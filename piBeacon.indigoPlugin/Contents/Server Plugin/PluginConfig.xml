@@ -913,6 +913,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 	<Field    id="debugUpdateTimeAndZone" type="checkbox"      > <Label>     ..  (20) set time and date on beacon:</Label>  </Field>
 	<Field    id="debugGarageDoor"     type="checkbox"         > <Label>     ..  (21) garage door:</Label>  </Field>
 	<Field    id="debugDelayedActions" type="checkbox"         > <Label>     ..  (22) delayed actions (for dev):</Label>  </Field>
+	<Field    id="debugUpdateIndigo"   type="checkbox"         > <Label>     ... (23) updateIndigo (only for development):</Label>  </Field>
 	<Field    id="debugSpecial"        type="checkbox"         > <Label>     ... (S)  special debug (only for development):</Label>  </Field>
 	<Field    id="debugall"            type="checkbox"         > <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 

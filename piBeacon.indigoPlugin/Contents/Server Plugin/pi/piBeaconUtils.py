@@ -116,7 +116,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 	try:		
 		if int(myPID) > 10 and len(delList) == 0:
 			cmd= ["/usr/bin/sudo","/usr/bin/python","{}killOldPgm.py".format(G.homeDir), str(myPID), pgmToKill, param1, param2]
-			if True or verbose: logger.log(20, u"cBY:{:<20} kill pgm using external, myPID:{}, cmd:{}".format(G.program, myPID, cmd) )
+			if verbose: logger.log(20, u"cBY:{:<20} kill pgm using external, myPID:{}, cmd:{}".format(G.program, myPID, cmd) )
 			ret = subprocess.Popen(cmd)
 			return 1
 	except Exception as e:
@@ -266,21 +266,22 @@ def fixoutofdiskspace():
 	except: pass
 
 #################################
-def pgmStillRunning(pgmToTest, verbose=False) :
+def pgmStillRunning(pgmToTest, notPresent ="", verbose=False) :
 	try :
 		pgmToTest = pgmToTest.strip()
-		if verbose: logger.log(30, "testing  for '{}'".format(pgmToTest))
+		if verbose: logger.log(20, "testing  for '{}'".format(pgmToTest))
 		cmd = "ps -ef | grep '{}' | grep -v grep".format(pgmToTest)
-		if verbose: logger.log(30, "command:{}, cmd:{}".format(pgmToTest, cmd))
+		if notPresent !="": cmd += " | grep -v " + notPresent
+		if verbose: logger.log(20, "command:{}, cmd:{}".format(pgmToTest, cmd))
 		ret = (subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 		lines = ret.split("\n")
-		if verbose: logger.log(30, "test returns {} ".format(ret))
+		if False and verbose: logger.log(20, "test returns {} ".format(ret))
 		for line in lines :
-			if verbose: logger.log(30, "testing  line {} ".format(line) )
+			if verbose: logger.log(20, "testing  line {} ".format(line) )
 			if len(line) < 10 : continue
 			return True
 	except	Exception as e :
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(20, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 ################################# 2020-12-12 12:12:12

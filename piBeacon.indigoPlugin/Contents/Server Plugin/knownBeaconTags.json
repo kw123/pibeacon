@@ -24,6 +24,52 @@
     "textForMenu": "",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   },
+ "BLEmeeblue": {
+    "Maj": "",
+    "Min": "",
+    "commands": {
+      "batteryLevel": {
+        "type": "msg"
+      }
+    },
+    "comment": "",
+    "correspondingSensorType": "BLEmeeblue-on",
+    "correspondingSwitchbotDevice": "",
+    "dBm": "-65",
+    "hexCode": "17160040MAC#########",
+    "hexCode2": "",
+    "pos": 16,
+    "posDelta": 2,
+    "sensorFunctions": "",
+    "sequence": 0,
+    "subType": {},
+    "text": "Mee blue MK52 realtime, button on",
+    "textForMenu": "",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
+ "BLEHunterNodeBT": {
+    "Maj": "",
+    "Min": "",
+    "commands": {
+      "batteryLevel": {
+        "type": "msg"
+      }
+    },
+    "comment": "",
+    "correspondingSensorType": "BLEHunterNodeBT",
+    "correspondingSwitchbotDevice": "",
+    "dBm": "-65",
+    "hexCode": "094E4F44452D42542D32",
+    "hexCode2": "",
+    "pos": 10,
+    "posDelta": 5,
+    "sensorFunctions": "",
+    "sequence": 0,
+    "subType": {},
+    "text": "Hunter Node BT sprinkler",
+    "textForMenu": "",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
   "BLEgoveeTempHum": {
     "Maj": "",
     "Min": "",
@@ -441,6 +487,27 @@
     "textForMenu": "",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   },
+  "JaaleeName": {
+    "Maj": "",
+    "Min": "",
+    "commands": {
+      "batteryLevel": {}
+    },
+    "comment": "",
+    "correspondingSwitchbotDevice": "",
+    "dBm": "-61",
+    "hexCode": "086A61616C6565",
+    "hexCode2": "",
+    "pos": 4,
+    "posDelta": 10,
+    "sensorFunctions": "",
+    "sequence": 0,
+    "subType": {},
+    "text": "Jaalee w name tagged",
+    "textForMenu": "",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
+
   "Jaalee": {
     "Maj": "",
     "Min": "",
@@ -1968,6 +2035,7 @@
 
 },
 "mfgNames":{
+	"NODE-BT":"Hunter sprinkler Node-BT",
 	"ruuvi":"Ruuvi, all versions",
 	"abeacon":"April",
 	"safedome":"all versions",
@@ -1978,6 +2046,7 @@
 	"Flower":"xiaomi Flower care",
 	"nut":" nutale, pro etc ",
 	"FSC":" feasy all version ",
+	"jaalee":" jaalee ",
 	"itrack":"musegear, spotypal, rinex nojii"
 	}
 }

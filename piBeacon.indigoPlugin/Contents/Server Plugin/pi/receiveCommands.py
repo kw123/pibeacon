@@ -32,6 +32,7 @@ allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWri
 
 externalGPIO = False
 
+mapCmds			= {"pu":"pulseUp","pd":"pulseDown","cup":"continuousUpDown","aw":"analogWrite"}
 ####-------------------------------------------------------------------------####
 def readPopen(cmd):
 		try:
@@ -54,8 +55,8 @@ def OUTPUTi2cRelay(command):
 		for iii in range(1):
 			U.logger.log(G.debug*20, "OUTPUTi2cRelay command:{}".format(command) )
 			if "cmd" in command:
-				cmd= command["cmd"]
-				if cmd not in allowedCommands:
+				cmd = command["cmd"]
+				if False and cmd not in allowedCommands:
 					U.logger.log(20, "OUTPUTi2cRelay pid={}d, bad command {}  allowed only: {}".format(myPID, command , allowedCommands )  )
 					exit(1)
 
@@ -172,18 +173,18 @@ def setGPIO(command):
 
 		if typeForPWM == "PIGPIO" and U.pgmStillRunning("pigpiod"):
 			import pigpio
-			PIGPIO = pigpio.pi()
-			pwmRange  = PWM
-			pwmFreq   = PWM
-			typeForPWM = "PIGPIO"
+			PIGPIO 		= pigpio.pi()
+			pwmRange  	= PWM
+			pwmFreq   	= PWM
+			typeForPWM 	= "PIGPIO"
 		else:
-			typeForPWM = "GPIO"
+			typeForPWM 	= "GPIO"
 		
 
 
 		if "cmd" in command:
 			cmd = command["cmd"]
-			if cmd not in allowedCommands:
+			if False and cmd not in allowedCommands:
 				U.logger.log(20, "setGPIO pid={}, bad command{}  allowed only: {}".format(myPID, command, allowedCommands)  )
 				exit(1)
 
@@ -325,7 +326,7 @@ def sleepForxSecs(sleepTime):
 		dt 		= 0.05
 		try: threadName = threading.currentThread().getName()
 		except: return True
-		#U.logger.log(20, u"threadName:{}, wait for {} secs".format(threadName, sleepTime))
+		#U.logger.log(20, "threadName:{}, wait for {} secs".format(threadName, sleepTime))
 		while True:
 			tDone += dt
 			if threadName not in threadsActive: return True
@@ -335,52 +336,63 @@ def sleepForxSecs(sleepTime):
 		return False
 	except	Exception as e:
 		U.logger.log(20,"", exc_info=True)
-		U.logger.log(20, u"threadsActive{}".format(threadsActive))
+		U.logger.log(20, "threadsActive{}".format(threadsActive))
 	return False
 
 ### ----------------------------------------- ###
-def execCMDS(next):
+def execCMDS(nextItem):
 	global threadsActive
 	global execcommands, PWM
 	global py3Cmd, readOutput, readInput
 	global usePython3
 
 	threadName = threading.currentThread().getName()
-	#U.logger.log(G.debug*20, u"{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
+	#U.logger.log(G.debug*20, "{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
 
 	for ijji in range(1):
 
-			#U.logger.log(20,"{:.2f} next command: {}".format(time.time(), next))
-			cmd = next["command"]
+			#U.logger.log(20,"{:.2f} nextItem command: {}".format(time.time(), nextItem))
 
 
-			delayStart = min(1000000, max(0,U.calcStartTime(next,"startAtDateTime")-time.time()))
+			delayStart = min(1000000, max(0,U.calcStartTime(nextItem,"startAtDateTime")-time.time()))
 
 
-			if "restoreAfterBoot" in next:
-				restoreAfterBoot= next["restoreAfterBoot"]
+			# make lower case available
+			for nI in copy.copy(nextItem):
+				if nI != nI.lower(): 
+					nextItem[nI.lower()] = nextItem[nI]
+
+			try:
+				if nextItem["command"] in mapCmds:
+					nextItem["command"] = mapCmds[nextItem["command"]]
+			except: pass
+
+			cmd = nextItem["command"]
+
+			if "restoreAfterBoot" in nextItem:
+				restoreAfterBoot= nextItem["restoreAfterBoot"]
 			else:
 				restoreAfterBoot="0"
 
 
-			if cmd =="general":
-				if "cmdLine" in next:
-					subprocess.call(next["cmdLine"] , shell=True)	 
+			if cmd == "general":
+				if "cmdLine" in nextItem:
+					subprocess.call(nextItem["cmdLine"] , shell=True)	 
 					continue
 
 
 			if cmd == "file":
-				if "fileName" in next and "fileContents" in next:
-					#print next
+				if "fileName" in nextItem and "fileContents" in nextItem:
+					#print nextItem
 					try:
 						m = "w"
-						if "fileMode" in next and next["fileMode"].lower() == "a": m = "a"
-						fc = json.dumps(next["fileContents"])
-						U.logger.log(20,"write to next {}  {}".format(next["fileName"], fc ))
-						f = open(next["fileName"], m)
+						if "fileMode" in nextItem and nextItem["fileMode"].lower() == "a": m = "a"
+						fc = json.dumps(nextItem["fileContents"])
+						U.logger.log(20,"write to nextItem {}  {}".format(nextItem["fileName"], fc ))
+						f = open(nextItem["fileName"], m)
 						f.write("{}".format(fc)) 
 						f.close()
-						if "touchFile" in next and next["touchFile"]:
+						if "touchFile" in nextItem and nextItem["touchFile"]:
 							subprocess.call("echo	 { } > {}temp/touchFile".format(time.time(), G.homeDir) , shell=True)
 						subprocess.call("sudo chown -R  pi  "+G.homeDir, shell=True)
 					except	Exception as e:
@@ -394,9 +406,9 @@ def execCMDS(next):
 					if sleepForxSecs(delayStart):
 						return 
 				try:
-						U.logger.log(20, u"execcmd. getBeaconParameters, write: ={}".format(next["device"]))
+						U.logger.log(20, "execcmd. getBeaconParameters, write: ={}".format(nextItem["device"]))
 						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
-						f.write(next[u"device"]) 
+						f.write(nextItem["device"]) 
 						f.close()
 				except	Exception as e:
 						U.logger.log(30,"", exc_info=True)
@@ -409,9 +421,9 @@ def execCMDS(next):
 					if sleepForxSecs(delayStart):
 						return 
 				try:
-						U.logger.log(20, u"execcmd. beep, write: ={}".format(str(next["device"])[:20]))
+						U.logger.log(20, "execcmd. beep, write: ={}".format(str(nextItem["device"])[:20]))
 						f = open(G.homeDir+"temp/beaconloop.beep","a")
-						f.write(next["device"]+"\n") 
+						f.write(nextItem["device"]+"\n") 
 						f.close()
 				except	Exception as e:
 						U.logger.log(30,"", exc_info=True)
@@ -420,38 +432,38 @@ def execCMDS(next):
 
 			if cmd == "updateTimeAndZone":
 				try:
-						U.logger.log(20, u"execcmd. updateTimeAndZone, write: ={}".format(str(next["device"])[:20]))
+						U.logger.log(20, "execcmd. updateTimeAndZone, write: ={}".format(str(nextItem["device"])[:20]))
 						f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","a")
-						f.write(next["device"]+"\n") 
+						f.write(nextItem["device"]+"\n") 
 						f.close()
 				except	Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 
 			if	cmd == "BLEAnalysis":
-					if "minRSSI" not in next: minRSSI = "-61"
-					else:					  minRSSI = next["minRSSI"]
+					if "minRSSI" not in nextItem: minRSSI = "-61"
+					else:					  minRSSI = nextItem["minRSSI"]
 					subprocess.call("echo "+minRSSI+" > "+G.homeDir+"temp/beaconloop.BLEAnalysis", shell=True)
 					continue
 
 			if	cmd == "trackMac":
-					if "mac" in next: 
-						subprocess.call("echo '"+next["mac"]+"' > "+G.homeDir+"temp/beaconloop.trackmac", shell=True)
+					if "mac" in nextItem: 
+						subprocess.call("echo '"+nextItem["mac"]+"' > "+G.homeDir+"temp/beaconloop.trackmac", shell=True)
 					else:
-						U.logger.log(20, u"trackMac, no mac number supplied")
+						U.logger.log(20, "trackMac, no mac number supplied")
 					continue
 
 
-			if "device" not in next:
-				U.logger.log(20," bad cmd no device given {}".format(next))
+			if "device" not in nextItem:
+				U.logger.log(20," bad cmd no device given {}".format(nextItem))
 				continue
 				
 
-			device = next["device"]
+			device = nextItem["device"]
 
 			
-			if device.lower()=="setsteppermotor":
-				cmdOut = json.dumps(next)
+			if device.lower() == "setsteppermotor":
+				cmdOut = json.dumps(nextItem)
 				if cmdOut != "":
 					try:
 						f=open(G.homeDir+"temp/setStepperMotor.inp","a")
@@ -462,16 +474,16 @@ def execCMDS(next):
 				continue
 			
 			if device.lower()=="output-display":
-				cmdOut = json.dumps(next)
+				cmdOut = json.dumps(nextItem)
 				if cmdOut != "":
 					try:
 						#print "execcmd", cmdOut
 						if not U.pgmStillRunning("display.py"):
 							subprocess.call("{} {}display.py &".format(py3Cmd, G.homeDir), shell=True)
-						f=open(G.homeDir+"temp/display.inp","a")
+						f = open(G.homeDir+"temp/display.inp","a")
 						f.write(cmdOut+"\n")
 						f.close()
-						f=open(G.homeDir+"display.inp","w")
+						f = open(G.homeDir+"display.inp","w")
 						f.write(cmdOut+"\n")
 						f.close()
 					except	Exception as e:
@@ -480,7 +492,7 @@ def execCMDS(next):
 
 
 			if device.lower().find("neopixel") > -1:### OUTPUT-neopixel
-				cmdOut = json.dumps(next)
+				cmdOut = json.dumps(nextItem)
 				if "neopixel" not in output: continue
 				if usePython3:	py2orpy3 = "py3"
 				else:			py2orpy3 = "py2"
@@ -501,7 +513,7 @@ def execCMDS(next):
 							f=open(G.homeDir+"temp/neopixel.inp","a")
 							f.write(cmdOut+"\n")
 							f.close()
-							f=open(G.homeDir+"neopixel.inp","w")
+							f = open(G.homeDir+"neopixel.inp","w")
 							f.write(cmdOut+"\n")
 							f.close()
 					except	Exception as e:
@@ -509,28 +521,28 @@ def execCMDS(next):
 				continue
 
 
-			if cmd not in allowedCommands:
+			if False and cmd not in allowedCommands:
 				U.logger.log(20,"bad cmd (9) dev:{} not in allowed commands {} \n{}".format(device, cmd,  allowedCommands))
 				continue
 
 
-			if "values" in next:
-				values = next["values"]
+			if "values" in nextItem:
+				values = nextItem["values"]
 			else:
-				values =""
+				values = { }
 
 			startAtDateTime = "{}".format(time.time())
-			if "startAtDateTime" in next:
-				startAtDateTime = next["startAtDateTime"]
+			if "startAtDateTime" in nextItem:
+				startAtDateTime = nextItem["startAtDateTime"]
 
-			if "inverseGPIO" in next:
-				inverseGPIO = next["inverseGPIO"]
+			if "inverseGPIO" in nextItem:
+				inverseGPIO = nextItem["inverseGPIO"]
 			else:
 				inverseGPIO = False
 
 
-			if "devId" in next:
-				devId = next["devId"]
+			if "devId" in nextItem:
+				devId = nextItem["devId"]
 			else:
 				devId = 0
 
@@ -538,24 +550,24 @@ def execCMDS(next):
 
 
 			if	cmd == "newMessage":
-						if next["device"].find(",")> 1:
-							list = next["device"].split(",")
-						elif next["device"]== "all":
+						if nextItem["device"].find(",")> 1:
+							list = nextItem["device"].split(",")
+						elif nextItem["device"]== "all":
 							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
 						else:
-							list = [next["device"]]
+							list = [nextItem["device"]]
 						for pgm in list:
 							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".now", shell=True)
 						continue
 
 
 			if	cmd == "resetDevice":
-						if next["device"].find(",")> 1:
-							list = next["device"].split(",")
-						elif next["device"]== "all":
+						if nextItem["device"].find(",")> 1:
+							list = nextItem["device"].split(",")
+						elif nextItem["device"]== "all":
 							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
 						else:
-							list = [next["device"]]
+							list = [nextItem["device"]]
 						for pgm in list:
 							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".reset", shell=True)
 						continue
@@ -564,12 +576,12 @@ def execCMDS(next):
 
 
 			if	cmd == "startCalibration":
-						if next["device"].find(",")> 1:
-							list = next["device"].split(",")
-						elif next["device"] == "all":
+						if nextItem["device"].find(",")> 1:
+							list = nextItem["device"].split(",")
+						elif nextItem["device"] == "all":
 							list = G.specialSensorList
 						else:
-							list = [next["device"]]
+							list = [nextItem["device"]]
 						for xxx in list:
 							xxx = xxx.split(".")
 							#U.logger.log(30,"xxx= {}".format(xxx))
@@ -588,20 +600,20 @@ def execCMDS(next):
 
 
 
-			if device=="setMCP4725":
+			if device == "setMCP4725":
 						try:
-							i2cAddress = U.getI2cAddress(next, default =0)
-							if cmd =="disable" :
+							i2cAddress = U.getI2cAddress(nextItem, default =0)
+							if cmd == "disable" :
 								if sthreadName in execcommandsList:
 									del execcommandsList[threadName]
 
 							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId })
-							U.logger.log(10,json.dumps(next))
+							U.logger.log(10,json.dumps(nextItem))
 							cmdOut="/usr/bin/python "+G.homeDir+"setmcp4725.py '"+ cmdJ+"'  &"
 							U.logger.log(10," cmd= %s"%cmdOut)
 							subprocess.call(cmdOut, shell=True)
 							if restoreAfterBoot == "1":
-								execcommandsList[threadName] = next
+								execcommandsList[threadName] = nextItem
 							else:
 								try: del execcommandsList[threadName]
 								except:pass
@@ -610,19 +622,19 @@ def execCMDS(next):
 							U.logger.log(30,"", exc_info=True)
 						continue
 
-			if device=="setPCF8591dac":
+			if device == "setPCF8591dac":
 						try:
-							i2cAddress = U.getI2cAddress(next, default =0)
-							if cmd =="disable":
+							i2cAddress = U.getI2cAddress(nextItem, default =0)
+							if cmd == "disable":
 								del execcommandsList[threadName]
 								continue
 							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId})
-							U.logger.log(10,json.dumps(next))
+							U.logger.log(10,json.dumps(nextItem))
 							cmdOut="/usr/bin/python "+G.homeDir+"setPCF8591dac.py '"+ cmdJ+"'  &"
 							U.logger.log(10," cmd= %s"%cmdOut)
 							subprocess.call(cmdOut, shell=True)
 							if restoreAfterBoot == "1":
-								execcommandsList[threadName] = next
+								execcommandsList[threadName] = nextItem
 							else:
 								try: del execcommandsList[threadName]
 								except:pass
@@ -632,21 +644,30 @@ def execCMDS(next):
 						continue
 
 
-			if device=="OUTgpio" or device.find("OUTPUTgpio")> -1:
-						#U.logger.log(G.debug*20, u"{:.2f} into if OUTgpio".format(time.time()))
+			if device == "OUTgpio" or device.find("OUTPUTgpio")> -1:
+						#U.logger.log(G.debug*20, "{:.2f} into if OUTgpio".format(time.time()))
 						try:
-							pinI = int(next["pin"])
+							pinI = int(nextItem["pin"])
 							pin = str(pinI)
 						except	Exception as e:
 							U.logger.log(30,"", exc_info=True)
-							U.logger.log(20,"bad pin {}".format(next))
+							U.logger.log(20,"bad pin {}".format(nextItem))
 							continue
-						#print "pin ok"
-						if "values" in next: values= next["values"]
-						else:				 values= {}
+
+						if "aw" 				in nextItem: nextItem["analogwrite"] 		= nextItem["aw"]
+						if "cup" 				in nextItem: nextItem["continuousupdown"] 	= nextItem["cup"]
+						if "pu" 				in nextItem: nextItem["pulseup"] 			= nextItem["pu"]
+						if "pd" 				in nextItem: nextItem["pulsedown"]		 	= nextItem["pd"]
+						if "np" 				in nextItem: nextItem["npulses"] 			= nextItem["np"]
+						if "analogwrite" 		in nextItem: values["analogwrite"] 			= float(nextItem.get("analogwrite",1))
+						if "continuousupdown" 	in nextItem: values["continuousUpDown"] 	= float(nextItem.get("continuousupdown",1))
+						if "pulseup" 			in nextItem: values["pulseUp"] 				= float(nextItem.get("pulseup",1))
+						if "pulsedown" 			in nextItem: values["pulseDown"] 			= float(nextItem.get("pulsedown",1))
+						if "npulses" 			in nextItem: values["nPulses"] 				= int(nextItem.get("npulses",0))
+
    
 						if restoreAfterBoot == "1":
-							execcommandsList[threadName] = next
+							execcommandsList[threadName] = nextItem
 						else:
 							try: del execcommandsList[threadName]
 							except: pass
@@ -659,33 +680,44 @@ def execCMDS(next):
 
 			if  device.find("OUTPUTi2cRelay")> -1:
 						try:
-							pinI = int(next["pin"])
+							pinI = int(nextItem["pin"])
 							pin = str(pinI)
 						except	Exception as e:
 							U.logger.log(30,"", exc_info=True)
-							U.logger.log(20,"bad pin {}".format(next))
+							U.logger.log(20,"bad pin {}".format(nextItem))
 							continue
 						#print "pin ok"
-						if "values" in next: values= next["values"]
+						if "values" in nextItem: values= nextItem["values"]
 						else:				 values={}
    
 						if restoreAfterBoot == "1":
-							execcommandsList[threadName] = next
+							execcommandsList[threadName] = nextItem
 
 						else:
 							try: del execcommandsList[threadName]
 							except: pass
 
+						if "aw" 				in nextItem: nextItem["analogwrite"] 		= nextItem["aw"]
+						if "cup" 				in nextItem: nextItem["continuousupdown"] 	= nextItem["cup"]
+						if "pu" 				in nextItem: nextItem["pulseup"] 			= nextItem["pu"]
+						if "pd" 				in nextItem: nextItem["pulsedown"]		 	= nextItem["pd"]
+						if "np" 				in nextItem: nextItem["npulses"] 			= nextItem["np"]
+						if "analogwrite" 		in nextItem: values["analogwrite"] 			= float(nextItem.get("analogwrite",1))
+						if "continuousupdown" 	in nextItem: values["continuousUpDown"] 	= float(nextItem.get("continuousupdown",1))
+						if "pulseup" 			in nextItem: values["pulseUp"] 				= float(nextItem.get("pulseup",1))
+						if "pulsedown" 			in nextItem: values["pulseDown"] 			= float(nextItem.get("pulsedown",1))
+						if "npulses" 			in nextItem: values["nPulses"] 				= int(nextItem.get("npulses",0))
+
 						if cmd =="disable":
 							continue
-						cmdJ= {"pin":pinI,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"i2cAddress":next["i2cAddress"], "devId":devId}
+						cmdJ= {"pin":pinI,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"i2cAddress":nextItem["i2cAddress"], "devId":devId}
 
 						OUTPUTi2cRelay(cmdJ)
 						continue
 
-			if device=="myoutput":
+			if device == "myoutput":
 						try:
-							text   = next["text"]
+							text   = nextItem["text"]
 							cmdOut= "/usr/bin/python "+G.homeDir+"myoutput.py "+text+" &"
 							U.logger.log(10,"cmd= %s"%cmdOut)
 							subprocess.call(cmdOut, shell=True)
@@ -693,15 +725,15 @@ def execCMDS(next):
 							U.logger.log(30,"", exc_info=True)
 						continue
 
-			if device=="playSound":
-						cmdOut=""
+			if device == "playSound":
+						cmdOut = ""
 						try:
 							if	 cmd  == "omxplayer":
-								cmdOut = json.dumps({"player":"omxplayer","file":G.homeDir+"soundfiles/"+next["soundFile"]})
+								cmdOut = json.dumps({"player":"omxplayer","file":G.homeDir+"soundfiles/"+nextItem["soundFile"]})
 							elif cmd  == "aplay":
-								cmdOut = json.dumps({"player":"aplay","file":G.homeDir+"soundfiles/"+next["soundFile"]})
+								cmdOut = json.dumps({"player":"aplay","file":G.homeDir+"soundfiles/"+nextItem["soundFile"]})
 							else:
-								U.logger.log(20, u"bad command : player not right =" + cmd)
+								U.logger.log(20, "bad command : player not right =" + cmd)
 							if cmdOut != "":
 								U.logger.log(10,"cmd= %s"%cmdOut)
 								subprocess.call("/usr/bin/python playsound.py '"+cmdOut+"' &" , shell=True)
@@ -737,25 +769,25 @@ def stopThreadsIfEnded(all=False):
 
 				 
 ### ----------------------------------------- ###
-def execSimple(next):
+def execSimple(nextItem):
 	global inp
-	if "command" not in next:		 return False
-	if next["command"] != "general": return False
-	if "cmdLine" not in next:		 return False
+	if "command" not in nextItem:		 return False
+	if nextItem["command"] != "general": return False
+	if "cmdLine" not in nextItem:		 return False
 	
 	try:
 		# execute unix command
-		if next["cmdLine"].lower().find("sudo reboot" )> -1 or next["cmdLine"].lower().find("sudo halt") > -1:
+		if nextItem["cmdLine"].lower().find("sudo reboot" )> -1 or nextItem["cmdLine"].lower().find("sudo halt") > -1:
 			stopThreadsIfEnded(all=True)
-			subprocess.call(next["cmdLine"] , shell=True)	 
+			subprocess.call(nextItem["cmdLine"] , shell=True)	 
 
 
 			return True
 			
 		# execute set time command 
-		if next["cmdLine"].find("setTime")>-1:
+		if nextItem["cmdLine"].find("setTime")>-1:
 			tt		   = time.time()
-			items	   =  next["cmdLine"].split("=")
+			items	   =  nextItem["cmdLine"].split("=")
 			mactime	   = items[1]
 			subprocess.call('date -s "'+mactime+'"', shell=True)
 			mactt	   = U.getTimetimeFromDateString(mactime)
@@ -765,10 +797,10 @@ def execSimple(next):
 				subprocess.call("hwclock --systohc", shell=True) # set hw clock to system time stamp, only works if HW is enabled
 			return True
 		# execute set time command 
-		if next["cmdLine"].find("refreshNTP")>-1:
+		if nextItem["cmdLine"].find("refreshNTP")>-1:
 			U.startNTP()
 			return True
-		if next["cmdLine"].find("stopNTP")>-1:
+		if nextItem["cmdLine"].find("stopNTP")>-1:
 			U.stopNTP()
 			return True
 
@@ -797,7 +829,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				break
 			data += buffer.strip()
 		
-		#U.logger.log(20, u"===== ip:{}:  data:{}<\n\n".format(self.client_address[0], data))
+		#U.logger.log(20, "===== ip:{}:  data:{}<\n\n".format(self.client_address[0], data))
 		try:
 			commands = json.loads(data.strip("\n"))
 		except	Exception as e:
@@ -807,37 +839,37 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 		#U.logger.log(20, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
 			
-		for next in commands:
-			if execSimple(next): continue
-			setupexecThreads(next)
+		for nextItem in commands:
+			if execSimple(nextItem): continue
+			setupexecThreads(nextItem)
  
 		readParams()
 		stopThreadsIfEnded()
 		return	 
 
 ### ----------------------------------------- ###
-def setupexecThreads(next):
+def setupexecThreads(nextItem):
 	global inp
 	global threadsActive
 	try:
-		if "command" not in next: return False
+		if "command" not in nextItem: return False
 		
 		threadName = ""
-		if "device" in next and next["device"] != "":				threadName = next["device"]
-		if "pin" in next and next["pin"] != "": 					threadName += "-"+str(next["pin"])
-		elif "i2cAddress" in next and next["i2cAddress"] != "": 	threadName += "-"+str(next["i2cAddress"])
-		if threadName =="":											threadName = next["command"]
+		if "device" in nextItem and nextItem["device"] != "":				threadName = nextItem["device"]
+		if "pin" in nextItem and nextItem["pin"] != "": 					threadName += "-"+str(nextItem["pin"])
+		elif "i2cAddress" in nextItem and nextItem["i2cAddress"] != "": 	threadName += "-"+str(nextItem["i2cAddress"])
+		if threadName =="":											threadName = nextItem["command"]
 
 		if threadName in threadsActive:
 			if threadsActive[threadName]["state"] != "stop":
 				stopExecCmd(threadName)
 			
-		#U.logger.log(20, u"starting thread={}".format(threadName))
-		threadsActive[threadName] = {"state":"running", "thread": threading.Thread(name=threadName, target=execCMDS, args=(next,))}	
+		#U.logger.log(20, "starting thread={}".format(threadName))
+		threadsActive[threadName] = {"state":"running", "thread": threading.Thread(name=threadName, target=execCMDS, args=(nextItem,))}	
 		threadsActive[threadName]["thread"].daemon = True
 		threadsActive[threadName]["thread"].start()
 
-		out = "{}".format(next)
+		out = "{}".format(nextItem)
 		ll = min(len(out),100)
 		#U.logger.log(20,"thread started: {}, command:{} ".format(threadName, out))
 		U.logger.log(20,"thread started: {}, command:{} ... {}".format(threadName, out[:ll], out[-ll:] ))
@@ -858,11 +890,11 @@ def stopExecCmd(threadName):
 	global threadsActive
 	try:
 		if threadName in threadsActive:
-			#U.logger.log(20, u"stop issuing thread={}".format(threadName))
+			#U.logger.log(20, "stop issuing thread={}".format(threadName))
 			if threadsActive[threadName]["state"] == "stop": return 
 			threadsActive[threadName]["state"] = "stop"
 			time.sleep(0.07)
-			#U.logger.log(20, u"stop finished after wait thread={}".format(threadName))
+			#U.logger.log(20, "stop finished after wait thread={}".format(threadName))
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	try: 	del threadsActive[threadName]
@@ -897,11 +929,11 @@ def getcurentCMDS():
 			for threadName in execcommandsList:
 				keep[threadName] = execcommandsList[threadName]
 				try:
-					next = execcommandsList[threadName]
+					nextItem = execcommandsList[threadName]
 				except	Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					continue
-				setupexecThreads(next)
+				setupexecThreads(nextItem)
 
 			f = open(G.homeDir+"execcommandsList.current","w")
 			f.write(json.dumps(keep))
@@ -935,13 +967,13 @@ def readTempDirThread():
 	threadName = "readTempDir"
 	fName = G.homeDir+"temp/file.cmd"	
 
-	U.logger.log(20, u"readTempDirThread started:")
+	U.logger.log(20, "readTempDirThread started:")
 	while  threadsActive[threadName]["state"] == "running":
-		#U.logger.log(20, u"readTempDirThread looping trough:{}".format(G.homeDir+"temp/fileCommand.inp"))
+		#U.logger.log(20, "readTempDirThread looping trough:{}".format(G.homeDir+"temp/fileCommand.inp"))
 		time.sleep(1.5)
 		commands = {}
 		if os.path.isfile(fName):
-			#U.logger.log(20, u"readTempDirThread file found:")
+			#U.logger.log(20, "readTempDirThread file found:")
 			f = open(fName,"r")
 			try:
 				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
@@ -950,16 +982,16 @@ def readTempDirThread():
 				reawRead = f.read().strip("\n")
 				commands = json.loads(reawRead)
 			except:
-				U.logger.log(20, u"readTempDirThread bad read:{}".format(reawRead))
+				U.logger.log(20, "readTempDirThread bad read:{}".format(reawRead))
 			f.close()
-			U.logger.log(20, u"readTempDirThread commands:{}".format(commands))
+			U.logger.log(20, "readTempDirThread commands:{}".format(commands))
 
 			os.remove(fName)
 			if commands != {}:
-				for next in commands:
-					#U.logger.log(20, u"readTempDirThread next:{}".format(next))
-					if execSimple(next): continue
-					setupexecThreads(next)
+				for nextItem in commands:
+					#U.logger.log(20, "readTempDirThread nextItem:{}".format(nextItem))
+					if execSimple(nextItem): continue
+					setupexecThreads(nextItem)
 
 
 			#'[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
@@ -1017,17 +1049,17 @@ if __name__ == "__main__":
 	readParams()
 
 	if U.getNetwork() == "off":
-		U.logger.log(20, u"network not active, sleeping ")
+		U.logger.log(20, "network not active, sleeping ")
 		time.sleep(500)# == 500 secs
 		exit(0)
 	# if not connected to network pass
 		
 		
-	if G.wifiType !="normal": 
-		U.logger.log(20, u"no need to receiving commands in adhoc mode pausing receive GPIO commands")
+	if G.wifiType != "normal": 
+		U.logger.log(20, "no need to receiving commands in adhoc mode pausing receive GPIO commands")
 		time.sleep(500)
 		exit(0)
-	U.logger.log(20, u"proceding with normal on no ad-hoc network")
+	U.logger.log(20, "proceding with normal on no ad-hoc network")
 
 	U.getIPNumber()
 	
@@ -1038,7 +1070,7 @@ if __name__ == "__main__":
 
 	setupReadTempDirThread()
 
-	U.logger.log(30,"started, listening to port: "+ str(PORT))
+	U.logger.log(20,"started, listening to port: "+ str(PORT))
 	restartMaster = False
 	try:	
 		# Create the server, binding on port 9999
@@ -1049,7 +1081,7 @@ if __name__ == "__main__":
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "getting  socket does not work, trying to reset {}".format(PORT) )
 		ret = readPopen("sudo ss -apn | grep :{}".format(PORT))[0]
-		lines= ret.split("\n")
+		lines = ret.split("\n")
 		for line in lines:
 			U.logger.log(20, line) 
 			pidString = line.split(",pid=")

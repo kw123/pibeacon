@@ -1,3 +1,35 @@
+added features / changes in v2022.178.101 @ 2024-07-03
+==================================================
+
+
+1. reduced number of dev states updates if value not changed
+   ==> dev state "last updated" now chnages only when a real dev state value was changed
+
+2. reduced # of beacon_is_back messages, 
+
+3. restructured beaconloop.py on rpi, reduced cpu comsumption by ~25%. That can have an impact if you are using an rpi0, for a rpi3++ likely not a big impact.
+
+4. optimized restart of beaconloop.py on RPi, in case hcidump does not start 
+
+5. added accept beacons:  >>jaalee w name tag<<. some Jaalee beacons send out a message that contains jaalee as a string (mfg info)
+
+6. added support for >>meeblue M52<<  beacons, The battery should last several years.:
+-1. start beacon (remove battery strip)
+-2. start app "checkBlue" on iPhone
+-3. press button for 3 secs, led should blink blue
+-4. put beacon next to phone
+-5. you should see “meeblue” and connectable true
+-6. click on beacon
+-7. after 10 secs you should see “configure Multiple Parameter”, click on it.. it will take 30 secs
+-8. click advertising mode: pick "Advertise Real-Time Data", everything else is off
+-9. back, you should see Advertising mode = 4
+-10. set "Button Detect" enabled
+-11. click back at top, back at top, settings are saved and the beacon is not connected anymore. it should start broadcasting data now
+---- 2 types: regular broadcast with mac number, battery info, and when button is pressed (blue led blinking) another package with "meeblue" mfg id for about 15 secs. These other packages are used to detect the button press
+-12. In indigo menu/ accept new beacons: select meebue m52.
+---- You should see 2 new devices after < 1 minute in indigo. One is the beacon(up/down/expired), the second the button(on/off). Both show battery level.
+
+
 added features / changes in v2022.176.98 @ 2024-06002
 ==================================================
 

@@ -21,7 +21,7 @@ U.setLogging()
 program = "killSudos"
 
 myOwnPID		= str(os.getpid())
-
+killedpgms = ""
 
 
 def execKill():
@@ -43,12 +43,13 @@ def execKill():
 			if verbose: U.logger.log(20, u"==kill sudos killing line:{}".format( (" ").join(items[7:])) )
 			xlist += str(pid)+ " "
 			count += 1
+			killedpgms +=  (" ").join(items[7:])+";"
 		if len(xlist) > 3:
 			if verbose: 
 				U.logger.log(20,u"== ext-kill /usr/bin/sudo kill -9 {} ".format(xlist) )
 			subprocess.call("/usr/bin/sudo kill -9 {}".format(xlist), shell=True)
 		if count > 0:
-			U.logger.log(20,u"==kill sudos finished killed {} programs".format(count) )
+			U.logger.log(20,u"==kill sudos finished killed {} programs:{}".format(count, killedpgms) )
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
