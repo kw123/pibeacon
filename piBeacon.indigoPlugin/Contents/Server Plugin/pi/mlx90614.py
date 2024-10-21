@@ -298,9 +298,9 @@ def doDisplay():
 						outText0.append(tu)
 						outText1.append(t)
 						nPages+=1
-			if "ambient" in sValues:
-				theValues	= sValues["ambient"][0]
-				theText		= sValues["ambient"][1]
+			if "AmbientTemperature" in sValues:
+				theValues	= sValues["AmbientTemperature"][0]
+				theText		= sValues["AmbientTemperature"][1]
 				if len(theValues) >0:
 					for	 ii in range(len(theValues)):
 						t =	 float(theValues[ii])
@@ -377,10 +377,10 @@ def doDisplay():
 						outText1.append(p)		  
 						nPages+=1
 
-			if "lux" in sValues:
-				theValues	= sValues["lux"][0]
-				theText		= sValues["lux"][1]
-				logScale	= sValues["lux"][2]
+			if "Illuminance" in sValues:
+				theValues	= sValues["Illuminance"][0]
+				theText		= sValues["Illuminance"][1]
+				logScale	= sValues["Illuminance"][2]
 				if len(theValues) >0:
 					for	 ii in range(len(theValues)):
 						lux =  theValues[ii]
@@ -703,14 +703,14 @@ def getMLX90614(sensor, data):
 					except: continue
 					data["sensors"][sensor][devId] = {"temp":t}
 
-					if a!="":
+					if a != "":
 						try:	a = float(a) + float(sensors[sensor][devId]["offsetTemp"])
 						except: continue
-						data["sensors"][sensor][devId]["AmbientTemperature"]=a
+						data["sensors"][sensor][devId]["AmbientTemperature"] = a
 
 
 					if devId in badSensors: del badSensors[devId]
-					putValText(sensors[sensor][devId],[t,a],["temp","ambient"])
+					putValText(sensors[sensor][devId],[t,a],["temp","AmbientTemperature"])
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except	Exception as e:
@@ -783,7 +783,7 @@ while True:
 		tt = time.time()
 		data={}
 		data["sensors"]		= {}
-		sValues={"temp":[[],[],[]],"ambient":[[],[],[]]}	  
+		sValues={"temp":[[],[],[]],"AmbientTemperature":[[],[],[]]}	  
 		if sensor in sensors:
 			retCode =""
 			for devId in sensors[sensor]:

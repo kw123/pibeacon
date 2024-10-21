@@ -312,6 +312,14 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 			</Field>
 
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -1543,6 +1551,11 @@ if you want to keep it running add an "&amp;" to the end </Label>
 				</List>
 			</Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
 
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -1919,8 +1932,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
 		</States>
+
 	</Device>
 
 
@@ -2137,6 +2150,20 @@ xx_Count_groupname_ .. Home, Away</Label>
 Setting to only accept the ONE device specific message type from knowBeaconTag file will avoid that.</Label>
 			</Field>
 
+			<Field id="enableBELSensorChild" type="menu"     defaultValue="1" readonly="Yes">
+				<Label>Enable creation of BLE SENSOR type child (eg Ruuvi tag, button sensor etc):</Label>
+				<List>
+					<Option value="0" >disable</Option>
+					<Option value="1" >enable</Option>
+				</List>
+			</Field>
+			<Field id="enableBELSensorChildLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Beacons that also have a sensor or button function can have a child device ie the button or temperature, 
+  which will be created automatically uppon receiving the first message from the RPI
+  this option allows to disable the creation of the child sensor. 
+  This option is only relevant for the beacons with these types of functions</Label>
+			</Field>
+
 			<Field id="label5"   type="label"   fontColor="green" >
 				<Label>== How often should we update the signal and distance states in the plugin:</Label>
 			</Field>
@@ -2206,11 +2233,11 @@ the msg and TLM messages are automatically recognized and the beacon is setup ac
 			<Field id="batteryLevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
 					<Option value="gatttool" 		>YES, use gatttool IF configured in knownBeaconTags file</Option>
-					<Option value="msg"    	 		>YES, use std msg, not through GATT commands (eg ruuvitag)</Option>
+					<Option value="msg"    	 		>YES, using  info from sensor data (eg ruuvitag)</Option>
+					<Option value="msgGET"    	 	>YES, use std msg, using position of data in string </Option>
 					<Option value="TLM-3000-2800"	>YES, use BLE-TLM message type with LiPo (CRxxx=3.2V)</Option>
 					<Option value="TLM-3000-2400"	>YES, use BLE-TLM message type with 2 AA(A) (3V)</Option>
 					<Option value="TLM-4500-3600"	>YES, use BLE-TLM message type with 3 AAA (4.5V)</Option>
-					<Option value="inherit"    	 	>inherit from beacon sensor device</Option>
 					<Option value="off"    	 		>OFF</Option>
 				</List>
 				<Label>.... get battery level:</Label>
@@ -2375,8 +2402,9 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 			</Field>
 		</ConfigUI>
 
-	<States>
-	</States>
+		<States>
+		</States>
+
 	</Device>
 
 
@@ -2665,6 +2693,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<States>
 		</States>
+
 	</Device>
 
 
@@ -2712,7 +2741,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 	
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -2854,11 +2883,25 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="type" type="menu"     defaultValue="RuuviTag" hidden="true">>
 				<List>
-					<Option value="RuuviTag"          >RuuviTag:  T H P Magnetic field</Option>
+					<Option value="RuuviTag"          >RuuviTag:  T H P Acceleration field</Option>
 				</List>
 				<Label>type of sensor:</Label>
 			</Field>
-			
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >
+				<Label>Temperature:</Label>
+			</Field>
+			<Field id="Humidity_EnableMinMax" 	type="checkbox"		defaultValue="true" >
+				<Label>Humidity:</Label>
+			</Field>
+			<Field id="Pressure_EnableMinMax" 	type="checkbox"		defaultValue="true" >
+				<Label>Pressure:</Label>
+			</Field>
+
+		
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -2888,7 +2931,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"      >Humidity[%]</Option>
@@ -3028,24 +3071,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<States>
 
 			<State id="movementCount">
-				<ValueType>Float</ValueType>
+				<ValueType>Number</ValueType>
 				<TriggerLabel>movementCount</TriggerLabel>
 				<ControlPageLabel>movementCount</ControlPageLabel>
 			</State>
 			<State id="measurementCount">
-				<ValueType>Float</ValueType>
+				<ValueType>Number</ValueType>
 				<TriggerLabel>measurementCount</TriggerLabel>
 				<ControlPageLabel>measurementCount</ControlPageLabel>
-			</State>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
 
 		</States>
@@ -3173,10 +3206,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
-					<Option value="illuminance"  >illuminance</Option>
+					<Option value="Illuminance"  >Illuminance</Option>
 				</List>
 			</Field>
 
@@ -3321,6 +3354,13 @@ save ===
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -3351,7 +3391,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature" >Temperature[C/F]</Option>
 					<Option value="Humidity"    >Humidity[%]</Option>
@@ -3430,11 +3470,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>button</TriggerLabel>
 				<ControlPageLabel>button</ControlPageLabel>
-			</State>
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
 
 		</States>
@@ -3519,6 +3554,13 @@ save===</Label>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -3549,7 +3591,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -3628,13 +3670,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-	
 		</States>
 	</Device>
 
@@ -3669,6 +3704,11 @@ save ===
 				<Label>Enter MAC number for this device: </Label>
 			</Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="AmbientTemperature_EnableMinMax"	type="checkbox"	defaultValue="true" >		<Label>AmbientTemperature:</Label>	</Field>
 
 			<Field id="labelRPI"   type="label" >
 				<Label>Select RPIs that should monitor this sensor,
@@ -3749,7 +3789,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  		 >Temperature[C/F]</Option>
 					<Option value="AmbientTemperature"   >Ambient - Probe Temperature</Option>
@@ -3822,12 +3862,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-	
 		</States>
 	</Device>
 
@@ -3912,6 +3946,13 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -3942,7 +3983,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"     >Humidity[%]</Option>
@@ -4008,12 +4049,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -4112,6 +4147,13 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 				</List>
 			</Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -4143,7 +4185,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"     >Humidity[%]</Option>
@@ -4208,13 +4250,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
-			<State id="counter">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -4304,6 +4339,13 @@ You can find the MAC number using the plugin tool detect new beacons look for
 				</List>
 			</Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+			<Field id="Formaldehyde_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Formaldehyde:</Label>		</Field>
+
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -4335,7 +4377,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Formaldehyde" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Formaldehyde" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Formaldehyde" >Formaldehyde</Option>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
@@ -4409,13 +4450,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
-			<State id="counter">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -4518,6 +4552,13 @@ This Sensor does not display F only C ===</Label>
 				</List>
 			</Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -4549,7 +4590,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"     >Humidity[%]</Option>
@@ -4614,18 +4655,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="counter">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -4715,6 +4744,13 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -4746,7 +4782,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"     >Humidity[%]</Option>
@@ -4805,13 +4841,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>connected</TriggerLabel>
 				<ControlPageLabel>connected</ControlPageLabel>
 			</State>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -4896,6 +4925,14 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Conductivity_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Conductivity:</Label>		</Field>
+			<Field id="Moisture_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Moisture:</Label>			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -4927,11 +4964,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Moisture" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Moisture"     >Moisture</Option>
-					<Option value="illuminance"  >Brightness</Option>
+					<Option value="Illuminance"  >Brightness</Option>
 					<Option value="Conductivity" >Conductivity</Option>
 				</List>
 			</Field>
@@ -5070,6 +5106,14 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -5101,7 +5145,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"     >Humidity[%]</Option>
@@ -5166,14 +5210,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="counter">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
-
 		</States>
+
 	</Device>
 
 
@@ -5285,8 +5323,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="accelerationTotal"  >Acc  total = sqrt(xx+yy+zz)</Option>
 					<Option value="accelerationX"     >Acc X </Option>
@@ -5400,12 +5437,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -5489,6 +5520,13 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -5519,7 +5557,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="accelerationTotal" >Acc  total = sqrt(xx+yy+zz)</Option>
 					<Option value="accelerationX"     >Acc X </Option>
@@ -5638,13 +5675,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -5719,7 +5749,12 @@ You can find the MAC number using the plugin tool detect new beacons, look for T
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
-
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -5751,7 +5786,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"  >Humidity[%]</Option>
@@ -5800,18 +5835,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -5894,6 +5917,11 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
 
 
 			
@@ -5926,7 +5954,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -6011,23 +6039,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>connected</TriggerLabel>
 				<ControlPageLabel>connected</ControlPageLabel>
 			</State>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
 
-	<Device type="sensor" id="BLEMKKsensor">     <Name>BLE-MKK sensors</Name>
+	<Device type="sensor" id="BLEKKMsensor">     <Name>BLE-KKM sensors</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
-			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -6037,8 +6057,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="label0"   type="label" alignText="left" fontColor="orange"> >
-				<Label>=== MKK  sensor types.
-On off for single and doible click as well as accelleration, temp and humdity ===</Label>
+				<Label>=== KKM  sensor types.
+On off for single and double click as well as accelleration, temp and humdity ===</Label>
 			</Field>
 
 
@@ -6096,6 +6116,12 @@ On off for single and doible click as well as accelleration, temp and humdity ==
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 
 
 			
@@ -6128,13 +6154,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="false">
+				<Label>for on button check, for sensors check off</Label>
+			</Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="false">
+				<Label>for on sensors check, for button check off</Label>
+			</Field>
 
-			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="false">
-				<Label>device has (temp, acceleration..), not just button:</Label>
-			</Field>	
+			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no" > <Label>Property to display in the State Column:</Label>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"  >Humidity[%]</Option>
@@ -6175,17 +6203,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-
-			<Field id="updateIndigoTiming"    type="menu"     defaultValue="180" hidden="no" tooltip="">
-				<Label>send data to indigo every:</Label>
-				<List>
-					<Option value="120" >  2 minutes</Option>
-					<Option value="180" >  3 minutes</Option>
-					<Option value="240" >  4 minutes</Option>
-				</List>
-			</Field>
-
-
 			<Field id="statusColorLabel" type="label" >
 				<Label>== set color of status column dot to </Label></Field>
 			<Field id="stateGreen" type="textfield"       defaultValue="x>28">		<Label>set State Indicator to GREEN if:</Label></Field>
@@ -6211,12 +6228,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<States>
 
-			<State id="trigger">
-				<ValueType>string</ValueType>
-				<TriggerLabel>trigger</TriggerLabel>
-				<ControlPageLabel>trigger</ControlPageLabel>
-			</State>
-
 			<State id="button">
 				<ValueType>string</ValueType>
 				<TriggerLabel>button</TriggerLabel>
@@ -6240,12 +6251,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>string</ValueType>
 				<TriggerLabel>currentOnEvent</TriggerLabel>
 				<ControlPageLabel>currentOnEvent</ControlPageLabel>
-			</State>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
 
 			<State id="softwareVersion">
@@ -6376,8 +6381,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="accelerationTotal"  >Acc  total = sqrt(xx+yy+zz)</Option>
 					<Option value="accelerationX"     >Acc X </Option>
@@ -6617,6 +6621,14 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -6647,11 +6659,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"     >Humidity[%]</Option>
-					<Option value="illuminance"  >illuminance</Option>
+					<Option value="Illuminance"  >Illuminance</Option>
 				</List>
 			</Field>
 
@@ -6794,6 +6806,12 @@ Use the plugin tool detect new beacons ===
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -6968,6 +6986,14 @@ Use the plugin tool detect new beacons ===
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
 
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -7177,8 +7203,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="accelerationTotal"  >Acc  total = sqrt(xx+yy+zz)</Option>
 					<Option value="accelerationX"     >Acc X </Option>
@@ -7292,13 +7317,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>button</TriggerLabel>
 				<ControlPageLabel>button</ControlPageLabel>
 			</State>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -7409,8 +7427,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="accelerationTotal"  >Acc  total = sqrt(xx+yy+zz)</Option>
 					<Option value="accelerationX"     >Acc X </Option>
@@ -7518,12 +7535,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -7687,12 +7698,6 @@ These sensor types are an onOff sensor. They have either a button, a mag sensor,
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
 			</State>
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -7777,6 +7782,15 @@ set trigger and sensitivity parameters ===
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
+
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -7806,8 +7820,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="accelerationTotal" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="accelerationTotal"  >Acc  total = sqrt(xx+yy+zz)</Option>
 					<Option value="accelerationX"     >Acc X </Option>
@@ -7920,34 +7933,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="counter">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
 			<State id="secsSinceStart">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>secsSinceStart</TriggerLabel>
 				<ControlPageLabel>secsSinceStart</ControlPageLabel>
 			</State>
 
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-
 			<State id="chipTemperature">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>chipTemperature</TriggerLabel>
 				<ControlPageLabel>chipTemperature</ControlPageLabel>
-			</State>
-
-			<State id="batteryVoltage">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
 			</State>
 
 		</States>
@@ -8034,6 +8029,13 @@ Currently the state rotation only works sometimes, not reliable
 			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
 
 		
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -8277,7 +8279,14 @@ download Shelly BLE debug from appstore/ launch/ press button/ connect/ set beac
 			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
-		
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
+
+	
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -8638,7 +8647,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"></Field>
 			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
-			<Field id="isBLESensorDevic`e" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
 
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
@@ -8651,11 +8660,12 @@ The device will go RED = off when an event happens (you can select the color)
 It will send an alive broadcast every xx minutes .. up to an hour
 this device type supports not remote button types:
 IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTemp
+test
 ===
 </Label>
 			</Field>
 
-			<Field id="mac" type="textfield"     defaultValue=""  >
+			<Field id="mac" type="textfield"  >
 				<Label>Enter MAC number for this device: </Label>
 			</Field>
 
@@ -8769,11 +8779,6 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
 			</State>
-			<State id="lastBatteryReplaced">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastBatteryReplaced</TriggerLabel>
-				<ControlPageLabel>lastBatteryReplaced</ControlPageLabel>
-			</State>
 			<State id="tampered">
 				<ValueType>String</ValueType>
 				<TriggerLabel>tampered</TriggerLabel>
@@ -8789,11 +8794,6 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
 			</State>
-			<State id="counter">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
 			<State id="lastAliveMessage">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastAliveMessage</TriggerLabel>
@@ -8804,7 +8804,7 @@ IR-Fence, PIR, Gas, Panic, Smoke, Door, GlasBreak, Vibration, WaterLevel, HighTe
 	</Device>
 
 
-	<Device type="sensor" id="BLEmeeblue-on">     	<Name>BLE-iSensor - on</Name>
+	<Device type="sensor" id="BLEmeeblue-on">     	<Name>BLE-meeblue - on</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
@@ -8864,8 +8864,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="counter" hidden="True"> <Label>Property to display in the State Column:</Label>
-     defaultValue="counter"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="counonOffStateter" hidden="True"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="onOffState"  >onOffState</Option>
 				</List>
@@ -8956,16 +8955,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="batteryVoltage">
-				<ValueType>String</ValueType>
-				<TriggerLabel>batteryVoltage</TriggerLabel>
-				<ControlPageLabel>batteryVoltage</ControlPageLabel>
-			</State>
-			<State id="lastBatteryReplaced">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastBatteryReplaced</TriggerLabel>
-				<ControlPageLabel>lastBatteryReplaced</ControlPageLabel>
-			</State>
 			<State id="currentOnEvent">
 				<ValueType>String</ValueType>
 				<TriggerLabel>currentOnEvent</TriggerLabel>
@@ -9040,8 +9029,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="counter" hidden="True"> <Label>Property to display in the State Column:</Label>
-     defaultValue="counter"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="onOffState" hidden="True"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="onOffState"  >onOffState</Option>
 				</List>
@@ -9142,11 +9130,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
 			</State>
-			<State id="lastBatteryReplaced">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastBatteryReplaced</TriggerLabel>
-				<ControlPageLabel>lastBatteryReplaced</ControlPageLabel>
-			</State>
 			<State id="tampered">
 				<ValueType>String</ValueType>
 				<TriggerLabel>tampered</TriggerLabel>
@@ -9161,11 +9144,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>previousOnEvent</TriggerLabel>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
-			</State>
-			<State id="counter">
-				<ValueType>Number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
 			</State>
 			<State id="lastAliveMessage">
 				<ValueType>String</ValueType>
@@ -9245,8 +9223,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="currentOnType" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="status"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="status" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="status"  >status</Option>
 				</List>
@@ -9440,6 +9417,14 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -9470,7 +9455,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="status"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"  >Humidity[%]</Option>
@@ -9515,11 +9499,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>String</ValueType>
 				<TriggerLabel>lowVoltage</TriggerLabel>
 				<ControlPageLabel>lowVoltage</ControlPageLabel>
-			</State>
-			<State id="lastBatteryReplaced">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastBatteryReplaced</TriggerLabel>
-				<ControlPageLabel>lastBatteryReplaced</ControlPageLabel>
 			</State>
 
 		</States>
@@ -9608,6 +9587,13 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -9638,7 +9624,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"  >Humidity[%]</Option>
@@ -9820,7 +9805,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="lastMotion" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="lastMotion"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="lastMotion"  >lastMotion</Option>
 				</List>
@@ -10098,11 +10082,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>sensitivity</TriggerLabel>
 				<ControlPageLabel>sensitivity</ControlPageLabel>
 			</State>
-			<State id="counter">
-				<ValueType>number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
 
 		</States>
 	</Device>
@@ -10143,6 +10122,14 @@ After you enable "add new onewire sensors" in RPi device edit the plugin will au
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -10172,7 +10159,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -10314,7 +10300,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"     >Humidity[%]</Option>
@@ -10331,6 +10316,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="0"  >No</Option>
 				</List>
 			</Field>
+
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
 
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes">	</Field>
@@ -10407,6 +10400,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -10437,7 +10437,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -10536,6 +10535,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -10566,7 +10571,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -10606,10 +10610,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 		</ConfigUI>
-	<States>
 
+		<States>
+		</States>
 
-	</States>
 	</Device>
 
 	<Device type="sensor" id="i2cMCP9808">     	<Name>INPUT-Temp-i2cMCP9808</Name>
@@ -10660,6 +10664,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -10690,7 +10702,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -10731,8 +10742,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-
-
 		</States>
 	</Device>
 
@@ -10789,6 +10798,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -10819,7 +10834,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -10861,9 +10875,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-
-
-
 		</States>
 
 	</Device>
@@ -10914,6 +10925,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Pressure_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Pressure:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -10944,7 +10962,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Pressure"      >Pressure</Option>
@@ -11048,6 +11065,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Pressure_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Pressure:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -11078,7 +11102,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Pressure"      >Pressure</Option>
@@ -11161,6 +11184,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Pressure_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Pressure:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -11191,7 +11221,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Pressure"      >Pressure</Option>
@@ -11284,6 +11313,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Pressure_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Pressure:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -11314,7 +11350,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Pressure"      >Pressure</Option>
@@ -11406,6 +11441,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Pressure_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Pressure:</Label>			</Field>
+			<Field id="VOC_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>VOC:</Label>					</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -11436,7 +11480,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Pressure"      >Pressure</Option>
@@ -11519,6 +11562,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -11549,7 +11600,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"      >Humidity[%]</Option>
@@ -11643,7 +11693,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -11673,7 +11732,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"      >Humidity[%]</Option>
@@ -11771,7 +11829,22 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+			<Field id="Pressure_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Pressure:</Label>			</Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+			<Field id="Pressure_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Pressure:</Label>			</Field>
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -11801,7 +11874,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"      >Humidity[%]</Option>
@@ -12047,7 +12119,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"      >Humidity[%]</Option>
@@ -12174,6 +12245,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+	
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -12204,7 +12284,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 					<Option value="Humidity"      >Humidity[%]</Option>
@@ -12304,6 +12383,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="AmbientTemperature_EnableMinMax"	type="checkbox"	defaultValue="true" >		<Label>AmbientTemperature:</Label>	</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -12334,7 +12420,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -12447,6 +12532,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="AmbientTemperature_EnableMinMax"	type="checkbox"	defaultValue="true" >		<Label>AmbientTemperature:</Label>	</Field>
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -12477,7 +12567,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -12563,6 +12652,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -12593,7 +12688,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"  >Temperature[C/F]</Option>
 				</List>
@@ -12987,6 +13081,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="VOC_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>VOC:</Label>					</Field>
+			<Field id="CO2_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>CO2:</Label>					</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -13016,7 +13117,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="CO2" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="CO2"     >CO2</Option>
@@ -13152,6 +13253,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="offsetCO2"  type="textfield"  defaultValue="0"> <Label>offset added to measured Co2 [ppm]</Label> </Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+			<Field id="CO2_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>CO2:</Label>					</Field>
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -13349,6 +13457,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="Humidity_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label>			</Field>
+			<Field id="CO2_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>CO2:</Label>					</Field>
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -13511,6 +13627,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="VOC_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>VOC:</Label>					</Field>
+
+
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -13540,8 +13662,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="VOC"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="VOC" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="VOC"     >VOC</Option>
 				</List>
@@ -13710,6 +13831,12 @@ It measures CO2 and temp using infrared light absorption
 
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="CO2_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>CO2:</Label>					</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -13739,8 +13866,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="CO2"  hidden="YES"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="CO2" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="CO2"     >CO2</Option>
 				</List>
@@ -13881,7 +14007,14 @@ It measures CO2 VOC
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
-			
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="CO2_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>CO2:</Label>					</Field>
+			<Field id="VOC_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>VOC:</Label>					</Field>
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -13910,12 +14043,11 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="CO2" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="CO2"     >CO2</Option>
 					<Option value="VOC"     >VOC</Option>
-					<Option value="temp"    >Temperature[C/F]</Option>
+					<Option value="Temperature"    >Temperature[C/F]</Option>
 					<Option value="CO2/VOC" >CO2/VOC</Option>
 				</List>
 			</Field>
@@ -13965,7 +14097,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabeli2cTCS" type="label">
 				<Label>Setup i2cTCS34725  RGB-white light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
-    illuminance is shown in lux</Label>
+    Illuminance is shown in lux</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -14024,16 +14156,15 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Illuminance" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="clear"      >clear</Option>
-					<Option value="red"        >read</Option>
-					<Option value="green"      >green</Option>
-					<Option value="blue"       >blue</Option>
-					<Option value="illuminance">illuminance [lux]</Option>
-					<Option value="kelvin"     >light Temp  [Kelvin]</Option>
-					<Option value="red/green/blue">red/green/blue</Option>
+					<Option value="Clear"      >clear</Option>
+					<Option value="Red"        >read</Option>
+					<Option value="Green"      >green</Option>
+					<Option value="Blue"       >blue</Option>
+					<Option value="Illuminance">Illuminance [lux]</Option>
+					<Option value="Kelvin"     >light Temp  [Kelvin]</Option>
+					<Option value="Red/Green/Blue">red/green/blue</Option>
 				</List>
 			</Field>
 
@@ -14082,32 +14213,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="clear">
-				<ValueType>String</ValueType>
-				<TriggerLabel>clear</TriggerLabel>
-				<ControlPageLabel>clear</ControlPageLabel>
-			</State>
-			<State id="red">
-				<ValueType>String</ValueType>
-				<TriggerLabel>red</TriggerLabel>
-				<ControlPageLabel>red</ControlPageLabel>
-			</State>
-			<State id="green">
-				<ValueType>String</ValueType>
-				<TriggerLabel>green</TriggerLabel>
-				<ControlPageLabel>green</ControlPageLabel>
-			</State>
-			<State id="blue">
-				<ValueType>String</ValueType>
-				<TriggerLabel>blue</TriggerLabel>
-				<ControlPageLabel>blue</ControlPageLabel>
-			</State>
-			<State id="kelvin">
-				<ValueType>String</ValueType>
-				<TriggerLabel>kelvin</TriggerLabel>
-				<ControlPageLabel>kelvin</ControlPageLabel>
-			</State>
-
 		</States>
 
 	</Device>
@@ -14127,7 +14232,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabelMAX44009" type="label">
 				<Label>Setup MAX44009   light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
-    illuminance is shown in Lux, auto ranging is enabled, range: 0.045..188,000 Lux </Label>
+    Illuminance is shown in Lux, auto ranging is enabled, range: 0.045..188,000 Lux </Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -14143,6 +14248,18 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
+
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -14172,10 +14289,9 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Illuminance" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="illuminance">illuminance [lux]</Option>
+					<Option value="Illuminance">Illuminance [lux]</Option>
 				</List>
 			</Field>
 
@@ -14234,7 +14350,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infoLabeli2cTCS" type="label">
 				<Label>Setup i2c as726x  RGB-Orange-Yellow-Violet light sensor on individual rPis.. connect 3.3V, GND, SDA,SCL
     numbers shown are in μW/cm2
-    illuminance is shown in lux, is calculated using green* 6.83</Label>
+    Illuminance is shown in lux, is calculated using green* 6.83</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -14265,6 +14381,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -14293,16 +14415,15 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="red/green/blue"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Red/Green/Blue" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="red"        >read</Option>
-					<Option value="green"      >green</Option>
-					<Option value="blue"       >blue</Option>
-					<Option value="yellow"     >yellow</Option>
-					<Option value="orange"     >orange</Option>
-					<Option value="violet"     >violet</Option>
-					<Option value="red/green/blue">red/green/blue</Option>
+					<Option value="Red"        >read</Option>
+					<Option value="Green"      >green</Option>
+					<Option value="Blue"       >blue</Option>
+					<Option value="Yellow"     >yellow</Option>
+					<Option value="Orange"     >orange</Option>
+					<Option value="Violet"     >violet</Option>
+					<Option value="Red/Green/Blue">red/green/blue</Option>
 				</List>
 			</Field>
 
@@ -14437,41 +14558,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="red">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>red</TriggerLabel>
-				<ControlPageLabel>red</ControlPageLabel>
-			</State>
-			<State id="green">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>green</TriggerLabel>
-				<ControlPageLabel>green</ControlPageLabel>
-			</State>
-			<State id="blue">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>blue</TriggerLabel>
-				<ControlPageLabel>blue</ControlPageLabel>
-			</State>
-			<State id="orange">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>orange</TriggerLabel>
-				<ControlPageLabel>orange</ControlPageLabel>
-			</State>
-			<State id="yellow">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>yellow</TriggerLabel>
-				<ControlPageLabel>yellow</ControlPageLabel>
-			</State>
-			<State id="violet">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>violet</TriggerLabel>
-				<ControlPageLabel>violet</ControlPageLabel>
-			</State>
-			<State id="LEDcurrent">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>LEDcurrent</TriggerLabel>
-				<ControlPageLabel>LEDcurrent</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -14528,8 +14614,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="visible" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="UV"       >UV</Option>
 					<Option value="IR"       >IR </Option>
@@ -14628,6 +14713,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -14657,10 +14748,9 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Illuminance" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="illuminance"  >illuminance</Option>
+					<Option value="Illuminance"  >Illuminance</Option>
 				</List>
 			</Field>
 
@@ -14758,6 +14848,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
+			<Field id="AmbientLight_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>AmbientLight:</Label>				</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -14787,11 +14884,10 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="AmbientLight" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="white"    >white</Option>
-					<Option value="ambient"  >ambient</Option>
+					<Option value="White"    		>white</Option>
+					<Option value="AmbientLight" 	 >AmbientLight</Option>
 				</List>
 			</Field>
 
@@ -14839,57 +14935,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="white">
-				<ValueType>String</ValueType>
-				<TriggerLabel>white</TriggerLabel>
-				<ControlPageLabel>white</ControlPageLabel>
-			</State>
-			<State id="whiteMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMinToday</TriggerLabel>
-				<ControlPageLabel>whiteMinToday</ControlPageLabel>
-			</State>
-			<State id="whiteMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMaxToday</TriggerLabel>
-				<ControlPageLabel>whiteMaxToday</ControlPageLabel>
-			</State>
-			<State id="whiteMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMaxYesterday</TriggerLabel>
-				<ControlPageLabel>whiteMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="whiteMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMinYesterday</TriggerLabel>
-				<ControlPageLabel>whiteMinYesterday</ControlPageLabel>
-			</State>
-			<State id="ambient">
-				<ValueType>String</ValueType>
-				<TriggerLabel>ambient</TriggerLabel>
-				<ControlPageLabel>ambient</ControlPageLabel>
-			</State>
-			<State id="ambientMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinToday</TriggerLabel>
-				<ControlPageLabel>ambientMinToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxToday</TriggerLabel>
-				<ControlPageLabel>ambientMaxToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="ambientMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-
 		</States>
 
 	</Device>
@@ -14940,6 +14985,13 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
+			<Field id="AmbientLight_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>AmbientLight:</Label>				</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -14969,11 +15021,10 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="AmbientLight" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="white"    >white</Option>
-					<Option value="ambient"  >ambient</Option>
+					<Option value="White"    	  >white</Option>
+					<Option value="AmbientLight"  >AmbientLight</Option>
 				</List>
 			</Field>
 
@@ -15021,57 +15072,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="white">
-				<ValueType>String</ValueType>
-				<TriggerLabel>white</TriggerLabel>
-				<ControlPageLabel>white</ControlPageLabel>
-			</State>
-			<State id="whiteMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMinToday</TriggerLabel>
-				<ControlPageLabel>whiteMinToday</ControlPageLabel>
-			</State>
-			<State id="whiteMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMaxToday</TriggerLabel>
-				<ControlPageLabel>whiteMaxToday</ControlPageLabel>
-			</State>
-			<State id="whiteMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMaxYesterday</TriggerLabel>
-				<ControlPageLabel>whiteMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="whiteMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMinYesterday</TriggerLabel>
-				<ControlPageLabel>whiteMinYesterday</ControlPageLabel>
-			</State>
-			<State id="ambient">
-				<ValueType>String</ValueType>
-				<TriggerLabel>ambient</TriggerLabel>
-				<ControlPageLabel>ambient</ControlPageLabel>
-			</State>
-			<State id="ambientMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinToday</TriggerLabel>
-				<ControlPageLabel>ambientMinToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxToday</TriggerLabel>
-				<ControlPageLabel>ambientMaxToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="ambientMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-
 		</States>
 
 	</Device>
@@ -15121,6 +15121,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -15150,13 +15156,12 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="white"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="White" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="white" >white[lux]</Option>
-					<Option value="red"   >red</Option>
-					<Option value="green" >green</Option>
-					<Option value="blue"  >blue</Option>
+					<Option value="White" >white[lux]</Option>
+					<Option value="Red"   >red</Option>
+					<Option value="Green" >green</Option>
+					<Option value="Blue"  >blue</Option>
 				</List>
 			</Field>
 
@@ -15204,47 +15209,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="white">
-				<ValueType>String</ValueType>
-				<TriggerLabel>white</TriggerLabel>
-				<ControlPageLabel>white</ControlPageLabel>
-			</State>
-			<State id="whiteMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMinToday</TriggerLabel>
-				<ControlPageLabel>whiteMinToday</ControlPageLabel>
-			</State>
-			<State id="whiteMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMaxToday</TriggerLabel>
-				<ControlPageLabel>whiteMaxToday</ControlPageLabel>
-			</State>
-			<State id="whiteMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMaxYesterday</TriggerLabel>
-				<ControlPageLabel>whiteMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="whiteMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>whiteMinYesterday</TriggerLabel>
-				<ControlPageLabel>whiteMinYesterday</ControlPageLabel>
-			</State>
-			<State id="red">
-				<ValueType>String</ValueType>
-				<TriggerLabel>red</TriggerLabel>
-				<ControlPageLabel>red</ControlPageLabel>
-			</State>
-			<State id="green">
-				<ValueType>String</ValueType>
-				<TriggerLabel>green</TriggerLabel>
-				<ControlPageLabel>green</ControlPageLabel>
-			</State>
-			<State id="blue">
-				<ValueType>String</ValueType>
-				<TriggerLabel>blue</TriggerLabel>
-				<ControlPageLabel>blue</ControlPageLabel>
-			</State>
-
 		</States>
 
 	</Device>
@@ -15341,8 +15305,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="UV" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="UV" >uv in lux</Option>
 				</List>
@@ -15476,8 +15439,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="UV"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="UV" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="UVA" >uv-A </Option>
 					<Option value="UVB" >uv-B </Option>
@@ -15566,7 +15528,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="infoLabeli2cTSL2561" type="label">
 				<Label>Setup i2cTSL2561 IR ambient light sensor on individual rPis .. connect 3.3V, GND, SDA,SCL
-    illuminance is shown in lux</Label>
+    Illuminance is shown in lux</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -15598,6 +15560,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+			<Field id="AmbientLight_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>AmbientLight:</Label>				</Field>
+			<Field id="IR_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>IR:</Label>					</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -15627,12 +15597,11 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="illuminance"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Illuminance" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="illuminance" >illuminance in lux</Option>
-					<Option value="IR"          >IR value</Option>
-					<Option value="ambient"     >ambient value</Option>
+					<Option value="Illuminance"   >Illuminance in lux</Option>
+					<Option value="IR"            >IR value</Option>
+					<Option value="AmbientLight"  >AmbientLight value</Option>
 				</List>
 			</Field>
 
@@ -15680,57 +15649,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="IR">
-				<ValueType>String</ValueType>
-				<TriggerLabel>IR</TriggerLabel>
-				<ControlPageLabel>IR</ControlPageLabel>
-			</State>
-			<State id="IRMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>IRMinToday</TriggerLabel>
-				<ControlPageLabel>IRMinToday</ControlPageLabel>
-			</State>
-			<State id="IRMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>IRMaxToday</TriggerLabel>
-				<ControlPageLabel>IRMaxToday</ControlPageLabel>
-			</State>
-			<State id="IRMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>IRMaxYesterday</TriggerLabel>
-				<ControlPageLabel>IRMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="IRMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>IRMinYesterday</TriggerLabel>
-				<ControlPageLabel>IRMinYesterday</ControlPageLabel>
-			</State>
-			<State id="ambient">
-				<ValueType>String</ValueType>
-				<TriggerLabel>ambient</TriggerLabel>
-				<ControlPageLabel>ambient</ControlPageLabel>
-			</State>
-			<State id="ambientMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinToday</TriggerLabel>
-				<ControlPageLabel>ambientMinToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxToday</TriggerLabel>
-				<ControlPageLabel>ambientMaxToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="ambientMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-
 		</States>
 	</Device>
 
@@ -15836,6 +15754,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Temperature:</Label>			</Field>
+			<Field id="AmbientTemperature_EnableMinMax"	type="checkbox"	defaultValue="true" >		<Label>AmbientTemperature:</Label>	</Field>
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -15866,11 +15790,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
-					<Option value="Temperature"  >Temperature[C/F]</Option>
-					<Option value="AmbientTemperature"      >Ambient Temperature</Option>
-					<Option value="Temperature/AmbientTemperature" >Temperature/Ambient</Option>
+					<Option value="Temperature"  					>Temperature[C/F]</Option>
+					<Option value="AmbientTemperature"  		    >Ambient Temperature</Option>
+					<Option value="Temperature/AmbientTemperature" 	>Temperature/Ambient</Option>
 				</List>
 			</Field>
 
@@ -16025,6 +15948,12 @@ you can setup
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="AmbientTemperature_EnableMinMax"	type="checkbox"	defaultValue="true" >		<Label>AmbientTemperature:</Label>	</Field>
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -16054,7 +15983,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"       >Temperature[C/F]</Option>
 					<Option value="AmbientTemperature">AmbientTemperature</Option>
@@ -16695,8 +16623,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Leaving_value" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Re-Calibration_needed_count"	>Re-Calibration needed - count</Option>
 					<Option value="Re-Calibration_needed_value"	>Re-Calibration needed - value</Option>
@@ -16904,7 +16831,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Temperature"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Temperature"       >Temperature[C/F]</Option>
 					<Option value="Uniformity"        >Uniformity</Option>
@@ -17172,8 +17098,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Current"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="GYR" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="GYR"        >x,y,z</Option>
 					<Option value="XYZSumSQ"   >GRY SQRT(x*x+y*y+z*z)</Option>
@@ -17374,8 +17299,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="EULER"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="EULER" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="EULER"           >EULER heading,roll,pitch</Option>
 					<Option value="MAG" >MAG  x,y,z</Option>
@@ -17593,8 +17517,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="EULER"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="EULER" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="EULER"           >EULER heading,roll,pitch</Option>
 					<Option value="MAG" >MAG  x,y,z</Option>
@@ -17784,8 +17707,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="EULER"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="ACC" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="calibration"     >calibration</Option>
 					<Option value="EULER"           >EULER heading,roll,pitch</Option>
@@ -18035,7 +17957,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="EULER"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="EULER"           >EULER heading,roll,pitch</Option>
 					<Option value="MAG" >MAG  x,y,z</Option>
@@ -18249,8 +18170,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="GYR"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="ACC" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="ACC" >ACC  x,y,z</Option>
 					<Option value="GYR" >GYR  x,y,z</Option>
@@ -18460,7 +18380,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="MAG" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="MAG"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="ACC" 		>ACC  x,y,z</Option>
 					<Option value="MAG"			>MAG  x,y,z</Option>
@@ -18638,8 +18557,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Value"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="adc" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="adc"     >adc</Option>
 					<Option value="value"   >value</Option>
@@ -18822,8 +18740,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Current"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Current" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Current"      >Current  through shunt resistor (Resolution = 0.1mA)</Option>
 					<Option value="ShuntVoltage" >ShuntVoltage = voltage across shunt resistor (Resolution = 0.1mV)</Option>
@@ -19029,8 +18946,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="Current1"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="Current1" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="Current1"      >Current1  through shunt resistor (Resolution = 0.1mA)</Option>
 					<Option value="ShuntVoltage1" >ShuntVoltage1 = voltage across shunt resistor (Resolution = 0.1mV)</Option>
@@ -19186,7 +19102,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="displayS" type="menu"     defaultValue="INPUT_0" hidden="no"> <Label>Property to display in the State Column:</Label>
-     defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT_0"  >INPUT 0</Option>
 					<Option value="INPUT_1"  >INPUT 1</Option>
@@ -20526,7 +20441,7 @@ You must supply the min max value = dry and in wet soil:
   seconds add water --> max
 Moisture state will show % between the 2 values 100*(raw-min)/(max-min)
   typical values are ~300/1000
-The Chirp sensor also has a crude measurement of light, the adafruit will show 0 as illuminance </Label>
+The Chirp sensor also has a crude measurement of light, the adafruit will show 0 as Illuminance </Label>
 			</Field>
 
 		<Field id="infoLabelRPI" type="label"> 				<Label>==RPI setup:  -----------------------------</Label> </Field>
@@ -20602,6 +20517,14 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			<Field id="maxMoisture" type="textfield"     defaultValue="610"> <Label>Moisture: max = value when in water:</Label> </Field>
 
 			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
+
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Moisture_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Moisture:</Label>			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
+
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -23338,8 +23261,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-    defaultValue="INPUT" > <Label>state to show in Status column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="INPUT" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT"    >decoded value</Option>
 				</List>
@@ -23499,8 +23421,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>==display parameters</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
-    defaultValue="INPUT" > <Label>state to show in Status column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="INPUT" hidden="no"> <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT"    >number of clicks</Option>
 				</List>
@@ -24753,6 +24674,11 @@ distance up to 20 cm</Label>
 				<Label>Cut off at raw min value::</Label>
 			</Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
 			
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -25219,7 +25145,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				<Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="distance"      >distance</Option>
-					<Option value="illuminance"   >ambient illuminance</Option>
+					<Option value="Illuminance"   >Illuminance</Option>
 					<Option value="speed"         >speed</Option>
 				</List>
 			</Field>
@@ -25229,6 +25155,10 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				<Label>select the icon pair you like to use for away/close:</Label>
 			</Field>
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
 
 			<Field id="statusColorLabel" type="label" alignText="left"  fontColor="green">
 				<Label>== set color of status column dot to (overwrites above)</Label>
@@ -25399,6 +25329,13 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="actionPROXdown"   type="textfield"     defaultValue="" > <Label>action for DOWN change PROXIMITY:</Label></Field>
 
 
+			<Field id="labelenableMinmax"   type="label" >
+				<Label>enable min/max/changed vaules states</Label>
+			</Field>
+			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
+			<Field id="Illuminance_EnableMinMax" 	type="checkbox"		defaultValue="true" >		<Label>Illuminance:</Label>			</Field>
+
+
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
 			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
 			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
@@ -25432,12 +25369,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayS"     type="menu"       defaultValue="gesture" >
 				<Label>show what in status column :</Label>
 				<List>
-					<Option value="red"           >read</Option>
-					<Option value="green"         >green</Option>
-					<Option value="blue"          >blue</Option>
-					<Option value="ambient"       >ambient </Option>
-					<Option value="kelvin"        >light Temp  [Kelvin]</Option>
-					<Option value="red/green/blue">red/green/blue</Option>
+					<Option value="Red"           >read</Option>
+					<Option value="Green"         >green</Option>
+					<Option value="Blue"          >blue</Option>
+					<Option value="AmbientLight"  >AmbientLight </Option>
+					<Option value="Kelvin"        >light Temp  [Kelvin]</Option>
+					<Option value="Red/Green/Blue">red/green/blue</Option>
 					<Option value="proximity"     >proximity</Option>
 					<Option value="gesture"       >gesture</Option>
 				</List>
@@ -25479,53 +25416,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>gestureDate</TriggerLabel>
 				<ControlPageLabel>gestureDate</ControlPageLabel>
 			</State>
-			<State id="red">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>red</TriggerLabel>
-				<ControlPageLabel>red</ControlPageLabel>
-			</State>
-			<State id="green">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>green</TriggerLabel>
-				<ControlPageLabel>green</ControlPageLabel>
-			</State>
-			<State id="blue">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>blue</TriggerLabel>
-				<ControlPageLabel>blue</ControlPageLabel>
-			</State>
-			<State id="kelvin">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>kelvin</TriggerLabel>
-				<ControlPageLabel>kelvin</ControlPageLabel>
-			</State>
-			<State id="ambient">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambient</TriggerLabel>
-				<ControlPageLabel>ambient</ControlPageLabel>
-			</State>
-			<State id="ambientMinToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinToday</TriggerLabel>
-				<ControlPageLabel>ambientMinToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxToday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxToday</TriggerLabel>
-				<ControlPageLabel>ambientMaxToday</ControlPageLabel>
-			</State>
-			<State id="ambientMaxYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMaxYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="ambientMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>ambientMinYesterday</TriggerLabel>
-				<ControlPageLabel>ambientMinYesterday</ControlPageLabel>
-			</State>
-
-
 		</States>
 
 	</Device>
@@ -25771,8 +25661,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
-     defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="INPUT_0" > <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT_0"  >INPUT 0</Option>
 					<Option value="INPUT_1"  >INPUT 1</Option>
@@ -25918,8 +25807,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
-     defaultValue="INPUT_0"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="INPUT_0" > <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="INPUT_0"  >INPUT 0</Option>
 					<Option value="INPUT_1"  >INPUT 1</Option>
@@ -26126,16 +26014,14 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
-     defaultValue="status"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="status" > <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="status"  >status</Option>
 				</List>
 			</Field>
 		</ConfigUI>
 		<States>
-
-			</States>
+		</States>
 	</Device>
 
 
@@ -26279,12 +26165,6 @@ For the read settings from the device to work you need to set up the device on t
 		</ConfigUI>
 
 		<States>
-
-			<State id="actualStatus">
-				<ValueType>String</ValueType>
-				<TriggerLabel>actualStatus</TriggerLabel>
-				<ControlPageLabel>actualStatus</ControlPageLabel>
-			</State>
 
 			<State id="version">
 				<ValueType>String</ValueType>
@@ -26572,26 +26452,6 @@ This device will get its battery level from its brother device,
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
-			<State id="actualStatus">
-				<ValueType>String</ValueType>
-				<TriggerLabel>actualStatus</TriggerLabel>
-				<ControlPageLabel>actualStatus</ControlPageLabel>
-			</State>
-			<State id="OUTPUT">
-				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT</TriggerLabel>
-				<ControlPageLabel>OUTPUT</ControlPageLabel>
-			</State>
-			<State id="inverse">
-				<ValueType  boolType="YesNo" >Boolean</ValueType>
-				<TriggerLabel>inverse</TriggerLabel>
-				<ControlPageLabel>inverse</ControlPageLabel>
-			</State>
-			<State id="initial">
-				<ValueType>string</ValueType>
-				<TriggerLabel>initial</TriggerLabel>
-				<ControlPageLabel>initial</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -26652,26 +26512,6 @@ This device will get its battery level from its brother device,
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
-			<State id="actualStatus">
-				<ValueType>String</ValueType>
-				<TriggerLabel>actualStatus</TriggerLabel>
-				<ControlPageLabel>actualStatus</ControlPageLabel>
-			</State>
-			<State id="OUTPUT">
-				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT</TriggerLabel>
-				<ControlPageLabel>OUTPUT</ControlPageLabel>
-			</State>
-			<State id="inverse">
-				<ValueType  boolType="YesNo" >Boolean</ValueType>
-				<TriggerLabel>inverse</TriggerLabel>
-				<ControlPageLabel>inverse</ControlPageLabel>
-			</State>
-			<State id="initial">
-				<ValueType>string</ValueType>
-				<TriggerLabel>initial</TriggerLabel>
-				<ControlPageLabel>initial</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -26736,26 +26576,6 @@ This device will get its battery level from its brother device,
 			<Field id="displayState" type="textfield"      defaultValue="status" hidden="YES"> </Field>
 		</ConfigUI>
 		<States>
-			<State id="actualStatus">
-				<ValueType>String</ValueType>
-				<TriggerLabel>actualStatus</TriggerLabel>
-				<ControlPageLabel>actualStatus</ControlPageLabel>
-			</State>
-			<State id="OUTPUT">
-				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT</TriggerLabel>
-				<ControlPageLabel>OUTPUT</ControlPageLabel>
-			</State>
-			<State id="inverse">
-				<ValueType  boolType="YesNo" >Boolean</ValueType>
-				<TriggerLabel>inverse</TriggerLabel>
-				<ControlPageLabel>inverse</ControlPageLabel>
-			</State>
-			<State id="initial">
-				<ValueType>string</ValueType>
-				<TriggerLabel>initial</TriggerLabel>
-				<ControlPageLabel>initial</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -27113,12 +26933,6 @@ This device will get its battery level from its brother device,
 
 		</ConfigUI>
 		<States>
-
-			<State id="OUTPUT">
-				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT</TriggerLabel>
-				<ControlPageLabel>OUTPUT</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -27164,12 +26978,6 @@ This device will get its battery level from its brother device,
 
 		</ConfigUI>
 		<States>
-
-			<State id="OUTPUT">
-				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT</TriggerLabel>
-				<ControlPageLabel>OUTPUT</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -27450,12 +27258,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 		</ConfigUI>
 		<States>
-
-			<State id="OUTPUT">
-				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT</TriggerLabel>
-				<ControlPageLabel>OUTPUT</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 
@@ -27772,11 +27574,6 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 
 		</ConfigUI>
 		<States>
-			<State id="OUTPUT">
-				<ValueType>String</ValueType>
-				<TriggerLabel>OUTPUT</TriggerLabel>
-				<ControlPageLabel>OUTPUT</ControlPageLabel>
-			</State>
 		</States>
 
 	</Device>
@@ -28550,11 +28347,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>status</TriggerLabel>
-				<ControlPageLabel>status</ControlPageLabel>
-			</State>
 			<State id="stopped">
 				<ValueType>boolean</ValueType>
 				<TriggerLabel>stopped</TriggerLabel>
@@ -28691,8 +28483,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="menu"     defaultValue="Temperature" > <Label>Property to display in the State Column:</Label>
-     defaultValue="state"> <Label>Property to display in the State Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="location" > <Label>Property to display in the State Column:</Label>
 				<List>
 					<Option value="location"   >location</Option>
 					<Option value="engine"     >engine</Option>
@@ -29010,11 +28801,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</ConfigUI>
 		<States>
-			<State id="status">
-				<ValueType>String</ValueType>
-				<TriggerLabel>engine</TriggerLabel>
-				<ControlPageLabel>engine</ControlPageLabel>
-			</State>
 		</States>
 	</Device>
 

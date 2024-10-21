@@ -10,7 +10,6 @@
 
 homeDir				= "/home/pi/pibeacon/"
 homeDir0			= "/home/pi/"
-#logDir				= "/run/user/1000/pibeacon/"
 logDir				= "/var/log/"
 program				= "undefined"
 debug				= 0
@@ -76,7 +75,7 @@ getBatteryMethod	= "batch"
 shutDownPinOutput	= -1
 enableMuxI2C		= -1
 enableMuxBus		= ""
-IndigoOrSocket		= "indigo"
+IndigoOrSocket		= "socket"
 indigoInputPORT		= 0
 switchedToWifi 		= 0
 wlan0Packets		= ""
@@ -102,6 +101,8 @@ networkRestartTries = 0
 lastVcode			= ""
 apiKey				= ""
 rpiIPNumber			= ""
+restartMaxLogfile	= 100000
+restartLogfileName	= logDir+"beaconloop.restarts"
 # 	UUID: Battery Service           (0000180f-0000-1000-8000-00805f9b34fb)  -- gatttols char-read-uuid 2A19
 
 """

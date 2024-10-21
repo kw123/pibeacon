@@ -39,7 +39,7 @@
 	</Field>
 
 	<Field    id="SQLLoggingEnable"   type="menu"  >
-		<Label>...Configure SQL logger for specific variables and devices (not) log</Label>
+		<Label>...Configure SQL logger for specific variables and devices not to log</Label>
 		<List>
 			<Option value="on-on"   >log normal = log everything </Option>
 			<Option value="off-on"  >disable devices/states -  enable variables</Option>
@@ -64,35 +64,6 @@
 Define the group names below: !! No spaces in names!! </Label>
 	</Field>
 
-	<Field    id="awayWhenNochangeInSeconds"   type="menu" default="600">
-		<Label>... number of seconds w/o message to be counted as away/offline:</Label>
-		<List>
-			<Option value="20"         >20 secs for testing</Option>
-			<Option value="60"         >60 secs</Option>
-			<Option value="90"         >90 secs</Option>
-			<Option value="120"        >2 minutes</Option>
-			<Option value="180"        >3 minutes</Option>
-			<Option value="240"        >4 minutes</Option>
-			<Option value="300"        >5 minutes</Option>
-			<Option value="360"        >6 minutes</Option>
-			<Option value="420"        >7 minutes</Option>
-			<Option value="480"        >8 minutes</Option>
-			<Option value="540"        >9 minutes</Option>
-			<Option value="600"        >10 minutes (default)</Option>
-			<Option value="900"        >15 minutes</Option>
-			<Option value="1200"       >20 minutes</Option>
-			<Option value="1600"       >30 minutes</Option>
-			<Option value="2500"       >45 minutes</Option>
-			<Option value="3600"       >1 hour</Option>
-			<Option value="7200"       >2 hours</Option>
-			<Option value="21600"      >6 hours</Option>
-			<Option value="43200"      >12 hours</Option>
-			<Option value="86400"      >1 day</Option>
-		</List>
-	</Field>
-	<Field id="awayWhenNochangeInSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>for sensors ONLY: they do not have state up/down, but temperature, humidity, ...</Label>
-	</Field>
 
 	<Field    id="groupName0"   type="textfield" >
 		<Label>... name for COUNT-Group1(def Family):</Label>
@@ -136,6 +107,42 @@ This is not used for trigger names they will continue to be called Family, Guest
 All BEACONS, RPI, BLEconnect, and SENSORS device types have predefined groups and are members of them, so that you can see eg how many BEACONS are home/ away </Label>
 	</Field>
 
+	<Field    id="awayWhenNochangeInSeconds"   type="menu" default="120">
+		<Label>... number of seconds w/o message to be counted as away/offline for groups:</Label>
+		<List>
+			<Option value="20"         >20 secs for testing</Option>
+			<Option value="40"         >40 secs</Option>
+			<Option value="50"         >50 secs</Option>
+			<Option value="60"         >60 secs</Option>
+			<Option value="70"         >70 secs</Option>
+			<Option value="80"         >80 secs</Option>
+			<Option value="90"         >90 secs</Option>
+			<Option value="100"        >100 secs</Option>
+			<Option value="110"        >110 secs</Option>
+			<Option value="120"        >2 minutes(default)</Option>
+			<Option value="150"        >2 1/2 minutes</Option>
+			<Option value="180"        >3 minutes</Option>
+			<Option value="240"        >4 minutes</Option>
+			<Option value="300"        >5 minutes</Option>
+			<Option value="360"        >6 minutes</Option>
+			<Option value="420"        >7 minutes</Option>
+			<Option value="480"        >8 minutes</Option>
+			<Option value="540"        >9 minutes</Option>
+			<Option value="600"        >10 minutes </Option>
+			<Option value="900"        >15 minutes</Option>
+			<Option value="1200"       >20 minutes</Option>
+			<Option value="1600"       >30 minutes</Option>
+			<Option value="2500"       >45 minutes</Option>
+			<Option value="3600"       >1 hour</Option>
+			<Option value="7200"       >2 hours</Option>
+			<Option value="21600"      >6 hours</Option>
+			<Option value="43200"      >12 hours</Option>
+			<Option value="86400"      >1 day</Option>
+		</List>
+	</Field>
+	<Field id="awayWhenNochangeInSecondsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>for sensors ONLY: they do not have state up/down, but temperature, humidity, ...</Label>
+	</Field>
 
 
 
@@ -158,8 +165,13 @@ All BEACONS, RPI, BLEconnect, and SENSORS device types have predefined groups an
 			<Option value="95"  > 95 Seconds</Option>
 			<Option value="100" >100 Seconds</Option>
 			<Option value="110" >110 Seconds</Option>
-			<Option value="120" >  2 Minutes </Option>
-			<Option value="180" >  3 Minutes </Option>
+			<Option value="120" >120 Seconds </Option>
+			<Option value="130" >130 Seconds </Option>
+			<Option value="140" >140 Seconds </Option>
+			<Option value="150" >150 Seconds</Option>
+			<Option value="160" >160 Seconds</Option>
+			<Option value="170" >170 Seconds</Option>
+			<Option value="180" >180 Seconds</Option>
 		</List>
 	</Field>
 
@@ -171,15 +183,11 @@ All BEACONS, RPI, BLEconnect, and SENSORS device types have predefined groups an
 		</List>
 	</Field>
 
-   	<Field    id="sendFullUUID"   type="menu" tooltip="short messages reduces message size by 50%">
-		<Label>RPi to send full UUID in every message or only every 10ths:</Label>
-		<List>
-<!--			<Option value="0" >short (x-x-x), only every 10th full UUID</Option> -->
-			<Option value="1" >always long , full UUID</Option>
-		</List>
+   	<Field    id="uselastMessageReceived"   type="checkbox" tooltip="">
+		<Label>Use actual last message received at rpi:</Label>
 	</Field>
-	<Field id="sendFullUUIDLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
-		<Label>in stable operations the UUID information is not needed(it does not change), this will cut the size of the message in half</Label>
+	<Field id="uselastMessageReceivedLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>if OFF time stamp of data received at plugin is used</Label>
 	</Field>
 
 
@@ -259,41 +267,26 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 		</List>    
 	</Field>
 
-	<Field id="compressRPItoPlugin"   type="menu"  defualtValue="20000" visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field id="compressRPItoPlugin"   type="menu"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
 		<List>
+			<Option value="5000"   >msg GT 5 KB </Option>
 			<Option value="10000"   >msg GT 10 KB </Option>
 			<Option value="20000"   >msg GT 20 KB </Option>
 			<Option value="40000"   >msg GT 40 KB </Option>
 		</List>    
-		<Label>Compress large messages from RPI to plugin (only for socket comm):</Label> 
+		<Label>Compress large messages from RPI to plugin:</Label> 
 	</Field>
 
 	<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>use if you have a slow connection ie wifi and large packages don't come through, can be set for each individual RPI in device edit</Label>
 	</Field>
-
-	<Field id="authentication"   type="menu"  visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo"  tooltip="default for indigo is digest,  PI server need this to send msg to indigo webbserver" >
-		<List>
-			<Option value="digest" >use DIGEST  </Option>
-			<Option value="basic"  >use BASIC </Option>
-			<Option value="bearer" >use Bearer only with py3 on RPI</Option>
-			<Option value="none"   >use do not use security ie no userid or password </Option>
-		</List>    
-		<Label>indigo web access authentication:</Label> 
-	</Field>
-
-
-	<Field id="apiKey"   type="textfield"  visibleBindingId="authentication" visibleBindingValue="bearer">
-		<Label>api key for http access to indigo:</Label> 
-	</Field>
-
    
-	<Field id="userIdOfServer"   type="textfield"  visibleBindingId="authentication" visibleBindingValue="digest" tooltip="only used for http restful connection RPI to indigo" >
-		<Label>userid for indigo server (webserver):</Label> 
+	<Field id="userIdOfServer"   type="textfield"  tooltip="used to enable storage of PNG files" >
+		<Label>userid for indigo server For storing files:</Label> 
 	</Field>
    
-	<Field id="passwordOfServer"   type="textfield"  visibleBindingId="authentication" visibleBindingValue="digest" tooltip="only used for http restful connection RPI to indigo"  >
-		<Label>password for indigo (webserver):</Label> 
+	<Field id="passwordOfServer"   type="textfield"  tooltip="used to enable storage of PNG files"  >
+		<Label>password for indigo For storing files:</Label> 
 	</Field>
 
 

@@ -116,7 +116,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 	try:		
 		if int(myPID) > 10 and len(delList) == 0:
 			cmd= ["/usr/bin/sudo","/usr/bin/python","{}killOldPgm.py".format(G.homeDir), str(myPID), pgmToKill, param1, param2]
-			if verbose: logger.log(20, u"cBY:{:<20} kill pgm using external, myPID:{}, cmd:{}".format(G.program, myPID, cmd) )
+			if verbose: logger.log(20, "cBY:{:<20} kill pgm using external, myPID:{}, cmd:{}".format(G.program, myPID, cmd) )
 			ret = subprocess.Popen(cmd)
 			return 1
 	except Exception as e:
@@ -130,7 +130,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":
 			cmd = "{} | grep ".format(cmd,param2)
-		if verbose: logger.log(20, u"cBY:{:<20} kill mypid:{}, command {}, {}, \nps:{}".format(G.program, myPID, cmd, delList, ps) )
+		if verbose: logger.log(20, "cBY:{:<20} kill mypid:{}, command {}, {}, \nps:{}".format(G.program, myPID, cmd, delList, ps) )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 		lines=ret.split("\n")
@@ -151,11 +151,11 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 				found = True
 			if not found: continue
 
-			if verbose: logger.log(20, u"cBY:{:<20}  killing {}  {}  {}, pid={}, line:{}".format(G.program, pgmToKill, param1, param2, pid, (" ").join(items[8:])) )
+			if verbose: logger.log(20, "cBY:{:<20}  killing {}  {}  {}, pid={}, line:{}".format(G.program, pgmToKill, param1, param2, pid, (" ").join(items[8:])) )
 			xlist += str(pid)+ " "
 			count += 1
 		if verbose: 
-			logger.log(20, u"cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist) )
+			logger.log(20, "cBY:{:<20} /usr/bin/sudo kill -9 {} ".format(G.program, xlist) )
 		if len(xlist) > 2:
 			cmd = "/usr/bin/sudo kill -9 {}".format(xlist)
 			if not wait: cmd += " &"
@@ -170,7 +170,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doRestartCount=True):
 	py3 = python3 or checkIfmustUsePy3()
 	try:
-		if doPrint: logger.log(20, u"cBY:{:<20} --- restarting --- {}  due to: {}, py3:{}, delay:{}".format(G.program, param, reason, py3, delay) )
+		if doPrint: logger.log(20, "cBY:{:<20} --- restarting --- {}  due to: {}, py3:{}, delay:{}".format(G.program, param, reason, py3, delay) )
 	except Exception as e:
 		logger.log(30,"", exc_info=True)
 
@@ -271,17 +271,17 @@ def pgmStillRunning(pgmToTest, notPresent ="", verbose=False) :
 		pgmToTest = pgmToTest.strip()
 		if verbose: logger.log(20, "testing  for '{}'".format(pgmToTest))
 		cmd = "ps -ef | grep '{}' | grep -v grep".format(pgmToTest)
-		if notPresent !="": cmd += " | grep -v " + notPresent
-		if verbose: logger.log(20, "command:{}, cmd:{}".format(pgmToTest, cmd))
+		if notPresent != "": cmd += " | grep -v " + notPresent
+		if verbose: logger.log(20, "command:{}".format( cmd))
 		ret = (subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 		lines = ret.split("\n")
 		if False and verbose: logger.log(20, "test returns {} ".format(ret))
 		for line in lines :
-			if verbose: logger.log(20, "testing  line {} ".format(line) )
-			if len(line) < 10 : continue
+			if len(line) < 10: continue
+			if verbose: logger.log(20, "testing  line >>{}<< ".format(line) )
 			return True
 	except	Exception as e :
-		logger.log(20, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 ################################# 2020-12-12 12:12:12
@@ -566,7 +566,7 @@ def doRead(inFile="{}temp/parameters".format(G.homeDir), lastTimeStamp="", testT
 			inp, inRaw = readJson(inFile)
 			if inp =={}:
 				if inFile == "{}temp/parameters".format(G.homeDir):
-					logger.log(20, u"cBY:{:<20} doRead error empty file".format(G.program))
+					logger.log(20, "cBY:{:<20} doRead error empty file".format(G.program))
 			if deleteAfterRead: os.remove(inFile)
 			if lastTimeStamp != "":
 				return "","error", t
@@ -615,12 +615,8 @@ def getGlobalParams(inp):
 
 		G.ipOfServer =				inp.get("ipOfServer",G.ipOfServer)
 		G.myPiNumber =				inp.get("myPiNumber",G.myPiNumber)
-		G.authentication =			inp.get("authentication",G.authentication)
-		G.passwordOfServer =		inp.get("passwordOfServer",G.passwordOfServer)
-		G.userIdOfServer =			inp.get("userIdOfServer",G.userIdOfServer)
 		G.portOfServer =			inp.get("portOfServer",G.portOfServer )
-		G.apiKey =					inp.get("apiKey",G.apiKey)
-		G.IndigoOrSocket =			inp.get("IndigoOrSocket",G.IndigoOrSocket)
+		G.IndigoOrSocket =			G.IndigoOrSocket
 		G.BeaconUseHCINo =			inp.get("BeaconUseHCINo",G.BeaconUseHCINo)
 		G.BLEconnectUseHCINo =		inp.get("BLEconnectUseHCINo",G.BLEconnectUseHCINo)
 		G.enableRebootCheck =		inp.get("enableRebootCheck",G.enableRebootCheck)
@@ -772,17 +768,17 @@ def manualStartOfRTC():
 		global checkIfmanualStartOfRTC
 		try:
 			y=checkIfmanualStartOfRTC
-			logger.log(20, u"cBY:{:<20} RTC clock not needed, network connection present".format(G.program))
+			logger.log(20, "cBY:{:<20} RTC clock not needed, network connection present".format(G.program))
 			return 
 		except:
 			checkIfmanualStartOfRTC = 1
 	
 		ret = (subprocess.Popen("/usr/bin/timedatectl status " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip()
 		if ret.find("NTP service: activex") > -1:
-			logger.log(20, u"cBY:{:<20} RTC clock not needed, network connection present".format(G.program))
+			logger.log(20, "cBY:{:<20} RTC clock not needed, network connection present".format(G.program))
 			return
 
-		logger.log(20, u"cBY:{:<20} starting RTC clock manually".format(G.program))
+		logger.log(20, "cBY:{:<20} starting RTC clock manually".format(G.program))
 		subprocess.call("/usr/bin/sudo bash -c 'echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device'", shell=True)
 		subprocess.call("sudo hwclock -s", shell=True)
 	except	Exception as e :
@@ -1021,8 +1017,8 @@ def getIPCONFIG():
 							G.wifiEnabled = False
 
 
-			#logger.log(20, u"cBY:{:<20} network info: \ndevs:     {}\nstate:    {}\nmac:      {}\nip:       {}\nrxBytes: {}\nrxPackets:{}\ntxBytes:   {}\ntxPackets:{}".format(G.program, dev, state,  mac, ip, rxBytes, rxPackets ,txBytes, txPackets))
-			#logger.log(20, u"cBY:{:<20} network info: G.wifiID:{}, G.wifiActive:{},  G.wifiEnabled:{}".format(G.program, G.wifiID , G.wifiActive,  G.wifiEnabled))
+			#logger.log(20, "cBY:{:<20} network info: \ndevs:     {}\nstate:    {}\nmac:      {}\nip:       {}\nrxBytes: {}\nrxPackets:{}\ntxBytes:   {}\ntxPackets:{}".format(G.program, dev, state,  mac, ip, rxBytes, rxPackets ,txBytes, txPackets))
+			#logger.log(20, "cBY:{:<20} network info: G.wifiID:{}, G.wifiActive:{},  G.wifiEnabled:{}".format(G.program, G.wifiID , G.wifiActive,  G.wifiEnabled))
 
 
 		else:  # pre os v 8
@@ -1151,7 +1147,7 @@ def getIPofRouter():
 		#192.168.1.0/24 dev eth0 proto dhcp scope link src 192.168.1.22 metric 202
 		for line in retRoute:
 			lineItems = line.split()
-			#logger.log(20, u"cBY:{:<20} lineItems:{}".format(G.program, lineItems))
+			#logger.log(20, "cBY:{:<20} lineItems:{}".format(G.program, lineItems))
 			if len(lineItems) > 1 and lineItems[0] == "default" and isValidIP(lineItems[2]):
 				return  lineItems[2]
 				break
@@ -1257,7 +1253,7 @@ def startWiFi():
 	try:
 
 		if G.wifiEth["wlan0"]["on"] == "dontChange": return
-		logger.log(20, u"cBY:{:<20} starting WiFi".format(G.program) )
+		logger.log(20, "cBY:{:<20} starting WiFi".format(G.program) )
 		subprocess.call("/usr/bin/sudo rfkill unblock all", shell=True)
 
 		osVersion = getOsVersion()
@@ -1365,7 +1361,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 			ip = useIP
 		if len(ip) > 8:
 			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverINPUT.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile ) #, G.sundialActive)
-			logger.log(20, u"cBY:{:<20} starting web server:{}".format( G.program, cmd) )
+			logger.log(20, "cBY:{:<20} starting web server:{}".format( G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
 			subprocess.call(cmd, shell=True)
@@ -1397,7 +1393,7 @@ def startwebserverSTATUS(port, useIP="", force=False):
 			ip = useIP
 		if len(ip) > 8:
 			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
-			logger.log(20, u"cBY:{:<20} starting web server:{}".format(G.program, cmd) )
+			logger.log(20, "cBY:{:<20} starting web server:{}".format(G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
 			subprocess.call(cmd, shell=True)
@@ -1651,7 +1647,7 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 							cmd = "/usr/bin/sudo /usr/bin/python master.py &".format(G.homeDir)
 						subprocess.call(cmd, shell=True)
 					else:
-						logger.log(20, u"cBY:{:<20} error bad timezone:{}".format(G.program, G.timeZones[setNew+12]) )
+						logger.log(20, "cBY:{:<20} error bad timezone:{}".format(G.program, G.timeZones[setNew+12]) )
 
 
 
@@ -1692,18 +1688,18 @@ def restartWifi():
 #################################
 def copySupplicantFileFromBoot():
 	try:
-		logger.log(20, u"cBY:{:<20} checking if interfaces or wpa_supplicant.conf files in /boot/".format(G.program))
+		logger.log(20, "cBY:{:<20} checking if interfaces or wpa_supplicant.conf files in /boot/".format(G.program))
 		retCode = False
 		if os.path.isfile("/boot/wpa_supplicant.conf"):
 			subprocess.call("/usr/bin/sudo cp  /boot/wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf", shell=True)
 			subprocess.call("/usr/bin/sudo rm  /boot/wpa_supplicant.conf", shell=True)
 			retCode = True
-			logger.log(20, u"cBY:{:<20} copying new wpa_supplicant.conf file from boot".format(G.program))
+			logger.log(20, "cBY:{:<20} copying new wpa_supplicant.conf file from boot".format(G.program))
 		if os.path.isfile("/boot/interfaces"):
 			subprocess.call("/usr/bin/sudo cp  /boot/interfaces  /etc/network/interfaces", shell=True)
 			subprocess.call("/usr/bin/sudo rm  /boot/interfaces", shell=True)
 			retCode = True
-			logger.log(20, u"cBY:{:<20} copying new interfaces file from boot".format(G.program))
+			logger.log(20, "cBY:{:<20} copying new interfaces file from boot".format(G.program))
 		return retCode
 	except	Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -2109,7 +2105,7 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 	# default is UART or USB, used if no other choice selected
 	# useDev  is UART or USB, used if available
 	# doNotUseHCI is ""/hci0/hci1/..2/..3/..4
-	#logger.log(20, u"cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI ))
+	#logger.log(20, "cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI ))
 	try:
 		if len(HCIs) == 1:
 			useHCI = list(HCIs)[0]
@@ -2127,30 +2123,30 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 			if tryBLEmac != "":
 				for hh in hciChannels:
 					if tryBLEmac == HCIs[hh]["BLEmac"]:
-						#logger.log(20, u"cBY:{:<20} ret USB".format(G.program ))
+						#logger.log(20, "cBY:{:<20} ret USB".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
-			#logger.log(20, u"cBY:{:<20} 1- , hciChannels:{}".format(G.program, hciChannels ))
+			#logger.log(20, "cBY:{:<20} 1- , hciChannels:{}".format(G.program, hciChannels ))
 			if useDev == "USB":
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] == "USB":
-						#logger.log(20, u"cBY:{:<20} ret USB".format(G.program ))
+						#logger.log(20, "cBY:{:<20} ret USB".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 			elif useDev == "UART":
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] == "UART":
-						#logger.log(20, u"cBY:{:<20} ret UART".format(G.program ))
+						#logger.log(20, "cBY:{:<20} ret UART".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 			elif defaultBus != "":
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] == defaultBus:
-						#logger.log(20, u"cBY:{:<20} ret default".format(G.program ))
+						#logger.log(20, "cBY:{:<20} ret default".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 				for hh in hciChannels:
 					if HCIs[hh]["bus"] != doNotUseHCI:
-						#logger.log(20, u"cBY:{:<20} ret default".format(G.program ))
+						#logger.log(20, "cBY:{:<20} ret default".format(G.program ))
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 			elif defaultBus == "":
@@ -2168,7 +2164,7 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 	sendURL( data={"ERROR":"can_not_setup_BLE,_HCIs:{},useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac )} )
 
 	logger.log(20, "cBY:{:<20} BLEconnect: NO BLE STACK UP ".format(G.program))
-	logger.log(20, u"cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac ))
+	logger.log(20, "cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac ))
 	return 0, -1, -1, -1
 
 #################################
@@ -2235,14 +2231,14 @@ hci1:	Type: Primary  Bus: UART
 	try:
 		aa	= subprocess.Popen("hciconfig ",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		ret	= [aa[0].decode('utf-8'),aa[1].decode('utf-8')]
-		if verbose: logger.log(20, u"cBY:{:<20} {}".format(G.program, ret[0]))
+		if verbose: logger.log(20, "cBY:{:<20} {}".format(G.program, ret[0]))
 		hciFound = False
 		for line in ret[0].split("\n"):
 			if line.find(str(useHCI)) == 0: 
 				hciFound = True
 				continue
 			if hciFound:
-				#if verbose: logger.log(20, u"cBY:{:<20} hciFound, line:{}".format(G.program, line))
+				#if verbose: logger.log(20, "cBY:{:<20} hciFound, line:{}".format(G.program, line))
 				if line.find("Bus: ") > 15:			return False # found next section , no up running
 				if len(line) < 5: 					return False # next section ...
 				if line.find("UP RUNNING") > -1:	return True  # ok, return True
@@ -2287,7 +2283,7 @@ def execSend():
 					if "verbose" in all and all["verbose"]: verbose = True
 					else:									verbose = False
 					verbose = False
-					if verbose:	logger.log(20, u"cBY:{:<20} send queue data {}".format(G.program, "{}".format(all)[0:100]) )
+					if verbose:	logger.log(20, "cBY:{:<20} send queue data {}".format(G.program, "{}".format(all)[0:100]) )
 					data 		= all["data"]
 					sendAlive 	= all["sendAlive"]
 					text 		= all["text"]
@@ -2320,98 +2316,7 @@ def execSend():
 					else:
 						name = "pi_IN_{}".format(G.myPiNumber)
 
-					if G.IndigoOrSocket == "indigo" and  G.authentication != "bearer":  # use indigo http restful
-								var = "/variables/{}".format(name)
-								data0 = json.dumps(data, separators=(',',':'))
-								if data0.find("NaN") > 0: data0 = data0.replace("NaN","-9999")
-								if squeeze: data0 = data0.replace(" ","")
-								if escape:  data0 = urllib.quote(data0)
-								###print data0
-								cmd=[]
-								cmd.append("/usr/bin/curl")
-								if G.userIdOfServer =="" or G.authentication =="none":
-										pass  # no id password ...
-								else:
-									if G.authentication == "basic":
-										cmd.append("--user")
-										cmd.append("{}:{}".format(G.userIdOfServer, G.passwordOfServer))
-									else:
-										cmd.append("-u")
-										cmd.append("{}:{}".format(G.userIdOfServer, G.passwordOfServer))
-										cmd.append("--digest")
-								cmd.append("-X")
-								cmd.append("PUT")
-								cmd.append("-d")
-								cmd.append("value={}".format(data0))
-								cmd.append("http://{}:{}{}".format(G.ipOfServer, G.portOfServer, var) ) ## " > /dev/null 2>&1 &"
-								#print cmd
-								logger.log(20, "cBY:{:<20} msg: {}\n".format(G.program , cmd) )
-								if wait:
-									retx   = subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-									ret    = retx[0].decode('utf-8')
-									reterr = retx[1].decode('utf-8')
-									if ret.find("This resource can be found at") == -1:
-										logger.log(30, "cBY:{:<20} curl err:{}-{}".format(G.program,ret,reterr))
-										logger.log(30, "cBY:{:<20} curl cmd:{}".format(G.program,cmd))
-										echoToMessageSend(data, "++msg NOT send ++")
-									else:
-										echoToMessageSend(data, "msg send --")
-								else:
-									cmd.append(" &")
-									subprocess.Popen(cmd,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-									echoToMessageSend(data, "msg send --")
-
-					elif G.IndigoOrSocket == "indigo" and G.authentication == "bearer":  ## do socket comm
-								try: 	varId
-								except:
-											varNanme  = "pi_IN_{}".format(G.myPiNumber)
-											varAlive  = "pi_IN_Alive"
-
-											cmd = "http://{}:{}/v2/api/indigo.variables?api-key={}".format(G.ipOfServer, G.portOfServer, G.apiKey)
-											#logger.log(20, "cBY:{:<20} cmd:{}\n".format(G.program , cmd) )
-
-											req = Request(cmd)
-											with urlopen(req) as request:
-												variables = json.load(request)
-												ff = 0
-												for vv in variables:
-													if ff > 1: break
-													if vv["name"] == varNanme:
-														varId= vv["id"]
-														ff += 1
-													if vv["name"] == varAlive:
-														aliveId =  vv["id"]
-														ff += 1
-											#logger.log(20, "cBY:{:<20}  {}:{}, {}:{} \n".format(G.program , varNanme, varId, varAlive, aliveId) )
-
-								if name == "pi_IN_Alive":	useId = aliveId
-								else:						useId = varId
-
-								data0 = json.dumps(data, separators=(',',':'))
-								if data0.find("NaN") > 0: data0 = data0.replace("NaN","-9999")
-								if squeeze: data0 = data0.replace(" ","")
-								if escape:  data0 = urllib.parse.quote(data0)
-
-								message = json.dumps({
-									"message": "indigo.variable.updateValue",
-									"id": "pibeacon msg from rpi:{}".format(G.myPiNumber),
-									"objectId": useId,
-									"parameters": {"value": data0}
-								}).encode("utf8")
-								cmd = "http://{}:{}/v2/api/command".format(G.ipOfServer, G.portOfServer)
-								cmdA = "Bearer {}".format(G.apiKey)
-
-								logger.log(20, "cBY:{:<20} cmd:{}, auth:{}, msg:{}\n".format(G.program , cmd, cmdA, message) )
-
-								try: req = Request(cmd, data=message)
-								except: req = request(cmd, data=message)
-								req.add_header('Authorization', cmdA)
-								with urlopen(req) as request:
-									reply = json.load(request)
-									logger.log(20, "reply:{}".format(reply))
-
-
-					else:  ## do socket comm
+					if True:  ## do socket comm
 								MSGwasSend = False
 								ii = 5
 								while ii > 0: 
@@ -2460,8 +2365,8 @@ def execSend():
 											time.sleep(1.)
 
 									except	Exception as e:
-										logger.log(20, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-										logger.log(20, u"cBY:{:<20} trying to send  bytes: {} --{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
+										logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+										logger.log(20, "cBY:{:<20} trying to send  bytes: {} --{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
 										try:	soc.shutdown(socket.SHUT_RDWR)
 										except: pass
 										try:	soc.close()
@@ -2476,10 +2381,10 @@ def execSend():
 								if MSGwasSend:
 									echoToMessageSend(dataC, "msg send, {} ---".format(compressedTag))
 									if ii !=4:
-										logger.log(20, u"cBY:{:<20} +++ message was send sucessfully after initial error at {}. try +++".format(G.program, 5-ii))
+										logger.log(20, "cBY:{:<20} +++ message was send sucessfully after initial error at {}. try +++".format(G.program, 5-ii))
 								else:
 									echoToMessageSend(dataC, "=== msg not send after 5 tries ===")
-									logger.log(20, u"cBY:{:<20} === message not send after 5 tries due to network error ===".format(G.program))
+									logger.log(20, "cBY:{:<20} === message not send after 5 tries due to network error ===".format(G.program))
 								try:	soc.shutdown(socket.SHUT_RDWR)
 								except: pass
 								try:	soc.close()
@@ -2573,14 +2478,14 @@ def removeOutPutFromFutureCommands(pin, devType):
 					if "startAtDateTime" in execcommands[channel] and time.time() - float(execcommands[channel]["startAtDateTime"]) > 2:
 						if execcommands[channel]["command"]	 not in ["analogWrite","up","down"]:
 							logger.log(10, "cBY:{:<20} removing testing channel time expired".format(G.program) )
-							rmEXEC[channel]=1
+							rmEXEC[channel] = 1
 							logger.log(10, "cBY:{:<20} removing removing channel".format(G.program,channel))
 			for channel in rmEXEC:
 				del execcommands[channel]
 			writeJson("{}execcommands.current".format(G.homeDir),execcommands)
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-		if str(e).find("Read-only file system:") >-1:
+		if str(e).find("Read-only file system:") > -1:
 			doReboot(tt=0)
 
 
@@ -2594,6 +2499,21 @@ def echoLastAlive(sensor):
 	except:
 			G.lastAliveEcho = tt
 			subprocess.call("echo  {} > {}temp/alive.{}".format(tt,G.homeDir,sensor), shell=True)
+	return
+
+
+#################################
+def echoText(fileName, text, start=False):
+	try:
+		#logger.log(20, " echoText to file:{}, text:{}".format(fileName, text))
+		if start:
+			f = open(fileName,"w")
+		else:
+			f = open(fileName,"a")
+		f.write("{} {}\n".format(datetime.datetime.now().strftime("%d-%H:%M:%S"),text))
+		f.close()
+	except	Exception as e:
+		logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -2638,14 +2558,14 @@ def doFileCheck(xxx,extension):
 					f = open(thefile,"r")
 					raw = f.read()
 					f.close()
-					#logger.log(20, u"cBY:{:<20}  removing calibration file:{}".format(G.program, thefile))
+					#logger.log(20, "cBY:{:<20}  removing calibration file:{}".format(G.program, thefile))
 					os.remove(thefile)
 					try:
 						data = json.loads(raw)
 						return data
 					except	Exception as e:
 						pass
-				#logger.log(20, u"cBY:{:<20}  removing calibration file:{}".format(G.program, thefile))
+				#logger.log(20, "cBY:{:<20}  removing calibration file:{}".format(G.program, thefile))
 				os.remove(thefile)
 			except:
 				pass
@@ -2754,7 +2674,7 @@ def readJson(fName):
 			raw = f.read()
 			f.close()
 			data = json.loads(raw)
-			if ii == 1: logger.log(20, u"cBY:{:<20} read error fixed".format(G.program) )
+			if ii == 1: logger.log(20, "cBY:{:<20} read error fixed".format(G.program) )
 			return data, raw
 		except	Exception as e:
 			logger.log(20,u"cBY:{:<20} Line {} has error={}, fname:{}, data:>>{}..{}<<".format(G.program, sys.exc_info()[-1].tb_lineno, e, fName, raw[0:50],raw[-50:] ))
@@ -3021,7 +2941,7 @@ def getSensorInfo(sensDict, i2cList):
 				ss = sens
 			ll = len(sensDict[sens])
 			if ll > 1:
-				sensList = "{}{} {},".format(sensList, ll, ss)
+				sensList = "{}{} {},".format(sensList, ss, ll)
 			else:
 				sensList = "{}{}, ".format(sensList, ss)
 			for devId in sensDict[sens]:
@@ -3132,10 +3052,10 @@ def checkIfThrottled():
 
 
 		tempInfo = (subprocess.Popen("/opt/vc/bin/vcgencmd get_throttled" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
-		#logger.log(20, u"cBY:{:<20} tempInfo old: {}".format(G.program, tempInfo))
+		#logger.log(20, "cBY:{:<20} tempInfo old: {}".format(G.program, tempInfo))
 		if tempInfo.find("No such file") > -1 or tempInfo =="":
 			tempInfo = (subprocess.Popen("/usr/bin/vcgencmd get_throttled" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
-		#logger.log(20, u"cBY:{:<20} tempInfo new: {}".format(G.program, tempInfo))
+		#logger.log(20, "cBY:{:<20} tempInfo new: {}".format(G.program, tempInfo))
 
 		try:	code = tempInfo.split("=")[1][:-1]
 		except: return "err_in_proc_check_power"
@@ -3260,8 +3180,8 @@ def testBad(newX, lastX, inXXX):
 		else:
 			xxx = 0
 	except	Exception as e:
-		logger.log(20, u"cBY:{:<20} newX:{}, lastX:{}, inXXX:{}".format(G.program,newX, lastX, inXXX))
-		logger.log(20, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(20, "cBY:{:<20} newX:{}, lastX:{}, inXXX:{}".format(G.program,newX, lastX, inXXX))
+		logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		xxx = 9993.
 	return xxx
 
@@ -3298,13 +3218,13 @@ def checkIfPauseSensor(sensor):
 					xx = json.loads(rr)
 					sleepFor = xx[sensor]
 					sleepFor = float(sleepFor)
-					logger.log(20, u"cBY:{:<20} sleep for {}".format(G.program,sleepFor))
+					logger.log(20, "cBY:{:<20} sleep for {}".format(G.program,sleepFor))
 					startSleep = time.time()
 					for ii in range(1000):
 						U.echoLastAlive(sensor)
 						time.sleep(5)
 						if time.time() - startSleep >= sleepFor: break
-					logger.log(20, u"cBY:{:<20} sleep ended".format(G.program))
+					logger.log(20, "cBY:{:<20} sleep ended".format(G.program))
 				except:	pass
 				subprocess.call("/usr/bin/sudo rm {}temp/pauseSensor".format(G.homeDir), shell=True)
 				return 
@@ -4131,10 +4051,10 @@ def testROUTER():
 				if	testPing(G.ipOfRouter)  ==0:
 					logger.log(30, u"cBY:{:<20}  ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
 					return 0
-			logger.log(20, u"cBY:{:<20}  ROUTER server NOT reachable at:{}".format(G.program,G.ipOfRouter))
+			logger.log(20, "cBY:{:<20}  ROUTER server NOT reachable at:{}".format(G.program,G.ipOfRouter))
 			return 1
 		else:
-			logger.log(20, u"cBY:{:<20} ipOfRouter not valid:".format(G.ipOfRouter))
+			logger.log(20, "cBY:{:<20} ipOfRouter not valid:".format(G.ipOfRouter))
 			return 1
 
 	except	Exception as e:

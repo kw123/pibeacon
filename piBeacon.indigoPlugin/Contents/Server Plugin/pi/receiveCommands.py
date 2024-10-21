@@ -123,21 +123,21 @@ def OUTPUTi2cRelay(command):
 				bus.write_byte_data(i2cAddress, pin,down)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
-			elif cmd == "pulseUp":
+			elif cmd in ["pulseUp","pulseup"]:
 				bus.write_byte_data(i2cAddress, pin, up)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 				if sleepForxSecs(pulseUp): break
 				bus.write_byte_data(i2cAddress, pin, down)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
-			elif cmd == "pulseDown":
+			elif cmd in ["pulseDown","pulsedown"]:
 				bus.write_byte_data(i2cAddress, pin, down)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 				if sleepForxSecs(pulseDown): break
 				bus.write_byte_data(i2cAddress, pin, up)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
-			elif cmd == "continuousUpDown":
+			elif cmd in ["continuousUpDown","continuousupdown"]:
 				for ii in range(nPulses):
 
 					bus.write_byte_data(i2cAddress, pin, up)
@@ -163,7 +163,7 @@ def setGPIO(command):
 
 	G.debug = 20
 	myDebug = G.debug
-	#U.logger.log(G.debug*20, "{:.2f} into setGPIO ".format(time.time()) )
+	#U.logger.log(20, "{:.2f} into setGPIO command:{}".format(time.time() , command))
 
 	for iiii in range(1):
 		try:	PWM= int(command["PWM"])
@@ -255,7 +255,7 @@ def setGPIO(command):
 				U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, off) )
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 
-			elif cmd == "analogWrite":
+			elif cmd in ["analogWrite","analogwrite"]:
 				if inverseGPIO:
 					value = (100-bits)	# duty cycle on xx hz
 				else:
@@ -280,7 +280,7 @@ def setGPIO(command):
 					p.start(int(value))	 # start the PWM with  the proper duty cycle
 				if sleepForxSecs(1000000000): break
 
-			elif cmd == "pulseUp":
+			elif cmd in ["pulseUp","pulseup"]:
 				GPIO.setup(pin, GPIO.OUT)
 				GPIO.output(pin, up)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
@@ -288,17 +288,19 @@ def setGPIO(command):
 				GPIO.output(pin, down)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 
-			elif cmd == "pulseDown":
+			elif cmd in ["pulseDown","pulsedown"]:
+				#U.logger.log(myDebug, "pulseDown action pin = {} start, pulseDown:{}, inverseGPIO:{}".format(pin,  pulseDown, inverseGPIO) )
 				GPIO.setup(pin, GPIO.OUT)
 				GPIO.output(pin, down)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 				if sleepForxSecs(pulseDown): break
+				#U.logger.log(myDebug, "pulseDown action pin = {} back up".format(pin) )
 				GPIO.output(pin, up)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 
-			elif cmd == "continuousUpDown":
+			elif cmd in ["continuousUpDown","continuousupdown"]:
 				GPIO.setup(pin, GPIO.OUT)
-				U.logger.log(myDebug, "continuousUpDown pin = {} start, pulseUp:{}, pulseDown:{}, nPulses:{}".format(pin,  pulseUp, pulseDown, nPulses, inverseGPIO) )
+				#U.logger.log(myDebug, "continuousUpDown pin = {} start, pulseUp:{}, pulseDown:{}, nPulses:{}".format(pin,  pulseUp, pulseDown, nPulses) )
 				for ii in range(nPulses):
 					GPIO.output(pin, up)
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})

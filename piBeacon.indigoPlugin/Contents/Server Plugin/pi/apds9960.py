@@ -1843,15 +1843,15 @@ def getinput(devid):
 					abs(blue  - lastBlueValue)	> deltaColor or 
 					abs(green - lastGreenValue) > deltaColor or 
 					abs(amb	  - lastAmbValue)	> deltaColor  ):
-						lastRedValue	= red 
-						lastBlueValue	= blue 
-						lastGreenValue	= green 
-						lastAmbValue	= amb
-						data["red"]		= red
-						data["blue"]	= blue
-						data["green"]	= green
-						data["ambient"] = amb
-				lastColorTime			= tt
+						lastRedValue		= red 
+						lastBlueValue		= blue 
+						lastGreenValue		= green 
+						lastAmbValue		= amb
+						data["red"]			= red
+						data["blue"]		= blue
+						data["green"]		= green
+						data["AmbientLight"] = amb
+				lastColorTime				= tt
 		
 
 	except	Exception as e:

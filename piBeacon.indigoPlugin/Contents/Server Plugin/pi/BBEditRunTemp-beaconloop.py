@@ -44,7 +44,7 @@ import	piBeaconGlobals as G
 
 import  pexpect
 G.program = "beaconloop"
-VERSION   = 9.60
+VERSION   = 8.60
 
 if sys.version[0] == "3": usePython3 = True
 else:					  usePython3 = False
@@ -55,42 +55,6 @@ except:	pass
 
 
 iTrackDevTypes = {"0":"0","1":"","2":""   ,"3":"Finder-3","4":"Wallet-4",  "5":"",  "6":"Mini-6",  "7":"",  "8":"Rechargeable-8",   "9":"Glasses-9","A":"A","B":"B","C":"C","D":"D","E":"E","F":"F"}
-		# first step to drive with table, not ready yet
-		# [ name,#of bytes, type, factor]
-shellyTagToProperty = { 
-			"00":{"name":"packetId",		"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"01":{"name":"batteryLevel",	"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"%",		"mapVtoText":{}									},
-			"03":{"name":"hum",				"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
-			"2E":{"name":"hum",				"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
-			"08":{"name":"dewpoint",		"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"C",		"mapVtoText":{}									},
-			"06":{"name":"mass",			"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.01,	"unit":"Kg",	"mapVtoText":{}									},
-			"07":{"name":"mass",			"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"lbs",	"mapVtoText":{}									}, 
-			"14":{"name":"moisture",		"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									}, 
-			"2F":{"name":"moisture",		"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
-			"02":{"name":"temp",			"bytes":3,	"type":"sint",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.03,	"unit":"C",		"mapVtoText":{}									},
-			"0D":{"name":"pm25",			"bytes":3,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"ug/m3",	"mapVtoText":{}									},
-			"0E":{"name":"pm10",			"bytes":3,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"ug/m3",	"mapVtoText":{}									},
-			"45":{"name":"temp",			"bytes":2,	"type":"sint",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.03,	"unit":"C",		"mapVtoText":{}									},
-			"03":{"name":"press",			"bytes":3,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.03,	"unit":"hPa",	"mapVtoText":{}									},
-			"40":{"name":"distance ",		"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"mm",	"mapVtoText":{}									},
-			"41":{"name":"distance ",		"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":0.1,	"trigValue":0.03,	"unit":"m",		"mapVtoText":{}									},
-			"12":{"name":"CO2",				"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.03,	"unit":"ppm",	"mapVtoText":{}									},
-			"43":{"name":"current",			"bytes":2,	"type":"int",		"typeFinal":"float,3",	"factor":0.001,	"trigValue":0.02,	"unit":"A",		"mapVtoText":{}									},
-			"0C":{"name":"voltage",			"bytes":2,	"type":"int",		"typeFinal":"float,3",	"factor":0.001,	"trigValue":0.02,	"unit":"V",		"mapVtoText":{}									},
-			"4A":{"name":"voltage",			"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.02,	"unit":"V",		"mapVtoText":{}									},
-			"44":{"name":"tvoc",			"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.02,	"unit":"ug/m3",	"mapVtoText":{}									},
-			"44":{"name":"speed",			"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.02,	"unit":"m/s",	"mapVtoText":{}									},
-			"05":{"name":"Illuminance",		"bytes":3,	"type":"int",		"typeFinal":"float,1",	"factor":0.001,	"trigValue":0.05,	"unit":"Lux",	"mapVtoText":{}									},
-			"3F":{"name":"rotation",		"bytes":2,	"type":"sint",		"typeFinal":"int",		"factor":0.1,	"trigValue":0.02,	"unit":"D",		"mapVtoText":{}									},
-			"09":{"name":"count",			"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"3D":{"name":"count",			"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"3E":{"name":"count",			"bytes":4,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"3C":{"name":"dimmer",			"bytes":2,	"type":"intLR",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									}, # need to fix
-			"21":{"name":"motion",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"motion"}		},
-			"2D":{"name":"isOpen",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"isClosed","01":"isOpen"}	},
-			"3A":{"name":"button",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"press","02":"double_press","03":"tripple_press","04":"long_press","05":"long_double_press","06":"long_triple_press","80":"hold_press","FE":"button_hold"}	}
-		}
-
 
 #################################
 def tryDeltaTime(test, oneDigit = False):
@@ -104,8 +68,8 @@ def tryDeltaTime(test, oneDigit = False):
 
 def hex2str(inString):
 	try:
-		if sys.version[0] == "3":
-			return codecs.decode(inString,"hex").decode("utf-8")
+		if sys.version[0] == '3':
+			return codecs.decode(inString,"hex").decode('utf-8')
 		else:
 			return  inString.decode("hex")
 	except Exception as e:
@@ -116,7 +80,7 @@ def hex2str(inString):
 def readPopen(cmd):
 		try:
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-			return ret.decode("utf_8"), err.decode("utf_8")
+			return ret.decode('utf_8'), err.decode('utf_8')
 		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 
@@ -250,7 +214,7 @@ def printpacket(pkt):
 
 def get_packed_bdaddr(bdaddr_string):
 	packable_addr = []
-	addr = bdaddr_string.split(":")
+	addr = bdaddr_string.split(':')
 	addr.reverse()
 	for b in addr: 
 		packable_addr.append(int(b, 16))
@@ -637,7 +601,7 @@ def readHCUIDUMPlistener():
 		messages = []
 		try:
 			if os.path.isfile(readFrom):
-				f = openEncoding(readFrom,"r")
+				f= openEncoding(readFrom,"r")
 				messages = f.read()
 				f.close()
 				subprocess.call("rm {}".format(readFrom), shell=True)
@@ -704,7 +668,7 @@ def combineLines(lines):
 
 	"""
 	try:
-		MSGs = []
+		MSGs=[]
 		msg = ""
 		countLinesPerMsg = 1
 		for line in lines.split("\n"):
@@ -719,7 +683,7 @@ def combineLines(lines):
 		ll = len(rd)
 		nn = 0
 		for line in rd:
-			nn += 1
+			nn +=1
 			if len(line) < 40 and nn < ll: continue
 			MSGs.append(line) 
 		if len(MSGs) == 0: return []
@@ -1145,7 +1109,6 @@ def composeMSG(timeAtLoopStart):
 	global onlyTheseMAC
 	global trackMac, logCountTrackMac, beaconLastMessageTS
 	global dataFromSensors, waitforcheckIfDelaySend
-	global messageStats, clearmessageStats
 
 	try:
 		nMessages = 0
@@ -1206,18 +1169,12 @@ def composeMSG(timeAtLoopStart):
 		if nMessages >1: downCount = 0
 		#U.logger.log(20," msending data:{}, sensor:{}".format(nMessages, len(dataFromSensors)))
 
-		for ii in range(messageStats["max"]):
-			messageStats["numberOfMessagesperRead"][ii] /= (max(1., messageStats["countTotal"])/100.)
-			messageStats["numberOfMessagesperRead"][ii] = int(messageStats["numberOfMessagesperRead"][ii])
-
 		if dataFromSensors != {}:
 			if waitforcheckIfDelaySend: time.sleep(0.05)
-			U.sendURL({"sensors":dataFromSensors, "msgs":data,"stats":{"nMsgDistribution":messageStats["numberOfMessagesperRead"], "total":messageStats["countTotal"]},"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":int(tryDeltaTime(timeAtLoopStart)),"trigger":mapReasonToText[reasonMax]})
+			U.sendURL({"sensors":dataFromSensors, "msgs":data,"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":int(tryDeltaTime(timeAtLoopStart)),"trigger":mapReasonToText[reasonMax]})
 			dataFromSensors = {}
 		else:
-			U.sendURL({"msgs":data,"stats":{"nMsgDistribution":messageStats["numberOfMessagesperRead"], "total":messageStats["countTotal"]},"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":int(tryDeltaTime(timeAtLoopStart)),"trigger":mapReasonToText[reasonMax]})
-		messageStats 			= {"numberOfMessagesperRead":copy.copy(clearmessageStats),"countTotal":0}
-		messageStats["max"]		= len(messageStats["numberOfMessagesperRead"])
+			U.sendURL({"msgs":data,"pi":str(G.myPiNumber),"piMAC":myBLEmac,"secsCol":int(tryDeltaTime(timeAtLoopStart)),"trigger":mapReasonToText[reasonMax]})
 		#U.logger.log(20, "beacons collected:{}".format(len(data)))
 
 		# save active iBeacons for getbeaconparameters() process
@@ -1389,7 +1346,7 @@ def checkIfFastDownForAll(iWhile, nMsgs, dtSend, lastMSGwithGoodData):
 
 ################################, check if signal strength is acceptable for fastdown 
 def checkIfBeaconIsBack(mac):
-	global trackMac, logCountTrackMac, findMAC
+	global trackMac, logCountTrackMac
 	global beacon_ExistingHistory 
 	global trackMacNumber
 	global sendAfterSecsOfLastMsg
@@ -1399,22 +1356,25 @@ def checkIfBeaconIsBack(mac):
 		#U.logger.log(20,"mac{} checkIfBeaconIsBack trackMac:{}  logCountTrackMac:{}".format(mac, trackMac, logCountTrackMac))
 		if  ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 			U.logger.log(20, "mac:{} New?  checking if Beacon is back " .format(mac))
-		if mac in findMAC: U.logger.log(20,"mac{} checkIfBeaconIsBack start".format(mac))
 
 		if  mac not in beacon_ExistingHistory: return False
 
 		if  len(beacon_ExistingHistory[mac]["timeSt"]) == 0 or mac not in beaconLastMessageTS:
 			if ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 				U.logger.log(30,"mac{} checkIfBeaconIsBack empty history".format(mac))
-			if mac in findMAC: U.logger.log(20,"mac{} checkIfBeaconIsBack empty history".format(mac))
 			return False
 
 		if not beacon_ExistingHistory[mac]["fastDown"]:
+			if mac in beaconLastMessageTS and tryDeltaTime(beaconLastMessageTS[mac]) < sendAfterSecsOfLastMsg:
+				if   ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
+					U.logger.log(20, "mac:{} ==> no DT:{}  receive" .format(mac, tryDeltaTime(beaconLastMessageTS[mac])))
+				return False
 
 			if mac in beaconLastMessageSendTS and tryDeltaTime(beaconLastMessageSendTS[mac]) < sendAfterSecsOfLastMsg:
 				if  ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 					U.logger.log(20, "mac:{} ==> no DT:{}  send " .format(mac, tryDeltaTime(beaconLastMessageSendTS[mac])))
 				return False
+
 
 		if   ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 			U.logger.log(20, "mac:{} first test dt: {} , FD:{}".format(mac, tryDeltaTime(beaconLastMessageTS[mac]), beacon_ExistingHistory[mac]["fastDown"]) )
@@ -1442,7 +1402,6 @@ def checkIfBeaconIsBack(mac):
 			):
 			if   ( (mac == trackMac or trackMac == "*") and logCountTrackMac >0):
 				U.logger.log(20, "{} NEW!  beacon is back, send message" .format(mac))
-			if mac in findMAC: U.logger.log(20,"mac{} checkIfBeaconIsBack back".format(mac))
 
 			if mac in beacon_ExistingHistory: 
 				if mac in fastDownList: 		beacon_ExistingHistory[mac]["trigger"][-1] = 4 # beacon_fastdown is back
@@ -1477,9 +1436,9 @@ def doFastSwitchBotPress(mac, trigOnOff):
 	try:
 
 		"""
-		fastBLEReaction::fastBLEReaction:{"B8:7C:6F:1A:D9:65"": 
-			{'cmd': {'pulseLengthOn': '0', 'repeat': '2', 'pulseLengthOff': '0.0', 'cmd': 'pulses', 'repeatDelay': '0', 'mac': 'F9:A6:49:9A:DF:85', 'pulses': '1', 'mode': 'batch', 'pulseDelay': '0.0', 'outputDev': 1323447574," 'sensorTriggerValue': 'on'}, 'indigoIdOfSwitchbot': 1323447574, 'pwdOfSwitchbotRPI': 'karl123.',
-			 'IdOfSwitchbotRPI': 'pi', 'macOfSwitchbot': 'F9:A6:49:9A:DF:85', 'pi': '12', 'IPOfSwitchbotRPI': '192.168.1.35'}}
+		fastBLEReaction::fastBLEReaction:{u'B8:7C:6F:1A:D9:65': 
+			{u'cmd': {u'pulseLengthOn': u'0', u'repeat': u'2', u'pulseLengthOff': u'0.0', u'cmd': u'pulses', u'repeatDelay': u'0', u'mac': u'F9:A6:49:9A:DF:85', u'pulses': u'1', u'mode': u'batch', u'pulseDelay': u'0.0', u'outputDev': 1323447574," u'sensorTriggerValue': u'on'}, u'indigoIdOfSwitchbot': 1323447574, u'pwdOfSwitchbotRPI': u'karl123.',
+			 u'IdOfSwitchbotRPI': u'pi', u'macOfSwitchbot': u'F9:A6:49:9A:DF:85', u'piU': u'12', u'IPOfSwitchbotRPI': u'192.168.1.35'}}
 		"""
 		#U.logger.log(20,"mac:{}, trigOnOff:{}, fastBLEReaction:{}".format(mac, trigOnOff, fastBLEReaction)) 
 		if mac not in fastBLEReaction: return 
@@ -1645,11 +1604,10 @@ def doBLEHunterNodeBT(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global bleServiceSections, bleServiceSectionsReverse
 
 
-	# complete package 
 	#			         00 8A   01 64   05 EC C2 00    2D 01   3F 01 00    C8
 	bl = ""
 	try:
-		if False and mac in findMAC: doPrint = True 
+		if Flase and mac in findMAC: doPrint = True 
 		else: doPrint = False
 		if len(hexData) < 20: return sensor, tx,  bl
 		
@@ -1682,16 +1640,15 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	#let ALLTERCO_MFD_ID_STR = "0ba9";  see: https://bthome.io/format/
 	#let BTHOME_SVC_ID_STR = "fcd2";
-	#  01  23 45 67 89 11 		  23 45 67 89 21 23 45 67 89
-	#  0E  02 01 06 0A 16 		  D2 FC 44 00 32 01 64 3A 02 
-	# 									   data-------------
+	#  01  23 45 67 89 11 		23 45 67 89 21 23 45 67 89
+	#  0E  02 01 06 0A 16 		D2 FC 44 00 32 01 64 3A 02 
 	#  ll  flag
 	#            =  not encr, cont bc    
 	#               ll   
-	#                     		  tag--
-	#                             	  44= no encr BC on  BThome v 2
-	#                                      == counter is following: 
-	#                                         32 is the counter number 
+	#                     		tag--
+	#                           	  44= no encr BC on  BThome v 2
+	#                                    == counter is following: 
+	#                                       32 is the counter number 
 	#                                    		01: bat is following
 	#                                          		   3A button press event
 	#                                           		  01 = press
@@ -1701,23 +1658,58 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	#                                           		  FE = button Hold
 	
 	#
-	#  14  02 01 06  10 16 D2 FC 44 	00 0E  01 64   05 00 00 00  21 01 3A 01  
-	#  15  02 01 06  11 16 D2 FC 44 	00 09  01 64   05 B8 50 01  2D 01  3F 00 00  
-	#  15  02 01 06  11 16 D2 FC 44		00 F1  01 64   05 B0 04 00  2D 00  3F 00 00   shelly door
-	#			         00 8A   01		64   05 EC C2 00    2D 01   3F 01 00    C8
+	#  14  02 01 06  10 16 D2 FC 44 00 0E  01 64   05 00 00 00  21 01 3A 01  
+	#  15  02 01 06  11 16 D2 FC 44 00 09  01 64   05 B8 50 01  2D 01  3F 00 00  
+	#  15  02 01 06  11 16 D2 FC 44 00 F1  01 64   05 B0 04 00  2D 00  3F 00 00   shelly door
+	#			         00 8A   01 64   05 EC C2 00    2D 01   3F 01 00    C8
 
 	try:
+		if len(hexData) < 20: return sensor, tx,  ""
 		doPrint =  False #mac == "60:EF:AB:4B:29:4A"
+		hexData = hexData[12:]
 
-		if mac not in parsedData: return sensor, tx,  ""
-		data16 = parsedData[mac]["analyzed"]["code"].get("16","")
-		if  doPrint: U.logger.log(20, "mac:{}, hexdata:{}".format(mac, data16))
-		if data16 == "": return sensor, tx,  ""
-		start = data16.find("D2FC")
-		if start < 0: return sensor, tx,  ""
-		data = data16[start+6:] # = 44 00 32 01 64 3A 02 
+		start = hexData.find("D2FC")
+		if start < 1: return sensor, tx,  ""
+		hexData = hexData[start+6:] # = 44 00 32 01 64 3A 02 
+		#if doPrint: U.logger.log(20, "mac:{},  hexdata:{}".format(mac, hexData))
 
 
+		# first step to drive with table, not ready yet
+		# [ name,#of bytes, type, factor]
+		tagToProperty = { 
+			"00":{"name":"packetId",		"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
+			"01":{"name":"batteryLevel",	"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"%",		"mapVtoText":{}									},
+			"03":{"name":"hum",				"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
+			"2E":{"name":"hum",				"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
+			"08":{"name":"dewpoint",		"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"C",		"mapVtoText":{}									},
+			"06":{"name":"mass",			"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.01,	"unit":"Kg",	"mapVtoText":{}									},
+			"07":{"name":"mass",			"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"lbs",	"mapVtoText":{}									}, 
+			"14":{"name":"moisture",		"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									}, 
+			"2F":{"name":"moisture",		"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
+			"02":{"name":"temp",			"bytes":3,	"type":"sint",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.03,	"unit":"C",		"mapVtoText":{}									},
+			"0D":{"name":"pm25",			"bytes":3,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"ug/m3",	"mapVtoText":{}									},
+			"0E":{"name":"pm10",			"bytes":3,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"ug/m3",	"mapVtoText":{}									},
+			"45":{"name":"temp",			"bytes":2,	"type":"sint",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.03,	"unit":"C",		"mapVtoText":{}									},
+			"03":{"name":"press",			"bytes":3,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.03,	"unit":"hPa",	"mapVtoText":{}									},
+			"40":{"name":"distance ",		"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"mm",	"mapVtoText":{}									},
+			"41":{"name":"distance ",		"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":0.1,	"trigValue":0.03,	"unit":"m",		"mapVtoText":{}									},
+			"12":{"name":"CO2",				"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.03,	"unit":"ppm",	"mapVtoText":{}									},
+			"43":{"name":"current",			"bytes":2,	"type":"int",		"typeFinal":"float,3",	"factor":0.001,	"trigValue":0.02,	"unit":"A",		"mapVtoText":{}									},
+			"0C":{"name":"voltage",			"bytes":2,	"type":"int",		"typeFinal":"float,3",	"factor":0.001,	"trigValue":0.02,	"unit":"V",		"mapVtoText":{}									},
+			"4A":{"name":"voltage",			"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.02,	"unit":"V",		"mapVtoText":{}									},
+			"44":{"name":"tvoc",			"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.02,	"unit":"ug/m3",	"mapVtoText":{}									},
+			"44":{"name":"speed",			"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.02,	"unit":"m/s",	"mapVtoText":{}									},
+			"05":{"name":"Illuminance",		"bytes":3,	"type":"int",		"typeFinal":"float,1",	"factor":0.001,	"trigValue":0.05,	"unit":"Lux",	"mapVtoText":{}									},
+			"3F":{"name":"rotation",		"bytes":2,	"type":"sint",		"typeFinal":"int",		"factor":0.1,	"trigValue":0.02,	"unit":"D",		"mapVtoText":{}									},
+			"09":{"name":"count",			"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
+			"3D":{"name":"count",			"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
+			"3E":{"name":"count",			"bytes":4,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
+			"3C":{"name":"dimmer",			"bytes":2,	"type":"intLR",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									}, # need to fix
+			"21":{"name":"motion",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"motion"}		},
+			"2D":{"name":"isOpen",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"isClosed","01":"isOpen"}	},
+			"3A":{"name":"button",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"press","02":"double_press","03":"tripple_press","04":"long_press","05":"long_double_press","06":"long_triple_press","80":"hold_press","FE":"button_hold"}	}
+		}
+		if False and  doPrint: U.logger.log(20, "mac:{}, hexdata:{}".format(mac, hexData))
 
 		BLEsensorMACs[mac]["updateIndigoTiming"] = 90
 
@@ -1728,10 +1720,10 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		trig = ""
 
 		while True:
-			if jj+2 >= len(data): break
+			if jj+2 >= len(hexData): break
 
-			tag = shellyTagToProperty.get(data[jj:jj+2],{})
-			if doPrint: U.logger.log(20, "mac:{}, tag:{}, data:{}".format(mac, tag, data))
+			tag = tagToProperty.get(hexData[jj:jj+2],{})
+			if False and doPrint: U.logger.log(20, "mac:{}, tag:{}, hexdata:{}".format(mac, tag, hexData))
 			if tag.get("name","") == "": 
 				jj += 2
 				continue
@@ -1745,13 +1737,13 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 
 			if  tag["type"] == "char":
-					itemsValues[tag["name"]] = tag["mapVtoText"].get(data[ii:ii+nn],"None")
+					itemsValues[tag["name"]] = tag["mapVtoText"].get(hexData[ii:ii+nn],"None")
 					trigValue[tag["name"]] =  tag["trigValue"]
 					jj =  ii + nn 
 					continue
 
 			if  tag["type"] == "int":
-					itemsValues[tag["name"]] = intfromhexR( data[ii:], tag["bytes"])
+					itemsValues[tag["name"]] = intfromhexR( hexData[ii:], tag["bytes"])
 					if tag["name"] == "packetId": 
 						packetId = itemsValues[tag["name"]] 
 						if packetId ==  BLEsensorMACs[mac]["packetId"]:  
@@ -1771,8 +1763,8 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 					continue
 
 			if  tag["type"] == "intLR":
-					itemsValues[tag["name"]] = intfrom8( data[ii+2:],0)
-					if data[ii:ii+2] == "02": itemsValues[tag["name"]] = -itemsValues[tag["name"]]
+					itemsValues[tag["name"]] = intfrom8( hexData[ii+2:],0)
+					if hexData[ii:ii+2] == "02": itemsValues[tag["name"]] = -itemsValues[tag["name"]]
 
 					if tag["factor"] != 1: itemsValues[tag["name"]]  = itemsValues[tag["name"]] * tag["factor"] 
 
@@ -1782,7 +1774,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 
 			if  tag["type"] == "sint":
-					itemsValues[tag["name"]] = signedintfromhexR( data[ii:], tag["bytes"])
+					itemsValues[tag["name"]] = signedintfromhexR( hexData[ii:], tag["bytes"])
 
 					if tag["factor"] != 1: itemsValues[tag["name"]]  = itemsValues[tag["name"]] * tag["factor"] 
 
@@ -1792,7 +1784,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 					elif tag["typeFinal"].find("int") > -1:
 						itemsValues[tag["name"]] = int(itemsValues[tag["name"]])
-					if doPrint and  tag["name"] == "rotation": U.logger.log(20, "mac:{}, jj:{}, code:{}, name:{:12s}, ll:{},  data:{}, value:{}".format(mac,  jj, data[jj:jj+2] , tag["name"] ,  len(data),  data[jj+2:jj+6] , itemsValues[tag["name"]]  ))
+					if doPrint and  tag["name"] == "rotation": U.logger.log(20, "mac:{}, jj:{}, code:{}, name:{:12s}, ll:{},  data:{}, value:{}".format(mac,  jj, hexData[jj:jj+2] , tag["name"] ,  len(hexData),  hexData[jj+2:jj+6] , itemsValues[tag["name"]]  ))
 
 					trigValue[tag["name"]] =  tag["trigValue"]
 					jj =  ii + nn 
@@ -1811,7 +1803,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			return sensor, tx,  itemsValues["batteryLevel"]
 
 		dd = {   # the data dict to be send 
-						"mac": 			mac,
+						'mac': 			mac,
 						"rssi":			int(rx)
 				}
 
@@ -1849,7 +1841,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			if itemsValues[tt] != "":
 				dd[tt] = itemsValues[tt]
 
-		if doPrint: U.logger.log(20, "mac:{}, dd:{}, data:{}".format(mac,dd,  data))
+		if doPrint: U.logger.log(20, "mac:{}, dd:{}, hexdata:{}".format(mac,dd,  hexData))
 
 		if  trig != "":
 					# compose complete message
@@ -1874,21 +1866,21 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 	global BLEsensorMACs, sensors
 	global switchbotData
 	try:
+		if len(hexData) < 30: return sensor, tx,  ""
 
-		if mac not in parsedData: return sensor, tx,  ""
+		hexData = hexData[12:]
 		"""
 		type1
-                                  MAC#-------- 
-											   xx          bright changes counter 00-ff
-											      b        brightnesss &b000000010  10=bright; 01 = dim
+                                MAC#-------- 
+											  xx          bright changes counter 00-ff
+											     b        brightnesss &b000000010  10=bright; 01 = dim
 											     		+ 4 = 5/6
-											        V      Version = 1.2? 
-											 	      secs motion secs since last int("xxxx",16) event 64k seconds
+											       V      Version = 1.2? 
+											 	   secs motion secs since last int("xxxx",16) event 64k seconds
 
-			11 02 0106 0D  FF6909 D99919AE2A81 4C 6 C 0018      
-            11 02 0106 0D  FF6909 D99919AE2A81 32 6 C 000D  BF;
-			01 23 4567 89  112345 678921234567 89 3 1 2345
-			                 0123 456789112345 67 8 9 2123
+			11 02 0106 0D FF6909 D99919AE2A81 4C 6 C 0018      
+            11 02 0106 0D FF6909 D99919AE2A81 32 6 C 000D  BF;
+			01 23 4567 89 112345 678921234567 89 3 1 2345
 
 		type2
 						     bb : int("xx",16)&0b01111111
@@ -1903,60 +1895,51 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 			0A 09 163DFD7380 64 32EB06B9;
 
 			01 23 4567891123 45 678921         23
-			    012345678911 23 456789
+
 		type3
-							BB:								0-1	int("BB",16)&0b01111111   = battery 0-64 = 0-100 some times first bit  is on, dont know why
+							 BB:								0-1	int("BB",16)&0b01111111   = battery 0-64 = 0-100 some times first bit  is on, dont know why
 							   G:								2	int("G",16)               = mostly 0 ?
 							    K:								3	int("K",16)               = closed=x00x, open=x01x, long open=x10x if bright= xxx1
 							     ssss							4-7 int("ssss",16)            = secs since ??? restarts once at battery start, or device soft restart = when type4 ssss hight bit is  0-> 1
 							         tttt:						8-11int("tttt",16)            = 0-2**16-1 secs since last open / closed 
 										 o:						12	int("o",16)&0b1100        =  abxx  ab changes when opened 01 -> 10 -> 11 -> 01
 							              C :					13	int("C",16)&0b0001        = 1-15 counter for press button
-			0D 0C 16  3D FD 64 00 E4  02  00  180  01  B40                     
-			01 23 45  67 89 11 23 45 67 89 21 23 45 67
-                      01 23 45 67 89 11 23
+			0D 0C 163DFD6400 E4020018001B40                     
+			01 23 4567891123 45678921234567
+                             01234567891123
 
 		type4   nothing for motion, only for bright/dim
 								MAC#-------- 
 											  pp 				0-1	int(w,16)                 = 0-255 secs press counter (not seconds) 
-											     W				2	int(w,16)  RAyz=  R =1xxx = 10 secs after boot stays ?? until ?? powersave ..?, some times just switches
-											     W				2	int(w,16)  0A00 , A= x1xx = 1=bright, 0=dim    
-											     W				2	int(w,16)  b0yz=  y= xx10 = left open
-											     W				2	int(w,16)  b0yz=  z= xx01 = open
-											     W				2	int(w,16)  b0yz=  z= xx00 = close
+											    W				2	int(w,16)  RAyz=  R =1xxx = 10 secs after boot stays ?? until ?? powersave ..?, some times just switches
+											    W				2	int(w,16)  0A00 , A= x1xx = 1=bright, 0=dim    
+											    W				2	int(w,16)  b0yz=  y= xx10 = left open
+											    W				2	int(w,16)  b0yz=  z= xx01 = open
+											    W				2	int(w,16)  b0yz=  z= xx00 = close
 												 H 				3	int("H"")                 = 1100  ???   using  last 2 bits for operflow for ssss or tttt
 												  ssss :		4-7	int("ssss",16)            = secs since ??? restarts once at battery start, or device soft restart = when type4 ssss hight bit is  0-> 1
 													  tttt :	8-11int("tttt",16)&0b00000000 = 0-2**16-1 secs since last open/close/left open  
 														  o:	12	int("o",16)&0b1100        =  abxx  ab changes when opened 01 -> 10 -> 11 -> 01
 														   C:	13	int("b",16)&0b0001        = 1-15 counter for press button
-			14 020106 10 FF6909 C9D180A1AA9C  5B 0C06A106871E   
+			14 020106 10 FF6909 C9D180A1AA9C  5B0C06A106871E   
 	msg1-- 2 b   1  2 
 	msg2-- 16 b          1 2 3  4 5 6 7 8 9   1 2 3 4 5 6
 			01 234567 89 112345 678921234567  89312345678941   
-						   0123 456769112345  6789212345678 
                                               01234567891123
 		"""
-		doPrint = False #mac == "C0:81:FE:CD:CF:9F"
-		dataFF = parsedData[mac]["analyzed"]["code"].get("FF","")
-		data16 = parsedData[mac]["analyzed"]["code"].get("16","")
+		doPrint = False#mac == "E4:7E:5F:23:82:1C"
 
-		if  doPrint: U.logger.log(20, "mac:{}, sens:{}; len ff:{} 16:{}".format(mac, sensor, len(dataFF), len(data16) ))
-
-		if   "6909"+macplain 	in  dataFF and len(dataFF) == 13*2: 	dType = 1  # for motion sensor
-		elif "3DFD73"		 	in  data16:  							dType = 2  # for motion sensor
-		elif "3DFD64"		 	in  data16:  							dType = 3  # for contact sensor
-		elif "6909"+macplain 	in  dataFF and len(dataFF) == 15*2:		dType = 4  # for contact sensor
-		else:											 		    	dType = 0
-
-		if  doPrint and dType in [1,4]: U.logger.log(20, "mac:{}, sens:{};                       dataFF:{};".format(mac, sensor, dataFF ))
-		if  doPrint and dType in [2,3]: U.logger.log(20, "mac:{}, sens:{};                 data16:{};".format(mac, sensor, data16 ))
-
+		if   "110201060DFF6909"+macplain in  hexData: dType = 1  # for motion sensor
+		elif "0A09163DFD73"  			 in  hexData: dType = 2  # for motion sensor
+		elif "0D0C163DFD64"				 in  hexData: dType = 3  # for contact sensor
+		elif "1402010610FF6909"+macplain in  hexData: dType = 4  # for contact sensor
+		else:								 		  dType = 0
 
 		if dType == 0: 
-			if  doPrint:				 U.logger.log(20, "mac:{}, sens:{}; dType:{};  ".format(mac, sensor, dType ))
+			if  doPrint: U.logger.log(20, "mac:{}, sens:{}; dType:{}; len(hexData):{}; hexData:{};".format(mac, sensor, dType, len(hexData), hexData ))
 			return sensor, tx,  ""
 		doPrint = doPrint #and (dType == 1 or dType == 2) 
-		if  doPrint: U.logger.log(20, "mac:{}, sens:{}; dType:{}; ".format(mac, sensor, dType ))
+		if  doPrint: U.logger.log(20, "mac:{}, sens:{}; dType:{}; len(hexData):{}; hexData:{};".format(mac, sensor, dType, len(hexData), hexData ))
 
 		lightCounter 	= -1
 		light	  		= ""
@@ -1999,7 +1982,7 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 
 		## motion Sensor
 		if dType == 1:
-			hData 		    = dataFF[16:]
+			hData 			= hexData[28:36] #686C0016
 			lightCounter 	= int(hData[0:2],16)
 			flag	  		= int(hData[2],16)
 			light	  		= "bright" if flag&0b0011 == 2 else "dim"
@@ -2019,13 +2002,13 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 			if BLEsensorMACs[mac]["motionDuration"] ==-1: BLEsensorMACs[mac]["motionDuration"] = BLEsensorMACs[mac]["secsSinceLastM"]
 						
 			dd = {   # the data dict to be send 
-							"onOffState": 			motion,
-							"light": 				light,
-							"sensitivity": 			switchbotData[mac]["sensitivity"],
-							"lightCounter": 		lightCounter,
-							"lastOn": 				lastMotion,
-							"motionDuration": 		motionDuration,
-							"mac": 					mac,
+							'onOffState': 			motion,
+							'light': 				light,
+							'sensitivity': 			switchbotData[mac]["sensitivity"],
+							'lightCounter': 		lightCounter,
+							'lastOn': 				lastMotion,
+							'motionDuration': 		motionDuration,
+							'mac': 					mac,
 							"rssi":					int(rx)
 					}
 			if BLEsensorMACs[mac]["batteryLevel"] != "": 	dd["batteryLevel"] 	 = BLEsensorMACs[mac]["batteryLevel"]
@@ -2069,16 +2052,16 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 
 
 		if dType == 2:
-			hData3  = data16[8:]
-			flags   = int(hData3, 16)
+			hData3 = hexData[20:22]
+			flags  = int(hData3, 16)
 			dimm    = flags & 0b0001
 			bright  = flags & 0b0010
 			mediumS = flags & 0b0100
 			shortS  = flags & 0b1000
 			longS   = flags & 0b1100 == 0
-			hData1  = data16[12:16]
+			hData1 = hexData[16:20]
 			secsSinceLastEvent = int(hData1,32)
-			hData2 = data16[10:12]
+			hData2 = hexData[14:16]
 			BL = int(hData2,16)&0b01111111
 			if doPrint: U.logger.log(20, "mac:{}, bat:{}-hex:{}, secsSinceLastEvent:{}-hex:{}, flags:{}-{:b}".format(mac, BL, hData2, secsSinceLastEvent, hData1, hData3, flags))
 			BLEsensorMACs[mac]["batteryLevel"] = BL
@@ -2095,7 +2078,7 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 
 		## for type 3/4 get most of the info from type3, then send out package
 		if dType == 3:								#01 2 3 4567 8901 2 3 pos
-			hData				= data16[8:]
+			hData 				= hexData[14:28]	#E4 0 2 0018 001B 4 0 
 			BL					= int(hData[0:2],16)&0b01111111
 			BlindicatorBit		= int(hData[0:2],16)&0b10000000 >>6
 			closed1				= int(hData[3],16)&0b00000110 == 0b00000000
@@ -2145,21 +2128,21 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 
 		
 			dd = {   # the data dict to be send 
-							"light": 				light,
-							"counter": 				switchbotData[mac]["counter"],
-							"onOffState": 			onOff !="",
-							"buttonCounter":		switchbotData[mac]["buttonCounter"],
-							"shortOpen": 			switchbotData[mac]["shortOpen"],
-							"longOpen": 			switchbotData[mac]["longOpen"] ,
-							"lastButton": 			switchbotData[mac]["timeButton"] ,
-							"lastLightChange": 		switchbotData[mac]["timelightChange"] ,
-							"lastOn": 				switchbotData[mac]["timeClosed"] ,
-							"lastShortOpen": 		switchbotData[mac]["timeShortOpen"] ,
-							"lastLongOpen": 		switchbotData[mac]["timeLongOpen"] ,
-							"batteryLevel": 		BL,
-							"trigger": 				trig.strip("/"),
-							"sensitivity": 			switchbotData[mac]["sensitivity"],
-							"mac": 					mac,
+							'light': 				light,
+							'counter': 				switchbotData[mac]["counter"],
+							'onOffState': 			onOff !="",
+							'buttonCounter':		switchbotData[mac]["buttonCounter"],
+							'shortOpen': 			switchbotData[mac]["shortOpen"],
+							'longOpen': 			switchbotData[mac]["longOpen"] ,
+							'lastButton': 			switchbotData[mac]["timeButton"] ,
+							'lastLightChange': 		switchbotData[mac]["timelightChange"] ,
+							'lastOn': 				switchbotData[mac]["timeClosed"] ,
+							'lastShortOpen': 		switchbotData[mac]["timeShortOpen"] ,
+							'lastLongOpen': 		switchbotData[mac]["timeLongOpen"] ,
+							'batteryLevel': 		BL,
+							'trigger': 				trig.strip("/"),
+							'sensitivity': 			switchbotData[mac]["sensitivity"],
+							'mac': 					mac,
 							"rssi":					int(rx)
 					}
 
@@ -2187,7 +2170,7 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 			return sensor, tx,  BLEsensorMACs[mac]["batteryLevel"]		
 
 		if dType == 4:				#01 2 3 4567 8901 2 3 Pos
-			hData = dataFF[16:]     #5B 0 C 06A1 0687 1 E 
+			hData = hexData[28:42]  #5B 0 C 06A1 0687 1 E 
 			switchbotData[mac]["status4"] 		= int(hData[3],16)
 			switchbotData[mac]["counternew"] 	= int(hData[0:2],16) - switchbotData[mac]["counter"]
 			switchbotData[mac]["counter"] 		= int(hData[0:2],16)
@@ -2205,7 +2188,9 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	try:
-		if mac not in parsedData: return sensor, tx,  ""
+		if len(hexData) < 60: return sensor, tx,  ""
+
+		hexData = hexData[12:]
 		"""
 				        name string ------------------------                               th start:        
 		1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 63 D0 CE 00 11 04 curtain 
@@ -2218,21 +2203,19 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, senso
 																						^^ light level / device chain
 
 		   11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB   06-
- 
-       1C  11 07 1B C5 D5 A5 02 00 		B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD   DA
-															adv "09" ==       00 0D 54 10 E4 04 97 3E
+        1C 11 07 1B C5 D5 A5 02 00 		B8 9F E6 11 4D 22 00 0D A2 CB   09 16 00 0D 54 10 64 01 99 AD   DA
 																		 start ------------------
-																					^^ =type:
+																			   ^^ =type:
 																					48 = H = switchbot (Hand),  63 = c = curtain,  73=s= motion sensor, 64= d= contactsensor, 54=T= temp , see: https://github.com/Danielhiversen/pySwitchbot/blob/master/switchbot/adv_parser.py
-	pos:01 23 45 67 89 11 23 45 67 		89 21 23 45 67 89 31 23 45 67   89 41 23 45 67 89 51 23 45 67   89 
-	pos:                                                                      01 23 45 67 89 11 23 45 
-																					      BB tt TT HH 	
+	pos:01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67   89 41 23 45 67 89 51 23 45 67   89 
+	pos:                                                                 01 23 45 67 89 11 23 45 
+																					 BB tt TT HH 	
         for other devices: 
-																				 00 0D 48 D0 E1
-																			  00 0D 62 00 64 00
-																				 00 0D 48 90 00 low battery
-																				 00 0D 48 D0 64
-																				 00 0D 48 D0 DF 95%
+																		 00 0D 48 D0 E1
+																	  00 0D 62 00 64 00
+																		 00 0D 48 90 00 low battery
+																		 00 0D 48 D0 64
+																		 00 0D 48 D0 DF 95%
 
 
 	switchbot 
@@ -2247,48 +2230,46 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, senso
 		doPrint 		= False
 		#if mac == "A4:C1:38:98:15:CB": doPrint 		= True
 		out 			= ""
-		data16 = parsedData[mac]["analyzed"]["code"].get("16","")
-		if data16 == "" or len(data16) < 16: return sensor, tx,  ""
+		startData = 42
+		if doPrint: U.logger.log(20, "mac:{}, sens:{}; startData:{}, len(hexData):{}; hexData:{};".format(mac, sensor, startData,  len(hexData), hexData ))
+		if  "1C11071BC5D5A50200B89FE6114D22000DA2CB0916" not in  hexData: return sensor, tx,  ""
+		hData = hexData[startData:]
+		if doPrint: U.logger.log(20, "mac:{},  len(hexData):{}".format(mac, hData ))
 
-		model = data16[4:6]
-		if model != "54": return sensor, tx,  ""
-
-		if doPrint: U.logger.log(20, "mac:{}, sens:{}; model:{}, lldata16:{}, data16:{}".format(mac, sensor, model,  len(data16), data16))
-
-		mode  = data16[6:8]
-
-		batteryLevel = int(data16[8:10].encode("utf-8"), 16) & 0b01111111
-
-		tempFra = int(data16[10:12].encode("utf-8"), 16) / 10.0
-		tempInt = int(data16[12:14].encode("utf-8"), 16)
+		tempFra = int(hData[10:12].encode('utf-8'), 16) / 10.0
+		tempInt = int(hData[12:14].encode('utf-8'), 16)
 		if tempInt < 128:
 			tempInt *= -1
 			tempFra *= -1
 		else:
 			tempInt -= 128
 		temp = tempInt + tempFra
+		hum = int(hData[14:16].encode('utf-8'), 16) % 128
+		#fahrenheit  = int(hData[8:10].encode('utf-8'), 16) &  0b10000000
 
-		hum = int(data16[14:16].encode("utf-8"), 16) % 128
+		batteryLevel = int(hData[8:10].encode('utf-8'), 16) & 0b01111111
+		model = chr(int(hData[4:6],16))
+		mode  = int(hData[6:8],16)
 
 		if doPrint: U.logger.log(20, "mac:{}, temp:{},  hum:{}".format(mac,temp,hum ))
 		trig = ""
-		if abs(temp - BLEsensorMACs[mac]["temp"]) > 0.5: 													trig+= "temp/" 
-		if abs(hum - BLEsensorMACs[mac]["hum"]) > 2: 														trig+= "hum/" 
+		if abs(temp - BLEsensorMACs[mac]["temp"]) > 0.5: 															trig+= "tempChange/" 
+		if abs(hum - BLEsensorMACs[mac]["hum"]) > 2: 																trig+= "humChange/" 
 		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])   > BLEsensorMACs[mac]["updateIndigoTiming"]: 	trig+= "Time" 			# send min every xx secs
 		trig = trig.strip("/")
 
 		dd = {   # the data dict to be send 
-						"temp": 		round(temp+ BLEsensorMACs[mac]["offsetTemp"],1),
-						"hum": 			int(hum + BLEsensorMACs[mac]["offsetHum"]),
-						"batteryLevel": batteryLevel,
-						"model": 		model,
-						"mode": 		mode,
-						"mac": 			mac,
-						"trigger": 		trig,
+						'temp': 		round(temp+ BLEsensorMACs[mac]["offsetTemp"],1),
+						'hum': 			int(hum + BLEsensorMACs[mac]["offsetHum"]),
+						'batteryLevel': batteryLevel,
+						'model': 		model,
+						'mode': 		mode,
+						'mac': 			mac,
+						'trigger': 		trig,
 						"rssi":			int(rx)
 				}
 
-		if doPrint: U.logger.log(20, "mac:{}, temp:{}, hum:{}, trig:{}<<".format(mac, temp, hum, trig))
+		if doPrint: U.logger.log(20, "mac:{}, temp:{}, hum:{}, trig{}".format(mac, temp, hum, trig))
 
 		if  trig !="":
 					# compose complete message
@@ -2314,9 +2295,9 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, senso
 def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	try:
+		if len(hexData) < 60: return sensor, tx,  ""
 
-		if mac not in parsedData: return sensor, tx,  ""
-		dataFF = parsedData[mac]["analyzed"]["code"].get("FF","")
+		hexData = hexData[12:]
 		"""
 		blueradio sensor bug info from 
 		https://www.blueradios.com/SensorBug%20Interface%20Specification%20v1.3.0.0a.pdf
@@ -2343,9 +2324,11 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		"""
 		doPrint 		= False
 		#if mac == "EC:FE:7E:10:9C:E7": doPrint = True
-		if doPrint: U.logger.log(20, "mac:{}, sensor:{} dataFF:{}, tag1:{}".format(mac, sensor,  dataFF, ddataFF.find("FF85000200")))
+		if doPrint: U.logger.log(20, "mac:{}, sensor:{} hexData:{}, tag1:{}, tag2:{}".format(mac, sensor,  hexData, hexData.find("03020A18"), hexData.find("FF85000200")))
 
-		if dataFF.find("85000200") <1:  
+		if hexData.find("03020A18") != 8:  
+			return sensor, tx,  ""
+		if hexData.find("FF85000200") != 18:  
 			return sensor, tx,  ""
 
 
@@ -2359,60 +2342,63 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		Illuminance 	= BLEsensorMACs[mac]["Illuminance"]
 		counter			= BLEsensorMACs[mac]["Illuminance"]
 		sensorSetup 	= {"temp":"","Accel":"","Light":""}
-		lTot = len(dataFF)
+		p = 0
+		lTot = len(hexData)
 
-		lDat = len(dataFF) 
+		p = 16
+		lDat = int(hexData[p:p+2],16)*2 
 
+		p = 30
 		if doPrint: U.logger.log(20, "mac:{}, sens:{}; passed 1".format(mac, sensor ))
 
-		p = 10
-		batteryLevel =  min(100,max(0,int( dataFF[p:p+2],16)))
+		p = 30
+		batteryLevel =  min(100,max(0,int( hexData[p:p+2],16)))
 
-		p = 12
-		counter =  min(100,max(0,int( dataFF[p:p+2],16)))
+		p = 32
+		counter =  min(100,max(0,int( hexData[p:p+2],16)))
 
-		p = 14
+		p = 34
 		for nn in range(3):
 			if p > lTot -8: break
 
-			dType = dataFF[p:p+2]
+			dType = hexData[p:p+2]
 
-			if doPrint: U.logger.log(20, "mac:{}, sens:{}; p:{}, tot char:{}, dType:{}, dataFF:{}".format(mac, sensor, p, lTot, dType, dataFF[p:-2] ))
+			if doPrint: U.logger.log(20, "mac:{}, sens:{}; p:{}, tot char:{}, dType:{}, hexData:{}".format(mac, sensor, p, lTot, dType, hexData[p:-2] ))
 
 			if dType == "41":
-				if dataFF[p+2:p+4] == "02":
-					onOff = dataFF[p+4:p+6] != "02"
+				if hexData[p+2:p+4] == "02":
+					onOff = hexData[p+4:p+6] != "02"
 					sensorSetup["Accel"] = "Op/Cl"
 				p += 6		
 				#if doPrint: U.logger.log(20, "mac:{}, sens:{}; onOff:{}".format(mac, sensor, onOff ))
 
 			elif dType == "42":
-				testHEX		= dataFF[p+2:p+4]
+				testHEX		= hexData[p+2:p+4]
 				testNumber  = int(testHEX ,16) & 0b00111111 
 				dataLen 	=              testNumber   & 0b00000011 
 				rangeInd 	= max(0,min(3,(testNumber   & 0b00001100) >>2 )) 
 				resInd	 	= max(0,min(3,(testNumber   & 0b00110000) >>4 )) 
 				if dataLen == 2:
-					Illuminance = round(int(dataFF[p+6:p+8] + dataFF[p+4:p+6],16 ) * rangeV[rangeInd] / resolutionMaxV[resInd],1)
+					Illuminance = round(int(hexData[p+6:p+8] + hexData[p+4:p+6],16 ) * rangeV[rangeInd] / resolutionMaxV[resInd],1)
 					p += 8		
 					sensorSetup["Light"] = "range={}k,{}b".format(rangeText[rangeInd],resolutionBits[resInd])
 				elif dataLen == 1:
-					Illuminance = round(int(dataFF[p+4:p+6],16) * rangeV[rangeInd] / resolutionMaxV[resInd],1)
+					Illuminance = round(int(hexData[p+4:p+6],16) * rangeV[rangeInd] / resolutionMaxV[resInd],1)
 					sensorSetup["Light"] = "range={}k,{}b;".format(rangeText[rangeInd],resolutionBits[resInd])
 					p += 6		
-				if doPrint: U.logger.log(20, "mac:{}, sens:{}; Illuminance:{},  dataLen:{}, rangeInd:{}, range:{}, resInd:{} res:{}, testHEX:{},testbin:{:6b} testNumber:{}, rangeX:{}, resX:{}, dataFF".format(mac, sensor, Illuminance, dataLen, rangeInd, rangeV[rangeInd] ,resInd,resolutionMaxV[resInd], testHEX,testNumber, testNumber, testNumber & 0b00001100, testNumber & 0b00110000 , dataFF[p:p+8]))
+				if doPrint: U.logger.log(20, "mac:{}, sens:{}; Illuminance:{},  dataLen:{}, rangeInd:{}, range:{}, resInd:{} res:{}, testHEX:{},testbin:{:6b} testNumber:{}, rangeX:{}, resX:{}, hexData".format(mac, sensor, Illuminance, dataLen, rangeInd, rangeV[rangeInd] ,resInd,resolutionMaxV[resInd], testHEX,testNumber, testNumber, testNumber & 0b00001100, testNumber & 0b00110000 , hexData[p:p+8]))
 
 			elif dType == "43":
-				temp = round(signedIntfrom16( dataFF[p+4:p+6] + dataFF[p+2:p+4] )*0.0625,1) + BLEsensorMACs[mac]["offsetTemp"]
+				temp = round(signedIntfrom16( hexData[p+4:p+6] + hexData[p+2:p+4] )*0.0625,1) + BLEsensorMACs[mac]["offsetTemp"]
 				sensorSetup["temp"] = "16b"
-				#if doPrint: U.logger.log(20, "mac:{}, sens:{}; temp:{}, hacData:{}".format(mac, sensor, temp,dataFF[p+2:p+6] ))
+				#if doPrint: U.logger.log(20, "mac:{}, sens:{}; temp:{}, hacData:{}".format(mac, sensor, temp,hexData[p+2:p+6] ))
 				p += 6		
 
 			else: # this is not a std tag, skip and try to find next
 				nextFound = False
 				for ii in [2,4,6,8]:
 					if p + ii < lTot -2:
-						if dataFF[p+ii:p+ii+2] in ["41","42","43"]:
+						if hexData[p+ii:p+ii+2] in ["41","42","43"]:
 							p += (ii - 2)
 							nextFound = True
 							break
@@ -2433,13 +2419,13 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		trig = trig.strip("/")
 
 		dd = {   # the data dict to be send 
-						"temp": 		round(temp+ BLEsensorMACs[mac]["offsetTemp"],1),
-						"Illuminance":	Illuminance, 
-						"onOff": 		onOff, 
-						"sensorSetup":	sensorSetup, 
-						"batteryLevel": batteryLevel, 
-						"mac": 			mac,
-						"trigger": 		trig,
+						'temp': 		round(temp+ BLEsensorMACs[mac]["offsetTemp"],1),
+						'Illuminance':	Illuminance, 
+						'onOff': 		onOff, 
+						'sensorSetup':	sensorSetup, 
+						'batteryLevel': batteryLevel, 
+						'mac': 			mac,
+						'trigger': 		trig,
 						"rssi":			int(rx)
 				}
 
@@ -2474,17 +2460,16 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	try:
+		if len(hexData) < 60: return sensor, tx,  ""
 
-		if mac not in parsedData: return sensor, tx,  ""
-		dataFF = parsedData[mac]["analyzed"]["code"].get("FF","")
-		data09 = parsedData[mac]["analyzed"]["code"].get("09F","")
+		hexData = hexData[12:]
 		"""
 		govee package  structure:
 
 
 		_D774
 		_15CB
-		09475648
+09475648
 		after mac#:
 		GVH5177_C097:
 				  name string ------------------------                                  mfg  type:        3byte data (1,2,3) + battery level
@@ -2508,17 +2493,18 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		#if mac == "A4:C1:38:98:15:CB": doPrint 		= True
 		out 			= ""
 
-		typeInfo 		= 	{"A":{"pos0":0, "type": "3+1",   "id":"01000101", "ll" : 8*2},
-							 "B":{"pos0":0, "type": "3+1",   "id":"88EC00",   "ll" : 7*2},
-							 "C":{"pos0":0, "type": "2+2+1", "id":"88EC00",   "ll" : 9*2}
+		typeInfo 		= 	{"A":{"pos0":44, "type": "3+1",   "id":"09FF01000101"},
+							 "B":{"pos0":44, "type": "3+1",   "id":"09FF88EC00"},
+							 "C":{"pos0":44, "type": "2+2+1", "id":"0AFF88EC00"}
 							}
 
 		sens = ""
+		#U.logger.log(20, "mac:{}, sensor:{} hexData:{}".format(mac, sensor,  hexData))
 		dataType 	= ""
 		startData 	= -1
 		for stype in  typeInfo:
-			posTag = dataFF.find(typeInfo[stype]["id"])
-			if posTag == 0 and len(dataFF) == typeInfo[stype]["ll"]:
+			posTag = hexData.find(typeInfo[stype]["id"])
+			if abs(posTag - typeInfo[stype]["pos0"]) < 3:
 				sens 		= stype
 				dataType 	= typeInfo[sens]["type"]
 				startData 	= posTag + len(typeInfo[sens]["id"])
@@ -2527,8 +2513,8 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			return sensor, tx,  ""
 
 
-		if False and doPrint: U.logger.log(20, "mac:{}, sens:{}; startData:{},  type:{}, len(dataFF):{}".format(mac, sens, startData, dataType, len(dataFF) ))
-		hData = dataFF[startData:]
+		if False and doPrint: U.logger.log(20, "mac:{}, sens:{}; startData:{}, pos-id: {}, type:{}, len(hexData):{}".format(mac, sens, startData, typeInfo[sens]["pos0"], dataType, len(hexData) ))
+		hData = hexData[startData:]
 
 #-0.7, hData:8047375ACB, intData:8388608 + 18176 + 55  =  8406839, temp:840.7, hum:84.4
 # hum = 34   8388608 + 27136 + 205 = -27341, temp:-2.7, intD:8415949, hum:94.9
@@ -2562,9 +2548,9 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 		out = ""
 		if doPrint:
-			for ii in range(0,len(dataFF)-2,2):
-				out+= dataFF[ii:ii+2] + " "
-				#U.logger.log(20, "mac:{}, sensor:{} data string:{}, {}".format(mac,sensor,  dataFF,  out))
+			for ii in range(0,len(hexData)-2,2):
+				out+= hexData[ii:ii+2] + " "
+				#U.logger.log(20, "mac:{}, sensor:{} data string:{}, {}".format(mac,sensor,  hData,  out))
 				pass
 
 		BLEsensorMACs[mac]["nMessages"] +=1 
@@ -2576,12 +2562,12 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		trig = trig.strip("/")
 
 		dd = {   # the data dict to be send 
-						"temp": 		round(temp+ BLEsensorMACs[mac]["offsetTemp"],1),
-						"hum": 			int(hum + BLEsensorMACs[mac]["offsetHum"]),
-						"batteryLevel": batteryLevel, 
-						"counter": 		BLEsensorMACs[mac]["nMessages"], 
-						"mac": 			mac,
-						"trigger": 		trig,
+						'temp': 		round(temp+ BLEsensorMACs[mac]["offsetTemp"],1),
+						'hum': 			int(hum + BLEsensorMACs[mac]["offsetHum"]),
+						'batteryLevel': batteryLevel, 
+						'counter': 		BLEsensorMACs[mac]["nMessages"], 
+						'mac': 			mac,
+						'trigger': 		trig,
 						"rssi":			int(rx)
 				}
 
@@ -2614,11 +2600,10 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	try:
+		if len(hexData) < 55: return sensor, tx,  ""
 
+		hexData = hexData[12:]
 		"""
-
-  					   19   0E 09 4D 4A 48 46 44 31 5F 30 30 31 30 46 4309FF8F0352572D424C45B1
- 
 		## message formats for round sensor - LYWSDCGQ = AA 01 = S-typ
         ##                                       counter                                    data-
         ##                                             S-typ ct   reverse mac -----   Stype ll      1  2  3  4		
@@ -2627,14 +2612,12 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		##17 02 01 06                13 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   04 10 02      DA 02   			04=temp; 		ll= 2 byte
 		##17 02 01 06                13 16 95 FE 51 20 DF 02 7D   FC 10 00 43 57 48   06 10 02      0E 02  
 		##19 02 01 06                15 16 95 FE 50 20 AA 01 nn   E2 1D 37 34 2D 58   0D 10 04      FC 00   1E 02  		0D=temp + hum;	ll= 4 byte
-	pos                                 01 23 45 67 89 11 23 45   67 89 21 23 45 67   89 31 23      45 67   89 41  		pos in tag 
-	pos16   							   01 23 45 67 89 11 23   45 67 89 21 23 45   67 89 31      23 45   67 89    	position in data16
+	pos                                 01 23 45 67 89 11 23 45   67 89 21 23 45 67   89 31 23      45 67   89 41  pos in tag 
 		## formaldehyde
 		##17 02 01 06                13 16 95 FE 51 20 DF 02 7E   FC 10 00 43 57 48   10 10 02      4200 
 
 		# 
-	pos   01 23 45 67                89 11 23 45 67 89 21 23 45   67 89 31 23 45 67   89 41 23      45 67   89 51		position in hexData
-	pos16   							   01 23 45 67 89 11 23   45 67 89 21 23 45   67 89 31      23 45   67 89    	position in data16
+	pos   01 23 45 67                89 11 23 45 67 89 21 23 45   67 89 31 23 45 67   89 41 23      45 67   89 61		position in hexData
 		##
 		## clock - LYWSD02 = 5B 04 = S-typ, no battery level? , each meassge is eitherh T or H or bat only 
 		## mac#                E7:2E:01:41:5C:D9                                        
@@ -2645,7 +2628,6 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 06 10 02   A4 01    			06=hum   01aa --> 420/10 = 42.9%
 		##1C 02 01 06   03 02 1A 18  14 16 95 FE 70 20 5B 04 nn   D9 5C 41 01 2E E7   09 0A 10 01   5B 00				0A=batt  5B   --> 91  ll= 1 byte, not too often
 	pos   01 23 45 67   89 11 23 45  67 89 21 23 45 67 89 31 23   45 67 89 41 23 45   67 89 51 23   45 67				position in hexData
-	pos16   							   01 23 45 67 89 11 23   45 67 89 21 23 45   67 89 31 23   45 67           	position in data16
 
 
 	# Xiaomi sensor types dictionary 
@@ -2692,14 +2674,7 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 	"""
 		doPrint 		= False
-		if mac == "xxx48:57:43:00:10:FC": doPrint = True
-		#if doPrint: U.logger.log(20, "mac:{}, sensor:{} hexData:{}".format(mac, sensor, hexData))
-
-
-		if mac not in parsedData: return sensor, tx,  ""
-		data16 = parsedData[mac]["analyzed"]["code"].get("16","")
-		if data16 == "": return sensor, tx,  "" 
-
+		#if mac == "E7:2E:01:41:5C:D9": doPrint = True
 		out 			= ""
 		testStringTEMP 	= "x"
 		testStringHUM  	= "x"
@@ -2713,19 +2688,20 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		TEMPHtag 		= "0D1004"
 		FORMAtag 		= "101002"
 		#							 						ID-tag		sensTypeTag		counter
-		data = data16
-		typeInfo 		= 	{ "LYWSDCGQ":{"pos0":0, "pos1":[ 0,12], "pos2":[26,32], "posC":12, "id":"95FE5020AA01"}
-							, "MJHFD1":  {"pos0":0, "pos1":[ 0,12], "pos2":[26,32], "posC":12, "id":"95FE5120DF02"}
-							, "LYWSD02": {"pos0":0, "pos1":[ 0,12], "pos2":[28,34], "posC":12, "id":"95FE70205B04"}
+		typeInfo 		= 	{ "LYWSDCGQ":{"pos0":10, "pos1":[ 0,14], "pos2":[28,34], "posC":14, "id":"1695FE5020AA01"}
+							, "MJHFD1":  {"pos0":10, "pos1":[ 0,14], "pos2":[28,34], "posC":14, "id":"1695FE5120DF02"}
+							, "LYWSD02": {"pos0":18, "pos1":[ 0,14], "pos2":[30,36], "posC":14, "id":"1695FE70205B04"}
 							}
+
 		found = False
 		for stype in  typeInfo:
-			if data16.find(typeInfo[stype]["id"]) >-1:
+			if hexData.find(typeInfo[stype]["id"]) >-1:
 				found = True
 				break
 		if not found: 
-			if doPrint: U.logger.log(20, "mac:{}, stype not found, sensor:{}".format(mac, sensor))
+			if False and doPrint: U.logger.log(20, "mac:{}, stype not found, sensor:{}".format(mac, sensor))
 			return sensor, tx,  ""
+
 
 
 		sens = ""
@@ -2737,15 +2713,16 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			return sensor, tx,  ""
 		if doPrint: U.logger.log(20, "mac:{}, sens:{}, sensor:{} start ========".format(mac, sens, sensor))
 
+		hData = hexData[typeInfo[sens]["pos0"]:]
 
-		testString		= data16[typeInfo[sens]["pos1"][0]:typeInfo[sens]["pos1"][1]]	+ macplainReverse + data16[typeInfo[sens]["pos2"][0]:typeInfo[sens]["pos2"][1]]
+		testString		= hData[typeInfo[sens]["pos1"][0]:typeInfo[sens]["pos1"][1]]	+ macplainReverse + hData[typeInfo[sens]["pos2"][0]:typeInfo[sens]["pos2"][1]]
 		testStringTEMP 	= typeInfo[sens]["id"] 											+ macplainReverse + TEMPtag
 		testStringTH	= typeInfo[sens]["id"] 											+ macplainReverse + TEMPHtag
 		testStringHUM	= typeInfo[sens]["id"] 											+ macplainReverse + HUMtag
 		testStringFORM	= typeInfo[sens]["id"] 											+ macplainReverse + FORMAtag
 		testStringBAT	= typeInfo[sens]["id"] 											+ macplainReverse + BATtag
-		dataString		= data16[typeInfo[sens]["pos2"][1]:]
-		counter			= int(data16[typeInfo[sens]["posC"]:typeInfo[sens]["posC"]+2],16)
+		dataString		= hData[typeInfo[sens]["pos2"][1]:]
+		counter			= int(hData[typeInfo[sens]["posC"]:typeInfo[sens]["posC"]+2],16)
 
 		if BLEsensorMACs[mac]["nMessages"] == 0:
 			BLEsensorMACs[mac]["tempAve"] = []
@@ -2754,11 +2731,11 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 				BLEsensorMACs[mac]["tempAve"].append(-100)
 				BLEsensorMACs[mac]["tempHum"].append(-100)
 
+		out = ""
+		for ii in range(10,len(hexData)-2,2):
+			out+= hexData[ii:ii+2] + " "
 		if doPrint:
-			out = ""
-			for ii in range(10,len(data16)-2,2):
-				out+= data16[ii:ii+2] + " "
-				U.logger.log(20, "mac:{},sensor:{} data string:{}, count:{}, \nteststr:{}\nformTag:{}\nout:{}".format(mac,sensor,  dataString, counter, testString, testStringFORM, out))
+			U.logger.log(20, "mac:{},sensor:{} data string:{}, count:{}, \nteststr:{}\nformTag:{}\nout:{}".format(mac,sensor,  dataString, counter, testString, testStringFORM, out))
 
 
 		temp 			= BLEsensorMACs[mac]["temp"]
@@ -2816,15 +2793,15 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 		
 		dd = {}  # the data dict to be send 
-		dd["mac"] =	mac
-		if temp > -100: 											dd["temp"] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
-		if hum > -100: 												dd["hum"]			= int(hum + BLEsensorMACs[mac]["offsetHum"])
-		if Formaldehyde > -100: 									dd["Formaldehyde"]	= round(Formaldehyde,2)
-		if counter > -100: 											dd["counter"]		= counter 
+		dd['mac'] =	mac
+		if temp > -100: 											dd['temp'] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
+		if hum > -100: 												dd['hum']			= int(hum + BLEsensorMACs[mac]["offsetHum"])
+		if Formaldehyde > -100: 									dd['Formaldehyde']	= round(Formaldehyde,2)
+		if counter > -100: 											dd['counter']		= counter 
 		if BLEsensorMACs[mac]["batteryLevel"] !="":
 			if BLEsensorMACs[mac]["batteryLevel"] >-100:
-																	dd["batteryLevel"]	= BLEsensorMACs[mac]["batteryLevel"]
-		if rx > -101: 												dd["rssi"]			= int(rx)
+																	dd['batteryLevel']	= BLEsensorMACs[mac]["batteryLevel"]
+		if rx > -101: 												dd['rssi']			= int(rx)
 
 		trig = ""
 		if abs(temp - BLEsensorMACs[mac]["temp"])  > 0.5: 														trig += "temp/"
@@ -2866,60 +2843,70 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 def doTempspike(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	try:
+		if len(hexData) < 55: return sensor, tx,  ""
+
+		hexData = hexData[12:]
 		"""
 		id package gives name, used as tag to detect this beacon type 
 	    04 3E 27 02 01 00 00   C3 CB 29 B5 D4 FD     1B  02 01 06   0E  08 54 50 33 39 33 53 20 28 43 42 43 33 29   08 FF C2 F8 00 29 22 23 01  
                                                      01  23 45 67   89  01 23 45 67 89 01 23 45 67 89 01 23 45 67   89 01 23 45 67 89 01 23 45
-                                                                                                                    01 23 45 67 89 01 23 45 67  
-                                                                                                                          01 23 45 67 89 01 23  
-                                                                           T  P  3  9  3  S     (  C  B  C  3  )             t1 t0 hh  B                            
+                                                                                                                    01 23 45 67 89 01 23 45 67 89 
+                                                                           T  P  3  9  3  S     (  C  B  C  3  )             t1 t0 hh                              
 	"""
 		doPrint 		= False
 		if mac == "xxFD:D4:B5:29:CB:C3": doPrint = True
-		if mac not in parsedData: return sensor, tx,  ""
-		data08 = parsedData[mac]["analyzed"]["code"].get("08","")
-		dataFF = parsedData[mac]["analyzed"]["code"].get("FF","")
 		out 	= ""
 		tag 	= "545033" #39335320284342433329"
 		#		=   T P 3
-		if data08.find("TP3") !=0: return sensor, tx,  "" 
+		tFound = hexData.find(tag)
+		if 10 > tFound or tFound > 14 : return sensor, tx,  "" 
 
 		dd = {}  # the data dict to be send 
 
+		ll = hexData[tFound-4:tFound-2]
+		length = int(ll,16)*2 +2
+
+		hexData = hexData[tFound-4+length:]
+		pp0 = hexData.find("08") +2
+
 		if doPrint:
-			U.logger.log(20, "mac:{}, FF:{}, 08:{} ,".format(mac,dataFF, data08))
+			#U.logger.log(20, "mac:{},sensor:{} data string:{}".format(mac,sensor,  hexData))
+			if hexData[pp0:pp0+4] != "FFC2" or hexData[pp0+10:-2] != "222301": 
+				U.logger.log(20, "mac:{}, ll:{}; length:{} pp0:{}  hex beg:{}; T:{}, H:{}, rest:{},  bc:{},".format(mac, ll, length, pp0, hexData[pp0:pp0+4], hexData[pp0+4:pp0+8], hexData[pp0+8:pp0+10], hexData[pp0+10:-2], hexData[-2:]))
 
 		temp 			= BLEsensorMACs[mac]["temp"]
 		hum  			= BLEsensorMACs[mac]["hum"]
 
-		val = int(dataFF[2:4],16) + int(dataFF[4:6],16)*256
+		pp = pp0 + 4
+		val = int(hexData[pp:pp+2],16) + int(hexData[pp+2:pp+4],16)*256
 		if val > 32767: val -= 65536
 		temp = round(val / 10.,1) 
 
-		hum = int(dataFF[6:8],16)
+		pp = pp0 + 8
+		hum = int(hexData[pp:pp+2],16)
 
-		xx = dataFF[9:10]
+		pp = pp0 + 10
+		xx = hexData[pp+1:pp+2]
 		if xx == "2":  		BL = 100
 		elif xx == "1":  	BL = 50
 		elif xx == "0":  	BL = 10
 		else:			 	BL = 0
-		dd["batteryLevel"]	= BL
+		dd['batteryLevel']	= BL
 
-		dd["mac"] =	mac
-		if temp > -100: 											dd["temp"] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
-		if hum > -100: 												dd["hum"]			= int(hum + BLEsensorMACs[mac]["offsetHum"])
-		if rx > -101: 												dd["rssi"]			= int(rx)
+		dd['mac'] =	mac
+		if temp > -100: 											dd['temp'] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
+		if hum > -100: 												dd['hum']			= int(hum + BLEsensorMACs[mac]["offsetHum"])
+		if rx > -101: 												dd['rssi']			= int(rx)
 
 		trig = ""
+		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])  > BLEsensorMACs[mac]["updateIndigoTiming"]:  trig += "Time/"			# send min every xx secs
 		if abs(temp - BLEsensorMACs[mac]["temp"]) 			> 0.5:  											trig += "temp/"
 		if abs(hum - BLEsensorMACs[mac]["hum"]) 			> 2:  												trig += "hum/"
 		if BL !=  BLEsensorMACs[mac]["batteryLevel"] :  														trig += "bat/"
-		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"]) > BLEsensorMACs[mac]["updateIndigoTiming"]:  		trig += "Time"			# send min every xx secs
 		trig = trig.strip("/")
+
 		dd["trigger"]			= trig 
-
 		if doPrint: U.logger.log(20, "mac:{}, temp:{}, hum:{}, triggers:{}".format(mac, temp, hum, trig))
-
 
 		if temp > -100.:
 			if  trig !="":
@@ -2948,59 +2935,73 @@ def doTempspike(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 def doThermopro(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	try:
+		if len(hexData) < 55: return sensor, tx,  ""
 
+		hexData = hexData[12:]
 		"""
 		id package gives name, used as tag to detect this beacon type 
 	    04 3E 27 02 01 00 00   C3 CB 29 B5 D4 FD     1B  02 01 06   0E  08 54 50 33 39 33 53 20 28 43 42 43 33 29   08 FF C2 F8 00 29 22 23 01  
                                                      01  23 45 67   89  01 23 45 67 89 01 23 45 67 89 01 23 45 67   89 01 23 45 67 89 01 23 45
-                                                                                                                    01 23 45 67 89 01 23 45 67  
-                                                                                                                          01 23 45 67 89 01 23  
-                                                                           T  P  3  9  3  S     (  C  B  C  3  )             t1 t0 hh  B                            
+                                                                                                                    01 23 45 67 89 01 23 45 67 89 
+                                                                           T  P  3  9  3  S     (  C  B  C  3  )             t1 t0 hh                              
 	"""
 		doPrint 		= False
 		if mac == "xxFD:D4:B5:29:CB:C3": doPrint = True
-		if mac not in parsedData: return sensor, tx,  ""
-		data08 = parsedData[mac]["analyzed"]["code"].get("08","")
-		dataFF = parsedData[mac]["analyzed"]["code"].get("FF","")
-		if data08.find("TP3") !=0: return sensor, tx,  "" 
+		out 	= ""
+		tag 	= "545033" #39335320284342433329"
+		#		=   T P 3
+		tFound = hexData.find(tag)
+		if 10 > tFound or tFound > 14 : return sensor, tx,  "" 
 
 		dd = {}  # the data dict to be send 
 
+		ll = hexData[tFound-4:tFound-2]
+		length = int(ll,16)*2 +2
+
+		hexData = hexData[tFound-4+length:]
+		pp0 = hexData.find("08") +2
+
 		if doPrint:
-			U.logger.log(20, "mac:{}, FF:{}, 08:{} ,".format(mac,dataFF, data08))
+			#U.logger.log(20, "mac:{},sensor:{} data string:{}".format(mac,sensor,  hexData))
+			if hexData[pp0:pp0+4] != "FFC2" or hexData[pp0+10:-2] != "222301": 
+				U.logger.log(20, "mac:{}, ll:{}; length:{} pp0:{}  hex beg:{}; T:{}, H:{}, rest:{},  bc:{},".format(mac, ll, length, pp0, hexData[pp0:pp0+4], hexData[pp0+4:pp0+8], hexData[pp0+8:pp0+10], hexData[pp0+10:-2], hexData[-2:]))
 
 		temp 			= BLEsensorMACs[mac]["temp"]
 		hum  			= BLEsensorMACs[mac]["hum"]
 
-		val = int(dataFF[2:4],16) + int(dataFF[4:6],16)*256
+		pp = pp0 + 4
+		val = int(hexData[pp:pp+2],16) + int(hexData[pp+2:pp+4],16)*256
 		if val > 32767: val -= 65536
 		temp = round(val / 10.,1) 
 
-		hum = int(dataFF[6:8],16)
+		pp = pp0 + 8
+		hum = int(hexData[pp:pp+2],16)
 
-		xx = dataFF[9:10]
+		pp = pp0 + 10
+		xx = hexData[pp+1:pp+2]
 		if xx == "2":  		BL = 100
 		elif xx == "1":  	BL = 50
 		elif xx == "0":  	BL = 10
 		else:			 	BL = 0
-		dd["batteryLevel"]	= BL
+		dd['batteryLevel']	= BL
 
-		dd["mac"] =	mac
-		if temp > -100: 											dd["temp"] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
-		if hum > -100: 												dd["hum"]			= int(hum + BLEsensorMACs[mac]["offsetHum"])
-		if rx > -101: 												dd["rssi"]			= int(rx)
+		dd['mac'] =	mac
+		if temp > -100: 											dd['temp'] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
+		if hum > -100: 												dd['hum']			= int(hum + BLEsensorMACs[mac]["offsetHum"])
+		if rx > -101: 												dd['rssi']			= int(rx)
 
 		trig = ""
 		if abs(temp - BLEsensorMACs[mac]["temp"]) 			> 0.5:  											trig += "temp/"
 		if abs(hum - BLEsensorMACs[mac]["hum"]) 			> 2:  												trig += "hum/"
 		if BL !=  BLEsensorMACs[mac]["batteryLevel"] :  														trig += "bat/"
-		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"]) > BLEsensorMACs[mac]["updateIndigoTiming"]:  		trig += "Time"			# send min every xx secs
+		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"]) > BLEsensorMACs[mac]["updateIndigoTiming"]:  trig += "Time"			# send min every xx secs
 		trig = trig.strip("/")
-		dd["trigger"]			= trig 
 
+		if True:		 											dd["trigger"]			= trig 
 		if doPrint: U.logger.log(20, "mac:{}, temp:{}, hum:{}, triggers:{}".format(mac, temp, hum, trig))
 
-		if temp > -100. and trig !="":
+		if temp > -100.:
+			if  trig !="":
 					# compose complete message
 					checkIfDelaySend({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}})
 
@@ -3026,8 +3027,9 @@ def doThermopro(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 def doBLEthermoBeacon(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs, sensors
 	try:
-		if mac not in parsedData: return sensor, tx,  ""
-		dataFF = parsedData[mac]["analyzed"]["code"].get("FF","")
+		if len(hexData) < 55: return sensor, tx,  ""
+
+		hexData = hexData[12:]
 		"""
 		id package gives name, used as tag to detect this beacon type 
 		lTot	ll MFG   T  h  e  r  m  o  B  e  a  c  o  n     SlaveConnectionIntervalRange-12    ????????
@@ -3040,81 +3042,83 @@ def doBLEthermoBeacon(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 																	 Tmax- ts--------- Tmin- ts---------
 
 		this package is used here 
-		 1  2  3  4    5  6  7  8   9  a  1  2  3  4  5  6  7  8  9  b  1  2  3  4  5  6  7  8  9  c
-		1D  02 01 06  03 02 F0 FF  15 FF 11 00 00 00 2B 07 00 00 54 E9 A1 0C 92 01 71 02 19 00 00 00          BC=-68
-		1D  02 01 06  03 02 F0 FF  15 FF 11 00 00 00 2B 07 00 00 54 E9 E6 0B B3 01 1E 02 9C 01 00 00  
-										 01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67 89 
-		01  23 45 67  89 11 23 45  67 89 21 23 45 67 89 31 23 45 67 89 41 23 45 67 89 51 23 45 67 89 
-										    22 
-											01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67 89 
+		 1  2  3  4  5  6  7  8  9  a   1  2  3  4  5  6  7  8  9  b  1  2  3  4  5  6  7  8  9  c
+		1D  02 01 06 03 02 F0 FF 15 FF 11 00 00 00 2B 07 00 00 54 E9 A1 0C 92 01 71 02 19 00 00 00          BC=-68
+		1D  02 01 06 03 02 F0 FF 15 FF 11 00 00 00 2B 07 00 00 54 E9 E6 0B B3 01 1E 02 9C 01 00 00  
 		--- tag ---------------------
-									     tp = type 11 = temp + hum 
-										    xx xx  always 00 ?? 
-												  cc = 00 / 80 if button pressed
-												     mac-------------
-																	   bb bb  battery voltage in mV
-																		     TT TT        /16 
-																				   HH HH  / 16
-																					     UT UT UT UT uptime in sec since last reset
+									   tp = type 11 = temp + hum 
+										  xx xx  always 00 ?? 
+												cc = 00 / 80 if button pressed
+												   mac-------------
+																	 bb bb  battery voltage in mV
+																		   TT TT        /16 
+																				 HH HH  / 16
+																					   UT UT UT UT uptime in sec since last reset
 																	
-		06 | 80 if Button is pressed else 00
-		08 | mac address
-		20 | bb  battery voltage: seems that 3400  in MV > 3000 == 100% 
-		24 | TT  temperature    /16 in C
-		28 | HH  humidity  /16 in %
-		32 | UT  seconds sinse the last reset
+		04 | 80 if Button is pressed else 00
+		15 | mac address
+		11 | bb  battery voltage: seems that 3400  in MV > 3000 == 100% 
+		13 | TT  temperature    /16 in C
+		15 | HH  humidity  /16 in %
+		17 | UT  seconds sinse the last reset
 
 
 	"""
 		doPrint =  mac == "xxE9:54:00:00:07:2B"
-		tag 	= "11"
-		if dataFF.find(tag) != 0 : return sensor, tx,  "" 
+		out 	= ""
+		tag 	= "1D0201060302F0FF15FF"
+		if hexData.find(tag) == -1 : return sensor, tx,  "" 
 
+
+		hData = hexData[11*2:]
 		if doPrint:
-			U.logger.log(20, "mac:{},sensor:{} data string:{}".format(mac,sensor,  dataFF))
+			U.logger.log(20, "mac:{},sensor:{} data string:{}".format(mac,sensor,  hexData))
+			U.logger.log(20, "mac:{}, hex used {}-{}-{}-{}".format(mac, hData[9*2:9*2+4], hData[11*2:11*2+4], hData[13*2:13*2+4], hData[15*2:15*2+8] ))
 
 		temp 			= BLEsensorMACs[mac]["temp"]
 		hum  			= BLEsensorMACs[mac]["hum"]
 		counter			= BLEsensorMACs[mac]["counter"]
 
-		pp = 6
-		buttonPressed  = dataFF[pp:pp+2] == "80"
+		pp = 2*2
+		val = hData[pp:pp+2]
+		buttonPressed  = hData[pp:pp+2] == "80"
 
-		pp = 20
-		#val = signedIntfrom16(data16[pp])
-		val = int(dataFF[pp:pp+2],16) + int(dataFF[pp+2:pp+4],16)*256
+
+		pp = 9*2
+		#val = signedIntfrom16(hData[pp])
+		val = int(hData[pp:pp+2],16) + int(hData[pp+2:pp+4],16)*256
 		if val > 32767: val -= 65536
 		batteryVoltage = val
 
-		pp = 24
-		#val = signedIntfrom16(data16[pp])
-		val = int(dataFF[pp:pp+2],16) + int(dataFF[pp+2:pp+4],16)*256
+		pp = 11*2
+		#val = signedIntfrom16(hData[pp])
+		val = int(hData[pp:pp+2],16) + int(hData[pp+2:pp+4],16)*256
 		if val > 32767: val -= 65536
 		temp = round(val / 16.,1) 
 
-		pp = 28
-		#val = signedIntfrom16(data16[pp])
-		val = int(dataFF[pp:pp+2],16) + int(dataFF[pp+2:pp+4],16)*256
+		pp = 13*2
+		#val = signedIntfrom16(hData[pp])
+		val = int(hData[pp:pp+2],16) + int(hData[pp+2:pp+4],16)*256
 		if val > 32767: val -= 65536
 		hum = int( round(val / 16.,0) )
 
-		pp = 32
-		#val = intfrom24(data16[pp])
-		val = int(dataFF[pp:pp+2],16) + int(dataFF[pp+2:pp+4],16)*256 + int(dataFF[pp+4:pp+6],16)*256*256 + int(dataFF[pp+6:pp+8],16)*256*256*256
+		pp = 15*2
+		#val = intfrom24(hData[pp])
+		val = int(hData[pp:pp+2],16) + int(hData[pp+2:pp+4],16)*256 + int(hData[pp+4:pp+6],16)*256*256 + int(hData[pp+6:pp+8],16)*256*256*256
 		counter = int(val)
 
 		bl = batLevelTempCorrection(batteryVoltage, temp)
 		
 		dd = {}  # the data dict to be send 
-		dd["mac"] =	mac
-		if temp > -100: 											dd["temp"] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
-		if hum > -100: 												dd["hum"]			= int(hum + BLEsensorMACs[mac]["offsetHum"])
-		if counter > -100: 											dd["counter"]		= counter 
-		if True:		 											dd["onOff"]			= buttonPressed 
+		dd['mac'] =	mac
+		if temp > -100: 											dd['temp'] 			= round(temp+ BLEsensorMACs[mac]["offsetTemp"],1)
+		if hum > -100: 												dd['hum']			= int(hum + BLEsensorMACs[mac]["offsetHum"])
+		if counter > -100: 											dd['counter']		= counter 
+		if True:		 											dd['onOff']			= buttonPressed 
 		if bl >-100:
-																	dd["batteryLevel"]	= int(bl)
-																	dd["batteryVoltage"]= int(batteryVoltage)
-		if rx > -101: 												dd["rssi"]			= int(rx)
+																	dd['batteryLevel']	= int(bl)
+																	dd['batteryVoltage']= int(batteryVoltage)
+		if rx > -101: 												dd['rssi']			= int(rx)
 
 		trig = ""
 		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])  > BLEsensorMACs[mac]["updateIndigoTiming"]:  trig += "Time/"			# send min every xx secs
@@ -3235,54 +3239,47 @@ format:
 	"""
 
 	try:
-		batL = ""
-		doPrint = mac in ["xxxB8:7C:6F:1A:D9:65"]
-		if mac not in parsedData: return sensor, tx,  batL
-		data08 = parsedData[mac]["analyzed"]["code"].get("08","")
-		dataFF = parsedData[mac]["analyzed"]["code"].get("FF","")
-		if len(dataFF) < 16: return sensor, tx,  batL
-		llFF = len(dataFF)//2
-#				   0123456789  1123456789213456 78931234567894123456
-#		           0201060908    iSensor        xxFF1065D91A360201A1
-
-		sensorName 	= data08  ## on off sensor
-		if   len(dataFF) == 8*2:	sensorType = "onOff" 
-		elif len(dataFF) == 15*2:	sensorType = "tempHum" 
-		else: 						sensorType = "" 
-
+		
+		hexData = hexData[14:]
+		if len(hexData) < 40: return sensor, tx,  ""
+		TagPos1 	= hexData.find("02010609086953656E736F722009FF")  ## on off sensor
+		TagPos2 	= hexData.find("02010609086953656E736F722011FF")  # temp hum .. sensor 
+		#                                        i S e n s o r _
+		if TagPos1 !=0 and TagPos2 !=0: return sensor, tx,  ""
 		trig = "" 
-		deviceByte			= intFrom8(dataFF,8)
+		deviceByte			= intFrom8(hexData,38)
 		typeID				= deviceByte & 0b00011111
 		if    deviceByte &  0b00010000 !=0: remote = True
 		else:								remote = False
 
-		#if  doPrint: U.logger.log(20, " mac:{}  deviceByte:{:08b}=={}, d18L:{},d18:{}, typeID:{}, remote:{}, sensorType:{}, ".format( mac,  deviceByte, deviceByte,  len(dataFF) , dataFF, typeID, remote, sensorType, ) )
-
-		if sensorType == "": return sensor, tx,  batL
+		doDebug = False
+		if False and mac in ["AC:9A:22:CC:EB:8E"]: doDebug = True
 		
 
+		if  doDebug:
+			U.logger.log(20, " mac:{}  TagPos1:{}  TagPos2:{}, deviceByte:{:08b}, typeID:{}, remote:{}".format( mac, TagPos1, TagPos2, deviceByte, typeID, remote) )
 
 		fastSwitchBotPress = "" 
 
-		if sensorType == "tempHum" : 
+		if TagPos2 == 0: 
 				out =""
-				for ii in range(0,len(dataFF),2):
-					out += dataFF[ii:ii+2]+" "
-				firmWare	= intFrom8(dataFF,0)
-				devId1		= intFrom8(dataFF,2)
-				devId2		= intFrom8(dataFF,4)
-				devId3		= intFrom8(dataFF,6)
-				eventData 	= intFrom8(dataFF,10)
-				counter		= intFrom8(dataFF,12)
-				cData		= intFrom8(dataFF,14)
-				temp1   	= intFrom8(dataFF,16)
-				temp2   	= intFrom8(dataFF,18)
-				hum1	   	= intFrom8(dataFF,20)
-				hum2	   	= intFrom8(dataFF,22)
-				empty1	   	= intFrom8(dataFF,24)
-				empty2	   	= intFrom8(dataFF,26)
-				empty3	   	= intFrom8(dataFF,28)
-				checkSum	= intFrom8(dataFF,30)
+				for ii in range(30,len(hexData),2):
+					out += hexData[ii:ii+2]+" "
+				firmWare	= intFrom8(hexData,30)
+				devId1		= intFrom8(hexData,32)
+				devId2		= intFrom8(hexData,34)
+				devId3		= intFrom8(hexData,36)
+				eventData 	= intFrom8(hexData,40)
+				counter		= intFrom8(hexData,42)
+				cData		= intFrom8(hexData,44)
+				temp1   	= intFrom8(hexData,46)
+				temp2   	= intFrom8(hexData,48)
+				hum1	   	= intFrom8(hexData,50)
+				hum2	   	= intFrom8(hexData,52)
+				empty1	   	= intFrom8(hexData,54)
+				empty2	   	= intFrom8(hexData,56)
+				empty3	   	= intFrom8(hexData,58)
+				checkSum	= intFrom8(hexData,60)
 				checkSumCalc= (firmWare + devId1 + devId2 + devId3 + deviceByte + eventData + counter + cData + temp1 + temp2 +hum1 + hum2 + empty1 + empty2 + empty2) & 255 # only one byte
 						
 				temp   		= float(temp1)
@@ -3297,23 +3294,22 @@ format:
 				lowVoltage	= eventData & 0b00000100 != 0
 				alarm		= eventData & 0b00000010 != 0
 				tampered	= eventData & 0b00000001 != 0
-				batL = 10 if lowVoltage else 100
+
 				sensorType = "undefined"
-				if    typeID == 0b00001100: sensorType = "TempHum"
-				else: return sensor, tx,  batL
+				if    typeId == 0b00001100: sensorType = "TempHum"
+				else: return sensor, tx,  ""
 
 				#U.logger.log(20, " mac:{} counter:{}, hum:{:5.2f}; temp:{:9.3f}; sendsAlive:{}, lowVoltage:{}, alarm:{}, tampered:{}, checkSum:{}, csCalc:{},  hex:{}".format( mac, counter, hum, temp, sendsAlive, lowVoltage, alarm, tampered, checkSum, checkSumCalc, out)  )
 				if  sensorType == "TempHum":
 					dd = {   # the data dict to be send 
-							"lowVoltage": 	lowVoltage,
-							"batterylevel": batL,
-							"temp": 		round(temp,2),
-							"hum": 			int(hum),
-							"tampered": 	eventData & 0b00000001 != 0,
-							"counter": 		counter, # changes only when pressed twice or ~1 sec after the last
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive,
-							"mac": 			mac,
+							'lowVoltage': 	eventData & 0b00000100 != 0,
+							'temp': 		round(temp,2),
+							'hum': 			int(hum),
+							'tampered': 	eventData & 0b00000001 != 0,
+							'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							'mac': 			mac,
 							"rssi":			int(rx)
 					}
 
@@ -3321,7 +3317,7 @@ format:
 				if False and counter != BLEsensorMACs[mac]["counter"]: 													trig += "count/" 			# send min every xx secs
 				if abs(temp - BLEsensorMACs[mac]["temp"]) > 0.5: 														trig += "temp/"
 				if abs(hum - BLEsensorMACs[mac]["hum"]) > 1: 															trig += "hum/"
-				if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])   > BLEsensorMACs[mac]["updateIndigoTiming"]:		trig += "Time" 			# send min every xx secs
+				if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])   > BLEsensorMACs[mac]["updateIndigoTiming"]:	trig += "Time" 			# send min every xx secs
 				trig = trig.strip("/")
 				if  trig != "":
 					dd["trigger"] = trig
@@ -3334,23 +3330,22 @@ format:
 					BLEsensorMACs[mac]["temp"]    	 = temp
 					BLEsensorMACs[mac]["hum"]    	 = hum
 
-				else:
-					return sensor, tx,  batL		
+				return sensor, tx,  ""		
 
 
-		elif sensorType == "onOff": 
-			firmWare	= intFrom8(dataFF,0)
-			devId1		= intFrom8(dataFF,2)
-			devId2		= intFrom8(dataFF,4)
-			devId3		= intFrom8(dataFF,6)
-			eventData 	= intFrom8(dataFF,10)
-			counter		= intFrom8(dataFF,12)
-			checkSum	= intFrom8(dataFF,14)
+		elif TagPos1 == 0: 
+			firmWare	= intFrom8(hexData,30)
+			devId1		= intFrom8(hexData,32)
+			devId2		= intFrom8(hexData,34)
+			devId3		= intFrom8(hexData,36)
+			eventData 	= intFrom8(hexData,40)
+			counter		= intFrom8(hexData,42)
+			checkSum	= intFrom8(hexData,44)
 
 			checkSumCalc 		= (firmWare + devId1 + devId2 + devId3 + deviceByte + eventData + counter) & 255 # only one byte
 
-			if False and checkSum != checkSumCalc:
-				U.logger.log(20, " mac:{}   checksum error  hex:{}, chs:{} chscalc:{}".format( mac, dataFF, checkSum, checkSumCalc) )
+			if checkSum != checkSumCalc:
+				U.logger.log(20, " mac:{}   checksum error  hex:{}, chs:{} chscalc:{}".format( mac, hexData[32:48], checkSum, checkSumCalc) )
 				U.sendURL( {"sensors":{sensor: {BLEsensorMACs[mac]["devId"]: {"badsensor":True, "rssi":int(rx)} }}} )
 				return sensor, tx,  "" 
 
@@ -3393,22 +3388,19 @@ format:
 			elif  typeID == 0b00011111:	sensorType = "RemoteSwitch"	  # not supported, will just post the bits
 			else:						sensorType = "undefined"
 
-			if  doPrint: U.logger.log(20, " mac:{}   typeID:{}, eventData:{:08b}, sensorType:{}, remote:{}".format( mac, typeID, eventData, sensorType, remote) )
+			if  doDebug: U.logger.log(20, " mac:{}   typeID:{}, eventData:{:08b}, sensorType:{}, remote:{}".format( mac, typeID, eventData, sensorType, remote) )
 
 			if sensorType in ["DoorBell", "RemoteKeyFob", "RemoteSwitch",  "Door", "WaterLevel",  "Panic"]:
 				if 	tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])  > 1.: trig += "remote/"
 				if  sensorType == "DoorBell":
-					lowVoltage	= eventData & 0b00000100 != 0
-					batL = 10 if lowVoltage else 100
 					dd = {   # the data dict to be send 
-							"lowVoltage": 	lowVoltage,
-							"batterylevel": batL,
-							"onOff": 		eventData & 0b00000010 != 0,
-							"tampered": 	eventData & 0b00000001 != 0,
-							"counter": 		counter, # changes only when pressed twice or ~1 sec after the last
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive,
-							"mac": 			mac,
+							'lowVoltage': 	eventData & 0b00000100 != 0,
+							'onOff': 		eventData & 0b00000010 != 0,
+							'tampered': 	eventData & 0b00000001 != 0,
+							'counter': 		counter, # changes only when pressed twice or ~1 sec after the last
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							'mac': 			mac,
 							"rssi":			int(rx)
 					}
 					if eventData & 0b00000010 != 0: fastSwitchBotPress =  "on"
@@ -3416,81 +3408,78 @@ format:
 				elif  sensorType == "RemoteKeyFob":
 					anybutton = eventData & 0b00001000 != 0 or eventData & 0b00000100 != 0 or eventData & 0b00000010 != 0 or eventData & 0b00000001 != 0
 					dd = {   # the data dict to be send 
-							"SOS": 			eventData & 0b00001000 != 0,
-							"home": 		eventData & 0b00000100 != 0,
-							"away": 		eventData & 0b00000010 != 0,
-							"disarm": 		eventData & 0b00000001 != 0,
-							"counter": 		counter, # not used always 1
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive, # should be false always
-							"mac": 			mac,
+							'SOS': 			eventData & 0b00001000 != 0,
+							'home': 		eventData & 0b00000100 != 0,
+							'away': 		eventData & 0b00000010 != 0,
+							'disarm': 		eventData & 0b00000001 != 0,
+							'counter': 		counter, # not used always 1
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive, # should be false always
+							'mac': 			mac,
 							"rssi":			int(rx)
 					}
 					if anybutton: fastSwitchBotPress =  "on"
 					else: 		  fastSwitchBotPress =  "off"
 				elif sensorType == "RemoteSwitch":
 					dd = {   # the data dict to be send 
-							"state": 		eventData & 0b00000100 != 0,
-							"onOff": 		eventData & 0b00000010 != 0,
-							"counter": 		counter,
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive,
-							"mac": 			mac,
+							'state': 		eventData & 0b00000100 != 0,
+							'onOff': 		eventData & 0b00000010 != 0,
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							'mac': 			mac,
 							"rssi":			int(rx)
 					}
 					if eventData & 0b000000010 != 0: fastSwitchBotPress = "on"
 					else: 						 	 fastSwitchBotPress = "off"
 				elif sensorType == "Door":
 					dd = {   # the data dict to be send 
-							"state": 		(eventData & 0b00000100) != 0,
-							"onOff": 		(eventData & 0b00000010) == 0, # this one is on if disconnected, off if mag is close, reversing logic 
-							"counter": 		counter,
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive,
-							"mac": 			mac,
+							'state': 		(eventData & 0b00000100) != 0,
+							'onOff': 		(eventData & 0b00000010) == 0, # this one is on if disconnected, off if mag is close, reversing logic 
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							'mac': 			mac,
 							"rssi":			int(rx)
 					}
 					if eventData & 0b000000010 != 0: fastSwitchBotPress = "on"
 					else: 						 	 fastSwitchBotPress = "off"
 				elif sensorType == "WaterLevel":
 					dd = {   # the data dict to be send 
-							"onOff": 		(eventData & 0b00000010) == 0,
-							"counter": 		counter,
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive,
-							"tampered": 	eventData & 0b00000001 != 0,
-							"mac": 			mac,
+							'onOff': 		(eventData & 0b00000010) == 0,
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							'tampered': 	eventData & 0b00000001 != 0,
+							'mac': 			mac,
 							"rssi":			int(rx)
 					}
 					if eventData & 0b000000010 != 0: fastSwitchBotPress = "on"
 					else: 						 	 fastSwitchBotPress = "off"
-					if  doPrint: U.logger.log(20, " mac:{}  in waterlevel;".format(mac))
+					if  doDebug: U.logger.log(20, " mac:{}  in waterlevel;".format(mac))
 
 				elif  sensorType == "Panic":
 					dd = {   # the data dict to be send 
-							"onOff": 		eventData & 0b00000010 != 0,
-							"counter": 		counter,
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive,
-							"mac": 			mac,
+							'onOff': 		eventData & 0b00000010 != 0,
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							'mac': 			mac,
 							"rssi":			int(rx)
 						}
 					if eventData & 0b000000010 != 0: fastSwitchBotPress = "on"
 
 			else: # all other type onOff
-					lowVoltage	= eventData & 0b00000100 != 0
-					batL = 10 if lowVoltage else 100
 					dd = {   
-							"bits": 		"{:b}".format(eventData),
-							"alive": 		eventData & 0b00001000 != 0,
-							"lowVoltage": 	lowVoltage,
-							"batterylevel": batL,
-							"onOff": 		eventData & 0b00000010 != 0,
-							"tampered": 	eventData & 0b00000001 != 0,
-							"counter": 		counter,
-							"sensorType": 	sensorType,
-							"sendsAlive": 	sendsAlive,
-							"mac": 			mac,
+							'bits': 		"{:b}".format(eventData),
+							'alive': 		eventData & 0b00001000 != 0,
+							'lowVoltage': 	eventData & 0b00000100 != 0,
+							'onOff': 		eventData & 0b00000010 != 0,
+							'tampered': 	eventData & 0b00000001 != 0,
+							'counter': 		counter,
+							'sensorType': 	sensorType,
+							'sendsAlive': 	sendsAlive,
+							'mac': 			mac,
 							"rssi":			int(rx)
 						}
 					if eventData & 0b000000010 != 0: fastSwitchBotPress = "on"
@@ -3501,7 +3490,7 @@ format:
 		if counter != BLEsensorMACs[mac]["counter"]:		 													trig += "count"# send min every xx secs
 		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])   > BLEsensorMACs[mac]["updateIndigoTiming"]: trig += "Time"			# send min every xx secs
 
-		if  doPrint: U.logger.log(20, " mac:{}  sending dd:{};".format(mac, dd))
+		if  doDebug: U.logger.log(20, " mac:{}  sending dd:{};".format(mac, dd))
 
 		trig = trig.strip("/")
 		if  trig != "":
@@ -3516,12 +3505,12 @@ format:
 
 			if fastSwitchBotPress != "" : doFastSwitchBotPress(mac, fastSwitchBotPress)
 
-		return sensor, tx, batL
+		return sensor, tx,  ""
 
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	# return incoming parameetrs
-	return sensor, tx,  batL
+	return sensor, tx,  ""
 
 
 #################################
@@ -3536,33 +3525,27 @@ def doBLEmeeblue(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 format:
 																							
 - on/off sensors 
-									pos#      01   23 45 67   89 01 23 45    67 89 01 23   45 67 89 01 23 45   67 89  01 23 45 67 89   01 23   45 67 89 01 23   RSSI
-									pos#                                           01 23   45 67 89 01 23 45   67 89  01 23 45 67 89   01 23   45 67 89 01 23   RSSI
-											  1F   02 01 06   03 03 00 40    17 16 00 40   F5 79 3C 4E 7D 50   43 0C  D3 5B 76 E2 E0   1C 52   2D8466FFFFBC																													 
-																			 		       MAC--------------   bat    ?? ?? ?? ?? ??   count   ????????????
+									pos#      01 23 45 67 89 01 23 45  67 89 01 23   45 67 89 01 23 45   67 89  01 23 45 67 89   01 23   45 67 89 01 23   RSSI
+											  1F 02 01 06 03 03 00 40  17 16 00 40   F5 79 3C 4E 7D 50   43 0C  D3 5B 76 E2 E0   1C 52   2D8466FFFFBC																													 
+																					 MAC--------------   bat    ?? ?? ?? ?? ??   count   ????????????
 
-
-																			08 09 6D 65 65 62 6C 75 65
 
 	"""
 
 	try:
 		bl = ""
+		hexData = hexData[12:]
+		if len(hexData) < 20: return sensor, tx,  bl
 		doPrint = mac == "xxF5:79:3C:4E:7D:50"
-		if mac not in parsedData: return sensor, tx,  ""
-		data16 = parsedData[mac]["analyzed"]["code"].get("16","")
-		data08 = parsedData[mac]["analyzed"]["code"].get("08","")
-
-
-		TagPos1 	= data16.find("0040") == 0  						# regular msg, get battery voltage
-		TagPos2 	= data08.find("meeblue") == 0						# is button on, is string meeblue
-		if doPrint: U.logger.log(20,"mac:{}, -0- TagPos1:{} , TagPos2:{}, ".format(mac, TagPos1, TagPos2))
+		TagPos1 	= hexData.find("0201060303004017160040")  			#regular msg, get battery voltage
+		TagPos2 	= hexData.find("08096D6565626C7565") 				# is button on, is string meeblue
+		if doPrint: U.logger.log(20,"mac:{}, -0- TagPos1:{} , TagPos2:{}, hexData:{}".format(mac, TagPos1, TagPos2, hexData))
 		#                                        i S e n s o r _
-		if not TagPos1  and not TagPos2: return sensor, tx,  bl
+		if TagPos1 < 0 and TagPos2 < 0: return sensor, tx,  bl
 
-		if TagPos1:
+		if TagPos1 < 5 and TagPos1 > -1:
 			# REGULAR MESSAGE, get battery voltage and calc bat level	
-			batVoltage = int(data16[18:20] + data16[16:18],16)
+			batVoltage = int(hexData[38:40] + hexData[36:38],16)
 			BLEsensorMACs[mac]["batteryVoltage"]   = batVoltage
 
 			bl = batLevelTempCorrection(batVoltage,23)
@@ -3570,11 +3553,11 @@ format:
 
 			if time.time() - BLEsensorMACs[mac]["lastUpdate2"] > 20: # send off msg and batterylevel voltage as part of normal msg packet 
 				dd = {   # the data dict to be send 
-								"mac": 				mac,
-								"onOff": 			False,
-								"trigger": 			"Time" ,
-								"batteryVoltage": 	BLEsensorMACs[mac]["batteryVoltage"],
-								"batteryLevel": 	BLEsensorMACs[mac]["batteryLevel"],
+								'mac': 				mac,
+								'onOff': 			False,
+								'trigger': 			"Time" ,
+								'batteryVoltage': 	BLEsensorMACs[mac]["batteryVoltage"],
+								'batteryLevel': 	BLEsensorMACs[mac]["batteryLevel"],
 								"rssi":				int(rx)
 						}
 				if doPrint: U.logger.log(20,"mac:{}, -2- dd:{}".format(mac, dd))
@@ -3588,13 +3571,13 @@ format:
 
 		if time.time() - BLEsensorMACs[mac]["lastUpdate1"] < 15.5: return sensor, tx,  "" # on messages come for about 14.8 secs, so do 15.5 secs no ON messages
 
-		if TagPos2:
+		if TagPos2 > 20:
 			dd = {   # the data dict to be send 
-							"mac": 				mac,
-							"onOff": 			True,
-							"trigger": 			"buttonp-press" ,
-							"batteryVoltage": 	BLEsensorMACs[mac]["batteryVoltage"],
-							"batteryLevel": 	BLEsensorMACs[mac]["batteryLevel"],
+							'mac': 				mac,
+							'onOff': 			True,
+							'trigger': 			"buttonp-press" ,
+							'batteryVoltage': 	BLEsensorMACs[mac]["batteryVoltage"],
+							'batteryLevel': 	BLEsensorMACs[mac]["batteryLevel"],
 							"rssi":				int(rx)
 					}
 			if doPrint: U.logger.log(20,"mac:{}, -3- dd:{}".format(mac, dd))
@@ -3869,6 +3852,9 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 
 	try:
+		HexStr0 				= hexData[12:] # skip mac data 
+		if len(HexStr0) < 40: #( = 20 bytes)
+			return sensor, tx,  ""
 
 		# 01 23 45 67   89 01 23 45   67  89 01 23 45 67 89 01 23 45 67 89   01 23 45 67 89 01 23 45  position characters
 		#  1  2  3  4    5  6  7  8    9  10 11 1  13 14 15 16 17 18 19 20   21 22 23 24 25 26 27 28  position bytes 
@@ -3892,11 +3878,11 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		#    FF = manufacturing specific .. the 2 bytes for ID: 4B 4D = itrack, rest is coded data 
 		#    01 = flag
 		#    09 = name,  convert hex to ascii
-		#					 beep: x=5, y=0 
+		#					 beep: x=5, y=0
 		# 					 normal off: x=5,6, z=2
 		#   				 back from app rule (a) 30+sec : x=5, z=2
 		#   				 back from app rule after (a) off : x=6, z=2
-		#   				 y= type of device 1..F
+		#   				 y= 2,3,4,5,8 varying
 
 		if mac not in parsedData: return sensor, tx,  ""
 		if "analyzed" not in parsedData[mac]: return sensor, tx,  ""
@@ -3908,9 +3894,9 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		itrackID 		= mfgData[0:4] # == 4B 4D
 		rMAC     		= mfgData[6:18] # == 28 89 F9 A7 DD E2
 		bat      		= mfgData[18:20] # == 28 89 F9 A7 DD E2
-		bPressed		= mfgData[5:6]   # == z
-		typeCode 		= mfgData[4:5]   # == y
-		backFromConnect	= typeCode == "0" # ==y
+		bPressed		= mfgData[5:6] 
+		typeCode 		= mfgData[4:5] 
+		backFromConnect	= typeCode == "0"
 		flagData 		= parsedData[mac]["analyzed"]["code"].get("01","") 
 
 		#if itrackID != "4B4D"   	return sensor, tx,  "" 
@@ -3928,11 +3914,8 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		devId				= BLEsensorMACs[mac]["devId"]
 		data   = {sensor:{devId:{}}}
 
-
-		#if bPressed == "0" and flagData[1] == "5" and not backFromConnect:	onOff = True
-
-		if bPressed == "0" and not backFromConnect:	onOff = True
-		else:										onOff = False
+		if bPressed == "0" and flagData == "05" and not backFromConnect:	onOff = True
+		else:																onOff = False
 
 		stateOfBeacon = flagData + "-" + bPressed
 		if backFromConnect: stateOfBeacon += "-back_from_connect_state"
@@ -3988,13 +3971,11 @@ def doBLESatech( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	global BLEsensorMACs
 	"""
 Assuming the following BL:E messages (starting directly afetr the reverse MAC #)
-HexStr:1A  020106  0303E1FF  12 16 E1 FF A1 03 5D 00 00 00 00 00 F2  DD 04 BD 1D D4 F7  B2 #accel
-HexStr:18  020106  0303E1FF  10 16 E1 FF A1 04 5D 1A 17 34 56 DD 04 BD 1D D4 F7  AF  # temp
-HexStr:18  020106  0303E1FF  10 16 E1 FF A1 08 5D DD 04 BD 1D D4 F7 50 4C 55 53  AD  # # battery % and PLUS name
-HexStr:17  020106  0303AAFE  11 16 AA FE 20 00 0B6D  16 00 00 00 08 D4 00 00 0D  E8  B7 # gen info
-	   01  234567  89112345  67 89 21 23 45 67 89 31 23 45 67 89 
-
-HexStr:0E  020106            0A 09 42 65 61 63 6F 6E 66 69 67 == Beaconfig
+HexStr:1A0201060303E1FF1216E1FFA103 5D0000000000F2  DD04BD1DD4F7  B2 #accel
+HexStr:180201060303E1FF1016E1FFA104 5D 1A17 3456  DD04BD1DD4F7  AF  # temp
+HexStr:180201060303E1FF1016E1FFA108 5D DD04BD1DD4F7 504C5553  AD  # # battery % and PLUS name
+HexStr:170201060303AAFE1116AAFE2000 0B6D  1600  000008D4  00000DE8  B7 # gen info
+HexStr:0E0201060A09426561636F6E666967
 
 if     HexStr.find("0201060303E1FF1016E1FFA104") == 2:	
 	subType 	= "tempHum"
@@ -4043,18 +4024,17 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 	"""
 
 	try:
-		if mac not in parsedData: return sensor, tx,  ""
-		if "analyzed" not in parsedData[mac]: return sensor, tx,  ""
-		data16 		=  parsedData[mac]["analyzed"]["code"].get("16","") 
+		HexStr 				= hexData[12:]
+		if len(HexStr) < 40: 
+			return sensor, tx,  ""
 
 		devId				= BLEsensorMACs[mac]["devId"]
 
 		subType = ""
-		if     data16.find("E1FFA104") == 2:	subType 	= "tempHum"
-		elif   data16.find("E1FFA103") == 2:	subType 	= "accel"
-		elif   data16.find("AAFE2000") == 2:	subType 	= "genInfo"
-		elif   data16.find("E1FFA1FF") == 2:	subType 	= "sos"
-		else:  return sensor, tx,  ""
+		if     HexStr.find("0201060303E1FF1016E1FFA104") == 2:	subType 	= "tempHum"
+		elif   HexStr.find("0201060303E1FF1216E1FFA103") == 2:	subType 	= "accel"
+		elif   HexStr.find("0201060303AAFE1116AAFE2000") == 2:	subType 	= "genInfo"
+		elif   HexStr.find("0201060303E1FF0F16E1FFA1FF") == 2:	subType 	= "sos"
 
 		data   = {sensor:{devId:{}}}
 		data[sensor][devId] = {"type":sensor,"mac":mac,"rssi":float(rx),"txPower":-60}
@@ -4093,7 +4073,7 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 
 
 		elif  subType == "genInfo": 
-			dataString 	= data16.split("AAFE2000")[1]  ## + mV-- C- Cp- adC----- secs-strt"
+			dataString 	= HexStr.split("0201060303AAFE1116AAFE2000")[1]  ## + mV-- C- Cp- adC----- secs-strt"
 			p = 0; bv	= dataString[p  :p+4];	batteryVoltage 	= int(bv,16)
 			p = 4 ;	ct	= dataString[p  :p+4];	chipTemperature	= round(float(int(ct,16))/255.,1)
 			p = 8 ;	c	= dataString[p  :p+8];	counter 		= int(c,32)
@@ -4116,7 +4096,8 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 				BLEsensorMACs[mac]["batteryVoltage"] 	 	 		= batteryVoltage
 
 		elif  subType == "tempHum": 	
-			dataString 	= data16.split("E1FFA1")[1][2:]
+			dataString 	= HexStr.split("0201060303E1FF")[1]
+			dataString 	= dataString.split("E1FFA1")[1][2:]
 			dataString 	= dataString.split(macplain)[0]
 			p = 2; 	temp = round(signedIntfrom16(dataString[p :p+4]) /255.,2)   + BLEsensorMACs[mac]["offsetTemp"]
 			p = 6;	hum  = int(signedIntfrom16(dataString[p :p+4]) /255. + 0.5) + BLEsensorMACs[mac]["offsetHum"]
@@ -4138,7 +4119,8 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 				BLEsensorMACs[mac]["hum"] 	 	 					= hum
 
 		elif  subType  == "accel":
-			dataString 	= data16.split("E1FFA1")[1][2:]
+			dataString 	= HexStr.split("0201060303E1FF")[1]
+			dataString 	= dataString.split("E1FFA1")[1][2:]
 			dataString 	= dataString.split(macplain)[0]
 			p = 2 
 			accelerationX 	= signedIntfrom16(dataString[p  :p+4 ]) *4
@@ -4199,7 +4181,62 @@ def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., battery
 #################################
 def domyBlueT( mac, rx, tx, hexData,sensor):
 	global BLEsensorMACs
+	try:
+		if len(hexData) < 55:
+			return sensor, tx,  ""
+
+		RawData = hexData[48:48+6] # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
+		RawData = [int(RawData[0],16), int(RawData[1],16), int(RawData[2],16)]
+		#RawData = list(struct.unpack("BBB", pkt[31:34])) # get bytes # 31,32,33	 (starts at # 0 , #33 has sign, if !=0 subtract 2**15
+		if RawData[2] != 0: tSign = 0x10000 # == 65536 == 2<<15
+		else:				tSign = 0
+		r8				= RawData[1] << 8 
+		sensorData		= ( r8 + RawData[0] - tSign ) /100.
+		sensor			= "BLEmyBlueT"
+		devId			= BLEsensorMACs[mac]["devId"]
+		try:	temp  	= (sensorData + BLEsensorMACs[mac]["offsetTemp"]) * BLEsensorMACs[mac]["multTemp"]
+		except: temp  	= sensorData
+		#U.logger.log(20, "{}   RX:{}; TX:{}; temp:{}".format(mac, rx, tx, temp) )
+		# print "raw, tSign, t1<<8, sensorData, sensorData*9./5 +32.", RawData, tSign, r8, temp, sensorData, sensorData*9./5 +32.
+		if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])  > BLEsensorMACs[mac]["updateIndigoTiming"]: 
+			data   = {sensor:{devId:{}}}
+			data[sensor][devId] = {"temp":temp, "type":sensor,"mac":mac,"rssi":float(rx),"txPower":float(tx)}
+			checkIfDelaySend({"sensors":data})
+			BLEsensorMACs[mac]["lastUpdate"] = time.time()
+		return sensor, tx,  ""
+	except	Exception as e:
+		U.logger.log(30,"", exc_info=True)
 	return sensor, tx,  ""
+
+		#print RawData				
+	""" from the sensor web site:
+		private void submitScanResult(BluetoothDevice device, int rssi, byte[] scanRecord)
+		{
+			int temp;
+			 // device has hw address and name, signal strength in rssi, raw packet in scanRecord
+
+			// temperature in C (* 100) appears to be in bytes 17 and 18, maybe 19..
+			// TODO no official docs on this (?)
+			// this seems to cover usable range
+			if ((0xff & scanRecord[19]) == 0xff)
+			{
+				temp = (0xff & scanRecord[18]) * 256;
+				temp += (0xff & scanRecord[17]);
+				temp = temp - 0x10000;
+			}
+			else
+			{
+				temp = (0xff & scanRecord[18]) * 256;
+				temp += (0xff & scanRecord[17]);
+			}
+			if (this.resultReceiver != null) {
+				Bundle b = new Bundle();
+				b.putString("scanResult", device.getAddress() + ": " + (temp / 100.0)+	" C / " + ((temp / 100.0) * 9.0 / 5.0 + 32.0) + " F");
+				this.resultReceiver.send(0, b);
+			}
+		}
+	"""						   
+
 
 
 #################################
@@ -4207,36 +4244,36 @@ def doBLEapril(mac, macplain, macplainReverse, rx, tx, hexData,sensor):
 	global BLEsensorMACs, sensors
 	try:
 		
+		hexData = hexData[12:]
+		if len(hexData) < 37: 							return sensor, tx,  ""
 
-		#if   hexData.find("1F020106030359FE171659FEAB0103"+macplainReverse) ==0: sensType = "TAccel"
-		#elif hexData.find("1A020106030359FE121659FEAB03"+macplainReverse)   ==0: sensType = "THL"
-		#else:						return sensor, tx,  ""
 
-		if "analyzed" not in parsedData[mac]: return sensor, tx,  ""
 
-		data16 = parsedData[mac]["analyzed"]["code"].get("16","") 
-		if   data16.find("59FEAB0103"+macplainReverse) == 0: sensType = "TAccel"
-		if   data16.find("59FEAB03"+macplainReverse)   == 0: sensType = "THL"
+		sensType = ""
+		if   hexData.find("1F020106030359FE171659FEAB0103"+macplainReverse) ==0: sensType = "TAccel"
+		elif hexData.find("1A020106030359FE121659FEAB03"+macplainReverse)   ==0: sensType = "THL"
 		else:						return sensor, tx,  ""
 
 		if sensType == "TAccel":
-			"""  16 adv		        01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 45 67 89 41 23
-  pos        01234567 89112345   67 89 21 23 45 67 89 31 23 45 67 89 41 23 45 67 89 51 23 45 67 89 61 23                  
-			 1F020106 030359FE   17 16 59 FE AB 01 03 D9 7E 3D 2E CA D2 5A 00 01 F9 D7 29 04 16 64 00 00 D2 
-                                                      rmac------------- tt tt SM xx yy zz cd ld BB TX BS RX
+			""" format:
+  pos        01234567 89112345 67 89 21 23 45 67 89 31 23 45 67 89 41 23 45 67 89 51 23 45 67 89 61 23                  
+			 1F020106 030359FE 17 16 59 FE AB 01 03 D9 7E 3D 2E CA D2 5A 00 01 F9 D7 29 04 16 64 00 00 D2 
+                                                    rmac------------- tt tt SM xx yy zz cd ld BB TX BS RX
 			"""
 
-			p = 22
-			onOff1 			= intFrom8(data16[p+4:p+6 ],0) !=0 # move
-			accelerationX 	= signedIntfrom8(data16[p+6:p+8 ])*16*.95
-			accelerationY 	= signedIntfrom8(data16[p+8:p+10])*16*.95
-			accelerationZ 	= signedIntfrom8(data16[p+10:p+12])*16*.95
-			currEvSecs		= intFrom8(data16[p+12:p+14],0)
-			prevEvSec		= intFrom8(data16[p+14:p+16],0)
-			batteryLevel	= intFrom8(data16[p+16:p+18],0)
-			TXint	  		= intFrom8(data16[p+18:p+20],0)
-			onOff			= intFrom8(data16[p+20:p+22],0) !=0 # button
 
+			# unpack   sensor data 
+			p = 42
+			# does not work temp 			= signedIntfrom16(hexData[p+2:p+4]+hexData[p:p+2])/8.
+			onOff1 			= intFrom8(hexData[p+4:p+6 ],0) !=0 # move
+			accelerationX 	= signedIntfrom8(hexData[p+6:p+8 ])*16*.95
+			accelerationY 	= signedIntfrom8(hexData[p+8:p+10])*16*.95
+			accelerationZ 	= signedIntfrom8(hexData[p+10:p+12])*16*.95
+			currEvSecs		= intFrom8(hexData[p+12:p+14],0)
+			prevEvSec		= intFrom8(hexData[p+14:p+16],0)
+			batteryLevel	= intFrom8(hexData[p+16:p+18],0)
+			TXint	  		= intFrom8(hexData[p+18:p+20],0)
+			onOff			= intFrom8(hexData[p+20:p+22],0) !=0 # button
 			accelerationTotal= math.sqrt(accelerationX * accelerationX + accelerationY * accelerationY + accelerationZ * accelerationZ)
 
 			# make deltas compared to last send 
@@ -4261,17 +4298,17 @@ def doBLEapril(mac, macplain, macplainReverse, rx, tx, hexData,sensor):
 
 			if trigMinTime and trig != "":
 				dd = {   # the data dict to be send 
-					"accelerationTotal": 	int(accelerationTotal),
-					"accelerationX": 		int(accelerationX),
-					"accelerationY": 		int(accelerationY),
-					"accelerationZ": 		int(accelerationZ),
-					"accelerationXYZMaxDelta":int(deltaXYZ),
-					"accelerationVectorDelta":int(dTot),
-					"onOff": 				onOff,
-					"onOff1": 				onOff1,
-					"batteryLevel": 		int(batteryLevel),
-					"trigger": 				trig.strip("/"),
-					"mac": 					mac,
+					'accelerationTotal': 	int(accelerationTotal),
+					'accelerationX': 		int(accelerationX),
+					'accelerationY': 		int(accelerationY),
+					'accelerationZ': 		int(accelerationZ),
+					'accelerationXYZMaxDelta':int(deltaXYZ),
+					'accelerationVectorDelta':int(dTot),
+					'onOff': 				onOff,
+					'onOff1': 				onOff1,
+					'batteryLevel': 		int(batteryLevel),
+					'trigger': 				trig.strip("/"),
+					'mac': 					mac,
 					"rssi":					int(rx)
 				}
 
@@ -4293,25 +4330,19 @@ def doBLEapril(mac, macplain, macplainReverse, rx, tx, hexData,sensor):
 		elif sensType == "THL":
 
 			""" format:
-	16 adv		                            01 23 45 67 89 11 23 45 67 89 21 23 45 67 89 31 23 
 	pos		 01 23 45 67 89 11 23 45  67 89 21 23 45 67 89 31 23 45 67 89 41 23 45 67 89 51 23
 			 1A 02 01 06 03 03 59 FE  12 16 59 FE AB 03 57 C1 56 C5 9C EF 64 D8 00 5F 00 18 00 AC
                                                         RMAC ------------ BB t2 t1 h2 h1 l2 l1 RX
 			"""
 
 			# unpack   sensor data 
-			#p = 42
-			#batteryLevel	= intFrom8(hexData[p-2:p],0)
-			#temp 			= signedIntfrom16(hexData[p+2:p+4]+hexData[p+0:p+2])/8. + BLEsensorMACs[mac]["offsetTemp"]
-			#hum  			= intFrom16(hexData[p+6:p+8]+hexData[p+4:p+6],0)/2.
-			#Illuminance		= intFrom16(hexData[p+10:p+12]+hexData[p+8:p+10],0)
+			p = 42
+			batteryLevel	= intFrom8(hexData[p-2:p],0)
+			temp 			= signedIntfrom16(hexData[p+2:p+4]+hexData[p+0:p+2])/8. + BLEsensorMACs[mac]["offsetTemp"]
+			hum  			= intFrom16(hexData[p+6:p+8]+hexData[p+4:p+6],0)/2.
+			Illuminance		= intFrom16(hexData[p+10:p+12]+hexData[p+8:p+10],0)
 
-			p = 22
-			batteryLevel	= intFrom8(data16[p-2:p],0)
-			temp 			= signedIntfrom16(data16[p+2:p+4]+data16[p+0:p+2])/8. + BLEsensorMACs[mac]["offsetTemp"]
-			hum  			= intFrom16(data16[p+6:p+8]+data16[p+4:p+6],0)/2.
-			Illuminance		= intFrom16(data16[p+10:p+12]+data16[p+8:p+10],0)
-
+			#U.logger.log(20,"doBLEapril THL {} temp:{}, hum:{}, Illuminance:{}; hexdata:{}".format(mac, temp, hum, Illuminance, hexData[p:p+12]))
 
 			# make deltas compared to last send 
 			trig = ""
@@ -4327,12 +4358,12 @@ def doBLEapril(mac, macplain, macplainReverse, rx, tx, hexData,sensor):
 
 			if trigMinTime and trig != "":
 				dd = {   # the data dict to be send 
-					"hum": 					int(hum),
-					"temp": 				round(temp,1),
-					"Illuminance": 			Illuminance,
-					"batteryLevel": 		int(batteryLevel),
-					"mac": 					mac,
-					"trigger": 				trig,
+					'hum': 					int(hum),
+					'temp': 				round(temp,1),
+					'Illuminance': 			Illuminance,
+					'batteryLevel': 		int(batteryLevel),
+					'mac': 					mac,
+					'trigger': 				trig,
 					"rssi":					int(rx)
 				}
 
@@ -4362,31 +4393,20 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 		#U.logger.log(20,"doBLEminew {}  hexData:{}; x:{} y:{}, z:{}".format(mac, hexData, hexData[30:34], hexData[34:38], hexData[38:42]))
 
-		if "analyzed" not in parsedData[mac]: return sensor, tx,  ""
 
 		sensType =""
-		data16 = parsedData[mac]["analyzed"]["code"].get("16","") 
-		if   data16.find("E1FFA103") == 0: sensType = "ACC"
-		elif data16.find("E1FFA101") == 0: sensType = "TH"
-		elif data16.find("E1FFA102") == 0: sensType = "light"
-		elif data16.find("AAFE2000") == 0: sensType = "batteryVoltage"
-		else:						return sensor, tx,  ""
-
-		"""
-						   01234567890123456789012345678
 		if   hexData.find("1A0201060303E1FF1216E1FFA103") ==0: sensType = "ACC"
 		elif hexData.find("180201060303E1FF1016E1FFA101") ==0: sensType = "TH"
 		elif hexData.find("150201060303E1FF0D16E1FFA102") ==0: sensType = "light"
 		elif hexData.find("190201060303AAFE1116AAFE2000") ==0: sensType = "batteryVoltage"
 		else:						return sensor, tx,  ""
-		#batteryLevel	= intFrom8(hexData, 28)
-		"""
-		batteryLevel	= intFrom8(data16, 8)
+
+		batteryLevel	= intFrom8(hexData, 28)
 
 		#U.logger.log(20,"doBLEminew {}  sensType:{},  hexdata:{} ".format(mac,sensType, hexData))
 		if sensType == "batteryVoltage":
-			p = 8
-			BLEsensorMACs[mac]["batteryVoltage"] = signedIntfrom16(data16[ p :p+4 ]) # in mV
+			p = 28
+			BLEsensorMACs[mac]["batteryVoltage"] = signedIntfrom16(hexData[ p :p+4 ]) # in mV
 			#U.logger.log(20,"doBLEminews1TH {}  sensType:{},  batteryVoltage:{}, hexdata:{} {} ".format(mac,sensType, BLEsensorMACs[mac]["batteryVoltage"],hexData[p:p+2],hexData[p+2:p+4]))
 
 
@@ -4400,10 +4420,8 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			"""
 
 			# unpack   sensor data 
-			#p = 30;	onOff 			= int(hexData[ p :p+2 ]) !=0
-			#p = 28;	batteryLevel 	= int(hexData[ p :p+2 ])
-			p = 10;	onOff 			= int(data16[ p :p+2 ]) !=0
-			p = 8;	batteryLevel 	= int(data16[ p :p+2 ])
+			p = 30;	onOff 			= int(hexData[ p :p+2 ]) !=0
+			p = 28;	batteryLevel 	= int(hexData[ p :p+2 ])
 
 			deltaTime 	= tryDeltaTime( BLEsensorMACs[mac]["lastUpdate"])
 			deltaonOff 	= onOff != BLEsensorMACs[mac]["onOff"]
@@ -4415,8 +4433,8 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 			if trigMinTime and trigTime:
 				dd = {   # the data dict to be send 
-					"onOff": 				onOff,
-					"batteryLevel": 		int(batteryLevel),
+					'onOff': 				onOff,
+					'batteryLevel': 		int(batteryLevel),
 					"rssi":					int(rx),
 				}
 				if BLEsensorMACs[mac]["batteryVoltage"] != -1:
@@ -4449,14 +4467,10 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			"""
 
 			# unpack   sensor data 
-			#p = 30
-			#accelerationX 	= signedIntfrom16(hexData[ p :p+4 ])*(10./2.45) # in mN/sec882  this sensor is off by a factor of 2.54!! should be 1000  ~ is 2540  
-			#accelerationY 	= signedIntfrom16(hexData[p+4:p+8 ])*(10./2.45)
-			#accelerationZ 	= signedIntfrom16(hexData[p+8:p+12])*(10./2.45)
-			p = 10
-			accelerationX 	= signedIntfrom16(data16[p  :p+4 ])*(10./2.45) # in mN/sec882  this sensor is off by a factor of 2.54!! should be 1000  ~ is 2540  
-			accelerationY 	= signedIntfrom16(data16[p+4:p+8 ])*(10./2.45)
-			accelerationZ 	= signedIntfrom16(data16[p+8:p+12])*(10./2.45)
+			p = 30
+			accelerationX 	= signedIntfrom16(hexData[ p :p+4 ])*(10./2.45) # in mN/sec882  this sensor is off by a factor of 2.54!! should be 1000  ~ is 2540  
+			accelerationY 	= signedIntfrom16(hexData[p+4:p+8 ])*(10./2.45)
+			accelerationZ 	= signedIntfrom16(hexData[p+8:p+12])*(10./2.45)
 			accelerationTotal= math.sqrt(accelerationX * accelerationX + accelerationY * accelerationY + accelerationZ * accelerationZ)
 
 			# make deltas compared to last send 
@@ -4480,15 +4494,15 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 			if trigMinTime and trig != "":
 				dd = {   # the data dict to be send 
-					"accelerationTotal": 	int(accelerationTotal),
-					"accelerationX": 		int(accelerationX),
-					"accelerationY": 		int(accelerationY),
-					"accelerationZ": 		int(accelerationZ),
-					"accelerationXYZMaxDelta":int(deltaXYZ),
-					"accelerationVectorDelta":int(dTot),
-					"batteryLevel": 		int(batteryLevel),
-					"trigger": 				trig.strip("/"),
-					"mac": 					mac,
+					'accelerationTotal': 	int(accelerationTotal),
+					'accelerationX': 		int(accelerationX),
+					'accelerationY': 		int(accelerationY),
+					'accelerationZ': 		int(accelerationZ),
+					'accelerationXYZMaxDelta':int(deltaXYZ),
+					'accelerationVectorDelta':int(dTot),
+					'batteryLevel': 		int(batteryLevel),
+					'trigger': 				trig.strip("/"),
+					'mac': 					mac,
 					"rssi":					int(rx)
 				}
 				if BLEsensorMACs[mac]["batteryVoltage"] != -1:
@@ -4519,12 +4533,9 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			"""
 
 			# unpack   sensor data 
-			#p = 30
-			#temp 				= float(signedIntfrom8(hexData[ p   :p+2 ]))  + intFrom8(hexData[p+2:p+4],0)/256. + BLEsensorMACs[mac]["offsetTemp"]
-			#hum				 	= float(signedIntfrom8(hexData[ p+4 :p+6 ]))  + intFrom8(hexData[p+6:p+8],0)/256. + BLEsensorMACs[mac]["offsetHum"]
-			p = 10
-			temp 				= float(signedIntfrom8(data16[ p   :p+2 ]))  + intFrom8(data16[p+2:p+4],0)/256. + BLEsensorMACs[mac]["offsetTemp"]
-			hum				 	= float(signedIntfrom8(data16[ p+4 :p+6 ]))  + intFrom8(data16[p+6:p+8],0)/256. + BLEsensorMACs[mac]["offsetHum"]
+			p = 30
+			temp 				= float(signedIntfrom8(hexData[ p   :p+2 ]))  + intFrom8(hexData[p+2:p+4],0)/256. + BLEsensorMACs[mac]["offsetTemp"]
+			hum				 	= float(signedIntfrom8(hexData[ p+4 :p+6 ]))  + intFrom8(hexData[p+6:p+8],0)/256. + BLEsensorMACs[mac]["offsetHum"]
 			#U.logger.log(20,"doBLEminews1TH {}  pos:{}, temp:{}, hum:{}, hexdata:{} {} {} {}".format(mac,TagPos, temp, hum, hexData[p:p+2],hexData[p+2:p+4],hexData[p+4:p+6],hexData[p+6:p+8]))
 
 			# make deltas compared to last send 
@@ -4540,11 +4551,11 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 			if trig !="" and trigMinTime:
 				dd = {   # the data dict to be send 
-					"hum": 					int(hum),
-					"temp": 				round(temp,1),
-					"batteryLevel": 		int(batteryLevel),
-					"mac": 					mac,
-					"trigger": 				trig,
+					'hum': 					int(hum),
+					'temp': 				round(temp,1),
+					'batteryLevel': 		int(batteryLevel),
+					'mac': 					mac,
+					'trigger': 				trig,
 					"rssi":					int(rx)
 				}
 				if BLEsensorMACs[mac]["batteryVoltage"] != -1:
@@ -4640,7 +4651,7 @@ offset	Allowed Values		description
 		accelerationTotal, accelerationX, accelerationY, accelerationZ 	= doRuuviTag_magValues(byte_data)
 		temp 					= (doRuuviTag_temperature(byte_data)+ BLEsensorMACs[mac]["offsetTemp"]) * BLEsensorMACs[mac]["multTemp"]
 		batteryVoltage, txPower = doRuuviTag_powerinfo(byte_data, doLog= mac in ["xxD1:FC:38:C4:57:75"])
-		batteryLevel 			= batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., batteryVoltAt0=2500.)
+		batteryLevel 			= batLevelTempCorrection(batteryVoltage, temp)
 		#if mac == "F3:4C:96:A2:CC:13": U.logger.log(20, "mac:{}  in sens 1  BL:{}, batteryVoltage:{}".format(mac, batteryLevel, batteryVoltage ))
 
 		# make deltas compared to last send 
@@ -4663,23 +4674,23 @@ offset	Allowed Values		description
 
 		if trigMinTime and trig !="":
 			dd = {   # the data dict to be send 
-				"data_format": 			dataFormat,
-				"hum": 					int(doRuuviTag_humidity(byte_data)	 + BLEsensorMACs[mac]["offsetHum"] + 0.5),
-				"temp": 				round(temp							 + BLEsensorMACs[mac]["offsetTemp"],1),
-				"press": 				int(doRuuviTag_pressure(byte_data) + BLEsensorMACs[mac]["offsetPress"]),
-				"accelerationTotal": 	int(accelerationTotal),
-				"accelerationX": 		int(accelerationX),
-				"accelerationY": 		int(accelerationY),
-				"accelerationZ": 		int(accelerationZ),
-				"accelerationXYZMaxDelta":int(deltaXYZ),
-				"accelerationVectorDelta":int(dTot),
-				"batteryLevel": 		int(batteryLevel),
-				"batteryVoltage": 		int(batteryVoltage),
-				"movementCount": 		int(doRuuviTag_movementcounter(byte_data)),
-				"measurementCount": 	int(doRuuviTag_measurementsequencenumber(byte_data)),
-				"trigger": 				trig.strip("/"),
-				"txPower": 				int(txPower),
-				"mac": 					mac,
+				'data_format': 			dataFormat,
+				'hum': 					int(doRuuviTag_humidity(byte_data)	 + BLEsensorMACs[mac]["offsetHum"] + 0.5),
+				'temp': 				round(temp							 + BLEsensorMACs[mac]["offsetTemp"],1),
+				'press': 				int(doRuuviTag_pressure(byte_data) + BLEsensorMACs[mac]["offsetPress"]),
+				'accelerationTotal': 	int(accelerationTotal),
+				'accelerationX': 		int(accelerationX),
+				'accelerationY': 		int(accelerationY),
+				'accelerationZ': 		int(accelerationZ),
+				'accelerationXYZMaxDelta':int(deltaXYZ),
+				'accelerationVectorDelta':int(dTot),
+				'batteryLevel': 		int(batteryLevel),
+				'batteryVoltage': 		int(batteryVoltage),
+				'movementCount': 		int(doRuuviTag_movementcounter(byte_data)),
+				'measurementCount': 	int(doRuuviTag_measurementsequencenumber(byte_data)),
+				'trigger': 				trig.strip("/"),
+				'txPower': 				int(txPower),
+				'mac': 					mac,
 				"rssi":					int(rx)
 			}
 			#if mac in ["D1:FC:38:C4:57:75"] :U.logger.log(20, " .... sending  data:{}".format( dd ) )
@@ -4781,7 +4792,7 @@ def doRuuviTag_mac( data):
 ## MKK ########################
 #################################
 def doBLEKKMsensor( mac, rx, tx, hexData,sensor):
-	global BLEsensorMACs, sensors, findMAC
+	global BLEsensorMACs, sensors
 
 	
 	"""
@@ -4792,45 +4803,47 @@ LL = length of following data
 
 1. k sensor 
 make this general for eddystone sensor
-													   01  23 45 67 89 A1 23 45 67 		89 b1 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89
-           04 3E 24 02 01 00 00   14 A5 00 29 57 BC    18  02 01 06 03 03 AA FE LL 		16 AA FE 21 01 0B 0F 7B 1B 00 00 EA 00 FA FB 9B                         BC=-68
-													   19  02 01 06 03 03 AA FE 11 		16 AA FE 20 00 0C 3D 1A 80 00 00 01 E0 00 00 37 D1 BC  TLM
-																								 xx frame type  20 = TLM not handled here 
-																								    xx version
-																								 	  xx 0=volt,   0B = 00001011 = volt, temp, accel
-																								 	  xx 1=temp, 
-																								 	  xx 2=humidity, 
-																								 	  xx 3=acceleration, 
-																								 	  xx 4=cutoff, ==?? 
-																								 	  xx 5= PIR, 
-																								 	  xx 6= 
-																								 	  xx 7= 
-																										 xx xx  big endian volt in 0.1mV here 7B0F == 31503
-																										       xx xx  temp fixed point 8.8
-																									                 xx xx   big endian acc x
-																									                       xx xx big endian acc y
-																									                             xx xx   big endian acc z
+													   01  23 45 67 89 A1 23 45 67 89 b1 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89
+           04 3E 24 02 01 00 00   14 A5 00 29 57 BC    18  02 01 06 03 03 AA FE LL 16 AA FE 21 01 0B 0F 7B 1B 00 00 EA 00 FA FB 9B                         BC=-68
+													   19  02 01 06 03 03 AA FE 11 16 AA FE 20 00 0C 3D 1A 80 00 00 01 E0 00 00 37 D1 BC  TLM
+																							xx frame type  20 = TLM not handled here 
+																							   xx version
+														    --------------------------------   use as Tag
+																								  xx 0=volt,   0B = 00001011 = volt, temp, accel
+																								  xx 1=temp, 
+																								  xx 2=humidity, 
+																								  xx 3=acceleration, 
+																								  xx 4=cutoff, ==?? 
+																								  xx 5= PIR, 
+																								  xx 6= 
+																								  xx 7= 
+																									 xx xx  big endian volt in 0.1mV here 7B0F == 31503
+																									       xx xx  temp fixed point 8.8
+																								                 xx xx   big endian acc x
+																								                       xx xx big endian acc y
+																								                             xx xx   big endian acc z
 
 system: 
-														01 	23 45 67 	89 A1 23 45 	67 		89 		b1 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89
- 														16	02 01 06 	03 03 AA FE 	LL 		16 		AA FE 22 0F 62 BC 57 29 00 A5 14 06 38       
-													    16	02 01 06 	03 03 AA FE		0E 		16 		AA FE 22 0D 71 BC 57 29 00 5B FB 06 37 BC
-																											     xx modelId
-																											        bb = bat level
-																													   xx xx xx xx xx xx  mac
-																						                         						 aa bb software version = aa.bb
+														01  23 45 67 89 A1 23 45 67 89 b1 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89
+ 														16  02 01 06 03 03 AA FE LL 16 AA FE 22 0F 62 BC 57 29 00 A5 14 06 38       
+													    16  02 01 06 03 03 AA FE 0E 16 AA FE 22 0D 71 BC 57 29 00 5B FB 06 37 BC
+														    --------------------------------------   use as Tag
+																								   xx modelId
+																									  xx xx xx xx xx xx  mac
+																						                                xx yy software version = xx.yy
 and this general for eddystone UID
 UID message
-														01  23 45 67 89 A1 23 45 67 	89 b1 23 45 67 89 C1 23 45 67 89 D1 23 45 67   89 E1 23 45 67 89 
-           04 3E 2B 02 01 00 00   FB 5B 00 29 57 BC     1F  02 01 06 03 03 AA FE LL 	16 AA FE 00 DA 00 00 00 00 00 00 00 00 00 01   00 00 00 00 00 01   02 00    BA=-70    single click
-           04 3E 2B 02 01 00 00   FB 5B 00 29 57 BC     1F  02 01 06 03 03 AA FE LL 	16 AA FE 00 DA 00 00 00 00 00 00 00 00 00 02   00 00 00 00 00 02   02 00    BA=-70    double click
-           04 3E 2B 02 01 00 00   FB 5B 00 29 57 BC     1F  02 01 06 03 03 AA FE LL 	16 AA FE 00 DA 00 00 00 00 00 00 00 00 00 03   00 00 00 00 00 03   02 00    BA=-70    long click
-														                            	         01 23 45 67 89 A1 23 45 67 89 b1 23   45 67 89 C1 23 45   67 89 
-														    										   xx  -----------------------xx UID 1  10 bytes
-																										                                xx  ----------xx UID 2 6 bytes
+														01  23 45 67 89 A1 23 45 67 89 b1 23 45 67 89 C1 23 45 67 89 D1 23 45 67   89 E1 23 45 67 89 
+           04 3E 2B 02 01 00 00   FB 5B 00 29 57 BC     1F  02 01 06 03 03 AA FE LL 16 AA FE 00 DA 00 00 00 00 00 00 00 00 00 01   00 00 00 00 00 01   02 00    BA=-70    single click
+           04 3E 2B 02 01 00 00   FB 5B 00 29 57 BC     1F  02 01 06 03 03 AA FE LL 16 AA FE 00 DA 00 00 00 00 00 00 00 00 00 02   00 00 00 00 00 02   02 00    BA=-70    double click
+           04 3E 2B 02 01 00 00   FB 5B 00 29 57 BC     1F  02 01 06 03 03 AA FE LL 16 AA FE 00 DA 00 00 00 00 00 00 00 00 00 03   00 00 00 00 00 03   02 00    BA=-70    long click
+														                                     01 23 45 67 89 A1 23 45 67 89 b1 23   45 67 89 C1 23 45    67 89 
+														    --------------------------------------   use as Tag
+														    										xx  ----------------------xx UID 1  10 bytes
+																									                               xx  -----------xx UID 2 6 bytes
 
 
-and this for mfg info, not done here 
+and this for mfg info 
 														01  23 45 67 89 A1 23 45 67 89 b1 23 45 67 89 C1 23 45 67 89 D1 23 45 67 89 E1 23 45 67 89 
 														18  09 16 80 20 67 01 00 00 00 00 0D 09 4B 42 50 72 6F 5F 32 39 31 33 37 31 BF
 														18  09 16 80 20 71 2A 00 00 00 00 0D 09 4B 42 50 72 6F 5F 32 37 32 36 35 36 C4
@@ -4844,87 +4857,118 @@ and this for mfg info, not done here
 		if len(hexData) < 20: 	
 			return sensor, tx,  ""
 
-		doPrint = False # mac in findMAC
-
-
-		data16  = parsedData[mac]["analyzed"]["code"].get("16","") 
-		dataMFG = parsedData[mac]["analyzed"]["text"].get("mfg_info","") 
-		dataTLM = parsedData[mac]["analyzed"]["text"].get("TLM","") 
+		doPrint 			= mac == "xxxBC:57:29:00:5B:FB"
 
 		sensor 				= "BLEKKMsensor"
 		hexData  			= hexData[12:]
-		tag16 				= "AAFE"
+		tagMFGName			= "094B4250726F5F" # = type(09) + K B P r o _ 
+		tagMain				= "0201060303AAFE"
+		tagMain2 			= "16AAFE"
 		tagSensor 			= "21"
 		tagSystem			= "22"
+		tagTLM				= tagMain2+"2000"  # 
 		tagUID				= "00"
-		pressPos 			= 21
+		tagMainFound 		= hexData.find(tagMain) 
+		tagTLMFound 		= hexData.find(tagTLM) 
+		tagMFGFound 		= hexData.find(tagMFGName)
 		waitWithButtonSend = 15 # secs
 		if doPrint: U.logger.log(20,"")
-		if doPrint: U.logger.log(20,"mac:{}; -0-  dataMFG:{}, dataTLM:{}, data16:{}, ll:{:2}, hexData:{}".format(mac,   dataMFG, dataTLM,  data16,  len(hexData), hexData))
+		if doPrint: U.logger.log(20,"mac:{}; -0- tMain:{:2}, tMFG:{:2}, T2:{:2}, TML:{},  ll:{:2}, hexData:{}".format(mac,  tagMainFound , hexData.find(tagMFGName), hexData.find(tagMain2), tagTLMFound, len(hexData), hexData))
 
-		if dataMFG != "":
-			BLEsensorMACs[mac]["mfg_info"]  = dataMFG
-			return sensor, tx,  BLEsensorMACs[mac]["batteryLevel"] 
 
-		if  dataTLM != "": 
-			BLEsensorMACs[mac]["batteryVoltage"]	= dataTLM.get("batteryVoltage","")
-			BLEsensorMACs[mac]["batteryLevel"]		= batLevelTempCorrection(BLEsensorMACs[mac]["batteryVoltage"] , 23)
-			return sensor, tx,  BLEsensorMACs[mac]["batteryLevel"] 
 
-		if data16 == "": return sensor, tx,  ""
 
-		if data16.find(tag16) != 0 : return sensor, tx,  ""
+		if tagMainFound == -1 and  tagMFGFound > 10: 
+			xx  = hexData[tagMFGFound  - 2:tagMFGFound]
+			ll = int(xx,16)*2 - 2
+			startP = tagMFGFound + 2
+			section = hexData[startP:startP+ll]
+			mfg_info = ""
+			for kk in range(ll):
+						x = section[kk*2:kk*2+2]
+						if x == "00":  mfg_info += "~"
+						else:
+							x = hex2str(x)
+							if x == "00": 	mfg_info += "~"
+							else:			mfg_info += x
 
-		data16 		= data16[len(tag16):]
-		sensSensor 	= data16[0:len(tagSensor)] == tagSensor
-		sensSystem  = data16[0:len(tagSensor)] == tagSystem
-		sensUID  	= data16[0:len(tagSensor)] == tagUID
-		data16 		= data16[len(tagSensor):]
+			if doPrint: U.logger.log(20,"mac:{}; -1- mfg_info:{}, xx:{:2}, ll:{:2}, startP:{}, len:{}, section:{}".format(mac, mfg_info,  xx , ll, startP,  len(section), section))
 
-		if doPrint:U.logger.log(20,"mac:{}; -2- sensSensor:{}, sensSystem:{}, sensUID:{}, hexDataRest:{}".format(mac, sensSensor, sensSystem, sensUID, data16 )) 
+			BLEsensorMACs[mac]["mfg_info"]  = mfg_info
+
+			return sensor, tx,  BLEsensorMACs[mac]['batteryLevel'] 
+
+
+		if  tagMainFound > -1 and hexData.find(tagTLM)  > waitWithButtonSend: 
+			retData = getTLMdata(mac, hexData[tagTLMFound -1:], verbose = False)
+			#  retData = {"batteryVoltage":Vbat, "temp":temp, "advCount":advCount, "timeSince":timeSince}
+			if doPrint: U.logger.log(20,"mac:{}; -2- got tlm info: {}, section:{}".format(mac, retData,  hexData[tagTLMFound -1:],))
+			BLEsensorMACs[mac]['batteryVoltage']   = retData.get("batteryVoltage","")
+
+			return sensor, tx,  BLEsensorMACs[mac]['batteryLevel'] 
+
+
+		if tagMainFound != 2: return sensor, tx,  ""
+
+		hexData  = hexData[tagMainFound+len(tagMain):]
+		tag2Found = hexData.find(tagMain2)
+		if  tag2Found == -1: return sensor, tx,  ""
+
+		typePos = tag2Found + len(tagMain2)
+		hexData = hexData[typePos:]
+		sensSensor = hexData[0:2] == tagSensor
+		sensSystem  = hexData[0:2] == tagSystem
+		sensUID  = hexData[0:2] == tagUID
+		hexData = hexData[2:]
+
+		if doPrint:U.logger.log(20,"mac:{};    typePos:{},  sensSensor:{}, sensSystem:{}, sensUID:{}, hexDataRest:{}".format(mac, typePos, sensSensor, sensSystem, sensUID, hexData )) 
+		#U.logger.log(20,"mac:{};  returning  tx:{}:{}".format(mac,tx, "")) 
+		#return sensor, tx,  ""
+
 
 		# make data into right format (bytes)
 
 		if BLEsensorMACs[mac].get("SupportsSensorValue","") == "":
 			BLEsensorMACs[mac]["SupportsSensorValue"] = False
 
-		dd = {"mac": mac, "rssi" : int(rx), "mfg_info": BLEsensorMACs[mac]["mfg_info"] } # , "SupportsSensorValue": BLEsensorMACs[mac]["SupportsSensorValue"] }
+		dd = {'mac': mac, 'rssi' : int(rx), 'mfg_info': BLEsensorMACs[mac]["mfg_info"] } # , "SupportsSensorValue": BLEsensorMACs[mac]["SupportsSensorValue"] }
 		trig = ""
-		hum  = ""
+		hum = ""
 		temp = ""
 		accelerationTotal = ""
 		batteryVoltage 		= ""
 		batteryLevel 		= ""
+		if BLEsensorMACs[mac].get('softwareVersion',"") != "":
+				dd['softwareVersion']  =  BLEsensorMACs[mac]['softwareVersion'] 
+		if BLEsensorMACs[mac].get('modelId',"") != "":
+				dd['modelId']  =  BLEsensorMACs[mac]['modelId'] 
+		if  BLEsensorMACs[mac]['batteryVoltage'] not in ["","-1"]:
+				dd['batteryVoltage']  =  BLEsensorMACs[mac]['batteryVoltage']
+		if  BLEsensorMACs[mac]['batteryLevel'] not in ["","-1"]:
+				dd['batteryLevel']  =  BLEsensorMACs[mac]['batteryLevel']
 
 		if sensSystem:  # this just save 2 items to be send with other packages 
-			BLEsensorMACs[mac]["modelId"] 			= data16[0:2]
-			##BLEsensorMACs[mac]["batteryLevel"] 		= max(0,min(100,int(data16[2:4],16)))
-			BLEsensorMACs[mac]["softwareVersion"] 	= "{}.{}".format( int(data16[16:18],16), int(data16[18:20],16) )
+			BLEsensorMACs[mac]['modelId'] 			= hexData[0:2]
+			BLEsensorMACs[mac]['batteryLevel'] 		= max(0,min(100,int(hexData[2:4],16)))
+			BLEsensorMACs[mac]['softwareVersion'] 	= "{}.{}".format( int(hexData[16:18],16), int(hexData[18:20],16) )
 
-			if doPrint: U.logger.log(20,"mac:{}; -3- modelId:{}, batLevel:{}, batteryVoltage:{}, softwareVersion:{}, ll16:{}".format(mac,BLEsensorMACs[mac]["modelId"], BLEsensorMACs[mac]["batteryLevel"], BLEsensorMACs[mac]["batteryVoltage"], BLEsensorMACs[mac]["softwareVersion"], len(data16) )) 
-			return sensor, tx,  BLEsensorMACs[mac]["batteryLevel"] 
+			if doPrint: U.logger.log(20,"mac:{};  -3- modelId:{}, batLevel:{}, softwareVersion:{}".format(mac,BLEsensorMACs[mac]['modelId'], BLEsensorMACs[mac]['batteryLevel'], BLEsensorMACs[mac]['softwareVersion'] )) 
+			return sensor, tx,  BLEsensorMACs[mac]['batteryLevel'] 
 
-		if BLEsensorMACs[mac].get("softwareVersion","") != "":
-				dd["softwareVersion"]  =  BLEsensorMACs[mac]["softwareVersion"] 
-		if BLEsensorMACs[mac].get("modelId","") != "":
-				dd["modelId"]  =  BLEsensorMACs[mac]["modelId"] 
-		if  BLEsensorMACs[mac]["batteryVoltage"] not in ["","-1"]:
-				dd["batteryVoltage"]  =  BLEsensorMACs[mac]["batteryVoltage"]
-		if  BLEsensorMACs[mac]["batteryLevel"] not in ["","-1"]:
-				dd["batteryLevel"]  =  BLEsensorMACs[mac]["batteryLevel"]
 
-		if sensUID: # this is for button press 
-			if len(data16) < pressPos-1: return sensor, tx,  ""
-			BLEsensorMACs[mac]["txPower"] = data16[0:2]
-			dd["txPower"] 		= BLEsensorMACs[mac]["txPower"] 
-			dd["mfg_info"]		= BLEsensorMACs[mac]["mfg_info"]
-			onOff		= data16[pressPos] == "1"
-			onOff1 		= data16[pressPos] == "2"
-			onOff2		= data16[pressPos] == "3"
-			if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate1"]) > waitWithButtonSend and onOff:		dd["onOff"]  = True;	trig += "press/"
-			if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate2"]) > waitWithButtonSend and onOff1:	dd["onOff1"] = True; 	trig += "doublePress/"
-			if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate3"]) > waitWithButtonSend and onOff2:	dd["onOff2"] = True; 	trig += "longPress/"
-			if  doPrint: U.logger.log(20,"mac:{}; -4- Button press txPower:{}, onOff:{},  onOff1:{}, onOff2:{}, t1:{:.1f}, t2:{:.1f}, t3:{:.1f} dd:{}".format(mac, dd["txPower"] , onOff,  onOff1, onOff2 , tryDeltaTime( BLEsensorMACs[mac]["t1"]) , tryDeltaTime(BLEsensorMACs[mac]["t2"]) , tryDeltaTime( BLEsensorMACs[mac]["t3"]), dd )) 
+		elif sensUID: # this is for button press 
+
+			if len(hexData) < 22: return sensor, tx,  ""
+			BLEsensorMACs[mac]['txPower'] = hexData[0:2]
+			dd['txPower'] 		= BLEsensorMACs[mac]['txPower'] 
+			dd['mfg_info']		= BLEsensorMACs[mac]["mfg_info"]
+			onOff		= hexData[21] == "1"
+			onOff1 		= hexData[21] == "2"
+			onOff2		= hexData[21] == "3"
+			if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate1"]) > waitWithButtonSend and onOff:		dd['onOff']  = True;	trig += "press/"
+			if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate2"]) > waitWithButtonSend and onOff1:	dd['onOff1'] = True; 	trig += "doubleP/"
+			if tryDeltaTime( BLEsensorMACs[mac]["lastUpdate3"]) > waitWithButtonSend and onOff2:	dd['onOff2'] = True; 	trig += "longP/"
+			if  doPrint: U.logger.log(20,"mac:{}; -4- Button press txPower:{}, onOff:{},  onOff1:{}, onOff2:{}, t1:{:.1f}, t2:{:.1f}, t3:{:.1f} dd:{}".format(mac, dd['txPower'] , onOff,  onOff1, onOff2 , tryDeltaTime( BLEsensorMACs[mac]["t1"]) , tryDeltaTime(BLEsensorMACs[mac]["t2"]) , tryDeltaTime( BLEsensorMACs[mac]["t3"]), dd )) 
 			trig = trig.strip("/")
 
 			if trig != "":
@@ -4948,59 +4992,59 @@ and this for mfg info, not done here
 
 
 
-		if sensSensor:
+		elif sensSensor:
 			BLEsensorMACs[mac]["SupportsSensorValue"] = True
-			dd ["SupportsSensorValue"] =  BLEsensorMACs[mac]["SupportsSensorValue"] 
-			version = data16[0:2]
-			data16 = data16[2:]
+			dd ['SupportsSensorValue'] =  BLEsensorMACs[mac]["SupportsSensorValue"] 
+			version = hexData[0:2]
+			hexData = hexData[2:]
 
-			typesPresent 	=  int(data16[0:2],16)
+			typesPresent 	=  int(hexData[0:2],16)
 			voltPresent 	= typesPresent & 0b00000001
 			tempPresent		= typesPresent & 0b00000010
 			humPresent 		= typesPresent & 0b00000100
 			accPresent 		= typesPresent & 0b00001000
-			data16 = data16[2:]
+			hexData = hexData[2:]
 
 
 
 			if voltPresent:
-				#U.logger.log(20,"mac:{};  volt calc:{}  data16:{}".format(mac,signedIntfrom16(data16[0:4]), data16[0:4]))
-				batteryVoltage = signedIntfrom16(data16[0:4])
-				data16 = data16[4:]
+				#U.logger.log(20,"mac:{};  volt calc:{}  hexData:{}".format(mac,signedIntfrom16(hexData[0:4]), hexData[0:4]))
+				batteryVoltage = signedIntfrom16(hexData[0:4])
+				hexData = hexData[4:]
 				if BLEsensorMACs[mac]["batteryLevel"] != "":
-					dd["batteryLevel"]  =  BLEsensorMACs[mac]["batteryLevel"]
-					batteryLevel		= dd["batteryLevel"] 
+					dd['batteryLevel']  =  BLEsensorMACs[mac]["batteryLevel"]
+					batteryLevel		= dd['batteryLevel'] 
 				else:
 					batteryLevel 			= batLevelTempCorrection(batteryVoltage, 23.)
-					BLEsensorMACs[mac]["batteryLevel"] 	= int(batteryLevel)
+					BLEsensorMACs[mac]['batteryLevel'] 	= int(batteryLevel)
 
-				BLEsensorMACs[mac]["batteryVoltage"] 	= int(batteryVoltage)
-				dd["batteryVoltage"]  =  int(batteryVoltage)
+				BLEsensorMACs[mac]['batteryVoltage'] 	= int(batteryVoltage)
+				dd['batteryVoltage']  =  int(batteryVoltage)
 
 
 			if tempPresent:
-				temp = signedIntfrom16(data16[0:2])
-				temp += float(int(data16[2:4],16))/256.
-				#U.logger.log(20,"mac:{};  temp calc  temp:{},  t1:{}, t2:{}  data16:{}".format(mac,temp, signedIntfrom16(data16[2:4]), signedIntfrom16(data16[0:2]), data16[0:4]))
-				data16 = data16[4:]
-				dd["temp"] 		= round(temp + BLEsensorMACs[mac]["offsetTemp"], 1)
+				temp = signedIntfrom16(hexData[0:2])
+				temp += float(int(hexData[2:4],16))/256.
+				#U.logger.log(20,"mac:{};  temp calc  temp:{},  t1:{}, t2:{}  hexData:{}".format(mac,temp, signedIntfrom16(hexData[2:4]), signedIntfrom16(hexData[0:2]), hexData[0:4]))
+				hexData = hexData[4:]
+				dd['temp'] 		= round(temp + BLEsensorMACs[mac]["offsetTemp"], 1)
 				if abs(BLEsensorMACs[mac]["temp"] - temp)  > 0.5: trig += "Temp/"
 
 
 			if humPresent:
-				hum = signedIntfrom16(data16[0:4])
-				data16 = data16[4:]
-				dd["hum"] 		= int(hum + BLEsensorMACs[mac]["offsetHum"] + 0.5)
+				hum = signedIntfrom16(hexData[0:4])
+				hexData = hexData[4:]
+				dd['hum'] 		= int(hum + BLEsensorMACs[mac]["offsetHum"] + 0.5)
 				if abs(BLEsensorMACs[mac]["hum"] - hum)   > 1: trig += "Hum/"
 
 			if accPresent:
-				accelerationX = signedIntfrom16(data16[0:4])
-				#U.logger.log(20,"mac:{};  acceleration  x:{}, data16:{}".format(mac, accelerationX, data16[0:12]))
-				data16 = data16[4:]
-				accelerationY = signedIntfrom16(data16[0:4])
-				data16 = data16[4:]
-				accelerationZ = signedIntfrom16(data16[0:4])
-				data16 = data16[4:]
+				accelerationX = signedIntfrom16(hexData[0:4])
+				#U.logger.log(20,"mac:{};  acceleration  x:{}, hexData:{}".format(mac, accelerationX, hexData[0:12]))
+				hexData = hexData[4:]
+				accelerationY = signedIntfrom16(hexData[0:4])
+				hexData = hexData[4:]
+				accelerationZ = signedIntfrom16(hexData[0:4])
+				hexData = hexData[4:]
 				accelerationTotal = math.sqrt(accelerationX*accelerationX + accelerationY*accelerationY + accelerationZ*accelerationZ)
 				# make deltas compared to last send 
 				dX 			= abs(BLEsensorMACs[mac]["accelerationX"]		- accelerationX)
@@ -5008,12 +5052,12 @@ and this for mfg info, not done here
 				dZ 			= abs(BLEsensorMACs[mac]["accelerationZ"]		- accelerationZ)
 				dTot 		= math.sqrt(dX*dX +dY*dY +dZ*dZ) # in N/s**2 *1000
 				deltaXYZ	= int(max(dX, dY, dZ))  # in N/s**2 *1000
-				dd["accelerationX"] =  					int(accelerationX)
-				dd["accelerationY"] =  					int(accelerationY)
-				dd["accelerationZ"] =  					int(accelerationZ)
-				dd["accelerationTotal"] =  				round(accelerationTotal,0)
-				dd["accelerationXYZMaxDelta"] = 		int(deltaXYZ)
-				dd["accelerationVectorDelta"] = 		int(dTot)
+				dd['accelerationX'] =  					int(accelerationX)
+				dd['accelerationY'] =  					int(accelerationY)
+				dd['accelerationZ'] =  					int(accelerationZ)
+				dd['accelerationTotal'] =  				round(accelerationTotal,0)
+				dd['accelerationXYZMaxDelta'] = 		int(deltaXYZ)
+				dd['accelerationVectorDelta'] = 		int(dTot)
 				if dTot	> BLEsensorMACs[mac]["updateIndigoDeltaAccelVector"]: trig += "AccTot/"	# acceleration change triggers 
 				if deltaXYZ	> BLEsensorMACs[mac]["updateIndigoDeltaMaxXYZ"]: trig += "AccDir/"			# acceleration-turn change triggers 
 				#U.logger.log(20,"mac:{};  dd :{}".format(mac, dd))
@@ -5027,8 +5071,8 @@ and this for mfg info, not done here
 
 			if trigMinTime and trig != "":
 				dd["trigger"] =   trig.strip("/")
-				if "txPower" not in dd and BLEsensorMACs[mac]["txPower"] != "":
-					dd["txPower"]  =  BLEsensorMACs[mac]["txPower"] 
+				if "txPower" not in dd and BLEsensorMACs[mac]['txPower'] != "":
+					dd['txPower']  =  BLEsensorMACs[mac]['txPower'] 
 
 				if doPrint: U.logger.log(20, " .... sending  data:{}".format( dd ) )
 
@@ -5350,16 +5394,11 @@ def BLEAnalysis():
 				nMsgNumber = len(MACs[mac]["raw_data"]) - 1
 				linesDevices +=1
 				for code in bleServiceSections:
-					textF  = bleServiceSections[code]
-					try:
-						if code in parsedData[mac]["analyzed"]["code"]: 
-							MACs[mac][textF].append(parsedData[mac]["analyzed"]["code"][code])
-						else:										
-							MACs[mac][textF].append("")
-					except	Exception as e:
-						U.logger.log(20,"", exc_info=True)
-						U.logger.log(20, "finished  hcidump: mac:{}, code:{}, text:{}, parsedData:{}   ".format(mac, code, textF, parsedData[mac]["analyzed"]["code"] ))
-
+					text  = bleServiceSections[code]
+					if code in parsedData[mac]["analyzed"]["code"]: 
+						MACs[mac][text].append(parsedData[mac]["analyzed"][text])
+					else:										
+						MACs[mac][text].append("")
 				for ee in extraLists:
 					if ee in parsedData[mac]["analyzed"]["text"]:
 							MACs[mac][ee].append(parsedData[mac]["analyzed"]["text"][ee])
@@ -5546,7 +5585,7 @@ def updateTimeAndZone(hciUse):
 			subprocess.call("rm {}temp/beaconloop.updateTimeAndZone".format(G.homeDir), shell=True)
 			U.logger.log(20,"updateTimeAndZone deviceList:{}".format(deviceList))
 
-			# devices: '{"24:DA:11:21:2B:20": "xxx"}'
+			# devices: '{u'24:DA:11:21:2B:20': "xxx"}'
 			for devices1 in deviceList:
 				if len(devices1) == 0: continue
 				devices = json.loads(devices1)
@@ -5714,7 +5753,7 @@ def beep(hciUse, resetBLE=False):
 			subprocess.call("rm {}temp/beaconloop.beep".format(G.homeDir), shell=True)
 			U.logger.log(20,"beepBeacon deviceList:{}".format(deviceList))
 
-			# devices: "{'24:DA:11:21:2B:20': {'cmdOff': 'char-write-cmd 0x0011 00', 'cmdON': 'char-write-cmd  0x0011  02', 'beepTime': 2.0}}"
+			# devices: '{u'24:DA:11:21:2B:20': {u'cmdOff': u'char-write-cmd 0x0011 00', u'cmdON': u'char-write-cmd  0x0011  02', u'beepTime': 2.0}}'
 			if beepBatteryBusy >0: beepBatteryBusy = 2
 			for devices in deviceList:
 				if len(devices) == 0: continue
@@ -5941,7 +5980,7 @@ def getBeaconParametersBatch(hciUse, resetBLE=True):
 				shift  = params["shift"]
 				norm   = params["norm"]
 				offset = params["offset"]
-#					devices:{'24:DA:11:21:2B:20': {'battCmd': {'random': 'public', 'bits': 63, 'uuid': '2A19', 'norm': 36}}}
+#					devices:{u'24:DA:11:21:2B:20': {u'battCmd': {u'random': u'public', u'bits': 63, u'uuid': u'2A19', u'norm': 36}}}
 #					after connect: 
 #					char-read-uuid 2A19 
 
@@ -6060,7 +6099,7 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 				if  params.get("startDelay","") !="":
 					try: time.sleep(float(params["startDelay"]))
 					except: pass			
-#					devices:{'24:DA:11:21:2B:20': {'battCmd': {'random': 'public', 'bits': 63, 'uuid': '2A19', 'norm': 36}}}
+#					devices:{u'24:DA:11:21:2B:20': {u'battCmd': {u'random': u'public', u'bits': 63, u'uuid': u'2A19', u'norm': 36}}}
 #					after connect: 
 #					char-read-uuid 2A19 
 
@@ -6161,7 +6200,7 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 								U.logger.log(20,"{}... 2 successful:  after:>>{}<<".format(ii, expCommands.after))
 
 								#U.logger.log(20,"... successful:  after:{}".format(expCommands.after))
-								check = expCommands.before.decode("utf_8").split("\r")[0].strip()
+								check = expCommands.before.decode('utf_8').split("\r")[0].strip()
 								try:
 									valueI = int(check,16)
 								except:
@@ -6247,7 +6286,6 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", tagString="", calledFrom="" ):
 	global knownBeaconTags, logCountTrackMac, trackMac
 	try:
-		doPrint = mac.find("xxB8:7C:6F:1A:") >-1 and tag.lower().find("isensor") >-1
 		subtypeOfBeacon = ""
 		inputString = copy.copy(hexstring)
 		if tag != ""		: tagPos 		= int(knownBeaconTags[tag].get("pos",0))
@@ -6263,7 +6301,6 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 		lTag = len(tagString)
 		lTag2 = len(tagString2)
 
-		if doPrint:	U.logger.log(20,"mac:{}, tag:{}, tagString:{}, hexstr:{}".format(mac, tag, tagString, hexstring[12:]))
 
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			if tag == "":
@@ -6283,7 +6320,7 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 
 
 		if tagString.find("X") >-1:
-			indexes = [n for n, v in enumerate(tagString) if v == "X"] 
+			indexes = [n for n, v in enumerate(tagString) if v == 'X'] 
 			inputString 	= list(inputString.upper())
 			#writeTrackMac("tag-0   ","indexes:{}".format(indexes), mac)
 			for ii in indexes:
@@ -6301,7 +6338,6 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			writeTrackMac("tst-1   ","tagString   fin: {} + {} ".format(tagString, tagString2), mac)
 			writeTrackMac("tst-1   ","inputString:     {}".format(inputString), mac)
-
 
 		if matchString: 
 			if inputString[:lTag] != tagString:
@@ -6324,12 +6360,12 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 				writeTrackMac("tst-F   ","posFound: {}, dPos: {}, tag: {}, tagString: {}".format(posFound, dPos, tag, tagString), mac)
-		if doPrint:	U.logger.log(20,"mac:{}, taginKnow:{}, posFound:{}, tag:{}, tagString:{}, inputString:{}, hexstr:{}".format(mac, tag in knownBeaconTags, posFound, tag, tagString, inputString, hexstring[12:]))
+
 		if  posFound > -1 and dPos == 0 and tag !="" and tag in knownBeaconTags :
 			#if tag == "iBSxx":U.logger.log(20,"{} tag:{}==\n  {},\n{} ".format(mac, tag,  tagString, hexstring))
-			if "subtypeOfBeacon" in knownBeaconTags[tag] and knownBeaconTags[tag]["subtypeOfBeacon"] != {}:
+			if "subtypeOfBeacon" in knownBeaconTags[tag] and knownBeaconTags[tag]["subtypeOfBeacon"] !={}:
 				subtypeOfBeacon = knownBeaconTags[tag]["subtypeOfBeacon"]
-				if doPrint: U.logger.log(20," {} posFound:{},   has subDevtype:{}, calledFrom:{}, hexstring:{}".format(mac,posFound, subtypeOfBeacon, calledFrom, hexstring))
+				#if tag == "iBSxx": U.logger.log(20," {} posFound:{},   has subDevtype:{}, calledFrom:{}, hexstring:{}".format(mac,posFound, subtypeOfBeacon, calledFrom, hexstring))
 				pos = subtypeOfBeacon["pos"]
 				mask = subtypeOfBeacon["mask"]
 				intHex = subtypeOfBeacon["intHex"]
@@ -6340,16 +6376,16 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 					else:
 						dataTAG = hexstring[pos:pos+length]
 
-					if doPrint:U.logger.log(20,"{} has  compare:{}-{}".format(mac, hexstring[pos:pos+length], dataTAG))
+					#if tag == "iBSxx":U.logger.log(20,"{} has  compare:{}-{}".format(mac, hexstring[pos:pos+length], dataTAG))
 					for devTypeID in subtypeOfBeacon["devTypeID"]:
 						if intHex == "int":
 							searchTAG = intFrom8(devTypeID,0)
 						else:
 							searchTAG = devTypeID
-						if doPrint:U.logger.log(20,"{}           to:{}-{}".format(mac, devTypeID, searchTAG))
+						#if tag == "iBSxx":U.logger.log(20,"{}           to:{}-{}".format(mac, devTypeID, searchTAG))
 						if dataTAG == searchTAG:
 							subtypeOfBeacon = subtypeOfBeacon["devTypeID"][devTypeID]
-							if doPrint:U.logger.log(20," {} has subtypeOfBeacon is :{}".format(mac, subtypeOfBeacon))
+							#if tag == "iBSxx":U.logger.log(20," {} has subtypeOfBeacon is :{}".format(mac, subtypeOfBeacon))
 							break
 
 		return posFound, dPos, subtypeOfBeacon
@@ -6377,7 +6413,6 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 	#    ll= 17, tp = 07 = 128BServClcmplt
 	#                                                            ll = 9,  tp = ServiceData 
 	try:
-		doPrint = mac.find("xxB8:7C:6F:1A:") > -1
 
 		totalLength = int(hexstring[0:2],16)
 
@@ -6390,7 +6425,6 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 		if ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 				writeTrackMac("pars0   ","totalLength:{}; hexstring: {}; ".format(totalLength,  hexstring ), mac)
 
-		if doPrint:  U.logger.log(20," mac:{:}, parsedData:{}".format(mac, hexstring))
 		for ii in range(8):
 
 
@@ -6408,7 +6442,6 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 
 				analyzed["code"][sectionCode] = section
 				analyzed["text"][sectionName] = section
-				if doPrint:  U.logger.log(20," mac:{:}, startOfSection:{}, lenSection:{}, sectionCode:{}, section:{}".format(mac, startOfSection, lenSection, sectionCode, section))
 
 				# special cases: 08, 09, FF  16 overwrite hex strings 
 				if sectionCode in ["08","09"]: # names translate to ascii 
@@ -6428,7 +6461,7 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 					analyzed["text"][sectionName] = dd
 					analyzed["code"][sectionCode] = dd
 
-				elif sectionCode ==  "FF": # ManufacturerSpecificData
+				elif sectionCode==  "FF": # ManufacturerSpecificData
 					if section[0:8] =="4C00":
 						try:
 							uuidEnd = 8+2*16
@@ -6442,7 +6475,6 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 					if xxx != {}:
 						analyzed["text"]["TLM"] = xxx
 
-
 				if  ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
 						writeTrackMac("parsT   "," startOfSection:{:2d}, sectionCode:{},  sectionsData:{}".format( startOfSection, sectionCode, section), mac)
 
@@ -6450,8 +6482,6 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 			writeTrackMac("parsE   "," lenTotal:{}, data:{}, hexstr:{}".format( totalLength, analyzed, hexstring), mac)
 
 		parsedData[mac]["analyzed"] = analyzed
-		if doPrint: 
-			U.logger.log(20," mac:{:}, parsedData:{}".format(mac, parsedData[mac]))
 
 		return 	
 	except	Exception as e:
@@ -6534,7 +6564,6 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 				if "params" not in cmdDict: continue
 				params = cmdDict["params"]
 				decodedData[cmdName] = ""
-				useAdv = cmdDict.get("useAdv","") 
 				try:
 					if  verbose:
 						#U.logger.log(20,"mac:{}, tag:{}, cmd:{}, params:{}".format(mac, tag, cmdName, params))
@@ -6564,13 +6593,8 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 						try:	reverse	= int(params["reverse"]) == 1
 						except:	reverse = False
 
-						if useAdv == "":
-							bHexStr = hexstr[12:]
-							Bstring =  bHexStr[pos:pos+length*2]
-						else:
-							bHexStr = parsedData[mac]["analyzed"]["code"].get(useAdv,"")
-							if bHexStr == "": continue
-							Bstring = bHexStr[pos:pos+length*2]
+						bHexStr = hexstr[12:]
+						Bstring =  bHexStr[pos:pos+length*2]
 
 						if reverse:
 							Bstring = Bstring[2:4]+Bstring[0:2]
@@ -6617,7 +6641,6 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 		subtypeOfBeacon		= ""
 		existing 			= mac in onlyTheseMAC
 		mfgTagged 			= False
-		tagOld				= ""
 
 		iBeacon  = parsedData[mac]["analyzed"]["text"].get("iBeacon","")
 		mfg_info = parsedData[mac]["analyzed"]["text"].get("mfg_info","")
@@ -6631,16 +6654,16 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 			batteryVoltage = 0
 			temp = 20.
 			
-		doPrint = mac.find("xxB8:7C:6F:1A:") > -1
+		
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 				writeTrackMac("parse   ", "parsedData {}".format(parsedData[mac]), mac)
 
 		setEmptybeaconsThisReadCycle(mac)
-		if doPrint: U.logger.log(20,"{} pass1 tagFound:{}, tagOld:{}".format(mac, tagFound, tagOld) )
 
 		### is this a know beacon with a known tag ?
 		rejectThisMessage 	= "reject"
 		tagFound 			= "failed"
+		tagOld				= ""
 		if existing:  
 			tagOld 			= onlyTheseMAC[mac].get("typeOfBeacon","")
 			useOnlyIfTagged = onlyTheseMAC[mac].get("useOnlyIfTagged",0) # this is from props, device edit settings, overwrites default
@@ -6676,7 +6699,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			writeTrackMac("tag-5   ", "rejectThisMessage:{}, tagFound:{};".format(rejectThisMessage, tagFound),mac)
 
-		if doPrint: U.logger.log(20,"{} pass1 tagFound:{}, tagOld:{}".format(mac, tagFound, tagOld) )
+		#if mac == "D5:BB:6F:BD:30:0E": U.logger.log(20,"{} pass1 tagFound:{}, tagOld:{}".format(mac, tagFound, tagOld) )
 
 		## mac not in current list, check if should look for it = accept new beacons?
 		# 1. not existing: accept  if match w acceptNewTagiBeacons or mfg tag match 
@@ -6689,20 +6712,20 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 				mfgTagged = True
 
 		testTag = ""
-		if doPrint:  U.logger.log(20,"{} testing  .. acceptNewMFGNameBeacons:{}, mfg_info:{}, acceptNewTagiBeacons:{}, tagOld:{}, existing:{},".format(mac, acceptNewMFGNameBeacons, mfg_info, acceptNewTagiBeacons, tagOld, existing) )
+		#if mac == "E2:DD:A7:F9:89:28": U.logger.log(20,"{} testing  .. acceptNewMFGNameBeacons:{}, mfg_info:{}".format(mac, acceptNewMFGNameBeacons, mfg_info) )
 		if (
 			(existing and tagOld in ["", "other"]) or  # check if we find a better tag than "other"
 			( not existing  and  (acceptNewTagiBeacons != "off"  or mfgTagged)   ) # if not existing try to find tag if enabled 
 			):
 
 			for testTag in knownBeaconTags:
-				if doPrint and testTag.lower().find("isensor") >-1:  U.logger.log(20,"{} testing  testTag:{}=={}, ".format(mac, testTag, knownBeaconTags.get(testTag,"")) )
+				#if mac == "D5:BB:6F:BD:30:0E": U.logger.log(20,"{} testing  testTag:{}".format(mac, testTag) )
 				if testTag in ["other", tagOld, "iBeacon"]: 		continue
 				if knownBeaconTags[testTag]["pos"] == -1: 			continue
 				posFound, dPos, subtypeOfBeacon = testComplexTag(hexstr[12:-2], testTag, mac, macplain, macplainReverse, calledFrom="checkIfTagged-2")
 				if posFound == -1: 									continue
 				if abs(dPos) > knownBeaconTags[testTag]["posDelta"]:continue
-				if doPrint and testTag.lower().find("isensor") >-1:  U.logger.log(20,"{} 2 tagOld:{}, testing  testTag:{}, posFound:{}, check:{}".format(mac, tagOld, testTag, posFound, acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or tagOld in ["", "other"]) )
+				#if mac == "E2:DD:A7:F9:89:28": U.logger.log(20,"{} 2 tagOld:{}, testing  testTag:{}, posFound:{}, check:{}".format(mac, tagOld, testTag, posFound, acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or tagOld in ["", "other"]) )
 				if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or (existing and tagOld in ["", "other"]):
 					typeOfBeacon 		= testTag
 					tagFound 			= "found"
@@ -6752,7 +6775,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 				#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,"mac {}; 0:{};  100:{}".format(mac, batteryVoltAt0,batteryVoltAt100))
 			decodedDatas["batteryLevel"] = batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=batteryVoltAt100, batteryVoltAt0=batteryVoltAt0)
 
-		if doPrint:  U.logger.log(20,"mac {}; decodedDatas[]:{};  batteryLevel:{}".format(mac, decodedDatas["batteryLevel"] , batteryLevel))
+		#if mac =="F3:4C:96:A2:CC:13": U.logger.log(20,"mac {}; decodedDatas[]:{};  batteryLevel:{}".format(mac, decodedDatas["batteryLevel"] , batteryLevel))
 		fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedDatas, parsedData[mac]["analyzed"]["text"])
 
 		if not checkMinMaxSignalAcceptMessage(mac, rssi): rejectThisMessage = "reject"
@@ -6761,7 +6784,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 			writeTrackMac("tag-E   ", "beaconsThisReadCycle ..mfg_info: {}, rejectThisMessage:{},  iBeacon: {}, batteryLevel>{}<".format(mfg_info, rejectThisMessage, iBeacon, batteryLevel) ,mac)
-		if doPrint:  U.logger.log(20, "mac:{}  after end of  decodedDatas:{}".format(mac, decodedDatas ))
+		#if mac in findMAC: U.logger.log(20, "mac:{}  after end of  decodedDatas:{}".format(mac, decodedDatas ))
 
 
 	except	Exception as e:
@@ -6769,7 +6792,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 	if rejectThisMessage == mfg_info:
 		pass
 		#U.logger.log(20,"{} accepted .. rejectThisMessage:{}".format(mac, rejectThisMessage) )
-	if doPrint:  U.logger.log(20,"{} 5 rejectThisMessage:{}, typeOfBeacon:{}, ".format(mac, rejectThisMessage, typeOfBeacon) )
+	#if mac == "E2:DD:A7:F9:89:28": U.logger.log(20,"{} 5 rejectThisMessage:{}, typeOfBeacon:{}, decodedDatas:{}".format(mac, rejectThisMessage, typeOfBeacon, decodedData) )
 	return rejectThisMessage
 
 
@@ -7037,139 +7060,12 @@ def setBeaconLastMsgSendTS(mac, setBy=""):
 
 	beaconLastMessageSendTS[mac] = time.time()
 	if  ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
-		U.logger.log(20, "mac:{} set  beaconLastMessageSendTS by:{}" .format(mac, setBy))
+		U.logger.log(20, "mac:{} set  beaconLastMessageTS by:{}" .format(mac, setBy))
 
 
+####### main pgm / loop ############
 
 
-####### main pgm / loop through package set  ############
-def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
-	global lastMSGwithGoodData, lastMSGwithDataPlain, nMessagesSend, nMsgs, lastMessageOK, lastMSGwithDataPassed, lastTimeMAC
-	global trackMac, logCountTrackMac, beaconLastMessageTS
-	global BLEsensorMACs, onlyTheseMAC, acceptNewBeaconMAC, acceptNewMFGNameBeacons, acceptNewiBeacons, acceptNewTagiBeacons, messageStats
-	global ignoreBeaconsIfRssiLessThan
-	global findMAC
-
-	messageBad = False
-	for hexstr in Msgs: 
-		try:
-			if tt - timeAtLoopStart	 > sendAfter: 
-				#U.logger.log(20,  "dt inner :{:.1f} limit:{},  ".format(tt - timeAtLoopStart, sendAfter))
-				break # send curl msgs after collecting for xx seconds
-			hexstr = fillHCIdump(hexstr)
-			nCharThisMessage	= len(hexstr)
-			#dtinner[4][1] = max(dtinner[1], tryDeltaTime( startofInnerLoop, oneDigit=True ))
-	
-			lastMessage = hexstr
-			# restart if junk data 
-			if nCharThisMessage < 16: 
-				return True
-			if nCharThisMessage > 110:  # 55 bytes cutoff normally max 31 bytes 
-				return  True
-	
-			lastMessageOK = hexstr
-			startHCITries = 0 # reset simple hci startup to ok
-	
-			#dtinner[4][2] = max(dtinner[2], tryDeltaTime( startofInnerLoop, oneDigit=True ))
-			lastMSGwithDataPlain = time.time()
-
-
-			rssi, txPower, macplainReverse, macplain, mac  = getStdIbeacon(hexstr)
-
-			doPrint = mac.find("xxB8:7C:6F:1A:") >-1
-
-			if doPrint : #or mac in findMAC: 
-				U.logger.log(20,  "mac:{:}, hexstr:{:}\n".format(mac,  hexstr[12:]))
-
-			if mac not in parsedData:
-				parsedData[mac] = {}
-			if mac in BLEsensorMACs or mac in onlyTheseMAC or mac in acceptNewBeaconMAC  or acceptNewMFGNameBeacons not in ["","off"] or acceptNewiBeacons > -200 or acceptNewTagiBeacons not in ["","off"]:
-				try:  parsePackage(mac, hexstr[12:], logData=False)
-				except: continue
-
-
-			setBeaconLastMsgTS(mac, "received")
-
-			if mac == trackMacNumber:# or mac in findMAC:
-				U.logger.log(20,  "mac:{:}, DT:{:4.1f}, new data: rssi:{}>{}?, hexstr:{:}\n".format(mac, tryDeltaTime(lastTimeMAC), rssi, ignoreBeaconsIfRssiLessThan, hexstr[12:]))
-				lastTimeMAC = time.time()
-
-			if readFrom != "":
-				U.logger.log(20, "mac:{}, data:{}".format(mac, hexstr[12:]))
-
-			########  track mac  start / end ############
-			trackMacStopIf(hexstr, mac)
-			#dtinner[4][2] = max(dtinner[2], tryDeltaTime( startofInnerLoop,oneDigit=True ))
-
-			if rssi < ignoreBeaconsIfRssiLessThan: continue
-
-			if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-				writeTrackMac("basic   ","  RX :{}, TX: {}".format( rssi, txPower) ,mac)
-
-
-			# check if this is a sensor, will send its own msg to mac, and will return battery level if present 
-			sensor = ""
-			batteryLevel = ""
-
-			# do sensor macs, also for ignored beacons, use only sensor info
-			if mac  in BLEsensorMACs:
-				sensor, txPower, batteryLevel = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr)
-
-			if sensor != "": nMessagesSend +=1
-			# check if known rejected mac
-			if mac in ignoreMAC: 
-				if readFrom !="":
-					U.logger.log(20, "TestMode: ignored mac:{}".format(mac))
-				continue # set to ignore in plugin
-
-			if  not (mac in onlyTheseMAC): 
-				# 		accept if rssi				accept spec mac				accept tag							accept mfg tag			if one is tru do not skip	
-				if not ( rssi > acceptNewiBeacons or  acceptNewBeaconMAC != "" or  acceptNewTagiBeacons != "off" or  acceptNewMFGNameBeacons not in ["","off"] ):
-				#U.logger.log(20,  "{} {:.1f}  mac:{:}, rejecting {} {} {} {} {} {}".format( datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], tryDeltaTime( lastTimeMAC), mac,  mac not in onlyTheseMAC, rssi < acceptNewiBeacons,  acceptNewBeaconMAC == "",  acceptNewTagiBeacons == "off", acceptNewMFGNameBeacons in ["","off"],  mac  not in BLEsensorMACs))
-					continue
-
-			rejectMac = checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, txPower)
-
-			if rejectMac == "reject": 
-				setBeaconLastMsgTS(mac, "reject")
-				continue
-
-			#dtinner[4] = max(dtinner[4], tryDeltaTime( startofInnerLoop,oneDigit=True ))
-			nMessagesSend += 1
-
-			if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-				writeTrackMac("A-Sens  ", " RX :{}, TX: {}, batteryLevel:{}".format(rssi, txPower, batteryLevel) ,mac)
-			#dtinner[4][5] = max(dtinner[5], tryDeltaTime( startofInnerLoop,oneDigit=True ))
-
-			if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-				writeTrackMac("A-tag   ", "after checkIfTagged, msg accepted, checking for new, changed signal,... ",mac)
-
-			lastMSGwithDataPassed = int(time.time())
-
-			if tryDeltaTime( G.tStart) > 31: # wee need some history first 
-				#U.logger.log(50, "tryDeltaTime( G.tStart):{}".format(tryDeltaTime( G.tStart)) )
-				if checkIfBeaconIsBack(mac): 
-					setBeaconLastMsgTS(mac, "beaconback")
-					continue
-
-				if checkIfDeltaSignal(mac): 
-					setBeaconLastMsgTS(mac, "motion")
-					continue
-
-				if checkIfinMotion(mac, rejectMac): 
-					setBeaconLastMsgTS(mac, "checkIfDeltaSignal")
-					continue
-
-			if  (mac == trackMac or trackMac =="*") and logCountTrackMac > 0:
-				writeTrackMac("Accpt   ", "{}".format(beaconsThisReadCycle[mac]) ,mac)
-
-			setBeaconLastMsgTS(mac, "loop")
-
-		except	Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			continue
-
-	return  False	
 
 
 
@@ -7212,12 +7108,9 @@ def execbeaconloop(test):
 	global beaconLastMessageSendTS
 	global outLast
 	global dataFromSensors, waitforcheckIfDelaySend
-	global lastMSGwithGoodData, lastMSGwithDataPlain, nMessagesSend, nMsgs, lastMessageOK, lastMSGwithDataPassed, lastTimeMAC, messageStats, clearmessageStats
 
 
-	clearmessageStats		= [0,0,0,0,0,0,0,0,0,0,0,0]
-	messageStats			= {"numberOfMessagesperRead":copy.copy(clearmessageStats),"countTotal":0}
-	messageStats["max"]		= len(messageStats["numberOfMessagesperRead"])
+
 	waitforcheckIfDelaySend = False
 	dataFromSensors			= {}
 	extraStates 			= ["calibrated","position","light","mode","onOffState", "mfg_info","iBeacon","batteryLevel","subtypeOfBeacon","TLMenabled","inMotion","allowsConnection","analyzed"]
@@ -7455,178 +7348,292 @@ def execbeaconloop(test):
 	U.echoText(G.restartLogfileName, "starting beaconloop")
 
 	try:
-		while True:
-			messageBad = False
-			loopCount += 1
-			# max every 5 minutes  .. restart BLE hcidump to clear out temp files if accumulated, takes ~1 secs 
-			if tryDeltaTime(restartBLE) > 300 and rpiDataAcquistionMethod == "hcidumpWithRestart":
-				restartBLE = time.time()
-				sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, reUse=True, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
-				retCode = startHCUIDUMPlistnr(useHCIForBeacon)
-				U.logger.log(20, "time needed to restartBLE:{:.2f}[secs]".format(tryDeltaTime(restartBLE)))
-				if debugRestarts: U.echoText(G.restartLogfileName,"restart due to rpiDataAcquistionMethod:{} time > 300".format(rpiDataAcquistionMethod))
+				while True:
+					messageBad = False
+					loopCount += 1
+					# max every 5 minutes  .. restart BLE hcidump to clear out temp files if accumulated, takes ~1 secs 
+					if tryDeltaTime(restartBLE) > 300 and rpiDataAcquistionMethod == "hcidumpWithRestart":
+						restartBLE = time.time()
+						sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, reUse=True, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
+						retCode = startHCUIDUMPlistnr(useHCIForBeacon)
+						U.logger.log(20, "time needed to restartBLE:{:.2f}[secs]".format(tryDeltaTime(restartBLE)))
+						if debugRestarts: U.echoText(G.restartLogfileName,"restart due to rpiDataAcquistionMethod:{} time > 300".format(rpiDataAcquistionMethod))
 
-			tt = time.time()
-			if tt - checkIPConnection > 600: # check once per 10 minutes
-				checkIPConnection = tt
-				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
-	
-			beaconsThisReadCycle = {}
-			timeAtLoopStart = tt
-			U.echoLastAlive(G.program)
-			reasonMax = 1
-
-			if checkIfBLErestart():
-				bleRestartCounter += 1
-				if bleRestartCounter > 10: 
-					U.restartMyself(param="", reason="bad BLE restart", python3=usePython3)
-					if debugRestarts: U.echoText(G.restartLogfileName,"restart due to bleRestartCounter:{}".format(bleRestartCounter))
-					time.sleep(1)
-					sys.exit(4)
-
-				sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
-				restartBLE = time.time()
-				if rpiDataAcquistionMethod == "hcidump":
-					retCode = startHCUIDUMPlistnr(useHCIForBeacon)
-				if retCode != 0:
-					U.logger.log(30,"stopping {} bad BLE start retCode= {}".format(G.program, retCode) )
-					if downCount > 1: sys.exit(5)
-					time.sleep(2)
-					continue
-
-			if rpiDataAcquistionMethod == "socket":
-				old_filter = setupSOCKET(sock)
-
-			sendAfter = sendAfterSeconds
-			iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 
-			nMsgs = 0
-			nMessagesSend = 0
-			while iiWhile > 0:
+					tt = time.time()
+					if tt - checkIPConnection > 600: # check once per 10 minutes
+						checkIPConnection = tt
+						eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
+			
+					beaconsThisReadCycle = {}
+					timeAtLoopStart = tt
 					U.echoLastAlive(G.program)
-					startofInnerLoop = time.time()
-					iiWhile -= 1
-					tt = round(time.time(),2)
-	
-					#U.logger.log(20,  "dt loop2 :{:.1f} limit:{},  nMsgs:{}".format(tt - timeAtLoopStart, sendAfter, nMsgs))
-					if (reasonMax > 1 or loopCount == 1 ) and tt -G.tStart > 30 : break	# only after ~30 seconds after start....  to avoid lots of short messages in the beginning = collect all ibeacons before sending
+					reasonMax = 1
 
-					if tt - timeAtLoopStart	 > sendAfter: 
-						break # send curl msgs after collecting for xx seconds
+					if checkIfBLErestart():
+						bleRestartCounter += 1
+						if bleRestartCounter > 10: 
+							U.restartMyself(param="", reason="bad BLE restart", python3=usePython3)
+							if debugRestarts: U.echoText(G.restartLogfileName,"restart due to bleRestartCounter:{}".format(bleRestartCounter))
+							time.sleep(1)
+							sys.exit(4)
 
-					if   nMsgs < 2: time.sleep(0.15)
-					elif nMsgs < 5: time.sleep(0.1)
-					else: 			time.sleep(0.05)
+						sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
+						restartBLE = time.time()
+						if rpiDataAcquistionMethod == "hcidump":
+							retCode = startHCUIDUMPlistnr(useHCIForBeacon)
+						if retCode != 0:
+							U.logger.log(30,"stopping {} bad BLE start retCode= {}".format(G.program, retCode) )
+							if downCount > 1: sys.exit(5)
+							time.sleep(2)
+							continue
 
-					if rpiDataAcquistionMethod.find("hcidump") == 0:
-						Msgs = readHCUIDUMPlistener()
+					if rpiDataAcquistionMethod == "socket":
+						old_filter = setupSOCKET(sock)
 
-					else:
-						Msgs = getSocketData(sock)
+					sendAfter = sendAfterSeconds
+					iiWhile = maxLoopCount # if 0.01 sec/ loop = 60 secs normal: 10/sec = 600 
+					nMsgs = 0
+					nMessagesSend = 0
+					while iiWhile > 0:
+							startofInnerLoop = time.time()
+							iiWhile -= 1
+							tt = round(time.time(),2)
+			
+							#U.logger.log(20,  "dt loop2 :{:.1f} limit:{},  nMsgs:{}".format(tt - timeAtLoopStart, sendAfter, nMsgs))
+							if (reasonMax > 1 or loopCount == 1 ) and tt -G.tStart > 30 : break	# only after ~30 seconds after start....  to avoid lots of short messages in the beginning = collect all ibeacons before sending
 
-					#### check new messages
-					#dtinner[4][0] = max(dtinner[0], tryDeltaTime( startofInnerLoop, oneDigit=True))
+							if tt - timeAtLoopStart	 > sendAfter: 
+								break # send curl msgs after collecting for xx seconds
 
-					nLast = nMsgs
-					nMsgs = len(Msgs)
+							if   nMsgs < 2: time.sleep(0.15)
+							elif nMsgs < 5: time.sleep(0.1)
+							else: 			time.sleep(0.05)
+							hexstr = ""
 
-					messageStats["numberOfMessagesperRead"][min(nMsgs, messageStats["max"]-1)] += 1
-					messageStats["countTotal"] += 1
-					if nMsgs == 0: 
-						zeroInARow += 1
-						if zeroInARow > zeroInARowMax or tryDeltaTime( lastmsg) > lastmsgMaxDelta:
-							zeroInARow  = 0
-							break
-					else:
-						zeroInARow = 0
-						lastmsg    = time.time()
+							if rpiDataAcquistionMethod.find("hcidump") == 0:
+								Msgs = readHCUIDUMPlistener()
 
-					messageBad = loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt)
-					if messageBad: break
-	
-					#dtinner[4][6] = max(dtinner[6], tryDeltaTime( startofInnerLoop,oneDigit=True ))
-					doLoopCheck( sensor )
-					#dtinner[4][7] = max(dtinner[7], tryDeltaTime( startofInnerLoop,oneDigit=True ))
+							else:
+								Msgs = getSocketData(sock)
 
-					if tryDeltaTime( G.tStart) > 31: checkIfFastDownForAll(iiWhile, nMsgs, tryDeltaTime( timeAtLoopStart), lastMSGwithGoodData) # send -999 if gone 
-					#dtinner[4][8] = max(dtinner[8], tryDeltaTime( startofInnerLoop,oneDigit=True ))
+							#### check new messages
+							dtinner[0] = max(dtinner[0], tryDeltaTime( startofInnerLoop, oneDigit=True))
 
-					if nMsgs > 0: lastMSGwithGoodData = time.time() 
+							nLast = nMsgs
+							nMsgs = len(Msgs)
+							oneValid = False
 
-					#check if beep or battery process is blocking beaconloop hci channel, if so wait , max 100 sec
-					if beepBatteryBusy > 1:
-						U.logger.log(20, "beep or battery process is blocking beaconloop, wait. Level={}".format(beepBatteryBusy) )
-						for ii in range(1000):
-							if beepBatteryBusy < 2: break
-							time.sleep(0.1)
+							if nMsgs == 0: 
+								zeroInARow += 1
+								if zeroInARow > zeroInARowMax or tryDeltaTime( lastmsg) > lastmsgMaxDelta:
+									zeroInARow  = 0
+									break
+							else:
+								zeroInARow = 0
+								lastmsg    = time.time()
+
+							nmsgCount = 0
+							for hexstr in Msgs: 
+									nmsgCount += 1
+									if tt - timeAtLoopStart	 > sendAfter: 
+										#U.logger.log(20,  "dt inner :{:.1f} limit:{},  nmsgCount:{}".format(tt - timeAtLoopStart, sendAfter, nmsgCount))
+										break # send curl msgs after collecting for xx seconds
+									hexstr = fillHCIdump(hexstr)
+									nCharThisMessage	= len(hexstr)
+									dtinner[1] = max(dtinner[1], tryDeltaTime( startofInnerLoop, oneDigit=True ))
+
+									lastMessage = hexstr
+									# restart if junk data 
+									if nCharThisMessage < 16: 
+										messageBad = True
+										break
+									if nCharThisMessage > 110:  # 55 bytes cutoff normally max 31 bytes 
+										messageBad = True
+										break
+
+									messageBad = False
+
+									lastMessageOK = hexstr
+									startHCITries = 0 # reset simple hci startup to ok
+
+									dtinner[2] = max(dtinner[2], tryDeltaTime( startofInnerLoop, oneDigit=True ))
+									try:
+										lastMSGwithDataPlain = time.time()
+					
+										rssi, txPower, macplainReverse, macplain, mac  = getStdIbeacon(hexstr)
+
+										if mac not in parsedData:
+											parsedData[mac] = {}
+										if mac in BLEsensorMACs or mac in onlyTheseMAC or mac in acceptNewBeaconMAC  or acceptNewMFGNameBeacons not in ["","off"] or acceptNewiBeacons > -200 or acceptNewTagiBeacons not in ["","off"]:
+											try:  parsePackage(mac, hexstr[12:], logData=False)
+											except: continue
 
 
+										setBeaconLastMsgTS(mac, "received")
 
-			if rpiDataAcquistionMethod == "socket":
-				sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
+										if mac == trackMacNumber:# or mac in findMAC:
+											U.logger.log(20,  "mac:{:}, DT:{:4.1f}, new data: rssi:{}>{}?, hexstr:{:}\n".format(mac, tryDeltaTime(lastTimeMAC), rssi, ignoreBeaconsIfRssiLessThan, hexstr[12:]))
+											lastTimeMAC = time.time()
+
+										if readFrom != "":
+											U.logger.log(20, "mac:{}, data:{}".format(mac, hexstr[12:]))
+
+										########  track mac  start / end ############
+										trackMacStopIf(hexstr, mac)
+										dtinner[2] = max(dtinner[2], tryDeltaTime( startofInnerLoop,oneDigit=True ))
+
+										if rssi < ignoreBeaconsIfRssiLessThan: continue
+
+										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("basic   ","  RX :{}, TX: {}".format( rssi, txPower) ,mac)
+
+
+										# check if this is a sensor, will send its own msg to mac, and will return battery level if present 
+										sensor = ""
+										batteryLevel = ""
+
+										# do sensor macs, also for ignored beacons, use only sensor info
+										if mac  in BLEsensorMACs:
+											sensor, txPower, batteryLevel = doSensors( mac, macplain, macplainReverse, rssi, txPower, hexstr)
+
+										if sensor != "": nMessagesSend +=1
+										# check if known rejected mac
+										if mac in ignoreMAC: 
+											if readFrom !="":
+												U.logger.log(20, "TestMode: ignored mac:{}".format(mac))
+											continue # set to ignore in plugin
+
+										if  not (mac in onlyTheseMAC): 
+											# 		accept if rssi				accept spec mac				accept tag							accept mfg tag			if one is tru do not skip	
+											if not ( rssi > acceptNewiBeacons or  acceptNewBeaconMAC != "" or  acceptNewTagiBeacons != "off" or  acceptNewMFGNameBeacons not in ["","off"] ):
+											#U.logger.log(20,  "{} {:.1f}  mac:{:}, rejecting {} {} {} {} {} {}".format( datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], tryDeltaTime( lastTimeMAC), mac,  mac not in onlyTheseMAC, rssi < acceptNewiBeacons,  acceptNewBeaconMAC == "",  acceptNewTagiBeacons == "off", acceptNewMFGNameBeacons in ["","off"],  mac  not in BLEsensorMACs))
+												continue
+
+										rejectMac = checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, txPower)
+
+										if rejectMac == "reject": 
+											setBeaconLastMsgTS(mac, "reject")
+											continue
+
+										dtinner[4] = max(dtinner[4], tryDeltaTime( startofInnerLoop,oneDigit=True ))
+										nMessagesSend += 1
+
+										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("A-Sens  ", " RX :{}, TX: {}, batteryLevel:{}".format(rssi, txPower, batteryLevel) ,mac)
+										dtinner[5] = max(dtinner[5], tryDeltaTime( startofInnerLoop,oneDigit=True ))
+
+										if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("A-tag   ", "after checkIfTagged, msg accepted, checking for new, changed signal,... ",mac)
+
+										lastMSGwithDataPassed = int(time.time())
 		
-			if readFrom != "":
-				lastMSGwithDataPlain  = time.time()
-				lastMSGwithDataPassed = time.time()
-				nEmptyMessagesInARow = 0
-				U.echoLastAlive(G.program)
-				if len(Msgs) > 0:
-					nMessagesSend = composeMSG(timeAtLoopStart)
-					handleHistory() 
-				U.logger.log(20, "TestMode: {}".format(beacon_ExistingHistory))
-				time.sleep(5)
-				continue
+										if tryDeltaTime( G.tStart) > 31: # wee need some history first 
+											#U.logger.log(50, "tryDeltaTime( G.tStart):{}".format(tryDeltaTime( G.tStart)) )
+											if checkIfBeaconIsBack(mac): 
+												setBeaconLastMsgTS(mac, "beaconback")
+												continue
 
-			nMessagesSend = composeMSG(timeAtLoopStart)
-			handleHistory() 
-			U.echoLastAlive(G.program)
+											if checkIfDeltaSignal(mac): 
+												setBeaconLastMsgTS(mac, "motion")
+												continue
+
+											if checkIfinMotion(mac, rejectMac): 
+												setBeaconLastMsgTS(mac, "checkIfDeltaSignal")
+												continue
+
+										if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+											writeTrackMac("Accpt   ", "{}".format(beaconsThisReadCycle[mac]) ,mac)
+
+										setBeaconLastMsgTS(mac, "loop")
 
 
-			dt1 = int(tryDeltaTime( lastMSGwithDataPlain))
-			dt2 = int(tryDeltaTime( lastMSGwithDataPassed))
-
-			if  nMessagesSend > 0:
-				nEmptyMessagesInARow = 0
-			else:
-				nEmptyMessagesInARow += 1
+									except	Exception as e:
+										U.logger.log(30,"", exc_info=True)
+										continue
 
 				
-			if dt1 > 10 or nEmptyMessagesInARow > 9  or messageBad or  (dt1 > 10  and not checkIfBLEprogramIsRunning(useHCIForBeacon)):
-					cmd = "rfkill list"
-					blocked = readPopen(cmd)[0]
-					if blocked.find(" blocked: yes") ==-1:	blocked = ""
-					else:									blocked = "\nrfkill list: "+blocked
+							dtinner[6] = max(dtinner[6], tryDeltaTime( startofInnerLoop,oneDigit=True ))
+							doLoopCheck( sensor )
+							dtinner[7] = max(dtinner[7], tryDeltaTime( startofInnerLoop,oneDigit=True ))
 
-					out =  "startHCITries:{}, lastmsg {}s:bytes:{},{}; okdata: {}s:,bytes:{},{}; loopCount:{}; restartCount:{}, bleRestartCounter:{}, nEmptyMessagesInARow:{}, {} ".format(startHCITries, dt1, len(lastMessage), lastMessage,  dt2, len(lastMessageOK), lastMessageOK, loopCount, restartCount, bleRestartCounter, nEmptyMessagesInARow,  blocked)
-					U.logger.log(20, "time w/out any message: "+out)
-					if debugRestarts: U.echoText(G.restartLogfileName, out)
-					if stackrestartcount < 5:
-						U.logger.log(20, "restarting stack  due to no messages " )
-						if rpiDataAcquistionMethod == "socket":
-							sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
-							restartBLE = time.time()
-							maxLoopCount = 6000
-						else:
-							startHCITries +=1
-							stopHCUIDUMPlistener()
-							restartBLETry = False
-							if startHCITries > 0:
-								sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac, hardreset=True) 
-								restartBLE = time.time()
-								restartBLETry = True
-							#restartLESCAN(hciUse, 20, force=True)
-							startHCUIDUMPlistnr(useHCIForBeacon)
-							if debugRestarts: U.echoText(G.restartLogfileName, "restarted  hcidump restartBLE:{}, startHCITries:{} ".format(restartBLE, startHCITries))
-							if restartBLETry: startHCITries = 0
+							if tryDeltaTime( G.tStart) > 31: checkIfFastDownForAll(iiWhile, nMsgs, tryDeltaTime( timeAtLoopStart), lastMSGwithGoodData) # send -999 if gone 
+							dtinner[8] = max(dtinner[8], tryDeltaTime( startofInnerLoop,oneDigit=True ))
+
+							if nMsgs > 0: lastMSGwithGoodData = time.time() 
+
+							#check if beep or battery process is blocking beaconloop hci channel, if so wait , max 100 sec
+							if beepBatteryBusy > 1:
+								U.logger.log(20, "beep or battery process is blocking beaconloop, wait. Level={}".format(beepBatteryBusy) )
+								for ii in range(1000):
+									if beepBatteryBusy < 2: break
+									time.sleep(0.1)
+
+					if rpiDataAcquistionMethod == "socket":
+						sock.setsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, old_filter )
+				
+					if readFrom != "":
+						lastMSGwithDataPlain  = time.time()
+						lastMSGwithDataPassed = time.time()
 						nEmptyMessagesInARow = 0
-						stackrestartcount +=1
+						U.echoLastAlive(G.program)
+						if len(Msgs) > 0:
+							nMessagesSend = composeMSG(timeAtLoopStart)
+							handleHistory() 
+						U.logger.log(20, "TestMode: {}".format(beacon_ExistingHistory))
+						time.sleep(5)
+						continue
+
+					nMessagesSend = composeMSG(timeAtLoopStart)
+					handleHistory() 
+					U.echoLastAlive(G.program)
+
+
+					dt1 = int(tryDeltaTime( lastMSGwithDataPlain))
+					dt2 = int(tryDeltaTime( lastMSGwithDataPassed))
+
+					if  nMessagesSend > 0:
+						nEmptyMessagesInARow = 0
 					else:
-						maxLoopCount = 20
-						restartCount += 1
-						if restartCount > 0:
-							U.logger.log(20, "restarting beaconloop  due to no messages " )
-							time.sleep(0.5)
-							U.restartMyself(param="", reason="too long a time w/o message", python3=usePython3)
-							if debugRestarts: U.echoText(G.restartLogfileName, "restarting beaconloop ")
+						nEmptyMessagesInARow += 1
+
+						
+					if dt1 > 10 or nEmptyMessagesInARow > 9  or messageBad or  (dt1 > 10  and not checkIfBLEprogramIsRunning(useHCIForBeacon)):
+							cmd = "rfkill list"
+							blocked = readPopen(cmd)[0]
+							if blocked.find(" blocked: yes") ==-1:	blocked = ""
+							else:									blocked = "\nrfkill list: "+blocked
+
+							out =  "startHCITries:{}, lastmsg {}s:bytes:{},{}; okdata: {}s:,bytes:{},{}; loopCount:{}; restartCount:{}, bleRestartCounter:{}, nEmptyMessagesInARow:{}, {} ".format(startHCITries, dt1, len(lastMessage), lastMessage,  dt2, len(lastMessageOK), lastMessageOK, loopCount, restartCount, bleRestartCounter, nEmptyMessagesInARow,  blocked)
+							U.logger.log(20, "time w/out any message: "+out)
+							if debugRestarts: U.echoText(G.restartLogfileName, out)
+							if stackrestartcount < 5:
+								U.logger.log(20, "restarting stack  due to no messages " )
+								if rpiDataAcquistionMethod == "socket":
+									sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
+									restartBLE = time.time()
+									maxLoopCount = 6000
+								else:
+									startHCITries +=1
+									stopHCUIDUMPlistener()
+									restartBLETry = False
+									if startHCITries > 0:
+										sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac, hardreset=True) 
+										restartBLE = time.time()
+										restartBLETry = True
+									#restartLESCAN(hciUse, 20, force=True)
+									startHCUIDUMPlistnr(useHCIForBeacon)
+									if debugRestarts: U.echoText(G.restartLogfileName, "restarted  hcidump restartBLE:{}, startHCITries:{} ".format(restartBLE, startHCITries))
+									if restartBLETry: startHCITries = 0
+								nEmptyMessagesInARow = 0
+								stackrestartcount +=1
+							else:
+								maxLoopCount = 20
+								restartCount += 1
+								if restartCount > 0:
+									U.logger.log(20, "restarting beaconloop  due to no messages " )
+									time.sleep(0.5)
+									U.restartMyself(param="", reason="too long a time w/o message", python3=usePython3)
+									if debugRestarts: U.echoText(G.restartLogfileName, "restarting beaconloop ")
 
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -7638,9 +7645,9 @@ def execbeaconloop(test):
 	except: pass
 
 
-debugRestarts = True
+debugRestarts = False
 
-findMAC = ["B8:7C:6F:1A:D9:65"] # ["DD:53:FB:BF:03:40"] #["00:81:F9:86:3E:A0"] # ["CC:48:72:06:40:52","F0:66:AF:D4:9F:C1"] #["EC:44:51:19:C9:44"] # [,"E9:DD:2E:0E:3B:54","F0:D3:EF:76:A1:74"]
+findMAC = []#  ["DD:C5:3B:C7:BF:6C"] # ["DD:53:FB:BF:03:40"] #["00:81:F9:86:3E:A0"] # ["CC:48:72:06:40:52","F0:66:AF:D4:9F:C1"] #["EC:44:51:19:C9:44"] # [,"E9:DD:2E:0E:3B:54","F0:D3:EF:76:A1:74"]
 trackmacFilter = ""
 U.echoLastAlive(G.program)
 try: test = sys.argv[1]

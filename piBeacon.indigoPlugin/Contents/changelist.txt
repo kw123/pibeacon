@@ -1,6 +1,31 @@
-added features / changes in v2022.178.101 @ 2024-07-03
+added features / changes in v2022.180.109 @ 2024-10-10
 ==================================================
 
+
+1. fixed battery level for iSensor types
+2. fixed bug where beacons where not recognized fast enough after being away .
+3. added battery level values for devcies that have lowBattery info: if low bat: set batterylevel to 5%, otherwise 100%
+
+
+added features / changes in v2022.180.108 @ 2024-10-07
+==================================================
+
+
+1. clean up code, handle some exceptions faster on RPI
+2. added states: 
+	xxxstateMinAt xxxstateMaxAt , shows time stamp when value was at min today and yesterday
+    xxxstate = temperature, humidity, pressure, illumination ....
+3. added option to enable / disable states xxMin/xxMax/ xxchanged10Minute/ .. for xx = states like Temperature Humidity, Pressure, CO2, illuminance ... 
+   this can reduce many state updates 
+4. added rpi name (besides number) to warning message rpi power propblem
+
+5. added device edit option in beacon edit for BLE beacon + sensor devcies like ruuvi, KKM button ..   to (not) create sensor child devices ie for button temp etc information.
+   e.g. if you dont want to use that sensor function, only interesed in the ebacon / presence info.
+6. removed some orphan text in device.xml and set display default to the proper options
+
+
+added features / changes in v2022.178.101 @ 2024-07-03
+==================================================
 
 1. reduced number of dev states updates if value not changed
    ==> dev state "last updated" now chnages only when a real dev state value was changed

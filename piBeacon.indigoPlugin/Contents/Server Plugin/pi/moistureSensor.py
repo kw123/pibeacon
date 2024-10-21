@@ -46,8 +46,8 @@ class MoistureChirp:
 	def getVersion(self): 
 		return self.version
 
-	def getdata(self, moisture=True, temp=True, illuminance=True): 
-		retData={"temp":-99, "illuminance":-99, "moisture":-99}
+	def getdata(self, moisture=True, temp=True, Illuminance=True): 
+		retData={"temp":-99, "Illuminance":-99, "moisture":-99}
 		try:
 			if temp:
 				for ii in range(20):
@@ -71,7 +71,7 @@ class MoistureChirp:
 			U.logger.log(30, u"in Line {} has error={} moisture ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		try:
-			if illuminance:
+			if Illuminance:
 				il = 0
 				for kk in range(3):
 					for ii in range(20):
@@ -83,9 +83,9 @@ class MoistureChirp:
 							break 
 					if il != 0: break
 					time.sleep(1)
-				retData["illuminance"] = il 
+				retData["Illuminance"] = il 
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={} illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, u"in Line {} has error={} Illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		return retData
 # ===========================================================================
@@ -234,10 +234,10 @@ def getValues(devId):
 
 		temp		 = 0.
 		moisture	 = 0.
-		illuminance	 = 0.
+		Illuminance	 = 0.
 		tempL		 = [-1000*ii for ii in range(5)]
 		moistureL	 = [-1000*ii for ii in range(5)]
-		illuminanceL = [-1000*ii for ii in range(5)]
+		IlluminanceL = [-1000*ii for ii in range(5)]
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
 
 		# take the average of  measurments every 0.2 secs
@@ -249,36 +249,36 @@ def getValues(devId):
 				moistureL[goodM]	= SENSOR[devId].moisture_read()
 
 			elif sensorMode[devId] == "chirp-2.7":
-				dataFromSens  = SENSOR[devId].getdata(moisture=True, temp=True, illuminance=True)
+				dataFromSens  = SENSOR[devId].getdata(moisture=True, temp=True, Illuminance=True)
 				if dataFromSens["moisture"] == -99: return "badSensor"
 				tempL[goodM]  		=  dataFromSens["temp"]/10.
-				illuminanceL[goodM] =  dataFromSens["illuminance"]
+				IlluminanceL[goodM] =  dataFromSens["Illuminance"]
 				moistureL[goodM]	=  dataFromSens["moisture"]
 			else:
-				dataFromSens  = SENSOR[devId].getdata(moisture=True, temp=False, illuminance=False)
+				dataFromSens  = SENSOR[devId].getdata(moisture=True, temp=False, Illuminance=False)
 				if dataFromSens["moisture"] == -99: return "badSensor"
 				tempL[goodM]  		=  dataFromSens["temp"]/10.
-				illuminanceL[goodM] =  dataFromSens["illuminance"]
+				IlluminanceL[goodM] =  dataFromSens["Illuminance"]
 				moistureL[goodM]	=  dataFromSens["moisture"]
 			goodM +=1
 			if goodM > 4: break
 		tempL 		 = sorted(tempL)[1:4]; 			tc =0
-		illuminanceL = sorted(illuminanceL)[1:4];	mc= 0
+		IlluminanceL = sorted(IlluminanceL)[1:4];	mc= 0
 		moistureL	 = sorted(moistureL)[1:4];		ic =0
 
 		for ii in range(3):
 			if moistureL[ii] > -99:		moisture 		+= moistureL[ii]; 		mc += 1.
 			if tempL[ii] > -99:			temp 			+= tempL[ii]; 			tc += 1.
-			if illuminanceL[ii] > -99:	illuminance		+= illuminanceL[ii]; 	ic += 1.
+			if IlluminanceL[ii] > -99:	Illuminance		+= IlluminanceL[ii]; 	ic += 1.
 		
 		temp 		= temp/max(1.,tc) + float(sensors[sensor][devId]["offsetTemp"]) 
 		moisture 	= moisture/max(1.,mc)
-		illuminance = illuminance/max(1.,ic)
+		Illuminance = Illuminance/max(1.,ic)
 
 		data = {"temp":	round(temp,1), 
-		 "illuminance":	round(illuminance,0),
+		 "Illuminance":	round(Illuminance,0),
 			"moisture":	round(moisture,0)} 
-		#print (tempL, illuminanceL, moistureL, data)
+		#print (tempL, IlluminanceL, moistureL, data)
 		badSensor = 0
 		return data
 	except	Exception as e:
@@ -335,7 +335,7 @@ def execMoistureSensor():
 	firstValue			= True
 
 
-	lastValues0			= {"moisture":0,"temp":0, "illuminance":0}
+	lastValues0			= {"moisture":0,"temp":0, "Illuminance":0}
 	lastValues			= {}
 	lastValues2			= {}
 	lastData			= {}

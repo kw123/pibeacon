@@ -865,8 +865,8 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 		try:	data["Version"]		= "".join(result1[2:]).decode("hex")
 		except: data["Version"]		= "unknown"
 		data["temp"]  				= round( signedIntfrom16(result2[1]+result2[0])/10., 1)
-		data["illuminance"]			= int(result2[6]+result2[5]+result2[4]+result2[3],16)
-		data["moisture"] 			= int(result2[7],16)
+		data["Illuminance"]			= int(result2[6]+result2[5]+result2[4]+result2[3],16)
+		data["Moisture"] 			= int(result2[7],16)
 		data["Conductivity"]		= int(result2[9]+result2[8],16)
 		data["dataRead"]			= True
 		data["connected"]			= True
@@ -877,9 +877,9 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 			macList[thisMAC]["lastData"]["temp"]	= -10000.
 			macList[thisMAC]["lastTesttt"] 			= time.time() - 90
 
-		if ( abs(data["temp"] 			- macList[thisMAC]["lastData"]["temp"])			> 0.5 	or
-			 abs(data["moisture"]  		- macList[thisMAC]["lastData"]["moisture"])		> 2 	or
-			 abs(data["Conductivity"]	- macList[thisMAC]["lastData"]["Conductivity"])	> 2 ):
+		if ( abs(data["temp"] 			- macList[thisMAC]["lastData"].get("temp",-100))			> 0.5 	or
+			 abs(data["Moisture"]  		- macList[thisMAC]["lastData"].get("Moisture",-100))		> 2 	or
+			 abs(data["Conductivity"]	- macList[thisMAC]["lastData"].get("Conductivity",-100))	> 2 ):
 			macList[thisMAC]["lastTesttt"] = time.time()
 			macList[thisMAC]["lastData"]  = copy.deepcopy(data)
 			data["dataChanged"]			=  True

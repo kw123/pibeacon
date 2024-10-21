@@ -366,11 +366,11 @@ while True:
 					continue
 
 				if lux != "": 
-							data["sensors"][sensor][devId]["lux"] =lux
+							data["sensors"][sensor][devId]["Illuminance"] =lux
 							lastLux2 = lastLux
 							lastLux  = float(lux)
 				else:
-							data["sensors"][sensor][devId]["lux"] = lastLux
+							data["sensors"][sensor][devId]["Illuminance"] = lastLux
 
 				#U.logger.log(20, "{}  {}".format(dist, lux) ) 
 				dist = round(float(dist),1)

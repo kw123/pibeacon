@@ -266,7 +266,7 @@ while True:
     try:
         tt = time.time()
         data={}
-        sValues={"temp":[[],[],[]],"press":[[],[],[]],"hum":[[],[],[]],"lux":[[],[],[]]}      
+        sValues={"temp":[[],[],[]],"press":[[],[],[]],"hum":[[],[],[]],"Illuminance":[[],[],[]]}      
         displayInfo={}
         
         if regularCycle:

@@ -692,10 +692,10 @@ while True:
 				if loopCount %20 == 0 or deltaN > 0.1:
 					lux = getLight()
 					if lux != "": 
-							data["sensors"][sensor][devId]["lux"] = lux
+							data["sensors"][sensor][devId]["Illuminance"] = lux
 							lastLux  = float(lux)
 					else:
-							data["sensors"][sensor][devId]["lux"] = lastLux
+							data["sensors"][sensor][devId]["Illuminance"] = lastLux
 
 				dist = round(float(dist),1)
 				if dist > maxRange: dist = 999
@@ -709,10 +709,10 @@ while True:
 
 				lux = getLight()
 				if lux !="": 
-						data["sensors"][sensor][devId]["lux"] =lux
+						data["sensors"][sensor][devId]["Illuminance"] =lux
 						lastLux  = float(lux)
 				else:
-						data["sensors"][sensor][devId]["lux"] =lastLux
+						data["sensors"][sensor][devId]["Illuminance"] =lastLux
 
 				trigDD 	= deltaN > deltaDist[devId]
 				trigDDa	= deltaA > deltaDistAbs[devId]

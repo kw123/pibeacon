@@ -667,12 +667,12 @@ def getValues(devId):
 						#print jj,ttt
 					rawData.append(ttt)
 					#print "after",pix[devId], ttt
-				val["ambientTemperature"] = 0
+				val["AmbientTemperature"] = 0
 				U.muxTCA9548Areset()
 
 		#print rawData
 		val = convertPixels(oldPix[devId],rawData,nx,ny)
-		val["ambientTemperature"] = round(float(  (ord(ddd[1540]) + ord(ddd[1541])*256) )/100.,1)
+		val["AmbientTemperature"] = round(float(  (ord(ddd[1540]) + ord(ddd[1541])*256) )/100.,1)
 		 ##  [maxV, minV, aveV, uniformity, movement, movementabs]
 		oldPix[devId] = copy.deepcopy(rawData)
 

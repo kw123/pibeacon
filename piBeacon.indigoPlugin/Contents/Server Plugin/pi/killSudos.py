@@ -9,51 +9,54 @@ import json
 import os
 import datetime
 import subprocess
-#sys.path.append(os.getcwd())
-#sys.path.append('/usr/lib/python3/dist-packages') 
-
-sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+
+sys.path.append(os.getcwd())
 
 U.setLogging()
 
 program = "killSudos"
 
-myOwnPID		= str(os.getpid())
-killedpgms = ""
+myOwnPID = int(os.getpid())
 
-
-def execKill():
+def execKill(pgmtype):
 	try:
-		verbose = False
+		killedpgms = ""
+		verbose = True
 		count = 0
-		cmd= "ps -ef | grep 'python' | grep sudo | grep -v grep | grep -v killSudos"
-		if verbose: U.logger.log(20, u"==grep result:{}, ".format(cmd) )
+		cmd = "ps -ef | grep '"+pgmtype+"' | grep sudo | grep -v grep | grep -v killSudos"
 	
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-		lines=ret.split("\n")
+		ret = subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
+		if verbose and len(ret) > 10: U.logger.log(20, "==grep cmd:{}, \nresult:{}< ".format(cmd, ret) )
+		lines = ret.split("\n")
 		del ret
 		xlist = ""
 		for line in lines:
-			if len(line) < 10: continue
-			items=line.split()
-			pid=int(items[1])
-			if pid == int(myOwnPID): continue
-			if verbose: U.logger.log(20, u"==kill sudos killing line:{}".format( (" ").join(items[7:])) )
-			xlist += str(pid)+ " "
-			count += 1
-			killedpgms +=  (" ").join(items[7:])+";"
-		if len(xlist) > 3:
-			if verbose: 
-				U.logger.log(20,u"== ext-kill /usr/bin/sudo kill -9 {} ".format(xlist) )
+			if len(line) > 10: 
+				items = line.split()
+				pid = int(items[1])
+				if pid != myOwnPID: 
+		
+					if verbose: U.logger.log(20, "==kill sudos killing line:{}".format( (" ").join(items[7:])) )
+					xlist += str(pid)+ " "
+					count += 1
+					killedpgms += (" ").join(items[7:])+";"
+
+		if len(xlist) > 2:
+			if verbose:  U.logger.log(20, "== ext-kill /usr/bin/sudo kill -9 {} ".format(xlist) )
 			subprocess.call("/usr/bin/sudo kill -9 {}".format(xlist), shell=True)
+
 		if count > 0:
-			U.logger.log(20,u"==kill sudos finished killed {} programs:{}".format(count, killedpgms) )
+			U.logger.log(20, "==kill sudos finished killed {} programs:{} w pids:{}".format(count, killedpgms, xlist) )
+
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
 		if verbose: U.logger.log(30,"", exc_info=True)
 
-execKill()
+
+execKill("python")
+execKill("hcidump")
+execKill("lescan")
 exit()

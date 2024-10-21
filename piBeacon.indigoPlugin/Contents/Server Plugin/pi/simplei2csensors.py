@@ -1062,7 +1062,7 @@ class TSL2561:
 			lux = 0
 		#print "===", g,i,ir,IR,full,ambient, lux
 
-		return {"lux":lux,"IR":IR,"ambient":ambient}
+		return {"Illuminance":lux,"IR":IR,"AmbientLight":ambient}
 
 
 # ===========================================================================
@@ -1343,9 +1343,9 @@ class TCS34725:
 		if not isinstance(rgb, dict):
 			raise ValueError('calculateLux expects dict as parameter')
 
-		illuminance = (-0.32466 * rgb['r']) + (1.57837 * rgb['g']) + (-0.73191 * rgb['b'])
+		Illuminance = (-0.32466 * rgb['r']) + (1.57837 * rgb['g']) + (-0.73191 * rgb['b'])
 
-		return int(illuminance)
+		return int(Illuminance)
 
 
 		
@@ -3229,15 +3229,15 @@ def getTCS34725(sensor, data):
 				lux = sensorTCS[devId].calculateLux(rgb)
 				sensorTCS[devId].setInterrupt(True)
 				lux= round(float(lux),2)
-				if lux>=0:
+				if lux >= 0:
 					data[sensor][devId]={}
 					data[sensor][devId]["clear"]=rgb["c"]
 					data[sensor][devId]["red"]	=rgb["r"]
 					data[sensor][devId]["green"]=rgb["g"]
 					data[sensor][devId]["blue"] =rgb["b"]
-					data[sensor][devId]["colorTemp"] =colorTemp
-					data[sensor][devId]["lux"] = lux
-					putValText(sensors[sensor][devId],[lux],["lux"])
+					data[sensor][devId]["colorTemp"] = colorTemp
+					data[sensor][devId]["Illuminance"] = lux
+					putValText(sensors[sensor][devId],[lux],["Illuminance"])
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except: 
@@ -3376,8 +3376,8 @@ def getOPT3001(sensor, data):
 				#U.logger.log(20, u"devId:{}; i2cAdd:{}; Lux:{}".format(devId, i2cAdd, lux))
 				if lux >= 0:
 					data[sensor][devId] = {}
-					data[sensor][devId]["illuminance"] = lux
-					putValText(sensors[sensor][devId],[lux],["lux"])
+					data[sensor][devId]["Illuminance"] = lux
+					putValText(sensors[sensor][devId],[lux],["Illuminance"])
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except: 
@@ -3413,11 +3413,11 @@ def getVEML7700(sensor, data):
 					sensorVEML7700[devId] = VEML7700(address=i2cAdd)
 				ambient,white= sensorVEML7700[devId].getLight()
 				## print ambient,white
-				if ambient>=0:
+				if ambient >= 0:
 					data[sensor][devId]					= {}
-					data[sensor][devId]["ambient"]		= round(ambient,2)
-					data[sensor][devId]["white"]		= round(white,2)
-					putValText(sensors[sensor][devId],[ambient],["lux"])
+					data[sensor][devId]["AmbientLight"]	= round(ambient,2)
+					data[sensor][devId]["White"]		= round(white,2)
+					putValText(sensors[sensor][devId],[ambient],["Illuminance"])
 					U.logger.log(10, u"VEML7700: {}".format(data[sensor][devId]))
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
@@ -3452,12 +3452,12 @@ def getVEML6030(sensor, data):
 			try :
 				if devId   not in  sensorVEML6030:
 					sensorVEML6030[devId] = VEML6030(address=i2cAdd)
-				ambient,white= sensorVEML6030[devId].getLight()
-				if ambient>=0:
+				ambient, white= sensorVEML6030[devId].getLight()
+				if ambient >= 0:
 					data[sensor][devId]					= {}
-					data[sensor][devId]["ambient"]		= round(ambient,2)
-					data[sensor][devId]["white"]		= round(white,2)
-					putValText(sensors[sensor][devId],[ambient],["lux"])
+					data[sensor][devId]["AmbientLight"]	= round(ambient,2)
+					data[sensor][devId]["White"]		= round(white,2)
+					putValText(sensors[sensor][devId],[ambient],["Illuminance"])
 					U.logger.log(10, u"VEML6030: {}".format(data[sensor][devId]))
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
@@ -3499,8 +3499,8 @@ def getVEML6040(sensor, data):
 					data[sensor][devId]["red"]	  = round(r,1)
 					data[sensor][devId]["green"]  = round(g,1)
 					data[sensor][devId]["blue"]	  = round(b,1)
-					data[sensor][devId]["white"]  = round(w,1)
-					putValText(sensors[sensor][devId], [w], ["lux"])
+					data[sensor][devId]["White"]  = round(w,1)
+					putValText(sensors[sensor][devId], [w], ["Illuminance"])
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except	Exception as e:
@@ -3587,7 +3587,7 @@ def getIS1145(sensor, data):
 					data[sensor][devId]["visible"]	  = round(v,2)
 					data[sensor][devId]["UV"]		  = round(u,2)
 					data[sensor][devId]["IR"]		  = round(i,2)
-					putValText(sensors[sensor][devId], [v], ["lux"])
+					putValText(sensors[sensor][devId], [v], ["Illuminance"])
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except:
@@ -3666,11 +3666,11 @@ def getTSL2561(sensor, data):
 					sensorTSL2561[devId]=TSL2561(address=i2cAdd)
 			ret =  sensorTSL2561[devId].readLux(gain = 1)
 			if ret!="":
-				ret["lux"] = round(ret["lux"],2)
-				ret["ambient"] = round(ret["ambient"],2)
+				ret["Illuminance"] = round(ret["Illuminance"],2)
+				ret["AmbientLight"] = round(ret["AmbientLight"],2)
 				ret["IR"] = round(ret["IR"],2)
-				data[sensor][devId] = ret	 # this is ~ {'lux': 0, 'IR': 51755, 'ambient': 2424}
-				putValText(sensors[sensor][devId],[ret["ambient"]],["lux"])
+				data[sensor][devId] = ret	 # this is ~ {'Illuminance': 0, 'IR': 51755, 'AmbientLight': 2424}
+				putValText(sensors[sensor][devId],[ret["AmbientLight"]],["Illuminance"])
 				if devId in badSensors: del badSensors[devId]
 				time.sleep(0.1)
 			else:
@@ -3876,7 +3876,7 @@ def putValText(sensorInfo,values,params):
 			sValues[params[ii]][1].append("")
 
 		
-	displayInfo["display"]= True
+	displayInfo["display"] = True
 			
 	return 
 
@@ -4285,10 +4285,10 @@ def doDisplay():
 						outText1.append(p)		  
 						nPages+=1
 
-			if "lux" in sValues:
-				theValues	= sValues["lux"][0]
-				theText		= sValues["lux"][1]
-				logScale	= sValues["lux"][2]
+			if "Illuminance" in sValues:
+				theValues	= sValues["Illuminance"][0]
+				theText		= sValues["Illuminance"][1]
+				logScale	= sValues["Illuminance"][2]
 				if len(theValues) >0:
 					for	 ii in range(len(theValues)):
 						lux =  theValues[ii]
@@ -4412,7 +4412,7 @@ def makeLightsensorFile(data):
 		out = {}
 		for sensor in dd:
 			for devId in dd[sensor]:
-				for lType in ["ambient","white","visible","visible","illuminance"]:
+				for lType in ["AmbientLight","White","visible","Illuminance"]:
 					if lType not in dd[sensor][devId]: continue
 					if "sensors" not in out: 							out["sensors"] = {}
 					if sensor    not in out["sensors"]: 				out["sensors"][sensor] = {}
@@ -4494,7 +4494,7 @@ while True:
 	try:
 		tt = time.time()
 		data = {}
-		sValues = {"temp":[[],[],[]],"press":[[],[],[]],"hum":[[],[],[]],"lux":[[],[],[]]}	  
+		sValues = {"temp":[[],[],[]],"press":[[],[],[]],"hum":[[],[],[]],"Illuminance":[[],[],[]]}	  
 		displayInfo = {}
 		if regularCycle:
 # temp+ press .. 
