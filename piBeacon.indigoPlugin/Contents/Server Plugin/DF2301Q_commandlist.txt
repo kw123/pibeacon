@@ -1,0 +1,156 @@
+
+1:  Wake-up words for learning
+2:  Hello robot
+255: off
+=== predefined  Command Words
+22:  Go forward
+23:  Retreat
+24:  Park a car
+25:  Turn left ninety degrees
+27:  Turn left thirty degrees
+26:  Turn left forty-five degrees
+29:  Turn right forty- five degrees
+30:  Turn right thirty degrees
+31:  Shift down a gear
+32:  Line tracking mode
+33:  Light tracking mode
+34:  Bluetooth mode
+35:  Obstacle avoidance mode
+36:  Face recognition
+37:  Object tracking
+38:  Object recognition
+39:  Line tracking
+40:  Color recognition
+41:  Tag recognition
+42:  Object sorting
+43:  Qr code recognition
+44:  General settings
+45:  Clear screen
+46:  Learn once
+47:  Forget
+48:  Load model
+49:  Save model
+50:  Take photos and save them
+51:  Save and return
+52:  Display number 0
+53:  Display number 1
+54:  Display number 2
+55:  Display number 3
+56:  Display number 4
+57:  Display number 5
+58:  Display number 6
+59:  Display number 7
+60:  Display number 8
+61:  Display number 9
+62:  Display smiley face
+63:  Display crying face
+64:  Display heart
+65:  Turn off dot matrix
+66:  Read current posture
+67:  Read ambient light
+68:  Read compass
+69:  Read temperature
+70:  Read acceleration
+71:  Reading sound intensity
+72:  Calibrate electronic gyroscope
+73:  Turn on the camera
+74:  Turn off the camera
+75:  Turn on the fan
+76:  Turn on the fan
+77:  Turn fan speed to gear one
+78:  Turn fan speed to gear two
+79:  Turn fan speed to gear three
+80:  Start oscillating
+81:  Stop oscillating
+82:  Reset
+83:  Set servo to ten degrees
+84:  Set servo to thirty degrees
+85:  Set servo to forty- five degrees
+86:  Set servo to sixty degrees
+87:  Set servo to ninety degrees
+88:  Turn on the buzzer
+89:  Turn off the buzzer
+90:  Turn on the speaker
+91:  Turn off the speaker
+92:  Play music
+93:  Stop playing
+94:  The last track
+95:  The next track
+96:  Repeat this track
+97:  Volume up
+98:  Volume down
+99:  Change volume to maximum
+100: Change volume to minimum
+101: Change volume to medium
+102: Play poem
+103: Turn on the light
+104: Turn off the light
+105: Brighten the light
+106: Dim the light
+107: Adjust brightness to maximum
+108: Adjust brightness to minimum
+109: Increase color temperature
+110: Decrease color temperature
+111: Adjust color temperature to maximum
+112: Adjust color temperature to minimum
+113: Daylight mode
+114: Moonlight mode
+115: Color mode
+116: Set to red
+117: Set to orange
+118: Set to yellow
+119: Set to green
+120: Set to cyan
+121: Set to blue
+122: Set to purple
+123: Set to white
+124: Turn on ac
+125: Turn off ac
+126: Increase temperature
+127: Decrease temperature
+128: Cool mode
+129: Heat mode
+130: Auto mode
+131: Dry mode
+132: Fan mode
+133: Enable blowing up & down
+134: Disable blowing up & down
+135: Enable blowing right & left
+136: Disable blowing right & left
+137: Open the window
+138: Close the window
+139: Open curtain
+140: Close curtain
+141: Open the door
+142: Close the door
+
+
+=== Learning-related commands
+200: Learning wake word
+201: Learning command word
+202: Re-learn
+203: Exit learning
+204: I want to delete
+205: Delete wake word
+207: Delete command word
+208: Exit deleting
+208: Delete all
+
+=== IDs that can be set by you
+5:   custom command 1
+6:   custom command 2
+7:   custom command 3
+8:   custom command 4
+9:   custom command 5
+10:  custom command 6
+11:  custom command 7
+12:  custom command 8
+13:  custom command 9
+14:  custom command 10
+15:  custom command 11
+16:  custom command 12
+17:  custom command 13
+18:  custom command 14
+19:  custom command 15
+20:  custom command 16
+21:  custom command 17

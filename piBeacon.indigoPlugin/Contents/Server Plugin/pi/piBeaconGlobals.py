@@ -191,6 +191,7 @@ specialSensorList =[ 	"amg88xx",
 						"vl503l0xDistance",
 						"vcnl4010Distance",
 						"vl6180xDistance",
+						"DF2301Q",
 						"ultrasoundDistance"]
 isBLEdirectSensorDevice =["BLEdirectMiTempHumRound"]
 ## not used anymore BLEsensorTypes =      ["BLEmyBLUEt","BLERuuviTag", "BLEiBS01", "BLEiBS01T",  "BLEiBS01RG", "BLEiBS02", "BLEiBS03","BLEiBS03G","BLEiBS03T","BLEiBS03TP", "BLEiBS03RG", "BLEminewE8", "BLEiSensor-TempHum", "BLEiSensor-onOff", "BLEiSensor-on", "BLEiSensor-RemoteKeyFob","BLESatech"]
@@ -199,7 +200,7 @@ parameterFileList   =[	"beacon_parameters",
 						"knownBeaconTags"]
 
 python2SensorsMustDo	= ["neopixel2"]
-python3SensorsMustDo	= ["tmp117","lidar360","moistureSensor", "sensirionscd30","neopixel3","vl503l0xDistance","vl503l1xDistance","vcnl4010Distance","vl6180xDistance","ultrasoundDistance","pmairquality"]
+python3SensorsMustDo	= ["tmp117","lidar360","moistureSensor", "sensirionscd30","neopixel3","vl503l0xDistance","vl503l1xDistance","vcnl4010Distance","vl6180xDistance","ultrasoundDistance","pmairquality","DF2301Q"]
 python3SensorsCanDo		= [	"ADS1x15", 
 							"simplei2csensors",
 							"INPUTgpio","INPUTpulse",

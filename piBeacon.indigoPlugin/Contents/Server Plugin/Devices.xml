@@ -2159,7 +2159,7 @@ Setting to only accept the ONE device specific message type from knowBeaconTag f
 			</Field>
 			<Field id="enableBELSensorChildLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>Beacons that also have a sensor or button function can have a child device ie the button or temperature, 
-  which will be created automatically uppon receiving the first message from the RPI
+  which will be created automatically uppon receiving message from the RPI
   this option allows to disable the creation of the child sensor. 
   This option is only relevant for the beacons with these types of functions</Label>
 			</Field>
@@ -20004,6 +20004,156 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
+			</State>
+
+		</States>
+
+	</Device>
+
+
+
+	<Device type="sensor" id="DF2301Q">     	<Name>INPUT Voice-recognition DF2301Q</Name>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="false" hidden="true"></Field>
+
+
+			<Field id="infoLabelDF2301Q" type="label">
+				<Label>Setup DF2301Q on individual rPis  connect 3.3V, GND, SDA,SCL, or use UART (3 cables only)
+it returns command ID 0...208
+trigger on "any change" state "sensorValue""; 
+    condition "state sensor value" = command ID eg 103 for lights on
+    then define your action</Label>
+			</Field>
+
+			<Field  id="buttonprintHelp" type="button"  >
+				<Label>print help to logfile</Label><Title>PRINT</Title> <CallbackMethod>printDF2301QhelpCALLBACK</CallbackMethod>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="" method="filterPiD" dynamicReload="true"/>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
+			</Field>
+
+			<Field id="i2cOrUart" type="menu"     defaultValue="i2c"> <Label>use I2C or UART:</Label>
+				<List>
+					<Option value="i2c"   >use i2c</Option>
+					<Option value="uart"  >use uart</Option>
+				</List>
+			</Field>
+
+
+			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute voice:</Label>
+				<List>
+					<Option value="0"   >mute off </Option>
+					<Option value="1"   >mute (dont have to wait for welcome to end)</Option>
+				</List>
+			</Field>
+
+
+			<Field id="volume" type="menu"     defaultValue="5"> <Label>volume of voice:</Label>
+				<List>
+					<Option value="0"   >low </Option>
+					<Option value="1"   >1</Option>
+					<Option value="2"   >2</Option>
+					<Option value="3"   >3</Option>
+					<Option value="4"   >4</Option>
+					<Option value="5"   >5</Option>
+					<Option value="6"   >6</Option>
+					<Option value="7"   >7</Option>
+					<Option value="8"   >8</Option>
+					<Option value="10"  >10</Option>
+					<Option value="12"  >12</Option>
+					<Option value="14"  >14</Option>
+					<Option value="16"  >16</Option>
+					<Option value="18"  >18</Option>
+					<Option value="20"  >20</Option>
+				</List>
+			</Field>
+
+			<Field id="setWakeTime" type="textfield"     defaultValue="25"> <Label>Set wake-up duration (10-255) seconds:</Label>
+			</Field>
+
+
+
+			<Field id="infoLabelDF2301Q2" type="label">
+				<Label>Set text for user defined command words. this has no impact on actions, but will show in cmd states as #: text</Label>
+			</Field>
+			<Field id="controllWord5"  type="textfield"    defaultValue="custom command"> <Label>id 5: custom command:</Label>	</Field>
+			<Field id="controllWord6"  type="textfield"    defaultValue="custom command"> <Label>id 6: custom command:</Label>	</Field>
+			<Field id="controllWord7"  type="textfield"    defaultValue="custom command"> <Label>id 7: custom command:</Label>	</Field>
+			<Field id="controllWord8"  type="textfield"    defaultValue="custom command"> <Label>id 8: custom command:</Label>	</Field>
+			<Field id="controllWord9"  type="textfield"    defaultValue="custom command"> <Label>id 9: custom command:</Label>	</Field>
+			<Field id="controllWord10" type="textfield"    defaultValue="custom command"> <Label>id 10: custom command:</Label>	</Field>
+			<Field id="controllWord11" type="textfield"    defaultValue="custom command"> <Label>id 11: custom command:</Label>	</Field>
+			<Field id="controllWord12" type="textfield"    defaultValue="custom command"> <Label>id 12: custom command:</Label>	</Field>
+			<Field id="controllWord13" type="textfield"    defaultValue="custom command"> <Label>id 13: custom command:</Label>	</Field>
+			<Field id="controllWord14" type="textfield"    defaultValue="custom command"> <Label>id 14: custom command:</Label>	</Field>
+			<Field id="controllWord15" type="textfield"    defaultValue="custom command"> <Label>id 15: custom command:</Label>	</Field>
+			<Field id="controllWord16" type="textfield"    defaultValue="custom command"> <Label>id 16: custom command:</Label>	</Field>
+			<Field id="controllWord17" type="textfield"    defaultValue="custom command"> <Label>id 17: custom command:</Label>	</Field>
+			<Field id="controllWord18" type="textfield"    defaultValue="custom command"> <Label>id 18: custom command:</Label>	</Field>
+			<Field id="controllWord19" type="textfield"    defaultValue="custom command"> <Label>id 19: custom command:</Label>	</Field>
+			<Field id="controllWord20" type="textfield"    defaultValue="custom command"> <Label>id 20: custom command:</Label>	</Field>
+			<Field id="controllWord21" type="textfield"    defaultValue="custom command"> <Label>id 21: custom command:</Label>	</Field>
+
+
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" 	type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  	</Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+		</ConfigUI>
+		<States>
+			<State id="cmd">
+				<ValueType>String</ValueType>
+				<TriggerLabel>cmd</TriggerLabel>
+				<ControlPageLabel>cmd</ControlPageLabel>
+			</State>
+			<State id="lastCmd">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastCmd</TriggerLabel>
+				<ControlPageLabel>lastCmd</ControlPageLabel>
+			</State>
+			<State id="cmdAt">
+				<ValueType>String</ValueType>
+				<TriggerLabel>cmdAt</TriggerLabel>
+				<ControlPageLabel>cmdAt</ControlPageLabel>
+			</State>
+			<State id="lastCmdAt">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastCmdAt</TriggerLabel>
+				<ControlPageLabel>lastCmdAt</ControlPageLabel>
 			</State>
 
 		</States>

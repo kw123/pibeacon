@@ -1,3 +1,11 @@
+added features / changes in v2022.181.109 @ 2024-10-30
+==================================================
+
+1. added support for voice recognition sensor DF2301Q
+   voice commands can be used to trigger indigo action. all data is local, recognition is done by the onboard chip
+
+
+
 added features / changes in v2022.180.109 @ 2024-10-10
 ==================================================
 

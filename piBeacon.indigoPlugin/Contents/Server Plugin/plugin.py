@@ -438,7 +438,9 @@ _GlobalConst_allowedSensors = [
 	 "BLEKKMsensor",														
 	 "i2cBMPxx", "i2cT5403", "i2cBMP280", "i2cMS5803",						 # temp / press
 	 "i2cBMExx",															 # temp / press/ hum /
-	 "bme680",																   # temp / press/ hum / gas
+	 "i2cBMExx",															 # temp / press/ hum /
+	 "bme680",																   # 
+	 "DF2301Q",																   # DF2301Q speach input 
 	 "bmp388",																   # temp / press/ alt
 	 "tmp006",																   # temp rmote infrared
 	 "tmp007",																   # temp rmote infrared
@@ -3176,6 +3178,7 @@ class Plugin(indigo.PluginBase):
 
 			self.currentVersion		 	= self.getParamsFromFile(self.indigoPreferencesPluginDir+"currentVersion", default="0")
 
+			self.readOtherParams()
 
 			self.readknownBeacontags()
 
@@ -3255,6 +3258,33 @@ class Plugin(indigo.PluginBase):
 			pass
 		self.savefastBLEReaction()
 
+
+####-------------------------------------------------------------------------####
+	def readOtherParams(self):
+		try:
+			self.DF2301Q_commandlistText  = ""
+			self.DF2301Q_commandlist = {}
+			if os.path.isfile(self.pathToPlugin+"DF2301Q_commandlist.txt"):
+				f = open(self.pathToPlugin + "DF2301Q_commandlist.txt", "r")
+				self.DF2301Q_commandlistText = f.read()	
+				f.close()
+	
+				for line in self.DF2301Q_commandlistText.split("\n"):
+					if len(line) < 5: continue
+					if line.find("===") == 0: continue
+					zz = line.split(":")
+					if len(zz) > 1:
+						self.DF2301Q_commandlist[zz[0]] = zz[1].strip()
+					else:
+						self.indiLOG.log(20,"DF2301Q_commandlist.txt: line is wrong: {}".format(line))
+
+				#self.indiLOG.log(20,"DF2301Q_commandlist.txt:\n{}".format(json.dumps(self.DF2301Q_commandlist, sort_keys=True, indent=2)))
+			else:
+				self.indiLOG.log(20,"DF2301Q_commandlist.txt  file not found")
+
+		except Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(30,"readOtherParams", exc_info=True)
+		
 ####-------------------------------------------------------------------------####
 	def readknownBeacontags(self):
 		try:
@@ -5246,6 +5276,10 @@ class Plugin(indigo.PluginBase):
 							else:
 									valuesDict["description"] = "i2c: " +valuesDict["i2cAddress"]+addrhex
 
+				if typeId.find("DF2301Q") >-1:
+					dev.updateStateOnServer( "status", "mute:{}, volume:{}, wakeTime:{}".format(valuesDict["mute"], valuesDict["volume"], valuesDict["setWakeTime"] ) )
+
+
 				if typeId.find("bme680") >-1:
 					if   valuesDict["calibrateSetting"] == "setFixedValue": valuesDict["description"] += ", set calib to "+ valuesDict["setCalibrationFixedValue"]
 					elif valuesDict["calibrateSetting"] == "readFromFile":	valuesDict["description"] += ", set calib to read from file"
@@ -5926,6 +5960,75 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def resetStatsMenu(self, valuesDict=None, typeId=""):
 		self.resetDataStats()
+
+####-------------------------------------------------------------------------####
+
+	def printDF2301QhelpCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		
+		out=   '\n HELP for DF2301Q speech recognition sensor'
+		out=   '\n istall sensor: connect the 4 cables to V+3.3, ground, I2C SDA and SLC'
+		out=   '\n in dev edit select the rpi the sensor is connected to.'
+		out=   '\n    set wake up time (how long is sensor listening after key word 0-255secs), volume 0-10, mute on/off and custom commands, save'
+		out += '\n use this sensor to trigger action on dev state "sensorValue" has any change; '
+		out += '\n     condition dev state sensorValue is eq 141 ==> then trigger your action for "Open the Door" in indigo'
+		out += '\n '
+		out += '\n configuring the sensor online:'
+		out += '\n====== Learning wake-up word:'
+		out += '\n· Initiate the voice assistant by employing the default wake-up word, then utter "Learning wake word" Follow the prompts to learn the new wake-up word (prior to each learning command, it is necessary to remove the previously learned wake-up word; kindly refer to the instructions for wake-up word and command phrase deletion)'
+		out += '\n· Indication: Learning now, be quiet, please say the wake word to be learned!'
+		out += '\n· The designated wake-up word to be acquired (taking "hey indigo" as an example): “hey indigo”'
+		out += '\n· Indication: Learning successful, please say it again!'
+		out += '\n· The designated wake-up word to be acquired : “hey indigo”'
+		out += '\n· Prompt: Learning successful, please say it again!'
+		out += '\n· The designated wake-up word to be acquired : “hey indigo”'
+		out += '\n· Prompt: Ok, learning completed!'
+		out += '\n· Once the learning process is accomplished, you will be able to utilize the phrase "hey indigo" to awaken the voice assistant!'
+		out += '\n '
+		out += '\n====== Learning command words:'
+		out += '\nUse a wake-up word (default or learned) to wake up the voice assistant, and then say "Learning command word" to initiate the process of learning command phrase, following the provided prompts.'
+		out += '\n     Before each session of learning command phrases, it is necessary to delete the previously learned command phrases.'
+		out += '\n· Indication: Learning now, be quiet, please learn the command word according to the prompt! Please say the first command to be learned!'
+		out += '\n· Command phrase to be learned (using "Turn on Greenlight" as an example): "Turn on Green light"'
+		out += '\n· Indication: Learning successful, please say it again!'
+		out += '\n· Command phrase to be learned : “Turn on Green light”'
+		out += '\n· Indication: Learning successful, please say it again!'
+		out += '\n· Command phrase to be learned : “Turn on Green light”'
+		out += '\n· Indication: OK, learned the first command successfully! Please say the second command to be learned!'
+		out += '\n... (Continue learning)'
+		out += '\nCommand phrase to exit learning mode: "Exit learning"'
+		out += '\nAfter the completion of the learning process, an ID will be automatically generated.'
+		out += '\n '
+		out += '\n '
+		out += '\n====== Delete Wake Words and Command Words:'
+		out += '\nUse a wake-up word (default or learned) to wake up the voice assistant, and articulate the phrase "I want to delete"'
+		out += '\n      Follow the prompts to eliminate the specified command phrase as instructed.'
+		out += '\n· Indication: Do you want to delete the learned wake word or command word?'
+		out += '\n· "Delete command word " : will Remove the previously acquired command phrases.'
+		out += '\n· "Delete wake word" : will Erase the learned awakening words from the system.'
+		out += '\n· "Delete all" : Eliminate the assimilated awakening utterances and command phrases from memory.'
+		out += '\n· "Exit deleting".'
+		out += '\n '
+		out += '\n======  command IDs 5..21 activated (set by you):'
+
+		lines = self.DF2301Q_commandlistText.split("\n")
+		for line in lines:
+			if line.find("custom command") == -1:
+				out += '\n{}'.format(line)
+
+		for ii in range(5,22):
+			if valuesDict.get("controllWord"+str(ii),"") != "custom command".format(ii):
+				out += '\n{}: {}'.format(ii, valuesDict.get("controllWord"+str(ii)),"" )
+
+		out += '\n '
+		out += '\n  see https://www.tme.eu/Document/064226f2d0b3baf20e9949b0a9b6a625/DF-SEN0539-EN-TME.pdf for tech doc'
+		out += '\n '
+
+		indigo.server.log(out)
+
+		return valuesDict
+
+
+
 
 ####-------------------------------------------------------------------------####
 	def printDeviceDictCALLBACK(self, valuesDict=None, typeId=""):
@@ -13010,13 +13113,13 @@ class Plugin(indigo.PluginBase):
 	def checkPiEnabled(self): # check if pi is defined, but not enabled, give warning at startup
 		try:
 			for piU in self.RPI:
-				if self.RPI[piU]["piOnOff"] != "0": continue
-				if self.RPI[piU]["piDevId"] ==	   0: continue
+				if self.RPI[piU]["piOnOff"] != "0":		continue
+				if self.RPI[piU]["piDevId"] == 0:		continue
 
-				if (self.RPI[piU]["passwordPi"]		 	!=""  and
-					self.RPI[piU]["userIdPi"]			 !=""  and
-					self.RPI[piU]["ipNumberPi"]			 != "" and
-					self.RPI[piU]["piMAC"]				 != ""):
+				if (self.RPI[piU]["passwordPi"]			!= "" and
+					self.RPI[piU]["userIdPi"]			!= "" and
+					self.RPI[piU]["ipNumberPi"]			!= "" and
+					self.RPI[piU]["piMAC"]				!= ""):
 						self.indiLOG.log(10,"pi# {} is configured but not enabled, mistake? This is checked once a day;  to turn it off set userId or password of unused rPi to empty ".format(piU))
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -14863,6 +14966,10 @@ class Plugin(indigo.PluginBase):
 
 						if "LEDcurrent" in data:
 							self.addToStatesUpdateDict(dev.id, "LEDcurrent", data["LEDcurrent"], decimalPlaces=1)
+
+					if sensor == "DF2301Q" :
+						self.updateDF2301Q(dev, props, data, whichKeysToDisplay)
+						continue
 
 					if sensor == "i2cTCS34725" :
 						self.updateRGB(dev, props, data, whichKeysToDisplay)
@@ -17750,6 +17857,28 @@ class Plugin(indigo.PluginBase):
 				#if self.decideMyLog("SensorData"): 
 					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return 
+
+
+
+####-------------------------------------------------------------------------####
+	def updateDF2301Q(self, dev, props, data, whichKeysToDisplay, theType="",dispType =""):
+		try:
+			if "cmd" in data and "cmd" in dev.states: 
+				if data["cmd"] > 4 and data["cmd"] < 22:
+					cmdtext = props.get("controllWord"+str(data["cmd"]), "text not set")
+				else:
+					cmdtext = self.DF2301Q_commandlist.get(str(data["cmd"]),"not recognized") 
+				self.addToStatesUpdateDict(dev.id, "sensorValue", int(data["cmd"]), uiValue=cmdtext )
+				self.addToStatesUpdateDict(dev.id, "cmd", "{}:{}".format(data["cmd"], cmdtext) )
+				self.addToStatesUpdateDict(dev.id, "cmdAt",  datetime.datetime.now().strftime(_defaultDateStampFormat) )
+				self.addToStatesUpdateDict(dev.id, "lastCmd", dev.states["cmd"] )
+				self.addToStatesUpdateDict(dev.id, "lastCmdAt", dev.states["cmdAt"] )
+		
+		except Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		return 
+
+
 ####-------------------------------------------------------------------------####
 	def updateRGB(self, dev, props, data, whichKeysToDisplay, theType="",dispType =""):
 		try:
@@ -19947,6 +20076,7 @@ class Plugin(indigo.PluginBase):
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","count","bounceTime","timeWindowForContinuousEvents",
 										"mac","type","INPUTdevId0","INPUTdevId1","INPUTdevId2","INPUTdevId3","coincidenceTimeInterval","updateIndigoTiming","updateIndigoDeltaTemp","updateIndigoDeltaAccelVector","updateIndigoDeltaMaxXYZ",
 										"usbPort","motorFrequency","nContiguousAngles","contiguousDeltaValue","triggerLast","triggerCalibrated","sendToIndigoEvery",
+										"mute", "volume", "setWakeTime",
 										"anglesInOneBin","measurementsNeededForCalib","sendPixelData","doNotUseDataRanges","minSignalStrength","relayType","python3","bleHandle"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate)
 							#if dev.id == 49344355: self.indiLOG.log(20,"pass 9 sens:{}".format(sens))
@@ -21513,13 +21643,13 @@ configuration         - ==========  defined beacons ==============
 				self.updateStatesDict[devId][key] = {"value":value, "decimalPlaces":decimalPlaces, "force":force, "uiValue":uiValue, "image":image, "IgnoreIfOnly":IgnoreIfOnly}
 				if isinstance(value, float) and  math.isnan(value): self.indiLOG.log(20,"updateStatesDict[devId]:{}, key:{}, value:{} is NaN, please check rpi program, contact KW".format(self.updateStatesDict[devId] , key,  value))
 
-				if newStates != "": newStates[key] = value
+				if type(newStates) != type(" "): newStates[key] = value
 
 			except Exception as e:
 				if "{}".format(e).find("UnexpectedNullErrorxxxx") == -1:
 					if "{}".format(e).find(str(devId)) == -1:
 						self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e)   )
-						self.indiLOG.log(40,"addToStatesUpdateDict: this happens when 2 update processes overlap. should not be a probelm if it happens not too frequently")
+						self.indiLOG.log(40,"addToStatesUpdateDict: this happens when 2 update processes overlap. should not be a problem if it happens not too frequently")
 						self.indiLOG.log(40,"devId:{};  key:{}; value:{}; newStates:{};".format(devId, key, value, newStates))
 
 
