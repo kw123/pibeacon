@@ -17866,13 +17866,19 @@ class Plugin(indigo.PluginBase):
 			if "cmd" in data and "cmd" in dev.states: 
 				if data["cmd"] > 4 and data["cmd"] < 22:
 					cmdtext = props.get("controllWord"+str(data["cmd"]), "text not set")
+					cmdtext2 = props.get("controllWord"+str(data["cmd"]), str(data["cmd"])+": text not set")
 				else:
 					cmdtext = self.DF2301Q_commandlist.get(str(data["cmd"]),"not recognized") 
-				self.addToStatesUpdateDict(dev.id, "sensorValue", int(data["cmd"]), uiValue=cmdtext )
-				self.addToStatesUpdateDict(dev.id, "cmd", "{}:{}".format(data["cmd"], cmdtext) )
-				self.addToStatesUpdateDict(dev.id, "cmdAt",  datetime.datetime.now().strftime(_defaultDateStampFormat) )
+					cmdtext2 = props.get("controllWord"+str(data["cmd"]), "text not set")
+				self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
+				self.addToStatesUpdateDict(dev.id, "lastCmd2At", dev.states["lastCmdAt"] )
+
 				self.addToStatesUpdateDict(dev.id, "lastCmd", dev.states["cmd"] )
 				self.addToStatesUpdateDict(dev.id, "lastCmdAt", dev.states["cmdAt"] )
+
+				self.addToStatesUpdateDict(dev.id, "cmd", "{}:{}".format(data["cmd"], cmdtext) )
+				self.addToStatesUpdateDict(dev.id, "cmdAt",  datetime.datetime.now().strftime(_defaultDateStampFormat) )
+				self.addToStatesUpdateDict(dev.id, "sensorValue", int(data["cmd"]), uiValue=cmdtext2 )
 		
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -20076,7 +20082,7 @@ class Plugin(indigo.PluginBase):
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","count","bounceTime","timeWindowForContinuousEvents",
 										"mac","type","INPUTdevId0","INPUTdevId1","INPUTdevId2","INPUTdevId3","coincidenceTimeInterval","updateIndigoTiming","updateIndigoDeltaTemp","updateIndigoDeltaAccelVector","updateIndigoDeltaMaxXYZ",
 										"usbPort","motorFrequency","nContiguousAngles","contiguousDeltaValue","triggerLast","triggerCalibrated","sendToIndigoEvery",
-										"mute", "volume", "setWakeTime",
+										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart",
 										"anglesInOneBin","measurementsNeededForCalib","sendPixelData","doNotUseDataRanges","minSignalStrength","relayType","python3","bleHandle"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate)
 							#if dev.id == 49344355: self.indiLOG.log(20,"pass 9 sens:{}".format(sens))

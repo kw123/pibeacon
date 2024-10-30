@@ -402,7 +402,7 @@ def readParams():
 	global sensorList, sensors, logDir, sensor,	 displayEnable
 	global deltaX, SENSOR, minSendDelta, sensorsOld
 	global oldRaw, lastRead
-	global startTime, lastMeasurement, sendToIndigoSecs, oldi2cOrUart, keepAwake, lastkeepAwake
+	global startTime, lastMeasurement, sendToIndigoSecs, oldi2cOrUart, keepAwake
 	try:
 
 
@@ -458,13 +458,14 @@ def readParams():
 				upd = True
 
 			if upd: 
+				lastkeepAwake = time.time()
 				SENSOR[devId].set_mute_mode(1) 												# mute for startup
 				SENSOR[devId].set_wake_time(int(sensors[sensor][devId]["setWakeTime"])) 	# set  setWakeTime as desired
 				SENSOR[devId].play_by_CMDID(1) 												# switch on listening
 				SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"])) 			# set  mute as desired
 				SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"])) 			# set  volume as desired
-				lastkeepAwake = time.time()
-			if upd: U.logger.log(20,"setting mode:{} volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}".format(i2cOrUart, sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), sensors[sensor][devId].get("setWakeTime"), keepAwake) )
+
+			if upd: U.logger.log(30,"setting mode:{} volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}".format(i2cOrUart, sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), sensors[sensor][devId].get("setWakeTime"), keepAwake) )
 
 			sensorsOld = copy.copy(sensors)
 
@@ -486,22 +487,21 @@ def readParams():
 
 
 #################################
-def keepAwakeCommand():
-	global lastkeepAwake, keepAwake, sensors, sensor, SENSOR
-	try:
-		if not keepAwake: return 
-		#U.logger.log(20, "check if re awake : {:.1f}".format(time.time() -lastkeepAwake))
-		if  time.time() - lastkeepAwake < 200: return 
-		lastkeepAwake = time.time()
-		for devId in SENSOR:
-			SENSOR[devId].set_mute_mode(1) 												# mute for restart
-			SENSOR[devId].set_wake_time(255) 	# 										# set  setWakeTime  to max
-			SENSOR[devId].play_by_CMDID(1) 												# switch on listening
-			SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"]))			# set mute to desired
-		U.logger.log(20, "awake reset")
+	def keepAwakeCommand():
+		global lastkeepAwake, keepAwake, sensors, sensor, SENSOR
+		try:
+			if not keepAwake: return 
+			if  time.time() - lastkeepAwake < 200: return 
+			U.logger.log(20, " restarted awake after {:.1f}secs".format(time.time()-lastkeepAwake)))
+			lastkeepAwake = time.time()
+			for devId in sensors:
+				SENSOR[devId].set_mute_mode(1) 												# mute for restart
+				SENSOR[devId].set_wake_time(255) 	# 										# set  setWakeTime  to max
+				SENSOR[devId].play_by_CMDID(1) 												# switch on listening
+				SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"]))			# set mute to desired
 
-	except Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		except Exception as e:
+			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 #################################
 def startSensor(devId,i2cOrUart):

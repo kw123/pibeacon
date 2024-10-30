@@ -1,4 +1,4 @@
-added features / changes in v2022.181.109 @ 2024-10-30
+added features / changes in v2022.181.110 @ 2024-10-30
 ==================================================
 
 1. added support for voice recognition sensor DF2301Q

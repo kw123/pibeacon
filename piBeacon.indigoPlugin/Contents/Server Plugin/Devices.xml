@@ -20057,7 +20057,6 @@ trigger on "any change" state "sensorValue"";
 				</List>
 			</Field>
 
-
 			<Field id="volume" type="menu"     defaultValue="5"> <Label>volume of voice:</Label>
 				<List>
 					<Option value="0"   >low </Option>
@@ -20078,7 +20077,22 @@ trigger on "any change" state "sensorValue"";
 				</List>
 			</Field>
 
-			<Field id="setWakeTime" type="textfield"     defaultValue="25"> <Label>Set wake-up duration (10-255) seconds:</Label>
+
+			<Field id="keepAwake" type="menu"     defaultValue="0"> <Label>keep awake on (refresh wakeup):</Label>
+				<List>
+					<Option value="0"   >let expire</Option>
+					<Option value="1"   >on</Option>
+				</List>
+			</Field>
+			<Field id="infoLabelDF2301Qkeepawake" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>When enabled, the sensor will be kept awake, means it will continue to listen, wake-up duration will be set to 255 and sensor receives a wake up command every 200 secs</Label>
+			</Field>
+
+
+			<Field id="setWakeTime" type="textfield"     defaultValue="25" visibleBindingId="keepAwake" visibleBindingValue="0"> <Label>Set wake-up duration (10-255) seconds:</Label>
+			</Field>
+			<Field id="infoLabelDF2301QsetWakeTime" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>after xx secs the sensor will stop listening and will require to hear the keyword</Label>
 			</Field>
 
 
@@ -20140,20 +20154,30 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>cmd</TriggerLabel>
 				<ControlPageLabel>cmd</ControlPageLabel>
 			</State>
-			<State id="lastCmd">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastCmd</TriggerLabel>
-				<ControlPageLabel>lastCmd</ControlPageLabel>
-			</State>
 			<State id="cmdAt">
 				<ValueType>String</ValueType>
 				<TriggerLabel>cmdAt</TriggerLabel>
 				<ControlPageLabel>cmdAt</ControlPageLabel>
 			</State>
+			<State id="lastCmd">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastCmd</TriggerLabel>
+				<ControlPageLabel>lastCmd</ControlPageLabel>
+			</State>
 			<State id="lastCmdAt">
 				<ValueType>String</ValueType>
 				<TriggerLabel>lastCmdAt</TriggerLabel>
 				<ControlPageLabel>lastCmdAt</ControlPageLabel>
+			</State>
+			<State id="lastCmd2">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastCmd2</TriggerLabel>
+				<ControlPageLabel>lastCmd2</ControlPageLabel>
+			</State>
+			<State id="lastCmd2At">
+				<ValueType>String</ValueType>
+				<TriggerLabel>lastCmd2At</TriggerLabel>
+				<ControlPageLabel>lastCmd2At</ControlPageLabel>
 			</State>
 
 		</States>

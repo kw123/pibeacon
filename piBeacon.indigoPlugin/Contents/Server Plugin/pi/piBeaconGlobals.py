@@ -210,7 +210,8 @@ python3SensorsCanDo		= [	"ADS1x15",
 							"sgp30","sgp40",
 							"lsm303",
 							"display",
-							"Wire18B20"]
+							"Wire18B20",
+							"DF2301Q"]
 python3Apps				= ["beaconloop", "BLEconnect", "copyToTemp", "receiveCommands"]
 
 appDoesNotExist			= ["INPUTcoincidence"]
