@@ -137,20 +137,20 @@
 208: Delete all
 
 === IDs that can be set by you
-5:   custom command 1
-6:   custom command 2
-7:   custom command 3
-8:   custom command 4
-9:   custom command 5
-10:  custom command 6
-11:  custom command 7
-12:  custom command 8
-13:  custom command 9
-14:  custom command 10
-15:  custom command 11
-16:  custom command 12
-17:  custom command 13
-18:  custom command 14
-19:  custom command 15
-20:  custom command 16
-21:  custom command 17
+5:   custom command 1 not defined
+6:   custom command 2 not defined
+7:   custom command 3 not defined
+8:   custom command 4 not defined
+9:   custom command 5 not defined
+10:  custom command 6 not defined
+11:  custom command 7 not defined
+12:  custom command 8 not defined
+13:  custom command 9 not defined
+14:  custom command 10 not defined
+15:  custom command 11 not defined
+16:  custom command 12 not defined
+17:  custom command 13 not defined
+18:  custom command 14 not defined
+19:  custom command 15 not defined
+20:  custom command 16 not defined
+21:  custom command 17 not defined

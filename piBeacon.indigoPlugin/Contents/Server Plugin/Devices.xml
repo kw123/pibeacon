@@ -20179,6 +20179,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>lastCmd2At</TriggerLabel>
 				<ControlPageLabel>lastCmd2At</ControlPageLabel>
 			</State>
+			<State id="counter">
+				<ValueType>number</ValueType>
+				<TriggerLabel>counter</TriggerLabel>
+				<ControlPageLabel>counter</ControlPageLabel>
+			</State>
 
 		</States>
 

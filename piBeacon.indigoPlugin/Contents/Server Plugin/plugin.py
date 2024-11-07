@@ -5966,15 +5966,22 @@ class Plugin(indigo.PluginBase):
 	def printDF2301QhelpCALLBACK(self, valuesDict=None, typeId="", devId=0):
 		
 		out=   '\n HELP for DF2301Q speech recognition sensor'
-		out=   '\n istall sensor: connect the 4 cables to V+3.3, ground, I2C SDA and SLC'
+		out=   '\n====== Install sensor: connect the 4 cables to V+3.3, ground, I2C SDA and SLC'
 		out=   '\n in dev edit select the rpi the sensor is connected to.'
-		out=   '\n    set wake up time (how long is sensor listening after key word 0-255secs), volume 0-10, mute on/off and custom commands, save'
-		out += '\n use this sensor to trigger action on dev state "sensorValue" has any change; '
-		out += '\n     condition dev state sensorValue is eq 141 ==> then trigger your action for "Open the Door" in indigo'
+		out=   '\n    set wake up time (how long is sensor listening after key word 0-255secs), or set keep awake = no controll word needed'
+		out=   '\n    volume 0-10, mute on/off and custom commands,   save'
+		out += '\n use this sensor to trigger on dev state "counter"  "has any change" (not sensorValue, that can be the same as the last)'
+		out += '\n     condition dev state "sensorValue" is eq 103 ==> then trigger your action for "switch on light" in indigo'
+		out += '\n====== How does it work:'
+		out += '\n  the rpi reads the codes coming from the sensor through i2c interface. it send just the code number to the plugin'
+		out += '\n   the plugin takes the code number and shows it with the pre-defined  (or the custome defined  etxt in dev edit  ) text in the states'
+		out += '\n '
 		out += '\n '
 		out += '\n configuring the sensor online:'
 		out += '\n====== Learning wake-up word:'
-		out += '\n· Initiate the voice assistant by employing the default wake-up word, then utter "Learning wake word" Follow the prompts to learn the new wake-up word (prior to each learning command, it is necessary to remove the previously learned wake-up word; kindly refer to the instructions for wake-up word and command phrase deletion)'
+		out += '\n· Initiate the voice assistant by employing the default wake-up word, then say "Learning wake word"'
+		out += '\n  Follow the prompts to learn the new wake-up word '
+		out += '\n    (prior to each learning command, it is necessary to remove the previously learned wake-up word; kindly refer to the instructions for wake-up word and command phrase deletion)'
 		out += '\n· Indication: Learning now, be quiet, please say the wake word to be learned!'
 		out += '\n· The designated wake-up word to be acquired (taking "hey indigo" as an example): “hey indigo”'
 		out += '\n· Indication: Learning successful, please say it again!'
@@ -6000,24 +6007,25 @@ class Plugin(indigo.PluginBase):
 		out += '\n '
 		out += '\n '
 		out += '\n====== Delete Wake Words and Command Words:'
-		out += '\nUse a wake-up word (default or learned) to wake up the voice assistant, and articulate the phrase "I want to delete"'
+		out += '\nUse a wake-up word (default or learned) to wake up the voice assistant, and speak the phrase "I want to delete"'
 		out += '\n      Follow the prompts to eliminate the specified command phrase as instructed.'
 		out += '\n· Indication: Do you want to delete the learned wake word or command word?'
 		out += '\n· "Delete command word " : will Remove the previously acquired command phrases.'
 		out += '\n· "Delete wake word" : will Erase the learned awakening words from the system.'
-		out += '\n· "Delete all" : Eliminate the assimilated awakening utterances and command phrases from memory.'
+		out += '\n· "Delete all" : Eliminate the assimilated awakening phrases and command phrases from memory.'
 		out += '\n· "Exit deleting".'
 		out += '\n '
-		out += '\n======  command IDs 5..21 activated (set by you):'
+		out += '\n======  predefined command IDs  with phrase'
 
 		lines = self.DF2301Q_commandlistText.split("\n")
 		for line in lines:
-			if line.find("custom command") == -1:
-				out += '\n{}'.format(line)
+			if line.find("IDs that can be set by you") > -1: 
+				out += '\n=== IDs that can be set by you, 1. set phrase on sensor as described above and 2. in device edit to use in dev states as string to map to command id'
+				break
+			out += '\n{}'.format(line)
 
 		for ii in range(5,22):
-			if valuesDict.get("controllWord"+str(ii),"") != "custom command".format(ii):
-				out += '\n{}: {}'.format(ii, valuesDict.get("controllWord"+str(ii)),"" )
+			out += '\n{}: {}'.format(ii, valuesDict.get("controllWord"+str(ii)),"" )
 
 		out += '\n '
 		out += '\n  see https://www.tme.eu/Document/064226f2d0b3baf20e9949b0a9b6a625/DF-SEN0539-EN-TME.pdf for tech doc'
@@ -17865,11 +17873,9 @@ class Plugin(indigo.PluginBase):
 		try:
 			if "cmd" in data and "cmd" in dev.states: 
 				if data["cmd"] > 4 and data["cmd"] < 22:
-					cmdtext = props.get("controllWord"+str(data["cmd"]), "text not set")
-					cmdtext2 = props.get("controllWord"+str(data["cmd"]), str(data["cmd"])+": text not set")
+					cmdtext = props.get("controllWord"+str(data["cmd"]), "text not set, set in device edit")
 				else:
 					cmdtext = self.DF2301Q_commandlist.get(str(data["cmd"]),"not recognized") 
-					cmdtext2 = props.get("controllWord"+str(data["cmd"]), "text not set")
 				self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
 				self.addToStatesUpdateDict(dev.id, "lastCmd2At", dev.states["lastCmdAt"] )
 
@@ -17878,7 +17884,10 @@ class Plugin(indigo.PluginBase):
 
 				self.addToStatesUpdateDict(dev.id, "cmd", "{}:{}".format(data["cmd"], cmdtext) )
 				self.addToStatesUpdateDict(dev.id, "cmdAt",  datetime.datetime.now().strftime(_defaultDateStampFormat) )
-				self.addToStatesUpdateDict(dev.id, "sensorValue", int(data["cmd"]), uiValue=cmdtext2 )
+				self.addToStatesUpdateDict(dev.id, "sensorValue", int(data["cmd"]), uiValue="{}:{}".format(data["cmd"], cmdtext)  )
+				try: 	counter = int(dev.states.get("counter",0))
+				except: counter = 0
+				self.addToStatesUpdateDict(dev.id, "counter", counter+1)
 		
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)

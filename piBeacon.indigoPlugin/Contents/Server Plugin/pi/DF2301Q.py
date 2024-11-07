@@ -400,9 +400,9 @@ class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 ###############################
 def readParams():
 	global sensorList, sensors, logDir, sensor,	 displayEnable
-	global deltaX, SENSOR, minSendDelta, sensorsOld
+	global deltaX, SENSOR, sensorsOld
 	global oldRaw, lastRead
-	global startTime, lastMeasurement, sendToIndigoSecs, oldi2cOrUart, keepAwake, lastkeepAwake
+	global startTime, lastMeasurement, oldi2cOrUart, keepAwake, lastkeepAwake
 	try:
 
 
@@ -456,14 +456,10 @@ def readParams():
 
 			elif "setWakeTime" in sensors[sensor][devId] and (upd or sensors[sensor][devId].get("setWakeTime") != sensorsOld[sensor][devId].get("setWakeTime")) : 
 				upd = True
+				restart = True
 
 			if upd: 
-				SENSOR[devId].set_mute_mode(1) 												# mute for startup
-				SENSOR[devId].set_wake_time(int(sensors[sensor][devId]["setWakeTime"])) 	# set  setWakeTime as desired
-				SENSOR[devId].play_by_CMDID(1) 												# switch on listening
-				SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"])) 			# set  mute as desired
-				SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"])) 			# set  volume as desired
-				lastkeepAwake = time.time()
+				refreshSetup(devIdx=devId, init=restart)
 			if upd: U.logger.log(20,"setting mode:{} volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}".format(i2cOrUart, sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), sensors[sensor][devId].get("setWakeTime"), keepAwake) )
 
 			sensorsOld = copy.copy(sensors)
@@ -486,7 +482,7 @@ def readParams():
 
 
 #################################
-def keepAwakeCommand():
+def refreshSetup(devIdx="", init=False):
 	global lastkeepAwake, keepAwake, sensors, sensor, SENSOR
 	try:
 		if not keepAwake: return 
@@ -494,10 +490,14 @@ def keepAwakeCommand():
 		if  time.time() - lastkeepAwake < 200: return 
 		lastkeepAwake = time.time()
 		for devId in SENSOR:
-			SENSOR[devId].set_mute_mode(1) 												# mute for restart
-			SENSOR[devId].set_wake_time(255) 	# 										# set  setWakeTime  to max
+			if devIdx !="" and devIdx != devId: continue
+			SENSOR[devId].set_mute_mode(1) 												# mute for startup
+			if init or keepAwake:
+				SENSOR[devId].set_wake_time(int(sensors[sensor][devId]["setWakeTime"])) # set  setWakeTime as desired
 			SENSOR[devId].play_by_CMDID(1) 												# switch on listening
-			SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"]))			# set mute to desired
+			SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"])) 			# set  mute as desired
+			SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"])) 			# set  volume as desired
+			lastkeepAwake = time.time()
 		U.logger.log(20, "awake reset")
 
 	except Exception as e:
@@ -566,9 +566,9 @@ def getValues(devId):
 ############################################
 def execSensorLoop():
 	global sensor, sensors, badSensor, sensorList
-	global deltaX, SENSOR, minSendDelta, sensorMode
+	global deltaX, SENSOR, sensorMode
 	global oldRaw, lastRead
-	global startTime, sendToIndigoSecs, lastMeasurement
+	global startTime, lastMeasurement
 	global oldi2cOrUart, sensorsOld, keepAwake, lastkeepAwake
 
 	lastkeepAwake				= 0
@@ -580,7 +580,6 @@ def execSensorLoop():
 	lastMeasurement				= time.time()
 	oldRaw						= ""
 	lastRead					= 0
-	minSendDelta				= 5.
 	loopCount					= 0
 	sensorRefreshSecs			= 0.1
 	sensorList					= []
@@ -608,13 +607,6 @@ def execSensorLoop():
 
 	U.echoLastAlive(G.program)
 
-	firstValue			= True
-
-
-	lastValues0			= 0
-	lastValues			= {}
-	lastData			= {}
-	lastSend			= 0
 	G.lastAliveSend		= time.time()
 
 	sensorWasBad 		= False
@@ -627,8 +619,6 @@ def execSensorLoop():
 			if sensor in sensors:
 				data = {"sensors": {sensor:{}}}
 				for devId in sensors[sensor]:
-					if devId not in lastValues: 
-						lastValues[devId]	= 0
 					theValues = getValues(devId)
 					if theValues == "": 
 						continue
@@ -645,15 +635,13 @@ def execSensorLoop():
 							U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
 						continue
 					elif theValues["cmd"] != 0:
-						lastValues[devId]	= theValues
 						data["sensors"][sensor][devId] = theValues
 						sendData = True
-					if (	(	tt - abs(sendToIndigoSecs) > G.lastAliveSend	) or quick ) and	( tt - G.lastAliveSend > minSendDelta ):
+					if ( tt - abs(sendToIndigoSecs) > G.lastAliveSend	) or quick:
 						sendData = True
-						firstValue = False
 			if sendData:
 				U.sendURL(data)
-				extraSleep = 1
+				extraSleep = 0.5
 			U.makeDATfile(G.program, data)
 
 			loopCount += 1
@@ -666,7 +654,7 @@ def execSensorLoop():
 			if tt - lastRead > 2.:	
 				readParams()
 				lastRead = tt
-				keepAwakeCommand()
+				refreshSetup()
 			time.sleep( max(0, (lastMeasurement + sensorRefreshSecs + extraSleep) - time.time() ) )
 			lastMeasurement = time.time()
 
