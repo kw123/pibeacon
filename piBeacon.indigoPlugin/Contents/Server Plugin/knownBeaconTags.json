@@ -382,14 +382,13 @@
     "Min": "",
     "commands": {
       "batteryLevel": {
-        "type": "msg",
         "bits": 127,
         "gattcmd": [
           "char-read-uuid 2A19"
         ],
         "norm": 100,
         "offset": 0,
-        "random": "public",
+        "random": "randomON",
         "shift": 0,
         "type": "BLEconnect"
       },

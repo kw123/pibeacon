@@ -720,7 +720,7 @@ def execSensor():
 
 					if values["CO2"] < 380: 
 						badsensorCountCO2[devId] +=1
-						U.logger.log(20," badsensorCountCO2:{}, co2:{}".format(badsensorCountCO2[devId] , values["CO2"] ))
+						U.logger.log(20," badsensorCountCO2: {}, co2:{} < 380 !!".format(badsensorCountCO2[devId] , values["CO2"] ))
 						if badsensorCountCO2[devId]  > 12:
 							U.restartMyself(param="", reason="co2 value to low",doPrint=True,python3=True)
 

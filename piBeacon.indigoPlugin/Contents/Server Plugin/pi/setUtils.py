@@ -36,7 +36,7 @@ def execAddingUtils():
 		if out.find("export PATH=$PATH:".format(G.homeDir)) == -1: 
 			U.logger.log(20, "adding  homedir to PATH")
 			cmd = "echo '\nexport PATH=$PATH:{}' >> {}".format(G.homeDir, bashFile)
-			U.logger.log(20, "adding {} to PATH  with: {}; will be active after next reboot".format(G.homeDir, cmd), shell=True)
+			U.logger.log(20, "adding {} to PATH  with: {}; will be active after next reboot".format(G.homeDir, cmd))
 			subprocess.call(cmd, shell=True)
 
 	except Exception as e:

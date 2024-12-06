@@ -1,4 +1,27 @@
-added features / changes in v2022.181.111 @ 2024-11-06
+added features / changes in added features / changes in v2022.182.115 @ 2024-12-06
+==================================================
+
+1. added option to set lastBatteryReplaced datetime stamp from many for devices
+2. voice recognition sensor DF2301Q: added support for uart/serial interface;  improved help menues etc 
+
+added features / changes in added features / changes in v2022.181.115 @ 2024-11-11
+==================================================
+
+1. changed batterylevel = 0 for ruuvitag to 2200 mV from 2500.
+2. menue msg improvements
+3. log statement in setUtils.py on rpi fixed
+4. change how to get battery level for itrack eacons, back previous method: get levelthough connect command, bnot thrugh message
+   baterry level in message was only chnaged after beep or button press. so if you have a beacon that is not touched for a long time, you dont get the new battery level
+5. auto enable i2c in commandline on rpi, no need for sudo raspi-config
+
+
+added features / changes in added features / changes in v2022.181.111 @ 2024-11-06
+==================================================
+
+1. added support for voice recognition sensor DF2301Q
+   voice commands can be used to trigger indigo action. all data is local, recognition is done by the onboard chip
+   
+@ 2024-11-06
 ==================================================
 
 1. added support for voice recognition sensor DF2301Q

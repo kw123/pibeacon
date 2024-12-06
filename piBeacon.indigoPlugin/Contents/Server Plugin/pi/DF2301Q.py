@@ -123,6 +123,9 @@ DF2301Q_UART_MSG_CMD_SET_NEEDSTRING			= 0x91
 DF2301Q_UART_MSG_ACK_ERR_NONE				= 0x00
 DF2301Q_UART_MSG_ACK_ERR_CHECKSUM			= 0xff
 DF2301Q_UART_MSG_ACK_ERR_NOSUPPORT			= 0xfe
+
+DF2301Q_SERIAL_PORT_NAME					= "serial0"
+
 ############ UART ##########################	end
 
 
@@ -146,6 +149,10 @@ class DFRobot_DF2301Q_I2C(DFRobot_DF2301Q):
 	def play_by_CMDID(self, CMDID):
 		# note Can enter wake-up state through ID = 1 in I2C mode
 		self._write_reg(DF2301Q_I2C_REG_PLAY_CMDID, CMDID)
+		time.sleep(1)
+
+	def set_wakeup(self):
+		self._write_reg(DF2301Q_I2C_REG_PLAY_CMDID, 1)
 		time.sleep(1)
 
 	def get_wake_time(self):
@@ -175,7 +182,7 @@ class DFRobot_DF2301Q_I2C(DFRobot_DF2301Q):
 		return data[0]
 
 
-##############  uart class, not used yet ##########
+##############  uart (serial) class, not used yet ##########
 class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 
 	REV_STATE_HEAD0	 	= 0x00
@@ -205,16 +212,18 @@ class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 			self.msg_seq = 0
 			self.msg_data = [0] * 8
 
-	def __init__(self):
+	def __init__(self, serialPortName=DF2301Q_SERIAL_PORT_NAME):
 		'''!
 			@brief Module UART communication init
 		'''
+		self.debug = 0
 		self.uart_cmd_ID = 0
 		self._send_sequence = 0
-		self._ser = serial.Serial("/dev/ttyAMA0", baudrate=DF2301Q_UART_BAUDRATE, bytesize=8, parity='N', stopbits=1, timeout=0.5)
+		self._ser = serial.Serial("/dev/"+serialPortName, baudrate=DF2301Q_UART_BAUDRATE, bytesize=8, parity='N', stopbits=1, timeout=0.5)
 		if self._ser.isOpen == False:
 			self._ser.open()
 		super(DFRobot_DF2301Q_UART, self).__init__()
+		self.reset_module()
 
 	def get_CMDID(self):
 		'''!
@@ -226,7 +235,7 @@ class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 		self.uart_cmd_ID = 0
 		return temp
 
-	def play_by_CMDID(self, play_id):
+	def play_by_CMDID(self, CMDID):
 		'''!
 			@brief Play the corresponding reply audio according to the command word ID
 			@param CMDID - Command word ID
@@ -240,7 +249,7 @@ class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 		self._send_sequence += 1
 		msg.msg_data[0] = DF2301Q_UART_MSG_DATA_PLAY_START
 		msg.msg_data[1] = DF2301Q_UART_MSG_DATA_PLAY_BY_CMD_ID
-		msg.msg_data[2] = play_id
+		msg.msg_data[2] = CMDID
 
 		self._send_packet(msg)
 		time.sleep(1)
@@ -249,33 +258,24 @@ class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 		'''!
 			@brief Reset the module
 		'''
-		msg = self.uart_msg()
-		msg.header = DF2301Q_UART_MSG_HEAD
-		msg.data_length = 5
-		msg.msg_type = DF2301Q_UART_MSG_TYPE_CMD_DOWN
-		msg.msg_cmd = DF2301Q_UART_MSG_CMD_RESET_MODULE
-		msg.msg_seq = self._send_sequence
-		self._send_sequence += 1
-		msg.msg_data[0] = 'r'
-		msg.msg_data[1] = 'e'
-		msg.msg_data[2] = 's'
-		msg.msg_data[3] = 'e'
-		msg.msg_data[4] = 't'
-
-		self._send_packet(msg)
+		try:
+			msg = self.uart_msg()
+			msg.header = DF2301Q_UART_MSG_HEAD
+			msg.data_length = 5
+			msg.msg_type = DF2301Q_UART_MSG_TYPE_CMD_DOWN
+			msg.msg_cmd = DF2301Q_UART_MSG_CMD_RESET_MODULE
+			msg.msg_seq = self._send_sequence
+			self._send_sequence += 1
+			msg.msg_data[0] = ord('r')
+			msg.msg_data[1] = ord('e')
+			msg.msg_data[2] = ord('s')
+			msg.msg_data[3] = ord('e')
+			msg.msg_data[4] = ord('t')
+	
+			self._send_packet(msg)
+		except Exception as e:
+			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 		time.sleep(3)
-
-
-	def set_volume(self,  set_value):
-		setting_CMD(self, DF2301Q_UART_MSG_CMD_SET_VOLUME, set_value)
-
-
-	def set_mute_mode(self,  set_value):
-		setting_CMD(self, DF2301Q_UART_MSG_CMD_SET_MUTE, set_value)
-
-
-	def set_wake_time(self,  set_value):
-		setting_CMD(self, DF2301Q_UART_MSG_CMD_SET_WAKE_TIME, set_value)
 
 
 	def setting_CMD(self, set_type, set_value):
@@ -299,33 +299,41 @@ class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 		msg.msg_data[1] = set_value
 
 		self._send_packet(msg)
+		time.sleep(0.1) # we need this for slow rpi eg pi0w
 
 	def _send_packet(self, msg):
 		'''
 			@brief Write data through UART
 			@param msg - Data packet to be sent
 		'''
-		chk_sum = 0x0000
-		data = []
-		data.append(msg.header & 0xFF)
-		data.append((msg.header >> 8) & 0xFF)
-		data.append(msg.data_length & 0xFF)
-		data.append((msg.data_length >> 8) & 0xFF)
-		data.append(msg.msg_type & 0xFF)
-		chk_sum += msg.msg_type
-		data.append(msg.msg_cmd & 0xFF)
-		chk_sum += msg.msg_cmd
-		data.append(msg.msg_seq & 0xFF)
-		chk_sum += msg.msg_seq
-		for i in range(0, msg.data_length):
-			data.append(msg.msg_data[i] & 0xFF)
-			chk_sum += msg.msg_data[i]
-		data.append(chk_sum & 0xFF)
-		data.append((chk_sum >> 8) & 0xFF)
-		data.append(DF2301Q_UART_MSG_TAIL & 0xFF)
-		logger.info(data)
-		self._ser.write(data)
-		time.sleep(0.1)
+		try:
+			chk_sum = 0x0000
+			data = []
+			data.append(msg.header & 0xFF)
+			data.append((msg.header >> 8) & 0xFF)
+			data.append(msg.data_length & 0xFF)
+			data.append((msg.data_length >> 8) & 0xFF)
+			data.append(msg.msg_type & 0xFF)
+			chk_sum += msg.msg_type
+			data.append(msg.msg_cmd & 0xFF)
+			chk_sum += msg.msg_cmd
+			data.append(msg.msg_seq & 0xFF)
+			chk_sum += msg.msg_seq
+			for i in range(0, msg.data_length):
+				try: 	data.append(msg.msg_data[i] & 0xFF)
+				except:	data.append(msg.msg_data[i] ) #for a string)
+
+				chk_sum += msg.msg_data[i]
+
+			data.append(chk_sum & 0xFF)
+			data.append((chk_sum >> 8) & 0xFF)
+			data.append(DF2301Q_UART_MSG_TAIL & 0xFF)
+			if self.debug > 1: U.logger.log(20,"_send_packet: {}".format(data))
+			self._ser.write(data)
+			time.sleep(0.1)
+		except Exception as e:
+			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "data:{}, msg:{}".format(data, str(msg.msg_data)))
 
 	def _recv_packet(self):
 		'''
@@ -393,6 +401,27 @@ class DFRobot_DF2301Q_UART(DFRobot_DF2301Q):
 		return data_rev_count
 
 
+	def set_volume(self,  set_value):
+		if self.debug > 0: U.logger.log(20, "value:{}".format(set_value) )
+		self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_VOLUME, set_value)
+
+
+	def set_mute_mode(self,  set_value):
+		if self.debug > 0: U.logger.log(20, "value:{}".format(set_value) )
+		self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_MUTE, set_value)
+
+
+	def set_wake_time(self,  set_value):
+		if self.debug > 0: U.logger.log(20, "value:{}".format(set_value) )
+		self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_WAKE_TIME, set_value)
+
+
+	def set_wakeup(self):
+		if self.debug > 0: U.logger.log(20, "value:{}".format(None) )
+		self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_ENTERWAKEUP, 1)
+
+
+
 # ===========================================================================
 # read params
 # ===========================================================================
@@ -402,7 +431,7 @@ def readParams():
 	global sensorList, sensors, logDir, sensor,	 displayEnable
 	global deltaX, SENSOR, sensorsOld
 	global oldRaw, lastRead
-	global startTime, lastMeasurement, oldi2cOrUart, keepAwake, lastkeepAwake
+	global startTime, lastMeasurement, oldi2cOrUart, oldserialPortName, keepAwake, lastkeepAwake
 	try:
 
 
@@ -432,18 +461,22 @@ def readParams():
 		for devId in sensors[sensor]:
 
 			restart = False
-			i2cOrUart =  sensors[sensor][devId].get("i2cOrUart","i2c")	 
-			if oldi2cOrUart != i2cOrUart:	restart = True 
-			oldi2cOrUart = i2cOrUart
+			i2cOrUart =  sensors[sensor][devId].get("i2cOrUart","")	 
+			if i2cOrUart != "" and oldi2cOrUart != i2cOrUart:					restart = True 
+
+			serialPortName =  sensors[sensor][devId].get("serialPortName",DF2301Q_SERIAL_PORT_NAME)	 
+			if serialPortName != "" and oldserialPortName != serialPortName:	restart = True 
+			oldiserialPortName = serialPortName
 
 			upd = False
 			if devId not in SENSOR or restart:
+				if devId in SENSOR: del SENSOR[devId] 
 				upd = True
-				startSensor(devId, i2cOrUart)
+				startSensor(devId, i2cOrUart, serialPortName)
 				if SENSOR[devId] == "":
 					return
 
-			if devId not in sensorsOld: upd= True
+			if devId not in sensorsOld: upd = True
 
 			keepAwake = sensors[sensor][devId].get("keepAwake") == "1"
 			if keepAwake: sensors[sensor][devId]["setWakeTime"] = 255
@@ -451,16 +484,18 @@ def readParams():
 			if "mute" in sensors[sensor][devId] and (upd or sensors[sensor][devId].get("mute") != sensorsOld[sensor][devId].get("mute")): 
 				upd = True
 
-			elif "volume" in sensors[sensor][devId] and (upd or sensors[sensor][devId].get("volume") != sensorsOld[sensor][devId].get("volume")) : 
+			elif "volume" in sensors[sensor][devId] and ( sensors[sensor][devId].get("volume") != sensorsOld[sensor][devId].get("volume")): 
 				upd = True
 
-			elif "setWakeTime" in sensors[sensor][devId] and (upd or sensors[sensor][devId].get("setWakeTime") != sensorsOld[sensor][devId].get("setWakeTime")) : 
+			elif "setWakeTime" in sensors[sensor][devId] and (sensors[sensor][devId].get("setWakeTime") != sensorsOld[sensor][devId].get("setWakeTime")): 
 				upd = True
 				restart = True
 
+			if upd: U.logger.log(20,"setting volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}".format( sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), sensors[sensor][devId].get("setWakeTime"), keepAwake) )
+
 			if upd: 
-				refreshSetup(devIdx=devId, init=restart)
-			if upd: U.logger.log(20,"setting mode:{} volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}".format(i2cOrUart, sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), sensors[sensor][devId].get("setWakeTime"), keepAwake) )
+				refreshSetup(devIdx=devId, restart=restart, upd=upd)
+
 
 			sensorsOld = copy.copy(sensors)
 
@@ -476,38 +511,49 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 
 
 #################################
-def refreshSetup(devIdx="", init=False):
+def refreshSetup(devIdx="", restart=False, upd=False):
 	global lastkeepAwake, keepAwake, sensors, sensor, SENSOR
 	try:
-		if not keepAwake: return 
+		if not keepAwake and not restart and not upd: return 
 		#U.logger.log(20, "check if re awake : {:.1f}".format(time.time() -lastkeepAwake))
-		if  time.time() - lastkeepAwake < 200: return 
-		lastkeepAwake = time.time()
-		for devId in SENSOR:
-			if devIdx !="" and devIdx != devId: continue
-			SENSOR[devId].set_mute_mode(1) 												# mute for startup
-			if init or keepAwake:
-				SENSOR[devId].set_wake_time(int(sensors[sensor][devId]["setWakeTime"])) # set  setWakeTime as desired
-			SENSOR[devId].play_by_CMDID(1) 												# switch on listening
-			SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"])) 			# set  mute as desired
-			SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"])) 			# set  volume as desired
+		if  time.time() - lastkeepAwake > 200 or restart or upd:  
+			for devId in SENSOR:
+				if devIdx != "" and devIdx != devId: continue
+	
+				if keepAwake or restart:
+					SENSOR[devId].set_mute_mode(1) 											# set  mute as desired
+					time.sleep(0.2)
+
+				if keepAwake:
+					SENSOR[devId].set_wakeup() 													# set  set awake
+					time.sleep(0.2)
+
+				if keepAwake or restart:
+					SENSOR[devId].set_wake_time(int(sensors[sensor][devId]["setWakeTime"])) 	# set  setWakeTime as desired
+					time.sleep(0.2)
+	
+				if upd or keepAwake:
+					SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"])) 			# set  volume as desired
+					time.sleep(0.2)
+					SENSOR[devId].set_mute_mode(int(sensors[sensor][devId]["mute"])) 			# set  mute as desired
+					time.sleep(0.2)
+			U.logger.log(20, "(re)-init sensor, restart:{}, keepAwake:{}, setWakeTime:{}, mute:{}, volume:{}".format(restart, keepAwake, sensors[sensor][devId]["setWakeTime"], sensors[sensor][devId]["mute"],  sensors[sensor][devId]["volume"] ))
+
 			lastkeepAwake = time.time()
-		U.logger.log(20, "awake reset")
 
 	except Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 #################################
-def startSensor(devId,i2cOrUart):
+def startSensor(devId, i2cOrUart, serialPortName):
 	global sensors,sensor
 	global startTime
-	global gasBaseLine, gasBurnIn
 	global SENSOR
 	startTime =time.time()
 	
@@ -517,16 +563,19 @@ def startSensor(devId,i2cOrUart):
 		try:
 			time.sleep(0.5)
 			if i2cOrUart == "uart":
-				SENSOR[devId] = DFRobot_DF2301Q_UART()
+				U.logger.log(20, "started sensor, version w type:{}, serial port:{}".format(i2cOrUart, serialPortName))
+				SENSOR[devId] = DFRobot_DF2301Q_UART(serialPortName=serialPortName)
 			else:
 				SENSOR[devId] = DFRobot_DF2301Q_I2C()
-
-			U.logger.log(20, u"started sensor, version")
+				U.logger.log(20, "started sensor, version w type:{}".format(i2cOrUart))
 	
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			if str(e).find("could not open port /dev/") > -1:
+				data = {"sensors":{sensor:{devId:"badsenor_error:bad_port_setting_/dev/"+serialPortName}}}
+				U.sendURL(data)
 			SENSOR[devId] = ""
-			return
+		return
 
 
 
@@ -536,27 +585,35 @@ def getValues(devId):
 	global keepAwake
 
 	try:
+		CMDID = 0
+		
 		if SENSOR[devId] == "": 
-			badSensor +=1
+			badSensor += 1
 			return "badSensor"
-		goodM = 0
+
 		for ii in range(5):
 			try:
 				CMDID = SENSOR[devId].get_CMDID()
-			except: return {"cmd":0}
-			if keepAwake and CMDID == 1: continue
+			except: 
+				badSensor += 1
+				if badSensor >= 5: return "badSensor"
+				return {"cmd":0}
+
 			if CMDID > 0: break
+
 			time.sleep(0.1)
 
-		if CMDID != 0: U.logger.log(20, "CMDID = {}".format(CMDID))
+		if CMDID != 0: 
+			U.logger.log(20, "CMDID = {}".format(CMDID))
 		
-		data = {"cmd":CMDID}
 		badSensor = 0
-		return data
+		return {"cmd":CMDID}
+
 	except	Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+
 	badSensor += 1
-	if badSensor > 5: return "badSensor"
+	if badSensor >= 5: return "badSensor"
 	return ""
 
 
@@ -569,18 +626,19 @@ def execSensorLoop():
 	global deltaX, SENSOR, sensorMode
 	global oldRaw, lastRead
 	global startTime, lastMeasurement
-	global oldi2cOrUart, sensorsOld, keepAwake, lastkeepAwake
+	global oldi2cOrUart, oldserialPortName, sensorsOld, keepAwake, lastkeepAwake
+
 
 	lastkeepAwake				= 0
 	keepAwake					= False
 	oldi2cOrUart				= ""
+	oldserialPortName			= ""
 	sensorsOld					= {}
-	sendToIndigoSecs			= 80
+	sendToIndigoSecs			= 85
 	startTime					= time.time()
 	lastMeasurement				= time.time()
 	oldRaw						= ""
 	lastRead					= 0
-	loopCount					= 0
 	sensorRefreshSecs			= 0.1
 	sensorList					= []
 	sensors						= {}
@@ -607,7 +665,7 @@ def execSensorLoop():
 
 	U.echoLastAlive(G.program)
 
-	G.lastAliveSend		= time.time()
+	lastAliveSend		= time.time()
 
 	sensorWasBad 		= False
 	while True:
@@ -615,39 +673,44 @@ def execSensorLoop():
 			extraSleep = 0
 			tt = time.time()
 			sendData = False
-			data ={}
+			data = {}
 			if sensor in sensors:
 				data = {"sensors": {sensor:{}}}
 				for devId in sensors[sensor]:
 					theValues = getValues(devId)
+					
 					if theValues == "": 
 						continue
 
-					data["sensors"][sensor][devId] = {}
+					data["sensors"][sensor][devId] = "alive"
 
 					if theValues == "badSensor" or type(theValues) == type(" "):
 						sensorWasBad = True
-						data["sensors"][sensor][devId] = "badSensor"
-						if badSensor < 5: 
-							U.logger.log(30," bad sensor")
-							U.sendURL(data)
-						else:
-							U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
-						continue
+						if badSensor in [5,6]: 
+							extraSleep = 5
+							sendData = True
+							data["sensors"][sensor][devId] = "badSensor"
+							break
+
+						elif badSensor > 10: 
+							U.restartMyself(param="", reason="badsensor", doPrint=True)
+
+						extraSleep = 2
+						break
+						
 					elif theValues["cmd"] != 0:
 						data["sensors"][sensor][devId] = theValues
 						sendData = True
-					if ( tt - abs(sendToIndigoSecs) > G.lastAliveSend	) or quick:
+						
+					if tt - sendToIndigoSecs > lastAliveSend:
 						sendData = True
+						
 			if sendData:
 				U.sendURL(data)
-				extraSleep = 0.5
-			U.makeDATfile(G.program, data)
+				U.makeDATfile(G.program, data)
+				extraSleep  += 0.5
+				lastAliveSend = tt
 
-			loopCount += 1
-
-			##U.makeDATfile(G.program, data)
-			quick = U.checkNowFile(G.program)				 
 			U.echoLastAlive(G.program)
 
 			tt = time.time()
@@ -655,11 +718,11 @@ def execSensorLoop():
 				readParams()
 				lastRead = tt
 				refreshSetup()
-			time.sleep( max(0, (lastMeasurement + sensorRefreshSecs + extraSleep) - time.time() ) )
+			time.sleep( max(0, (lastMeasurement + sensorRefreshSecs + extraSleep) - tt ) )
 			lastMeasurement = time.time()
 
 		except	Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			time.sleep(5.)
 
 

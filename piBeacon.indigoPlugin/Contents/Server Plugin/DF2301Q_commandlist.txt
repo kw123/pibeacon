@@ -56,7 +56,7 @@
 73:  Turn on the camera
 74:  Turn off the camera
 75:  Turn on the fan
-76:  Turn on the fan
+76:  Turn off the fan
 77:  Turn fan speed to gear one
 78:  Turn fan speed to gear two
 79:  Turn fan speed to gear three

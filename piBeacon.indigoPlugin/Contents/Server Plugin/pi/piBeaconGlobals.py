@@ -216,6 +216,8 @@ python3Apps				= ["beaconloop", "BLEconnect", "copyToTemp", "receiveCommands"]
 
 appDoesNotExist			= ["INPUTcoincidence"]
 
+i2cMustBeOn				= True
+
 loggerSet = False
 
 apiKey = ""

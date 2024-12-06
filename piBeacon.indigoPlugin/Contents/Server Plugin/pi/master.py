@@ -316,6 +316,9 @@ def readNewParams(force=0, init=False):
 		if True or init or force !=0:
 			U.logger.log(20, "programs that should be running: {}".format(programsThatShouldBeRunning))
 			U.logger.log(20, "list of all sensor   {}".format(sensorList))
+
+		if init: U.startI2C(text="start checkstartOtherProgram")
+
 		for ss in programsThatShouldBeRunning:
 			if ss in G.appDoesNotExist: continue 
 			checkIfPGMisRunning(ss, force=init)
@@ -564,8 +567,8 @@ def setupX(action="leaveAlone"):
 					##     @lxterminal -e "/home/pi/pibeacon/startmaster.sh"
 					## to  /etc/xdg/lxsession/LXDE-pi/autostart 
 
-					subprocess.call("mkdir  /etc/xdg/lxsession", shell=True)
-					subprocess.call("mkdir  /etc/xdg/lxsession/LXDE-pi/", shell=True)
+					subprocess.call("/usr/bin/mkdir  /etc/xdg/lxsession > /dev/null 2>&1", shell=True)
+					subprocess.call("/usr/bin/mkdir  /etc/xdg/lxsession/LXDE-pi/ > /dev/null 2>&1", shell=True)
 					subprocess.call("cp "+G.homeDir+"autostart.forxwindows   /etc/xdg/lxsession/LXDE-pi/autostart", shell=True)
 					subprocess.call("sudo chmod +x /etc/xdg/lxsession/LXDE-pi/autostart", shell=True)
 					subprocess.call("sudo chown -R pi:pi /etc/xdg/lxsession/LXDE-pi/", shell=True)
@@ -936,17 +939,23 @@ def checkIfRebootRequest():
 	global usePython3, mustUsePy3
 	###print "into checkIfRebootRequest"
 	if	os.path.isfile(G.homeDir+"temp/rebootNeeded"):
-		f=open(G.homeDir+"temp/rebootNeeded") 
+		f = open(G.homeDir+"temp/rebootNeeded") 
 		reason = f.read()
 		f.close()
 		os.remove(G.homeDir+"temp/rebootNeeded")
-		if reason.find("noreboot")>-1:
+		if reason.find("noreboot") > -1:
 			U.logger.log(30, " sending message to plugin re:{}".format(reason) )
 			U.sendRebootHTML(reason)
+
+		elif reason == "hardreboot":
+			U.logger.log(30, "hard reboot due to request:{}".format(reason))
+			time.sleep(1)
+			U.doRebootThroughRUNpinReset()
+
 		else:
-			U.logger.log(30, " rebooting due to request:{}".format(reason))
+			U.logger.log(30, "soft reboot due to request:{}".format(reason))
 			U.sendRebootHTML(reason)
-			if reason.find("FORCE") >-1:
+			if reason.find("FORCE") > -1:
 				U.doReboot(tt=15,force=True)
 			time.sleep(50)
 			U.doRebootThroughRUNpinReset()
@@ -1337,7 +1346,7 @@ def checkLogfiles():
 
 		if retCode in [1,2]:   # (need 500Mbyte free or 80% max
 			U.restartMyself(reason=" out of space ", python3=usePython3)
-			subprocess.call("sudo killall -9 python; sleep 2;sudo reboot -f", shell=True)
+			subprocess.call("sudo killall -9 python;sudo killall -9 python3; sleep 2;sudo reboot -f", shell=True)
 
 		try:
 			if os.path.isfile("{}permanent.log".format(G.homeDir)) and os.path.getsize("{}permanent.log".format(G.homeDir)) > 20000:
@@ -1369,10 +1378,8 @@ def checkLogfiles():
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
-		return
+	return
 
-
-	U.doRebootThroughRUNpinReset()
 
 
 
@@ -2147,7 +2154,7 @@ def checkNTP():
 def setupTempDir():
 	try:
 		if	not os.path.isdir(G.homeDir+"temp"):
-			subprocess.call("mkdir  "+G.homeDir+"temp", shell=True)
+			subprocess.call("/usr/bin/mkdir   "+G.homeDir+"temp > /dev/null 2>&1" , shell=True)
 		if U.readPopen("df | grep tempfs ")[0].find(G.homeDir+"temp") == -1:
 			subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
 		subprocess.call("sudo rm "+G.homeDir+"temp/*  > /dev/null 2>&1", shell=True)
@@ -2160,7 +2167,6 @@ def checkFilesystem():
 	try:
 		# do a system boot sector check / repair
 		subprocess.call("dosfsck -w -r -l -a -v -t /dev/mmcblk0p1 > "+G.homeDir+"temp/dosfsck & ", shell=True)
-
 
 		# reset rights and ownership just in case
 		subprocess.call("chmod a+r -R "+G.homeDir0+"*", shell=True)
@@ -2241,7 +2247,7 @@ def getadhocIpNumber():
 	return adhocIP
 
 ####################      #########################
-def checkstartOtherProgram():
+def checkstartOtherProgram(init=False):
 	try:
 		global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted
 		#U.logger.log(20, "startOtherProgram:{}<, startOtherProgramOld:{}<, startOtherProgramKeepRunning:{}, startOtherProgramStarted:{},".format(startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted))
@@ -2285,8 +2291,8 @@ def checkstartOtherProgram():
 ####################      #########################
 def makeNeopix2Work():
 	try:
-		if not os.path.isdir(G.homeDir+"neopix2"):
-			subprocess.call("mkdir {}neopix2 > /dev/null 2>&1 ".format(G.homeDir), shell=True)
+		subprocess.call("/usr/bin/mkdir {}rgbmatrix > /dev/null 2>&1".format(G.homeDir), shell=True)
+		subprocess.call("/usr/bin/mkdir {}neopix2 > /dev/null 2>&1".format(G.homeDir), shell=True)
 		if not os.path.isfile(G.homeDir+"neopix2/__init__.py"):
 			subprocess.call("echo '' > {}neopix2/__init__.py".format(G.homeDir,G.homeDir), shell=True)
 		oldF = "_rpi_ws281x.so"
@@ -2361,6 +2367,7 @@ def execMaster():
 		global programsThatShouldBeRunning, programsThatShouldBeRunningOld
 		global pyCommand
 		global pgmStart
+
 
 		programsThatShouldBeRunning = {}
 		programsThatShouldBeRunningOld ={}
@@ -2603,7 +2610,7 @@ def execMaster():
 		U.logger.log(20, "=========START7.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<, indigoServerOn:{}<<, changed:{}<<, connected:{}<< ".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType, indigoServerOn, changed, connected ) )
 		# make directory for sound files
 		if not os.path.isdir(G.homeDir+"soundfiles"):
-			subprocess.call("mkdir "+G.homeDir+"soundfiles &", shell=True)
+			subprocess.call("/usr/bin/mkdir "+G.homeDir+"soundfiles > /dev/null 2>&1", shell=True)
 
 
 		if checkDiskSpace() == 1:
@@ -2623,11 +2630,11 @@ def execMaster():
 
 		checkIfGpioIsInstalled()
 
-		checkstartOtherProgram()
+		checkstartOtherProgram(init =True)
 		U.logger.log(20, "=========START8.. adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )
 
 
-		pgmStart	  = time.time()
+		pgmStart = time.time()
 
 		U.sendSensorAndRPiInfoToPlugin(sensors)	
 		tAtLoopSTart =time.time()
@@ -2661,9 +2668,6 @@ def execMaster():
 
 		checkTempForFanOnOff(force = True)
 		lastCheckAlive = time.time() -90
-
-		# start voltage checker 
-
 
 		while True:
 			if loopCount > 1000000000: loopCount = 0

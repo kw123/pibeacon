@@ -22,7 +22,7 @@ import matplotlib.patches as patches
 import logging
 import logging.handlers
 global logging, logger
-_defaultDateStampFormat				= u"%Y-%m-%d %H:%M:%S"
+_defaultDateStampFormat				= "%Y-%m-%d %H:%M:%S"
 
 try:	unicode
 except:	unicode = str
@@ -63,14 +63,15 @@ logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
 
 
 try:
-	# print start to logfile 
-	logger.setLevel(logging.INFO)
+	if not logLevel:	logger.setLevel(logging.WARNING)
+	else:				logger.setLevel(logging.DEBUG)
+	## disable fontmanager logging output 
+	logging.getLogger('matplotlib.font_manager').disabled = True
+	logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
+
+
 	logger.log(20,"========= start @ {}  =========== ".format(datetime.datetime.now()) )
 	logger.log(20,"called as:\n{}".format(sys.argv) )
-	if not logLevel:
-		logger.setLevel(logging.WARNING)
-	else:
-		logger.setLevel(logging.DEBUG)
 
 
 	tStart= time.time()
@@ -298,7 +299,7 @@ try:
 							hatch = hatches[ii]
 							break
 
-					if this["status"] == u"up":
+					if this["status"] == "up":
 						edgecolor= "#000000"
 				
 					logger.log(20,"{:26} {:6} {:7} {:7} {:3} {:11} {:8} {:5.1f} {:4} {:12} {:.3f},{:.3f} {}".format(this["name"] , this["nickName"], color, edgecolor, this["bType"][:3], symbol, Dtype, distanceToRPI, hatch,this["status"],randx,randy,pos) )
@@ -329,7 +330,7 @@ try:
 						ax.text(pos[0] + dx ,pos[1]- textDeltaYLabel ,this["nickName"], color=this["textColor"] ,size="x-small")
 
 		except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
+			logger.log(30,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 	try:
 		if plotData["ShowCaption"] != "0":
 			logger.log(20,"Caption: text offset x= {:.2f};   y={:.2f}".format(textDeltaYCaption, textDeltaYCaption) )
@@ -361,14 +362,14 @@ try:
 				ax.text(5* textDeltaXCaption,y, "{}".format( datetime.datetime.now().strftime(_defaultDateStampFormat)) ,size=captionTextSize)
 
 	except  Exception as e:
-			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
+			logger.log(40,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 
 	# 
 	logger.log(20,"time used {:4.2f} --   making the plot".format((time.time()-tStart)))
 	try: 	plt.savefig((piPositionsDir+"beaconPositions.png").encode('utf8'))	# this does not work ==>   ,bbox_inches = 'tight', pad_inches = 0)
 	except  Exception as e:
-			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
+			logger.log(40,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 	try:	pngSize = os.path.getsize((piPositionsDir+"beaconPositions.png").encode('utf8'))/1024.
 	except: pnGsize = 0
@@ -386,7 +387,7 @@ try:
 			os.rename((piPositionsDir+"beaconPositions.xxx").encode('utf8'),(piPositionsDir+"beaconPositions.png").encode('utf8') )
 			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
 	except  Exception as e:
-			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
+			logger.log(40,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 	
 	try:
 		if imageOutfile != piPositionsDir+"beaconPositions.png":
@@ -398,11 +399,11 @@ try:
 				if os.path.isfile("{}beaconPositions.png".format(imageOutfile)) and os.path.isfile("{}beaconPositions.png".format(piPositionsDir)): 
 					os.remove("{}beaconPositions.png".format(piPositionsDir))
 	except  Exception as e:
-			logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
+			logger.log(40,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 	logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
 except  Exception as e:
-	logger.log(40,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
+	logger.log(40,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 sys.exit(0)

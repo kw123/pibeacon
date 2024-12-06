@@ -125,7 +125,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 	count = 0
 	try:
 		#print "killOldPgm ",pgmToKill,str(myPID)
-		cmd= "ps -ef | grep '{}' | grep -v grep".format(pgmToKill)
+		cmd = "ps -ef | grep '{}' | grep -v grep".format(pgmToKill)
 		if param1 !="":
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":
@@ -204,6 +204,12 @@ def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doR
 	exit()
 	time.sleep(5)
 
+
+
+	cmd = "/usr/bin/sudo /usr/bin/python {}{}.py {} &".format(G.homeDir,G.program, param)
+
+	if doPrint: logger.log(30, cmd )
+	subprocess.call(cmd, shell=True)
 
 
 #################################
@@ -695,7 +701,7 @@ def doReboot(tt=10., text="", cmd="", force=False):
 		setRebootedToday()
 		setRebootingNow(text=text)
 		time.sleep(tt)
-		if cmd =="":
+		if cmd == "":
 			subprocess.call("sh /home/pi/pibeacon/forceReboot.sh &",shell=True)
 		else:
 			subprocess.call(cmd,shell=True)
@@ -750,13 +756,13 @@ def doRebootThroughRUNpinReset(tt =20):
 	return 
 
 #################################
-def sendRebootHTML(reason,reboot=True, force=False, wait=10.):
+def sendRebootHTML(reason, reboot=True, force=False, wait=10.):
 	sendURL(sendAlive="reboot", text=reason)
 	setRebootingNow()
 	if reboot:
 	   doReboot(tt=wait, text=reason,force=force)
 	else:
-	   doReboot(tt=wait, text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python3; sleep 1; shutdown -h now ")
+	   doReboot(tt=wait, text=reason, cmd="/usr/bin/sudo /usr/bin/killall -9 python3; sleep 1; shutdown -r now ")
 
 	return
 
@@ -2492,7 +2498,7 @@ def removeOutPutFromFutureCommands(pin, devType):
 #################################
 def echoLastAlive(sensor):
 	try:
-		tt=time.time()
+		tt = time.time()
 		if time.time() - G.lastAliveEcho > 30.:
 			G.lastAliveEcho = tt
 			subprocess.call("echo  {} > {}temp/alive.{}".format(tt,G.homeDir,sensor), shell=True)
@@ -2945,6 +2951,7 @@ def getSensorInfo(sensDict, i2cList):
 			else:
 				sensList = "{}{}, ".format(sensList, ss)
 			for devId in sensDict[sens]:
+				if sensDict[sens][devId].get("i2cOrUart","") == "uart": continue
 				if "i2cAddress" in sensDict[sens][devId]:
 					logger.log(10, u"cBY:{:<20}   i2c:{} in sensor:{}".format(G.program, sensDict[sens][devId]["i2cAddress"], sens) )
 					try:
@@ -2971,7 +2978,7 @@ def getSensorInfo(sensDict, i2cList):
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return "","",""
 
-
+#
 
 #################################
 def getRPiType():
@@ -3089,6 +3096,32 @@ def getLastBoot():
 
 
 #################################
+def checki2cdetect():
+	try:
+		i2cfile = "{}temp/i2cdetect".format(G.homeDir)
+		if os.path.isfile(i2cfile):
+			os.remove(i2cfile)
+
+		cmd = "/usr/sbin/i2cdetect -y 1 > {} &".format(i2cfile)
+		subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		time.sleep(2)
+
+		if os.path.isfile(i2cfile):
+			f = open(i2cfile)
+			i2cout = f.read()
+			f.close()
+
+			if i2cout.find("   0  1  2  3  4  5  6  ") > -1 and i2cout.find("70: ") > 10 : 
+				#logger.log(20, u"cBY:{:<20} cmd:{} ret ok .. is:\n{}".format(G.program, cmd, i2cout))
+				return "ok"
+
+			logger.log(20, u"cBY:{:<20} cmd:{}  ret bad.. is:\n{}".format(G.program, cmd, i2cout))
+
+	except Exception as e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return "bad"
+
+#################################
 def geti2c():
 	try:
 		i2cChannelsINTHex=[]
@@ -3143,6 +3176,8 @@ def geti2cIntChannels():
 #################################
 def sendSensorAndRPiInfoToPlugin(sensDict,fanOnTimePercent=""):
 	try:
+
+		i2cok 						= checki2cdetect()
 		i2cListIntHex,i2cListHex	= geti2c()
 		i2cError, sensList			= getSensorInfo(sensDict,i2cListIntHex)
 		rpiType						= getRPiType()
@@ -3150,15 +3185,28 @@ def sendSensorAndRPiInfoToPlugin(sensDict,fanOnTimePercent=""):
 		temp						= getTemperatureOfRPI()
 		RPI_throttled				= checkIfThrottled()
 		lastBoot					= getLastBoot()
-		data ={"sensors_active":sensList, "i2c_active":json.dumps(i2cListHex).replace(" ","").replace("[","").replace("]","").replace('"','').replace('0x','x'),"temp":temp,
+		data = {"i2c_ok":i2cok, "sensors_active":sensList, "i2c_active":json.dumps(i2cListHex).replace(" ","").replace("[","").replace("]","").replace('"','').replace('0x','x'),"temp":temp,
 			 "rpi_type":rpiType, "op_sys":os, "last_boot":lastBoot,"last_masterStart":G.last_masterStart,"RPI_throttled":"{}".format(RPI_throttled)}
 		if fanOnTimePercent != "": data["fan_OnTime_Percent"] = int(fanOnTimePercent*100)
 		if i2cError != "": data["i2cError"]   = i2cError
 		##print data
 		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
+		if G.i2cMustBeOn and ( not i2cok or i2cError != ""):
+			startI2C(text="reason: {}, {}".format(i2cok, i2cError))
+			logger.log(20, u"cBY:{:<20} enabled i2c reason: {}, {}".format(G.program, i2cok, i2cError))
+
 	except Exception as e :
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
+
+#################################
+def startI2C(text=""):
+	try:
+		cmd = "sudo raspi-config nonint do_i2c 0 "
+		subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+		logger.log(20, u"cBY:{:<20} enabled i2c with cmd:{}".format(G.program, cmd))
+	except Exception as e :
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 
 #################################

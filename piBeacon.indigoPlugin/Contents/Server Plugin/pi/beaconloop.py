@@ -4640,7 +4640,7 @@ offset	Allowed Values		description
 		accelerationTotal, accelerationX, accelerationY, accelerationZ 	= doRuuviTag_magValues(byte_data)
 		temp 					= (doRuuviTag_temperature(byte_data)+ BLEsensorMACs[mac]["offsetTemp"]) * BLEsensorMACs[mac]["multTemp"]
 		batteryVoltage, txPower = doRuuviTag_powerinfo(byte_data, doLog= mac in ["xxD1:FC:38:C4:57:75"])
-		batteryLevel 			= batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., batteryVoltAt0=2500.)
+		batteryLevel 			= batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., batteryVoltAt0=2200.)
 		#if mac == "F3:4C:96:A2:CC:13": U.logger.log(20, "mac:{}  in sens 1  BL:{}, batteryVoltage:{}".format(mac, batteryLevel, batteryVoltage ))
 
 		# make deltas compared to last send 

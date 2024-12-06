@@ -613,7 +613,7 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 		</ConfigUI>
 	</MenuItem>
  
-	<MenuItem id="sendSetTimeOnDEvice">
+	<MenuItem id="sendSetTimeOnDevice">
 		<Name>Send a set Time and Zone command to RPI to beacon device..</Name>
 		<ConfigUI>
 			<Field id="infoLabelINPUT0" type="label">
@@ -633,6 +633,27 @@ During the time of setting time the regular ibeacon process is suspended (10-30s
 				<Label> ....after selection click</Label>
 				<Title>EXECUTE</Title>
 				<CallbackMethod>sendSetTimeAndZoneOnDeviceCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
+ 
+	<MenuItem id="setBatteryReplaceDate">
+		<Name>Set date-time of battery replaced state..</Name>
+		<ConfigUI>
+			<Field id="infoLabelINPUT0" type="label">
+				<Label>Select the  device  to set last battery replaced state</Label>
+			</Field>
+			<Field id="devId" type="menu" defaultValue="-1">
+				<Label>select the device</Label>
+				<List class="self" filter="setTime" method="filterDevicesThatHaveLastBatteryReplaced" dynamicReload="false" />
+			</Field>
+			<Field id="execAll" type="button">
+				<Label> ....after selection click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>setBatteryReplaceDateCALLBACKmenu</CallbackMethod>
 			</Field>
 			<Field id="MSG" type="textfield" defaultValue="">
 				<Label>message from Plugin:</Label>
@@ -962,28 +983,6 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<CallbackMethod>printDeviceDictCALLBACK</CallbackMethod>
 			</Field>
        </ConfigUI>
-	</MenuItem>
-
-	<MenuItem id="d19">
-		<Name>-------------fix indigo webserver  (for indigo v less than 7.4)-----------------</Name>
-	</MenuItem>
-	<MenuItem id="changeIndigoconnFileID">
-		<Name>Replace Indigowebserver file by reduced Logging option version</Name>
-		<ConfigUI>
-			<Field id="lableLogfile" type="label">
-				<Label>Replace/restore Indigowebserver file by reduced Logging option version... you will need to restart indigo SERVER to activate the change, </Label>
-			</Field>
-			<Field id="exeLogfile" type="button">
-				<Label>click to </Label>
-				<Title>EXECUTE</Title>
-				<CallbackMethod>buttonConfirmchangeLogfile</CallbackMethod>
-			</Field>
-			<Field id="exeReverse" type="button">
-				<Label>click to </Label>
-				<Title>REVERSE</Title>
-				<CallbackMethod>buttonConfirmReversechangeLogfile</CallbackMethod>
-			</Field>
-		</ConfigUI>
 	</MenuItem>
 
 	<MenuItem id="d20">

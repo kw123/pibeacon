@@ -20022,11 +20022,12 @@ use bit max value, not actual voltage for feedVolt </Label>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
-			<Field id="noI2cCheck" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
 
+			<Field id="i2cAddress" type="textfield"   hidden="True" defaultValue="100"> </Field>
 
 			<Field id="infoLabelDF2301Q" type="label">
-				<Label>Setup DF2301Q on individual rPis  connect 3.3V, GND, SDA,SCL, or use UART (3 cables only)
+				<Label>Setup DF2301Q on individual rPis 
 it returns command ID 0...208
 trigger on "any change" state "sensorValue""; 
     condition "state sensor value" = command ID eg 103 for lights on
@@ -20042,12 +20043,25 @@ trigger on "any change" state "sensorValue"";
 				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
-			<Field id="i2cOrUart" type="menu"     defaultValue="i2c"> <Label>use I2C or UART:</Label>
+			<Field id="i2cOrUart" type="menu"     defaultValue="i2c"> <Label>use I2C or UART (serial):</Label>
 				<List>
 					<Option value="i2c"   >use i2c</Option>
 					<Option value="uart"  >use uart</Option>
 				</List>
 			</Field>
+
+			<Field id="serialPortName" type="textfield"     defaultValue="serial0" visibleBindingId="i2cOrUart" visibleBindingValue="uart" > 
+				<Label>name of serial port (serial0 serial1  check ls -l /dev/ on rpi):</Label>
+			</Field>
+			<Field id="uartLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="uart" >
+				<Label> connect:+5V, gnd, T to RXD, R to TCD</Label>
+			</Field>
+
+			<Field id="i2cLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="i2c" >
+				<Label> connect:+3V, gnd, C to SLC, D to SDA, i2c number is fixed: 0x64 = 100</Label>
+			</Field>
+
+
 
 
 			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute voice:</Label>
