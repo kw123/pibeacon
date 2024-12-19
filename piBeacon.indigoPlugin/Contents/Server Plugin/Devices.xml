@@ -2254,6 +2254,13 @@ the msg and TLM messages are automatically recognized and the beacon is setup ac
 			<Field id="batteryLevelCheckhourslabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true" >
 				<Label>some (ie nutale) beacons beep when battery level is checked. This option can disallow the std check at 4 am</Label>
 			</Field>
+			<Field id="setBatteryReplacedDateButton"   type="button"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true">
+				<Label>.... set "lastBatteryReplaced" state to now</Label>
+				 <Title>SET</Title> <CallbackMethod>setBatteryReplacedDateButton</CallbackMethod>>
+			</Field>
+
+
+
 <!--
 			<Field id="txPowerlevelUUID" type="menu"     defaultValue="off"  visibleBindingId="SupportsBatteryLevel" visibleBindingValue="true"  >
 				<List>
@@ -20026,6 +20033,9 @@ use bit max value, not actual voltage for feedVolt </Label>
 
 			<Field id="i2cAddress" type="textfield"   hidden="True" defaultValue="100"> </Field>
 
+			<Field id="comandList" type="textfield"  hidden="true"></Field>
+
+
 			<Field id="infoLabelDF2301Q" type="label">
 				<Label>Setup DF2301Q on individual rPis 
 it returns command ID 0...208
@@ -20035,7 +20045,10 @@ trigger on "any change" state "sensorValue"";
 			</Field>
 
 			<Field  id="buttonprintHelp" type="button"  >
-				<Label>print help to logfile</Label><Title>PRINT</Title> <CallbackMethod>printDF2301QhelpCALLBACK</CallbackMethod>
+				<Label>print help to logfile</Label><Title>PRINT</Title> <CallbackMethod>printDF2301QhelpDeviceCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="infoLabelDF2301Q0" type="label"  fontColor="green">
+				<Label>=== Set must define parameters</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -20053,27 +20066,38 @@ trigger on "any change" state "sensorValue"";
 			<Field id="serialPortName" type="textfield"     defaultValue="serial0" visibleBindingId="i2cOrUart" visibleBindingValue="uart" > 
 				<Label>name of serial port (serial0 serial1  check ls -l /dev/ on rpi):</Label>
 			</Field>
-			<Field id="uartLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="uart" >
-				<Label> connect:+5V, gnd, T to RXD, R to TCD</Label>
+			<Field id="uartLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="uart" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label> connect:+5V, gnd, T to RXD, R to TCD.
+Set switch 1 to uart
+on RPi: sudo raspi-config: Interface Options/Serial Port: disable login, enable serial hardware port 
+Using the serial port requires to speak the key word "hello robot" at least once to enable the sensor
+</Label>
 			</Field>
 
-			<Field id="i2cLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="i2c" >
-				<Label> connect:+3V, gnd, C to SLC, D to SDA, i2c number is fixed: 0x64 = 100</Label>
+			<Field id="i2cLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="i2c" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label> connect:+3V, gnd, C to SLC, D to SDA, i2c number is fixed: 0x64 = 100
+i2c is not stable on rpi2 or rpi0w
+set switch 1 to i2c</Label>
 			</Field>
 
-
-
-
-			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute voice:</Label>
+			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute speaker:</Label>
 				<List>
 					<Option value="0"   >mute off </Option>
-					<Option value="1"   >mute (dont have to wait for welcome to end)</Option>
+					<Option value="1"   >mute (dont have to wait for speaker to end)</Option>
 				</List>
 			</Field>
+			<Field id="infoLabelDF2301Qmute" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>When mute is OFF the next command can only be handled after speaker reply is finished (eg "is turned on"")
+when mute is ON the speaker is off and you can speak the next command after ~0.5 secs, 
+  eg "turn the light on"  ... "to 60 percent"
+  this enables indigo to combine the 2 commands into one action (has to be setup in indigo). 
+Switch 2 is a hardware switch, that can be used to "mute" the sensor, 
+  but it has no impact on the wait period, the sensor still waits out the response</Label>
+			</Field>
 
-			<Field id="volume" type="menu"     defaultValue="5"> <Label>volume of voice:</Label>
+			<Field id="volume" type="menu"     defaultValue="5"> 
+				<Label>Volume of speaker:</Label>
 				<List>
-					<Option value="0"   >low </Option>
 					<Option value="1"   >1</Option>
 					<Option value="2"   >2</Option>
 					<Option value="3"   >3</Option>
@@ -20082,6 +20106,7 @@ trigger on "any change" state "sensorValue"";
 					<Option value="6"   >6</Option>
 					<Option value="7"   >7</Option>
 					<Option value="8"   >8</Option>
+					<Option value="9"   >9</Option>
 					<Option value="10"  >10</Option>
 					<Option value="12"  >12</Option>
 					<Option value="14"  >14</Option>
@@ -20099,20 +20124,24 @@ trigger on "any change" state "sensorValue"";
 				</List>
 			</Field>
 			<Field id="infoLabelDF2301Qkeepawake" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>When enabled, the sensor will be kept awake, means it will continue to listen, wake-up duration will be set to 255 and sensor receives a wake up command every 200 secs</Label>
+				<Label>When enabled, the sensor will be kept awake, means it will continue to listen, 
+wake-up duration will be set to 255 and sensor receives a wake up command every 200 secs
+for uart/serial interface, the key word has to be heard once. Then it can stay active</Label>
 			</Field>
 
 
 			<Field id="setWakeTime" type="textfield"     defaultValue="25" visibleBindingId="keepAwake" visibleBindingValue="0"> <Label>Set wake-up duration (10-255) seconds:</Label>
 			</Field>
-			<Field id="infoLabelDF2301QsetWakeTime" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>after xx secs the sensor will stop listening and will require to hear the keyword</Label>
+			<Field id="infoLabelDF2301QsetWakeTime" type="label" visibleBindingId="keepAwake" visibleBindingValue="0" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>After xx secs the sensor will stop listening and will require to hear the keyword</Label>
 			</Field>
 
 
 
-			<Field id="infoLabelDF2301Q2" type="label">
-				<Label>Set text for user defined command words. this has no impact on actions, but will show in cmd states as #: text</Label>
+
+			<Field id="infoLabelDF2301Q2" type="label"  fontColor="green">
+				<Label>=== Set text for user defined command words. 
+      This has no impact on actions, but will show in cmd states as #: text</Label>
 			</Field>
 			<Field id="controllWord5"  type="textfield"    defaultValue="custom command"> <Label>id 5: custom command:</Label>	</Field>
 			<Field id="controllWord6"  type="textfield"    defaultValue="custom command"> <Label>id 6: custom command:</Label>	</Field>
@@ -20131,6 +20160,90 @@ trigger on "any change" state "sensorValue"";
 			<Field id="controllWord19" type="textfield"    defaultValue="custom command"> <Label>id 19: custom command:</Label>	</Field>
 			<Field id="controllWord20" type="textfield"    defaultValue="custom command"> <Label>id 20: custom command:</Label>	</Field>
 			<Field id="controllWord21" type="textfield"    defaultValue="custom command"> <Label>id 21: custom command:</Label>	</Field>
+
+
+
+
+			<Field id="infoLabelDF2301Qgpios" type="label"  fontColor="green">
+				<Label>=== Here you can define a reactions to a received voice command, 
+        i.e. switch any GPIO on/off after receiving a valid voice command</Label>
+			</Field>
+
+			<Field id="gpioCmdIndicator"   type="menu" defaultValue="-1"  >
+				<Label>Turn on GPIO if ANY voice cmd GT 0 received:</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+			<Field id="gpioCmdIndicatorInverse"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>On off state:</Label>
+			</Field>
+
+			<Field id="gpioCmdIndicatorOnTime"   type="menu" defaultValue="2"  >
+				<List>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 sec</Option>
+					<Option value="3"   >3 sec</Option>
+					<Option value="4"   >4 sec</Option>
+					<Option value="5"   >5 sec</Option>
+					<Option value="7"   >7 sec</Option>
+					<Option value="10"  >10 sec</Option>
+					<Option value="15"  >15 sec</Option>
+					<Option value="20"  >20 sec</Option>
+					<Option value="30"  >30 sec</Option>
+				</List>
+				<Label>On for how long:</Label>
+			</Field>
+
+			<Field id="infoLabelfpio" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>You can connect an LED+100Ohm resistor to a gpio. (LED anode to +3.3V) 
+When a valid command (cmdID >0) is received the LED will go on for xx seconds</Label>
+			</Field>
+
+
+			<Field id="gpioNumberForCmdAction1"   type="menu" defaultValue="-1"  >
+				<Label>Turnon/off GPIO if cmd = #xx received, select GPIO(1):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+			<Field id="gpioCmdForAction1"   type="textfield" defaultValue="103"  >
+				<Label>voice command # for trigger:</Label>
+			</Field>
+			<Field id="gpioNumberForCmdAction2"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(2):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+			<Field id="gpioCmdForAction2"   type="textfield" defaultValue="103"  >
+				<Label>voice command # for trigger:</Label>
+			</Field>
+			<Field id="gpioNumberForCmdAction3"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(3):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+			<Field id="gpioCmdForAction3"   type="textfield" defaultValue="103"  >
+				<Label>voice command # for trigger:</Label>
+			</Field>
+			<Field id="gpioNumberForCmdAction4"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(4):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+			</Field>
+
+			<Field id="gpioCmdForAction4"   type="textfield" defaultValue="103"  >
+				<Label>voice command # for trigger:</Label>
+			</Field>
+
+			<Field id="infoLabelfgpioaction" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>You can select a voice command # eg 103 to trigger a GPIO on/off action for 0.5 sec 
+Negative logic is used (state:on=low/ off=high) as most devices require a "low" signal to activate</Label>
+			</Field>
+
+
 
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -20161,44 +20274,87 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
+
+
+			<Field id="infoLabelsleep" type="label"  fontColor="green">
+				<Label>=== EXPERTS ONLY </Label>
+			</Field>
+
+			<Field id="logLevel"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"	> off </Option>
+					<Option value="1"	> 1 </Option>
+					<Option value="2"	> 2 </Option>
+					<Option value="3"	> 3 max </Option>
+				</List>
+				<Label>Log level on rpi for this sensor:</Label>
+			</Field>
+
+
+			<Field id="restartRepeat"   type="menu" defaultValue="400"  >
+				<List>
+					<Option value="999999999999"	> off (for serial interface)</Option>
+					<Option value="55"   			> every 55 secs</Option>
+					<Option value="100"   			> every 100 secs</Option>
+					<Option value="200"   			> every 200 secs</Option>
+					<Option value="400"   			> every 400 secs</Option>
+					<Option value="600"   			> every 600 secs</Option>
+					<Option value="1200"   			> every 1200 secs</Option>
+				</List>
+				<Label>Do a restart of connection to sensor:</Label>
+			</Field>
+
+			<Field id="refreshRepeat"   type="menu" defaultValue="200"  >
+				<List>
+					<Option value="30"   			> every 30 secs</Option>
+					<Option value="50"   			> every 50 secs</Option>
+					<Option value="100"   			> every 100 secs</Option>
+					<Option value="200"   			> every 200 secs</Option>
+					<Option value="400"   			> every 400 secs</Option>
+					<Option value="600"   			> every 600 secs</Option>
+				</List>
+				<Label>Send parameters to sensor (volume, mute..):</Label>
+			</Field>
+
+			<Field id="uartSleepAfterWrite"   type="menu" defaultValue="70"  >
+				<List>
+					<Option value="50"   			> 50 msec</Option>
+					<Option value="70"   			> 70 msec</Option>
+					<Option value="100"   			> 100 msec</Option>
+					<Option value="150"   			> 150 msec</Option>
+					<Option value="200"   			> 200 msec</Option>
+					<Option value="300"   			> 300 msec</Option>
+				</List>
+				<Label>Sleep after write to uart/serial port:</Label>
+			</Field>
+
+
+			<Field id="i2cSleepAfterWrite"   type="menu" defaultValue="200"  >
+				<List>
+					<Option value="150"   			> 150 msec</Option>
+					<Option value="200"   			> 200 msec</Option>
+					<Option value="300"   			> 300 msec</Option>
+					<Option value="400"   			> 300 msec</Option>
+					<Option value="500"   			> 300 msec</Option>
+				</List>
+				<Label>Sleep after read/write to i2c port:</Label>
+			</Field>
+
+			<Field id="resetPowerGPIO"   type="menu" defaultValue="21"  >
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+				<Label>Enable power on/off through gpio/relay low=active:</Label>
+			</Field>
+
+			<Field id="infoLabelresetGPIO" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Experimental: if the sensor hangs ( several reading errors in a row) you can use this option with a relay to power cycle the sensor.
+Connect the relay to the gpio and +5V, make sure that current demand is ok, gpio=low is relay on.
+recommened is a relay with transitor switch in front!</Label>
+			</Field>
+
+
+
 		</ConfigUI>
 		<States>
-			<State id="cmd">
-				<ValueType>String</ValueType>
-				<TriggerLabel>cmd</TriggerLabel>
-				<ControlPageLabel>cmd</ControlPageLabel>
-			</State>
-			<State id="cmdAt">
-				<ValueType>String</ValueType>
-				<TriggerLabel>cmdAt</TriggerLabel>
-				<ControlPageLabel>cmdAt</ControlPageLabel>
-			</State>
-			<State id="lastCmd">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastCmd</TriggerLabel>
-				<ControlPageLabel>lastCmd</ControlPageLabel>
-			</State>
-			<State id="lastCmdAt">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastCmdAt</TriggerLabel>
-				<ControlPageLabel>lastCmdAt</ControlPageLabel>
-			</State>
-			<State id="lastCmd2">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastCmd2</TriggerLabel>
-				<ControlPageLabel>lastCmd2</ControlPageLabel>
-			</State>
-			<State id="lastCmd2At">
-				<ValueType>String</ValueType>
-				<TriggerLabel>lastCmd2At</TriggerLabel>
-				<ControlPageLabel>lastCmd2At</ControlPageLabel>
-			</State>
-			<State id="counter">
-				<ValueType>number</ValueType>
-				<TriggerLabel>counter</TriggerLabel>
-				<ControlPageLabel>counter</ControlPageLabel>
-			</State>
-
 		</States>
 
 	</Device>

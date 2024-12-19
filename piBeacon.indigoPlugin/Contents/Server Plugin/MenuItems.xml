@@ -937,51 +937,76 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<Title>execute</Title>
 				<CallbackMethod>printConfigMenu</CallbackMethod>
 			</Field>
+
 			<Field id="printGroups" type="button" tooltip="">
 				<Label>Print GROUPS to logfile</Label>
 				<Title>execute</Title>
 				<CallbackMethod>buttonPrintGroupsCALLBACK</CallbackMethod>
 			</Field>
+
 			<Field id="execBatReport" type="button">
 				<Label>Print report of current beacon battery levels</Label>
 				<Title>execute</Title>
 				<CallbackMethod>makeBatteryLevelReportCALLBACKmenu</CallbackMethod>
 			</Field>
+
 			<Field id="printDistanceActionHelp" type="button" tooltip="">
 				<Label>Print Distance action help to logfile</Label>
 				<Title>execute</Title>
 				<CallbackMethod>printHelpActionsCALLBACKmenu</CallbackMethod>
 			</Field>
+
 			<Field id="printstats" type="button" tooltip="">
 				<Label>Print Stats  to logfile</Label>
 				<Title>execute</Title>
 				<CallbackMethod>buttonPrintStatsCALLBACK</CallbackMethod>
 			</Field>
+
 			<Field id="resetStats" type="button" tooltip="">
 				<Label>... Reset Stats</Label>
 				<Title>execute</Title>
 				<CallbackMethod>resetStatsMenu</CallbackMethod>
 			</Field>
+
 			<Field id="printBeaconsIgnored" type="button" tooltip="">
 				<Label>Print ignored iBeacons to logfile</Label>
 				<Title>execute</Title>
 				<CallbackMethod>printBeaconsIgnoredButton</CallbackMethod>
 			</Field>
+
 			<Field id="printDeviceDictLabel0" type="label">
 				<Label></Label>
 			</Field>
+
 			<Field id="printDeviceDictLabel" type="label">
 				<Label>Print device info to logfile ...</Label>
 			</Field>
+
 			<Field id="printDeviceDict" type="menu" defaultValue="0" tooltip="select device and then click on confirm ">
 				<List class="indigo.devices" filter="self" />
 				<Label>...select piBeacon device to print all info:</Label>
 			</Field>
+
 			<Field id="execprintDeviceDictCALLBACK" type="button">
 				<Label> ....after selection click</Label>
 				<Title>EXECUTE</Title>
 				<CallbackMethod>printDeviceDictCALLBACK</CallbackMethod>
 			</Field>
+
+			<Field id="printDF2301QLabel0" type="label">
+				<Label></Label>
+			</Field>
+
+			<Field id="printDF2301QLabel" type="label">
+				<Label>DF2301Q sensor:</Label>
+			</Field>
+			<Field  id="buttonprintDF2301QHelp" type="button"  >
+				<Label>print help to logfile</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>printDF2301QhelpMenuCALLBACK</CallbackMethod>
+			</Field>
+
+
        </ConfigUI>
 	</MenuItem>
 
@@ -1146,6 +1171,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 					<Option value="mysensor">mysensor</Option>
 					<Option value="ina219">ina219</Option>
 					<Option value="bno095">bno095</Option>
+					<Option value="DF2301Q">DF2301Q</Option>
 					<Option value="sgp30">sgp30</Option>
 					<Option value="sensirionscd30">sensirion scd30</Option>
 					<Option value="sensirionscd40">sensirion scd40</Option>

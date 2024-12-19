@@ -33,6 +33,11 @@ def execInstall():
 
 	logger.log(20,"------ starting on os v :{}".format(v) )
 
+
+	if True:
+		logger.log(20,"check if apt install  is ok"  )
+		ret = readPopen("sudo apt --fix-broken install  -y &")
+
 	if v < 9:
 		logger.log(20,"finished, due to OS < 9, py 3 not completely installed" )
 		readPopen('echo "done" > "/home/pi/pibeacon/includep3.done"')
@@ -145,6 +150,14 @@ def execInstall():
 
 
 	readPopen('echo "done" > "/home/pi/pibeacon/includep3.done"')
+
+	if True:
+		logger.log(20,"check if apt install  is ok"  )
+		ret = readPopen("sudo apt --fix-broken install  -y") # wait until finsihed
+		logger.log(20,"check if apt autoremove  is ok"  )
+		ret = readPopen("sudo apt autoremove -y &")
+
+
 	logger.log(20,"finished")
 
 execInstall()

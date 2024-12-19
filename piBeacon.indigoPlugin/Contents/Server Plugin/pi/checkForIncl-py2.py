@@ -36,6 +36,11 @@ def execInstall():
 		logger.log(30,"must use py3 due to opsys version > 10 "  )
 		exit()
 
+	if True:
+		logger.log(20,"check if apt install  is ok"  )
+		ret = readPopen("sudo apt --fix-broken install  -y &")
+
+
 	if False:
 		logger.log(20,"check python-serial"  )
 		try:
@@ -87,6 +92,12 @@ def execInstall():
 		ret = readPopen("which hcidump")
 		if ret[0].find("/usr/bin/hcidump") == -1:
 			readPopen("sudo apt-get install -y bluez-hcidump")
+
+	logger.log(20,"check if apt install  is ok"  )
+	ret = readPopen("sudo apt --fix-broken install  -y")
+	logger.log(20,"check if apt autoremove  is ok"  )
+	ret = readPopen("sudo apt autoremove -y &")
+
 
 	logger.log(20,"finished" )
 

@@ -2527,7 +2527,7 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			return sensor, tx,  ""
 
 
-		if False and doPrint: U.logger.log(20, "mac:{}, sens:{}; startData:{},  type:{}, len(dataFF):{}".format(mac, sens, startData, dataType, len(dataFF) ))
+		if doPrint: U.logger.log(20, "mac:{}, sens:{}; startData:{},  type:{}, len(dataFF):{}".format(mac, sens, startData, dataType, len(dataFF) ))
 		hData = dataFF[startData:]
 
 #-0.7, hData:8047375ACB, intData:8388608 + 18176 + 55  =  8406839, temp:840.7, hum:84.4
@@ -3036,8 +3036,8 @@ def doBLEthermoBeacon(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 
 		long package gives max and min temp and time stamps, not used
-		1F  02 01 06 03 02 F0 FF 17 FF 11 00 00 00 2B 07 00 00 54 E9 C8 01 AF 00 00 00 65 01 A0 11 00 00
-																	 Tmax- ts--------- Tmin- ts---------
+		  1F  02 01 06 03 02 F0 FF 17 FF 11 00 00 00 2B 07 00 00 54 E9 C8 01 AF 00 00 00 65 01 A0 11 00 00
+		                                                               Tmax- ts--------- Tmin- ts---------
 
 		this package is used here 
 		 1  2  3  4    5  6  7  8   9  a  1  2  3  4  5  6  7  8  9  b  1  2  3  4  5  6  7  8  9  c
@@ -3070,8 +3070,12 @@ def doBLEthermoBeacon(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		tag 	= "11"
 		if dataFF.find(tag) != 0 : return sensor, tx,  "" 
 
+		## fixed 2024/12/17, exclude long packages, they have the wrong format 
+		ll = 40 # == len("110000002B07000054E9190C5F018A020BFC3300") 
+		if len(dataFF) != ll: return sensor, tx,  "" 
+
 		if doPrint:
-			U.logger.log(20, "mac:{},sensor:{} data string:{}".format(mac,sensor,  dataFF))
+			U.logger.log(20, "mac:{},sensor:{} data string len:{}, FF:{}".format(mac,sensor, ll,  dataFF))
 
 		temp 			= BLEsensorMACs[mac]["temp"]
 		hum  			= BLEsensorMACs[mac]["hum"]

@@ -3793,8 +3793,9 @@ this will pause the sensor, will just sleep, but any other action already initat
 			</Field>
 			 <Field id="typeId"   type="menu" defaultValue="" tooltip="" >
 			    <List>
-					<Option value= "pmairquality"        >pmairquality</Option>
-					<Option value= "all"			     >all</Option>
+					<Option value= "pmairquality"       >pmairquality</Option>
+					<Option value= "DF2301Q"        	>DF2301Q</Option>
+					<Option value= "all"			    >all</Option>
 			    </List>
 			    <Label>device type that should be reset:</Label>
 			 </Field>

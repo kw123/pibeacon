@@ -566,7 +566,7 @@ def execCMDS(nextItem):
 			if	cmd == "resetDevice":
 						if nextItem["device"].find(",")> 1:
 							list = nextItem["device"].split(",")
-						elif nextItem["device"]== "all":
+						elif nextItem["device"] == "all":
 							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
 						else:
 							list = [nextItem["device"]]

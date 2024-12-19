@@ -522,9 +522,7 @@ def readNewParams(force=0, init=False):
 		if init or force !=0:
 			U.logger.log(20, "sensors  : {}".format(sensorList))
 
-		for ss in sensorList:
-			checkifActive(ss, ss+".py", True)
-			time.sleep(1)
+		checkIFSensorlistIsRunning()
 
 		BLEdirectSensorDeviceActive = False
 		for sensor in sensors:
@@ -544,6 +542,19 @@ def readNewParams(force=0, init=False):
 
 		firstRead = False
 		return 
+	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
+
+
+####################      #########################
+def checkIFSensorlistIsRunning():
+	global sensorList, lastSensorRunningCheck
+	try:
+		if time.time() - lastSensorRunningCheck < 68: return 
+		for ss in sensorList:
+			checkifActive(ss, ss+".py", True)
+			time.sleep(0.5)
+		lastSensorRunningCheck = time.time()
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
@@ -743,15 +754,12 @@ def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters="
 	tt = time.time()
 	#if pgmToStart == "beaconloop.py": U.logger.log(20, "{};  {};  {};  {}; dt:{:.0f}".format(pgmToStart, force,checkAliveFile, parameters , tt-pgmStart))
 	if tt-pgmStart< 15. and not force: return False
-	if pgmToStart == "beaconloop": U.logger.log(20, "2")
 	try:
 		if not U.pgmStillRunning(pgmToStart):
-			if pgmToStart == "beaconloop": U.logger.log(20, "2")
 			startProgam(pgmToStart, params=parameters, reason=" -- restarting "+pgmToStart+" ..not running")
 			return True
 
 		if checkAliveFile != "" and not checkIfAliveFileOK(checkAliveFile):
-			if pgmToStart == "beaconloop": U.logger.log(20, "3")
 			startProgam(pgmToStart, params="", reason=" -- restarting "+pgmToStart+" ..not running .. no alive file")
 			return True
 
@@ -2367,10 +2375,13 @@ def execMaster():
 		global programsThatShouldBeRunning, programsThatShouldBeRunningOld
 		global pyCommand
 		global pgmStart
+		global lastSensorRunningCheck
 
 
-		programsThatShouldBeRunning = {}
-		programsThatShouldBeRunningOld ={}
+
+		lastSensorRunningCheck			= time.time()
+		programsThatShouldBeRunning 	= {}
+		programsThatShouldBeRunningOld	= {}
 
 		RTCpresent						= False
 		ipNumberForAdhoc				= "192.168.5.10"
@@ -2713,6 +2724,7 @@ def execMaster():
 
 
 				lastCheckAlive = checkIfSTDprogramsAreRunning(lastCheckAlive)
+				checkIFSensorlistIsRunning()
 
 				checkIfRebootRequest()
 		

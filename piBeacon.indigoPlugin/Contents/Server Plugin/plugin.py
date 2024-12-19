@@ -672,12 +672,19 @@ _addingstates["currentEvent"]					= {"addTag":False, "States":{"currentEvent":"S
 _addingstates["previousEvent"]					= {"addTag":False, "States":{"previousEvent":"String"}}
 _addingstates["currentEventType"]				= {"addTag":False, "States":{"currentEventType":"String"}}
 _addingstates["previousEventType"]				= {"addTag":False, "States":{"previousEventType":"String"}}
-_addingstates["counter"]						= {"addTag":False, "States":{"counter":"Integer"}}
 _addingstates["OUTPUT"]							= {"addTag":False, "States":{"OUTPUT":"String"}}
 _addingstates["status"]							= {"addTag":False, "States":{"status":"String"}}
 _addingstates["actualStatus"]					= {"addTag":False, "States":{"actualStatus":"String"}}
 _addingstates["inverse"]						= {"addTag":False, "States":{"inverse":"Boolean"}}
 _addingstates["initial"]						= {"addTag":False, "States":{"initial":"String"}}
+
+_addingstates["counter"]						= {"addTag":False, "States":{"counter":"Integer"}}
+_addingstates["cmd"]							= {"addTag":False, "States":{"cmd":"String"}}
+_addingstates["cmdAt"]							= {"addTag":False, "States":{"cmdAt":"String"}}
+_addingstates["lastCmd"]						= {"addTag":False, "States":{"lastCmd":"String"}}
+_addingstates["lastCmdAt"]						= {"addTag":False, "States":{"lastCmdAt":"String"}}
+_addingstates["lastCmd2"]						= {"addTag":False, "States":{"lastCmd2":"String"}}
+_addingstates["lastCmd2At"]						= {"addTag":False, "States":{"lastCmd2At":"String"}}
 
 
 #which devtype has which state 
@@ -688,6 +695,12 @@ _stateListToDevTypes["previousEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1
 _stateListToDevTypes["currentEventType"]		= {"BLEShellyButton":1}
 _stateListToDevTypes["previousEventType"]		= {"BLEShellyButton":1}
 
+_stateListToDevTypes["cmd"]						= {"DF2301Q":1}
+_stateListToDevTypes["cmdAt"]					= {"DF2301Q":1}
+_stateListToDevTypes["lastCmd"]					= {"DF2301Q":1}
+_stateListToDevTypes["lastCmdAt"]				= {"DF2301Q":1}
+_stateListToDevTypes["lastCmd2"]				= {"DF2301Q":1}
+_stateListToDevTypes["lastCmd2At"]				= {"DF2301Q":1}
 
 _stateListToDevTypes["lastBatteryReplaced"]		= {"BLEiSensor-onOff":1, "BLEmeeblue-on":1, "BLEiSensor-on":1, "BLEiSensor-TempHum":1}
 _stateListToDevTypes["status"]					= {"garageDoor":1, "FBHtempshow":1}
@@ -695,7 +708,7 @@ _stateListToDevTypes["actualStatus"]			= {"OUTPUTswitchbotRelay":1, "OUTPUTi2cRe
 _stateListToDevTypes["inverse"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1}
 _stateListToDevTypes["initial"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1}
 _stateListToDevTypes["OUTPUT"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1, "setMCP4725":1, "setPCF8591dac":1, "display":1, "neopixel":1}
-_stateListToDevTypes["counter"]					= {"BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEgoveeTempHum":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEswitchbotContact":1 }
+_stateListToDevTypes["counter"]					= {"BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEgoveeTempHum":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEswitchbotContact":1 ,"DF2301Q":1}
 _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
 _stateListToDevTypes["speed"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
@@ -3263,7 +3276,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def readOtherParams(self):
 		try:
-			self.DF2301Q_commandlistText  = ""
+			self.DF2301Q_commandlistText  = "DF2301Q_commandlist.txt  file not found"
 			self.DF2301Q_commandlist = {}
 			if os.path.isfile(self.pathToPlugin+"DF2301Q_commandlist.txt"):
 				f = open(self.pathToPlugin + "DF2301Q_commandlist.txt", "r")
@@ -5283,7 +5296,10 @@ class Plugin(indigo.PluginBase):
 
 				if typeId.find("DF2301Q") >-1:
 					dev.updateStateOnServer( "status", "mute:{}, volume:{}, wakeTime:{}, keepAwake:{}".format(valuesDict["mute"], valuesDict["volume"], valuesDict["setWakeTime"], valuesDict["keepAwake"] ))
-
+					cc = copy.copy(self.DF2301Q_commandlist)
+					for ii in range(4,22):
+						cc[str(ii)] = props.get("controllWord"+str(ii), "text not set")
+					valuesDict["commandList"] = json.dumps(cc)
 
 				if typeId.find("bme680") >-1:
 					if   valuesDict["calibrateSetting"] == "setFixedValue": valuesDict["description"] += ", set calib to "+ valuesDict["setCalibrationFixedValue"]
@@ -5968,83 +5984,40 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 
-	def printDF2301QhelpCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		
-		out =  '\n'
-		out += '\n HELP for DF2301Q speech recognition sensor'
-		out += '\n====== Install sensor: '
-		out += '\n    for i2c:    connect the 4 cables to +3V, gnd, C to SLC, D to SDA, i2c number is fixed: 0x64 = 100; make sure that i2c is enabled in sudo raspi-config interfaces.. / i2c.. '
-		out += '\n    for serial: connect the 4 cables to +5V, gnd, T to RXD, R to TCD; make sure that serial port is enabled in sudo raspi-config interfaces .. / serial..'
-		out += '\n    pi3 and faster can do i2c, while pi2 and pi0 are not stable with i2c with THIS sensor, use uart/serial with them'
-		out += '\n in dev edit select the rpi the sensor is connected to.'
-		out += '\n     set keep awake = no controll word needed, it will continuously listen to commands'
-		out += '\n     set wake up time (how long is sensor listening after key word 0-255secs)'
-		out += '\n     set mute on/off --> with mute ON the device can react faster to the next command'
-		out += '\n     set volume 0-10 = volume of speaker'
-		out += '\n     enter custom commands = strings to be used in status display for user defined commands 5 - 21'
-		out += '\n     save'
-		out += '\n use this sensor to trigger on dev state "counter"  "has any change" ( counter gets increased with every message. Do not trigger on sensorValue, that can be the same as the last value)'
-		out += '\n     use condition dev state "sensorValue" is eq 103 (phrase: turn on the light)  ==> then trigger your action "turn on light" in indigo'
-		out += '\n     use condition dev state "sensorValue" is eq 104 (phrase: turn off the light) ==> then trigger your action "turn off light" in indigo'
-		out += '\n====== How does "it" work:'
-		out += '\n  the rpi reads the codes coming from the sensor through i2c interface or serial. It sends just the code number to the plugin'
-		out += '\n  the plugin takes the code number and shows it with the pre-defined text in the states (or from the custom commands defined text from device edit)'
-		out += '\n '
-		out += '\n configuring the sensor online:'
-		out += '\n====== Learning wake-up word:'
-		out += '\n· Initiate the voice assistant by employing the default wake-up word, then say "Learning wake word"'
-		out += '\n  Follow the prompts to learn the new wake-up word '
-		out += '\n    (prior to each learning command, it is necessary to remove the previously learned wake-up word; kindly refer to the instructions for wake-up word and command phrase deletion)'
-		out += '\n· Indication: Learning now, be quiet, please say the wake word to be learned!'
-		out += '\n· The designated wake-up word to be acquired (taking "hey indigo" as an example): “hey indigo”'
-		out += '\n· Indication: Learning successful, please say it again!'
-		out += '\n· The designated wake-up word to be acquired : “hey indigo”'
-		out += '\n· Prompt: Learning successful, please say it again!'
-		out += '\n· The designated wake-up word to be acquired : “hey indigo”'
-		out += '\n· Prompt: Ok, learning completed!'
-		out += '\n· Once the learning process is accomplished, you will be able to utilize the phrase "hey indigo" to awaken the voice assistant!'
-		out += '\n '
-		out += '\n====== Learning command words:'
-		out += '\nUse a wake-up word (default or learned) to wake up the voice assistant, and then say "Learning command word" to initiate the process of learning command phrase, following the provided prompts.'
-		out += '\n     Before each session of learning command phrases, it is necessary to delete the previously learned command phrases.'
-		out += '\n· Indication: Learning now, be quiet, please learn the command word according to the prompt! Please say the first command to be learned!'
-		out += '\n· Command phrase to be learned (using "Turn on Greenlight" as an example): "Turn on Green light"'
-		out += '\n· Indication: Learning successful, please say it again!'
-		out += '\n· Command phrase to be learned : “Turn on Green light”'
-		out += '\n· Indication: Learning successful, please say it again!'
-		out += '\n· Command phrase to be learned : “Turn on Green light”'
-		out += '\n· Indication: OK, learned the first command successfully! Please say the second command to be learned!'
-		out += '\n... (Continue learning)'
-		out += '\nCommand phrase to exit learning mode: "Exit learning"'
-		out += '\nAfter the completion of the learning process, an ID will be automatically generated.'
-		out += '\n '
-		out += '\n '
-		out += '\n====== Delete Wake Words and Command Words:'
-		out += '\nUse a wake-up word (default or learned) to wake up the voice assistant, and speak the phrase "I want to delete"'
-		out += '\n      Follow the prompts to eliminate the specified command phrase as instructed.'
-		out += '\n· Indication: Do you want to delete the learned wake word or command word?'
-		out += '\n· "Delete command word " : will Remove the previously acquired command phrases.'
-		out += '\n· "Delete wake word" : will Erase the learned awakening words from the system.'
-		out += '\n· "Delete all" : Eliminate the assimilated awakening phrases and command phrases from memory.'
-		out += '\n· "Exit deleting".'
-		out += '\n '
-		out += '\n======  predefined command IDs  with phrase'
+	def readDF2301Qhelp(self):
+		ret  = "\n\n==== DF2301Q_help.txt  file not found ==== \n\n"
+		if os.path.isfile(self.pathToPlugin+"DF2301Q_help.txt"):
+			f = open(self.pathToPlugin + "DF2301Q_help.txt", "r", encoding="utf-8")
+			ret = f.read()	
+			f.close()
+		else:
+			self.indiLOG.log(20,"DF2301Q_help.txt  file not found")
+		return ret
 
-		lines = self.DF2301Q_commandlistText.split("\n")
-		for line in lines:
-			if line.find("IDs that can be set by you") > -1: 
-				out += '\n=== IDs that can be set by you, 1. set phrase on sensor as described above and 2. in device edit to use in dev states as string to map to command id'
-				break
-			out += '\n{}'.format(line)
+####-------------------------------------------------------------------------####
+	def printDF2301QhelpMenuCALLBACK(self, valuesDict=None, typeId="", devId=0):
+		out = self.readDF2301Qhelp()
+		self.indiLOG.log(20,out)
 
-		for ii in range(5,22):
-			out += '\n{}: {}'.format(ii, valuesDict.get("controllWord"+str(ii)),"" )
+####-------------------------------------------------------------------------####
+	def printDF2301QhelpDeviceCALLBACK(self, valuesDict=None, typeId="", devId=0):
 
-		out += '\n '
-		out += '\n  see https://www.tme.eu/Document/064226f2d0b3baf20e9949b0a9b6a625/DF-SEN0539-EN-TME.pdf for tech doc'
+		out = self.readDF2301Qhelp()
+
+		out += "\n======  predefined command IDs  with phrase"
+		out += self.DF2301Q_commandlistText
+
+		out += '\n=== IDs that can be set by you: ' 
+		out += '\n   A. define custom command word on sensor as described above, remember the command id'
+		out += '\n   B. in device edit set the phrase for the command id. It will be use in dev states as string to map to command id'
+		out += '\nID   set to:'
+		for ii in range(1,30): # will only use the defined items
+			cmdIDItem = "controllWord{}".format(ii)
+			if cmdIDItem in valuesDict:
+				out += '\n{:2d}: "{}"'.format(ii, valuesDict[cmdIDItem] )
 		out += '\n '
 
-		indigo.server.log(out)
+		self.indiLOG.log(20,out)
 
 		return valuesDict
 
@@ -9617,12 +9590,20 @@ class Plugin(indigo.PluginBase):
 		return 0
 
 
+
+####-------------------------------------------------------------------------####
+	def setBatteryReplacedDateButton(self, valuesDict=None, typeId="", devId=0):
+		valuesDict["devId"] = devId
+		self.setBatteryReplaceDateCALLBACKmenu(valuesDict)
+		return 
+
 ####-------------------------------------------------------------------------####
 	def setBatteryReplaceDateCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
 		try:
 			devId = int(valuesDict["devId"])
-			if devId == -1:
+			if devId in[0, -1]:
 				valuesDict["MSG"] = "select device"
+				self.indiLOG.log(20,"setBatteryReplaceDateCALLBACKmenu: device for set battery last replaced not defined")
 				return valuesDict
 
 			dev = indigo.devices[int(valuesDict["devId"])]
@@ -17936,20 +17917,23 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def updateDF2301Q(self, dev, props, data, whichKeysToDisplay, theType="",dispType =""):
 		try:
-			if "cmd" in data and "cmd" in dev.states: 
-				if data["cmd"] > 4 and data["cmd"] < 22:
-					cmdtext = props.get("controllWord"+str(data["cmd"]), "text not set, set in device edit")
-				else:
-					cmdtext = self.DF2301Q_commandlist.get(str(data["cmd"]),"not recognized") 
+			if "cmd" in data: 
+				cmdId = data["cmd"]
+
 				self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
 				self.addToStatesUpdateDict(dev.id, "lastCmd2At", dev.states["lastCmdAt"] )
 
 				self.addToStatesUpdateDict(dev.id, "lastCmd", dev.states["cmd"] )
 				self.addToStatesUpdateDict(dev.id, "lastCmdAt", dev.states["cmdAt"] )
 
-				self.addToStatesUpdateDict(dev.id, "cmd", "{}:{}".format(data["cmd"], cmdtext) )
+				if dev.states["sensorValue"] != cmdId:
+					cmdtextDict = json.loads(props.get("commandList","{}"))
+					cmdtext = cmdtextDict.get(str(cmdId), "text not set, set in device edit")
+					if dev.states["status"] != "ok": self.addToStatesUpdateDict(dev.id, "status", "ok" )
+					self.addToStatesUpdateDict(dev.id, "cmd", "{}:{}".format(cmdId, cmdtext) )
+					self.addToStatesUpdateDict(dev.id, "sensorValue", cmdId, uiValue="{}:{}".format(cmdId, cmdtext)  )
 				self.addToStatesUpdateDict(dev.id, "cmdAt",  datetime.datetime.now().strftime(_defaultDateStampFormat) )
-				self.addToStatesUpdateDict(dev.id, "sensorValue", int(data["cmd"]), uiValue="{}:{}".format(data["cmd"], cmdtext)  )
+
 				try: 	counter = int(dev.states.get("counter",0))
 				except: counter = 0
 				self.addToStatesUpdateDict(dev.id, "counter", counter+1)
@@ -20066,7 +20050,6 @@ class Plugin(indigo.PluginBase):
 				out["sensors"]				 = {}
 				for sensor in self.RPI[piU]["input"]:
 					try:
-
 						if sensor not in _GlobalConst_allowedSensors and sensor not in _BLEsensorTypes: continue
 						if len(self.RPI[piU]["input"][sensor]) == 0: continue
 						sens = {}
@@ -20075,7 +20058,7 @@ class Plugin(indigo.PluginBase):
 							try:
 								devId = int(devIdS)
 								dev = indigo.devices[devId]
-								doPrint = False # dev.id in [1149421851]
+								doPrint = False # dev.id in [1672150172]
 							except Exception as e:
 								if "{}".format(e).find("timeout waiting") > -1:
 									if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -20156,7 +20139,8 @@ class Plugin(indigo.PluginBase):
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","count","bounceTime","timeWindowForContinuousEvents",
 										"mac","type","INPUTdevId0","INPUTdevId1","INPUTdevId2","INPUTdevId3","coincidenceTimeInterval","updateIndigoTiming","updateIndigoDeltaTemp","updateIndigoDeltaAccelVector","updateIndigoDeltaMaxXYZ",
 										"usbPort","motorFrequency","nContiguousAngles","contiguousDeltaValue","triggerLast","triggerCalibrated","sendToIndigoEvery",
-										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName",
+										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","gpioCmdIndicator","gpioCmdIndicatorInverse","gpioCmdIndicatorOnTime","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetPowerGPIO",
+										"gpioCmdForAction1","gpioNumberForCmdAction1","gpioCmdForAction2","gpioNumberForCmdAction2","gpioCmdForAction3","gpioNumberForCmdAction3","gpioCmdForAction4","gpioNumberForCmdAction4","logLevel",
 										"anglesInOneBin","measurementsNeededForCalib","sendPixelData","doNotUseDataRanges","minSignalStrength","relayType","python3","bleHandle"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate)
 							#if dev.id == 49344355: self.indiLOG.log(20,"pass 9 sens:{}".format(sens))
