@@ -20183,18 +20183,18 @@ for uart/serial interface, the key word has to be heard once. Then it can stay a
 
 			<Field id="gpioCmdIndicatorOnTime"   type="menu" defaultValue="2"  >
 				<List>
-					<Option value="0.5" >0.5 sec</Option>
-					<Option value="1"   >1 sec</Option>
-					<Option value="1.5" >1.5 sec</Option>
-					<Option value="2"   >2 sec</Option>
-					<Option value="3"   >3 sec</Option>
-					<Option value="4"   >4 sec</Option>
-					<Option value="5"   >5 sec</Option>
-					<Option value="7"   >7 sec</Option>
-					<Option value="10"  >10 sec</Option>
-					<Option value="15"  >15 sec</Option>
-					<Option value="20"  >20 sec</Option>
-					<Option value="30"  >30 sec</Option>
+					<Option value="500"    >0.5 sec</Option>
+					<Option value="1000"   >1 sec</Option>
+					<Option value="1500"   >1.5 sec</Option>
+					<Option value="2000"   >2 sec</Option>
+					<Option value="3000"   >3 sec</Option>
+					<Option value="4000"   >4 sec</Option>
+					<Option value="5000"   >5 sec</Option>
+					<Option value="7000"   >7 sec</Option>
+					<Option value="10000"  >10 sec</Option>
+					<Option value="15000"  >15 sec</Option>
+					<Option value="20000"  >20 sec</Option>
+					<Option value="30000"  >30 sec</Option>
 				</List>
 				<Label>On for how long:</Label>
 			</Field>
@@ -20306,6 +20306,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="refreshRepeat"   type="menu" defaultValue="200"  >
 				<List>
+					<Option value="15"   			> every 15 secs</Option>
 					<Option value="30"   			> every 30 secs</Option>
 					<Option value="50"   			> every 50 secs</Option>
 					<Option value="100"   			> every 100 secs</Option>
@@ -20334,8 +20335,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="150"   			> 150 msec</Option>
 					<Option value="200"   			> 200 msec</Option>
 					<Option value="300"   			> 300 msec</Option>
-					<Option value="400"   			> 300 msec</Option>
-					<Option value="500"   			> 300 msec</Option>
+					<Option value="400"   			> 400 msec</Option>
+					<Option value="500"   			> 500 msec</Option>
 				</List>
 				<Label>Sleep after read/write to i2c port:</Label>
 			</Field>

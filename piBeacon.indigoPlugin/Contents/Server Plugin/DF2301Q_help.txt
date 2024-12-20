@@ -1,7 +1,7 @@
 
 ======= HELP for DF2301Q / SEN0539 speech recognition sensor
 ----- Intro
-    This sensor can decode specific voice phrases into command codes (1...255)
+    This sensor can recognize specific voice phrases, it convrts them into command codes (1...255)
     It can learn new phrases by speaking into it.
     The plugin supports the sensor connected to an rpi. It shows the received command codes in sensorValues as command# and in sensorValue_ui as #:text
 
@@ -12,12 +12,12 @@
        on RPi: sudo raspi-config: Interface Options/Serial Port: disable login, enable serial hardware port 
     pi 3 and faster can do i2c, but is sometimes unstable. Pi 2 and pi0 are not stable with i2c with THIS sensor, use uart/serial with them
     uart/serial does not support initial set wake up ON. After sensor power on you need to speak the wakeup word once, then it is active until power cycle / restart of program
-  In dev edit 
+  In device edit 
      select the rpi the sensor is connected to.
      set keep awake = no controll word needed, it will continuously listen to commands
      set wake up time (how long is sensor listening after key word 0-255secs)
      set mute on/off this is for the speaker, not the mic. With mute ON the device can react faster to the next command
-     set volume 0-10 = volume of speaker
+     set volume 0-20 = volume of speaker
      enter custom commands = strings to be used in status display for user defined commands 5 - 21
      you can select to add a local (on rpi) action to turn gpios on/off when any or a specific voice command is received
      enable a GPIO command received inditicator: gpio turns off/on (can be reversed) if cmd# > 0 received. It can be used to drive an LED, conencted w 100Ohm resistor to V+3.3
