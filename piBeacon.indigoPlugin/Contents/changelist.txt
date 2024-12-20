@@ -1,0 +1,2798 @@
+added features / changes in added features / changes in v2022.183.121 @ 2024-12-19
+==================================================
+
+1. added option to set lastBatteryReplaced datetime stamp for devices in menu (select beacon from list shown) or in beacon device edit.
+2. voice recognition sensor DF2301Q: added support for uart/serial interface;  improved help menues etc 
+   added option to set a GPIO output to switch on an LED when a phrase is recognized (any phrase)
+   added option to switch gpios on/off if specific voice commands (4) are received, eg turn the lights on (id#103) --> toggle gpio 21
+   added option to set timing parameters  in device edit to adopt to different circumstances (experts only)
+
+added features / changes in added features / changes in v2022.181.115 @ 2024-11-11
+==================================================
+
+1. changed batterylevel = 0 for ruuvitag to 2200 mV from 2500.
+2. menue msg improvements
+3. log statement in setUtils.py on rpi fixed
+4. change how to get battery level for itrack eacons, back previous method: get levelthough connect command, bnot thrugh message
+   baterry level in message was only chnaged after beep or button press. so if you have a beacon that is not touched for a long time, you dont get the new battery level
+5. auto enable i2c in commandline on rpi, no need for sudo raspi-config
+
+
+added features / changes in added features / changes in v2022.181.111 @ 2024-11-06
+==================================================
+
+1. added support for voice recognition sensor DF2301Q
+   voice commands can be used to trigger indigo action. all data is local, recognition is done by the onboard chip
+   
+@ 2024-11-06
+==================================================
+
+1. added support for voice recognition sensor DF2301Q
+   voice commands can be used to trigger indigo action. all data is local, recognition is done by the onboard chip
+   ficed some miro costmetics, added dev state counter for trigger purpose
+
+
+added features / changes in v2022.181.110 @ 2024-10-30
+==================================================
+
+1. added support for voice recognition sensor DF2301Q
+   voice commands can be used to trigger indigo action. all data is local, recognition is done by the onboard chip
+
+
+
+added features / changes in v2022.180.109 @ 2024-10-10
+==================================================
+
+
+1. fixed battery level for iSensor types
+2. fixed bug where beacons where not recognized fast enough after being away .
+3. added battery level values for devcies that have lowBattery info: if low bat: set batterylevel to 5%, otherwise 100%
+
+
+added features / changes in v2022.180.108 @ 2024-10-07
+==================================================
+
+
+1. clean up code, handle some exceptions faster on RPI
+2. added states: 
+	xxxstateMinAt xxxstateMaxAt , shows time stamp when value was at min today and yesterday
+    xxxstate = temperature, humidity, pressure, illumination ....
+3. added option to enable / disable states xxMin/xxMax/ xxchanged10Minute/ .. for xx = states like Temperature Humidity, Pressure, CO2, illuminance ... 
+   this can reduce many state updates 
+4. added rpi name (besides number) to warning message rpi power propblem
+
+5. added device edit option in beacon edit for BLE beacon + sensor devcies like ruuvi, KKM button ..   to (not) create sensor child devices ie for button temp etc information.
+   e.g. if you dont want to use that sensor function, only interesed in the ebacon / presence info.
+6. removed some orphan text in device.xml and set display default to the proper options
+
+
+added features / changes in v2022.178.101 @ 2024-07-03
+==================================================
+
+1. reduced number of dev states updates if value not changed
+   ==> dev state "last updated" now chnages only when a real dev state value was changed
+
+2. reduced # of beacon_is_back messages, 
+
+3. restructured beaconloop.py on rpi, reduced cpu comsumption by ~25%. That can have an impact if you are using an rpi0, for a rpi3++ likely not a big impact.
+
+4. optimized restart of beaconloop.py on RPi, in case hcidump does not start 
+
+5. added accept beacons:  >>jaalee w name tag<<. some Jaalee beacons send out a message that contains jaalee as a string (mfg info)
+
+6. added support for >>meeblue M52<<  beacons, The battery should last several years.:
+-1. start beacon (remove battery strip)
+-2. start app "checkBlue" on iPhone
+-3. press button for 3 secs, led should blink blue
+-4. put beacon next to phone
+-5. you should see “meeblue” and connectable true
+-6. click on beacon
+-7. after 10 secs you should see “configure Multiple Parameter”, click on it.. it will take 30 secs
+-8. click advertising mode: pick "Advertise Real-Time Data", everything else is off
+-9. back, you should see Advertising mode = 4
+-10. set "Button Detect" enabled
+-11. click back at top, back at top, settings are saved and the beacon is not connected anymore. it should start broadcasting data now
+---- 2 types: regular broadcast with mac number, battery info, and when button is pressed (blue led blinking) another package with "meeblue" mfg id for about 15 secs. These other packages are used to detect the button press
+-12. In indigo menu/ accept new beacons: select meebue m52.
+---- You should see 2 new devices after < 1 minute in indigo. One is the beacon(up/down/expired), the second the button(on/off). Both show battery level.
+
+
+added features / changes in v2022.176.98 @ 2024-06002
+==================================================
+
+1. added in "print beacon battery stats" check for bad device (not in beacons dict)
+2. reduced number of updates for lastBatterylevelUpdate to 1/10 minutes or if bat level has chnaged.
+3. added dev type dev state for itrack type beacons (musegear mini, regular, recharge, wallet) 
+4. added get battery level from message for itrack beacon, no need to connect and get battery level
+5. added charged dev state for itrack beacons, ie for rechargeable beacons 
+
+
+added features / changes in v2022.175.94 @ 2024-04-10
+==================================================
+
+1. fixed Thermobeacon code on RPi
+
+
+
+added features / changes in v2022.175.93 @ 2024-03-26
+==================================================
+
+1. NaN == "Not a Number" 
+   Replaced any "NaN" received from an RPI  sensor to -9999
+   This is not a problem for any std pibeacon or sensor data. Only if you use a user extension (your own program) that can create a NaN.
+   A sensor might return an error when reading , that in turn could lead to a NaN. 
+   In all data from std sensors I have converted a read error to a "bad Sensor" message or a -999 or a -9999 data element
+   Indigo has serious issues with NaN data in some funtions, hence the new filter.
+   This has happened to one user and if you dont know about it you are not impacted.
+
+2. Added Switchbot curtain version 3 support
+   The version 3  has a changed ble handler (0x08->0x10) and a new device id (c -> { )
+
+
+added features / changes in v2022.175.91 @ 2024-02-13
+==================================================
+
+1. fixed for older rpi imgaes install of tmp177 library
+   the pip3 environment changed with os v rpi of 12
+   with v 11 it is 
+		sudo pip3 install  adafruit-circuitpython-tmp117
+	with v 12:
+		sudo pip3 install --break-system-packages adafruit-circuitpython-tmp117
+
+
+added features / changes in v2022.175.90 @ 2024-02-13
+==================================================
+
+1. added precision temperature sensor tmp117
+
+2. some py3 fixes on rpi, to import adafruit libraries
+
+
+
+
+added features / changes in v2022.174.90 @ 2024-01-31
+==================================================
+
+1. fixed restart master on rpi through ssh did not work
+
+2. added a check around debugRPI, it now makes sure that the variable is properly, set even if not initialized
+
+
+
+added features / changes in v2022.174.89 @ 2024-01-22
+==================================================
+
+1. now supports RPI opsys bookworm - 32 bit version, released in Dec 2023
+  it was a little bit of work to make everything work again.
+  behaviour of links between programs programs changed, ie sudo python xxx.py now requires sudo python xx.py & to invoke
+  previously  xxx.py canceled the sudo process w/o impaction xxx.py. That is not true anymore. It is used quit extenisveley in pibeacon
+  Several other chnages required modigications
+  NO  python2 programs are available, everything is now py3 o the new RPI OP sys
+
+2. you now can use the regular RPI SD IMAGE INSTALLER tool to create your SD.
+   see  https://forums.indigodomo.com/viewtopic.php?f=187&t=15482&p=109421#p109421
+   The plugin will auto install all needed software and set all required configs on the RPI
+
+==> I will not supply a precanned image anymore to be copied onto the SD 
+    you can now create that yourself. It is actually more user friendly.
+
+In the future I will need to stop supporting py2 compatibility.
+That means new plugin versions MIGHT not run on older SD versions anymore.
+This one still does, but might be the last one. I hope you understand.
+
+
+
+added features / changes in v2022.173.89 @ 2024-01-13
+==================================================
+
+
+1. added Thermopro beacon & sensors
+
+2. added Shelly BLU button and Motion and Window sensor
+   this is a newer line of SHELLY products that use BLE to communicat. They Broadcast various infos:
+   battery level, button:press/short/double/tripple/long, illuminance (in Lux), door open/closed/ rotation, motion.
+   some of they can beep, but only thru the shelly phone app shelly BLU
+   YOU MUST SETUP EACH DEVICE IN THAT APP AND ENBALE broadcast (BC) and disable encryption 
+   you can add them with menu/accept new beacons.. selcet the proper shelly dev type.
+   then a beacon device is created as well as a sensor device that shows the open/close montion/. button press. values.
+   you need to edit the created sensor device to select the proper RPi to be used to trac the button info. you can select several RPi to do this.
+   with a single shelly button device you can trigger up to 4 actions in indigo. (press/double/tripple/long press)
+   trigger on dev/state[on/offstate] == True, then with condition dev/state[currentEvntType]  == press/ double_press/ tripple_press / long_press
+   then you can have ONE button that can eg: open house/ garage/ light on/ away
+   the beacon behaves like a regular beacon (although it broadcast alive only every 8 secs, otehr beacosn every second or faster)
+       it hence can be used as "present" indicator like all otehr beacons
+   
+3. fixed state indicator red/green/grey for delayed action (eg button press goes green but never grey.. afetr x seconds as intended). It was always set to sensor ON
+
+!!! IMPORTANT !!! 
+4. fixed issue for python2 installs on rpi w older ssd image:  removed new format statement that only work under py3: f" {xx}" replaced by " {}.format(xx)"
+if you are using an older RPI image w/o python3 as default (older than 2022) PLEASE install this version. beacon detection will not work otherwise
+ 
+
+
+
+
+added features / changes in v2022.171.88 @ 2023-11-07
+==================================================
+
+
+1.   added option to use any GPIO on the rpi to read one wire sensor temperature (ie 18db20)
+     you can now use all gpios (20+) to read multiple onewire sensors each
+     you need to set the GPIOs in device edit for the RPI as it is set for all onewire sensrs on that RPI
+     With eg = 10 gpios and 10 onewire sensors on each gpio it can read 100 sensors
+     with    ls -o /sys/bus/w1/devices/  you can check if the busmaster channels are ok. You should see something like this:
+lrwxrwxrwx 1 root 0 Aug 29 02:06 28-000d770e64ff -> ../../../devices/w1_bus_master4/28-000d770e64ff
+..
+lrwxrwxrwx 1 root 0 Aug 29 02:06 28-3ce104570a38 -> ../../../devices/w1_bus_master2/28-3ce104570a38
+...
+lrwxrwxrwx 1 root 0 Aug 29 02:06 w1_bus_master1 -> ../../../devices/w1_bus_master1
+
+     where 28-3ce10457da57 are the IDs of the one wire sensors
+
+    added option to use a relay to reset the onewire setup (eg to disconnect power from the onewire sensors). Set this in RPI device edit
+    added option to reboot the RPI if reading onewire sensors is not successfull for xx read tries
+    It takes about 1 secs to read a sensor. With 10 sensors on one GPIO it would take about 11 secs to read 100 sensors with 10 GPIOs
+
+2. fixed bug for iSensor On devices (door button): the dev state onOffstate ui value was always "on". the onOffState itself was correct.
+
+3. added "lastBatteryReplaced" state to isensor  devices
+      they will show when the state "lowVoltage" went from empty to false or from true to false, ie when a new battery was added 
+ 
+4. changed state lastBatteryUpdate:
+  was: if new batterylevel ==100 and old < 100: set lastBatteryUpdate to current date
+  now: added if lastBatteryUpdate is empty set to current date.
+  if the battery level is less than 100 when you start the plugin you might need to wait for a loooong time before this state gets set ie if the battery live is 2 years
+  this now gives you at east some date (when you load this plugin)
+
+5. added device types:
+   MMK  beacons, must be configured with iphone app KBeaconpro. These devices transmit TML (google def) packages
+   they can be configured to send different packges of data. 
+   you need to setup these diffent packages (called slots in KBeaconpro)
+   add one slot for each package, single, doube, long press and if available for Temp/hum/acceleration
+   set Namespace ID to 1 for single press, 2 for double press, 3 for long press
+   then set trigger advertisement to "trigger only"  and "trigger by" to single, double long press respectively
+
+   A) SOS button can be used for eg a door buton, indigo can then trigger on button press, double press, long press
+
+   B) rechargeable beacon with ALSO temp,hum,acceleration info.
+  
+   It is a little tricky to setup but works well
+
+
+
+added features / changes in v2022.170.86 @ 2023-08-23
+==================================================
+
+1.   fixed bug introduced in v2022.169.84
+     changed values (5 min, 10 min, 1 hour ...)  for temp humidity .. values did not update
+2.   added sensirion scd40 41.. sensortypes they measure CO2 temp and hunidity, using i2c 
+     please get one with its own voltage regulator (eg adafruit.
+     they draw 200mA when measuring and require a very stable voltage. 
+     And connect the V pin to +5V make sure you set V-i2c to 3V on the board)
+     not fully tested, pre version
+3.   optimized pi software updates
+
+
+
+added features / changes in v2022.169.84 @ 2023-08-20
+==================================================
+
+1.   general maintenance release
+2.   added battery level to veg trug beacons
+3.   added menu action to reset or calibrate co2 sensors sensirion scd30
+     added device states to reflect calibration status
+
+
+Added features / changes in v2022.168.82 @ 2023-07-14
+==================================================
+
+1.   added state: "lastBatteryReplaced" ...   
+     .. now also supports beacons that do not broadcast their battery level, but also beacons that 
+     have to be queried to get their battery status eg iTrack, musegear ..
+
+
+Added features / changes in v2022.168.79 @ 2023-07-12
+==================================================
+
+1.   added state: "lastBatteryReplaced" to devices that have a batteryLevel state.
+    it shows the date-time when the battery level went back from < 100 to 100 %
+    with this you can see when you replaced the battery.
+    this is also shown in the battery level report in menue / print various ...
+
+Added features / changes in v2022.168.78 @ 2023-07-09
+==================================================
+
+1.  add different ruuvitag format capture
+
+
+Added features / changes in v2022.168.76 @ 2023-06-14
+==================================================
+
+1. bugfix:
+File "beaconloop.py", line 5784, in checkIfTagged
+    if testTag == "iBeacon" and iBeacon != ""
+
+
+
+Added features / changes in v2022.168.75 @ 2023-06-14
+==================================================
+
+1. bugfix:
+  "plugin.py", line 20656, in actionControlSensor   type: name 'address' is not defined
+2. added option to not print test logging at startup, set in config/ debug section
+3. added "iTRACK" (musegear, rinex,...) type beacons to automatically add a button device, that will be on/off (red/green) when the button is pressed
+   this can be used for any indigo action.
+4. fixed exception "lastMessageSend" for fast_down type beacons in beaconloop.py on rpi
+
+
+Added features / changes in v2022.167.71 @ 2023-05-09
+==================================================
+
+1. added cut off values for distance sensors min/ max, added state distanceRaw (unmodified  measured value)
+
+
+
+
+Added features / changes in v2022.166.70 @ 2023-05-06
+==================================================
+
+1. maintenance release
+   small bugs fixed, (format statements, beeping beacons ...) 
+
+2. added menu item to clean up ~/.ssh/know_hostsfile
+   if you have issues with ssh loging in to your RPIS, you can now reset the entries in ~/.ssh/konwn_hosts file
+
+
+Added features / changes in v2022.165.69@ 2023-04-01
+==================================================
+
+
+1. added support for thermobeacons. They are bluetooth temperature & humidity sensors w and w/o display
+   they are sold under various brands like sensorBlue etc.
+
+2. added some states to itrack button:
+   state of beacon
+   current and  last off event time stamp
+
+3. for BLE-sensor devcies added pluginProp beaconDevId that is the corresponding beacon device to the sensor device
+    eg for on off BLE sensor device like iTrack it has a corresponding beacon device that has the same MAC number
+    this can be used in triggers etc to find which device triggered
+
+4. added variables:
+    lastButtonOnDevId         this is the device id of an on/off BLE sensor device that was off-> on 
+    lastButtonOnBeaconDevId   this is the corresponding dev id for the beacon device
+    this can be used eg after receiving an On event from an iTrack sensor on/off device to send a message to the beacon to make it beep or get battery level
+    like so in an action script:
+
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+# this action: 
+# calls actiongroup to open door, but not more often than every 10 secs
+# then send get battery command to rpi # 999 (closeset)  for corresponding beacon that triggered the button
+# it has 3 lists of triggering devices, will do something else for group B, C
+#
+
+
+## this is the list of on/off button BLE devices that could have triggerd this action
+# we have 2 lists, different actions for A and B
+# you can use names or variables
+devListA = ["button-musegear-1", "button-musegear-2", ]
+devListB = [ "button-musegear-H",  ]
+devListC = [ "button2"]
+
+# if you want to use Ids
+#devListA = [123,23524,56745,457457 ]
+#devListB = [2453456,6475789,231234124]
+#devListC = [2453456,6475789,231234124]
+
+beep = True
+getBattery = True
+
+import time
+
+# is everything running?:
+try:
+	plug = indigo.server.getPlugin("com.karlwachs.piBeacon")
+except:
+	indigo.server.log("plugin not running")
+	return
+if not plug.isEnabled(): 
+	indigo.server.log("plugin not running")
+	return 
+
+# get device that triggered this action:
+try:
+	triggerDevId = indigo.variables["lastButtonOnDevId"].value
+	triggerDev = indigo.devices[int(triggerDevId)]
+except:
+	indigo.server.log("variable lastButtonOnDevId:{}  not correct".format(triggerDevId))
+	return
+
+if type(devListA[0]) == type(1):
+	useTag = triggerDev.id
+else:
+	useTag = triggerDev.name
+
+
+if useTag not in devListA + devListB + devListC:
+	indigo.server.log("trigger device {} not in defined groups".format(triggerDev.name))
+	return 
+
+
+# action for A list
+if useTag in devListA or useTag in devListB:
+	# get / setup last time stamp variable of last action for this action
+	try:
+		var = indigo.variables["lastDoorOpen"].value
+	except: 	
+		indigo.variable.create("lastDoorOpen","0")
+		var = indigo.variables["lastDoorOpen"].value
+	lastOpen = float(var)
+
+	if time.time() - lastOpen > 10: # too early for this action?
+		indigo.actionGroup.execute("press door unlock button action")  # use your action here 
+		indigo.variable.updateValue("lastDoorOpen", value="{:.0f}".format(time.time())) # remember last action in variable
+	else: # skip
+		indigo.server.log("skipping open door, last open door event was {:.0f} secs ago".format(time.time()-lastOpen))
+		return 
+
+	# now next action, beep and get battery level
+	beacondevID = indigo.variables["lastButtonOnBeaconDevId"].value
+	try:
+		beaconDev = indigo.devices[int(beacondevID)]
+	except:
+		indigo.server.log("beacon {}  not defined in indigo".format(beacondevID))
+		return 
+
+	if beep:	# server =-1: use closest, beepTime =-1: only beep off, >0 = beep 
+		plug.executeAction("beepBeacon", props ={"piServerNumber":"-1","selectbeacon": beacondevID,"beepTime":"1"})
+		indigo.server.log("sending beep to dev:{}".format(beaconDev.name))
+	if getBattery:	# must "set get battery mode" to interactive in config							
+		indigo.server.log("sending get battery to dev:{}".format(beaconDev.name)) 
+		# all = use closest RPI, startAtDateTime set delay of start for command, 0 should work fine 
+		plug.executeAction("getONEiBeaconParameters", props ={"piServerNumber":"all","devIdOfBeacon": beacondevID, "startAtDateTime":0})
+
+# action for C list do beep and then 9 sec ater get battery level
+if useTag in devListC:
+		beacondevID = indigo.variables["lastButtonOnBeaconDevId"].value
+		beaconDev = indigo.devices[int(beacondevID)]
+		plug.executeAction("beepBeacon", props ={"piServerNumber":"-1","selectbeacon": beacondevID,"beepTime":"1"})
+		plug.executeAction("getONEiBeaconParameters", props ={"piServerNumber":"all","devIdOfBeacon": beacondevID, "startAtDateTime":0})
+
+############################################################################################################################################################
+############################################################################################################################################################
+############################################################################################################################################################
+
+
+
+
+
+
+Added features / changes in v2022.163.59@ 2023-03-15
+==================================================
+
+1. fixed some issues with new iTrack beacons. 
+
+
+
+Added features / changes in v2022.163.56@ 2023-03-13
+==================================================
+
+1. added new dev type iTrack (Rinex,Vozni,Njoii,Musegear) BUTTON.
+   iTrack types are regular beacon that can deliver battery info, can be beeped and can trigger any indigo action with the button press
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   !!!!! FINALLY an ALL IN ONE device - after 8 years with this plugin: beacon position,  Battery level, beep, and action button. !!!!
+   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+   1. get a iTrack beacon, (amazon germany euro 25 for Musegear), 
+   2. click on the button for 5 secs to enable it
+   3. add the eg musegear beacon to indigo:  menu/ accept/reject new beacons, select ITrack: Rinex,Vozni,Njoii,Musegear On Button as beacon type;  then a new beacon will be created within 30 secs. Copy the mac number
+   4. add a new device type "BLE-iTrack (Musegear,Rinex,..) On Button", paste the mac number. Select which rpi should track the button sensor button On/off ( this is not the beacon data!!, that will continue as is)
+   5. then you can press the button (5 secs) on the beacon and the status will go to "true/On" for 30 secs, then to false/off again, use this as a trigger to eg open door... 
+
+ =====
+ now you can with this beacon type:
+   1. know in which room the beacon is (requires one rpi per room, state= closest RPI ), or if it is away
+      or if it moves - change in distances states, or dev state position of beacon
+   2. you can see the battery level in the beacon dev state
+   3. you can in indigo menu/action beep the beacon to find it
+   4. press the button on the beacon and you can trigger any action in indigo
+ =====  
+
+   The smallest version is 4mm x 35mm x 25mm
+   There are regular, wallet, mini, rechargeable versions 
+
+2. added support for the new indigo 2022.2 http api w bearer id.
+   the old http restfull api does not work under indigo 2022.2
+   the new version will only work if your RPI is running bullseye or later and everything with py3
+   BUT it will create a lot of logfile entries each time the rpis send data to indigo. with the old version there was a patch you could use to disable the logging.
+
+   I strongly recommend to use the default socket communication rpi to indigo -  you select it in config.
+   that works with all versions and combinations
+
+3. worked on "fastDown" option for beacons. It is now stable down to 10 secs. 
+   Normal mode beacons take about 90 secs to go "down"/ off. They expire due to no signal receives from rpis in indigo
+   In fastdown mode the rpi sends a signal (down rssi=-999) when it has not received a signal from the beacon for xx secs.
+   After receiving a down signal the plugin sets the state to down - after all rpis have send the down signal.
+   This works for fastDown times down to 15 secs and if you have several RPi that "see" the beacon down to 10 secs.
+   this will create a lot more traffic from the RPIs to the plugin:    
+     For fastDown time = 10 secs one message every 5 secs from each RPI for each of these fastDown beacons, so for 5 beacons and 5 rpi up to 5 message per second from rpis to indigo
+     Indigo is able to handle this if you have a good sized mac -  my mac mini M1 2020 has 14% total load (and 10% pibeacon plugin load on one proc.) with that config with many other plugins running
+
+4. fixed variable counters for devices Up/down for groups with beacon members (the group BEACON was correct). the other groups (Family ..) worked correctly for sensor devcies 
+   added 2 more optional groups you can use to count devices home/away, default are Family, guest, other1.. other5. If not assigned a name in config, the variables are not created.
+   You need to edit a device and check the groups name you want it to be come a member of. Then the variables GroupName_Away and _Home counters will be updated
+
+5. fixed: piBeacon Error 'local variable 'xx' referenced before assignment'
+
+
+Added features / changes in v2022.162.54@ 2023-02-21
+===================================================
+   
+1. decreased the fast down option to 3 secs from 5 seconds. This is only for very special applications.
+   this is to detect very fast if a beacon is not present. It might create false down states. you need to test what works for your beacon.
+   I have tried it with a ruuvitag beacon/sensor. 3 seconds does not seem to give false donw states at least for 30 minutes, 2 secs does.
+   to clarify: beacons with fast down enabled, will not simply expire when there is no message after xx secs (normally 90 secs)
+               Normal beacon behavior: there is no active not seen message, just no message about that beacon. That is the default behavior of beacons. 
+                                       then tey will go down / expire after 90 secs / 180 secs.
+               With fast down they will only go to down if an RPI send a message that the beacon has not been seen for yy secs (3,4,5,... select in device edit)
+             
+
+Added features / changes in v2022.162.53@ 2023-02-21
+===================================================
+   
+1. added color knight rider option for neopixel: you can show swinging LEDS w different colors on a neopixel string
+   for detail see  menu/print various info to logfile /print distance actions ..
+
+2. fixed :  undervoltage reporting,   vcgencmd cmd has moved in new raspian image to /usr/bin/vcgencmd 
+   it will check the old and new postion of executable.
+
+
+Added features / changes in v2022.161.52@ 2023-02-11
+===================================================
+   
+This version now offers to directly show distance sensor information on attached neopixel devices on the rpi
+It does not have to go through indigo.
+you configure 
+a) the neopixel output device in indigo, set the pyhical parameters - # of LED etc, connect teh device to the RPI
+b) configure the distance sensor in indigo (any of the supported models3 work) and connect the distance sensor to the same RPI
+   configure the neopixel commands (see menu/indigo/pibeacon/print various info.. for examples) in the distance sensor device
+   like: distance limits for versyshort, short, medium, long verylong and stopped
+   then the distance sensor will send these commands directly to the neopixel.py program on the same RPI
+   when it reaches the limits set, eg stop, verylong distance ...
+   you can have the neopixel device show simple colored LEDS R/B/B or blinking or "knightrider" type
+   the neopixel indigo device status will also show the commands send to it on the rpi
+
+
+1. improved trigger for distance sensors (how often new values get send to indigo)
+   now it is trigger:  if  (delta absolut > DA and  delta% > D% ) or delta time > 30 secs : send to indigo
+    DA, D% = set in sensor edit 
+    added dev state trigger to distance sensor
+    with these setting you can now fine tune trigger sensitivity 
+    there is also the option for local execution of any script on the rpi
+        eg set LED lights  r/g/b if distance is gt or lt xx... must have neopixel device attached on that RPI
+        do menu /Print various info to logfile../Print Distance action help to logfile/    or click on help button in distance sensors
+
+2. fixed status column method. only ON/off was used. now if detailed colors are set then they are used, on/off only if details not defined.
+   added data field "trigger" send to indigo if there is an action trigger event (Short, Med, Long, Stop, Dist, Time )
+   you can trigger on that device state["trigger"] == "your choice here"
+   added option to have neopixel return command type received. you must supply "ststus":"yourtext" to the command send to neopixel, eg:
+   echo '{"repeat":"1","status":"Long","command":[{"type":"sLine","display":"wait","position":[0,12,0,0,0]},{"type":"sLine","display":"immediate","position":[0,12,0,100,0]}]}' > temp/neopixel.inp
+   would set neopixle device status to "Long"
+   added states:
+      trigger		--> Dist,Time, distanceEvent
+      distanceEvent --> VeryLong,Long,Medium,Short,VeryShort,Stop
+  
+
+3. added line type sLine for neopixel, same as "line" (2D) but just 1D, reduces the number or parameters to be specified
+4. reduced key length for specifc commands (long form still works)
+   sLine —> sl
+   line —> l
+   resetinitial -> res
+   knightrider -> kr
+   position -> p
+   spoint -> sp
+   rectangle —> r 
+   and
+   repeat:1 is default, no need to add to command
+   display:"immediate" is default, no need to add to command
+
+5. added option to show distance as thermometer type on neopixel, executed locally on RPI
+6. added action to pause any distance sensor. it simply "sleeps"  in the execution loop for the specified time 
+   this is useful if you have local display/neopixel commands and want to pause them due to eg garage dooor open... 
+
+
+
+
+Added features / changes in v2022.160.27@ 2023-01-27
+===================================================
+   
+1. smooth out kinght rider neopixel option
+2. fill  create date in all devices 
+
+
+Added features / changes in v2022.160.26@ 2023-01-26
+===================================================
+   
+1. fixed bug introduced in v ..19, error setting up new RPI
+
+
+Added features / changes in v2022.160.24@ 2023-01-25
+===================================================
+   
+1. added feature kight rider for neopixel (swinging band of leds left right )
+
+  
+2. delay start time for gpio and i2c-relay: now checks ALSO during delay before any action if it should be cancelled
+   in general you can remove the previous command by issuing a new one
+     eg send 10 pulses 1 sec each and then an off after 5 secs, only 5 pulses will be done
+   before this it was only checking during the active part if it should stop.
+   ... this matters only if you use a delay at start parameter
+
+3. bug fix: File "plugin.py", line 6052, in filterNeopixeldevices
+   it is a format error 
+
+4. bug fix in config edit 
+
+5. some menu changes
+
+
+
+Added features / changes in v2022.160.19@ 2023-01-14
+===================================================
+   
+1. added option for each pi to ignore known_hosts for ssh and sftp to rpi
+   this is to avoid needing to modify knownhostsfile incase of changes in ip number etc.
+
+2. fixed pmairquality py2 -> py3 bug ( concatenate strings / bytes)
+   sensor now only works with py3 !!
+
+3. bug for sensor INPUTpulse, device statename was wrong (typo), fixed (bug was added in py2->py3 conversion (u"xxx" changed to  "uxxx" instead of "xxx"))
+
+
+
+Added features / changes in v2022.160.16@ 2022-12-14
+===================================================
+   
+1. improved switchbot response time  by ~ 0.5 secs
+
+
+Added features / changes in v2022.160.15@ 2022-12-08
+===================================================
+   
+1. fixed issues with py3 ie for BLE connect devices like xiaomi soil meter, Temp&Humidity sensors...  
+
+
+
+Added features / changes in v2022.160.14@ 2022-12-03
+===================================================
+   
+1. made all major py programs on rpi run under python2 or python3
+   py2 vs py3 can be selected in config for all rpi or left to each individual rpi
+   in rpi dev edit the py version can be selected if in config it is set to individual rpi
+   py3 requires pi-os >=10 (stretch ssd) to work properly 
+
+   All required libs are installed by the plugin system (ie neopixel, sensor libs etc, see checkForInclude-py2/py3.py on the rpi
+       eg   libs: io, hcidump, smbus2 pexpect, expect, ... , syntax changes:  / vs // (int//float), print /;print() etc 
+       the devil is in the details:  
+        calling py3 modules can be different from py2 eg to make them "unlinked" /E option has to be used and many more "little" changes
+        binary socket data transfer is different 
+
+   ==> this was a major pice of work <==  
+
+   for ssd updates:  I suggest that you do 
+     1. updates apps and sys:
+      sudo apt update
+      sudo apt upgrade -y   ( or a more thorough, but mostly not needed:  sudo apt dist-upgrade  -y )
+     2. cleanup:
+      sudo apt autoremove
+      sudo apt clean
+     3. then reboot 
+     every 2 months to keep the security patches up to date
+
+2. added option to detect new beacons looking at the manufacturer name in the BLE message. Some beacons send that info in their BLE msg
+   some beacons like from NUT or april have several tag definitions, with this option you can catch them all
+   the plugin will then find the proper individual tag that works for the soecific beacon type ie beep, battery, ..
+   to use this: select in "accept new beacons" menu item 
+
+3. added TOF sensor vl503l1xDistance. It has range up to 4 m
+   you now can use several of vl503l1x or vl503l0x tof sensors on one RPI
+
+3. several smaller fixes and improvements
+
+4. some menu fixes 
+
+
+
+Added features / changes in v2022.151.14@ 2022-10-10
+===================================================
+   
+1. made switchbot operation work more smoothly, timing, error recovery ..
+
+2. added an action that stops any switchbot actions pending on an rpi
+   eg when you got multiple triggers and the first responding action worked, no need to have the action executed many times
+     like when the door is open no need to trigger open magnet n times more  
+
+3. added option in the switchbot action to have a sensor(BLE only) on one RPi that triggers 
+   a switchbot action on another (or same) rpi w/o indigo being up. 
+   the sensor RPI will send a command to the switchbot rpi through sftp
+   eg a BLE sensor with button press signal (eg ibs04-button) can be received on rpi-1, 
+     rpi-1 sends a press/on command to rpi-2 for a switchbot to move the arm.
+     Indigo is not involved.
+     This is useful if the button is out of reach of the rpi where the switchbot is managed and indigo is down
+   To setup create an action in indigo "Set switchbot relay to on/off or pulses.."
+
+4. added option to have ON/OFF sensors stay longer ON for xx secs. Some of these sensors go from on-off within 0.2 secs. 
+   This gives the indigo dev state more time to show the ON state
+
+5. added option for on/off sensor to show arbitrary text in display like moving / stopped etc.
+
+6. added support for musegear finder beacons (regular, mini, wallet). They can be purchased from amazon in Europe
+   They can be beeped (to find its location) and the plugin gets the battery level.
+   They have the itrack software similar to Rinex, Njoii, Spotypal etc, which can be bought in the USA
+
+6.1 added support for NUT - pro beacon 
+
+7. Added a virtual device "garage door". (similar to the virtual device Car) 
+   This dev type tracks the states of a garage door:
+	Closed, opening, stopped, open, closing, position
+	This device needs 3 on/off magnet sensors(eg switchbot connect) and several magnets
+	The sensors are positioned at: at closed position, open position; on the moving door
+	Magnets are at:
+	- One on door, moving between open sensor and closed sensor to indicate open/closed
+	- Several magnets on the rail where the sensor on the door moves by and gets triggers by the magnets
+	  the magnets should be placed >1 "second" apart, something like 20-30 cm
+	  But the speed of the door changes, eg at close it slows down. There the magnets should be closer together
+	  But not too close as the sensor might not be ready for the next trigger
+	  With these magnets the plugin counts the magnets passed and calculates the current position (0-100%)
+
+	The dev states used for the sensors are onoffState and one that indicates the moving changes
+	eg lastMotion of the sensor that is mounted on the door. 
+ 
+8. for ADS-1115 ADC added samples per second option, removed un-used code and made differential measurement (eg input0 -input1)  
+   a single measurement instead of 2 single and then subtract 
+
+
+
+
+Added features / changes in v2022.148.12@ 2022-09-03
+===================================================
+   
+1. improved auto create function for  "switchbot"  devices 
+2. some smaller bug fixes (beacon beep works again)
+3. added direct command from BLE switch devices to switchbot w/o going through indigo
+   this enables a faster response BLEswitch --> switch bot, now limited only by "ble connect" to switchbot, that sometimes takes sveral seconds
+4. cleanedup groups:
+   each beacon is in BEACON group, each rpi is in PI group, each senor is in SENSOR broup, each BLEconnect device is in BLEconnect group
+   now also shown in dev state "groupmember"
+   and properly shown in report 
+
+
+
+
+
+Added features / changes in v2022.148.11@ 2022-08-21
+===================================================
+   
+1. fixed: value transformation for adc type sensor  1/value was off by factor of 10
+   (11/value instead of 1/value) 
+2.  made BLEconnect devices work again ie iphones using BLE ping from rpi to phone
+
+
+
+Added features / changes in v2022.148.10@ 2022-08-21
+===================================================
+   
+1. fixed: BLEconenct "display status" error message
+2. fixed: cmd0, cmds not found error messages
+ 
+
+
+Added features / changes in v2022.148.9@ 2022-08-13
+===================================================
+   
+1. improved coexistance of trugveg ... and switchbot devices 
+   switchbot has better priority now, wait time for trugveg to finish is now max 4 secs, down from 15.
+
+
+
+Added features / changes in v2022.148.8@ 2022-08-010
+===================================================
+   
+1. increased speed to switchbot relay and more reliable
+   added autocreate for iSensor devices lik ruuvitag
+
+
+
+Added features / changes in v2022.147.7@ 2022-08-05
+===================================================
+   
+1. fixed "execSshToRPI @line 18578: 'ret, err = self.readPopen(cmd0)'"
+   left over from py2-py3 conversion
+2. added better auto create for certain dev types:
+   switchbot, ruuvi, govee, ...
+3. streamlined dev states changed5minutes changed1hour ...
+   does not store values in dev props but in file (changedValues.json) in pluginPrefs directory. That gives significant reduction in device restarts = reduced load in plugin and server
+4. removed unicode indicator u"  (now just " ). 
+   removed any unicode() fucntion
+   leftover from python2,   ===> now no going back to py2 <===
+5. made sure all mac numbers are upper case ie not f9:... but F9:...
+
+
+Added features / changes in v2022.146.7@ 2022-08-04
+===================================================
+   
+1. fixed "execSshToRPI @line 18578: 'ret, err = self.readPopen(cmd0)'"
+  left over from py2-py3 conversion
+2. added better auto crate for certain dev types:
+   switchbot button
+   swithcbot curtain
+3. streamlined dev states changed5 minutes 1 hour ...
+   does not store values in dev props but in file (changedValues.json) in pluginPrefs directory, gives significant reduction in device restarts = reduced load in plugin and server
+
+
+Added features / changes in v2022.146.6@ 2022-07-27
+===================================================
+   
+1. fixed BLEconnect program on RPi,
+  iPhones are not supported anymore as they do not answer BLE pings anymore, only BLE connect sensors and switches like switchbot.
+2. supressed matplot logging in beacon plot
+
+
+Added features / changes in v2022.146.4@ 2022-07-25
+===================================================
+   
+1. streamlined and improved  autocreate of BLE sensors type device (temp, humidity, pressure, motion, Formaldehyde ) (eg ruuvitag, govee)
+2. added check for properties if not set in device edit 
+
+
+Added features / changes in v2022.146.3@ 2022-07-16
+===================================================
+   
+1. added autocreate of BLE sensors type device(temp, humidity, motion, ... ) (eg ruuvitag, govee)  when BLE-sensor type beacons gets created
+   these devices are represented as 2 indigo devices one a beacon and the other the sensor
+   with this addon the sensor type gets created at the same time when the beacon type gets detected and created. 
+
+2. fixed batterylevel for beacons that are also sensor type devices (eg govee, ruuvi,..)
+
+3. added variables for number of sensor devices online/offline  (away / home) xx_SENSORS_nAway and _nHome
+
+4. added option in config for individual sensor devices be part of a group1..4  for home/away
+
+added function #3 and #4 enable to see quickly how many sensor devices that are (not) online and total number of sensors
+
+
+
+
+Added features / changes in v2022.143.1@ 2022-06-26
+===================================================
+   
+1. runs under python 3
+   requires indigo 2022.1 or later
+
+
+Added features / changes in v7.141.1@ 2022-03-02
+===================================================
+   
+1. prep for indigo 2022 and os 12.3
+2. added support for CO2 sensor sensirion scd30
+
+
+Added features / changes in v7.138.559@ 2022-03-02
+===================================================
+   
+1. The dev states for BLEconnect, beacon, and RPi dev types now only have Pi_xx_signal _Distance _Time for those RPi-xx that are configured
+   that shoud reduce the number of empty states. Eg if you have 3 RPi from 20*3=60 states to 3*3=9 for device types BLEconnect, beacon, and RPi (all those with Pi_00_Signal ... Pi_19_Signal. etc)
+2. added some more checks for #1
+
+Added features / changes in v7.138.558@ 2022-03-01
+===================================================
+   
+1. The dev states for BLEconnect, beacon, and RPi dev types now only have Pi_xx_signal _Distance _Time for those RPi-xx that are configured
+   that shoud reduce the number of empty states. Eg if you have 3 RPi from 20*3=60 states to 3*3=9 for device types BLEconnect, beacon, and RPi (all those with Pi_00_Signal ... Pi_19_Signal. etc)
+
+
+Added features / changes in v7.138.554@ 2022-02-26
+===================================================
+   
+1. changed sequence of loading dev state definitions
+
+
+Added features / changes in v7.138.553@ 2022-02-25
+===================================================
+   
+1. made BLEconnect a threaded program with priority for switchbot. now response is much faster ~ 1-3 secs 
+2. most common dev states are now set in plugin and not in devices.xml
+   that will enable in the future dynamic add / remove of states ie pi_16_Signal will be gone if you don't have pi_15 
+   in addition all temperature humidity, Co2, formaldehyde, VOC etc now have  common statistic states eg TemperatureChange10Minutes, TemperatureAveToday  max / min etc 
+     makes it easier to maintain and keep consistent, only one place needed to change for all device types  
+3. fixed some typos
+
+
+
+Added features / changes in v7.138.551@ 2022-02-22
+===================================================
+   
+1. made BLEconnect a threaded program with priority for switchbot. now response is much faster ~ 1-3 secs 
+2. most common dev states are now set in plugin and not in devices.xml
+   that will enable in the future dynamic add / remove of states ie pi_16_Signal will be gone if you don't have pi_15 
+   in addition all temperature humidity, Co2, formaldehyde, VOC etc now have  common statistic states eg TemperatureChange10Minutes, TemperatureAveToday  max / min etc 
+     makes it easier to maintain and keep consitent, only one place needed to change for all device types  
+
+
+Added features / changes in v7.138.551@ 2022-02-22
+===================================================
+   
+1. made BLEconnect a threaded program with priority for switchbot. now reposne is much faster ~ 1-3 secs 
+
+
+Added features / changes in v7.138.550@ 2022-02-21
+===================================================
+   
+1. added calibration options for sensirion scd30 CO2 sensor
+2. fixed switchbot program on RPI
+3. fixed output-gpio high / low for inverse/ not inverse config 
+
+
+
+Added features / changes in v7.138.548@ 2022-02-20
+===================================================
+   
+1. fixed output-gpio high / low for inverse/ not inverse config 
+
+
+
+Added features / changes in v7.138.547@ 2022-02-20
+===================================================
+   
+1. added sensirion scd30 Co2 temp hum sensor
+   runs in python 3
+
+
+Added features / changes in v7.138.546@ 2022-02-13
+===================================================
+   
+1. replaced unicode( with u"{}".format(
+   to prepare for python 3.9 -- unicode function does not exist any more 
+
+
+Added features / changes in v7.138.545@ 2021-09-06
+===================================================
+   
+1. added config option to enabled / disable rpi ip # check
+   set to off if your RPI are in a separate subnet. then the router will replace the rpi ip# with its own
+
+
+
+Added features / changes in v7.138.543@ 2021-09-05
+===================================================
+   
+1. changed setting of local ip number determination:
+   was set by IP # of MAC, now ip numbers of RPi(s) is used (first 2 octet eg 192.168.x.x are used)
+   this is used to block incoming socket connections fro non local ip numbers
+   set option in plugin config
+   
+
+
+
+Added features / changes in v7.138.542@ 2021-08-17
+===================================================
+   
+1. tuned switchbot and hci bluetooth channel management (timing etc) on RPIs
+
+
+Added features / changes in v7.138.541@ 2021-08-17
+===================================================
+   
+1. added RPI dev states for hci info, which port used etc
+
+
+Added features / changes in v7.138.540@ 2021-08-16
+===================================================
+   
+1. fixed:  switchbot setup
+
+
+
+Added features / changes in v7.138.539@ 2021-08-16
+===================================================
+   
+1. fixed: piBeacon Error                  setting up OUTPUT Line 4821 has error='holdSeconds'
+
+
+
+Added features / changes in v7.138.534@ 2021-07-10
+===================================================
+   
+1. performance improvements when using 2 bluetooth channels on RPI
+
+
+Added features / changes in v7.138.533@ 2021-07-10
+===================================================
+   
+1. added support for several switchbot devices
+   - temp + humidity, set states: temperature, humidity, battery
+   - contact, set states: onoff, last open, short open, long open, light, press count ..
+   - motion,  set states: onoff, last motion,  light, ...
+   - curtain, can set mode : slow, fast, and position the device between 0/100 = open closed as an indigo dimmer device 
+     a curtain can be operated with an ssh command: 
+        ssh pi@ip#
+        echo '{"mac":mac#,"pos":"0...100"}' temp/switchbot.cmd for direct position
+        echo '{"mac":mac#,"pos":"open"}' temp/switchbot.cmd for moving to open 
+        echo '{"mac":mac#,"pos":"close"}' temp/switchbot.cmd for moving to close
+        echo '{"mac":mac#,"pos":"pause"}' temp/switchbot.cmd for stopping any move
+        - only o c p are needed (not open close pause)
+
+   - bot, can set modes up/down/ inverse, and set on/ off as indigo relay device 
+     a bot can be operated with an ssh command: 
+        ssh pi@ip#
+        echo '{"mac":mac#,"onOff":"1/0"}' temp/switchbot.cmd
+
+   they all suport battery level states
+   they all benefit from having "brother" devices - the beacons for each type, they expose mac number and battery level.
+
+   These devices all send and receive bluetooth messages. The RPI's will be talking bluetooth with them and send / receive commands/ status from to indigo
+   for the output devices: curtain & bot you need an extra BLE dongle besides the internal
+
+
+Added features / changes in v7.137.533@ 2021-07-02
+===================================================
+   
+1. switch bot now supports remote commands through ssh (ie iphone short cuts)
+    ssh pi@ ip# password then
+    echo '{"mac#":"xx:xx:xx:xx:xx","onOff":"1"}' > /home/pi/pibeacon/temp/switchbot.cmd
+
+
+
+Added features / changes in v7.137.532@ 2021-06-30
+===================================================
+   
+1. added support battery values for all switchbot type beacons and auto population of battery level for switchbot bot relays
+2. fixed auto update when new version ships
+
+
+Added features / changes in v7.137.531@ 2021-06-29
+===================================================
+   
+1. added support for switch bot temperature humidity display / sensor
+2. added batterylevel version states for switchbot bot
+
+
+Added features / changes in v7.137.529@ 2021-06-28
+===================================================
+   
+1. added support for switch bot devices
+   they have to be "associated" to a single RPi in device edit
+   you need to first find the MAC # either through detect new beacons or through iphone app
+   then create switch bot indigo device add mac# and select RPi that is closest to device
+   rest should be left at default
+   then the device will behave like a relay
+   you can set the "hold" time with the iphone app 
+   --- these device can be used to eg switch press an apple power button
+
+2. fixed issue with inkbird pool temp sensor
+
+
+
+Added features / changes in v7.136.528@ 2021-06-17
+===================================================
+   
+1. maintenance release
+   - fixed various smaller siuues, mostly for exceptions 
+   - small performance improvements
+
+
+Added features / changes in v7.136.526@ 2021-05-30
+===================================================
+   
+1. some code cleanup for BLEconnect - iphones  and BLEconnect-sensors
+2. added some debugging logs in plugin  
+3. fixed error with static / dynamic ip number settings in RPI device edit  
+   and accept blocking non local ip numbers to connect to the plugin
+
+Added features / changes in v7.136.521@ 2021-05-27
+===================================================
+   
+1. added sensor type BLE inkBird Pool 01B ( not R!!)
+   this is the first floating pool temperature sensors 
+   that can be read by indigo. The old pool temp sensor RFXcom from scientific  was discontinued
+   to install: put batteries into inkbird, put it next to RPI;  menu / accept new beacons: select Inkbird
+               After a minute a new beacon device should be created. That is just a regular ibeacon device.
+               Now create a new indigo device "pibeacon / BLE-inkBird.." and copy the mac address from the ibeacon device into teh MAC field
+               Select the RPI that is next to the pool, leave the other parameters as they are 
+                      (you could set the color of the sensor dot to different values)
+2. small bug fixes for special circumstances
+
+
+Added features / changes in v7.135.520@ 2021-05-05
+===================================================
+   
+1. fixed label for dev state: particles_100um ( was airquality) in control page and trigger page
+
+Added features / changes in v7.135.519@ 2021-05-04
+===================================================
+   
+1. added option for airquality sensors to set name for airpolution name in device edit
+
+
+Added features / changes in v7.135.518@ 2021-05-04
+===================================================
+   
+1. fixed average rollover at mid night  for sensors
+
+Added features / changes in v7.135.517@ 2021-04-20
+===================================================
+   
+1. moved execution of output commands to threads within recevecommands.py instead of calling another python progra execcommands.py
+   this is accelerating the execution of eg relays up/down by 0.6 secs 
+2. changed setting of default values in plugin-config to  kDefaultPluginPrefs = {..} in plugin.py
+   this will fix issues when a new parameters is set in the plugin, as indigo does not set defaults of  new properties in pluginconfig 
+
+
+
+Added features / changes in v7.135.516@ 2021-03-29
+===================================================
+   
+1. fixed error='key groupMember not found in dict'
+   is an issue only for non beacon typ devices 
+
+
+Added features / changes in v7.135.514@ 2021-03-22
+===================================================
+   
+1. added variables for all PI, BLEconnect and beacon devices: # of devices home and away
+   this can be used to trigger is any change in # of devices home/away changes
+   this is in addition to the regular groups: Family, guests, other 1,2 3 
+     this groups can be named as you like in config
+
+
+Added features / changes in v7.135.513@ 2021-03-21
+===================================================
+   
+1. supports the latest SSD (march 20 2021)
+2. added option to block any ip number accessing the indigo mac that does not have the same first 2 octets
+   to avoid ansering outside ip numbers from probing, they will just be ignored, no acknowledge packet is send
+   only works if mac and rpi have the same 2 octets, eg 192.168.x.y  and 192,.1678.x.z would be accepted, but not 72.60.4.5
+3. fixed group status memebrship for rpis, was ok for beacons
+
+Added features / changes in v7.135.507@ 2021-03-06
+===================================================
+   
+1. --- only for experts: added option set IP number of RPI to fixed, set in rpi device edit
+   w/o the you initially set the ip number, but the rpi can chnage it eg switching between ethernet and wifi
+   w this option ON the rpi will always send the fixed IP number IN THE  data, although it could use a differnt ip#
+   By enabling this YOU must make sure that the data arriving from the RPI comes from the defined fixed IP#
+   otherwise they will be rejected
+
+2. added menu option to send just new pgm and config files, skipping fonts images etc
+   this will reduce bytes by factor 2 to be send to rpi, fonts and images have not changed for several years now
+
+Added features / changes in v7.135.505@ 2021-02-16
+===================================================
+   
+1. added option to do a wake on lan command to the indigo server from the RPI
+   use this if the mac was shut down after powerfailure and does not boot.
+   the has to be anabled on the mac in setup/ powersavings
+   set in rpi devcie edit: enter the MAC# of the indigo server ethernet card
+
+
+Added features / changes in v7.134.505@ 2021-02-08
+===================================================
+   
+1. added option to overwrite hci read method for each rpi or use default set in config
+2. added some menu messages 
+
+
+Added features / changes in v7.134.504@ 2021-02-08
+===================================================
+   
+1. fixed dev state lables 
+2. added option to start any command from pibeacon
+   this is managed by the pibeacon master.py program
+   it will make sure the program launches,    
+    and stays up and running if requested
+     
+
+
+
+Added features / changes in v7.134.503@ 2021-01-26
+===================================================
+   
+1. tuned INPUT- pulse plugin part for reset of counters
+
+
+
+Added features / changes in v7.134.502@ 2021-01-17
+===================================================
+   
+1. made compatible with 2021-01-17 SSD card
+
+
+
+Added features / changes in v7.134.501@ 2021-01-16
+===================================================
+   
+1. fixed:
+   piBeacon Error                  Line 6819 has error=list index out of range
+     in confirmdeviceIDINPUTBUTTONmenu
+   pulse device:  reset of pulse / gpio input count was not reset
+   pulse device: calculation of counts/ xx
+   beep beacon action:  did not work, menu beep did work fine, one parameter was missing
+
+2. added to pulse/coincidence device
+   maxCountperSecondInLastHour state  
+   min/max count/min today & yesterday state 
+   counts/min*scalefactor state for 
+   several more states 
+   made the number of digits dynamc in count/xx dev states to have at keast 3 significant numbers shown (that is equivalent to 0.1%) 
+     the number of significant digits can be set in dev edit
+
+3. set compress data send to plugin to on if data len > 40kb as default. There seems to be a timeout .. issue with larger data.
+   regular data is < 5Kb, larger data (h ad 128k) only happens for detect new beacons etc 
+   compress reduces most data by factor of >7
+ 
+4. changed detect new beacons to use data aquired anyway with hcidump. so no data collection break during detect new beacons process
+   that is not active for hci- socket data aquisition, as that does not deliver all package types, have to do hcidump do catch that data.
+
+5. added beacon type nut v 45 and 46.
+   the comamnds for battery and beep have changed with the new release. the hardware looks identical
+
+6. fixed negative temperatures for govee sensors 
+
+
+
+Added features / changes in v7.134.484@ 2021-01-01
+===================================================
+
+1. added BLE sensors:
+   xiaomi formaldehyde sensor
+2. fixed bug that made BLE sensor devices not being active on RPi after comm disable/enable
+3. added check if reset for min/max sensor values was already at 0 am - might have been done several times between 0 and 1 am
+4. fixed typo for MoistureMinYesterday was MoistureeMinYesterday
+
+
+Added features / changes in v7.133.482@ 2020-12-23
+===================================================
+
+1. added BLE sensors:
+  blueradio sensor bug, support temp, light and orientation
+2. changed number to float in device states for indigo version 7.5
+
+
+Added features / changes in v7.132.481@ 2020-12-14
+===================================================
+
+
+1. added BLE sensors:
+  Govee Temp & humidity sensors, they broadcast T, H, BatteryLevel
+  - H5101 w small display
+  - H5075 w medium display
+  - H5177 w large display
+  - H5174 outside sensor, no display
+
+
+
+Added features / changes in v7.132.480@ 2020-12-11
+===================================================
+
+
+1. added sensors:
+  
+Xiaomi MiJia Bluetooth Xiaomi MiJia MI clock w temp humidity(LYWSD02)   w clock temp/hum display   2xcr2032  
+  shows T, H, Batterylevel. and count (message#) in indigo dev states  
+  This sensor sends out Broadcasts w T, H , Battery and count     
+
+works similar to Ruuvitag, w display, but no pressure and acceleration info.
+you need to use the Xiaomi mi home app to setup the sensor (connect to china server, todate that sensor was not supported on servers outside china)
+
+
+
+
+Added features / changes in v7.131.479@ 2020-12-07
+===================================================
+
+0. added option to use 2 UBS BLE dongles, beta
+
+1. added sensors:
+  
+Vendor  sensorName battery          Freqquency       Size         App      Type of Sensor ------------------------------------------------------------------------      
+                                    Ibeacon                                On/off or ON      Temp ExTemp Hum  Press   Accell/Grav  IR       Light  GAS  CO  Smoke     
+  
+
+Xiaomi MiJia  LYWSDCGQ/01ZM round Temp & humidity sensor.
+        w display   1x AAA           1/1s            largeRound   YES                         Y           Y    
+
+Xiaomi Mi     LYWSD03MMC  square Temp & humidity sensor, requires 2 BLE dongles
+        w display   1x CR2032       1/2Min           small Square YES                         Y           Y    
+  
+Xiaomi Mi VegTrug / Flower Care sensor, requires 2 BLE dongles
+                    1x CR2032       1/2Min                        YES                         Y           Y                                  Y  + Moisture+Conductivity
+
+
+Added features / changes in v7.129.472 @ 2020-11-29
+===================================================
+0. added option for BLE devcies read data while extended connected to BLE device
+   first implementation is Xiaomi square TH sensor
+
+
+Added features / changes in v7.129.471 @ 2020-11-16
+===================================================
+0. fixed format for humidity UI values was {:0f} should be {:.0f}
+1. added optiuon to add new beacon mac # in menu, (accept new becons
+   if you know a beacons mac numebr and you like to add it put the mac number there 
+   and the system will allow that mac numebr to be added as a beacon
+2. updated BLE-Analysis - detect new beacon tool 
+   the print outin plugin.log is now done is a nice format 
+   this can be used to identify beacons and understand the message structure 
+3. for Minew TH + accelerator sensor (s1-Plus) added states amd options
+4. Autodetect battery level in BLE data and setup beacon accordingly for TLM and msg battery levels
+   set supportBatterylevel = true and set method prop
+5. Added nuki door lock and UDM-pro and Flower care /mate
+
+
+Added features / changes in v7.129.469 @ 2020-11-13
+===================================================
+0. fixed format for humidity UI values was {:0f} should be {:.0f}
+1. added optiuon to add new beacon mac # in menu, (accept new becons
+   if you know a beacons mac numebr and you like to add it put the mac number there 
+   and the system will allow that mac numebr to be added as a beacon
+2. updated BLE-Analysis - detect new beacon tool 
+   the print outin plugin.log is now done is a nice format 
+   this can be used to identify beacons and understand the message structure 
+3. for Minew TH + accelerator sensor (s1-Plus) added states amd options
+
+
+Added features / changes in v7.129.468 @ 2020-11-08
+===================================================
+0. fixed format for humidity UI values was {:0f} should be {:.0f}
+
+
+
+Added features / changes in v7.129.467 @ 2020-11-07
+===================================================
+0. added Bluetooth Temp / humdity sensor: Xiaomi MiJia  round humidity sensor. The round one not sqaure!
+check eg: https://medium.com/@smarthomespot/my-xiaomi-bluetooth-temperature-humidity-sensor-review-d37b32ab1d0
+
+
+Added features / changes in v7.129.467 @ 2020-11-05
+===================================================
+0. added some debug statements when master on pi can not find indigo or ip number
+1. fixed fillMemberListState error
+
+
+Added features / changes in v7.128.465 @ 2020-11-05
+===================================================
+0. fixed error memberList not defined
+1. change secuence of accepting beacons to aloow ignored beacon to be accepted as sensors
+   eg for ruuviTag beacon: it has a beacon and a sensor device, 
+   when beacon device was deleted in indigo the mac# was set to ignore and the the sensor device was not updated.
+
+
+
+Added features / changes in v7.128.464 @ 2020-11-03
+===================================================
+0. switch bluetooth to no socket if bluez python include fails
+1. added support for safedome credit card  type beacons, wireless rechargeable
+2. changed some menu text, spelling and messages shown 
+
+
+
+Added features / changes in v7.128.463 @ 2020-11-01
+===================================================
+0. fixed accept new beacons signal
+1. added new beacons and sensors:
+   Radius RAD beacons
+   
+2. added option to change name of group variables from "other1" to eg bicycles ..
+   and you can jnow have up to 5 groups. the varibales will only be cretaed if 
+   a the names are set in config
+   b a group has any members (set in device edit)
+
+
+Added features / changes in v7.128.462 @ 2020-10-19
+===================================================
+0. some internal sensor management changes
+
+
+Added features / changes in v7.128.461 @ 2020-10-10
+===================================================
+0. added BLE Temp& humidity sensor from Kaipule - iSensor
+1. fixed pIU error not found 
+
+
+Added features / changes in v7.128.460 @ 2020-10-04
+===================================================
+0. added option to use new wpa_supplicant and inetrfaces file in boot directry at every boot
+   this can be used to setup wifi, dhcp etc files
+   creat a wpa_supplicant (for ssid / passw)  and or interfaces(dhcp etc) file(s) in /boot on the rpi SSD
+   reboot and the RPI will copy the files to the proper directories and reboot with the new settings
+
+
+Added features / changes in v7.128.459 @ 2020-09-29
+===================================================
+0. cleaned up some code 
+1. rearanged some menu items, clearer structure, using some color for menu items
+2. In addition to the Ruuvitag added several blue tooth sensors, very easy to setup, they all can be used as presence as well as sensors
+   They have long battery life and > 30 m distance -- with several RPi in the house essetially the whole house is covered
+    INGICS:
+        iBS01-x: Family of on/off sensors- Button, magent, movement, external switch 
+        iBS01T:  Temp and humidity
+        iBS01RG: x-y-z acceleration/ gravity sensor
+        iBS02:   PIR presence ir IR object detection
+        iBS03-x: Family of on/off sensors- Button, magent, movement, external switch 
+        iBS03G:  Movement detection of beacon on/off
+        iBS03T:  on board temp sensor
+        iBS03TP: on board temp sensor + temp sensor probe, water proved 
+        iBS03RG: x-y-z acceleration/ gravity sensor
+    Minew 
+        E8: x-y-z acceleration/ gravity sensor
+    iSensor - Kaipule
+        various on/off sensors: GAS, CO water, alarm , 
+        on sensor: door button
+        remoteKey
+        The on/off states are managed according to the cabailities of the sensors
+    Satech
+        STixx sensors, acceleration, temp, humidity, on/off
+
+3. Normally beacon go "up" as soon as a signal is detect. When they are gone / no signal is received: 
+   the RPi does not send any info to the plugin if no signal. Then the plugin will set them to down after xx secs (normally 90) and after another xx secs to expired
+  In "fastDown" mode: after yy secs (>=10) w/o signal the RPi sends a fast down message to the pluginthen teh plugin will set teh beacon to down, 
+  If you have more than 2 RPi you can probably go down to 10 secs, better 20 seconds.
+  That means if the beacons leaves the house you will know in ~ 10+3 secs
+  If you have just one RPI and have it connected to something that moves around in the house it is likely not a good idea
+  but for eg a beacon that is connected to eg a bike that arrives in a dedicated space and has a good connection to the RPi it shouldd work well
+
+4. minupSigal and mindownSignal:
+  When set to eg up=-60 and down=-80: the beacon will only go up when it is close to the RPI  ~ 1 m. but will stay up until it has eg left the room (>10m) 
+  with this setting you can decide if a beacon is in a room - that requires an RPI in each room you like to have this feature
+
+5. changed hcidump method
+    added option to restart BLE scanner every 5 minutes, just in case RPi can not keep up
+    fixed so that 2. ble dongle is not needed
+    This method catches all types of messages while the python socket method ignored some of the mesage types
+     ie mfg info which is used to id a beacon / sensor 
+    You can select whcih method to use for all RPi in config, or overwrite in RPI device edit.
+
+Added features / changes in v7.126.438 @ 2020-08-31
+===================================================
+0. fixed buffer overflow in new hcidump method
+
+Added features / changes in v7.126.436 @ 2020-08-31
+===================================================
+0. added new method (option) to read beacons using hcidump & lescan instead of python socket calls
+1. added several "feasy" type beacons w battery level support in std message
+
+
+Added features / changes in v7.125.432 @ 2020-08-27
+===================================================
+1. added several "Minew" type beacons w battery level support in std message
+
+Added features / changes in v7.124.431 @ 2020-08-25
+===================================================
+1. added menu option to reload known beacon tags (for dev)
+2. added some debug statements for get battery 
+3. fixed known beacon tag for mini beacon, there was a space in the hex number string, (fat finger)
+
+
+Added features / changes in v7.124.430 @ 2020-08-24
+===================================================
+1. rectified difference in beacon .. device type models is allows sensor change, updates.. now fixed at startup
+2. can now change battery command in device edit (will only be set to default at first edit device)
+3. added check in print battery report and adding special debug for selecting beacons in get battery level
+
+
+
+Added features / changes in v7.124.424 @ 2020-08-23
+===================================================
+1. several small fixes, typos, menus ..
+2. fixed some properties of ruuvi tag sensor and settings
+3. added option in ibeacon device edit to not run get beattery level for individual beacon at 4 am, as eg 
+   nutale beacons beep for 5 secs when get beacon runs (they beep when connection to a host is lost) 
+
+
+Added features / changes in v7.124.423 @ 2020-08-06
+===================================================
+1. added sensor bosch BMP388 high precision pressure
+   accurancy equivalent = 0.8m altitude change
+  
+Added features / changes in v7.123.423 @ 2020-07-26
+===================================================
+1. for ADSxx ADC devices alsways show INPUT as status (was INPUT_x)
+
+
+Added features / changes in v7.123.422 @ 2020-07-23
+===================================================
+1. re-wrote get battery level, beep functions, BLE analysis, get new beacon info.
+   also added a beaconloop restart after any of the above functions to avoid a hanging BLE stack
+2. fixed battery level calculation for Aiko beacons (it uses a range value:64 = 0% .. value:100 =100 %)
+3. added more tagging features for beacons
+4. RINEX and NJOII are now the same type of beacon
+   if you have a RINEX or NJOII you need to edit and set beacon type
+5. some samller menue changes
+6. some smaller program changes
+
+
+Added features / changes in v7.121.418 @ 2020-07-16
+===================================================
+1. clarified menues for get battery levels for ibeacons
+   normally battery level gets executed 3 times a day, if last update is older than 16 hours for each individula beacon.
+2. for new beacosn battery parameters are now automatically set, for existing beacons you need to edit and save beacon device.
+
+
+
+
+Added features / changes in v7.121.417 @ 2020-07-07
+===================================================
+1. cosmetic changes for new beacon reports
+2. increased data collection time for new beacon report from 15secs to 25 secs.
+3. fixed action reboot rpi# through ssh
+4. improved speed of car devices status changes 
+5. improved new beacon report
+6. fixed update to states in devcies edit does not work anymore, changed to batch update
+  ie group members was impacted, need to edit and save all devices / beacons if problem
+
+
+Added features / changes in v7.121.412 @ 2020-06-29
+===================================================
+1. added track mac menu option. instead of manually launching it on the rpi you now can do it through a menu command in the plugin.
+the output will be in plugin.log
+2. added battery level for Jaalee beacons
+
+Added features / changes in v7.121.407 @ 2020-06-20
+===================================================
+1. added compression of data when #bytes > xxbytes (set in config)
+2. there was a limnit in # of bytes to be received from RPIs at ~ 30k, was lifted to 120kbytes
+running beacon scan with very low cutoff RSSI could produced much more data 
+3. added beacon report for new and existing beacons
+ start from menu and send request to ONE rpi, set RSSI cutoff  to accpet all/many/some/ony very close beacons:
+BLEAnalysis received for beacons with signal (rssi) > -70; from RPI#:11
+================================ existing_Beacons ============================================
+===MAC# DC:0D:30:92:E3:1F  -b-feasy-aaa == ; raw data:
+n_of_MSG_Types              : 4
+raw data:
+- 043E26020100001FE392300DDC1A0201060303AAFE1116AAFE20000C6F80000005E43F000414A4
+- 043E26020104001FE392300DDC1A0E16F0FF1B020902DC0D3092E31F640A094653435F42503130
+- 043E2A020100001FE392300DDC1E0201061AFF4C000215FDA50693A4E24FB1AFCFC6EB07647825275165C1
+- 043E27020100001FE392300DDC1B0201060303AAFE1316AAFE10D403676F6F2E676C2F50484E5364
+mfg_info                    : FSC_BP104
+MSG_in_10Secs               : 4.0
+beaconType                  : [u'Feasy_AAA', u'MiniBeacon']
+max_rssi                    : -53
+max_TX                      : 109
+pos_of_reverse_MAC_in_UUID  : []
+pos_of_MAC_in_UUID          : []
+possible knownTag options:
+-- use:Feasy_AAA
+-- use:MiniBeacon
+
+================================ new_Beacons ============================================
+===MAC# FF:FF:C2:28:06:C3   == ; raw data:
+n_of_MSG_Types              : 2
+raw data:
+- 043E1702010000C30628C2FFFF0B0201060302E0FF030954
+- 043E1A02010400C30628C2FFFF0E0DFFFFFFC22806C315FB757117
+mfg_info                    : TF
+MSG_in_10Secs               : 5.3
+beaconType                  : [u'', u'']
+max_rssi                    : -60
+max_TX                      : 70
+pos_of_reverse_MAC_in_UUID  : [-1, -1]
+pos_of_MAC_in_UUID          : [-1, 18]
+possible knownTag options:
+-- "name_here":{"battCmd":"off","beepCmd":"off","dBm":"-61","prio":1,"pos":12,"posDelta":0,"tag":"0B0201060302"}
+-- "name_here":{"battCmd":"off","beepCmd":"off","dBm":"-61","prio":1,"pos":12,"posDelta":0,"tag":"0E0DFFMAC#########"}
+
+4. added debug option on RPI do 
+   cd pibeacon 
+   echo "A4:DA:32:24:5F:6B" > temp/beaconloop.trackmac
+will create output like for 10 beacon message, it will give you frequence, some raw info and if accepted or rejected 
+START  A4:DA:32:24:5F:6B 30:20.899144  logCount: 10  hex: 6B5F2432DAA41E0201061AFF4C00021553706F747950616C5465727261636F6D1ADDD624CACA
+0-     A4:DA:32:24:5F:6B ; UUID: 53706f747950616c5465727261636f6d ; Maj: 6877 ; Min: 54820
+1-     A4:DA:32:24:5F:6B ; tag: SpotyPal ; prio: 1 ; uuidMajMin: [u'SpotyPal', u'6877', u'54820'] ; useOnlyPrioMsg: True
+tag-   A4:DA:32:24:5F:6B ; posFound: 32 ; dPos: 0 ; tag: SpotyPal ;  53706F747950616C5465727261636F ; tagString 53706F747950616C5465727261636F
+5-     A4:DA:32:24:5F:6B ; rejectThisMessage: False ; UUID: SpotyPal 6877 54820
+9-     A4:DA:32:24:5F:6B ; tagFound True ; UUID: SpotyPal
+11-    A4:DA:32:24:5F:6B ; added to beaconMSG
+99     A4:DA:32:24:5F:6B ; accepted
+START  A4:DA:32:24:5F:6B 30:24.911548  logCount: 9  hex: 6B5F2432DAA41E0201061AFF4C00021553706F747950616C5465727261636F6D1ADDD624CACB
+0-     A4:DA:32:24:5F:6B ; UUID: 53706f747950616c5465727261636f6d ; Maj: 6877 ; Min: 54820
+1-     A4:DA:32:24:5F:6B ; tag: SpotyPal ; prio: 1 ; uuidMajMin: [u'SpotyPal', u'6877', u'54820'] ; useOnlyPrioMsg: True
+tag-   A4:DA:32:24:5F:6B ; posFound: 32 ; dPos: 0 ; tag: SpotyPal ;  53706F747950616C5465727261636F ; tagString 53706F747950616C5465727261636F
+5-     A4:DA:32:24:5F:6B ; rejectThisMessage: False ; UUID: SpotyPal 6877 54820
+9-     A4:DA:32:24:5F:6B ; tagFound True ; UUID: SpotyPal
+11-    A4:DA:32:24:5F:6B ; added to beaconMSG
+99     A4:DA:32:24:5F:6B ; accepted
+
+Added features / changes in v7.120.402 @ 2020-06-18
+===================================================
+1. fixed selection of RPI, only RPI11 was working
+2. added option to set RSSI cutoff for detect new beacons  -40 .. -90 dBm
+
+
+Added features / changes in v7.120.401 @ 2020-06-17
+===================================================
+1. added menu for detailed detect beacon in "manage beacons" menu
+
+
+Added features / changes in v7.120.399 @ 2020-06-09
+===================================================
+1. cleanup debug and finished beacons, configs
+
+Added features / changes in v7.120.397 @ 2020-06-09
+===================================================
+1. added beacom smarttracker 
+2. added option to have mac and reverse mac in uuid field to tag beacon and ignore single characters
+
+
+
+1. added some more beacon definitions ie spotyPal and Rinex
+2. take dBm value from knownBeaconTags if txPower == 999 == not set
+
+
+Added features / changes in v7.120.396 @ 2020-06-08
+===================================================
+
+1. added some more beacon definitions ie spotyPal and Rinex
+2. take dBm value from knownBeaconTags if txPower == 999 == not set
+   can still be overwritten in device edit
+3. made beacontype read only: it is either other or a value from known beacon tags
+4. fixed spotypal battery type command
+5. cleaned up menus
+6. fixed distance unit if not meter config read 
+7. repeat beep msg to beacon if beep time > 10 secs
+8. add connect control in pexpect, try 3 times to reconnect if not successful
+9. corrected beacon plot positions circle size 
+10. added spotypal beep function
+11. added rinex beep function
+12. added option to force beep if beacon is up or not (only in menu)
+13. added option to set rpi to perform beep (only in menu), for action it is always closest
+14. for cases where the beacon sends different uuid, and one of them is a known tag, use only the tag in props and description, state will still change
+15. limit beep commands repetitin, last beep command must have finished for > 20 sec before new one is accepted
+16. battery level command parameter data is now a regular dict, not string with "-" separators, easier to read and understand 
+17. disable position update for 1+minutes after beep or get battery. otherwise the beacon position jumps around as the closet RPi changes.
+18. beep beacon now uses other HCI channel (than beaconloop) if available. This will then not required to restart beaconloop after beep
+19. config parameters for position plot: multiply symbol size and multiply largecicle size parameters
+20. improved timeliness of closets RPI
+21. added state for beacons: iBeepable = YES /no, 1. it has to support beep & 2. the last end of beep must be > 50 secs ago
+22. fixed UUID tag name for "nonda" was spelled incorrectly "noda"
+23. fixed get battery, was screwd up 2 versions ago
+24. added battery / beep report 
+25. added option to accept new beacons of know types eg in config select accpet new beacons of type spotypal and any new becon with tag spotypal will be added
+26. added option to allcept "ALL" known beacons, not just one type 
+27. beacon plot position added option to put symbol text label  at center or  right side of large circle  
+28. added tag def for iTrack=njoiii, swiftFinder=zenlife, cube
+29. added tag def for innway, can beep
+29. added several tags (beacontypes)
+30. updates type of beacon property to make it more consistent
+31. added an option to accept all message types or only use tag defined message type
+32. in beacon position plot, move beacon label to the left if outside the boarder
+
+Added features / changes in v7.120.362 @ 2020-05-31
+===================================================
+
+1. added some more beacon definitions ie spotyPal and Rinex
+2. take dBm value from knownBeaconTags if txPower == 999 == not set
+   can still be overwritten in device edit
+3. made beacontype read only: it is either other of a value from known beacon tags
+ 
+
+
+Added features / changes in v7.120.361 @ 2020-05-29
+===================================================
+
+1. enabled beacon beep command for specific beacons
+
+
+Added features / changes in v7.119.360 @ 2020-05-29
+===================================================
+
+1. added tagging of beacon in beaconlopp rpi code  
+
+
+Added features / changes in v7.119.358 @ 2020-05-23
+===================================================
+
+1. added  battery level property to print config 
+
+
+Added features / changes in v7.119.357 @ 2020-05-21
+===================================================
+
+1. added 3 differnt font sizes for position plot
+2. added option to randomize beacon+BLE positions by 0/10/20/30/40%
+3. added timestamp to position plot, set in config 
+4. added delay in master start from getbattery level to ensure that message was send to plugin
+5. added RuuviTag sensors
+   they are iBeacons, T,H,P Mag field and movement sensors
+   no setup of the device is needed
+   battery life is > 1 Year, but they are larger than regular iBeacon devices 
+
+
+Added features / changes in v7.119.352 @ 2020-05-20
+===================================================
+
+1. made sizes consitent, now 3 sizes:
+   title text, label,  caption
+   new config edit isrequired
+
+
+Added features / changes in v7.119.350 @ 2020-05-19
+===================================================
+
+1. add fan _onTime_percent for RPI dev states == 3 minute average of fan on time on RPI
+2. fixed logfile errro for get battery parameters
+3. clean up font size factors in position plot 
+
+
+Added features / changes in v7.119.349 @ 2020-04-18
+===================================================
+
+1. add font size config parameter for iBeacon position plot
+2. fixed get vendor info, is stored now in preference directory.
+3. prepped for new BLE- RuuviTag beacons/sensors 
+4. looking at position calculation
+
+
+Added features / changes in v7.118.349 @ 2020-04-14
+===================================================
+
+1. add ed check in print rpi config for index out of list  
+2. changed expect files to accomodate yes/no/fingerprint  propmpt 
+
+
+
+Added features / changes in v7.118.348 @ 2020-04-18
+===================================================
+
+1. added light sensor MAX44009
+   This is a very simple fully autoscale light sensor 
+   range 0.045 .. 188,000 Lux
+    has 2 i2c address configurable
+
+3. added state: clostestiBeaconLast 
+   it inherits from clostestiBeacon when that changes
+
+3. fixed:
+   - devices edit for CAR devices, did not list choices for members. My fault, created 3 V ago
+   - some typos and menue changes
+
+
+Added features / changes in v7.118.346 @ 2020-04-05
+===================================================
+
+1. fixed timezone setting
+2. added check for install NTP  (apt-get install ntp)
+3. suppress msg for stopBLE file not fouund 
+4. changed logging on RPI, date format and logfile now /var/log/pibeacon (no .log)
+
+
+Added features / changes in v7.118.344 @ 2020-03-27
+===================================================
+
+1. changed loggin on RPI, date format and logfile now /var/log/pibeacon (no .log)
+
+
+Added features / changes in v7.118.343 @ 2020-03-26
+===================================================
+
+1. fixed startup issues
+
+
+Added features / changes in v7.118.342 @ 2020-03-19
+===================================================
+
+1. added a delay (min time between probes= 3 secs) in between BLE probes to phone.
+   this is needed for eg pizero when everything goes through one com dev  
+
+
+
+
+Added features / changes in v7.118.340 @ 2020-03-17
+===================================================
+
+1. fixed problem on RPI:  get battery level could  stopped getting regular ibeacon message
+
+2. add option in config to disable regular get ibeacon parameters (timed 3 times a day) for all beacons
+
+
+Added features / changes in v7.118.339 @ 2020-03-15
+===================================================
+
+1. fixed problem on RPI, stack did not restart after boot (a" instead of a ;")
+
+
+
+Added features / changes in v7.118.338 @ 2020-02-17
+===================================================
+
+1. added option for several sensor types to have red/grey/green status column colors
+   in devcice edit (for sensors only) you can set the condition when the icon should be red/grey/green
+   eg green: 20<x<30, grey 30<=x<60, red x>=60, where x is the sensor value as shown in the status field
+
+2. fixed action shutdown rpi through ssh command timing issue for some slower RPI network connections
+
+3. now has 20 ibeacon RPi and 20 RPI sensor only RPI.
+  you might need to restart the plugin twice to get all the new states loaded.
+
+4. the ibeacon state Names are now Pi_xx_Signal .. _Distance  .._Time = 2 digits for all pi_xx states  ie Pi_1 --> Pi_01, to make it sort better.
+    and there are now 20 ibeacon RPIs (0-19) and 20 non iBeacon RPI (for sensors only) 20-39
+
+5. fixed issue with wrong ip number on RPI when switching between Wifi and ethernet
+
+
+1. upgraded ADC converters, more parameters, models :
+   0. apply offset and multiplier to value
+   1. if Resistor measurement (one resistor to V+or gd, the measurement resistor to gnd or V+, eg light, thermistor ..)
+      will calculate the proper value of the resistor
+   2. if value [min,max] = (INPUT -Min)/Max-Min)
+   3. if  log;  log(value)
+   4. if  1/value;   value = 1/value
+   5. apply offset2 and multiplier2
+   6. format formula and add  unit 
+     any input number can be a simple formula eg 1./255
+
+2. plugin now shows RPI power problems as: 
+	none
+	#0 Under-voltage,
+	#1 ARM freq capped,
+	#2 Curr throttled,
+	#3 Soft temp limit active,
+	#16 Under-voltage occd since reboot,
+	#17 Throttling occd since reboot,
+	#18 ARM freq capped occd since reboot,
+	#19 Soft temp limit occd
+
+3. RPI will reboot if hciconfig shows DOWN for 2 tests in a row ~ 20 sec apart
+
+4. a new program will be running on the RPI: master.sh
+   It will test every 25 secs if master.py is running, if not it will restart it 
+   This is mostly for development as starting master.py from the console and logging out 
+   will kill it after some seconds  .. the parent process stops and then the childprocess also.
+
+5. fixed reboot action, only reboot menue was working
+
+6. cleanup some code in beaconloop and BLEconnect
+
+7. fixed master.sh bug that caused constant restarts of master.py (from V .334)
+
+
+
+1. upgraded ADC converters, more paraemteers, models :
+   1. Resistor mesasurement (one resistor to V+, the mreasurment resistor to gnd, eg light, thermistor ..)
+   2. value [min,max] = (INPUT -Min)/Max-Min)
+   3. lin: (value + offset)* multiplier;  log;  log(value * offset) *multiplier
+   4. format formula and unit 
+   any input number can be a simple formula eg 1./255
+
+2. added option for BLEconnect to work thorugh commandline tools (hcitool) instead of python code.
+  it seems that running BLEconnect together with wifi on the internal chips can create timeout > 1 sec.
+   ie for a pi0-W use an extermnal BLE-dongle and send BOTH iBeacon AND BLEconnect to the external BLE dongle, pings are const at ~ 5msec.
+
+
+
+Added features / changes in v7.117.334 @ 2020-02-11
+===================================================
+
+1. added menu option to update beacon battery level for a SINGLE beacon, not just all
+
+2. added clostestRPIlast and clostestRPIlast states to RPi, ibeacon and BLEconnect states. it show the previous clostest RPI
+   this is not the second clostsest!!
+
+3. added "nohup" to ssh master start, otehrwise master stops when ssh session ends
+
+4. fixed clostest RPI in BLEconnect, was not alwasy showing correct RPI.
+
+5. added requiremnt that two (RSSI values - lastAverage)  in sequence > delta signal to trigger deltat signal change.
+   this remove some noise fluctuations of signals that otherwise would trigger delta_signal > xx state.
+   
+6. fixed:
+   Error setting up BLEconnect Line 3636 has error=range() integer end a
+   Error Line 12444 has error=Unknown format code 'd' 
+  
+7. improved stability reading for adafruit moisture sensor 
+ 
+
+
+Added features / changes in v7.117.333 @ 2020-02-09
+===================================================
+
+1. fixed pressure format for pascal units (%.0f instead of %d as value is float)
+   fixed BLEconnect was disabled when switching to 16 RPI
+   fixed pressure and humidity offsets, for some sensors (eg BME280) it was applied twice
+
+2. improved dynamic behavior (fast changing distance) for ultrasound distance sensor.
+
+3. improved BME680 manangement, added SensorStatus, AirQualityText
+
+4. option to suppress writing certain high frequency dev/states and variables to SQL logger
+   requires Indigo 7.4.1 or higher
+   this can reduce the cpu load of the SQL logger by > 20%..30%
+   variables: pi_IN_x and b_count and lastChanged
+   states: Pi_xx_Time, TxPowerReceived,UUID,closestRPIText,displayStatus,status,batteryLevelLastUpdate,pktInfo,sensorvalue_ui,updateReason  
+   these are mostly text fields that do not need to be kept in sql history
+   you need to set and select in plugin config
+   will reduce SQL data for device types: beacon, rpi, rpi-sensor, BLEconnect, sensors
+
+5. changed mbar to mBar in config. You need to reselect the pressure unit in config
+
+6. added Adafruit STEMMA Soil Moisture Sensor and Chirp soil sensor
+   it is configured to give rel moisture 0-100%
+
+7. changed message structure (pi --> indigo) from a list to a dict, for easier reading
+
+8. added state "updateReason" for iBeacons to indicate why it was updated
+   - timer = data once a minute (90+ % of times)
+   - new beacon
+   - fast down
+   - fast down back
+   - beacon is back
+   - delta signal = if you enabled that parameter in beacon device edit
+
+9. can now handle python3.x modules on RPI
+
+
+Added features / changes in v7.116.332 @ 2020-01-30
+===================================================
+
+1. ++++ STRUCTURAL CHANGE: ++++
+   # of ibeacon pi-servers increased from (#0-#9) to (#0-#15) == 10 --> 16 pi-servers
+   # of sensor pi-servers increased from (#10-#19) to (#16-#40) == 10 --> 25 pi servers
+   As a consequence CURRRENT pi- servers #0-#9 should not experience any change. 
+   BUT current pi-servers #10-#15 will need to be re-created as pi-servers #16 .. #40 (pick any number) ie sensors-only  pi-servers
+   Also all sensors and output devices need to point to the new pi-server numbers (device edit of sensors and outputs) 
+   you will see a lot of new indigo sql device tables crated and converted from number to real 
+   ++++ STRUCTURAL CHANGE: ++++
+
+2. added support for i2c relay from 52pi for RG11 rain sensor.
+   see device edit for details for relay# to dip-switch mapping   
+
+3. removed option to foget ALL history, that removed all definitions for all BLE RPI and recreated them with new indigo ID
+
+4. changed default for restart options, apparently indigo does not like ","" in defaults  
+
+5. fixed bug with menu command shutdown rpi
+
+6. many smaller fixed and improvements in menus and controls 
+
+
+Added features / changes in v7.115.332 @ 2020-01-23
+===================================================
+
+1. optimized acquisition of battery level for ibeacons
+   - repeat process every 8 hours(4/12/20). Request to read if last successful read was > 17 hour or battery level < 20%
+   - send  tasks to closest rpi for each beacon
+   - prevent up-->down status change for ibeacons during measurement times
+   - generate a warning log entry when ibeacon has bad / old info: > 2 days or < 20% once a day at 8am
+  ==> you need to enable this option individually for each beacon in device edit
+
+2. split of getBeaconParameters.py from execcommands.py to be able to better mange termination of processes
+
+3. added comments in device edit for battery level setting and process.
+
+4. streamlined plugin process to manage do not do up--> down status changes while RPIs are busy
+
+5. added several comments and explanations to config and device edit 
+
+6. added a reboot trigger on RPI if error "too many open files" 
+
+
+
+Added features / changes in v7.115.330 @ 2020-01-19
+===================================================
+
+1. fixed:  get battery level for noda aiko beacons. they are a little special 
+   they use 6 bits, bit 7 is always on, max value is 36 hex = 54 int 
+   in device edit you must use the proper ibeacon type for battery value read.
+
+
+
+
+Added features / changes in v7.115.329 @ 2020-01-18
+===================================================
+
+1. device state " batteryLevelLastUpdate" to iBeacon devices.
+   with this information you can see when the last successful update of the iBeacon battery level was obtained.
+
+2. add daily report to indigo log / plugin log if batterylevel to low or update older than 2 days eg:
+piBeacon Warning                    batterylevel level test:
+b-iHere black2                      last level reported:  74%, has not been updated for > 2 days:
+b-iHere_black                       last level reported:  76%, has not been updated for > 2 days:
+b-Mazda-aaa                               level down to:  11% ... charge or replace battery
+
+   if all ok one line "batterylevel level test:  no iBeacon found with low battery indicator or old update"  is printed to plugin.log
+   you could trigger on event log warning to check for that output 
+
+2. if there are any active ibeacons w battery reporting,  each morning at 4 or after plugin relaunch 
+   the plugin will request a battery level update  from the RPIs
+
+
+Added features / changes in v7.115.327 @ 2020-01-15
+===================================================
+
+1. adding new rpi does not require a restart of the plugin anymore:
+
+2. fixed DHT sensor if it does not answer it will not hang anymore 
+
+3. minor menu text improvements
+
+3. print config adjustments and additions
+
+
+
+Added features / changes in v7.115.326 @ 2019-12-11
+===================================================
+
+1. added states to sensor devices:
+    eg TemperatureChange10Minutes shows the delta temperature now - 10 minutes ago
+    available for  Temperature, humidity, pressure, airquality, CO2, VOC
+    each has 3 states eg 5 minutes/1 hours /12 hours or 10 minutes /1 hour /6 hours ..
+    depending of how which timing makes sense: for co2 and airquaility you want to have fast reaction time (=5 minutes), 
+    for temperature and humidity 10 minutes is fine ..
+    In addition you still have min / max today and yesterday
+
+
+
+
+
+Added features / changes in v7.114.326 @ 2019-12-09
+===================================================
+
+1. improved rd-lidar sensor:
+   option to exclude certain angles from being used in move trigger
+
+2. fix bug: i2c state in RPi, number were wrong for Hex > 20
+
+3. re-wrote the sgp30.py sensor function
+   now does automatic calibration, you can also request a new calibration from menu or an action
+   the sgp30 sensor does sometimes not show in i2cdetect -y 1. 
+
+4. added indigo log entry warning: 
+   >>> piBeacon Warning                RPi# 0 has i2c error, not found in i2cdetect sensor: sensor:bme680 - devId:593268732 i2c:119/0x77 <<<
+   when any sensors i2c address is NOT in i2cdetect (excluded is sgp30)
+   you need to edit and save each i2c device to activate
+  
+5. added xattr setting for >>pngquant<< png compressing tool (included in the plugin directory
+   used for images (rd-lidar, beacon position). If you select to have no compression selected for images, this tool is not used
+   For it to work you need to have the proper user password set in config.
+  
+
+
+
+Added features / changes in v7.114.323 @ 2019-11-24
+===================================================
+
+1. improved rd-lidar sensor:
+   - 1. added selection (UBS0...4) or autotdetect of USB port
+   - 2. added auto restart when usb gets interrupted or re-connected
+   - 3. added option in rdlidar device edit to select if graph data is send from RPi to indigo. That reduces data by factor of > 10.
+        That data is not needed if no plots are produced.
+   - 4. compressed trigger parameter display in graph (list in one line, empty sections now shown)
+   - 5. added option to not suppresss values of no measurement in plot. Only meant to show how many gaps in data (angles with no godd quality values)
+   - 6. fixed angle display in graph. The sensor spins clock wise while math.sin(phi) goes conter clockwise; the data in display are now also clockwise
+   - 7. improved menus w explanations and tooltips. 
+
+2. fixed INPUTcount sensor, had one wrong index (integer instead of string for GPIO)
+
+3. Added time stamp to temp/messageSend on RPI. That file contains the last message send to the RPI. It is overwritten by the next message.
+   follow it with cd pibeacon <ret>  tail -F temp/messageSend <ret> (use -F not -f). looks linke:
+   15:15:18 beaconloop:  send -- {"msgs":[["24...
+   15:15:19 rdlidar:  send -- {"pi":"0","se...
+
+
+Added features / changes in v7.114.322 @ 2019-11-20
+===================================================
+
+1. fixed global variable "currTZ not defined"  error on RPI 
+
+2. added warning in case /beacon_parameters file becomes too big.
+   also moved that file from temp directory to pibeacon directory as it not written to often.
+
+
+
+Added features / changes in v7.114.321 @ 2019-11-20
+===================================================
+
+1. fixed multiple onewire sensor detection 
+
+2. improved rd-lidar movement detection and display 
+
+
+
+Added features / changes in v7.114.319 @ 2019-11-17
+===================================================
+
+1. added RD lidar sensor, see indigo web site for details
+
+
+3. fixes to code on rpi to determine ip numbers etc. ie when in first startup = not connected to indigo
+Added features / changes in v7.113.319 @ 2019-11-13
+===================================================
+
+1. small fixes to auto wifi config using file on ssd boot directory
+
+2. small fixes to menus
+
+3. fixes to code on rpi to determine ip numbers etc. ie when in first startup = not connected to indigo
+
+
+Added features / changes in v7.113.318 @ 2019-11-07
+===================================================
+
+1. added device type 52pi relay i2c HAT. This relay board has 4 relays, set through i2c, 
+   you can stack 4 of these boards w 16 total relays, no soldering needed
+   see: wiki.52pi.com/index.php/DockerPi_4_Channel_Relay_SKU:_EP-0099 for details
+
+2. fixed some smaller items, menus etc
+
+3. added option to setup wifi through file on RPI SSD boot directory. 
+   this is the directory visible when you mount the SSD on a mac, it should also contain the file config.txt 
+   add a file: wifiInfo.json with the exact format:
+   wifiInfo.json
+   the file name as well as keys and data are case sensitive.
+	   it will add:
+network={
+      ssid="abc"
+      psk="def"
+}
+   to /etc/wpa_supplicant/wpa_supplicant.conf. replace abc and def with your wifi setup.
+   the /boot/wifiInfo.json file will be removed once used.
+   ===> this allows to configure wifi at first start w/o connecting terminal and monitor and keyboard  
+
+
+
+Added features / changes in v7.112.311 @ 2019-10-20
+===================================================
+
+1. fixed rpi device edit "Field ID sleepAfterBootLabel was already used. "
+
+
+
+Added features / changes in v7.112.316 @ 2019-10-20
+===================================================
+
+1. fixed GPIOINPUT device type
+2. catch error reading beacons w short message 
+
+ 
+Added features / changes in v7.112.314 @ 2019-10-13
+===================================================
+
+1. switched from ifconfig to ip xx for network info on rpi if os is > 7 (jessie)
+2. checking network connectivity now checking for router instead of dns server
+3. improved handling of frequencies of sensor updates 
+4. some smaller menu corrections
+5. upgraded neopixel libraries to support rpi4
+5. changed DHT temp+humidity sensor to check temp twice and build average (takes ~ 3 secs)
+
+ 
+
+
+Added features / changes in v7.112.313 @ 2019-10-07
+===================================================
+
+1. bad plugin prefs error check at startup.
+
+
+
+Added features / changes in v7.112.312 @ 2019-10-03
+===================================================
+
+1. fixed situation when plugin deletes RPI, due to  MAC number =00:00:00:00:00:00 - bad data coming from RPI
+
+2. tuned IMPULSE sensor
+
+3. made # of digits for sensors consistent
+
+4. added several options for display device on RPI
+   - supports xwindows = can show composed (dynamic) images in window on rpi desktop
+   - added "thermometer" item to display, w options for labels, ticks etc
+   - added zoom factor for xwindows display.
+   - it will automatically start xwindows on rpi when indigo output device is an xwindows device type
+   - option in rpi device edit to start windows on RPI by rpi-master program 
+
+Added features / changes in v7.111.311 @ 2019-09-16
+===================================================
+
+1. debug on rpi now logs individual ibeacon msgs as they come
+
+2.  added battery level querry for beacons, shown in dev.states["batteryLevel"] and in detailed device listing in indigo main window
+   Prep-steps::::::
+     you MUST first edit each ibeacon indigo device and set enable battery level .. and select either 
+     "randown" or plain com to iBeacons.   xy beacons use random,  NODA, iHere .. use plain comm.
+        you can try on the rpi with:
+        hciconfig hci0 down 
+        hciconfig hci0 up
+         for xy beacons:
+           /usr/bin/gatttool -b MAC#  -t random  --char-read --uuid=2A19
+         for iHere,  Noda .. 
+            /usr/bin/gatttool -b MAC#  --char-read --uuid=2A19
+         replace MAC# with eg 0C:F3:EE:00:66:15 = the mac # of your ibeacon connected to that RPI
+
+         the gatttool will return something like this (or an error message, can not connect)
+             handle: 0x002f 	 value: 64 
+            where 64 is the hex value, into integer = 100%
+        gatttool will conflict with the regular iBeacon message listening = during that time(..15 secs per ibeacon) no ibeacon messages will be received 
+        The RPI that is asked to get the battery level is the "closestRPI" to the iBeacon(see dev.state). When a beacon is not "up" it will not be querried and will keep its battery level unchanged
+
+      In order to check if your SSD is supporting gatttol do: ssh pi@... gatttool.. if its says not found you need to upgrade your ssd
+      error messages:
+       -- connect error: software caused connection abort (103)       == beaconloop might have restarted and the BLE stack was rebooted, ==> resubmit
+       -- connect error: transport endpoint is not connected (107)    == beacon is in state where it rejects requests ==> either ranom on/off or retry
+       -- connect error: function not implemented (38)                == beacon is in state where it rejects requests==> either random on/off or retry
+       -- connect error: timeout                                      == connection took longer that 15 seconds, terminated ==> retry
+
+    activate:
+       - Set option in ibeacon device edit to enable battery reading 
+       - A) in pibeacon menu select: "Get iBeacons parameters from rPi" for a one-time update
+       - B) create an indigo action group and select "Get iBeacons parameters from rPi ie battery levels"
+             then add a schedule ( eg every 6 hours ) to call that action group.
+
+    This is the first version, some fine tuning will be necessary.
+
+
+Added features / changes in v7.110.306 @ 2019-09-07
+===================================================
+
+1. added option for logfile size on rpi
+2. fixed no reboot if no ibeacon signal parameter on RPI, it was not active
+
+3. added INPUTcoincidence device:
+    eg using 2 .. 4 geiger counters you can set up a cosmic muon detector, by requiring simultaneous (within coincidence time window) events by all GPIOs
+    coincidence time of  INPUTpulses from different gpios trigger is 0.1 msec to several minutes.
+    this can be used to for FAST (msecs) detection of 2 events and up to several minutes
+
+
+
+Added features / changes in v7.109.305 @ 2019-09-05
+===================================================
+
+1.  added test if python-serial is installed in master.py
+
+2.  change the check if userid/password is setup 
+
+3. change bug level setup for rpi, now select which PRI to debug, not which area.
+
+4. fixed several smal formatting bugs 
+
+5. Option to enable setting wifi supplicant info on your RPI w/o terminal and keyboard attached to the RPI
+    at FIRST launch of new SSD, before any connection to RPI is made.
+    At start Master.py checks if GPIO#26 (lower left pins) is low = bridge grnd to GPIO#26
+    An adhoc wifi server: "clock"  ip# 192.168.1.254 is started
+    Connect laptop to that wifi server w safari  @ 192.168.1.254:8010 
+         there you can set SSID and passwd of your home network (also timezone)
+    Or you can ssh pi@192.168.1.254 pwd = pibeacon and manually configure files in commandline mode
+    FIRST:  select "clock" wifi
+            you must attach to that wifi in network prefs / advanced / tcpip:  
+            set your dhcp to manual and assign an IPv4 #(eg 192.168.1.5)
+            set subnetmask to 255.255.255.0; router 192.168.1.254
+            click ok  ... apply
+    This is helpfull for a RPI-0W. You can then set your wifi sidd and password and the RPI-0W will connect to your home wifi network after reboot
+    ==> this is only an option with a new SSD image > 2019-09-xx
+
+
+
+Added features / changes in v7.109.304 @ 2019-08-24
+===================================================
+
+1. Now all sending RPI-> indigo is in independed threads. 
+   This has the advatange that the sensor programs do not have to wait
+   until the sending is finished, but can continue to eg count pulse etc.
+
+2. improved the management of the pulse sensor on when to send updates.
+
+
+Added features / changes in v7.109.302 @ 2019-08-24
+===================================================
+
+1. added sensor Geiger counter support
+   use INPUT pulse sensor as input
+   set deadtime and bounce time to 0
+   you need to make sure that the RPI does not get 5V to GPIO.
+   tested w  Portable Handle Geiger Counter 0.01 μSv/h DIY Kit Nuclear Radiation Detector With Miller GM Tube Gamma Beta Ray Suit for Arduino
+   https://www.amazon.com/Portable-Counter-Nuclear-Radiation-Detector/dp/B0749KGY81/ref=sr_1_5?keywords=gamma+ray+detector&qid=1566533293&s=gateway&sr=8-5
+    standard cheap china detector.
+    with this detecor you need to bridge the P100 pins and use the headset output through a voltage devider (2x 4.7K Ohm) as GPIO input
+    The detector can be connected to +5V/ground from the RPi as power source.
+    As the signals are ~ 0.5 mSec wide a faster RPI (3 and higher) is recommended
+    in normal circumstance you should see ~ 1 count per second. w a radioactive source like:
+    Geiger Counter Radioactive Source Thorium Lantern Mantles  you should see ~ 10 counts/second
+    These detectors do not detect alpha particles. Mostly muons and some elctrons / gamma rays from cosmic particles  (muon) decays
+
+2. improved INPUTpulse sensor. now shows
+   counts per minute [cpm], frequency = counts per second [cps]
+   improved handling of fast and short pulses
+
+
+Added features / changes in v7.108.302 @ 2019-08-24
+===================================================
+
+1. various little fixes 
+
+2. added several options to pi server:
+	- network management, if network config chnages : do notthing, retsrat master, reboot
+	- added option to start webinput server where you can enter wifi SID and password w/o using shh
+
+3. works with rpi - buster image 
+
+
+
+Added features / changes in v7.107.301 @ 2019-07-30
+===================================================
+
+1. fixed error: Error in Line 5014 has error=Unknown format code 'f' for object of type 'str'
+
+2. some small format adjustments
+
+
+Added features / changes in v7.107.300 @ 2019-07-30
+===================================================
+
+1. fixed error: line 7336 has error=No JSON object could be decoded
+
+2. converted (most) logging of modules of code running on the rpi to regular logging
+
+
+
+Added features / changes in v7.107.298 @ 2019-07-12
+===================================================
+
+1. added menu option in send ... to RPI:
+   - get pibeacon log:  does an tail - 100 on /var/log/pibeacon and puts it into the plugin.log file
+   - gets output of hcitool lesacn from the rpi to plugin.log
+   - lines for rpi log are preceded by "-Pi#x - " to easily id that info
+
+2. added option to use the new rpi UPS v2 ups. It has an interface (rx/tx and signal shutdown eminent) 
+   you can connect the 3 pins to your rpi (rx,tx and one gpio) and set shutdown at xx % battery power left and or use shutdown eminent signal to shut down the rpi.
+   this version (2) is significantly  better than the previous UPS version.
+
+3. cleaned up thread for sending stuff to the rpi's better management of down rpi ...
+
+4. fixed several little things, menus
+
+
+
+Added features / changes in v7.105.295 @ 2019-07-03
+===================================================
+
+1. fixed  chmod for pibeacon.log removed, as it is in std log directory now
+
+2. checking if userid password is set AND ( authorisathion is basic or digest)
+   = does not wait for userid and passsword if no indigo security enabled.
+
+3. cleaned up threads for sending files to RPI
+   now much clearer and will also manage new RPI w/o restarting plugin.
+
+Added features / changes in v7.105.294 @ 2019-06-30
+===================================================
+
+1. addded options for AMG88xx i2c address - added 0x68 0x6A
+
+
+Added features / changes in v7.105.293 @ 2019-06-22
+===================================================
+
+1. allows now to "nnormally creat an RPi beside "basic initial setup of RPI.
+   you can now setup all parameters from device edit 
+   basic initial setup is still available
+
+2. cleaned up device edit py programs (internal only)
+
+3. cleaned up wlan/eth management on RPI
+
+
+
+Added features / changes in v7.105.291 @ 2019-06-22
+===================================================
+
+1. fix .. hopefully .. last bug w wlan eth management
+    did not read changed settings on RPI
+2. packages w wrong/changed RPI-IP number are now processed not rejected - a warning message is logged, data is ignored
+      IF message does NOT start w "pi_IN_":
+          NO ACK is send to that device w wrong sender IP .. assuming junk data and from a bad IP number
+      IF message has right structure:
+          ok ACK is send nervertheless
+
+
+Added features / changes in v7.105.290 @ 2019-06-20
+===================================================
+
+1. fixed: wifi only setup, RPI master  was always restarting
+   added check for # of wlan0 / wifi packages to check if networks are up
+
+
+
+Added features / changes in v7.105.288 @ 2019-06-20
+===================================================
+
+1. fixed: error in Line 514 has error=global name 'wlIP' is not defined
+
+
+Added features / changes in v7.105.287 @ 2019-06-19
+===================================================
+
+1. added option for ibeacon plot postions background.png
+   can either be in (1) .../Indigo x.y/Preferences/Plugins/com.karlwachs.piBeacon/plotPositions/
+   or in            (2)   /output image path/
+   fixed description in config, was pointing to old directories
+
+
+Added features / changes in v7.105.286 @ 2019-06-17
+===================================================
+
+1. fixed "error in Line 513 has error=global name 'wifiIP' "
+   previous version had a bug introduced 
+
+Added features / changes in v7.105.285 @ 2019-06-13
+===================================================
+
+1. fixed "error in Line 513 has error=global name 'wifiIP' "
+
+
+"
+
+Added features / changes in v7.105.284 @ 2019-06-13
+===================================================
+
+1. fixed some code and menus for select wlan/eth on raspberry 
+
+2. added option to sitwch on fan when RPI internal temp is > xx C
+   in addtion to any external temp sensor 
+   this is set in RPI device edit
+
+3. now warnings are also printoed into the standard indigo logfile, was send only to pibeacon.log file before
+
+4. when the RPI boots it check if the "dirty bit was on (ie shutdown = simple power off)"
+   when after boot the dirty bit is still on the plugin will get a message ( shown in the logfile)
+
+6. increase wait time for proper start of tcpip stack to > 75 secs from 65 secs. should always work after 25 secs.
+   but some slower MAC might take a little longer
+
+7. change error message when tcpip stack does not strat properly to something meaingfull beside error in line ..
+
+8. changed log message when sending data to rpi and it is not accepting commands while rebooting to a simple warning, not error
+
+
+
+Added features / changes in v7.105.283 @ 2019-06-13
+===================================================
+
+1. added option to select wlan/ eth on rpasberry 
+    switch wlan/eth : on / off / on if other off/ do not change
+    useIP# use / do not use / use if other off/
+       this is the IP # send to the plugin to ID the device
+    the default is 
+      eth : do not change, useIP#
+      wlan: on if eth off, useIP if eth off
+== this was added to cover: wifi is used for comm to indigo and eth for another subnet
+
+2. fixed pibeacon utils format error
+
+general setting is done in config, as soon as the rpi is edited the device edit setting is used.
+
+
+
+Added features / changes in v7.105.280 @ 2019-05-08
+===================================================
+
+1. added option to show BLEconnect devices on location plot.
+   you need to set options (color, name etc) in devcie edit.
+
+2. fixed some code inconsistencies after running code inspec w pycharm.
+   and found some bugs, but only when exceptions occur = not under normal operations
+   hence they do not show up frequently
+
+3. remove old style version check, now depends on indigo to do version checking (7.3 and higher)
+
+
+Added features / changes in v7.104.279 @ 2019-05-08
+===================================================
+
+1. moved setGPIO command into execcommands. that reduces delay with older RPI ie RPI1
+   and do not send back status to indigo if not requested
+
+2. now all pibeacon logfiles on the RPI are in ONE file: /var/log/piBeacon.log
+it looks like:
+date              module       debuglvl message 
+20190507-12:56:30 copyToTemp      L:-1= killing copyToTemp.py    
+20190507-12:56:30 sundial         L:-2= move  return due to: direction1, inFixBoundaryMode:0 cap switch sens: 0;   switch sensor:0 
+20190507-12:56:30 sundial         L:-3= 1100 === 34 1  
+20190507-12:56:31 master          L:-1=  IP find:::: wifiIP >><<; eth0IP: >>192.168.1.39<<;   hostnameIP >>['192.168.1.39']<<;   ipAddressRead >>192.168.1.39<< 
+20190507-12:56:31 sundial         L:-2= move  return due to: direction-1, inFixBoundaryMode:0 cap switch sens: 0;   switch sensor:0 
+20190507-12:56:31 sundial         L:-3= 1300 === 85 -1  
+20190507-12:56:31 master          L:-1=  master can ping indigo server at ip:>>192.168.1.50<< 
+20190507-12:56:32 installLibs     L:-1=  installLibs starting  
+20190507-12:56:32 installLibs     L:-1=  installLibs no opsys upgrade requested 
+ 
+20190507-14:59:04 execcommands    L:-1= next command: {u'device': u'OUTPUTgpio-1', u'inverseGPIO': True, u'command': u'down', u'pin': u'26'} 
+20190507-14:59:04 execcommands    L: 1= next cmd: "down" 
+20190507-14:59:04 execcommands    L: 0= setGPIO pid=16700,  command :{'startAtDateTime': u'1557259144.27', 'values': {}, 'pin': '26', 'debug': 3, 'inverseGPIO': True, 'cmd': u'down', 'devId': 0, 'PWM': 1} 
+20190507-14:59:04 execcommands    L: 0= msg: 156x-6-api_IN_14x-6-a{"outputs":{"OUTPUTgpio-1-ONoff":{"0":{"actualGpioValue":"high"}}},"program":"execcommands","ipAddress":"","pi":"14","ts":{"tz":"CDT","time":1557259144.16}}
+ 
+20190507-14:59:04 execcommands    L:-1= next command: {u'device': u'OUTPUTgpio-1', u'inverseGPIO': True, u'command': u'down', u'pin': u'5'} 
+20190507-14:59:04 execcommands    L: 1= next cmd: "down" 
+20190507-14:59:04 execcommands    L: 0= setGPIO pid=16707,  command :{'startAtDateTime': u'1557259144.36', 'values': {}, 'pin': '5', 'debug': 3, 'inverseGPIO': True, 'cmd': u'down', 'devId': 0, 'PWM': 1} 
+20190507-14:59:04 execcommands    L: 0= msg: 156x-6-api_IN_14x-6-a{"outputs":{"OUTPUTgpio-1-ONoff":{"0":{"actualGpioValue":"high"}}},"program":"execcommands","ipAddress":"","pi":"14","ts":{"tz":"CDT","time":1557259144.29}}
+ 
+
+Added features / changes in v7.103.275 @ 2019-05-06
+===================================================
+
+1. fixed  SPRINKLER relay to be on if GPIO is 0 or 1 
+
+
+Added features / changes in v7.103.274 @ 2019-04-30  
+===================================================
+
+1. added option for SPRINKLER relay to be on if GPIO is 0 or 1 
+	set in device edit.
+
+2. some typos in menus
+
+
+Added features / changes in v7.103.274 @ 2019-02-20  
+===================================================
+
+1. added check at startup in case indigo device was deleted while pibeacon was not running
+
+
+
+Added features / changes in v7.103.273 @ 2019-02-20  
+===================================================
+
+1. fixed plot beacons
+	wrong test for xposition, was tested against Ymax not Xmax
+
+2. moved plot beacon position to regular plugin.log file 
+
+3. absolute position rotary switches with Serial input now support 6...12 bits resolution
+
+
+
+Added features / changes in v7.103.272 @ 2019-02-10:  
+===================================================
+
+1. finalized rotaty encoded switch devices
+	A absolute position
+		read encoded n pin rotaty switch, send integer value to indogo every 90 secs or if changed
+		grey code = only 1 bit changes pre step
+		    eg http://www.grayhill.com/assets/1/7/mech_encoder_26.pdf
+		regular binary; normal binary code 
+		   like also: https://www.amazon.com/gp/product/B071F4QM6L/ref=ppx_yo_dt_b_asin_title_o06__o00_s00?ie=UTF8&th=1
+		Bourns table encoded: 
+			special bourns devices that comes with an 8 bit 0-127 value encoding
+			    https://www.bourns.com/pdfs/ace.pdf
+			    pins 1,2,G,,3,4   8,7,G,6,5 
+				0-127 positions
+
+		Bourns serial evice that is read like SPI, but just very simple code
+			    CLK, CS, DO= read data. it is 10 bits + some status bits
+			    pins: Di,CLK, GND, DO, V+, CS
+			    https://www.bourns.com/pdfs/EMS22A.pdf
+				0-1023 positions
+
+
+	B continuous increment / decrement 
+		"2-bit quadrature code" using 2 GPIO pins and GND and V+
+		2 gpios are read. they go 1 0 1 0 .. most have 0=ON and 1 = off
+		B: 011001100110
+		A: 001100110011
+		and opposit direction:
+		B: 001100110011
+		A: 011001100110 
+		one full step is 4 bits
+
+2. BUG fix for DHT temp sensor
+	screw up in one of the last versions when I switch from 2 different DHT to one type
+
+3. Made version check future proof
+
+4. changed logging for errors or init of dataStats file
+
+
+
+
+Added features / changes in v7.101.271 @ 2019-02-04:  
+===================================================
+
+1. added  save / reset for INPUT rotary increments devices
+	at each start old values are read and saved to SSD when they changed.
+	indigo menu option can send  reset command to the RPi to rotary switch counters 
+
+
+Added features / changes in v7.101.270 @ 2019-02-04:  
+===================================================
+
+1. added lookup of mac to vendor name for ibeacons, added state "vendorName"
+
+2. some smaller debugs
+
+3. added check if userid / password not set: will write message and wait before doing anything  
+
+4. converted to std logging
+
+5. added sensor type: 
+	INPUT-Rotatary-switch-Grey-Pulses : supports turn switches that send grey encoded pulse left and right direction
+	INPUT-Rotatary-switch-encoded: supports turn switches that have static codes at n Pins that deliver 4.8.16... states from binary pins values
+
+6. did a lot of testing and added little fixes when creating / deleting RPIs
+
+
+Added features / changes in v7.100.269 @ 2019-01-25:  
+===================================================
+
+1. added time windows < 3 secs where status can not change up/down/up/down
+
+2. added more options for stepper motor  
+ - stepper motor ON time after move
+ - wait before and after step loop
+
+
+Added features / changes in v7.100.269 @ 2019-01-25:  
+===================================================
+
+1. fixed:  BLE connect up/down/up when iphone is off.
+
+2. fixed:  some logging inconsistencies, typos... 
+
+3. added support for various STEPPER MOTORS
+You can chose between 5 pole unipolar and 2 coils bipolar stepper motors.  
+These motors must be driven by chips:    
+ULN2003 is a simple set of darlington transitors, current up to 250mA. It is used for the 5 pole unipolar motor   
+L9110 low power and L298N high power: can be used to drive bipolar 2 coil motors in full and half step modes  
+A4988 (8V-35V) and DRV8834(2.5V-8V) are more sophisticated.   
+-They are almost 100% pin compatible
+-Can drive bipolar 2 coil motors in 1,1/2,1/4,1/8,1/16 (and 1/32) step size you need to configure the pins on the chips to set the step size
+-Can configure enable / sleep / reset and fault pins. They are currently only used to switch the motor ON at start,
+      but you could also simply hardwire the pins at the chip directly. You should be able to use multiple motors on the same RPI, just limited by the number of GPIOs available
+Use an indigo ACTION  "Send commands to stepper motor .." to drive the motor; #of steps, direction, delays ... can be send in single or multiple sets
+You can use up to 3 GPIO input pins to control the range of the motor:  
+   If one of thes GPIO goes High/low the motor will stop. This can be enabled / configured in each action separately. 
+   In device edit you define the GPIO pin numbers and refer to them in actions as GPIO#0 / 1 / 2
+
+
+
+Added features / changes in v7.99.266 @ 2019-01-08:  
+===================================================
+
+1. fixed:  sself.log.. should be  self.log... -- typo in 2 places. Only happens when error occurs and error is logged 
+
+
+Added features / changes in v7.99.265 @ 2019-01-07:  
+===================================================
+
+1. fixed: 1. wlan0 not working, logging not working
+
+Added features / changes in v7.99.263 @ 2019-01-06:  
+===================================================
+
+1. added support for wlan1 in addition to wlan0. in case you have 2 wifi adapters. BUT ONLY one can be active
+
+2. moved all pibeacon files from ~/indigo/pibeacon to  /Library/Application Support/Perceptive Automation/Indigo 7.2/Preferences/Plugins/com.karlwachs.piBeacon/
+
+3. all detailed logging now goes to /Library/Application Support/Perceptive Automation/Indigo 7.2/Logs/com.karlwachs.piBeacon/plugin.log. all error messages still go to teh standard indigo logfile
+
+4. fixed bug line 4649 in buttonAnycommandCALLBACK bad operand... . only occures when sending custom command to rpi and logging was switched on
+
+5. suppressed some RPi updating messages
+
+A
+Added features / changes in v7.99.262 @2018-12-28 :  
+===================================================
+
+1. renamed  dev state closestRPItext to closestRPIText to make it constant with previous name
+
+
+Added features / changes in v7.99.261 @ 2018-12-28:  
+===================================================
+
+1. added support for sensors:
+	- adafruit max31865 platinum 100/1000 temp sensor
+	- adafruit  tmp007 remote temperature sensor,  successor to temp006
+
+
+2. added back dev state closestRPItext for iBeacons:
+	this dev state now shows the NAME of the closest RPI, not just PI_x
+	also added option in config to set closestRPItext to blank when iBeacon leaves or keep the last RPI name
+
+
+
+Added features / changes in v7.98.258 @ 2018-12-14:  
+===================================================
+
+1. bug fix for RPI beaconloop.py program - only a problem when BLE program was not working properly ie in restart: 
+	return argument was mixed up, was introduced in 7.98.255 
+
+2. added check for MAC mac number returned from RPI in plugin- in case of empty messages ... 
+
+3. added RPI devices states: last_boot, rpi_type, op_sys to give you a quick view of the state and config of your RPIs.
+	Useful if you have many RPi
+
+4. Improved devices edit menus for RPi and iBeacon sensors
+
+5. fixed reboot ssh command, was not always working 
+
+
+===================================================
+
+1. added clostedRPI state to RRPI devices. Was only in iBeacons devices
+
+
+Added features / changes in v7.98.256 @ 2018-12-10:  
+===================================================
+
+1. clean up GPOIO output and inverse settings. the inverse as well as initial state are now shown in device states
+
+
+Added features / changes in v7.98.255 @ 2018-12-09:  
+===================================================
+
+1. added option in RPI device edit to select which BLE channel should be used for iBeacon / BLEconnect.
+	RPI3+ with SSD >=2018-11 does not work properly with the internal chip, 
+	Must add an external USB dongle for iBeacon. BLE connect works fine w internal BLE chip.
+
+2. added option to DELETE RPI in "initial setup of RPI" in the plugin menu, besides "ON/off".
+	this is useful if you interchange RPi or want to get rid of any RPI config for a specific RPI. 
+	
+3. A RPI device will now be created when setting up a new RPi in "initial setup of RPI".
+	the plugin does not wait for the first iBeacon message to create the RPI.
+	The RPi will be initiated with MAC# 00:00:00:00:00:00. When the first iBeacon message arrives from the RPI that MAC number is overwritten 
+	This is needed in order to be able to set the BLE device that should be used for iBeacon (for RPI3plus you need to set the BLE for iBeacon to USB)
+	When the proper BLE device is not selected no iBeacon message are send from the RPI
+
+4. added a log message when ftp to RPI is successfully finished (when Update RPI debug is on). Before only the start was put into the log file
+
+5. increased some timers on the RPI python files to make sure that if something goes wrong and its in "panic" mode  it is not constantly rebooting, but wait 30+ secs between reboots.
+	(I had that problem.)
+
+These changes should now enable the usage of "SSD stretch image 2018-11" ... BUT the RPI3plus will need an extra BLE dongle to work. 
+With "SSD stretch image 2018-04" RPI3plus works fine.
+
+
+
+
+Added features / changes in v7.97.253 @ 2018-12-08:  
+===================================================
+
+1. fixed wrong trigger labels 
+
+
+Added features / changes in v7.97.252 @ 2018-12-06:  
+===================================================
+
+1. option to set sleep/wait time after boot (in RPI device edit), before master.py starts.   
+	This is useful for #2 and can be tuned to accommodate to let eg wifi connect before master.py is started  
+	rc.local calls /home/pi/callbeacon.py, it then waits xx secs before it calls /home/pi/pibeacon/master.py  
+
+2. option to set 2 GPIO  (input or output) to any value (in/out, low, high, floating .,..) BEFORE master.py immetiately after rc.local is finished (set in RPI device edit)  
+	this is useful to set a GPIO as fast as possible after boot before all networks, vars, etc are finished.. saves ~ 15 secs  
+	done in /home/pi/pibeacon/doGPIOatStartup.py called by /home/pi/callbeacon.py  ..called by rc.local after boot  
+	doGPIOatStartup is setup by master with the options set in RPI device edit  
+
+3. added state "actualGpioValue" to OUTPUT-GPIO on/off devices.  
+	This will set the actual value of the GPIO on the RPI, msg send from rpi to the plugin.   
+	It will be refreshed after GPIO is set from plugin and checked every 90 secs or if changed   
+	useful if your GPIUO is set by other means or after a reboot the GPIOs might not be set properly  
+
+4. added RPI device state "closest iBeacon". it will show eg b-xy-volvo-keys-turcoise@0.2 = name@distance.
+	you can set cutoff distance (ignore if distance > xx) in PRI device edit
+	you can set ignore THIS iBeacon for this feature in iBeacon device edit.
+	how to use it in an action (python code), trigger on any chage of dev/state
+		yyyy = indigo.devices["name of your rpi"].states
+		xxx = yyyy["closestiBeacon"]
+		if xxx.find("@")>-1:  
+			nameOfBeacon = xxx.split("@")[0]
+			distToRPI    = float(xxx.split("@")[1])
+			indigo.server.log(" closest beacon to RPi is "+nameOfBeacon+" at distance of "+str(distToRPI))
+			# do something with dist
+			if distToRPI < 3: 
+				indigo.server.log("beacon is very close" )
+		else:
+			indigo.server.log("no iBeacon is close" )
+   
+
+5. added option in menu to restart master.py in case it hangs ... 
+
+
+x. will deprecate devices OUTPUT-GPIO-4,8,12,16,.. should all be changed to device type OUTPUT-GPIO-1-on-off
+	it is to complicated to manage all the states and which one to use for status and is more in line with std Indigo philosophy 
+

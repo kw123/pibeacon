@@ -1,0 +1,31 @@
+set argsCount [llength $argv]
+set userID [lindex $argv 0 ] 
+set password [lindex $argv 1 ] 
+set authKeyOrPassword [lindex $argv 2 ] 
+set ipNumber [lindex $argv 3 ] 
+set timeout [lindex $argv 4 ] 
+
+
+set timeout $timeout
+if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
+
+if {$authKeyOrPassword == "assword"} { 
+    expect {
+        "(yes/no" { 
+            send "yes\r"
+            sleep 0.1
+            expect "$authKeyOrPassword" { send "$password\r"}
+        }    
+        "$authKeyOrPassword" { 
+            send "$password\r" 
+        }
+    }
+}
+
+expect "Last login:" { }
+sleep 3
+send "sudo killall -9 python;sleep 4;sudo reboot -f\r"
+sleep 3
+expect "Rebooting" {}
+set timeout 1s
+expect eof
