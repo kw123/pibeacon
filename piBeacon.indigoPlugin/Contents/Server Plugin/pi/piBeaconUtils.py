@@ -2058,7 +2058,7 @@ def getSerialDEV():
 
 
 
-		if (version).find("Raspberry") ==-1:
+		if (version).find("Raspberry") == -1:
 			logger.log(30, "cBY:{:<20} cat /proc/device-tree/model something is wrong... {}".format(G.program,version)  )
 			time.sleep(10)
 			return ""
@@ -2070,12 +2070,13 @@ def getSerialDEV():
 			subprocess.Popen("systemctl stop serial-getty@ttyAMA0.service" ,	shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 			subprocess.Popen("systemctl disable serial-getty@ttyAMA0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-			if serials.find("serial0 -> ttyAMA0") ==-1 :
+			if serials.find("serial0 -> ttyAMA0") == -1 :
 				logger.log(30, "cBY:{:<20} pi2 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyAMA0".format(G.program) )
 				time.sleep(10)
 				return ""
+			return sP
 
-		elif version.find("Pi Zero") >-1:	# not RPI3
+		elif version.find("Pi Zero") > -1:	# not RPI3
 			sP = "/dev/ttyS0"
 
 			### disable and remove tty usage for console
@@ -2086,6 +2087,7 @@ def getSerialDEV():
 				logger.log(30, "cBY:{:<20} pi3 4 .. wrong serial port setup  .. enable serial port in raspi-config .. can not run missing in 'ls -l /dev/' : serial0 -> ttyS0".format(G.program)  )
 				time.sleep(10)
 				return ""
+			return sP
 
 		else:# RPI3, 4
 			sP = "/dev/ttyS0"
@@ -2094,11 +2096,12 @@ def getSerialDEV():
 			subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,	  shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 			subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-			if serials.find("serial0 -> ttyS0")==-1:
+			if serials.find("serial0 -> ttyS0") == -1:
 				logger.log(30, "cBY:{:<20} pi3 .. wrong serial port setup .. enable serial port in raspi-config ..  can not run missing in 'ls -l /dev/' : serial0 -> ttyS0".format(G.program) )
 				time.sleep(10)
 				return ""
 		logger.log(20, "cBY:{:<20} serial port name:{}".format(G.program, sP) )
+
 		return sP
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))

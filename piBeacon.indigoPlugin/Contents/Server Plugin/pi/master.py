@@ -449,7 +449,7 @@ def readNewParams(force=0, init=False):
 		if typeOfUPS in ["OnlyC","AC"]:
 			U.logger.log(30,"UPS-V2 starting serial port for UPS support")
 			port = U.getSerialDEV()
-			if port =="":
+			if port == "":
 				U.logger.log(20, "UPS-V2 serial port not setup properly, setting  interface to off ")
 				shutdownSignalFromUPS_SerialInput =""
 				batteryUPSshutdownAtxPercent = -1

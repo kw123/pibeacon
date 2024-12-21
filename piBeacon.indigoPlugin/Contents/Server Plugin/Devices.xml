@@ -20169,39 +20169,9 @@ for uart/serial interface, the key word has to be heard once. Then it can stay a
         i.e. switch any GPIO on/off after receiving a valid voice command</Label>
 			</Field>
 
-			<Field id="gpioCmdIndicator"   type="menu" defaultValue="-1"  >
-				<Label>Turn on GPIO if ANY voice cmd GT 0 received:</Label>
-				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
-			</Field>
-			<Field id="gpioCmdIndicatorInverse"   type="menu" defaultValue="0"  >
-				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
-				</List>
-				<Label>On off state:</Label>
-			</Field>
-
-			<Field id="gpioCmdIndicatorOnTime"   type="menu" defaultValue="2"  >
-				<List>
-					<Option value="500"    >0.5 sec</Option>
-					<Option value="1000"   >1 sec</Option>
-					<Option value="1500"   >1.5 sec</Option>
-					<Option value="2000"   >2 sec</Option>
-					<Option value="3000"   >3 sec</Option>
-					<Option value="4000"   >4 sec</Option>
-					<Option value="5000"   >5 sec</Option>
-					<Option value="7000"   >7 sec</Option>
-					<Option value="10000"  >10 sec</Option>
-					<Option value="15000"  >15 sec</Option>
-					<Option value="20000"  >20 sec</Option>
-					<Option value="30000"  >30 sec</Option>
-				</List>
-				<Label>On for how long:</Label>
-			</Field>
-
-			<Field id="infoLabelfpio" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+			<Field id="infoLabelfpio" type="label" >
 				<Label>You can connect an LED+100Ohm resistor to a gpio. (LED anode to +3.3V) 
-When a valid command (cmdID >0) is received the LED will go on for xx seconds</Label>
+Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds</Label>
 			</Field>
 
 
@@ -20209,33 +20179,79 @@ When a valid command (cmdID >0) is received the LED will go on for xx seconds</L
 				<Label>Turnon/off GPIO if cmd = #xx received, select GPIO(1):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
-
-			<Field id="gpioCmdForAction1"   type="textfield" defaultValue="103"  >
-				<Label>voice command # for trigger:</Label>
+			<Field id="gpioCmdForAction1"   type="textfield" defaultValue="0"  >
+				<Label>.. voice command # for trigger (0,2,3,x see explanation):</Label>
 			</Field>
+			<Field id="infoLabelDF2301cmdhelp" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>cmd options:
+ = 0,1: any command, 
+ = 2: 2 and higher, 
+ = 3: 3 and higher,
+ = 4,.., 255:  only that specific comand</Label>
+			</Field>
+			<Field id="gpioOnTimeAction1"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction1"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
 			<Field id="gpioNumberForCmdAction2"   type="menu" defaultValue="-1"  >
 				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(2):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
-
 			<Field id="gpioCmdForAction2"   type="textfield" defaultValue="103"  >
-				<Label>voice command # for trigger:</Label>
+				<Label>..voice command # for trigger (0,2,3,x see explanation):</Label>
 			</Field>
+			<Field id="gpioOnTimeAction2"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction2"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
 			<Field id="gpioNumberForCmdAction3"   type="menu" defaultValue="-1"  >
 				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(3):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
-
-			<Field id="gpioCmdForAction3"   type="textfield" defaultValue="103"  >
-				<Label>voice command # for trigger:</Label>
+			<Field id="gpioCmdForAction3"   type="textfield" defaultValue="104"  >
+				<Label>voice command # for trigger (0,2,3,x see explanation):</Label>
 			</Field>
+			<Field id="gpioOnTimeAction3"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction3"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
 			<Field id="gpioNumberForCmdAction4"   type="menu" defaultValue="-1"  >
 				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(4):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
-
-			<Field id="gpioCmdForAction4"   type="textfield" defaultValue="103"  >
-				<Label>voice command # for trigger:</Label>
+			<Field id="gpioCmdForAction4"   type="textfield" defaultValue="142"  >
+				<Label>voice command # for trigger (0,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction4"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction4"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
 			</Field>
 
 			<Field id="infoLabelfgpioaction" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">

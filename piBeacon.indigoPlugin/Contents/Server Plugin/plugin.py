@@ -17919,8 +17919,14 @@ class Plugin(indigo.PluginBase):
 		try:
 			if "cmd" in data: 
 				cmdId = data["cmd"]
+				if isinstance(cmdId, str):
+					self.indiLOG.log(30,"updateDF2301Q, bad port def, check device edit and on RPI do: sudo-raspi-config ::interfaces / serial set enable... msg from RPI: "+cmdId)
+					if dev.states["status"] != cmdId: 
+						self.addToStatesUpdateDict(dev.id, "status", cmdId)
+						self.addToStatesUpdateDict(dev.id, "sensorValue", -1, uiValue="error, see logfile, status"  )
+					return 
+
 				if cmdId > 1:
-	
 					self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
 					self.addToStatesUpdateDict(dev.id, "lastCmd2At", dev.states["lastCmdAt"] )
 	
@@ -20140,8 +20146,11 @@ class Plugin(indigo.PluginBase):
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","count","bounceTime","timeWindowForContinuousEvents",
 										"mac","type","INPUTdevId0","INPUTdevId1","INPUTdevId2","INPUTdevId3","coincidenceTimeInterval","updateIndigoTiming","updateIndigoDeltaTemp","updateIndigoDeltaAccelVector","updateIndigoDeltaMaxXYZ",
 										"usbPort","motorFrequency","nContiguousAngles","contiguousDeltaValue","triggerLast","triggerCalibrated","sendToIndigoEvery",
-										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","gpioCmdIndicator","gpioCmdIndicatorInverse","gpioCmdIndicatorOnTime","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetPowerGPIO",
-										"gpioCmdForAction1","gpioNumberForCmdAction1","gpioCmdForAction2","gpioNumberForCmdAction2","gpioCmdForAction3","gpioNumberForCmdAction3","gpioCmdForAction4","gpioNumberForCmdAction4","logLevel",
+										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetPowerGPIO","logLevel",
+										"gpioCmdForAction1","gpioNumberForCmdAction1","gpioOnTimeAction1","gpioInverseAction1",
+										"gpioCmdForAction2","gpioNumberForCmdAction2","gpioOnTimeAction2","gpioInverseAction2",
+										"gpioCmdForAction3","gpioNumberForCmdAction3","gpioOnTimeAction3","gpioInverseAction3",
+										"gpioCmdForAction4","gpioNumberForCmdAction4","gpioOnTimeAction4","gpioInverseAction4",
 										"anglesInOneBin","measurementsNeededForCalib","sendPixelData","doNotUseDataRanges","minSignalStrength","relayType","python3","bleHandle"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate)
 							#if dev.id == 49344355: self.indiLOG.log(20,"pass 9 sens:{}".format(sens))

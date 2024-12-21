@@ -527,10 +527,11 @@ def readParams():
 	global SENSOR, sensorsOld
 	global oldRaw, lastRead
 	global startTime, lastMeasurement, oldi2cOrUart, oldserialPortName, keepAwake, lastkeepAwake
-	global gpioCmdIndicator, gpioCmdIndicatorInverse, gpioCmdIndicatorOnTime, gpioAlreadyLoaded, restartRepeat, refreshRepeat
+	global restartRepeat, refreshRepeat
 	global sleepAfterWrite, oldSleepAfterWrite, commandList, resetPowerGPIO
 	global i2cOrUart, serialPortName
-	global gpioCmdForAction, gpioNumberForCmdAction, anyCmdDefined, logLevel
+	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction, anyCmdDefined, gpioAlreadyLoaded
+	global logLevel
 	try:
 
 
@@ -616,25 +617,6 @@ def readParams():
 			elif "setWakeTime" in sensors[sensor][devId] and (sensors[sensor][devId].get("setWakeTime") != sensorsOld[sensor][devId].get("setWakeTime")):
 				upd = True
 
-			if "gpioCmdIndicator" in sensors[sensor][devId]:
-				if (
-						gpioCmdIndicator == "" or str(gpioCmdIndicator) != sensors[sensor][devId].get("gpioCmdIndicator","") or
-						str(gpioCmdIndicatorInverse) != sensors[sensor][devId].get("gpioCmdIndicatorInverse","0") or
-						str(gpioCmdIndicatorOnTime)	 != sensors[sensor][devId].get("gpioCmdIndicatorOnTime",1)
-					):
-					try:	gpioCmdIndicator	= int(sensors[sensor][devId].get("gpioCmdIndicator",""))
-					except:	gpioCmdIndicator	= ""
-					if gpioCmdIndicator not in ["",-1,0]:
-						gpioCmdIndicatorInverse 		= sensors[sensor][devId].get("gpioCmdIndicatorInverse","0")
-						try:	gpioCmdIndicatorOnTime	= int(sensors[sensor][devId].get("gpioCmdIndicatorOnTime",1000))
-						except:	gpioCmdIndicatorOnTime	= 1000
-						if not gpioAlreadyLoaded:
-							GPIO.setmode(GPIO.BCM)
-							GPIO.setwarnings(False)
-							gpioAlreadyLoaded = True
-
-						GPIO.setup(gpioCmdIndicator, GPIO.OUT)
-						GPIO.output(gpioCmdIndicator, gpioCmdIndicatorInverse == "0")
 
 
 			if "resetPowerGPIO" in sensors[sensor][devId]:
@@ -655,28 +637,54 @@ def readParams():
 
 			for ii in range(1,5):
 				iis = str(ii)
-				if "gpioNumberForCmdAction"+iis in sensors[sensor][devId]:
-						if ( gpioNumberForCmdAction[ii] == "" or str(gpioNumberForCmdAction[ii]) != sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,"") ):
-							try:	gpioNumberForCmdAction[ii] 	= int(sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,""))
-							except: gpioNumberForCmdAction[ii] 	= ""
-						if ( gpioCmdForAction[ii] == "" or str(gpioCmdForAction[ii] ) != sensors[sensor][devId].get("gpioCmdForAction"+iis,"") ):
-							try:	gpioCmdForAction[ii]  			= int(sensors[sensor][devId].get("gpioCmdForAction"+iis,""))
+				try:
+					if "gpioNumberForCmdAction"+iis in sensors[sensor][devId]:
+						changed = False
+						if ( gpioNumberForCmdAction[ii] == "" or str(gpioNumberForCmdAction[ii])	!= sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,"") ):
+							try:	
+									gpioNumberForCmdAction[ii] 		= int(sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,""))
+									if gpioNumberForCmdAction[ii] not in range(2,27):
+										gpioNumberForCmdAction[ii]  = ""
+									else:
+										changed = True
+							except Exception as e:
+								U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+								gpioNumberForCmdAction[ii] 	= ""
+	
+						if ( gpioCmdForAction[ii] == "" 		or str(gpioCmdForAction[ii] ) 		!= sensors[sensor][devId].get("gpioCmdForAction"+iis,"") ):
+							try:	
+									gpioCmdForAction[ii]  			= int(sensors[sensor][devId].get("gpioCmdForAction"+iis,""))
+									changed = True
 							except:	gpioCmdForAction[ii] = ""
-
-							if gpioNumberForCmdAction[ii] not in ["",0,-1]:
-								if logLevel > 0: U.logger.log(20, "checking parameters file for  gpioNumberForCmdAction:{} enabled? for gpioCmdForAction:{} ".format(gpioNumberForCmdAction[ii], gpioCmdForAction[ii]  ) )
-								gpioNumberForCmdAction[ii]  = int(gpioNumberForCmdAction[ii] )
+	
+						if ( gpioOnTimeAction[ii] == "" 		or str(gpioOnTimeAction[ii] ) 		!= sensors[sensor][devId].get("gpioOnTimeAction"+iis,"") ):
+							try:	
+									gpioOnTimeAction[ii]  			= float(sensors[sensor][devId].get("gpioOnTimeAction"+iis,""))
+									changed = True
+							except:	gpioOnTimeAction[ii] = ""
+	
+						if ( gpioInverseAction[ii] == "" 		or str(gpioInverseAction[ii] ) 		!= sensors[sensor][devId].get("gpioInverseAction"+iis,"") ):
+							try:	
+									gpioInverseAction[ii]  			= sensors[sensor][devId].get("gpioInverseAction"+iis,"")
+									changed = True
+							except:	gpioInverseAction[ii] = ""
+	
+						if changed:
+							if gpioInverseAction[ii] in ["0","1"] and isinstance(gpioOnTimeAction[ii],float) and isinstance(gpioCmdForAction[ii], int) and isinstance(gpioNumberForCmdAction[ii], int):
+								if logLevel > 0: U.logger.log(20, "checking parameters file for #{}  gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} ".format(ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii]  ) )
 								anyCmdDefined = True
 								if not gpioAlreadyLoaded:
 									GPIO.setmode(GPIO.BCM)
 									GPIO.setwarnings(False)
 									gpioAlreadyLoaded = True
 	
-								GPIO.setup(gpioNumberForCmdAction[ii] , GPIO.OUT)
-								GPIO.output(gpioNumberForCmdAction[ii] , 1)
+								GPIO.setup(gpioNumberForCmdAction[ii], GPIO.OUT)
+								GPIO.output(gpioNumberForCmdAction[ii], gpioInverseAction[ii] == "0")
+				except Exception as e:
+					U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 
-			if upd: U.logger.log(20,"setting volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}, gpioCmdIndicator:>{}<, gpioCmdIndicatorInverse:{}, gpioCmdIndicatorOnTime:{:.0f}, refreshRepeat:{:.1f}, restartRepeat:{:.1f}, logLevel:{}".format( sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), sensors[sensor][devId].get("setWakeTime"), keepAwake, gpioCmdIndicator, gpioCmdIndicatorInverse, gpioCmdIndicatorOnTime, refreshRepeat, restartRepeat,logLevel) )
+			if upd: U.logger.log(20,"setting volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}, refreshRepeat:{:.1f}, restartRepeat:{:.1f}, logLevel:{}".format( sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), sensors[sensor][devId].get("setWakeTime"), keepAwake, refreshRepeat, restartRepeat,logLevel) )
 
 			if upd:
 				checkifRefreshSetup(restart=restart, upd=upd)
@@ -719,12 +727,18 @@ def startSensor(devId ):
 		try:
 			if i2cOrUart == "uart":
 				if logLevel > 0: U.logger.log(20, "started sensor,  serial port:{}, sleep:{}".format(serialPortName, sleepAfterWrite))
-				SENSOR[devId] = DFRobot_DF2301Q_UART(serialPortName=serialPortName, sleepAfterWrite=sleepAfterWrite)
+				if cmdCheckSerialPort(serialPortName, devId):
+					SENSOR[devId] = DFRobot_DF2301Q_UART(serialPortName=serialPortName, sleepAfterWrite=sleepAfterWrite)
+				else:
+					time.sleep(20)
+					del SENSOR[devId]
 			else:
 				if logLevel > 0: U.logger.log(20, "started sensor,  i2cAddr:{}, sleep:{}".format(DF2301Q_I2C_ADDR, sleepAfterWrite))
 				SENSOR[devId] = DFRobot_DF2301Q_I2C(i2c_addr=DF2301Q_I2C_ADDR, sleepAfterWrite=sleepAfterWrite)
-			SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite, logLevel=logLevel)
-			lastRestart	= time.time()
+
+			if devId in SENSOR:
+				SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite, logLevel=logLevel)
+				lastRestart	= time.time()
 		except	Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			if str(e).find("could not open port /dev/") > -1:
@@ -807,7 +821,7 @@ def checkifRefreshSetup( restart=False, upd=False):
 					SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite,logLevel=logLevel)
 					currentMute = sensors[sensor][devId]["mute"]
 
-				SENSOR[devId].set_notify_Status()
+				#SENSOR[devId].set_notify_Status() does not do anything
 
 				if logLevel > 0: U.logger.log(20, "(re)-init sensor, timeUsed:{:.1f}, upd:{}, restart:{}, keepAwake:{}, setWakeTime:{}, mute:{}, volume:{}, learning <0?:{:.1f}, learningOn:{} ".format(time.time()-startTime,upd, restart, keepAwake, sensors[sensor][devId]["setWakeTime"], sensors[sensor][devId]["mute"],  sensors[sensor][devId]["volume"], min(999., time.time() - tempMuteOff) ,learningOn))
 			lastkeepAwake = time.time()
@@ -857,10 +871,10 @@ def checkIfRestart():
 #################################
 def getValues(devId):
 	global sensor, sensors,	 SENSOR, badSensor, tempMuteOff, learningOn
-	global keepAwake, gpioCmdIndicator
+	global keepAwake
 	global commandList, lastValidCmd, lastkeepAwake
 	global i2cOrUart
-	global cmdQueue, anyCmdDefined, gpioCmdIndicator
+	global cmdQueue, anyCmdDefined
 	global logLevel, firstCmdReceived
 
 	try:
@@ -911,7 +925,7 @@ def getValues(devId):
 
 		if CMDID != 0:
 			lastValidCmd = time.time()
-			if anyCmdDefined or gpioCmdIndicator != "": cmdQueue.put(CMDID)
+			if anyCmdDefined: cmdQueue.put(CMDID)
 		firstCmdReceived = True
 
 		badSensor = 0
@@ -930,17 +944,22 @@ def getValues(devId):
 def checkResetPower():
 	global resetPowerGPIO
 	global logLevel
-	if logLevel > 0: U.logger.log(20, "power off/on resetPowerGPIO:{} enabled?".format(resetPowerGPIO not in ["","-1"]) )
-	if resetPowerGPIO not in ["","-1"]:  # switch power off/on twice to reset i2c / serial on sensor
-		if logLevel > 0: U.logger.log(20, "power off/on twice with relay with gpio:{}".format(resetPowerGPIO))
-		GPIO.output(resetPowerGPIO, 0) # relay on (power off)
-		time.sleep(1)
-		GPIO.output(resetPowerGPIO, 1) # relay off (power on)
-		time.sleep(1)
-		GPIO.output(resetPowerGPIO, 0) # relay on
-		time.sleep(1)
-		GPIO.output(resetPowerGPIO, 1) # relay off(power on)
-		return
+	try:
+		if logLevel > 0: U.logger.log(20, "power off/on resetPowerGPIO:{} enabled?".format(resetPowerGPIO not in ["","-1"]) )
+		if str(resetPowerGPIO) not in ["","0","-1","1"]:  
+			# switch power off/on twice to reset i2c / serial on sensor
+			if logLevel > 0: U.logger.log(20, "power off/on twice with relay with gpio:{}".format(resetPowerGPIO))
+			GPIO.output(resetPowerGPIO, 0) # relay on (power off)
+			time.sleep(1)
+			GPIO.output(resetPowerGPIO, 1) # relay off (power on)
+			time.sleep(1)
+			GPIO.output(resetPowerGPIO, 0) # relay on
+			time.sleep(1)
+			GPIO.output(resetPowerGPIO, 1) # relay off(power on)
+			return True
+	except	Exception as e:
+		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+	return False
 
 ############################################
 def startThreads():
@@ -961,44 +980,74 @@ def startThreads():
 
 ############################################
 def cmdCheckIfGPIOon():
-	global gpioCmdForAction, gpioNumberForCmdAction, anyCmdDefined
-	global gpioCmdIndicator, gpioCmdIndicatorInverse, gpioCmdIndicatorOnTime
+	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction	
 	global cmdQueue, threadCMD
-	global logLevel
+	global logLeve, anyCmdDefined
 	try:
 		if logLevel > 0: U.logger.log(20, "start  loop")
+		ledOn = [0,0,0,0,0]
+		anyOn = False
 		while threadCMD["state"] == "running":
 			try:
-				ledOn = 0
 				while not cmdQueue.empty():
 					cmd = cmdQueue.get()
-					if gpioCmdIndicator != "":
-						ledOn = time.time()
-						GPIO.output(gpioCmdIndicator, gpioCmdIndicatorInverse != "0")
-						#U.logger.log(20, "setting GPIO{} off/on ".format(gpioCmdIndicator) )
 					if anyCmdDefined:
 						for ii in range(1,5):
 							if gpioNumberForCmdAction[ii] == "": continue
 							if gpioCmdForAction[ii] == "": continue
-							if gpioCmdForAction[ii] == cmd:
-								if logLevel > 0: U.logger.log(20, "setting  item({}) GPIO{} off/on due to receiving cmd:{} ".format(ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii]) )
-								GPIO.output(gpioNumberForCmdAction[ii], 0)
-								time.sleep(0.5)
-								GPIO.output(gpioNumberForCmdAction[ii], 1)
-				if ledOn > 0:
-					time.sleep(max(0,gpioCmdIndicatorOnTime/1000. - (time.time() - ledOn)))
-					GPIO.output(gpioCmdIndicator, gpioCmdIndicatorInverse == "0")
+							##    any cmd								cmd >= 1 == wake key any comand			cmd >= 2 == wake + any real cmd					cmd > 2, any real command
+							if gpioCmdForAction[ii]  == 0 or (gpioCmdForAction[ii]  == 1 and cmd > 0) or  (gpioCmdForAction[ii]  == 2 and cmd > 1) or  (gpioCmdForAction[ii]  == 3 and cmd > 2) or  gpioCmdForAction[ii] == cmd:
+								ledOn[ii] = time.time()
+								if logLevel > 0: U.logger.log(20, "setting  item({}) GPIO{} on due to receiving cmd:{} ontime:{}, inv:{} ".format(ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii] ) )
+								GPIO.output(gpioNumberForCmdAction[ii], gpioInverseAction[ii] != "0")
+								anyOn = True
+				if anyOn:
+					anyOn = False
+					for ii in range(1,5):
+						if ledOn[ii] > 0:
+							if time.time() - ledOn[ii]  > gpioOnTimeAction[ii]:
+								ledOn[ii] = 0
+								if logLevel > 0: U.logger.log(20, "setting  item({}) GPIO{} offdue to receiving cmd:{} ontime:{}, inv:{} ".format(ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii] ) )
+								GPIO.output(gpioNumberForCmdAction[ii], gpioInverseAction[ii] == "0")
+							else:
+								anyOn = True
+
 
 			except	Exception as e:
 				U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 				time.sleep(10)
 
-			if not (anyCmdDefined or gpioCmdIndicator): time.sleep(10)
-			time.sleep(0.2)
+			if anyOn: 	time.sleep(0.2)
+			else: 		time.sleep(0.1)
 
 	except	Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	if logLevel > 0: U.logger.log(20, "ended  loop, state:{}".format(threadCMD["state"] ))
+
+
+############################################
+def cmdCheckSerialPort(requestedPortName, devId):
+	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction
+	global sensor, sensors
+	try:
+		cmd = "/bin/ls -l /dev | grep serial"
+		ret = (subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
+		found = ""
+		for line in ret.split("\n"):
+			pp = line.find("serial")
+			if pp < 10: continue
+			found += line[pp-1:]+"; "
+			if line.find(requestedPortName) > 10: 
+				return True
+		msg = "bad_port:_/dev/"+serialPortName+";_existing:"+found.strip().strip(";")
+		data = {"sensors":{sensor:{devId:{"cmd":msg.replace(" ","_")}}}}
+		U.logger.log(20, "cmdCheckSerialPort {}".format(msg))
+		U.sendURL(data, wait=False)
+	except	Exception as e:
+		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+
+	return False
+		
 
 
 ############################################
@@ -1008,12 +1057,12 @@ def execSensorLoop():
 	global oldRaw, lastRead
 	global startTime, lastMeasurement, lastRestart, restartRepeat, restartON
 	global oldi2cOrUart, oldserialPortName, sensorsOld, keepAwake, lastkeepAwake, tempMuteOff, serialPortName
-	global gpioCmdIndicator, gpioCmdIndicatorInverse, gpioCmdIndicatorOnTime
+	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction
 	global refreshRepeat, gpioAlreadyLoaded
 	global currentMute
 	global sleepAfterWrite, oldSleepAfterWrite, commandList, lastValidCmd
 	global resetPowerGPIO
-	global gpioCmdForAction, gpioNumberForCmdAction, anyCmdDefined
+	global anyCmdDefined
 	global cmdQueue, logLevel
 	global threadCMD
 	global firstCmdReceived
@@ -1023,8 +1072,10 @@ def execSensorLoop():
 	firstCmdReceived				= False
 	logLevel						= 1
 	cmdQueue						= queue.Queue()
-	gpioCmdForAction				= ["","","","",""]
-	gpioNumberForCmdAction			= ["","","","",""]
+	gpioCmdForAction				= ["","","","","","",""]
+	gpioNumberForCmdAction			= ["","","","","","",""]
+	gpioInverseAction				= ["","","","","","",""]
+	gpioOnTimeAction				= ["","","","","","",""]
 	anyCmdDefined					= False
 
 	serialPortName					= ""
@@ -1037,9 +1088,6 @@ def execSensorLoop():
 	currentMute						= "0"
 	gpioAlreadyLoaded				= False
 	refreshRepeat					= 50
-	gpioCmdIndicatorOnTime			= 1000
-	gpioCmdIndicatorInverse			= "0"
-	gpioCmdIndicator				= ""
 	restartON						= True
 	restartRepeat					= 400
 	lastRestart						= time.time()
