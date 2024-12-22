@@ -747,7 +747,7 @@ def setRebootingNow(text=""):
 
 #################################
 def doRebootThroughRUNpinReset(tt =20):
-	if G.shutDownPinOutput >1:
+	if G.shutDownPinOutput > 1:
 		setRebootingNow()
 		time.sleep(tt)
 		GPIO.setup(G.shutDownPinOutput, GPIO.OUT)
@@ -813,25 +813,29 @@ def setUpRTC(useRTCnew):
 		if	G.useRTC == useRTCnew and not initRTC: # return if not first and no change
 			return
 
+		bootFile = getBootFileName
+
+
+
 		if useRTCnew == "ds3231":
-			if findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") == 2: # already there ?
+			if findString("dtoverlay=i2c-rtc,ds3231", bootFile) == 2: # already there ?
 				G.useRTC = useRTCnew
 				return
 
 			uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local",	 before="(sleep ")
-			removefromFile("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt")
-			uncommentOrAdd("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt", before="")
+			removefromFile("dtoverlay=i2c-rtc,ds1307", bootFile)
+			uncommentOrAdd("dtoverlay=i2c-rtc,ds3231", bootFile, before="")
 			removefromFile("if [ -e /run/systemd/system ]", "/lib/udev/hwclock-set",nLines=3)
 			subprocess.call("apt-get -y remove fake-hwclock", shell=True)
 			doReboot(tt=30, text="installing HW clock" )
 
 		elif useRTCnew == "ds1307":
-			if findString("dtoverlay=i2c-rtc,ds1307",	"/boot/config.txt") == 2: # already done ?
+			if findString("dtoverlay=i2c-rtc,ds1307",	bootFile) == 2: # already done ?
 				G.useRTC = useRTCnew
 				return
 			uncommentOrAdd("/sbin/hwclock -s|| echo \"hwclock not working\"","/etc/rc.local", before="(sleep ")
-			removefromFile("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt")
-			uncommentOrAdd("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt", before="")
+			removefromFile("dtoverlay=i2c-rtc,ds3231", bootFile)
+			uncommentOrAdd("dtoverlay=i2c-rtc,ds1307", bootFile, before="")
 
 			# in /lib/udev/hwclock-set ADD # infront of
 			#if [ -e /run/systemd/system ] ; then
@@ -843,13 +847,13 @@ def setUpRTC(useRTCnew):
 			doReboot(tt=30, text="installing HW clock")
 
 		else:
-			if (findString("dtoverlay=i2c-rtc,ds1307", "/boot/config.txt") != 2 and
-				findString("dtoverlay=i2c-rtc,ds3231", "/boot/config.txt") != 2 ) : # already done ?
+			if (findString("dtoverlay=i2c-rtc,ds1307", bootFile) != 2 and
+				findString("dtoverlay=i2c-rtc,ds3231", bootFile) != 2 ) : # already done ?
 				G.useRTC = useRTCnew
 				return
 
-			removefromFile("dtoverlay=i2c-rtc,ds3231","/boot/config.txt")
-			removefromFile("dtoverlay=i2c-rtc,ds1307","/boot/config.txt")
+			removefromFile("dtoverlay=i2c-rtc,ds3231",bootFile)
+			removefromFile("dtoverlay=i2c-rtc,ds1307",bootFile)
 			removefromFile('/sbin/hwclock -s|| echo "hwclock not working"', "/etc/rc.local" )
 			# in /lib/udev/hwclock-set REMOVE # infront of
 			#if [ -e /run/systemd/system ] ; then
@@ -2032,13 +2036,62 @@ def checkIfusbSerialActive(usb):
 	try:
 		cmd = "/bin/ls -l /dev | grep {}".format(usb)
 		ret = (subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
-		if  ret.find(usb) > -1 and ret.find("dialout")> -1: return True
+		if  ret.find(usb) > -1 and ret.find("dialout")> -1: 
+			return True
 		else:
 			#logger.log(30, u"{} is not active, returned:{}  cmd:{} ".format( usb, ret, cmd) )
 			return False
 	except	Exception as e:
 		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
+
+
+#################################
+def checkAndaddIfenable_uart1InConfigtxt():
+	try:
+		bootFile = getBootFileName()
+		dd = doReadSimpleFile(bootFile)
+		logger.log(20,u"cBY:{:<20} checking if enable_uart=1 in confix.txt".format( G.program))
+
+		enblPresent =  dd.find("enable_uart=1")
+		if enblPresent > 1: 
+			logger.log(20,u"cBY:{:<20} checking if enable_uart=1 all ok".format( G.program))
+			return False # all ok
+
+
+		enblPresent =  dd.find("enable_uart=")
+
+		if enblPresent == -1:
+			dd += "\nenable_uart=1\n"
+			doWriteSimpleFile(bootFile, dd)
+			logger.log(20,u"cBY:{:<20} checking if enable_uart=1 added".format( G.program))
+			return True # reboot needed
+
+		enblPresent = dd.find("enable_uart=0")
+		if enblPresent > 1: 
+			dd = dd.replace("enable_uart=0", "enable_uart=1")
+			doWriteSimpleFile(bootFile, dd)
+			logger.log(20,u"cBY:{:<20} checking if enable_uart=1 repalce 0 with 1".format( G.program))
+			return True # reboot needed
+
+		return False
+	except	Exception as e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return False
+
+
+#################################
+def getBootFileName():
+	try:
+		bootFile = "/boot/config.txt"
+		if not os.path.isfile(bootFile):
+			bootFile = "/boot/firmware/config.txt"
+		else:
+			if doReadSimpleFile(bootFile).find("/boot/firmware/config.txt") > -1:
+				bootFile = "/boot/firmware/config.txt"
+	except	Exception as e:
+		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return bootFile
 
 
 
@@ -2083,7 +2136,7 @@ def getSerialDEV():
 			subprocess.Popen("systemctl stop serial-getty@ttyS0.service" ,	  shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 			subprocess.Popen("systemctl disable serial-getty@ttyS0.service" , shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 
-			if serials.find("serial0 -> ttyS0")==-1:
+			if serials.find("serial0 -> ttyS0")== -1:
 				logger.log(30, "cBY:{:<20} pi3 4 .. wrong serial port setup  .. enable serial port in raspi-config .. can not run missing in 'ls -l /dev/' : serial0 -> ttyS0".format(G.program)  )
 				time.sleep(10)
 				return ""

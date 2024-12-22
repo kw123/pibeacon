@@ -1,4 +1,4 @@
-added features / changes in added features / changes in v2022.183.122 @ 2024-12-19
+added features / changes in added features / changes in v2022.183.123 @ 2024-12-22
 ==================================================
 
 1. added option to set lastBatteryReplaced datetime stamp for devices in menu (select beacon from list shown) or in beacon device edit.
@@ -6,7 +6,9 @@ added features / changes in added features / changes in v2022.183.122 @ 2024-12-
    added option to set a GPIO output to switch on an LED when a phrase is recognized (any phrase or specific)
    added option to switch gpios on/off if specific voice commands (4) are received, eg turn the lights on (id#103) --> toggle gpio 21
    added option to set timing parameters  in device edit to adopt to different circumstances (experts only)
-   added chec if serial/uart port is properly defined, if not a waring is printed in indigo log file
+   added check if serial/uart port is properly defined, if not a waring is printed in indigo log file
+      and try to fix by adding enable_uart=1 to /boot/(firmware)/config.txt if not present
+   added check for directory for config.txt,  wad /boot , with recent op-sys it is /boot/firmware/
 
 
 added features / changes in added features / changes in v2022.181.115 @ 2024-11-11

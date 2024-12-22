@@ -1026,7 +1026,7 @@ def cmdCheckIfGPIOon():
 
 
 ############################################
-def cmdCheckSerialPort(requestedPortName, devId):
+def cmdCheckSerialPort(requestedPortName, devId, reboot=True):
 	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction
 	global sensor, sensors
 	try:
@@ -1039,10 +1039,20 @@ def cmdCheckSerialPort(requestedPortName, devId):
 			found += line[pp-1:]+"; "
 			if line.find(requestedPortName) > 10: 
 				return True
+
+		configtxtNotOk = U.checkAndaddIfenable_uart1InConfigtxt()
+
 		msg = "bad_port:_/dev/"+serialPortName+";_existing:"+found.strip().strip(";")
+		if configtxtNotOk : msg += "enable_uart=1  missing  in config.txt"
+		if reboot: msg += " rebooting now"
 		data = {"sensors":{sensor:{devId:{"cmd":msg.replace(" ","_")}}}}
 		U.logger.log(20, "cmdCheckSerialPort {}".format(msg))
 		U.sendURL(data, wait=False)
+
+		# ask master to reboot
+		if reboot:
+			U.doWriteSimpleFile(G.homeDir+"temp/rebootNeeded", "adding serial port")
+
 	except	Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 

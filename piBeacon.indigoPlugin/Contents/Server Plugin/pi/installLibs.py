@@ -20,7 +20,7 @@ G.program  = "installLibs"
 def setupLibs(upgradeOpSys):
 		reBootNeeded = False
 		U.logger.log(30,	 "==== starting setup sensor libraries")
-
+		bootFile = U.getBootFileName()
 		U.logger.log(30,"==== check if nameserver works")
 		cmd= "/bin/ping -c 3 -i 1 -W 3 -q www.google.com " # not /sbin/ like on a mac!!
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
@@ -43,31 +43,31 @@ def setupLibs(upgradeOpSys):
 			U.logger.log(30, "need to reboot, added 'python /home/pi/callbeacon.py &'	to /home/pi/callbeacon.py")
 			reBootNeeded=True
 
-		if U.uncommentOrAdd("dtoverlay=w1-gpio","/boot/config.txt") >0:
-			U.logger.log(30, "need to reboot, added 'dtoverlay=w1-gpio'	to /boot/config.txt")
+		if U.uncommentOrAdd("dtoverlay=w1-gpio",bootFile) >0:
+			U.logger.log(30, "need to reboot, added 'dtoverlay=w1-gpio' to " + bootFile)
 			reBootNeeded=True
 
-		if U.removefromFile("dtparam=spi=off","/boot/config.txt")>0:
+		if U.removefromFile("dtparam=spi=off",bootFile)>0:
 			U.logger.log(30, "removed dtparam=spi=off")
 
-		if U.removefromFile("dtparam=i2c_arm=off","/boot/config.txt")>0:
+		if U.removefromFile("dtparam=i2c_arm=off",bootFile)>0:
 			U.logger.log(30, "removed blacklist i2c-bcm2708")
 
-		if U.uncommentOrAdd("dtparam=i2c_arm=on","/boot/config.txt") >0:
-			U.logger.log(30, "need to reboot, added 'dtparam=i2c_arm=on'	 to /boot/config.txt")
+		if U.uncommentOrAdd("dtparam=i2c_arm=on",bootFile) >0:
+			U.logger.log(30, "need to reboot, added 'dtparam=i2c_arm=on' to " + bootFile)
 			reBootNeeded=True
 
-		if U.uncommentOrAdd("dtparam=i2c1=on","/boot/config.txt") >0:
-			U.logger.log(30, "need to reboot, added 'dtparam=i2c1=on'  to /boot/config.txt")
+		if U.uncommentOrAdd("dtparam=i2c1=on",bootFile) >0:
+			U.logger.log(30, "need to reboot, added 'dtparam=i2c1=on' to " + bootFile)
 			reBootNeeded=True
 
 
-		if U.uncommentOrAdd("i2c-dev","/boot/config.txt") >0:
+		if U.uncommentOrAdd("i2c-dev",bootFile) >0:
 			U.logger.log(30, "need to reboot, added 'i2c-dev'  to /etc/modules")
 			reBootNeeded=True
 
 		if U.uncommentOrAdd("i2c-bcm2708","/etc/modules") >0:
-			U.logger.log(30, "need to reboot, added '2c-bcm2708'	 to /etc/modules")
+			U.logger.log(30, "need to reboot, added '2c-bcm2708'  to /etc/modules")
 			reBootNeeded=True
 
 		if U.removefromFile("blacklist i2c-bcm2708","/etc/modprobe.d/raspi-blacklist.conf")>0:
@@ -76,8 +76,8 @@ def setupLibs(upgradeOpSys):
 		if U.removefromFile("blacklist spi-bcm2708","/etc/modprobe.d/raspi-blacklist.conf")>0:
 			U.logger.log(30, "removed blacklist i2c-bcm2708")
 
-		#if U.uncommentOrAdd("display_rotate=2","/boot/config.txt") >0:
-		#	 U.logger.log(30, "need to reboot, added 'dtparam=i2c1=on'  to /boot/config.txt")
+		#if U.uncommentOrAdd("display_rotate=2",bootFile) >0:
+		#	 U.logger.log(30, "need to reboot, added 'dtparam=i2c1=on'  to /etc/modules")
 		#	 reBootNeeded=True
 
 		if False:

@@ -119,10 +119,11 @@ def checkIfReset(needToReset):
 
 def mapBusmasterToGpio():
 	global busMasterToGPIO, lastmapBusmasterToGpio, oneWireGpios
+	global bootFileName
 	try:
 		"""
 use :
-looking  in /boot/config.txt for eg: 
+looking  in config.txt for eg: 
 dtoverlay=w1-gpio
 dtparam=gpiopin=26   <-- this will be  busmaster 4
 dtoverlay=w1-gpio
@@ -143,8 +144,9 @@ oneWireGpios set in rpi device edit = [1,4,6,7,8..]
 		newMapping = False
 		busMasterToGPIO = {}
 
-		if (oneWireGpios) == 0: #(use /boot/config.txt to check)
-			f = open("/boot/config.txt","r")
+		if (oneWireGpios) == 0: #(use config.txt to check)
+			
+			f = open(bootFileName,"r")
 			configTxt = f.read().split("\n")
 			f.close()
 			pinsFound = []
@@ -184,7 +186,7 @@ oneWireGpios set in rpi device edit = [1,4,6,7,8..]
 
 
 	"""
-replacing in /boot/config.txt:
+replacing in config.txt:
 dtoverlay=w1-gpio
 dtparam=gpiopin=26
 	"""
@@ -777,6 +779,7 @@ def execWire():
 	global resetTime, lastResetDateTime, sendMetaData
 	global oneWireGpios,oneWireGpiosLast
 	global resetCounter, oneWireForceReboot
+	global bootFileName
 
 	oneWireForceReboot		= -1
 	resetCounter			= 0
@@ -816,7 +819,7 @@ def execWire():
 	myPID	   = str(os.getpid())
 	U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
-
+	bootFileName = U.getBootFileName()
 	readParams()
 
 	if U.getIPNumber() > 0:
