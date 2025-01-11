@@ -1192,6 +1192,11 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<Title>RESET</Title>
 				<CallbackMethod>setresetDeviceCALLBACKmenu</CallbackMethod>
 			</Field>
+			<Field id="execRestart" type="button">
+				<Label> ....after selection click</Label>
+				<Title>RESTART</Title>
+				<CallbackMethod>setrestartDeviceCALLBACKmenu</CallbackMethod>
+			</Field>
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="newCalibration">

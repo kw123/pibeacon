@@ -531,10 +531,10 @@ def getOsVersion():
 			if line.find("VERSION_ID=") == 0:
 				items = line.split("=")
 				OSVersion = int( items[1].strip('"') )
-				#logger.log(10, u"cBY:{:<20} os version:{}".format(G.program,osVersion) )
+				#logger.log(10, "cBY:{:<20} os version:{}".format(G.program,osVersion) )
 				break
 		except	Exception as e:
-			logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+			logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return OSVersion
 
 
@@ -582,7 +582,7 @@ def doRead(inFile="{}temp/parameters".format(G.homeDir), lastTimeStamp="", testT
 			return inp, inRaw, t
 		return inp, inRaw
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		if str(e).find("Too many open files") >-1:
 			doReboot(tt=3, text=str(e), force=True)
 	return {}, ""
@@ -675,7 +675,7 @@ def getGlobalParams(inp):
 				writeTZ(iTZ=tznew)
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	return
 
@@ -693,7 +693,7 @@ def cleanUpSensorlist(sens, theSENSORlist):
 			pass
 		return theSENSORlist
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return {}
 #################################
 def doReboot(tt=10., text="", cmd="", force=False):
@@ -708,7 +708,7 @@ def doReboot(tt=10., text="", cmd="", force=False):
 
 		doRebootThroughRUNpinReset()
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return 
 
 #################################
@@ -788,7 +788,7 @@ def manualStartOfRTC():
 		subprocess.call("/usr/bin/sudo bash -c 'echo ds1307 0x68 > /sys/class/i2c-adapter/i2c-1/new_device'", shell=True)
 		subprocess.call("sudo hwclock -s", shell=True)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 		
 
@@ -865,7 +865,7 @@ def setUpRTC(useRTCnew):
 
 		doReboot(tt=30, text=" .. reason de installing HW clock" ,cmd="")
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -883,7 +883,7 @@ def getIPNumber(doPrint=True):
 			G.ipAddress = ipAddressRead
 			return 0
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	logger.log(30, "cBY:{:<20} no ip number defined".format(G.program))
 
 	return 1
@@ -1143,7 +1143,7 @@ def getIPCONFIG():
 					G.wifiID = retwifiID.split(":")[1]
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	G.packetsTime = time.time()
 	return eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled
@@ -1162,7 +1162,7 @@ def getIPofRouter():
 				return  lineItems[2]
 				break
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 ################################
@@ -1178,7 +1178,7 @@ def whichWifi():
 		else:
 			G.wifiType = "normal"
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return G.wifiType
 
 ################################
@@ -1190,7 +1190,7 @@ def checkWhenAdhocWifistarted():
 		if "startTime" in xxx:
 			return xxx["startTime"]
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return -1
 
 #################################
@@ -1209,7 +1209,7 @@ def startAdhocWifi():
 		time.sleep(2)
 		doReboot(tt=0)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -1224,7 +1224,7 @@ def prepNextNormalRestartFromAdhocWifi():
 		else:
 			logger.log(20, "cBY:{:<20}  restoring wifi /etc/network/interface not needed, adhoc file not present ".format(G.program))
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 #################################
 def stopAdhocWifi():
@@ -1236,7 +1236,7 @@ def stopAdhocWifi():
 		time.sleep(2)
 		doReboot(tt=0)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -1254,7 +1254,7 @@ def clearAdhocWifi():
 		if  os.path.isfile("{}adhocWifistarted.time".format(G.homeDir)):
 			subprocess.call("/usr/bin/sudo rm {}adhocWifistarted.time".format(G.homeDir), shell=True)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -1285,10 +1285,10 @@ def startWiFi():
 		ret.append((subprocess.Popen("/usr/bin/sudo wpa_cli -i wlan0 reassociate " 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		ret.append((subprocess.Popen("/usr/bin/sudo /etc/init.d/networking restart&" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		#subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
-		logger.log(30, u"cBY:{:<20} starting Wifi: {}".format(G.program, ret))
+		logger.log(30, "cBY:{:<20} starting Wifi: {}".format(G.program, ret))
 		G.wifiEnabled = True
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	return
 #################################
@@ -1305,10 +1305,10 @@ def startEth():
 		ret.append((subprocess.Popen("/usr/bin/sudo dhcpcd eth0&" 	 				,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		ret.append((subprocess.Popen("/usr/bin/sudo /etc/init.d/networking restart&" 	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		#subprocess.call('/usr/bin/sudo cp {}dhclient.conf-fast /etc/dhcp/dhclient.conf'.format(G.homeDir), shell=True)
-		logger.log(30,  u"cBY:{:<20} starting ETH: {}".format(G.program, ret))
+		logger.log(30,  "cBY:{:<20} starting ETH: {}".format(G.program, ret))
 		G.eth0Enabled = True
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -1317,17 +1317,17 @@ def stopWiFi(calledFrom=""):
 		ret = []
 		osVersion = getOsVersion()
 		if G.wifiEth["wlan0"]["on"] == "dontChange": return
-		logger.log(30, u"cBY:{:<20} stopping WiFi: called from:{}".format(G.program, calledFrom))
+		logger.log(30, "cBY:{:<20} stopping WiFi: called from:{}".format(G.program, calledFrom))
 		ret.append((subprocess.Popen("/usr/bin/sudo rfkill unblock all"    	,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		if osVersion < 8:
 			ret.append((subprocess.Popen("/usr/bin/sudo ifconfig wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 		else:
 			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set wlan0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 
-		logger.log(30, u"cBY:{:<20} stopping WiFi: {}; called from:{}".format(G.program, ret, calledFrom))
+		logger.log(30, "cBY:{:<20} stopping WiFi: {}; called from:{}".format(G.program, ret, calledFrom))
 		G.wifiEnabled = False
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 #################################
 def stopEth():
@@ -1341,10 +1341,10 @@ def stopEth():
 		else:
 			ret.append((subprocess.Popen("/usr/bin/sudo /sbin/ip link set  eth0 down " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip())
 
-		logger.log(30, u"cBY:{:<20} stopping ETH: {}".format(G.program, ret))
+		logger.log(30, "cBY:{:<20} stopping ETH: {}".format(G.program, ret))
 		G.eth0Enabled = False
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -1379,7 +1379,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 			logger.log(20, "cBY:{:<20} starting web server INPUT.. error no ip number".format(G.program) )
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -1412,7 +1412,7 @@ def startwebserverSTATUS(port, useIP="", force=False):
 
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	return
 
@@ -1543,13 +1543,13 @@ def checkwebserverINPUT():
 							writeJson("{}timezone.set".format(G.homeDir), {"timezone":data["timezone"]}, sort_keys=False, indent=0)
 						except: pass
 				except	Exception as e:
-					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+					logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 			if makeNewSupplicantFile(data):
 				newFile = True
 			return newFile
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return newFile
 
 
@@ -1575,7 +1575,7 @@ def getTZ():
 			if line.lower().find("time zone:") > -1:
 				return line.split(":")[1]
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 ###############################
 def getTZNumber():
@@ -1663,7 +1663,7 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -1679,7 +1679,7 @@ def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
 		time.sleep(0.2)
 		startWiFi()
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -1690,7 +1690,7 @@ def restartWifi():
 		time.sleep(0.2)
 		startWiFi()
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -1712,7 +1712,7 @@ def copySupplicantFileFromBoot():
 			logger.log(20, "cBY:{:<20} copying new interfaces file from boot".format(G.program))
 		return retCode
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 #################################
@@ -1812,7 +1812,7 @@ def makeNewSupplicantFile(data):
 		doReboot(tt=2)
 		return True
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 #
@@ -1994,7 +1994,7 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP, noRestart=False):
 			if not noRestart: stopWiFi()
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 
 	return wlan0IP,eth0IP, changed
@@ -2004,9 +2004,9 @@ def writeIPtoFile(ip,reason=""):
 	try:
 		G.ipAddress = ip
 		writeFile("ipAddress", G.ipAddress.strip(" ").strip("\n").strip(" "))
-		logger.log(30,u"cBY:{:<20} writing ip number to file >>{}<<  reason:{}".format( G.program, G.ipAddress, reason))
+		logger.log(30,"cBY:{:<20} writing ip number to file >>{}<<  reason:{}".format( G.program, G.ipAddress, reason))
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -2018,16 +2018,16 @@ def findActiveUSB():
 		# returns: crw-rw----  1 root dialout 188,   0 Nov 22 09:51 ttyUSB0
 		ret = (subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 
-		#logger.log(10,u"cBY:{:<20} found ls /dev usb:  {}".format( G.program,ret) )
+		#logger.log(10,"cBY:{:<20} found ls /dev usb:  {}".format( G.program,ret) )
 		for line in ret.split("\n"):
 				if line.find("dialout") == -1: continue
 				line = line.split()[-1]
 				if line.find("tty") == -1: continue
 				line = line.split("tty")[-1]
-				#logger.log(10,u"cBY:{:<20} return  {}".format( G.program,line) )
+				#logger.log(10,"cBY:{:<20} return  {}".format( G.program,line) )
 				activUsbList.append(line)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return activUsbList
 
 
@@ -2039,10 +2039,9 @@ def checkIfusbSerialActive(usb):
 		if  ret.find(usb) > -1 and ret.find("dialout")> -1: 
 			return True
 		else:
-			#logger.log(30, u"{} is not active, returned:{}  cmd:{} ".format( usb, ret, cmd) )
 			return False
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 
@@ -2051,11 +2050,11 @@ def checkAndaddIfenable_uart1InConfigtxt():
 	try:
 		bootFile = getBootFileName()
 		dd = doReadSimpleFile(bootFile)
-		logger.log(20,u"cBY:{:<20} checking if enable_uart=1 in confix.txt".format( G.program))
+		logger.log(20,"cBY:{:<20} checking if enable_uart=1 in confix.txt".format( G.program))
 
 		enblPresent =  dd.find("enable_uart=1")
 		if enblPresent > 1: 
-			logger.log(20,u"cBY:{:<20} checking if enable_uart=1 all ok".format( G.program))
+			logger.log(20,"cBY:{:<20} checking if enable_uart=1 all ok".format( G.program))
 			return False # all ok
 
 
@@ -2064,19 +2063,19 @@ def checkAndaddIfenable_uart1InConfigtxt():
 		if enblPresent == -1:
 			dd += "\nenable_uart=1\n"
 			doWriteSimpleFile(bootFile, dd)
-			logger.log(20,u"cBY:{:<20} checking if enable_uart=1 added".format( G.program))
+			logger.log(20,"cBY:{:<20} checking if enable_uart=1 added".format( G.program))
 			return True # reboot needed
 
 		enblPresent = dd.find("enable_uart=0")
 		if enblPresent > 1: 
 			dd = dd.replace("enable_uart=0", "enable_uart=1")
 			doWriteSimpleFile(bootFile, dd)
-			logger.log(20,u"cBY:{:<20} checking if enable_uart=1 repalce 0 with 1".format( G.program))
+			logger.log(20,"cBY:{:<20} checking if enable_uart=1 repalce 0 with 1".format( G.program))
 			return True # reboot needed
 
 		return False
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 
@@ -2090,7 +2089,7 @@ def getBootFileName():
 			if doReadSimpleFile(bootFile).find("/boot/firmware/config.txt") > -1:
 				bootFile = "/boot/firmware/config.txt"
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return bootFile
 
 
@@ -2157,7 +2156,7 @@ def getSerialDEV():
 
 		return sP
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 
@@ -2220,8 +2219,8 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 				return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-		logger.log(30, u"cBY:{:<20} HCIs={}".format(G.program, HCIs))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} HCIs={}".format(G.program, HCIs))
 
 	sendURL( data={"ERROR":"can_not_setup_BLE,_HCIs:{},useDev:{}, defaultBus:{}, doNotUseHCI:{}, tryBLEmac:{}".format(HCIs, useDev, defaultBus, doNotUseHCI, tryBLEmac )} )
 
@@ -2272,7 +2271,7 @@ def whichHCI():
 		hci["ret"] = ret
 		return hci
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return {}
 #################################
 def checkIfHCiUP(useHCI,verbose=False):
@@ -2307,7 +2306,7 @@ hci1:	Type: Primary  Bus: UART
 		return False			
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 #################################
@@ -2326,7 +2325,7 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 
 			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait,  "verbose":verbose, "squeeze":squeeze, "escape":escape})
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -2453,13 +2452,13 @@ def execSend():
 								except: pass
 
 				except	Exception as e:
-					logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+					logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 				subprocess.call("rm  {}temp/sending > /dev/null 2>&1 ".format(G.homeDir), shell=True)
 				G.lastAliveSend = time.time()
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 	return
 
@@ -2470,7 +2469,7 @@ def echoToMessageSend(data, wasSend):
 		logger.log(10, "cBY:{:<20}  {} {}\n".format(G.program, wasSend, data) )
 		writeFile("temp/messageSend", "{} {} {}: {}\n".format(datetime.datetime.now().strftime("%d-%H:%M:%S"), wasSend, G.program , data) )
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 
 ######## un decode i2c ether from in or from hex
@@ -2490,7 +2489,7 @@ def getI2cAddress(item,default =0):
 			i2cAddress =default
 		return  i2cAddress
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		return default
 
 ######## setup and use	multiplexer if requested
@@ -2546,7 +2545,7 @@ def removeOutPutFromFutureCommands(pin, devType):
 				del execcommands[channel]
 			writeJson("{}execcommands.current".format(G.homeDir),execcommands)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		if str(e).find("Read-only file system:") > -1:
 			doReboot(tt=0)
 
@@ -2634,7 +2633,7 @@ def doFileCheck(xxx,extension):
 			return True
 		return False
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 #################################
 def checkForNewCommand(fname):
@@ -2649,7 +2648,7 @@ def checkForNewCommand(fname):
 			return ""
 		return ""
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 #################################
@@ -2694,7 +2693,7 @@ def writeJson(fName, data, sort_keys=False, indent=0):
 		f.write(out)
 		f.close()
 	except	Exception as e:
-		logger.log(30,u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30,"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		if str(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return
@@ -2727,7 +2726,7 @@ def readJson(fName):
 	data = {}
 	raw  = ""
 	if not os.path.isfile(fName):
-		logger.log(10,u"cBY:{:<20}  fname does not exist:{}, return empty".format(G.program, fName))
+		logger.log(10,"cBY:{:<20}  fname does not exist:{}, return empty".format(G.program, fName))
 		return {}, ""
 
 	for ii in range(2):
@@ -2739,7 +2738,7 @@ def readJson(fName):
 			if ii == 1: logger.log(20, "cBY:{:<20} read error fixed".format(G.program) )
 			return data, raw
 		except	Exception as e:
-			logger.log(20,u"cBY:{:<20} Line {} has error={}, fname:{}, data:>>{}..{}<<".format(G.program, sys.exc_info()[-1].tb_lineno, e, fName, raw[0:50],raw[-50:] ))
+			logger.log(20,"cBY:{:<20} Line {} has error={}, fname:{}, data:>>{}..{}<<".format(G.program, sys.exc_info()[-1].tb_lineno, e, fName, raw[0:50],raw[-50:] ))
 			if ii > 0:
 				return {}, ""
 			time.sleep(1)
@@ -2809,7 +2808,7 @@ def checkresetCount(IPCin):
 			#print "checkresetCount pin=", pin
 		writeINPUTcount(IPC)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	#print "checkresetCount pin=", IPC[15:25]
 	return IPC
 
@@ -2892,7 +2891,7 @@ def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAct
 
 
 				except	Exception as e:
-					 logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+					 logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 				if	action !="":
 					if "action{}".format(action) in sens and sens["action{}".format(action)] !="":
@@ -2910,7 +2909,7 @@ def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAct
 
 		############ local action  end #######
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return lastGPIO
 
 
@@ -2970,7 +2969,7 @@ def manageActions(action,waitTime=3,click="UP", aType="actionDoubleClick",devId=
 			return
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -2982,7 +2981,7 @@ def checkIfrebootAction(action):
 			killOldPgm(-1,"display.py")
 			time.sleep(0.2)
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -2994,7 +2993,7 @@ def checkIfrebootAction(action):
 def getSensorInfo(sensDict, i2cList):
 	i2cError	= ""
 	try:
-		#logger.log(30, u"cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
+		#logger.log(30, "cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
 		sensList = ""
 		for sens in sensDict:
 			if sens.find("i2c") == 0: # strip i2c from the beginning of name.
@@ -3009,7 +3008,7 @@ def getSensorInfo(sensDict, i2cList):
 			for devId in sensDict[sens]:
 				if sensDict[sens][devId].get("i2cOrUart","") == "uart": continue
 				if "i2cAddress" in sensDict[sens][devId]:
-					logger.log(10, u"cBY:{:<20}   i2c:{} in sensor:{}".format(G.program, sensDict[sens][devId]["i2cAddress"], sens) )
+					logger.log(10, "cBY:{:<20}   i2c:{} in sensor:{}".format(G.program, sensDict[sens][devId]["i2cAddress"], sens) )
 					try:
 						i2cI = int(sensDict[sens][devId]["i2cAddress"])
 						if i2cI < 1: continue
@@ -3021,17 +3020,17 @@ def getSensorInfo(sensDict, i2cList):
 					i2cActive = i2cH.split("=")[0]
 					if int(i2cActive) != i2cI: continue
 					matchFound =True
-					logger.log(10, u"cBY:{:<20}  match found for i2c:{}".format(G.program,i2cI) )
+					logger.log(10, "cBY:{:<20}  match found for i2c:{}".format(G.program,i2cI) )
 					break
 				if not matchFound:
-					logger.log(10, u"cBY:{:<20}  no match found for i2c:{}".format(G.program,i2cI) )
+					logger.log(10, "cBY:{:<20}  no match found for i2c:{}".format(G.program,i2cI) )
 					i2cError = "{}sensor:{} - devId:{} i2c:{}/{}; ".format(i2cError, sens, devId, i2cI,hex(i2cI))
 
 		i2cError = i2cError.strip("; ")
 		if len(sensList) > 0: sensList = sensList.strip(" ").strip(",")
 		return i2cError, sensList
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return "","",""
 
 #
@@ -3039,7 +3038,7 @@ def getSensorInfo(sensDict, i2cList):
 #################################
 def getRPiType():
 	try:
-		#logger.log(30, u"cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
+		#logger.log(30, "cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
 		#																	remove trailing null chars;  \\ for escape  of \
 		rpiType	 = (subprocess.Popen("cat /sys/firmware/devicetree/base/model | tr -d '\\000' " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 		rpiType	 = ''.join(i for i in rpiType if ord(i)>1).split("Raspberry ")
@@ -3051,7 +3050,7 @@ def getRPiType():
 		#  --> Raspberry Pi 3 Model B Plus Rev 1.3/ ser#00000000dcfb216c
 		return rpiType
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 
@@ -3068,7 +3067,7 @@ def getOSinfo():
 		ret = "{}, {}, {}".format(os, os1, os2)
 		return str(ret)
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 
@@ -3083,7 +3082,7 @@ def getTemperatureOfRPI():
 		except: temp = "0"
 		return  temp
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 
@@ -3137,7 +3136,7 @@ def checkIfThrottled():
 			logger.log(20, "retCode: {}".format(retCode))
 		return  retCode
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 
@@ -3147,7 +3146,7 @@ def getLastBoot():
 		lastBoot = (subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n")
 		return lastBoot
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ""
 
 #################################
@@ -3156,7 +3155,7 @@ def resetI2cBus():
 		cmd = "sudo su; echo '3f804000.i2c' > /sys/bus/platform/drivers/i2c-bcm2835/unbind;echo '3f804000.i2c' > /sys/bus/platform/drivers/i2c-bcm2835/bind &"
 		subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return 
 
 
@@ -3177,13 +3176,13 @@ def checki2cdetect():
 			f.close()
 
 			if i2cout.find("   0  1  2  3  4  5  6  ") > -1 and i2cout.find("70: ") > 10 : 
-				#logger.log(20, u"cBY:{:<20} cmd:{} ret ok .. is:\n{}".format(G.program, cmd, i2cout))
+				#logger.log(20, "cBY:{:<20} cmd:{} ret ok .. is:\n{}".format(G.program, cmd, i2cout))
 				return "ok"
 
-			logger.log(20, u"cBY:{:<20} cmd:{}  ret bad.. is:\n{}".format(G.program, cmd, i2cout))
+			logger.log(20, "cBY:{:<20} cmd:{}  ret bad.. is:\n{}".format(G.program, cmd, i2cout))
 
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return "bad"
 
 #################################
@@ -3221,7 +3220,7 @@ def geti2c():
 				i2cChannelsHEX.append("{}".format(hex(channel)))
 		return i2cChannelsINTHex, i2cChannelsHEX
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return ["i2c detect error"]
 
 
@@ -3233,7 +3232,7 @@ def geti2cIntChannels():
 		for ret in i2cChannelsINTHex:
 			retInt.append(int(ret.split("=")[0]))
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		return  []
 	return retInt
 
@@ -3258,10 +3257,10 @@ def sendSensorAndRPiInfoToPlugin(sensDict,fanOnTimePercent=""):
 		sendURL(data=data, sendAlive="alive", squeeze=False, escape=True)
 		if G.i2cMustBeOn and ( not i2cok or i2cError != ""):
 			startI2C(text="reason: {}, {}".format(i2cok, i2cError))
-			logger.log(20, u"cBY:{:<20} enabled i2c reason: {}, {}".format(G.program, i2cok, i2cError))
+			logger.log(20, "cBY:{:<20} enabled i2c reason: {}, {}".format(G.program, i2cok, i2cError))
 
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 #################################
@@ -3269,9 +3268,9 @@ def startI2C(text=""):
 	try:
 		cmd = "sudo raspi-config nonint do_i2c 0 "
 		subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-		logger.log(20, u"cBY:{:<20} enabled i2c with cmd:{}".format(G.program, cmd))
+		logger.log(20, "cBY:{:<20} enabled i2c with cmd:{}".format(G.program, cmd))
 	except Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 
 
 #################################
@@ -3313,7 +3312,7 @@ def checkIfAliveNeedsToBeSend():
 		if time.time() - lastSend> 330:	 # do we have to send alive signal to plugin?
 			sendURL(sendAlive=True )
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
 
 
@@ -3342,7 +3341,7 @@ def checkIfPauseSensor(sensor):
 				subprocess.call("/usr/bin/sudo rm {}temp/pauseSensor".format(G.homeDir), shell=True)
 				return 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return 
 
 
@@ -3494,7 +3493,7 @@ def setOffsetFromCalibration(calib):
 			logger.log(20,'theClass.magOffset {}'.format(offset))
 			return offset
 		except	Exception as e:
-			logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+			logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		return [0,0,0]
 
 #################################
@@ -3788,7 +3787,7 @@ def checkMGACCGYRdata(new, oldIN, dims, coords, testForBad, devId, sensor, quick
 					G.lastAliveSend  = time.time()
 
 		except	Exception as e:
-			logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+			logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 			retCode="exception"
 		if retCode =="ok":
 			makeDATfile(G.program, data)
@@ -3835,11 +3834,11 @@ class simpleI2cReadWrite:
 		self.fr.close()
 
 #################################
-def findString(string, file):
-	if string =="": return 0
+def findString(string, filename):
+	if string == "": return 0
 
 	try:
-		f=open(file,"r")
+		f = open(filename,"r")
 		text0=f.read()
 		text =text0.split("\n")
 		f.close()
@@ -3850,7 +3849,8 @@ def findString(string, file):
 				return 1
 		return 0
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "string:{}, fname:{}".format(G.program, string, filename))
 		if str(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return 3
@@ -3879,7 +3879,7 @@ def checkIfInFile(stringItems, file):
 			if nFound == nItems: return "found"
 		return "not found" # == not found
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		if str(e).find("Read-only file system:") >-1:
 			subprocess.call("/usr/bin/sudo reboot", shell=True)
 	return "error"
@@ -3937,7 +3937,7 @@ def uncommentOrAdd(string, file, before="", nLines=1):
 			f.close()
 			return 1
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		if str(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 
@@ -3976,7 +3976,7 @@ def removefromFile(string, file, nLines=1):
 			f.close()
 		return 0
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 		if str(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return 1
@@ -3994,7 +3994,7 @@ def startNTP(mode=""):
 #################################
 def installNTP():
 	if os.path.isfile("/etc/init.d/ntp"): return 
-	logger.log(30, u"cBY:{:<20} started NTP install w >>/usr/bin/sudo apt-get -y install ntp &<<;  will be installed next time around")
+	logger.log(30, "cBY:{:<20} started NTP install w >>/usr/bin/sudo apt-get -y install ntp &<<;  will be installed next time around")
 	subprocess.call("/usr/bin/sudo apt-get -y install ntp & ", shell=True)
 	time.sleep(30)
 	return
@@ -4117,7 +4117,7 @@ def testPing(ipToPing):
 
 		# IPnumber setup?
 		if not isValidIP(ipToPing):
-			logger.log(10, u"cBY:{:<20}  testPing bad ip number to ping >>{}<<".format(G.program,ipToPing) )
+			logger.log(10, "cBY:{:<20}  testPing bad ip number to ping >>{}<<".format(G.program,ipToPing) )
 			return 1
 
 
@@ -4132,12 +4132,12 @@ def testPing(ipToPing):
 		if ipToPing !="":
 			return 1
 
-		logger.log(10,u"cBY:{:<20} testPing can not connect to : {}	ping code:{}".format( G.program, ipToPing,ret) )
+		logger.log(10,"cBY:{:<20} testPing can not connect to : {}	ping code:{}".format( G.program, ipToPing,ret) )
 
 		return 2
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return 2
 
 
@@ -4148,13 +4148,13 @@ def testROUTER():
 	try:
 		G.ipOfRouter = getIPofRouter()
 		if isValidIP(G.ipOfRouter):
-			logger.log(10, u"cBY:{:<20} router info ip:>{}<".format(G.program,G.ipOfRouter))
+			logger.log(10, "cBY:{:<20} router info ip:>{}<".format(G.program,G.ipOfRouter))
 			ret = testPing(G.ipOfRouter)
 			if	ret == 0:
-				logger.log(10, u"cBY:{:<20} ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
+				logger.log(10, "cBY:{:<20} ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
 				return 0
 			if ret == -1:
-				logger.log(30, u"cBY:{:<20} still waiting for installLibs to finish".format(G.program))
+				logger.log(30, "cBY:{:<20} still waiting for installLibs to finish".format(G.program))
 				time.sleep(30)
 				return 1
 			time.sleep(1)
@@ -4162,7 +4162,7 @@ def testROUTER():
 			if newIP != G.ipOfRouter and isValidIP(newIP):
 				G.ipOfRouter = newIP
 				if	testPing(G.ipOfRouter)  ==0:
-					logger.log(30, u"cBY:{:<20}  ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
+					logger.log(30, "cBY:{:<20}  ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
 					return 0
 			logger.log(20, "cBY:{:<20}  ROUTER server NOT reachable at:{}".format(G.program,G.ipOfRouter))
 			return 1
@@ -4171,7 +4171,7 @@ def testROUTER():
 			return 1
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return 1
 ################################
 def testIndigoServer():
@@ -4181,17 +4181,17 @@ def testIndigoServer():
 
 		ret =testPing(G.ipOfServer)
 		if	ret ==0:
-			logger.log(10, u"cBY:{:<20}  ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
+			logger.log(10, "cBY:{:<20}  ROUTER server reachable at:{}".format(G.program,G.ipOfRouter))
 			return 0
 		if ret ==-1:
-			logger.log(30, u"cBY:{:<20} still waiting for installLibs to finish".format(G.program))
+			logger.log(30, "cBY:{:<20} still waiting for installLibs to finish".format(G.program))
 			time.sleep(30)
 			return 1
 		return 1
 
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return 1
 
 #################################
@@ -4235,7 +4235,7 @@ def testNetwork(force=False):
 
 
 	except	Exception as e:
-		logger.log(30, u"cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	G.networkStatus = "local"
 	return
 

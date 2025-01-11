@@ -2,6 +2,11 @@
 <!--
     <SupportURL>httptype="textfield" default=//www.perceptiveautomation.com/wiki/doku.php?id=pluginstype="textfield" default=airfoil</SupportURL>
 -->
+
+<Action id="handle_message" uiPath="hidden">
+    <Name>webrequest</Name>
+    <CallbackMethod>webRequest</CallbackMethod>
+</Action>
    <Action id="setPins">
 		<Name>Set GPIO Pin on rPi to HIGH-LOW ... </Name>
 			<CallbackMethod>setPinCALLBACKaction</CallbackMethod>
@@ -3755,8 +3760,8 @@ this will pause the sensor, will just sleep, but any other action already initat
 		<Name>Request new data from rPi</Name>
 		<CallbackMethod>setnewMessageCALLBACKaction</CallbackMethod>
 		<ConfigUI>
-			 <Label>Request new data from rPi</Label>
-   		<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+			 <Label>Request new data from rPi</Label>	
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
 			    <List class="self" filter="" method="filterAllpiSimple" dynamicReload="false"/>
 			    <Label>select rPi-server:</Label>
 			</Field>
@@ -3801,6 +3806,28 @@ this will pause the sensor, will just sleep, but any other action already initat
 			 </Field>
 		</ConfigUI>
      </Action>
+
+     <Action id="restartDevice">
+		<Name>Restart Sensor device on rPi</Name>
+		<CallbackMethod>setrestartDeviceCALLBACKAction</CallbackMethod>
+		<ConfigUI>
+			 <Label>Restart Sensor device on rPi</Label>
+   		<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+			    <List class="self" filter="" method="filterAllpiSimple" dynamicReload="false"/>
+			    <Label>select rPi-server:</Label>
+			</Field>
+			 <Field id="typeId"   type="menu" defaultValue="" tooltip="" >
+			    <List>
+					<Option value= "pmairquality"       >pmairquality</Option>
+					<Option value= "DF2301Q"        	>DF2301Q</Option>
+					<Option value= "all"			    >all</Option>
+			    </List>
+			    <Label>device type that should be reset:</Label>
+			 </Field>
+		</ConfigUI>
+     </Action>
+
+
 
     <Action id="getONEiBeaconParameters">
 		<Name>Get battery level for ONE/All beacons</Name>

@@ -406,7 +406,7 @@ _GlobalConst_beaconPlotSymbols = [
 
 
 _GlobalConst_allowedCommands = [
-	"up", "down", "pulseUp", "pulseDown", "continuousUpDown", "analogWrite", "disable", "newMessage", "resetDevice",
+	"up", "down", "pulseUp", "pulseDown", "continuousUpDown", "analogWrite", "disable", "newMessage", "resetDevice", "restartDevice",
 	"getBeaconParameters", "startCalibration", "BLEAnalysis", "trackMac", "rampUp", "rampDown", "rampUpDown", "beepBeacon", "updateTimeAndZone"]	 # commands support for GPIO pins
 
 _BLEsensorTypes =["BLERuuviTag",
@@ -681,6 +681,7 @@ _addingstates["initial"]						= {"addTag":False, "States":{"initial":"String"}}
 _addingstates["counter"]						= {"addTag":False, "States":{"counter":"Integer"}}
 _addingstates["cmd"]							= {"addTag":False, "States":{"cmd":"String"}}
 _addingstates["cmdAt"]							= {"addTag":False, "States":{"cmdAt":"String"}}
+_addingstates["cmdText"]						= {"addTag":False, "States":{"cmdText":"String"}}
 _addingstates["lastCmd"]						= {"addTag":False, "States":{"lastCmd":"String"}}
 _addingstates["lastCmdAt"]						= {"addTag":False, "States":{"lastCmdAt":"String"}}
 _addingstates["lastCmd2"]						= {"addTag":False, "States":{"lastCmd2":"String"}}
@@ -701,6 +702,7 @@ _stateListToDevTypes["lastCmd"]					= {"DF2301Q":1}
 _stateListToDevTypes["lastCmdAt"]				= {"DF2301Q":1}
 _stateListToDevTypes["lastCmd2"]				= {"DF2301Q":1}
 _stateListToDevTypes["lastCmd2At"]				= {"DF2301Q":1}
+_stateListToDevTypes["cmdText"]					= {"DF2301Q":1}
 
 _stateListToDevTypes["lastBatteryReplaced"]		= {"BLEiSensor-onOff":1, "BLEmeeblue-on":1, "BLEiSensor-on":1, "BLEiSensor-TempHum":1}
 _stateListToDevTypes["status"]					= {"garageDoor":1, "FBHtempshow":1}
@@ -2774,6 +2776,20 @@ class Plugin(indigo.PluginBase):
 
 
 ####------================----------- CARS ------================-----------END
+
+####------================----------- web requests ------================-----------START
+
+	def webRequest(self, action, dev=None, callerWaitingForResult=None):
+		self.indiLOG.log(20,"webRequest actionprops:{}".format(action.props))
+		requestedAction = action.props.get("url_query_args",{})
+		self.indiLOG.log(20,"webRequest action:{}".format(requestedAction))
+		if requestedAction.get("other") == "openDoor":
+			indigo.actionGroup.execute("press door unlock button")
+			return "door opened"
+		return "no action"
+
+####------================----------- web requests ------================-----------START
+
 
 
 ####------================------- sprinkler ------================-----------
@@ -5996,8 +6012,8 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def printDF2301QhelpMenuCALLBACK(self, valuesDict=None, typeId="", devId=0):
-		out = self.readDF2301Qhelp()
-		self.indiLOG.log(20,out)
+		self.printDF2301QhelpDeviceCALLBACK()
+		return valuesDict
 
 ####-------------------------------------------------------------------------####
 	def printDF2301QhelpDeviceCALLBACK(self, valuesDict=None, typeId="", devId=0):
@@ -6011,10 +6027,11 @@ class Plugin(indigo.PluginBase):
 		out += '\n   A. define custom command word on sensor as described above, remember the command id'
 		out += '\n   B. in device edit set the phrase for the command id. It will be use in dev states as string to map to command id'
 		out += '\nID   set to:'
-		for ii in range(1,30): # will only use the defined items
-			cmdIDItem = "controllWord{}".format(ii)
-			if cmdIDItem in valuesDict:
-				out += '\n{:2d}: "{}"'.format(ii, valuesDict[cmdIDItem] )
+		if valuesDict is not None:
+			for ii in range(1,30): # will only use the defined items
+				cmdIDItem = "controllWord{}".format(ii)
+				if cmdIDItem in valuesDict:
+					out += '\n{:2d}: "{}"'.format(ii, valuesDict[cmdIDItem] )
 		out += '\n '
 
 		self.indiLOG.log(20,out)
@@ -6202,6 +6219,19 @@ class Plugin(indigo.PluginBase):
 		xList = sorted(xList, key=lambda tup: tup[1])
 		xList.append(("0", "none = OFF"))
 		return xList
+
+
+
+####-------------------------------------------------------------------------####
+	def filterResetDevices(self, filter="", valuesDict=None, typeId="", devId=""):
+		xList = []
+		for dev in indigo.devices.iter("props.isSensorDevice"):
+			if dev.pluginProps.get("SupportsOnState",False):
+				xList.append((dev.id, dev.name))
+		xList = sorted(xList, key=lambda tup: tup[1])
+		xList.append(("0", "none = OFF"))
+		return xList
+
 
 ####-------------------------------------------------------------------------####
 	def filterBeaconTags_and_all(self, filter="", valuesDict=None, typeId="", devId=""):
@@ -7718,6 +7748,9 @@ class Plugin(indigo.PluginBase):
 		else:
 			self.indiLOG.log(10,"inputfile seems to be corrupt")
 			valuesDict["MSG"] = "inputfile seems to be corrupt"
+
+		self.readOtherParams()
+
 
 		return valuesDict
 
@@ -10243,6 +10276,13 @@ class Plugin(indigo.PluginBase):
 		valuesDict["cmd"]		 = "newMessage"
 		self.setPin(valuesDict)
 
+
+####-------------------------------------------------------------------------####
+	def setrestartDeviceCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+		valuesDict["cmd"]		 = "restartDevice"
+		self.setPin(valuesDict)
+
+
 ####-------------------------------------------------------------------------####
 	def setresetDeviceCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
 		valuesDict["cmd"]		 = "resetDevice"
@@ -10266,6 +10306,7 @@ class Plugin(indigo.PluginBase):
 			
 			dev2.replacePluginPropsOnServer(props)
 		return
+
 
 
 
@@ -10824,8 +10865,8 @@ class Plugin(indigo.PluginBase):
 				return
 
 			ip = self.RPI[piU]["ipNumberPi"]
-			if "typeId" in valuesDict:	typeId = valuesDict["typeId"]
-			else:						typeId = ""
+			typeId = valuesDict.get("typeId","")
+			cmd = valuesDict.get("cmd","")
 
 			startAtDateTime = 0
 			if "startAtDateTime" in valuesDict:
@@ -10902,68 +10943,40 @@ class Plugin(indigo.PluginBase):
 						line +="\n	,\"device\":\"{}".format(typeId)+"\""
 						line +="\n	,\"restoreAfterBoot\":{}".format(restoreAfterBoot)
 						line +="\n	,\"startAtDateTime\":\"{}".format(startAtDateTime)+"\""
-						line +="\n	,\"cmd\":\""+valuesDict["cmd"]+"\""
+						line +="\n	,\"cmd\":\""+cmd+"\""
 						line +="\n	,\"soundFile\":\""+valuesDict["soundFile"]+"\"})\n"
 						line+= "##=======	end	   =====\n"
 						if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"\n"+line+"\n")
 					except:
-						if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,	"sending command to rPi at " + ip + "; port: {}".format(self.rPiCommandPORT) + "; cmd: " + valuesDict["cmd"] + ";  " + valuesDict["soundFile"])
-					self.sendGPIOCommand(ip, pi,typeId, valuesDict["cmd"], soundFile=valuesDict["soundFile"])
+						if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,	"sending command to rPi at " + ip + "; port: {}".format(self.rPiCommandPORT) + "; cmd: " + cmd + ";  " + valuesDict["soundFile"])
+					self.sendGPIOCommand(ip, pi,typeId, cmd, soundFile=valuesDict["soundFile"])
 					return
 
-			if "cmd" not in valuesDict:
+			if "cmd" == "":
 				self.indiLOG.log(10," setPIN bad parameter: cmd not set:")
 				return
-			cmd = valuesDict["cmd"]
 
 			if cmd not in _GlobalConst_allowedCommands:
 				self.indiLOG.log(10," setPIN bad parameter: cmd bad:{}; allowed commands= {}".format(cmd, _GlobalConst_allowedCommands))
 				return
 
-			if cmd == "getBeaconParameters":
-				#self.indiLOG.log(10,"sending command to rPi at {}; port: {}; cmd:{} ;  devices:{}, startAtDateTime:{}".format(pi, self.rPiCommandPORT, valuesDict["cmd"], valuesDict["typeId"], startAtDateTime) )
-				self.sendGPIOCommand(ip, pi, valuesDict["typeId"], valuesDict["cmd"], startAtDateTime=startAtDateTime)
+			if cmd in ["beepBeacon", "updateTimeAndZone","getBeaconParameters"]:
+				if self.decideMyLog("OutputDevice") or self.decideMyLog("UpdateTimeAndZone") : self.indiLOG.log(5,"sending command to rPi at {}; port: {}; cmd:{} ;  devices:{}".format(pi, self.rPiCommandPORT, cmd, typeId) )
+				self.sendGPIOCommand(ip, pi, typeId, cmd, startAtDateTime=startAtDateTime )
 				return
 
-			if cmd in ["beepBeacon", "updateTimeAndZone"]:
-				if self.decideMyLog("OutputDevice") or self.decideMyLog("UpdateTimeAndZone") : self.indiLOG.log(5,"sending command to rPi at {}; port: {}; cmd:{} ;  devices:{}".format(pi, self.rPiCommandPORT, valuesDict["cmd"], valuesDict["typeId"]) )
-				self.sendGPIOCommand(ip, pi, valuesDict["typeId"], valuesDict["cmd"], startAtDateTime=startAtDateTime )
-				return
-
-			if cmd == "newMessage":
-				if "typeId" not in valuesDict:
+			if cmd in ["resetDevice", "restartDevice","newMessage","startCalibration"]:
+				if typeId == "":
 					self.indiLOG.log(10,"setPIN bad parameter: typeId not supplied: for pi#{}".format(piU))
 					return
 
-				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(piU, self.rPiCommandPORT, valuesDict["cmd"], valuesDict["typeId"]) )
-				self.sendGPIOCommand(ip, pi, typeId, valuesDict["cmd"])
+				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(piU, self.rPiCommandPORT, cmd, typeId) )
+				self.sendGPIOCommand(ip, pi, typeId, cmd)
 				return
 
-
-			if cmd == "resetDevice":
-				if "typeId" not in valuesDict:
-					self.indiLOG.log(10,"setPIN bad parameter: typeId not supplied: for pi#{}".format(piU))
-					return
-
-				if self.decideMyLog("OutputDevice"): sself.indiLOG.log(5,"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(piU, self.rPiCommandPORT, valuesDict["cmd"], valuesDict["typeId"]) )
-				self.sendGPIOCommand(ip, pi, typeId, valuesDict["cmd"])
-				return
-
-			if cmd == "startCalibration":
-				if "typeId" not in valuesDict:
-					self.indiLOG.log(10,"setPIN bad parameter: typeId not supplied: for pi#{}".format(piU))
-					return
-
-				if True:  self.indiLOG.log(10,"sending command to rPi at {}; port: {}; cmd:{} ;  typeId:{}".format(piU, self.rPiCommandPORT, valuesDict["cmd"], valuesDict["typeId"]) )
-				self.sendGPIOCommand(ip, pi, typeId, valuesDict["cmd"])
-				return
-			if cmd == "BLEAnalysis":
-				if True:  self.indiLOG.log(10,"sending command to rPi at {}; port: {}; cmd:{} ".format(ip, self.rPiCommandPORT, valuesDict["cmd"]) )
-				self.sendGPIOCommand(ip, pi, typeId, valuesDict["cmd"])
-				return
-			if cmd == "trackMac":
-				if True:  self.indiLOG.log(10,"sending command to rPi at {}; port: {}; cmd:{} ".format(ip, self.rPiCommandPORT, valuesDict["cmd"]) )
-				self.sendGPIOCommand(ip, pi, typeId, valuesDict["cmd"])
+			if cmd in ["BLEAnalysis","trackMac"]:
+				if True:  self.indiLOG.log(10,"sending command to rPi at {}; port: {}; cmd:{} ".format(ip, self.rPiCommandPORT, cmd) )
+				self.sendGPIOCommand(ip, pi, typeId, cmd)
 				return
 
 
@@ -11003,7 +11016,7 @@ class Plugin(indigo.PluginBase):
 					line +="\n	,\"device\":\"{}".format(typeId)+"\""
 					line +="\n	,\"restoreAfterBoot\":{}".format(restoreAfterBoot)
 					line +="\n	,\"startAtDateTime\":\"{}".format(startAtDateTime)+"\""
-					line +="\n	,\"cmd\":\""+valuesDict["cmd"]+"\""
+					line +="\n	,\"cmd\":\""+cmd+"\""
 					line +="\n	,\"pulseUp\":\"{}".format(pulseUp)+"\""
 					line +="\n	,\"pulseDown\":\"{}".format(pulseDown)+"\""
 					line +="\n	,\"rampTime\":\"{}".format(rampTime)+"\""
@@ -11130,7 +11143,7 @@ class Plugin(indigo.PluginBase):
 					line +="\n	,\"device\":\"{}".format(typeId)+"\""
 					line +="\n	,\"restoreAfterBoot\":{}".format(restoreAfterBoot)
 					line +="\n	,\"startAtDateTime\":\"{}".format(startAtDateTime)+"\""
-					line +="\n	,\"cmd\":\""+valuesDict["cmd"]+"\""
+					line +="\n	,\"cmd\":\""+cmd+"\""
 					line +="\n	,\"pulseUp\":\"{}".format(pulseUp)+"\""
 					line +="\n	,\"pulseDown\":\"{}".format(pulseDown)+"\""
 					line +="\n	,\"rampTime\":\"{}".format(rampTime)+"\""
@@ -11330,12 +11343,16 @@ class Plugin(indigo.PluginBase):
 		valuesDict = action1.props
 		valuesDict["cmd"] 				= "newMessage"
 		self.setPin(valuesDict)
-		valuesDict["cmd"]	 			= "resetDevice"
 
 ####-------------------------------------------------------------------------####
 	def setresetDeviceCALLBACKAction(self, action1):
 		valuesDict = action1.props
 		valuesDict["cmd"]		 		= "resetDevice"
+		self.setPin(valuesDict)
+####-------------------------------------------------------------------------####
+	def setrestartDeviceCALLBACKAction(self, action1):
+		valuesDict = action1.props
+		valuesDict["cmd"]		 		= "restartDevice"
 		self.setPin(valuesDict)
 
 ####-------------------------------------------------------------------------####
@@ -17926,18 +17943,31 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id, "sensorValue", -1, uiValue="error, see logfile, status"  )
 					return 
 
-				if cmdId > 1:
+				cmdtextDict = json.loads(props.get("commandList","{}"))
+				cmdtext = cmdtextDict.get(str(cmdId), "text not set, set in device edit")
+
+				if cmdId > 899:
+					if dev.states["status"] != cmdtext: 
+						self.addToStatesUpdateDict(dev.id, "status", "{}:{}".format(cmdId, cmdtext) )
+						self.indiLOG.log(30,"updateDF2301Q, msg from RPI: {}:{}".format(cmdId,cmdtext) )
+					return 
+
+
+				elif cmdId > 255 or cmdId < 5:
+					if dev.states["status"] != cmdtext: self.addToStatesUpdateDict(dev.id, "status", "{}:{}".format(cmdId, cmdtext) )
+
+				elif cmdId > 4:
 					self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
 					self.addToStatesUpdateDict(dev.id, "lastCmd2At", dev.states["lastCmdAt"] )
 	
-					self.addToStatesUpdateDict(dev.id, "lastCmd", dev.states["cmd"] )
+					self.addToStatesUpdateDict(dev.id, "lastCmd", dev.states["cmd"]+":"+  dev.states["cmdText"])
 					self.addToStatesUpdateDict(dev.id, "lastCmdAt", dev.states["cmdAt"] )
 	
 					if dev.states["sensorValue"] != cmdId:
-						cmdtextDict = json.loads(props.get("commandList","{}"))
-						cmdtext = cmdtextDict.get(str(cmdId), "text not set, set in device edit")
 						if dev.states["status"] != "ok": self.addToStatesUpdateDict(dev.id, "status", "ok" )
-						self.addToStatesUpdateDict(dev.id, "cmd", "{}:{}".format(cmdId, cmdtext) )
+
+						self.addToStatesUpdateDict(dev.id, "cmd", "{}".format(cmdId) )
+						self.addToStatesUpdateDict(dev.id, "cmdText", "{}".format( cmdtext) )
 						self.addToStatesUpdateDict(dev.id, "sensorValue", cmdId, uiValue="{}:{}".format(cmdId, cmdtext)  )
 					self.addToStatesUpdateDict(dev.id, "cmdAt",  datetime.datetime.now().strftime(_defaultDateStampFormat) )
 	
@@ -19586,7 +19616,7 @@ class Plugin(indigo.PluginBase):
 	def sendGPIOCommand(self, ip, pi, typeId, cmd, GPIOpin=0, pulseUp=0, pulseDown=0, nPulses=0, analogValue=0,rampTime=0, i2cAddress=0,text="",soundFile="",restoreAfterBoot="0",startAtDateTime=0, inverseGPIO=False, devId=0):
 		cmd1 =""
 		try:
-			if cmd in["updateTimeAndZone", "beepBeacon", "getBeaconParameters", "resetDevice", "startCalibration", "newMessage"]:
+			if cmd in["updateTimeAndZone", "beepBeacon", "getBeaconParameters", "resetDevice", "restartDevice", "startCalibration", "newMessage"]:
 				cmd1 = {"device": typeId, "command":cmd, "startAtDateTime": startAtDateTime}
 			elif cmd == "BLEAnalysis":
 				cmd1 = {"minRSSI": typeId, "command":cmd, "startAtDateTime": startAtDateTime}

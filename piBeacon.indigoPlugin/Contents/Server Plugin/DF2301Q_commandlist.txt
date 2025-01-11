@@ -1,7 +1,14 @@
 
 1:  Wake-up words for learning
-2:  Hello robot
+2:  Wake up
 255: off
+800: Power On
+801: Wake up 
+802: Wake up exit
+803: Play start
+804: Play end
+820: Config successful
+821: Device reset
 
 === predefined  Command Words
 22:  Go forward
@@ -125,6 +132,13 @@
 141: Open the door
 142: Close the door
 
+
+=== error message
+900: bad_port:_/dev/.. does not exist, check device edit
+901: bad_port:_/dev/.. does not exist, enable_uart=1  missing  in config.txt
+902: bad_port:_/dev/.. does not exist, check device edit  rebooting
+902: bad_port:_/dev/.. does not exist, enable_uart=1  rebooting
+910: bad sensor
 
 === Learning-related commands
 200: Learning wake word

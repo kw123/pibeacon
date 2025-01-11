@@ -27,7 +27,7 @@ import	piBeaconGlobals as G
 
 G.program = "receiveCommands"
 
-allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice",
+allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","restartDevice",
 				"startCalibration","getBeaconParameters","beepBeacon","updateTimeAndZone","file","BLEreport","BLEAnalysis","trackMac"]
 
 externalGPIO = False
@@ -552,7 +552,7 @@ def execCMDS(nextItem):
 
 
 			if	cmd == "newMessage":
-						if nextItem["device"].find(",")> 1:
+						if nextItem["device"].find(",") > 1:
 							list = nextItem["device"].split(",")
 						elif nextItem["device"]== "all":
 							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
@@ -564,7 +564,7 @@ def execCMDS(nextItem):
 
 
 			if	cmd == "resetDevice":
-						if nextItem["device"].find(",")> 1:
+						if nextItem["device"].find(",") > 1:
 							list = nextItem["device"].split(",")
 						elif nextItem["device"] == "all":
 							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
@@ -575,10 +575,20 @@ def execCMDS(nextItem):
 						continue
 
 
+			if	cmd == "restartDevice":
+						if nextItem["device"].find(",") > 1:
+							list = nextItem["device"].split(",")
+						elif nextItem["device"] == "all":
+							list = G.programFiles + G.specialSensorList + G.specialOutputList + G.programFiles
+						else:
+							list = [nextItem["device"]]
+						for pgm in list:
+							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".restart", shell=True)
+						continue
 
 
 			if	cmd == "startCalibration":
-						if nextItem["device"].find(",")> 1:
+						if nextItem["device"].find(",") > 1:
 							list = nextItem["device"].split(",")
 						elif nextItem["device"] == "all":
 							list = G.specialSensorList
