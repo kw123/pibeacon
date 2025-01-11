@@ -271,6 +271,8 @@ class DFRobot_DF2301Q_UART():
 		self.debug = 0
 		self.uart_cmd_ID = 0
 		self._send_sequence = 0
+		self.commandList = {}
+		self.sleepAfterWrite = sleepAfterWrite
 		self._ser = serial.Serial("/dev/"+serialPortName, baudrate=DF2301Q_UART_BAUDRATE, bytesize=8, parity='N', stopbits=1, timeout=0.5)
 		if self._ser.isOpen == False:
 			self._ser.open()
@@ -278,11 +280,21 @@ class DFRobot_DF2301Q_UART():
 		super(DFRobot_DF2301Q_UART, self).__init__()
 		#self.reset_module()
 
-	def set_Params(self, sleepAfterWrite=DF2301Q_I2C_sleepAfterReadWrite, logLevel=0, commandList={}):
-		self.debug = int(logLevel)
-		self.sleepAfterWrite = sleepAfterWrite/1000. # set in msecs by calling program
-		self.commandList = copy.copy(commandList)
-		if self.debug > 1: U.logger.log(20, "sleepAfterWrite:{}, logLevel:{} ".format(sleepAfterWrite, logLevel) )
+	def set_Params(self, sleepAfterWrite=0, logLevel=-1, commandList={}):
+		try:
+			if logLevel != -1:
+				self.debug = int(logLevel)
+
+			if sleepAfterWrite != 0:
+				self.sleepAfterWrite = sleepAfterWrite/1000. # set in msecs by calling program
+
+			if commandList != {}:
+				self.commandList = copy.copy(commandList)
+
+			if self.debug > 1: U.logger.log(20, "sleepAfterWrite:{}, logLevel:{} ".format(sleepAfterWrite, logLevel) )
+
+		except Exception as e:
+			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 
 	def get_CMDID(self):
@@ -878,7 +890,7 @@ def startSensor(devId):
 			if i2cOrUart[devId] == "uart":
 				if logLevel > 0: U.logger.log(20, "devId:{}; started sensor,  serial port:{}, sleep:{}".format(devId, serialPortName[devId], sleepAfterWrite[devId]))
 				if cmdCheckSerialPort(devId):
-					SENSOR[devId] = DFRobot_DF2301Q_UART(serialPortName=serialPortName[devId] , sleepAfterWrite=sleepAfterWrite[devId])
+					SENSOR[devId] = DFRobot_DF2301Q_UART(serialPortName=serialPortName[devId], sleepAfterWrite=sleepAfterWrite[devId])
 				else:
 					time.sleep(20)
 					del SENSOR[devId]
@@ -966,7 +978,7 @@ def checkifRefreshSetup(devId,  restart=False, upd=False):
 			if True:
 				SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"]))
 				SENSOR[devId].set_mute_mode(sensors[sensor][devId]["mute"], calledFrom="checkifRefreshSetup2")
-				SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite[devId],logLevel=logLevel, commandList=commandList[devId] )
+				SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite[devId], logLevel=logLevel )
 				currentMute[devId] = sensors[sensor][devId]["mute"]
 
 			if logLevel > 0: U.logger.log(20, "devId:{}; (re)-init sensor, timeUsed:{:.1f}, upd:{}, restart:{}, keepAwake:{}, setWakeTime:{}, mute:{}, volume:{}, learning <0?:{:.1f}, learningOn:{} ".format(devId, time.time()-startTime,upd, restart, keepAwake[devId], sensors[sensor][devId]["setWakeTime"], sensors[sensor][devId]["mute"],  sensors[sensor][devId]["volume"], min(999., time.time() - tempMuteOff) ,learningOn[devId]))
@@ -1075,6 +1087,10 @@ def checkIfCommand():
 				getValues(devId, wait=0.1)
 			if "string" 		in data: 
 				SENSOR[devId].set_need_string()
+				getValues(devId, wait=0.1)
+			if "loglevel" 		in data: 
+				logLevel = data["loglevel"]
+				SENSOR[devId].set_Params(logLevel=logLevel)
 				getValues(devId, wait=0.1)
 
 	except	Exception as e:

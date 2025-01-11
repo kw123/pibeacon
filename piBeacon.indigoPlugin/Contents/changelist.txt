@@ -1,9 +1,9 @@
-added features / changes in added features / changes in v2022.183.124 @ 2025-01-11
+added features / changes in added features / changes in v2022.183.125 @ 2025-01-11
 ==================================================
 
-1. fixed expection situations for DF2301Q, eg when senor hangs etc.
-   this is now very stable and can recover fro power disconnects, sensors issues, due to reset commands
-   best stbility (several days w/o any hickup) with the serial / uart connection.
+1. fixed exception situations for DF2301Q, eg when senor hangs etc.
+   this is now very stable and can recover from power disconnects, sensors issues, due to reset commands
+   very stabile (several days w/o any hickup) with the serial / uart connection.
    the i2c interface still creates propblems on some older RPI.
 
 

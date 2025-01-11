@@ -17976,7 +17976,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, "counter", counter+1)
 		
 		except Exception as e:
-			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"dev:{}, data:{}".format(dev.name, data), exc_info=True)
 		return 
 
 
