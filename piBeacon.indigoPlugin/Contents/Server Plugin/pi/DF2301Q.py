@@ -69,7 +69,7 @@ DF2301Q_UART_MSG_DATA_MAX_SIZE				= 8
 # header
 DF2301Q_UART_MSG_HEAD_LOW					= 0xF4
 DF2301Q_UART_MSG_HEAD_HIGH					= 0xF5
-DF2301Q_UART_MSG_HEAD						= 0xF4F5
+DF2301Q_UART_MSG_HEAD						= 0xF5F4
 # tail
 DF2301Q_UART_MSG_TAIL						= 0xFB
 
@@ -272,7 +272,6 @@ class DFRobot_DF2301Q_UART():
 		self.uart_cmd_ID = 0
 		self._send_sequence = 0
 		self.commandList = {}
-		self.sleepAfterWrite = sleepAfterWrite
 		self._ser = serial.Serial("/dev/"+serialPortName, baudrate=DF2301Q_UART_BAUDRATE, bytesize=8, parity='N', stopbits=1, timeout=0.5)
 		if self._ser.isOpen == False:
 			self._ser.open()
@@ -1150,13 +1149,13 @@ def getValues(devId, wait=0):
 			checkifRefreshSetup(devId, restart=badSensor > 0, upd=True)
 
 		if CMDID == 800 :
-			time.sleep(5.)
+			time.sleep(3.)
 			sendReset(devId)
-			time.sleep(2.)
+			time.sleep(3.)
 			lastkeepAwake[devId] = 0
 			checkifRefreshSetup(devId, restart=True, upd=True)
 
-		if CMDID == 802 and keepAwake[devId]:
+		if CMDID == 802 and keepAwake[devId]: # 802 == exit wakeup
 			lastkeepAwake[devId] = 0
 			checkifRefreshSetup(devId, restart=True, upd=True)
 

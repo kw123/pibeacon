@@ -20333,14 +20333,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Send parameters to sensor (volume, mute..):</Label>
 			</Field>
 
-			<Field id="uartSleepAfterWrite"   type="menu" defaultValue="70"  >
+			<Field id="uartSleepAfterWrite"   type="menu" defaultValue="100"  >
 				<List>
-					<Option value="50"   			> 50 msec</Option>
 					<Option value="70"   			> 70 msec</Option>
 					<Option value="100"   			> 100 msec</Option>
 					<Option value="150"   			> 150 msec</Option>
 					<Option value="200"   			> 200 msec</Option>
-					<Option value="300"   			> 300 msec</Option>
 				</List>
 				<Label>Sleep after write to uart/serial port:</Label>
 			</Field>
