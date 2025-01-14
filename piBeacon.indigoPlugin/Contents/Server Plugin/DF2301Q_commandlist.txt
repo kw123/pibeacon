@@ -1,9 +1,9 @@
 
-1:  Wake-up words for learning
-2:  Wake up
+1:  Is Awake
+2:  Wake up word
 255: off
 800: Power On
-801: Wake up 
+801: Enter Wake up 
 802: Wake up exit
 803: Play start
 804: Play end

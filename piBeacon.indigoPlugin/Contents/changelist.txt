@@ -1,4 +1,4 @@
-added features / changes in added features / changes in v2022.183.126 @ 2025-01-11
+added features / changes in added features / changes in v2022.183.127 @ 2025-01-13
 ==================================================
 
 1. fixed exception situations for DF2301Q, eg when senor hangs etc.

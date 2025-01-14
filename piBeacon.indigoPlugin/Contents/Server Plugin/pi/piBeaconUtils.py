@@ -813,7 +813,7 @@ def setUpRTC(useRTCnew):
 		if	G.useRTC == useRTCnew and not initRTC: # return if not first and no change
 			return
 
-		bootFile = getBootFileName
+		bootFile = getBootFileName()
 
 
 

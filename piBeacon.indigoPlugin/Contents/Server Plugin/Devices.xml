@@ -20067,17 +20067,15 @@ trigger on "any change" state "sensorValue"";
 				<Label>name of serial port (serial0 serial1  check ls -l /dev/ on rpi):</Label>
 			</Field>
 			<Field id="uartLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="uart" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
-				<Label> connect:+5V, gnd, T to RXD, R to TCD.
+				<Label> connect:+5V, gnd, T to RXD, R to TCD. (pins 4,6,8,10)
 Set switch 1 to uart
-on RPi: sudo raspi-config: Interface Options/Serial Port: disable login, enable serial hardware port 
-Using the serial port requires to speak the key word "hello robot" at least once to enable the sensor
+on RPi: sudo raspi-config: Interface Options/Serial Port: DISABLE login, ENABLE serial hardware port 
 </Label>
 			</Field>
 
 			<Field id="i2cLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="i2c" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label> connect:+3V, gnd, C to SLC, D to SDA, i2c number is fixed: 0x64 = 100
-i2c is not stable on rpi2 or rpi0w
-set switch 1 to i2c</Label>
+				<Label> connect:+3V, gnd, C to SLC, D to SDA, (pins 1,3,5,9). 
+The i2c number is fixed: 0x64 = 100, i2c is not stable on rpi2 or rpi0w, set switch 1 to i2c</Label>
 			</Field>
 
 			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute speaker:</Label>
@@ -20164,6 +20162,8 @@ for uart/serial interface, the key word has to be heard once. Then it can stay a
 
 
 
+			<Field id="simpleSeparatorline00" type="separator"/>
+			<Field id="simpleSeparatorline01" type="separator"/>
 			<Field id="infoLabelDF2301Qgpios" type="label"  fontColor="green">
 				<Label>=== Here you can define a reactions to a received voice command, 
         i.e. switch any GPIO on/off after receiving a valid voice command</Label>
@@ -20180,14 +20180,14 @@ Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="gpioCmdForAction1"   type="textfield" defaultValue="0"  >
-				<Label>.. voice command # for trigger (0,2,3,x see explanation):</Label>
+				<Label>.. voice command # for trigger (1,2,3,x see explanation):</Label>
 			</Field>
 			<Field id="infoLabelDF2301cmdhelp" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>cmd options:
- = 0,1: any command, 
+ = 1: 1 and higher = all command IDs, 
  = 2: 2 and higher, 
  = 3: 3 and higher,
- = 4,.., 255:  only that specific comand</Label>
+ = 4,.., 255:  only that specific comand ID</Label>
 			</Field>
 			<Field id="gpioOnTimeAction1"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
@@ -20200,12 +20200,13 @@ Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds
 				<Label>.. On off state:</Label>
 			</Field>
 
+			<Field id="simpleSeparatorline02" type="separator"/>
 			<Field id="gpioNumberForCmdAction2"   type="menu" defaultValue="-1"  >
 				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(2):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="gpioCmdForAction2"   type="textfield" defaultValue="103"  >
-				<Label>..voice command # for trigger (0,2,3,x see explanation):</Label>
+				<Label>..voice command # for trigger (1,2,3,x see explanation):</Label>
 			</Field>
 			<Field id="gpioOnTimeAction2"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
@@ -20218,12 +20219,13 @@ Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds
 				<Label>.. On off state:</Label>
 			</Field>
 
+			<Field id="simpleSeparatorline03" type="separator"/>
 			<Field id="gpioNumberForCmdAction3"   type="menu" defaultValue="-1"  >
 				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(3):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="gpioCmdForAction3"   type="textfield" defaultValue="104"  >
-				<Label>voice command # for trigger (0,2,3,x see explanation):</Label>
+				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
 			</Field>
 			<Field id="gpioOnTimeAction3"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
@@ -20236,12 +20238,13 @@ Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds
 				<Label>.. On off state:</Label>
 			</Field>
 
+			<Field id="simpleSeparatorline04" type="separator"/>
 			<Field id="gpioNumberForCmdAction4"   type="menu" defaultValue="-1"  >
 				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(4):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 			<Field id="gpioCmdForAction4"   type="textfield" defaultValue="142"  >
-				<Label>voice command # for trigger (0,2,3,x see explanation):</Label>
+				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
 			</Field>
 			<Field id="gpioOnTimeAction4"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
@@ -20260,6 +20263,8 @@ Negative logic is used (state:on=low/ off=high) as most devices require a "low" 
 			</Field>
 
 
+			<Field id="simpleSeparatorline11" type="separator"/>
+			<Field id="simpleSeparatorline12" type="separator"/>
 
 
 			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
@@ -20292,6 +20297,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 
+			<Field id="simpleSeparatorline21" type="separator"/>
+			<Field id="simpleSeparatorline22" type="separator"/>
 			<Field id="infoLabelsleep" type="label"  fontColor="green">
 				<Label>=== EXPERTS ONLY </Label>
 			</Field>

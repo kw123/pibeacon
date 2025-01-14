@@ -1,17 +1,18 @@
 
 ======= HELP for DF2301Q / SEN0539 speech recognition sensor
 ----- Intro
-    This sensor can recognize specific voice phrases, it convrts them into command codes (1...255)
+    This sensor can recognize specific voice phrases, it converts them into command codes (1...255)
     It can learn new phrases by speaking into it.
     The plugin supports the sensor connected to an rpi. It shows the received command codes in sensorValues as command# and in sensorValue_ui as #:text
 
 ----- Install sensor: 
-    for i2c:    connect the 4 cables to +3V, gnd, C to SLC, D to SDA, i2c number is fixed: 0x64 = 100; 
+    for i2c:    connect the 4 cables to +3V, gnd, C to SLC, D to SDA,(pins 1,3,5,9). Set switch to i2c on sensor
+       i2c number is fixed: 0x64 = 100; 
        on RPi: sudo raspi-config: Interface Options/I2C enabled
-    for serial: connect the 4 cables to +5V, gnd, T to RXD, R to TCD
-       on RPi: sudo raspi-config: Interface Options/Serial Port: disable login, enable serial hardware port 
-    pi 3 and faster can do i2c, but is sometimes unstable. Pi 2 and pi0 are not stable with i2c with THIS sensor, use uart/serial with them
-    uart/serial does not support initial set wake up ON. After sensor power on you need to speak the wakeup word once, then it is active until power cycle / restart of program
+    for serial: connect the 4 cables to +5V, gnd, T to RXD, R to TCD (pins 4,6,8,10). Set switch to uart on sensor
+       on RPi: sudo raspi-config: Interface Options/Serial Port: DISABLE login, ENABLE serial hardware port 
+    pi 4 and faster can do i2c, but is sometimes unstable. Pi 2 and pi0 are not stable with i2c with THIS sensor, use uart/serial with them
+    uart/serial works well
   In device edit 
      select the rpi the sensor is connected to.
      set keep awake = no controll word needed, it will continuously listen to commands
@@ -20,17 +21,19 @@
      set volume 0-20 = volume of speaker
      enter custom commands = strings to be used in status display for user defined commands 5 - 21
      you can select to add a local (on rpi) action to turn gpios on/off when any or a specific voice command is received
-     enable a GPIO command received inditicator: gpio turns off/on (can be reversed) if cmd# > 0 received. It can be used to drive an LED, conencted w 100Ohm resistor to V+3.3
+     enable a GPIO command received cmd inditicator: gpio turns off/on (can be reversed) if cmd# > 0 received. It can be used to drive an LED, conencted w 100Ohm resistor to V+3.3 or to grnd if active = High
      In the expert section you can tune specific timing parameters and can add a power cycle of the sensor with a gpio -> relay option - connect the power to the sensor through a relay
         that relay will then power cycle the sensor when the sensor has a hard ware connect error ie for i2c connection.
-   save
- Use this sensor to trigger on dev state "counter"  "has any change" ( counter gets increased with every message. Do not trigger on sensorValue, that can be the same as the last value)
+   SAVE
+ Use this sensor to trigger an "indigo action" on dev state "counter"  "has any change" ( counter gets increased with every message. Do not trigger on sensorValue, that can be the same as the last value)
      use "condition" dev state "sensorValue" is eq 103 (phrase: turn on the light)  ==> then trigger your action "turn on light" in indigo
      use "condition" dev state "sensorValue" is eq 104 (phrase: turn off the light) ==> then trigger your action "turn off light" in indigo
+
 ----- How does it work:
-  the sensor py program on the rpi can set mute, volume, wake up,.. through i2c/uart/serial. It can not set any custom commands, that must be done through voice commands speaking into the sensor.
-  the rpi reads the codes coming from the sensor as the sensor detetcs them. It is done through i2c interface or uart/serial. It sends just the code number to the plugin
-  the plugin takes the code number and shows it with the pre-defined text in the states (or from the custom commands defined text from device edit)
+  The sensor py program on the rpi can set mute, volume, wake up,.. through i2c/uart/serial. It can not set any custom commands, that must be done through voice commands speaking into the sensor.
+  The rpi reads the codes coming from the sensor as the sensor detects them. It is done through i2c interface or uart/serial. It sends just the code number to the plugin
+  The plugin takes the code number and shows it with the pre-defined text in the states (or from the custom commands defined text from device edit)
+  Using UART the py program on the RPI will check if the sensor is responsive and resets it if it is not.
  
 ======= Configuring the sensor commands -- from the sensor web pages:
 ----- Learning wake-up word:

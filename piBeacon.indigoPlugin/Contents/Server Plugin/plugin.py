@@ -15039,7 +15039,7 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(dev.id, "LEDcurrent", data["LEDcurrent"], decimalPlaces=1)
 
 					if sensor == "DF2301Q" :
-						self.updateDF2301Q(dev, props, data, whichKeysToDisplay)
+						self.updateDF2301Q(dev, props, data, pi)
 						continue
 
 					if sensor == "i2cTCS34725" :
@@ -17932,12 +17932,12 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def updateDF2301Q(self, dev, props, data, whichKeysToDisplay, theType="",dispType =""):
+	def updateDF2301Q(self, dev, props, data, pi):
 		try:
 			if "cmd" in data: 
 				cmdId = data["cmd"]
 				if isinstance(cmdId, str):
-					self.indiLOG.log(30,"updateDF2301Q, bad port def, check device edit and on RPI do: sudo-raspi-config ::interfaces / serial set enable... msg from RPI: "+cmdId)
+					self.indiLOG.log(30,"updateDF2301Q, {}: bad port def, check device edit and on RPI do: sudo-raspi-config ::interfaces / serial set enable... msg from RPI{}: {}".format(dev.name, pi, cmdId) )
 					if dev.states["status"] != cmdId: 
 						self.addToStatesUpdateDict(dev.id, "status", cmdId)
 						self.addToStatesUpdateDict(dev.id, "sensorValue", -1, uiValue="error, see logfile, status"  )
@@ -17949,7 +17949,7 @@ class Plugin(indigo.PluginBase):
 				if cmdId > 899:
 					if dev.states["status"] != cmdtext: 
 						self.addToStatesUpdateDict(dev.id, "status", "{}:{}".format(cmdId, cmdtext) )
-						self.indiLOG.log(30,"updateDF2301Q, msg from RPI: {}:{}".format(cmdId,cmdtext) )
+						self.indiLOG.log(30,"updateDF2301Q, {} msg from RPI:{}; {}:{}".format(dev.name, pi, cmdId,cmdtext) )
 					return 
 
 
@@ -17976,7 +17976,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, "counter", counter+1)
 		
 		except Exception as e:
-			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"dev:{}, data:{}".format(dev.name, data), exc_info=True)
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"dev:{}; pi:{}; data:{}".format(dev.name, pi, data), exc_info=True)
 		return 
 
 
