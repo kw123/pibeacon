@@ -30,11 +30,22 @@ def execInstall():
 
 	if checkOsVersionis3: 
 		logger.log(30,"python2 not installed stopping checking for include py2 "  )
+		readPopen('echo "done" > "/home/pi/pibeacon/includepy2.done"')
 		exit()
 
 	if checkIfPy3():
-		logger.log(30,"must use py3 due to opsys version > 10 "  )
+		logger.log(30,"must use py3 due to opsys version < 10 "  )
+		readPopen('echo "done" > "/home/pi/pibeacon/includepy2.done"')
 		exit()
+
+
+	for ii in range(20):
+		logger.log(20,"check if apt-get ist still running"  )
+		ret = readPopen("ps -ef | grep apt-get")
+		if ret[0].find("apt-get install") == -1:
+			break
+		time.sleep(10)		
+
 
 	if True:
 		logger.log(20,"check if apt install  is ok"  )
@@ -56,6 +67,14 @@ def execInstall():
 		except Exception as e:
 			logger.log(20,"", exc_info=True)
 			readPopen("sudo pip install smbus2")
+
+
+	if True:
+		logger.log(20,"check pigpio"  )
+		try:
+			import RPi.GPIO as GPIO
+		except:
+			ret = readPopen("sudo apt-get install -y pigpio python-pigpio ")
 
 	if True:
 		logger.log(20,"check RPi.GPIO "  )
@@ -98,6 +117,7 @@ def execInstall():
 	logger.log(20,"check if apt autoremove  is ok"  )
 	ret = readPopen("sudo apt autoremove -y &")
 
+	readPopen('echo "done" > "/home/pi/pibeacon/includepy2.done"')
 
 	logger.log(20,"finished" )
 

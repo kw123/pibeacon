@@ -870,7 +870,6 @@ def setUpRTC(useRTCnew):
 
 #################################
 def getIPNumber(doPrint=True):
-	G.ipAddress   = ""
 	ipAddressRead = ""
 	###  if G.networkType  not in G.useNetwork or G.wifiType !="normal": return 0
 	try:
@@ -2045,39 +2044,6 @@ def checkIfusbSerialActive(usb):
 	return False
 
 
-#################################
-def checkAndaddIfenable_uart1InConfigtxt():
-	try:
-		bootFile = getBootFileName()
-		dd = doReadSimpleFile(bootFile)
-		logger.log(20,"cBY:{:<20} checking if enable_uart=1 in confix.txt".format( G.program))
-
-		enblPresent =  dd.find("enable_uart=1")
-		if enblPresent > 1: 
-			logger.log(20,"cBY:{:<20} checking if enable_uart=1 all ok".format( G.program))
-			return False # all ok
-
-
-		enblPresent =  dd.find("enable_uart=")
-
-		if enblPresent == -1:
-			dd += "\nenable_uart=1\n"
-			doWriteSimpleFile(bootFile, dd)
-			logger.log(20,"cBY:{:<20} checking if enable_uart=1 added".format( G.program))
-			return True # reboot needed
-
-		enblPresent = dd.find("enable_uart=0")
-		if enblPresent > 1: 
-			dd = dd.replace("enable_uart=0", "enable_uart=1")
-			doWriteSimpleFile(bootFile, dd)
-			logger.log(20,"cBY:{:<20} checking if enable_uart=1 repalce 0 with 1".format( G.program))
-			return True # reboot needed
-
-		return False
-	except	Exception as e:
-		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-	return False
-
 
 #################################
 def getBootFileName():
@@ -2308,9 +2274,53 @@ hci1:	Type: Primary  Bus: UART
 	except	Exception as e:
 		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return False
+#################################
+def checkIfHciBlocked(verbose=False):
+	"""
+checking for hci is up , find "up runnning" for proper hci channel hci0/hci1..
+sudo rfkill --output-all
+ID TYPE      DEVICE TYPE-DESC         SOFT      HARD
+ 0 bluetooth hci0   Bluetooth    unblocked unblocked
+ 1 bluetooth hci1   Bluetooth    unblocked unblocked
+ 3 wlan      phy0   Wireless LAN unblocked unblocked
+ 4 bluetooth hci3   Bluetooth    unblocked unblocked
+34 bluetooth hci2   Bluetooth    unblocked unblocked
+returns {"hciX":{"softBlock": True/false, "hardBlock":true/false}}
+
+	"""
+	hciBlocked = {}
+	blocked = False
+	try:
+		cmd = "/usr/bin/sudo /usr/sbin/rfkill --output-all"
+		aa	= subprocess.Popen("/usr/bin/sudo /usr/sbin/rfkill --output-all",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		ret	= [aa[0].decode('utf-8'),aa[1].decode('utf-8')]
+		if verbose: logger.log(20, "cBY:{:<20} {}\n{}".format(G.program, cmd, ret[0]))
+		for line in ret[0].split("\n"):
+			if line.find("bluetooth") > 0: 
+				items = line.split("bluetooth")[1].split()
+				if len(items) == 4:
+					hci = items[0]
+					if hci.find("hci") ==0:
+						softBlock = items[2] == "blocked"
+						hardBlock = items[3] == "blocked"
+						hciBlocked[hci] = {"softBlock": softBlock, "hardBlock":hardBlock}
+						if softBlock or hardBlock: blocked = True
+		return blocked, hciBlocked			
+
+	except	Exception as e:
+		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
+	return blocked, hciBlocked
 
 #################################
-def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=True, escape=False):
+def hciUnblock():
+	"""
+	tries to unblock bluetooth 
+	"""
+	subprocess.Popen("/usr/bin/sudo /usr/sbin/rfkill unblock bluetooth",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+	return
+
+#################################
+def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=True, escape=False, forceCompress=False):
 
 	try:
 			netwM = getNetwork()
@@ -2323,7 +2333,7 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 				G.sendThread = { "run":True, "queue": Queue.Queue(), "thread": threading.Thread(name=u'execSend', target=execSend, args=())}
 				G.sendThread["thread"].start()
 
-			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait,  "verbose":verbose, "squeeze":squeeze, "escape":escape})
+			G.sendThread["queue"].put({"data":data,"sendAlive":sendAlive,"text":text, "wait":wait,  "verbose":verbose, "squeeze":squeeze, "escape":escape, "forceCompress":forceCompress})
 	except	Exception as e:
 		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
@@ -2339,18 +2349,19 @@ def execSend():
 			time.sleep(1)
 			while not G.sendThread["queue"].empty():
 				try:
-					all 		= G.sendThread["queue"].get()
+					nextData 		= G.sendThread["queue"].get()
 					
-					if "verbose" in all and all["verbose"]: verbose = True
+					if "verbose" in nextData and nextData["verbose"]: verbose = True
 					else:									verbose = False
 					verbose = False
-					if verbose:	logger.log(20, "cBY:{:<20} send queue data {}".format(G.program, "{}".format(all)[0:100]) )
-					data 		= all["data"]
-					sendAlive 	= all["sendAlive"]
-					text 		= all["text"]
-					wait 		= all["wait"]
-					squeeze 	= all["squeeze"]
-					escape 		= all["escape"]
+					if verbose:	logger.log(20, "cBY:{:<20} send queue data {}".format(G.program, "{}".format(nextData)[0:100]) )
+					data 			= nextData["data"]
+					sendAlive 		= nextData["sendAlive"]
+					text 			= nextData["text"]
+					wait 			= nextData["wait"]
+					squeeze 		= nextData["squeeze"]
+					escape 			= nextData["escape"]
+					forceCompress 	= nextData["forceCompress"]
 
 					subprocess.call("echo x > {}temp/sending".format(G.homeDir), shell=True)
 
@@ -2367,15 +2378,23 @@ def execSend():
 
 					if	sendAlive == "reboot":
 						name = "pi_IN_Alive"
-						data["reboot"] =True
+						data["msgType"] = sendAlive
+						data["reboot"] = True
 						G.lastAliveSend2 = time.time()
 
 					elif  sendAlive == "alive":
 						name = "pi_IN_Alive"
+						data["msgType"] = sendAlive
+						G.lastAliveSend2 = time.time()
+
+					elif  sendAlive == "raspi-config":
+						name = "pi_IN_Alive"
+						data["msgType"] = sendAlive
 						G.lastAliveSend2 = time.time()
 
 					else:
 						name = "pi_IN_{}".format(G.myPiNumber)
+						data["msgType"] = "regular"
 
 					if True:  ## do socket comm
 								MSGwasSend = False
@@ -2386,7 +2405,7 @@ def execSend():
 									if dataC.find("NaN") > 0: dataC = dataC.replace("NaN","-9999")
 									lenStart = len(dataC)
 									if squeeze: dataC = dataC.replace(" ","")
-									if  len(dataC) > G.compressRPItoPlugin: 
+									if  len(dataC) > G.compressRPItoPlugin or forceCompress: 
 										if sys.version_info[0] == 3: data0 = zlib.compress(bytes(dataC,'utf-8'))
 										else:						 data0 = zlib.compress(dataC)
 										compressedTag = "+comp"
@@ -2395,8 +2414,8 @@ def execSend():
 										compressedTag = "+NOTC"
 									lld = len(data0)
 									if verbose: logger.log(20, "cBY:{:<20}  socket send data lengths  in:{} --> :sq:{} --> cmp:{} ".format(G.program, lenStart, len(dataC), lld))
-									sendData= "{}x-6-a{}x-6-a{}".format(lld, name,compressedTag)
-									sendData= "{:<30}".format(sendData)
+									sendData = "{}x-6-a{}x-6-a{}".format(lld, name,compressedTag)
+									sendData = "{:<30}".format(sendData)
 									if sys.version_info[0] == 3 and type(data0) == type(bytes("xx","utf-8")): 
 										if verbose: logger.log(20, "cBY:{:<20}  sendData type{}, data0 type:{} ".format(G.program, type(sendData), type(data0) ))
 										sendData = bytes(sendData,"utf8")
@@ -3274,18 +3293,20 @@ def startI2C(text=""):
 
 
 #################################
-def testBad(newX, lastX, inXXX):
+def testBad(newX, lastX, inXXX, deltaAbs=99999999.):
 
 	xxx = inXXX
 	try:
 		if lastX is not None and newX is not None:
 			if str(newX).find("bad") == -1:
 				if str(lastX).find("bad") == -1:
-					xxx = max(xxx, abs( float(lastX) - float(newX) )/ max(0.1, abs(float(lastX) + float(newX)) ) )
+					dAbs = abs( float(lastX) - float(newX) )
+					if dAbs > deltaAbs: xxx = 999.
+					xxx = max(xxx, abs( dAbs ) / max(0.1, abs(float(lastX) + float(newX)) ) )
 				else:
 					xxx = 9991.
 			else:
-				if lastX.find("bad") >-1:
+				if lastX.find("bad") > -1:
 					xxx = 0
 				else:
 					xxx = 9992.

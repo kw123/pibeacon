@@ -15,6 +15,11 @@ except:
 	homeDir		= "/home/pi/pibeacon/"
 	homeDir0	= "/home/pi/"
 
+import os, time, subprocess, logging, sys
+
+logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+logger = logging.getLogger(__name__)
+
 
 ################################
 def readPopen(cmd):
@@ -47,7 +52,7 @@ def checkIfmustUsePy3():
 	return False
 
 #################################
-
+logger.log(30," -1-  starting callbeacon "  )
 
 simpleCall("/usr/bin/sudo /usr/bin/systemctl daemon-reload")
 
@@ -58,6 +63,7 @@ else:					usePython3 = ""
 if usePython3 == "":	simpleCall("/usr/bin/sudo /usr/bin/python {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir))
 else:					simpleCall("/usr/bin/sudo /usr/bin/python3 -E {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir))
 
+logger.log(30," -2-  callbeacon after doGPIOatStartup "  )
 
 
 # make new directories if they do not exist 
@@ -77,10 +83,13 @@ subprocess.call("chmod +777 -R {}fonts > 		/dev/null 2>&1 ".format(homeDir), she
 subprocess.call("chmod +777  {}tm > 		/dev/null 2>&1 ".format(homeDir), shell=True)
 subprocess.call("chmod +777  {}tf > 		/dev/null 2>&1 ".format(homeDir), shell=True)
 subprocess.call("chmod +777  {}py > 		/dev/null 2>&1 ".format(homeDir), shell=True)
+subprocess.call("chmod +777  {}ct > 		/dev/null 2>&1 ".format(homeDir), shell=True)
 subprocess.call("chown -R  pi  {} ".format(homeDir), shell=True)
 
+logger.log(30," -3-  callbeacon after chmod "  )
 
 subprocess.call("rm {}*.pyc > 					/dev/null 2>&1 ".format(homeDir), shell=True)
+
 
 subprocess.call("rm {}pygame.active".format(homeDir), shell=True)
 
@@ -90,8 +99,12 @@ subprocess.call("echo {:.0f} >{}masterStartAfterboot".format(time.time(), homeDi
 subprocess.call("rm {}restartCount > 			/dev/null 2>&1 ".format(homeDir), shell=True)
 #subprocess.call("rm  /var/log/piBeacon.log >	/dev/null 2>&1 ")
 
-## call main program
-subprocess.call("cd {}; nohup /bin/bash master.sh  {}  > /dev/null 2>&1 & ".format(homeDir, usePython3), shell=True)
+
+# call main program
+cmd1 = "cd {}; nohup /bin/bash master.sh  {} & ".format(homeDir, usePython3)
+logger.log(30," -4-  callbeacon {}".format(cmd1) )
+
+subprocess.call(cmd1, shell=True)
 
 
 # remove old files 
@@ -109,6 +122,8 @@ for dd in delList:
 # remove old logfiles
 subprocess.call("rm  /var/log/pibeacon*.log  >/dev/null 2>&1", shell=True) # it is now ...../pibeacon no .log
 subprocess.call("rm -r {}logs                >/dev/null 2>&1".format(homeDir), shell=True)
+
+logger.log(30," -5-  callbeacon finished"  )
 
 
 exit()

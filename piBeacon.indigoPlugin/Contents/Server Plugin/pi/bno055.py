@@ -6,7 +6,6 @@
 
 import sys, os, time, json, copy
 import smbus
-import	RPi.GPIO as GPIO  
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -14,6 +13,21 @@ import	piBeaconGlobals as G
 
 G.program = "bno055"
 
+try:
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
 
 
 
@@ -209,10 +223,11 @@ class BNO055():
 		self.i2cAddress = i2cAddress
 		self.resetPin = resetPin
 		if self.resetPin is not None:
-			GPIO.setwarnings(False)
-			GPIO.setmode(GPIO.BCM)
-			GPIO.setup(self.resetPin, GPIO.OUT)
-			GPIO.output(self.resetPin, True)
+			if useGPIO:
+				GPIO.setup(self.resetPin, GPIO.OUT)
+				GPIO.output(self.resetPin, True)
+			else:
+				self.GPIOZERO.LED(self.resetPin, initial_value=True)
 			# Wait a 650 milliseconds in case setting the reset high reset the chip.
 			time.sleep(0.65)
 		# Use I2C if no serial port is provided.
@@ -308,9 +323,14 @@ class BNO055():
 			# Use the hardware reset pin if provided.
 			# Go low for a short period, then high to signal a reset.
 			U.logger.log(10,'BEGIN: doing a hardware reset')
-			GPIO.output(self.resetPin, False)
-			time.sleep(0.01)  # 10ms
-			GPIO.output(self.resetPin, True)
+			if useGPIO:
+				GPIO.output(self.resetPin, False)
+				time.sleep(0.01)  # 10ms
+				GPIO.output(self.resetPin, True)
+			else:
+				self.GPIOZERO.off()
+				time.sleep(0.01)  # 10ms
+				self.GPIOZERO.on()
 		else:
 			# Else use the reset command.
 			U.logger.log(10,'BEGIN: doing a software reset')
@@ -924,6 +944,7 @@ while True:
 	except	Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
-stry: 	G.sendThread["run"] = False; time.sleep(1)
+
+try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
-ys.exit(0)
+sys.exit(0)

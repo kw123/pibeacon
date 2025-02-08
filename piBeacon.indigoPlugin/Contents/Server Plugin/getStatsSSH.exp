@@ -7,7 +7,7 @@ set timeout [lindex $argv 4 ]
 
 
 set timeout $timeout
-if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn sftp -o ConnectTimeout=20 $userID@$ipNumber}
+if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
 
 if {$authKeyOrPassword == "assword"} { 
     expect {
@@ -24,9 +24,9 @@ if {$authKeyOrPassword == "assword"} {
 
 expect "pi@" { 
 	sleep 0.5
-    send "echo '===fix===';sudo dosfsck -w -r -l -a -v -t /dev/mmcblk0p1;echo '===ps===';ps -ef | grep -v grep | grep python;echo '===mem===';free -h;echo '===OSV1===';cat /proc/version;echo '===OSV2===';cat /etc/os-release;echo '===disk===';df;echo '===cpu===';cat /proc/cpuinfo;echo '===hostname===';hostname -I;echo '===ifconfig===';ifconfig;echo '===i2c===';i2cdetect -y 1;echo '===GPIOstats===';gpio readall\r"
+    send "echo '===fix===';echo '===ps===';ps -ef | grep -v grep | grep python;echo '===mem===';free -h;echo '===OSV1===';cat /proc/version;echo '===OSV2===';cat /etc/os-release;echo '===disk===';df;echo '===cpu===';cat /proc/cpuinfo;echo '===hostname===';hostname -I;echo '===ifconfig===';ifconfig;echo '===i2c===';i2cdetect -y 1;echo '===GPINOUT===';pinout -m;echo '===GPIOstats===';gpio readall\r"
     }
-expect ":~" {send "exit\r"}
+expect "pi@" {send "exit\r"}
 expect eof
 
 

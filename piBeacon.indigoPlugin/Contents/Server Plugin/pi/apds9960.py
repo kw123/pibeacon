@@ -1,4 +1,4 @@
-`#!/usr/bin/env python
+#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 # by Karl Wachs
 # feb 5 2016
@@ -19,10 +19,22 @@ import math
 import io
 import fcntl # used to access I2C parameters like addresses
 
-import RPi.GPIO as GPIO
+try:
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
 
-
-GPIO.setmode(GPIO.BCM)
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
@@ -1768,7 +1780,7 @@ class APDS9960():
 
 				
 ##################################	gesture handling ############
-def gestureInterrupt(gpio):
+def gestureInterrupt(gpio=0):
 	global lastGestureTime,	 newInterrupt
 	lastGestureTime = 0
 	newInterrupt	= True
@@ -1876,6 +1888,8 @@ def readParams():
 	global sensors, sensor, sensorList, sensorDev, interruptGPIOAlreadySetup, sensorsOld
 	global refreshColor, deltaColor, refreshProximity, deltaProximity, enableGesture,enableNearFar, interruptGPIO, i2cAddress
 	global oldRaw, lastRead
+	global PIZEROGPIO
+
 	try:
 
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -1981,16 +1995,23 @@ def readParams():
 
 				
 				if enableGesture:
-					GPIO.setwarnings(False)
 					try:
 						if interruptGPIO > 0:
 							if interruptGPIOAlreadySetup != interruptGPIO:
-								GPIO.setup(interruptGPIO, GPIO.IN)
-								GPIO.remove_event_detect(interruptGPIO)
-								GPIO.add_event_detect(interruptGPIO,GPIO.FALLING)
-								GPIO.add_event_callback(interruptGPIO,gestureInterrupt)
-								U.logger.log(30, "GPIO interrupt pin setup")
-								interruptGPIOAlreadySetup = interruptGPIO
+								if useGPIO:
+									GPIO.setup(interruptGPIO, GPIO.IN)
+									GPIO.remove_event_detect(interruptGPIO)
+									GPIO.add_event_detect(interruptGPIO,GPIO.FALLING)
+									GPIO.add_event_callback(interruptGPIO,gestureInterrupt)
+									U.logger.log(20, "GPIO interrupt pin setup")
+									interruptGPIOAlreadySetup = interruptGPIO
+								else:
+									PIZEROGPIO[interruptGPIO] = gpiozero.Button(interruptGPIO, pull_up=True) 
+									PIZEROGPIO[interruptGPIO].when_pressed  = gestureInterrupt 
+
+									U.logger.log(20, "PIZEROGPIO interrupt pin setup")
+									interruptGPIOAlreadySetup = interruptGPIO
+
 					except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 					
@@ -2039,6 +2060,10 @@ global sensorList, ipAddress, interruptGPIOAlreadySetup
 global authentication, newInterrupt, sensorsOld
 global refreshColor, deltaColor, refreshProximity, deltaProximity, enableGesture,enableNearFar, interruptGPIO, i2cAddress
 global oldRaw,	lastRead
+global PIZEROGPIO
+
+PIZEROGPIO					= {}
+
 oldRaw					= ""
 lastRead				= 0
 
@@ -2143,4 +2168,3 @@ while True:
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
 sys.exit(0)
-`

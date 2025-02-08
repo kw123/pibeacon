@@ -14,10 +14,23 @@ import threading
 try: import Queue
 except: import queue as Queue
 
-import RPi.GPIO as GPIO
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+try:
+	#1/0 # use GPIO
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
 
 
 
@@ -161,12 +174,13 @@ def setGPIO(command):
 	devType = "OUTPUTgpio"
 
 
+	GPIOZERO = ""
 	G.debug = 20
 	myDebug = G.debug
 	#U.logger.log(20, "{:.2f} into setGPIO command:{}".format(time.time() , command))
 
 	for iiii in range(1):
-		try:	PWM= int(command["PWM"])
+		try:	PWM = int(command["PWM"])
 		except: PWM = 100
 
 
@@ -212,7 +226,10 @@ def setGPIO(command):
 					pulseUp = float(values.get("pulseUp",1))
 					pulseDown = float(values.get("pulseDown",1))
 					nPulses = int(values.get("nPulses",1))
-					bits = min(100,max(100,int(values.get("bits",50))))
+					bits = min(100,int(values.get("bits",-1)))
+					analogValue = min(100.,values.get("analogValue",-1))
+					if bits == -1: bits = analogValue
+					if bits == -1: bits = 0
 				except	Exception as e:
 					U.logger.log(20," error reading command values:{}".format(values))
 		
@@ -229,31 +246,47 @@ def setGPIO(command):
 			devId = str(command["devId"])
 		else: devId = "0"
 
-		U.logger.log(20, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, command:{} ".format(time.time(), cmd, pin, command) )
+		U.logger.log(20, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, useGPIO:{}, command:{} ".format(time.time(), cmd, pin,useGPIO,  command) )
 		try:
 			if inverseGPIO: 
 				up   = 0
 				down = 1
 				on   = "low"
 				off  = "high" 
+				ON   = "off"
+				OFF  = "on"
 			else:
 				up   = 1
 				down = 0
 				on   = "high"
 				off  = "low" 
+				ON   = "on"
+				OFF  = "off"
 
 			if cmd == "up":
-				GPIO.setup(pin, GPIO.OUT)
-				GPIO.output(pin, up)
 				U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, on) )
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
+				if useGPIO:
+					GPIO.setup(pin, GPIO.OUT)
+					GPIO.output(pin, up)
+				else:
+					GPIOZERO = gpiozero.LED(pin)
+					getattr(GPIOZERO, ON)()
+					if sleepForxSecs(1000000000): 
+						break
 		
 
 			elif cmd == "down":
-				GPIO.setup(pin, GPIO.OUT)
-				GPIO.output(pin, down)
 				U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, off) )
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
+				if useGPIO:
+					GPIO.setup(pin, GPIO.OUT)
+					GPIO.output(pin, down)
+				else:
+					GPIOZERO = gpiozero.LED(pin)
+					getattr(GPIOZERO, OFF)()
+					if sleepForxSecs(1000000000): 
+						break
 
 			elif cmd in ["analogWrite","analogwrite"]:
 				if inverseGPIO:
@@ -275,37 +308,70 @@ def setGPIO(command):
 					PIGPIO.set_PWM_dutycycle(pin, value)
 
 				else:
-					GPIO.setup(pin, GPIO.OUT)
-					p = GPIO.PWM(pin, PWM)	# 
-					p.start(int(value))	 # start the PWM with  the proper duty cycle
-				if sleepForxSecs(1000000000): break
+					if useGPIO:
+						GPIO.setup(pin, GPIO.OUT)
+						p = GPIO.PWM(pin, PWM)	# 
+						p.start(int(value))	 # start the PWM with  the proper duty cycle
+						if sleepForxSecs(1000000000): break
+					else:
+						v = float(value) / 100.
+						#U.logger.log(myDebug, "analogWrite action pin = {}  value:{}, v:{}".format(pin,  value, v) )
+						GPIOZERO = gpiozero.PWMLED(pin, frequency=1000)
+						GPIOZERO.value = v
+						if sleepForxSecs(1000000000): 
+							break
 
-			elif cmd in ["pulseUp","pulseup"]:
-				GPIO.setup(pin, GPIO.OUT)
-				GPIO.output(pin, up)
+			elif cmd in ["pulseUp","pulseup"]: # ignoe inverse
+				U.logger.log(myDebug, "pulseDown action pin = {} start, pulseDown:{}, inverseGPIO:{}, useGPIO:{}".format(pin,  pulseDown, inverseGPIO, useGPIO) )
+				if useGPIO:
+					GPIO.setup(pin, GPIO.OUT)
+					GPIO.output(pin, up)
+				else:
+					GPIOZERO = gpiozero.LED(pin)
+					getattr(GPIOZERO, ON)()
+
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 				if sleepForxSecs(pulseUp): break
-				GPIO.output(pin, down)
+				if useGPIO:
+					GPIO.output(pin, down)
+				else:
+					getattr(GPIOZERO, OFF)()
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 
-			elif cmd in ["pulseDown","pulsedown"]:
-				#U.logger.log(myDebug, "pulseDown action pin = {} start, pulseDown:{}, inverseGPIO:{}".format(pin,  pulseDown, inverseGPIO) )
-				GPIO.setup(pin, GPIO.OUT)
-				GPIO.output(pin, down)
+			elif cmd in ["pulseDown","pulsedown"]: # ignoe inverse
+				U.logger.log(myDebug, "pulseDown action pin = {} start, pulseDown:{}, inverseGPIO:{}".format(pin,  pulseDown, inverseGPIO) )
+				if useGPIO:
+					GPIO.setup(pin, GPIO.OUT)
+					GPIO.output(pin, down)
+				else:
+					GPIOZERO = gpiozero.LED(pin)
+					getattr(GPIOZERO, OFF)()
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 				if sleepForxSecs(pulseDown): break
-				#U.logger.log(myDebug, "pulseDown action pin = {} back up".format(pin) )
-				GPIO.output(pin, up)
+				U.logger.log(myDebug, "pulseDown action pin = {} back up".format(pin) )
+				if useGPIO:
+					GPIO.output(pin, up)
+				else:
+					getattr(GPIOZERO, ON)()
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 
-			elif cmd in ["continuousUpDown","continuousupdown"]:
-				GPIO.setup(pin, GPIO.OUT)
+			elif cmd in ["continuousUpDown","continuousupdown"]: # ignoe inverse
+				if useGPIO:
+					GPIO.setup(pin, GPIO.OUT)
+				else:
+					GPIOZERO = gpiozero.LED(pin)
 				#U.logger.log(myDebug, "continuousUpDown pin = {} start, pulseUp:{}, pulseDown:{}, nPulses:{}".format(pin,  pulseUp, pulseDown, nPulses) )
 				for ii in range(nPulses):
-					GPIO.output(pin, up)
+					if useGPIO:
+						GPIO.output(pin, up)
+					else:
+						GPIOZERO.on()
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
-					if sleepForxSecs(pulseUp): break
-					GPIO.output(pin, down)
+					if sleepForxSecs(pulseUp): pass
+					if useGPIO:
+						GPIO.output(pin, down)
+					else:
+						GPIOZERO.off()
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 					if sleepForxSecs(pulseDown): break
 				U.logger.log(myDebug, "continuousUpDown finished" )
@@ -316,6 +382,7 @@ def setGPIO(command):
 
 	U.logger.log(myDebug, "exit {}".format(command) )
 	U.removeOutPutFromFutureCommands(pin, devType)
+	if GPIOZERO != "": GPIOZERO.close()
 
 	return 
 
@@ -867,19 +934,20 @@ def setupexecThreads(nextItem):
 		if "command" not in nextItem: return False
 		
 		threadName = ""
-		if "device" in nextItem and nextItem["device"] != "":				threadName = nextItem["device"]
-		if "pin" in nextItem and nextItem["pin"] != "": 					threadName += "-"+str(nextItem["pin"])
+		if "pin" in nextItem and nextItem["pin"] != "": 					threadName += "pin-"+str(nextItem["pin"])
+		elif "device" in nextItem and nextItem["device"] != "":				threadName = nextItem["device"]
 		elif "i2cAddress" in nextItem and nextItem["i2cAddress"] != "": 	threadName += "-"+str(nextItem["i2cAddress"])
-		if threadName =="":											threadName = nextItem["command"]
+		if threadName =="":													threadName = nextItem["command"]
 
 		if threadName in threadsActive:
 			if threadsActive[threadName]["state"] != "stop":
 				stopExecCmd(threadName)
 			
-		#U.logger.log(20, "starting thread={}".format(threadName))
+		U.logger.log(20, "starting thread={}, comment:{}".format(threadName, nextItem))
 		threadsActive[threadName] = {"state":"running", "thread": threading.Thread(name=threadName, target=execCMDS, args=(nextItem,))}	
 		threadsActive[threadName]["thread"].daemon = True
 		threadsActive[threadName]["thread"].start()
+		threadsActive[threadName]["comment"] = nextItem
 
 		out = "{}".format(nextItem)
 		ll = min(len(out),100)
@@ -902,7 +970,7 @@ def stopExecCmd(threadName):
 	global threadsActive
 	try:
 		if threadName in threadsActive:
-			#U.logger.log(20, "stop issuing thread={}".format(threadName))
+			U.logger.log(20, "stop issuing thread={}, comment: {}".format(threadName, threadsActive[threadName]["comment"] ))
 			if threadsActive[threadName]["state"] == "stop": return 
 			threadsActive[threadName]["state"] = "stop"
 			time.sleep(0.07)

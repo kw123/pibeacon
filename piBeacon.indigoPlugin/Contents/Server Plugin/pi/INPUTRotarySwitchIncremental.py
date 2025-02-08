@@ -14,13 +14,11 @@
 #  B: 001100110011
 #  A: 011001100110 
 # one full step is 4 bits
-# this py program can read the gpio pins through regular GPIO edge.BOTH events(workEvent), and analyzed with workEvent
 # for fast changing events: try: 
-#   RPI.GPIO events put into queue(pigEVENTthread),  get by a thread (workQueue) and analyzed with workEvent
 #   PIgGPIO  events put into queue(gpioEVENTthread), get by a thread (workQueue) and anaylzed with workEvent
 #
 # workEVENT and executePinChange have options to
-# supporess bounces and to cover for missing signals in the steps.
+# supports bounces and to cover for missing signals in the steps.
 #  ignorePinValue =
 #   0= no management
 #   1 = if event pin not changed: set event pin true if TRUE would be next expected signal (not if threads & queue are used)
@@ -31,7 +29,6 @@
 import	sys, os, subprocess, copy
 import	time,datetime
 import	json
-import	RPi.GPIO as GPIO  
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -64,6 +61,7 @@ def readParams():
 		restart = False
 			
 		if G.program  not in sensors:
+			U.logger.log(20, "no {} sensor defined, exiting".format(G.program))
 			stopProgram()
 
 		oldINPUTS  = copy.deepcopy(INPUTS)
@@ -106,14 +104,8 @@ def readParams():
 				if "incrementIfGT4Signals" in sens:
 						INPUTS[devId]["incrementIfGT4Signals"]  = (sens["incrementIfGT4Signals"]=="1")
 
-				if "useWhichGPIO" in sens:
-						xxx 							 = sens["useWhichGPIO"].split("-")
-						if  useWhichGPIO != xxx[0]:
-							new = True
-						if  useThreads != (xxx[1] == "threads"):
-							new = True
-						useWhichGPIO = xxx[0]
-						useThreads	 = xxx[1] == "threads"
+				useWhichGPIO = "pig"
+				useThreads	 = True
 						
 					
 				if oldINPUTS != {} and new:
@@ -125,24 +117,6 @@ def readParams():
 			stopProgram(action ="onlyThread")
 			U.restartMyself(reason="new parameters")
 		return 
-
-
-#################################
-def setupGPIOsystem():
-
-	U.logger.log(30, "starting setup GPIOsystem")
-
-	ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-	if len(ret[1]) > 0:
-		U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
-		return False
-
-	ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
-	if len(ret[1]) > 0:
-		U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
-		return False
-
-	return True
 
 
 
@@ -192,30 +166,6 @@ def pigEVENTthread(pin, level, tick):
 	threadDict["queue"].put(( pin, stateA, stateB, tick/1000. ))
 	return 
 
-#################################
-def gpioEVENTthread(pin):
-	global lastTick
-	global INPUTS, pinsToDevid
-	global threadDict
-	global debug
-	devIDUsed = pinsToDevid[pin]
-	IP = INPUTS[devIDUsed]
-	pinA= IP["pinA"]
-	pinB= IP["pinB"]
-	stateA = (GPIO.input(pinA) == 0)
-	stateB = (GPIO.input(pinB) == 0)
-	if IP["inverse"]:
-		stateA = not stateA
-		stateB = not stateB
-	tick = time.time()*1000
-
-	level = "D"
-	if pin == pinB and stateB: level = "U" 
-	if pin == pinA and stateA: level = "U"
-
-	lastTick = tick
-	threadDict["queue"].put(( pin, stateA, stateB, tick ))
-	return 
 
 #################################
 def workQueue():
@@ -280,25 +230,6 @@ def startGPIO(devId):
 			threadDict[devId]["pinA"] = PIGPIO.callback(INPUTS[devId]["pinA"], pigpio.EITHER_EDGE, pigEVENTthread)
 			threadDict[devId]["pinB"] = PIGPIO.callback(INPUTS[devId]["pinB"], pigpio.EITHER_EDGE, pigEVENTthread)
 			return
-
-		elif useWhichGPIO == "rpi":
-			U.logger.log(30, "GPIO  setting up gpio "+str(devId)+"  "+ str(INPUTS[devId]))
-			GPIO.setup( INPUTS[devId]["pinA"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-			GPIO.setup( INPUTS[devId]["pinB"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-			if useThreads: 
-				if 	"queue" not in threadDict:
-					import threading 
-					try: import Queue
-					except: import queue as Queue
-					threadDict["queue"] = Queue.Queue()
-					threadDict["thread"] = threading.Thread(target=workQueue, name="workQueue" )
-					threadDict["thread"].start()
-				GPIO.add_event_detect( INPUTS[devId]["pinA"], GPIO.BOTH, callback=gpioEVENTthread ) 		
-				GPIO.add_event_detect( INPUTS[devId]["pinB"], GPIO.BOTH, callback=gpioEVENTthread ) 
-			else:
-				GPIO.add_event_detect( INPUTS[devId]["pinA"], GPIO.BOTH, callback=workEvent ) 		
-				GPIO.add_event_detect( INPUTS[devId]["pinB"], GPIO.BOTH, callback=workEvent ) 
-
 		else:
 			exit()
 		
@@ -313,7 +244,7 @@ def startGPIO(devId):
 	   
 #################################
 def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
- 	global INPUTS, pinsToDevid, newData
+	global INPUTS, pinsToDevid, newData, PIGPIO
 	global counts
 	global countSignals
 	global debug
@@ -324,8 +255,8 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 			pinB= IP["pinB"]
 
 			if stateA==-1 and stateB ==-1:
-				stateA = (GPIO.input(pinA) == 0)
-				stateB = (GPIO.input(pinB) == 0)
+				stateA = PIGPIO.read(pinA) == 0 
+				stateB = PIGPIO.read(pinB) == 0
 	
 			if IP["inverse"]:
 				stateA = not stateA
@@ -373,7 +304,7 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 
 #################################
 def executePinChange(devIDUsed, pin, stateA, stateB, tt):
- 	global INPUTS, pinsToDevid, newData
+	global INPUTS, pinsToDevid, newData
 	global counts
 	global countSignals
 	global debug
@@ -441,10 +372,6 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 
 
 #################################
-
-
-
-#################################
 def checkReset():
 	if not os.path.isfile(G.homeDir+"temp/"+ G.program+".reset"): return False
 	try:    os.remove(G.homeDir+"temp/" + G.program+".reset")
@@ -464,134 +391,126 @@ def stopProgram(action=""):
 	sys.exit(0)
 
 
-
-#################################
-#################################
-######      MAIN     ############
-#################################
-#################################
-global sensors
-global sensors
-global oldRaw, lastRead
-global INPUTS
-global newData
-global counts
-global debug
-global countSignals
-global useThreads
-global useWhichGPIO
-global threadDict
-global PIGPIO
-global lastTick
-
-
-
-#### threadding does not work with edge detect, can have only ONE edge detect !!!!
-threadDict			= {"stopThread":False}
-lastTick 			= 0.
-PIGPIO				= ""	
-useWhichGPIO		= "rpi"
-useThreads			= True
-countSignals		= {}
-debug 				= 0
-oldRaw				= ""
-lastRead			= 0
-INPUTS				= {}
-sensors				= {}
-pinsToDevid			= {}
-newData				= False
-
-###################### constants #################
-
-GPIO.setmode(GPIO.BCM)
-U.setLogging()
-
-myPID		= str(os.getpid())
-U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
-
-#  Possible answers are 0 = Compute Module, 1 = Rev 1, 2 = Rev 2, 3 = Model B+/A+
-piVersion = GPIO.RPI_REVISION
-
-sensor			  = G.program
-
-U.logger.log(30, "starting "+G.program+" program")
-
-# check if everything is installed
-for i in range(100):
-	if not setupGPIOsystem(): 
-		time.sleep(10)
-		if i%50==0: U.logger.log(30,G.program+"===>  GPIO sensor libs not installed, need to wait until done")
-	else:
-		break	 
-
-
-readCounts()
-
-readParams()
-
-		
-
-shortWait			= 0.3	 
-lastEverything		= time.time()-10000. # -1000 do the whole thing initially
-G.lastAliveSend		= time.time()
-
-#print "shortWait",shortWait	 
-
-if U.getIPNumber() > 0:
-	U.logger.log(30," sensors no ip number  exiting ")
-	time.sleep(10)
-	stopProgram()
-
-
-lastMsg  = 0
-quick    = 0
-
-lastData = {}
-G.tStart = time.time() 
-lastRead = time.time()
-shortWait = 40
-loopCount  = 0
-
-while True:
-	try:
-		data0={}
-		data ={"sensors":{}}
-		tt= time.time()
-		if sensor not in sensors: break
-		for devId in  sensors[sensor]:
-			if devId not in lastData: lastData[devId]={"INPUT":0}
-			data0[devId] = {"INPUT":counts[devId]}
-
-		if	data0 != lastData or tt - lastMsg > 100:
-			saveCounts()
-			lastMsg=tt
-			lastData=copy.copy(data0)
-			data["sensors"][sensor] = data0
-			#print data, counts
-			U.sendURL(data)
-		quick = U.checkNowFile(G.program)
-		if loopCount%50==0:
-			U.echoLastAlive(G.program)
+def execMain():
+	#################################
+	#################################
+	######      MAIN     ############
+	#################################
+	#################################
+	global sensors
+	global sensors
+	global oldRaw, lastRead
+	global INPUTS
+	global newData
+	global counts
+	global debug
+	global countSignals
+	global useThreads
+	global useWhichGPIO
+	global threadDict
+	global PIGPIO
+	global lastTick
+	global pinsToDevid
+	
+	
+	
+	#### threadding does not work with edge detect, can have only ONE edge detect !!!!
+	threadDict			= {"stopThread":False}
+	lastTick 			= 0.
+	PIGPIO				= ""	
+	useWhichGPIO		= "pig"
+	useThreads			= True
+	countSignals		= {}
+	debug 				= 0
+	oldRaw				= ""
+	lastRead			= 0
+	INPUTS				= {}
+	sensors				= {}
+	pinsToDevid			= {}
+	newData				= False
+	
+	###################### constants #################
+	
+	U.setLogging()
+	
+	myPID		= str(os.getpid())
+	U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
+	
+	
+	sensor			  = G.program
+	
+	U.logger.log(20, "starting "+G.program+" program")
+	
+	
+	readCounts()
+	
+	readParams()
+	
 			
-		if time.time()- lastRead > 10:
-			readParams()
-			lastRead = time.time()
-
-		loopCount+=1
-		for iii in range(100):
-			time.sleep(shortWait/100.)
-			if newData: break
-
-		if checkReset():
-			for devId in counts:
-				counts[devId]=0
+	
+	shortWait			= 0.3	 
+	lastEverything		= time.time()-10000. # -1000 do the whole thing initially
+	G.lastAliveSend		= time.time()
+	
+	#print "shortWait",shortWait	 
+	
+	if U.getIPNumber() > 0:
+		U.logger.log(30," sensors no ip number  exiting ")
+		time.sleep(10)
+		stopProgram()
+	
+	
+	lastMsg  = 0
+	quick    = 0
+	
+	lastData = {}
+	G.tStart = time.time() 
+	lastRead = time.time()
+	shortWait = 40
+	loopCount  = 0
+	
+	while True:
+		try:
+			data0={}
+			data ={"sensors":{}}
+			tt= time.time()
+			if sensor not in sensors: break
+			for devId in  sensors[sensor]:
+				if devId not in lastData: lastData[devId]={"INPUT":0}
+				data0[devId] = {"INPUT":counts[devId]}
+	
+			if	data0 != lastData or tt - lastMsg > 100:
 				saveCounts()
+				lastMsg = tt
+				lastData = copy.copy(data0)
+				data["sensors"][sensor] = data0
+				#print data, counts
+				U.sendURL(data)
+			quick = U.checkNowFile(G.program)
+			if loopCount%50 == 0:
+				U.echoLastAlive(G.program)
+				
+			if time.time()- lastRead > 10:
+				readParams()
+				lastRead = time.time()
+	
+			loopCount+=1
+			for iii in range(100):
+				time.sleep(shortWait/100.)
+				if newData: break
+	
+			if checkReset():
+				for devId in counts:
+					counts[devId] = 0
+					saveCounts()
+	
+			newData = False
+		except	Exception as e:
+			U.logger.log(30,"", exc_info=True)
+			time.sleep(5.)
+	
+	stopProgram()
+	try: 	G.sendThread["run"] = False; time.sleep(1)
+	except: pass
 
-		newData = False
-	except	Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		time.sleep(5.)
-
-stopProgram()
-try: 	G.sendThread["run"] = False; time.sleep(1)
-except: pass
+execMain()

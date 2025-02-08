@@ -31,18 +31,20 @@ Then the rPi will start sending data to plugin
 				<List class="self" filter="" method="filterPiD" dynamicReload="true" />
 				<Label>select rPi to configure:</Label>
 			</Field>
-			<Field id="confirmPiServer" type="button" tooltip="select pi- server number and then click on confirm ">
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="menuRefreshCallback"/>
+<!-->			<Field id="confirmPiServer" type="button" tooltip="select pi- server number and then click on confirm ">
 				<Label>Confirm rPi</Label>
 				<Title>CONFIRM</Title>
 				<CallbackMethod>buttonConfirmPiServerCALLBACK</CallbackMethod>
 			</Field>
+-->
 			<Field id="MSG" type="textfield" defaultValue="">
 				<Label> message from Plugin:</Label>
 			</Field>
 			<Field id="beaconOrSensor" type="textfield" defaultValue="iBeacon" readonly="Yes">
 				<Label> rPiMode:</Label>
 			</Field>
-			<Field enabledBindingId="enablePiEntries" id="piOnOff" type="menu" defaultValue="1">
+			<Field enabledBindingId="enablePiEntries" id="piOnOff" type="menu" defaultValue="">
 				<List>
 					<Option value="0">off </Option>
 					<Option value="1">On </Option>
@@ -78,7 +80,7 @@ Then the rPi will start sending data to plugin
 			</Field>
 			<Field enabledBindingId="enablePiEntries" id="confirmPiServerConfig" type="button" tooltip="">
 				<Label>Confirm rPi Config</Label>
-				<Title>CONFIRM</Title>
+				<Title>SAVE</Title>
 				<CallbackMethod>buttonConfirmPiServerConfigCALLBACK</CallbackMethod>
 				<Field id="infoLabelend" type="label">
 					<Label>!!!!! do not hit ENTER or click CLOSE before CONFIRM !!!!!</Label>
@@ -147,7 +149,7 @@ Then the rPi will start sending data to plugin
 				<Title>Reboot rPi Force through socket</Title>
 				<CallbackMethod>buttonRebootHardSocketCALLBACK</CallbackMethod>
 			</Field>
-			<Field id="buttonUpgrade" type="button" tooltip=" apt-get updae and apt-get upgrade">
+			<Field id="buttonUpgrade" type="button" tooltip=" apt-get update and apt-get upgrade">
 				<Label>click to</Label>
 				<Title>Upgrade opsys on rpi</Title>
 				<CallbackMethod>buttonUpgradeCALLBACK</CallbackMethod>
@@ -161,6 +163,11 @@ Then the rPi will start sending data to plugin
 
 			<Field id="logsStart" type="label">
 				<Label> -------- get info / logs </Label>
+			</Field>
+			<Field id="sendRaspiConfigCALLBACKmenu" type="button" tooltip="">
+				<Label>click to</Label>
+				<Title>get raspi-config settings</Title>
+				<CallbackMethod>sendRaspiConfigCALLBACK</CallbackMethod>
 			</Field>
 			<Field id="buttonGetpiBeaconLog" type="button" tooltip="using tail -1000 /var/log/pibeacon.log">
 				<Label>click to</Label>
@@ -210,11 +217,13 @@ Then the rPi will start sending data to plugin
 				<Label>change IP number of rPi#:</Label>
 				<List class="self" filter="" method="filterPi" dynamicReload="false" />
 			</Field>
+<!-->
 			<Field id="buttonconfirmPIforIPChange" type="button" tooltip="this will change the ip number used to contact the rPI server. It will send all NEW config and program files to the old ip address then reboot rPi">
 				<Label>click to</Label>
 				<Title>SELECT PI</Title>
 				<CallbackMethod>buttonConfirmoldIPCALLBACK</CallbackMethod>
 			</Field>
+-->
 			<Field id="oldipNumberPi" type="textfield" defaultValue="192.168.1.x">
 				<Label>Old rPi IP Number :</Label>
 			</Field>
@@ -612,55 +621,6 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
- 
-	<MenuItem id="sendSetTimeOnDevice">
-		<Name>Send a set Time and Zone command to RPI to beacon device..</Name>
-		<ConfigUI>
-			<Field id="infoLabelINPUT0" type="label">
-				<Label>Select the beacon device  to receive the set time and zone command
-the device must be able to digest the command, only qualified devices (ie xiaomi LYWSD02) are shown in the select list
-During the time of setting time the regular ibeacon process is suspended (10-30secs).</Label>
-			</Field>
-			<Field id="selectbeacon" type="menu" defaultValue="-1">
-				<Label>select the device</Label>
-				<List class="self" filter="setTime" method="filterBeaconsThatCanBeepOrSetTime" dynamicReload="false" />
-			</Field>
-			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number">
-				<Label>select rPi to use for set time </Label>
-				<List class="self" filter="" method="filterPibeaconOne" dynamicReload="false" />
-			</Field>
-			<Field id="execAll" type="button">
-				<Label> ....after selection click</Label>
-				<Title>EXECUTE</Title>
-				<CallbackMethod>sendSetTimeAndZoneOnDeviceCALLBACKmenu</CallbackMethod>
-			</Field>
-			<Field id="MSG" type="textfield" defaultValue="">
-				<Label>message from Plugin:</Label>
-			</Field>
-		</ConfigUI>
-	</MenuItem>
- 
-	<MenuItem id="setBatteryReplaceDate">
-		<Name>Set date-time of battery replaced state..</Name>
-		<ConfigUI>
-			<Field id="infoLabelINPUT0" type="label">
-				<Label>Select the  device  to set last battery replaced state</Label>
-			</Field>
-			<Field id="devId" type="menu" defaultValue="-1">
-				<Label>select the device</Label>
-				<List class="self" filter="setTime" method="filterDevicesThatHaveLastBatteryReplaced" dynamicReload="false" />
-			</Field>
-			<Field id="execAll" type="button">
-				<Label> ....after selection click</Label>
-				<Title>EXECUTE</Title>
-				<CallbackMethod>setBatteryReplaceDateCALLBACKmenu</CallbackMethod>
-			</Field>
-			<Field id="MSG" type="textfield" defaultValue="">
-				<Label>message from Plugin:</Label>
-			</Field>
-		</ConfigUI>
-	</MenuItem>
- 
 
 	<MenuItem id="d15">
 		<Name>-------------print / log configs detect/id beacons ... ---------------------</Name>
@@ -1010,6 +970,45 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
        </ConfigUI>
 	</MenuItem>
 
+	<MenuItem id="setDevState">
+		<Name>Set a state of any piBeacon Indigo device to ..</Name>
+		<ConfigUI>
+			<Field     id="MSG" type="textfield" defaultValue="">
+				<Label>MSG from plugin:</Label>
+			</Field>
+			<Field     id="devId" type="menu" defaultValue="0">
+				<Label>select device:</Label>
+				<List class="self" filter="all" method="filterallDevicesReturnDevID"  dynamicReload="false" />
+			</Field>
+
+			<Field  id="refreshCallbackMethod" type="textfield" defaultValue="menuRefreshCallback" hidden="true"></Field>
+
+			<Field id="stateName" type="menu"> 
+				<Label>select state name to be overwritten</Label> 
+				<List class="self"  filter="" method="selectStateForChange"  dynamicReload="true" />
+			</Field>
+
+			<Field id="oldValue" type="textfield" readonly="true"> 
+				<Label>old value of state</Label> 
+			</Field>
+
+			<Field id="newValue" type="textfield"> 
+				<Label>new value for state</Label> 
+			</Field>
+
+
+			<Field id="newValueUi" type="textfield"> 
+				<Label>new value Ui for state, leave empty to ignore</Label> 
+			</Field>
+
+			<Field id="executeOverwrite" type="button"> 
+				<Label>overwrite now</Label> 
+				<Title>OVERWRITE</Title><CallbackMethod>executeOverwriteButtonState</CallbackMethod>
+			</Field>
+
+		</ConfigUI>
+	</MenuItem>
+
 	<MenuItem id="d20">
 		<Name>-------------manage sensor   devices  ----------</Name>
 	</MenuItem>
@@ -1023,11 +1022,13 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<List class="self" filter="" method="filterINPUTdevices" />
 				<Label> select device</Label>
 			</Field>
-			<Field id="buttonDeviceID" type="button">
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="menuRefreshCallback"/>
+<!-->			<Field id="buttonDeviceID" type="button">
 				<Label> ....after selection click</Label>
 				<Title>CONFIRM</Title>
 				<CallbackMethod>confirmdeviceIDINPUTBUTTONmenu</CallbackMethod>
 			</Field>
+-->
 			<Field id="i0" type="checkbox" default="false" hidden="yes"></Field>
 			<Field id="i1" type="checkbox" default="false" hidden="yes"></Field>
 			<Field id="i2" type="checkbox" default="false" hidden="yes"></Field>
@@ -1380,11 +1381,13 @@ Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</
 				<List class="self" filter="" method="filterOUTPUTdevicesACTION" />
 				<Label>select OUTPgpio device to set gpio pins:</Label>
 			</Field>
-			<Field id="buttonDeviceID" type="button">
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="menuRefreshCallback"/>
+<!-->			<Field id="buttonDeviceID" type="button">
 				<Label> ....after selection click</Label>
 				<Title>CONFIRM</Title>
 				<CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
 			</Field>
+-->
 			<Field id="GPIOpin" type="menu" tooltip="select the OUTPUT state">
 				<Label>pick GPIO-pin:</Label>
 				<List class="self" filter="" method="filterOUTPUTchannelsACTION" dynamicReload="true" />
@@ -1437,11 +1440,13 @@ Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</
 				<List class="self" filter="" method="filterOUTPUTrelaydevicesACTION" />
 				<Label>select OUTP i2c relay device for channel = relay#:</Label>
 			</Field>
-			<Field id="buttonDeviceID" type="button">
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="menuRefreshCallback"/>
+<!-->			<Field id="buttonDeviceID" type="button">
 				<Label> ....after selection click</Label>
 				<Title>CONFIRM</Title>
 				<CallbackMethod>confirmdeviceIDOUTPUTBUTTONmenu</CallbackMethod>
 			</Field>
+-->
 			<Field id="GPIOpin" type="menu">
 				<Label>pick relay# on board:</Label>
 				<List>

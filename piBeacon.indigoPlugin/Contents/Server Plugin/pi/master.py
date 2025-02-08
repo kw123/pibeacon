@@ -3,7 +3,7 @@
 # by Karl Wachs
 # feb 5 2016
 
-masterVersion			= 16.11
+masterVersion			= 17.11
 ## changelog: 
 # 2020-04-05 added check for NTP
 # 2023-01-04 v=16.11:  improved  creation of rc.local file 
@@ -30,6 +30,22 @@ import	piBeaconGlobals as G
 import	piBeaconUtils	as U
 G.program = "master"
 
+try:
+	#1/0 # use GPIO
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
 
 
 ####################      #########################
@@ -103,7 +119,7 @@ def checkWiFiSetupBootDir():
 def readNewParams(force=0, init=False):
 	global restart,sensorList,rPiCommandPORT, firstRead
 	global enableiBeacons, beforeLoop, cAddress,rebootHour,sensors,enableShutDownSwitch, rebootWatchDogTime
-	global shutdownInputPin, shutdownPinVoltSensor,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles
+	global shutdownInputPin, shutdownPinVoltSensor,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, GPIOZEROshutdown
 	global actions, output
 	global lastAlive
 	global activePGMOutput, bluetoothONoff
@@ -130,6 +146,8 @@ def readNewParams(force=0, init=False):
 	global macIfWOLsendToIndigoServer, IpnumberIfWOLsendToIndigoServer
 	global typeOfUPS, RTCpresent, usePython3, usePython3
 	global programsThatShouldBeRunning, programsThatShouldBeRunningOld
+	global GPIOZEROfan
+	global GPIOZEROveto
 
 	try:	
 		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -247,11 +265,14 @@ def readNewParams(force=0, init=False):
 					xx= int(inp["fanGPIOPin"])
 					if xx > 0 and xx != fanGPIOPin: 
 						fanGPIOPin = xx
-						GPIO.setup(fanGPIOPin, GPIO.OUT)	
+						if useGPIO:
+							GPIO.setup(fanGPIOPin, GPIO.OUT)	
+						else:
+							GPIOZEROfan = gpiozero.LED(fanGPIOPin, initial_value=False)
 				if "fanTempOnAtTempValue" in inp:
-					fanTempOnAtTempValue= int(inp["fanTempOnAtTempValue"])
+					fanTempOnAtTempValue = int(inp["fanTempOnAtTempValue"])
 				if "fanTempOffAtTempValue" in inp:
-					fanTempOffAtTempValue= int(inp["fanTempOffAtTempValue"])
+					fanTempOffAtTempValue = int(inp["fanTempOffAtTempValue"])
 
 		
 		doGPIOAfterBoot()
@@ -399,8 +420,12 @@ def readNewParams(force=0, init=False):
 						U.restartMyself(reason="systemctl disable hciuart", python3=usePython3)
 						time.sleep(1)
 					if shutDownPinVetoOutput !=-1:
-						GPIO.setup(shutDownPinVetoOutput, GPIO.OUT) # disable shutdown 
-						GPIO.output(shutDownPinVetoOutput, True)    # set to high while running 
+						if useGPIO:
+							GPIO.setup(shutDownPinVetoOutput, GPIO.OUT) # disable shutdown 
+							GPIO.output(shutDownPinVetoOutput, True)    # set to high while running 
+						else:
+							GPIOZEROveto = gpiozero.LED(shutDownPinVetoOutput, initial_value= True)
+			
 			except: pass
 
 
@@ -414,8 +439,11 @@ def readNewParams(force=0, init=False):
 					if shutdownInputPin ==15 or shutdownInputPin==14:
 						subprocess.call("systemctl disable hciuart", shell=True)
 						time.sleep(1)
-					if shutdownInputPin !=-1:
-						GPIO.setup(int(shutdownInputPin), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+					if shutdownInputPin != -1:
+						if useGPIO:
+							GPIO.setup(int(shutdownInputPin), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+						else:
+							GPIOZEROshutdown = gpiozero.gpioEcho(shutdownInputPin, pull_up=True)
 			except: pass
 
 
@@ -925,7 +953,7 @@ def rebootWatchDog():
 	global rebootWatchDogTime
 	try:
 
-		if rebootWatchDogTime <=0:
+		if rebootWatchDogTime <= 0:
 			if U.pgmStillRunning("shutdownd"):
 				subprocess.call("shutdown -c >/dev/null 2>&1", shell=True)
 			return
@@ -951,6 +979,16 @@ def checkIfRebootRequest():
 		reason = f.read()
 		f.close()
 		os.remove(G.homeDir+"temp/rebootNeeded")
+		for ii in range(30):
+			if os.path.isfile(G.homeDir+"includepy2.done"): break
+			time.sleep(10)
+		for ii in range(30):
+			if os.path.isfile(G.homeDir+"includepy3.done"): break
+			time.sleep(10)
+		for ii in range(30):
+			if os.path.isfile(G.homeDir+"setStartupParams.done"): break
+			time.sleep(10)
+
 		if reason.find("noreboot") > -1:
 			U.logger.log(30, " sending message to plugin re:{}".format(reason) )
 			U.sendRebootHTML(reason)
@@ -1175,12 +1213,13 @@ def getUPSdata():
 
 ####################      #########################
 def checkIfShutDownVoltage():
-	global shutdownInputPin, shutdownPinVoltSensor,  batteryMinPinActiveTimeForShutdown, inputPinVoltRawLastONTime
+	global shutdownInputPin, shutdownPinVoltSensor,  batteryMinPinActiveTimeForShutdown, inputPinVoltRawLastONTime, GPIOZEROshutdown
 	global batteryChargeTimeForMaxCapacity, batteryCapacitySeconds
 	global batteryStatus,lastWriteBatteryStatus
 	global batteryUPSshutdownAtxPercent, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_LastCall , shutdownSignalFromUPS_LastCount, batteryUPSshutdown_Vin
 	global batteryUPSshutdownALCHEMYupcI2C, batteryUPSshutdownEnable
 	global checkIfShutDownVoltageLastCheck
+	global GPIOZEROVoltSensor
 
 
 	if batteryUPSshutdownEnable == "" : return 
@@ -1251,8 +1290,12 @@ def checkIfShutDownVoltage():
 					if shutdownPinVoltSensor > 1:
 						#print	"setting shutdownPinVoltSensor to GPIO: " + str(shutdownPinVoltSensor) 
 						U.logger.log(30, "setting shutdownPinVoltSensor to GPIO: {}".format(shutdownPinVoltSensor))
-						try: GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
-						except: pass
+						if useGPIO:
+							try: GPIO.setup(int(shutdownPinVoltSensor), GPIO.IN, pull_up_down = GPIO.PUD_UP)	# use pin shutDownPin  to input reset
+							except: pass
+						else:
+							GPIOZEROVoltSensor = gpiozero.Button(shutdownPinVoltSensor, pull_up=True)
+
 						inputPinVoltRawLastONTime = time.time()
 				except: pass
 				if batteryStatus == {}: 
@@ -1279,18 +1322,22 @@ def checkIfShutDownVoltage():
 							return
 				elif version != "ALCHEMY":
 					for ii in range(2):
-						if shutdownPinVoltSensor > 3-1 and  GPIO.input(int(shutdownPinVoltSensor)) == 1:
-							batteryStatus["timeCharged"] 						+= (time.time() - batteryStatus["testTime"]) 
-							batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"],batteryChargeTimeForMaxCapacity),1) # x hour charge time should get to 90+%
-							batteryStatus["inputPinVoltRawLastONTime"]			= round(time.time(),1)
-							batteryStatus["testTime"]							= round(time.time(),1)
-							batteryStatus["chargeLevel"] 						= round(max( 0., batteryStatus["timeCharged"] /batteryChargeTimeForMaxCapacity ),4)
-							batteryStatus["batteryTimeLeftEndOfCharge"]			= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["chargeLevel"]),1)
-							if batteryStatus["chargeLevel"] == 1:			  	  batteryStatus["status"]	= "charged"
-							else:  												  batteryStatus["status"]	= "charging"
-							batteryStatus["batteryTimeLeft"]					= batteryStatus["batteryTimeLeftEndOfCharge"]
-							lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
-							return
+						onState = False
+						if shutdownPinVoltSensor > 3-1 :
+							if useGPIO: onState = GPIO.input(int(shutdownPinVoltSensor)) == 1
+							else:		onState = GPIOZEROVoltSensor.value == 1
+							if onState:
+								batteryStatus["timeCharged"] 						+= (time.time() - batteryStatus["testTime"]) 
+								batteryStatus["timeCharged"]						= round(min(batteryStatus["timeCharged"],batteryChargeTimeForMaxCapacity),1) # x hour charge time should get to 90+%
+								batteryStatus["inputPinVoltRawLastONTime"]			= round(time.time(),1)
+								batteryStatus["testTime"]							= round(time.time(),1)
+								batteryStatus["chargeLevel"] 						= round(max( 0., batteryStatus["timeCharged"] /batteryChargeTimeForMaxCapacity ),4)
+								batteryStatus["batteryTimeLeftEndOfCharge"]			= round(min(batteryMinPinActiveTimeForShutdown, batteryCapacitySeconds*batteryStatus["chargeLevel"]),1)
+								if batteryStatus["chargeLevel"] == 1:			  	  batteryStatus["status"]	= "charged"
+								else:  												  batteryStatus["status"]	= "charging"
+								batteryStatus["batteryTimeLeft"]					= batteryStatus["batteryTimeLeftEndOfCharge"]
+								lastWriteBatteryStatus= writeJson2(batteryStatus,G.homeDir+"batteryStatus", lastWriteBatteryStatus)
+								return
 						time.sleep(0.1)
 				else:
 					pass
@@ -1437,6 +1484,7 @@ def checkRamDisk(loopCount=99):
 ####################      #########################
 def delayAndWatchDog():
 	global shutdownInputPin, lastshutdownInputPinTime, shutdownPinVoltSensor, rebootWatchDogTime,lastrebootWatchDogTime
+	global GPIOZEROshutdown
 	global pgmStart
 
 
@@ -1449,9 +1497,12 @@ def delayAndWatchDog():
 				checkIfShutDownVoltage()
 
 			if shutdownInputPin >1 :
-				if GPIO.input(shutdownInputPin) == 1: 
-					lastshutdownInputPinTime = tt
-
+				if useGPIO:
+					if GPIO.input(shutdownInputPin) == 1: 
+						lastshutdownInputPinTime = tt
+				else:
+					if GPIOZEROshutdown.value == 1:
+						lastshutdownInputPinTime = tt
 				if tt - pgmStart > 10  and tt - lastshutdownInputPinTime > 3:
 					U.doReboot(tt=10,  text="... shutdown by button/pin", cmd="sudo killall -9 python; sudo sync;wait 9;sudo halt")
 
@@ -1532,34 +1583,67 @@ def doGPIOAfterBoot():
 		f.write("#!/usr/bin/env python\n")
 		f.write("# -*- coding: utf-8 -*-\n")
 		f.write("#  called from callbeacon.py BEFORE master.py  to set GPIO in or output QUICKLY after boot \n")
-		f.write("import RPi.GPIO as GPIO\n")
-		f.write("GPIO.setwarnings(False)\n")
-		f.write("GPIO.setmode(GPIO.BCM)\n")
-		if GPIOTypeAfterBoot1 != "off": 
-			if GPIONumberAfterBoot1 != "-1" and GPIONumberAfterBoot1 != "":
-				if GPIOTypeAfterBoot1 =="Ohigh":
-					f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.HIGH)\n".format(GPIONumberAfterBoot1))
-				if GPIOTypeAfterBoot1 =="Olow":
-					f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.LOW)\n".format(GPIONumberAfterBoot1))
-				if GPIOTypeAfterBoot1.find("Iup") ==0:
-					f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_UP)\n".format(GPIONumberAfterBoot1))
-				if GPIOTypeAfterBoot1.find("Idown") == 0:
-					f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n".format(GPIONumberAfterBoot1))
-				if GPIOTypeAfterBoot1.find("Ifloat") == 0:
-					f.write("GPIO.setup({}, GPIO.IN)\n".format(GPIONumberAfterBoot1))
+		if useGPIO:
+			f.write("import RPi.GPIO as GPIO\n")
+			f.write("GPIO.setwarnings(False)\n")
+			f.write("GPIO.setmode(GPIO.BCM)\n")
+			if GPIOTypeAfterBoot1 != "off": 
+				if GPIONumberAfterBoot1 != "-1" and GPIONumberAfterBoot1 != "":
+					if GPIOTypeAfterBoot1 =="Ohigh":
+						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.HIGH)\n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1 =="Olow":
+						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.LOW)\n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1.find("Iup") ==0:
+						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_UP)\n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1.find("Idown") == 0:
+						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1.find("Ifloat") == 0:
+						f.write("GPIO.setup({}, GPIO.IN)\n".format(GPIONumberAfterBoot1))
+	
+			if GPIOTypeAfterBoot2 != "off": 
+				if GPIONumberAfterBoot2 != "-1" and GPIONumberAfterBoot2 != "":
+					if GPIOTypeAfterBoot2 =="Ohigh":
+						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.HIGH)\n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot2 =="Olow":
+						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.LOW)\n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot2.find("Iup") == 0:
+						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_UP)\n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot2.find("Idown") == 0:
+						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot2.find("Ifloat") == 0:
+						f.write("GPIO.setup({}, GPIO.IN)\n".format(GPIONumberAfterBoot2))
+		else:
+			f.write("import gpiozero\n")
+			f.write("from gpiozero.pins.pigpio import PiGPIOFactory\n")
+			f.write("from gpiozero import Device\n")
+			f.write("Device.pin_factory = PiGPIOFactory()\n")
 
-		if GPIOTypeAfterBoot2 != "off": 
-			if GPIONumberAfterBoot2 != "-1" and GPIONumberAfterBoot2 != "":
-				if GPIOTypeAfterBoot2 =="Ohigh":
-					f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.HIGH)\n".format(GPIONumberAfterBoot2))
-				if GPIOTypeAfterBoot2 =="Olow":
-					f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.LOW)\n".format(GPIONumberAfterBoot2))
-				if GPIOTypeAfterBoot2.find("Iup") == 0:
-					f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_UP)\n".format(GPIONumberAfterBoot2))
-				if GPIOTypeAfterBoot2.find("Idown") == 0:
-					f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n".format(GPIONumberAfterBoot2))
-				if GPIOTypeAfterBoot2.find("Ifloat") == 0:
-					f.write("GPIO.setup({}, GPIO.IN)\n".format(GPIONumberAfterBoot2))
+			if GPIOTypeAfterBoot1 != "off": 
+				if GPIONumberAfterBoot1 != "-1" and GPIONumberAfterBoot1 != "":
+					if GPIOTypeAfterBoot1 =="Ohigh":
+						f.write("gpio1 = gpiozero.LED({}, initial_value=True) \n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1 =="Olow":
+						f.write("gpio1 = gpiozero.LED({}, initial_value=False) \n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1.find("Iup") ==0:
+						f.write("gpio1= gpiozero.Button({}, pull_up=True) \n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1.find("Idown") == 0:
+						f.write("gpio1= gpiozero.Button({}, pull_up=False) \n".format(GPIONumberAfterBoot1))
+					if GPIOTypeAfterBoot1.find("Ifloat") == 0:
+						f.write("gpio1= gpiozero.Button({}, pull_up=None, active_state=True) \n".format(GPIONumberAfterBoot1))
+	
+			if GPIOTypeAfterBoot2 != "off": 
+				if GPIONumberAfterBoot2 != "-1" and GPIONumberAfterBoot2 != "":
+					if GPIOTypeAfterBoot2 =="Ohigh":
+						f.write("gpio2 = gpiozero.LED({}, initial_value=True) \n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot2 =="Olow":
+						f.write("gpio2 = gpiozero.LED({}, initial_value=False) \n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot1.find("Iup") ==0:
+						f.write("gpio2= gpiozero.Button({}, pull_up=True) \n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot1.find("Idown") == 0:
+						f.write("gpio2= gpiozero.Button({}, pull_up=False) \n".format(GPIONumberAfterBoot2))
+					if GPIOTypeAfterBoot1.find("Ifloat") == 0:
+						f.write("gpio2= gpiozero.Button({}, pull_up=None, active_state=True) \n".format(GPIONumberAfterBoot2))
+
 		f.write("\n")
 
 		f.close()
@@ -1573,6 +1657,8 @@ def doGPIOAfterBoot():
 def checkTempForFanOnOff(force = False):
 	global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTempValue, fanWasOn,  lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
 	global fanOnTimePercent, fanOntimeData, fanOntimePeriod
+	global GPIOZEROfan
+
 	try:
 		#print "into checkTempForFanOnOff",fanTempName, fanTempDevId, fanEnable, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTimeTempValueChecked, lastTempValue
 		#U.logger.log(30, "checkTempForFanOnOff fanEnable:{}  fanTempName:{}   fanGPIOPin:{}".format(fanEnable, fanTempName, fanGPIOPin))
@@ -1612,8 +1698,11 @@ def checkTempForFanOnOff(force = False):
 
 			#print " fan on"
 			if  fanWasOn <=0: 
-				if fanEnable =="1": GPIO.output(fanGPIOPin, True)
-				if fanEnable =="0": GPIO.output(fanGPIOPin, False)
+				if useGPIO:
+					if fanEnable =="1": GPIO.output(fanGPIOPin, fanEnable =="1")
+				else:
+					getattr(GPIOZEROfan, "on" if fanEnable =="1" else "off")()
+
 				fanWasOn = 1
 		else:
 			#print " fan off"  .. only if 1 degree lower than target
@@ -1623,8 +1712,10 @@ def checkTempForFanOnOff(force = False):
 				fanOntimeData.append([time.time(),1])
 
 			if  ( fanWasOn == 1 and temp < (fanTempOnAtTempValue - fanTempOffAtTempValue ) ) or fanWasOn == 0: 
-				if fanEnable =="0": GPIO.output(fanGPIOPin, True)
-				if fanEnable =="1": GPIO.output(fanGPIOPin, False)
+				if useGPIO:
+					GPIO.output(fanGPIOPin, fanEnable =="0")
+				else:
+					getattr(GPIOZEROfan, "on" if fanEnable =="0" else "off")()
 				fanWasOn = -1
 
 		if True: 
@@ -1659,15 +1750,27 @@ def fixRcLocal():
 		if not os.path.isfile(G.homeDir+"/etc/rc.local"):
 			subprocess.call("cp  /etc/rc.local /home/pi/pibeacon/rc.local", shell=True)
 
+		if usePython3: 
+			callPibeaconLine ="(/usr/bin/sudo /usr/bin/python3 -E /home/pi/callbeacon.py &)"
+		else:
+			callPibeaconLine ="(/usr/bin/sudo /usr/bin/python /home/pi/callbeacon.py &)"
+
+
+		if not os.path.isfile("/etc/rc.local"): 
+			f=open(G.homeDir+"temp/rc.local","w")
+			f.write("#!/bin/sh -e\n")
+			f.write(callPibeaconLine+"\n")
+			f.write("exit 0 \n")
+			f.close()
+			subprocess.call("/usr/bin/sudo cp "+G.homeDir+"temp/rc.local /etc/rc.local ", shell=True)
+			subprocess.call("/usr/bin/sudo chmod a+x /etc/rc.local", shell=True)
+			U.logger.log(20, ".. created new /etc/rc/local file ")
+			return 
+
+
 		f=open("/etc/rc.local","r")
 		rclocal = f.read().split("\n")
 		f.close()
-
-		if usePython3: 
-			callPibeaconLine ="(/usr/bin/python3 -E /home/pi/callbeacon.py &)"
-		else:
-			callPibeaconLine ="(python /home/pi/callbeacon.py &)"
-
 		out      = ""
 		writeOut = False
 		foundCallbeacon = False
@@ -1762,6 +1865,22 @@ def fixCallbeacon(sleepTime):
 	return
  
 
+####################      #########################
+def sendRaspiConfig():
+	try:
+		if not os.path.isfile(G.homeDir+"temp/sendRaspiConfig"): return 
+		os.remove(G.homeDir+"temp/sendRaspiConfig")
+
+		f = open(G.homeDir+"raspiConfig.params","r")
+		dd = f.read()
+		f.close()
+		if len(dd) > 10:
+			U.sendURL(sendAlive="raspi-config", text=dd, squeeze=False, forceCompress=True)
+			U.logger.log(20, "sending raspi-config info to indigo:{}".format(str(dd)[0:100]))
+	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
+
+	return
 
 ####################      #########################
 def checkFSCHECKfile():
@@ -1785,6 +1904,7 @@ def checkFSCHECKfile():
 
 			U.logger.log(20, dataSend)
 			U.sendURL(sendAlive="alive",text=dataSend)
+
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
@@ -2329,6 +2449,21 @@ def copySupplicantToBoot(adhocWifi):
 	
 
 ####################      #########################
+def makeRaspiConfigFile():
+	global usePython3
+	try:
+		if usePython3:
+			cmd = "sudo python3 {}get_raspi_config.py {}pibeacon &".format(G.homeDir, G.logDir)
+		else:
+			cmd = "sudo python {}get_raspi_config.py {}pibeacon &".format(G.homeDir, G.logDir)
+
+		U.logger.log(20,"starting: {}".format(cmd))
+		subprocess.call(cmd, shell=True)
+	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
+	return 
+
+####################      #########################
 #################### main #########################
 ####################      #########################
 
@@ -2340,7 +2475,7 @@ def execMaster():
 		global restart, enableiBeacons, beforeLoop,iPhoneMACList,rebootHour
 		global lastAliveultrasoundDistance, sensorAlive,useRamDiskForLogfiles,lastAlive
 
-		global shutdownInputPin, shutdownPinVoltSensor, shutDownPinVetoOutput, lastshutdownInputPinTime
+		global shutdownInputPin, shutdownPinVoltSensor, shutDownPinVetoOutput, lastshutdownInputPinTime, GPIOZEROveto
 		global actions, output, sensors, sensorList
 		global activePGMOutput, bluetoothONoff
 		global oldRaw,	lastRead
@@ -2497,17 +2632,11 @@ def execMaster():
 
 		U.setLogging()
 		U.logger.log(20, "" )
-		U.logger.log(20, "=========START-0.. MASTER  v:{}".format(masterVersion) )
+		U.logger.log(20, "\n\n\n=========START-0.. MASTER  v:{} ==============\n\n\n".format(masterVersion) )
 
 
 		# set to autologin on commandline
 		subprocess.Popen("/usr/bin/sudo {} -E {}setStartupParams.py &".format(pyCommand, G.homeDir), shell=True)
-
-		try:
-			import RPi.GPIO as GPIO
-			GPIO.setwarnings(False)
-			GPIO.setmode(GPIO.BCM)
-		except: pass		
 
 		### ret = U.readPopen("/bin/cat /etc/os-release ")[0].strip("\n").strip().split("\n")
 
@@ -2524,7 +2653,7 @@ def execMaster():
 		# just in case the file is present, is created by calling master w nohup. it is terminal output, can be Gbytes
 		subprocess.call("sudo rm {}nohup.out > /dev/null 2>&1".format(G.homeDir), shell=True)
 
-		U.logger.log(20, "=========START1.. MASTER  bf kill old pgms")
+		U.logger.log(20, "=========START-1.. MASTER  bf kill old pgms")
 		killOldPrograms()
 		subprocess.call("/usr/bin/sudo "+pyCommand+" -E "+G.homeDir+"copyToTemp.py &", shell=True)
 
@@ -2532,6 +2661,8 @@ def execMaster():
 		if usePython3: test = "yes"
 		subprocess.call("nohup sudo /bin/bash {}master.sh {} > /dev/null 2>&1 ".format(G.homeDir, test), shell=True)
 		time.sleep(1)
+
+		makeRaspiConfigFile()
 
 		setupUtilities()
 
@@ -2547,7 +2678,7 @@ def execMaster():
 
 		checkPythonLibs()
 
-		U.logger.log(20, "=========START2.. indigoServer @ IP:{}<< G.wifiType:>>{}<<".format(G.ipOfServer, G.wifiType) )
+		U.logger.log(20, "=========START-2.. indigoServer @ IP:{}<< G.wifiType:>>{}<<".format(G.ipOfServer, G.wifiType) )
 
 		checkIfUARThciChannelIsOnRPI4()
 
@@ -2565,7 +2696,7 @@ def execMaster():
 
 
 		if adhocWifiStarted > 10: U.logger.log(20, "adhocWifi active, {} sec left bf restart".format(600 - (time.time() - adhocWifiStarted)) )
-		U.logger.log(20, "=========START3.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
+		U.logger.log(20, "=========START-3.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
 		subprocess.call("cp  "+G.homeDir+"callbeacon.py  "+G.homeDir0+"callbeacon.py", shell=True)
 
@@ -2582,17 +2713,16 @@ def execMaster():
 
 
 		checkIfFirstStart()
-		U.logger.log(20, "=========START4.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
+		U.logger.log(20, "=========START-4.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
 		if startWebServerSTATUS > 0 and  adhocWifiStarted < 10:
 			U.startwebserverSTATUS(startWebServerSTATUS)
 
-		U.logger.log(20, "=========START5.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
+		U.logger.log(20, "=========START-5.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
 		checkForAdhocWeb()
 		if os.path.isfile(G.homeDir+"temp/rebootNeeded"): 	os.remove(G.homeDir+"temp/rebootNeeded")
 		if os.path.isfile(G.homeDir+"temp/restartNeeded"):	os.remove(G.homeDir+"temp/restartNeeded")
-		GPIO.setwarnings(False)
 
 		checkRamDisk()
 
@@ -2604,7 +2734,7 @@ def execMaster():
 		# check if all libs for sensors etc are installed
 		checkInstallLibs()
 
-		U.logger.log(20, "=========START6.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
+		U.logger.log(20, "=========START-6.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
 
 
@@ -2618,7 +2748,7 @@ def execMaster():
 
 		indigoServerOn, changed, connected  = checkIfNetworkStarted2(indigoServerOn, changed, connected )
 
-		U.logger.log(20, "=========START7.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<, indigoServerOn:{}<<, changed:{}<<, connected:{}<< ".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType, indigoServerOn, changed, connected ) )
+		U.logger.log(20, "=========START-7.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<, indigoServerOn:{}<<, changed:{}<<, connected:{}<< ".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType, indigoServerOn, changed, connected ) )
 		# make directory for sound files
 		if not os.path.isdir(G.homeDir+"soundfiles"):
 			subprocess.call("/usr/bin/mkdir "+G.homeDir+"soundfiles > /dev/null 2>&1", shell=True)
@@ -2642,7 +2772,7 @@ def execMaster():
 		checkIfGpioIsInstalled()
 
 		checkstartOtherProgram(init =True)
-		U.logger.log(20, "=========START8.. adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )
+		U.logger.log(20, "=========START-8.. adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )
 
 
 		pgmStart = time.time()
@@ -2669,13 +2799,14 @@ def execMaster():
 			changed = False
 	
 
-		U.logger.log(20, "=========START9.. network confirmed,  adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )
+		U.logger.log(20, "=========START-9.. network confirmed,  adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )
 		if adhocWifiStarted < 10 and G.ipAddress == "" and RTCpresent:
 			U.manualStartOfRTC()
 
 		subprocess.call("rm  {}temp/sending > /dev/null 2>&1 ".format(G.homeDir), shell=True)
 
-		U.logger.log(20,"=========START10 setup done, normal loop")
+
+		U.logger.log(20,"=========START-10 setup done, normal loop")
 
 		checkTempForFanOnOff(force = True)
 		lastCheckAlive = time.time() -90
@@ -2699,6 +2830,8 @@ def execMaster():
 		
 			if loopCount == 3: 
 				checkFSCHECKfile()
+
+			sendRaspiConfig()
 
 			try:	
 				readNewParams()

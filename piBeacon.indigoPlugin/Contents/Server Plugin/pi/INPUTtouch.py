@@ -4,14 +4,32 @@
 #
 ## py3 prept
 
-import RPi.GPIO as GPIO
 import time
 import	sys, os, time, json, datetime,subprocess,copy
 import struct
 
+
+
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+
+try:
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
+
 
 G.program = "INPUTtouch"
 import smbus 
@@ -314,31 +332,51 @@ class MPR121():
 
 
 def startTouch16Serial():
-	global SCLPin,SDOPin, HALF_BIT_TIME, CHARACTER_DELAY, sensBase
+	global SCLPin,SDOPin, HALF_BIT_TIME, CHARACTER_DELAY, sensBase, GPIOZERO
 	global INPUTlastvalue, INPUTcount, INPUTtouchCountFilename
 	HALF_BIT_TIME		= .001#	 1 msec
 	CHARACTER_DELAY		= 5*HALF_BIT_TIME
 
-	GPIO.setmode(GPIO.BCM)
-	GPIO.setup(SCLPin,GPIO.OUT)
-	GPIO.setup(SDOPin,GPIO.IN)
+	if useGPIO:
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setup(SCLPin,GPIO.OUT)
+		GPIO.setup(SDOPin,GPIO.IN)
+	else:
+		GPIOZERO[SCLPin] = gpiozero.LED(SCLPin, initial_value=False) 
+		GPIOZERO[SDOPin] = gpiozero.Button(SDOPin, pull_up=None, active_state=True) 
+
 
 def getTouched16Serial(np):
-	global SCLPin,SDOPin
+	global SCLPin,SDOPin, zeroPINS, GPIOZERO
 
 	try:
-		GPIO.output(SCLPin,GPIO.HIGH)
-		time.sleep(HALF_BIT_TIME)
-		time.sleep(CHARACTER_DELAY)
-		keys =[0 for ii in range(np)]
-		for button in range(np):
-			GPIO.output(SCLPin,GPIO.LOW)
-			time.sleep(HALF_BIT_TIME)
-			keyval=GPIO.input(SDOPin)
-			if not keyval:
-				keys[button]=1
+		if useGPIO:
 			GPIO.output(SCLPin,GPIO.HIGH)
 			time.sleep(HALF_BIT_TIME)
+			time.sleep(CHARACTER_DELAY)
+			keys =[0 for ii in range(np)]
+			for button in range(np):
+				GPIO.output(SCLPin,GPIO.LOW)
+				time.sleep(HALF_BIT_TIME)
+				keyval=GPIO.input(SDOPin)
+				if not keyval:
+					keys[button]=1
+				GPIO.output(SCLPin,GPIO.HIGH)
+				time.sleep(HALF_BIT_TIME)
+		else:
+			GPIOZERO[SCLPin].on()
+			time.sleep(HALF_BIT_TIME)
+			time.sleep(CHARACTER_DELAY)
+			keys = [0 for ii in range(np)]
+			for button in range(np):
+				GPIOZERO[SCLPin].off()
+				time.sleep(HALF_BIT_TIME)
+				keyval = GPIOZERO[SDOPin].value
+				if not keyval:
+					keys[button] = 1
+				GPIOZERO[SCLPin].on()
+				time.sleep(HALF_BIT_TIME)
+
 
 		return keys
 
@@ -429,6 +467,7 @@ def readParams():
 					if sensors[sensor][devId]["devType"] not in INPUTsensorTypes: INPUTsensorTypes.append(sensors[sensor][devId]["devType"])
 				
 		if	INPUTsensors == {}:
+			U.logger.log(20, "no {} sensor defined, exiting".format(G.program))
 			exit()
 
 	   
@@ -532,6 +571,10 @@ global devClass16Serial,devClass16i2c,devClass12i2c,INPUTsensors,INPUTsensorType
 global restartCount
 global devTypes
 global oldRaw,	lastRead
+global GPIOZERO
+
+GPIOZERO			= {}
+
 oldRaw					= ""
 lastRead				= 0
 

@@ -15,8 +15,10 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
 G.program = "DHT"
-import Adafruit_DHT
+#import Adafruit_DHT
 
+import adafruit_dht
+import board
 
 
 
@@ -32,35 +34,68 @@ def getDATAdht(DHTpinI,Type,devId):
 		global sensorDHT, startDHT, lastRead
 		global lastSensorRead
 		t,h="",""
+		pin = str(DHTpinI)
 		try:
-			ii=startDHT[str(DHTpinI)]
+			ii=int(startDHT[pin])
 		except:
 			if startDHT =="":
 				startDHT  = {}
 				sensorDHT = {}
-			startDHT[str(DHTpinI)] = 1
-			if Type.lower() == "11":		
-				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT11
+			startDHT[pin] = 1
+			if Type.lower() == "11":	
+				if pin == "17": sensorDHT[pin] = adafruit_dht.DHT11(board.D17,use_pulseio=False)
+				if pin == "27": sensorDHT[pin] = adafruit_dht.DHT11(board.D27,use_pulseio=False)
+				if pin == "22": sensorDHT[pin] = adafruit_dht.DHT11(board.D22,use_pulseio=False)
+				if pin == "5":  sensorDHT[pin] = adafruit_dht.DHT11(board.D5, use_pulseio=False)
+				if pin == "6":  sensorDHT[pin] = adafruit_dht.DHT11(board.D6, use_pulseio=False)
+				if pin == "13": sensorDHT[pin] = adafruit_dht.DHT11(board.D13,use_pulseio=False)
+				if pin == "19": sensorDHT[pin] = adafruit_dht.DHT11(board.D19,use_pulseio=False)
+				if pin == "26": sensorDHT[pin] = adafruit_dht.DHT11(board.D26,use_pulseio=False)
+				if pin == "21": sensorDHT[pin] = adafruit_dht.DHT11(board.D21,use_pulseio=False)
+				if pin == "20": sensorDHT[pin] = adafruit_dht.DHT11(board.D20,use_pulseio=False)
+				if pin == "16": sensorDHT[pin] = adafruit_dht.DHT11(board.D16,use_pulseio=False)
+				if pin == "12": sensorDHT[pin] = adafruit_dht.DHT11(board.D16,use_pulseio=False)
+				if pin == "25": sensorDHT[pin] = adafruit_dht.DHT11(board.D25,use_pulseio=False)
+				if pin == "24": sensorDHT[pin] = adafruit_dht.DHT11(board.D24,use_pulseio=False)
+				if pin == "23": sensorDHT[pin] = adafruit_dht.DHT11(board.D23,use_pulseio=False)
 			else:	  
-				sensorDHT[str(DHTpinI)] = Adafruit_DHT.DHT22
+				if pin == "17": sensorDHT[pin] = adafruit_dht.DHT22(board.D17,use_pulseio=False)
+				if pin == "27": sensorDHT[pin] = adafruit_dht.DHT22(board.D27,use_pulseio=False)
+				if pin == "22": sensorDHT[pin] = adafruit_dht.DHT22(board.D22,use_pulseio=False)
+				if pin == "5":  sensorDHT[pin] = adafruit_dht.DHT22(board.D5, use_pulseio=False)
+				if pin == "6":  sensorDHT[pin] = adafruit_dht.DHT22(board.D6, use_pulseio=False)
+				if pin == "13": sensorDHT[pin] = adafruit_dht.DHT22(board.D13,use_pulseio=False)
+				if pin == "19": sensorDHT[pin] = adafruit_dht.DHT22(board.D19,use_pulseio=False)
+				if pin == "26": sensorDHT[pin] = adafruit_dht.DHT22(board.D26,use_pulseio=False)
+				if pin == "21": sensorDHT[pin] = adafruit_dht.DHT22(board.D21,use_pulseio=False)
+				if pin == "20": sensorDHT[pin] = adafruit_dht.DHT22(board.D20,use_pulseio=False)
+				if pin == "16": sensorDHT[pin] = adafruit_dht.DHT22(board.D16,use_pulseio=False)
+				if pin == "12": sensorDHT[pin] = adafruit_dht.DHT22(board.D12,use_pulseio=False)
+				if pin == "25": sensorDHT[pin] = adafruit_dht.DHT22(board.D25,use_pulseio=False)
+				if pin == "24": sensorDHT[pin] = adafruit_dht.DHT22(board.D24,use_pulseio=False)
+				if pin == "23": sensorDHT[pin] = adafruit_dht.DHT22(board.D23,use_pulseio=False)
+				U.logger.log(20,"setup DHT pin:{}, sensor:{}".format(pin, sensorDHT[pin] ) )
 		try:
 			if devId not in lastSensorRead: 
 				lastSensorRead[devId] = time.time()
 
 			if time.time() - lastSensorRead[devId] < 3.: time.sleep( max(0, min(3.1, 3.5 - (time.time() - lastRead )) ) )
-
-			h, t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpinI)], int(DHTpinI))
-			if "{}".format(h) == "None" or "{}".format(t) == "None":
-				time.sleep(3.) # min wait between read -s 2.0 secs, give it a little more..
-				h, t = Adafruit_DHT.read_retry(sensorDHT[str(DHTpinI)], int(DHTpinI))
-				if "{}".format(h) == "None" or "{}".format(t) == "None":
-					U.logger.log(20, " return data failed: h:"+"{}".format(h)+" t:"+"{}".format(t)+"  Type:"+"{}".format(Type)+"  pin:"+"{}".format(DHTpinI) )
-			#U.logger.log(20, " return data: t:{}, h:{} pin: {}".format(t, h, DHTpinI) )
-#			# sensorDHT=""
+			for ii in range(10):
+				t = ""
+				h = ""
+				try:
+					#U.logger.log(20,"    pin: reading t".format(pin) )
+					t = sensorDHT[pin].temperature
+					h = sensorDHT[pin].humidity
+					t = round(t,1)
+					h = round(h,1)
+					#U.logger.log(20,"ok  pin:{}  t={};  h={}".format(pin, t, h) )
+					break
+				except:
+					#U.logger.log(20,"err pin:{}  t={};  h={}".format(pin, t, h) )
+					time.sleep(3)
 			lastSensorRead[devId] = time.time() 
-			try: return float(t),float(h)
-			except: return "",""
-			#else: return "" ,""  
+			return t , h 
 		except	Exception as e:
 			U.logger.log(20,"", exc_info=True)
 			U.logger.log(20, u" pin: "+ str(DHTpinI)+" return value: t={}".format(t)+"; h={}".format(h) )
@@ -167,13 +202,14 @@ def readParams():
 		U.getGlobalParams(inp)
 		if "output"				  in inp: output=				   (inp["output"])
 		if "sensors"			  in inp: sensors =				   (inp["sensors"])
-		if "sensorRefreshSecs"	  in inp: sensorRefreshSecs = float(inp["sensorRefreshSecs"])
+		#if "sensorRefreshSecs"	  in inp: sensorRefreshSecs = float(inp["sensorRefreshSecs"])
 
 		sensorList=""
 		for sens in sensors:
 			sensorList+=sens.split("-")[0]+","
 
 		if sensorList.find("DHT") ==-1:
+			U.logger.log(30,"no {} sensor defined, exiting ".format(G.program ))
 			exit()
 		return 
 
@@ -194,7 +230,7 @@ global oldRaw, lastRead
 global sensorRefreshSecs, lastSensorRead
 
 
-sensorRefreshSecs	= 90
+sensorRefreshSecs	= 10
 oldRaw				= ""
 lastRead			= 0
 lastSensorRead		= {}
@@ -226,6 +262,9 @@ if G.networkType  in G.useNetwork and U.getNetwork() == "off":
 		U.logger.log(30," no ip number working, giving up")
 		time.sleep(10)
 
+U.logger.log(30,"starting sensor")
+
+
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
 
 
@@ -252,11 +291,11 @@ while True:
 		
 		delta =-1
 		changed = 0
-		if lastData=={}: 
+		if lastData == {}: 
 			changed = 1
 		else:
 			for sens in data:
-				if changed>0: break
+				if changed > 0: break
 				if sens not in lastData:
 					changed= 2
 					break
@@ -271,7 +310,7 @@ while True:
 							changed= 5
 							break
 						try:
-							U.logger.log(10,"{}  {}  {}".format(devid, lastData[sens][devid], data[sens][devid]))
+							#U.logger.log(20,"{}  old:{}  new:{}".format(devid, lastData[sens][devid], data[sens][devid]))
 							xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed = xxx

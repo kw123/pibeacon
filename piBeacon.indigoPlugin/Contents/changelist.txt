@@ -1,10 +1,50 @@
-added features / changes in added features / changes in v2022.183.127 @ 2025-01-13
+added features / changes in added features / changes in v2022.184.130 @ 2025-02-07
+==================================================
+
+1. this version will fully configure a new micro SSD. No need to for any raspi-config to set Onewire i2c on/off or install new libraries.
+    it supports RPI-OS 11(bullseye) and 12 (bookworm) 32 bit and 64 bit
+    The module GPIO is not supported by the new OSes anymore. The programs on the PRI now uses PIGPIO and GPIOZERO to write and read pins on the rpi - that was a major effort.
+    Older OSes are still supported with GPIO. so no need to upgrade the RPI OS. but suggested to at leas V11 for security updates on your RPI.
+
+2. added menu and action to set any pibeacon device state, just in case
+
+3. added a delayed "off" for itrack / musegear beacons. When you press the button these beacons will send an on and after 60 secs an off.
+   if you leave the house fast and the off does not reach the RPI receiver anymore the beacon state stays ON. At the next button press  nothing will happen as the state is already ON
+   This was fixed with a delayed action in the plugin. If the onOffState is not going to an off after 50 secs (no off from the beacon received as it is out of reach) the plugin will set the onOffState to off.
+
+4. fixed some config exceptions for oneWire sensors. All config is done automatically. No need for raspi-config, also if several GPIOs are used to read many oneWire sensors
+   I have one RPI with 21 oneWire sensors connected to 11 GPIOs to speed up reading to make signal errors on the wire less frequent (2 sensors on one pin not 21)
+
+5. changed state "lastUpdateBatterylevel": only do update once a day or when changed. 
+   this is to cover ie musegear / iTrack beacons. they send battery level with every package, but it only gets changed after a button press or connect.
+   the plugin uses both message as well as connect to beacon through ble. this is scheduled 3 times a day, but only when last update is older that 17 hours.
+   to avoid preventing a "real" update the battery info is used only once a day or when changed.
+
+
+added features / changes in added features / changes in v2022.183.130 @ 2025-01-25
+==================================================
+
+1. added auto config of serial port etc for DF2301Q sensor on RPI
+   added proper settings of sensor icon in idigo device view
+
+
+added features / changes in added features / changes in v2022.183.129 @ 2025-01-15
 ==================================================
 
 1. fixed exception situations for DF2301Q, eg when senor hangs etc.
    this is now very stable and can recover from power disconnects, sensors issues, due to reset commands
    very stabile (several days w/o any hickup) with the serial / uart connection.
    the i2c interface still creates propblems on some older RPI.
+   set proper values auotmatically if i2c or uart or keep awake set 
+
+2. To reduce menue size of menu items:
+ 2.1. moved update time command from menu to device edit for xiaomi with time display beacons 
+
+ 2.2. moved Set date-time of battery replaced state to device edit 
+
+3. improved edit for gpio input and output devices and several menu and actions 
+   no "confirm" button needed anymore.
+   using dynamic valuesDictupdate once per second
 
 
 

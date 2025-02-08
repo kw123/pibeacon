@@ -8,7 +8,6 @@ import spidev
 import sys
 import os, subprocess, copy
 import time, datetime
-import RPi.GPIO as gpio
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
@@ -25,6 +24,25 @@ import	smbus
 import threading
 import signal
 import math
+
+
+try:
+	#1/0 # use GPIO
+	if subprocess.popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep").communicate()[0].decode('utf-8').find("pigpiod") < 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
+
 
 
 sys.path.append(os.getcwd())
@@ -356,10 +374,13 @@ SSD1351_HEIGHT			= 128
 
 
 class SSD1351:
-	import RPi.GPIO as gpio
-	gpio.setwarnings(False)
-	COMMAND = gpio.LOW
-	DATA	= gpio.HIGH
+	if useGPIO:
+		COMMAND = GPIO.LOW
+		DATA	= GPIO.HIGH
+	else:
+		COMMAND = False
+		DATA	= True
+
 	def __init__(self, dc, rst, cs,ce):
 		try:
 			self.rst = int(rst)
@@ -369,16 +390,21 @@ class SSD1351:
 			self.width	= SSD1351_WIDTH
 			self.height = SSD1351_HEIGHT
 		
-			gpio.setmode(gpio.BCM)
 
-			gpio.setup(self.dc, gpio.OUT)
-			gpio.output(self.dc, gpio.LOW)
-
-			gpio.setup(self.rst, gpio.OUT)
-			gpio.output(self.rst, gpio.HIGH)
-		
-			gpio.setup(self.cs, gpio.OUT)
-			gpio.output(self.cs, gpio.HIGH)
+			if useGPIO:
+				GPIO.setup(self.dc, GPIO.OUT)
+				GPIO.output(self.dc, GPIO.LOW)
+	
+				GPIO.setup(self.rst, GPIO.OUT)
+				GPIO.output(self.rst, GPIO.HIGH)
+			
+				GPIO.setup(self.cs, GPIO.OUT)
+				GPIO.output(self.cs, GPIO.HIGH)
+			else:
+				self.GPIOZERO = {}
+				self.GPIOZERO[self.dc] 	= gpiozero.LED(self.dc, initial_value=False) 
+				self.GPIOZERO[self.rst]	= gpiozero.LED(self.rst, initial_value=True) 
+				self.GPIOZERO[self.cs] 	= gpiozero.LED(self.cs, initial_value=True) 
 
 			self.__OpenSPI() # Setup SPI.
 			self.__Setup() # Setup device screen.
@@ -397,13 +423,15 @@ class SSD1351:
 		return
 
 	def __WriteCommand(self, data):
-		gpio.output(self.dc, self.COMMAND)
+		if useGPIO:	GPIO.output(self.dc, self.COMMAND)
+		else:		self.GPIOZERO[self.dc].off()
 		if isinstance(data, list) or isinstance(data, tuple):
 			self.spi.xfer(data)
 		return
 
 	def __WriteData(self, data):
-		gpio.output(self.dc, self.DATA)
+		if useGPIO:	GPIO.output(self.dc, self.DATA)
+		else:		self.GPIOZERO[self.dc].on()
 		if isinstance(data, list) or isinstance(data, tuple):
 			self.spi.xfer(data)
 		return
@@ -429,12 +457,21 @@ class SSD1351:
 	def __Setup(self):
 		self.spi.cshigh = True
 		self.spi.xfer([0])
-		gpio.output(self.cs, gpio.LOW)
-		time.sleep(0.1)
-		gpio.output(self.rst, gpio.LOW)
-		time.sleep(0.5)
-		gpio.output(self.rst, gpio.HIGH)
-		time.sleep(0.5)
+		if useGPIO:
+			GPIO.output(self.cs, GPIO.LOW)
+			time.sleep(0.1)
+			GPIO.output(self.rst, GPIO.LOW)
+			time.sleep(0.5)
+			GPIO.output(self.rst, GPIO.HIGH)
+			time.sleep(0.5)
+		else:
+			self.GPIOZERO[self.cs].off()
+			time.sleep(0.1)
+			self.GPIOZERO[self.rst].off()
+			time.sleep(0.5)
+			self.GPIOZERO[self.rst].on()
+			time.sleep(0.5)
+
 		self.spi.cshigh = False
 		self.spi.xfer([0])
 		self.__WriteCommand([SSD1351_COMMANDLOCK])	# set command lock
@@ -485,7 +522,7 @@ class SSD1351:
 		return
 
 	def Remove(self):
-		gpio.cleanup()
+		if useGPIO: GPIO.cleanup()
 		self.spi.close()
 		return
 
@@ -579,10 +616,9 @@ st7735_COLMOD  = 0x3A
 
 
 class st7735:
-	import RPi.GPIO as gpio
-	gpio.setwarnings(False)
-	COMMAND = gpio.LOW
-	DATA	= gpio.HIGH
+	if useGPIO:
+		COMMAND = GPIO.LOW
+		DATA	= GPIO.HIGH
 	def __init__(self, dc, rst, cs,ce):
 		try:
 			self.rst = int(rst)
@@ -592,10 +628,12 @@ class st7735:
 			self.width	= st7735_XMAX
 			self.height = st7735_YMAX
 			#print "__init__", dc,rst,cs,ce
-			gpio.setmode(gpio.BCM)
 
-			gpio.setup(self.dc, gpio.OUT)
-			#gpio.output(self.dc, gpio.LOW)
+			if useGPIO:	GPIO.setup(self.dc, GPIO.OUT)
+			else:		
+				self.GPIOZERO = {}
+				self.GPIOZERO[self.dc] 	= gpiozero.LED(self.dc, initial_value=False) 
+			#GPIO.output(self.dc, GPIO.LOW)
 			self.__OpenSPI() # Setup SPI.
 			self.__Setup() # Setup device screen.
 			#self.Clear() # Blank the screen.
@@ -651,7 +689,9 @@ class st7735:
 		bufLen= len(buff)
 		#print "bufLen", bufLen
 		self.__WriteCommand([st7735_RAMWR]) #	  RAM write
-		gpio.output(self.dc, self.DATA)
+		if useGPIO:	GPIO.output(self.dc, self.DATA)
+		else:		self.GPIOZERO[dc].on()
+
 		for ll in range(0,bufLen,2048):
 			self.spi.writebytes(buff[ll:min(bufLen,ll+2048)])
 		##time.sleep(2)
@@ -664,13 +704,15 @@ class st7735:
 		return
 
 	def __WriteCommand(self, data):
-		gpio.output(self.dc, self.COMMAND)
+		if useGPIO:	GPIO.output(self.dc, self.COMMAND)
+		else:		self.GPIOZERO[dc].off()
 		if isinstance(data, list) or isinstance(data, tuple):
 			self.spi.writebytes(data)
 		return
 
 	def __WriteData(self, data):
-		gpio.output(self.dc, self.DATA)
+		if useGPIO:	GPIO.output(self.dc, self.DATA)
+		else:		self.GPIOZERO[dc].on()
 		if isinstance(data, list) or isinstance(data, tuple):
 			self.spi.writebytes(data)
 		return
@@ -678,7 +720,7 @@ class st7735:
 
 
 	def Remove(self):
-		gpio.cleanup()
+		if useGPIO: GPIO.cleanup()
 		self.spi.close()
 		return
 

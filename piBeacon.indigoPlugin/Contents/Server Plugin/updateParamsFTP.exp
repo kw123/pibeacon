@@ -35,12 +35,6 @@ expect "sftp" {  send  "lcd '$piPath//interfaceFiles' \r" }
 sleep .1 
 expect "sftp" {  send  "put 'parameters.$ipParms'  /home/pi/pibeacon/parameters\r" }
 sleep .1 
-expect "sftp" {  send  "lcd '$piPath//rejected' \r" }
-sleep .1 
-expect "sftp" {  send  "get /home/pi/pibeacon/temp/rejects 'rejects.$ipParms'\r" }
-sleep .1
-expect "sftp" {  send  "rm /home/pi/pibeacon/temp/rejec* \r" }
-sleep .1
 expect "sftp" {  send  "lcd '$piPath//all' \r" }
 sleep .1 
 expect "sftp" {  send  "put *  /home/pi/pibeacon/ \r" }

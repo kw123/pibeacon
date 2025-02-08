@@ -14,7 +14,7 @@
 #
 # can also track a single mac, all messages and all steps to ID these messages
 #
-# it is now >5< years in development
+# it is now >10< years in development
 #
 # runs on all kinds of RPI and BLE UART and external dongles
 #
@@ -274,6 +274,143 @@ def hci_le_set_scan_parameters(sock):
 	cmd_pkt = struct.pack("<BBBBBBB", 0x01, 0x0, 0x10, 0x0, 0x10,0x01, 0x00)
 	bluez.hci_send_cmd(sock, OGF_LE_CTL,OCF_LE_SET_SCAN_ENABLE, cmd_pkt) 
 
+
+#################################
+def checkIfHCIIsBlockedAndFix():
+	try:
+		### test hci blocked?
+		blocked, hciDict = U.checkIfHciBlocked(verbose=False)
+		if blocked: 
+			U.logger.log(20,"hci is blocked, trying to unblock\n{}".format(hciDict ) )
+			U.hciUnblock()
+			blocked, hciDict = U.checkIfHciBlocked(verbose=True)
+			if blocked: 
+				U.logger.log(20,"hci is still blocked,  giving up\n{}".format(hciDict ) )
+				U.sendURL( data={"data":{"hciInfo":"err-BLE-is blocked"}}, squeeze=False, wait=False )
+				return False
+			else:
+				U.logger.log(20,"hci was unblocked")
+		else:
+			U.logger.log(20,"hci is not blocked")
+	except Exception as e: 
+		U.logger.log(30,"", exc_info=True)
+		return False
+	return True
+
+
+#################################
+def hardrestHCI(hci, startTime):
+	try:
+		cmd = "sudo hciconfig {} down".format(hci)
+		ret = readPopen(cmd) # enable bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
+		#cmd = "sudo rmmod btusb"
+		#ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+		#U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)  )
+		#cmd = "sudo modprobe btusb"
+		#ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
+		#U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)  )
+		cmd = "sudo invoke-rc.d bluetooth restart"
+		ret = readPopen(cmd) # enable bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
+		cmd = "sudo hciconfig {} up".format(hci)
+		ret = readPopen(cmd) # enable bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime) ) )
+	except Exception as e: 
+		U.logger.log(30,"", exc_info=True)
+	return 
+
+#################################
+def normalStartHCI(hci, startTime):
+	try:
+		cmd = "sudo hciconfig "+hci+" reset"
+		ret =readPopen(cmd)
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+		if ret[1].find("RF-kill") > -1 or ret[0].find("RF-kill") > -1:
+			time.sleep(0.2)
+			ret = readPopen(cmd)
+			U.logger.log(logLevelStart,"resetting {} bluetooth".format(hci))
+
+		cmd = "hciconfig "
+		ret = readPopen(cmd) # test bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+
+		cmd = "sudo hciconfig "+hci+" up"
+		ret = readPopen(cmd) # enable bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
+		if ret[1] != "":
+			time.sleep(0.2)
+			ret = readPopen(cmd) # enable bluetooth
+			U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+	except Exception as e: 
+		U.logger.log(30,"", exc_info=True)
+	return 
+
+
+#################################
+def startHCIBroadCast(useHCIForBeacon, pi, startTime, logLevelStart):
+	try:
+		OGF						= " 0x08"
+		# setup broadcast message
+		OCF					= " 0x0008"
+		iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
+		uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
+		MAJ					= " 00 01"
+		MIN					= " 00 "+"0%x"%(int(pi))
+		txP					= " C5 00"
+		#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
+		cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCIForBeacon, OGF, OCF, iBeaconPrefix, uuid,  MAJ, MIN, txP)
+		ret = readPopen(cmd)
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+
+
+		if 	rpiDataAcquistionMethod.find("hcidump" ) == 0:
+			restartLESCAN(useHCIForBeacon, logLevelStart, force=True )
+
+		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
+		#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
+		#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
+		#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
+		#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
+		cmd	 = "hcitool -i {} cmd{} 0x0006 00 10 00 20 03 00 00 00 00 00 00 00 00 07 00 &".format(useHCIForBeacon, OGF)
+		## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
+		ret = readPopen(cmd)
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
+		####################################LE Set Advertise Enable
+		#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + " 0x000a" + " 01"
+		time.sleep(0.1)
+		cmd	 = "hcitool -i {} cmd{} 0x000a 01 &".format(useHCIForBeacon, OGF)
+		ret = readPopen(cmd)
+		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+		time.sleep(0.1)
+
+	except Exception as e: 
+		U.logger.log(30,"", exc_info=True)
+	return 
+
+
+#################################
+def reuseHCI(hci, startTime):
+	try:
+				cmd = "sudo hciconfig "+hci+" reset"
+				ret = readPopen(cmd) # 
+				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+	except Exception as e: 
+		U.logger.log(30,"", exc_info=True)
+	return 
+
+
+#################################
+def setNoLead(hci, logLevelStart, startTime):
+	try:
+		cmd	 = "sudo hciconfig {} noleadv &\n sudo hciconfig {} noscan &".format(hci, hci)
+		ret = readPopen(cmd)
+		U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd.replace("\n",";"), ret, tryDeltaTime(startTime))  )
+	except Exception as e: 
+		U.logger.log(30,"", exc_info=True)
+	return 
+
+
 #def hci_le_set_scan_parameters(sock, scan_type=constants.LE_SCAN_ACTIVE,  # 0x01
 #								interval=0x10, window=0x10,
 #								own_bdaddr_type=constants.LE_RANDOM_ADDRESS, # ==0x01
@@ -281,9 +418,8 @@ def hci_le_set_scan_parameters(sock):
 #	 # TODO: replace B with appropriate size and remove 0 padding.
 #	 cmd_pkt = struct.pack("<BBBBBBB", scan_type, 0x0, interval, 0x0, window,own_bdaddr_type, filter_type)
 #	 bluez.hci_send_cmd(sock, constants.OGF_LE_CTL,constants.OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
-			
-	
 
+#################################
 def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False):
 	global myBLEmac, downCount
 	global lastLESCANrestart
@@ -301,7 +437,13 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 	logLevelStart = 20
 	if thisHCI !="": logLevelStart = 10
 	U.writeFile("temp/beaconloop.hci", json.dumps({}))
+
+
 	try:
+		### test hci blocked?
+		if not checkIfHCIIsBlockedAndFix():
+			return 0, "", -1
+
 		HCIs = U.whichHCI()
 		U.logger.log(20,"thisHCI:{}; HCIs available:{}".format(thisHCI, HCIs)  )
 		for hci in HCIs["hci"]:
@@ -309,62 +451,25 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			if thisHCI != "" and hci!=thisHCI: continue
 			U.logger.log(20,"checking hci:{}".format(hci)  )
 
-			if hardreset:
-				cmd = "sudo hciconfig {} down".format(hci)
-				ret = readPopen(cmd) # enable bluetooth
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
-				#cmd = "sudo rmmod btusb"
-				#ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
-				#U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)  )
-				#cmd = "sudo modprobe btusb"
-				#ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
-				#U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)  )
-				cmd = "sudo invoke-rc.d bluetooth restart"
-				ret = readPopen(cmd) # enable bluetooth
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
-				cmd = "sudo hciconfig {} up".format(hci)
-				ret = readPopen(cmd) # enable bluetooth
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime) ) )
+			if hardreset: 
+				hardrestHCI(hci, startTime)
 
 			elif reUse:
-				cmd = "sudo hciconfig "+hci+" reset"
-				ret = readPopen(cmd) # 
-				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+				reuseHCI(hci, startTime)
 
 			else:
-				cmd = "sudo hciconfig "+hci+" reset"
-				ret =readPopen(cmd)
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
-				if ret[1] != "":
-					time.sleep(0.2)
-					ret = readPopen(cmd)
-					U.logger.log(logLevelStart,"resetting {} bluetooth".format(hci))
-
-				cmd = "hciconfig "
-				ret = readPopen(cmd) # test bluetooth
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
-
-				cmd = "sudo hciconfig "+hci+" up"
-				ret = readPopen(cmd) # enable bluetooth
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
-				if ret[1] != "":
-					time.sleep(0.2)
-					ret = readPopen(cmd) # enable bluetooth
-					U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
-					cmd = "hciconfig "
-					ret = readPopen(cmd) # test bluetooth
-					U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+				normalStartHCI(hci, startTime)
 
 			if rpiDataAcquistionMethod.find("hcidump") == 0:
-				cmd	 = "sudo hciconfig {} noleadv &\n sudo hciconfig {} noscan &".format(hci, hci)
-				ret = readPopen(cmd)
-				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd.replace("\n",";"), ret, tryDeltaTime(startTime))  )
+				setNoLead(hci, logLevelStart, startTime)
 
 		time.sleep(1)
 
 		#### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0, or use last one
 		if not reUse: HCIs = U.whichHCI()
-		if HCIs !={} and "hci" in  HCIs and HCIs["hci"] !={}:
+
+		ret = ["",""]
+		if HCIs != {} and "hci" in  HCIs and HCIs["hci"] != {}:
 
 			U.logger.log(30,"myBLEmac HCIs{}".format( HCIs))
 			useHCIForBeacon,  myBLEmac, devId, bus = U.selectHCI(HCIs["hci"], G.BeaconUseHCINo,"USB", tryBLEmac=trymyBLEmac)
@@ -388,74 +493,36 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				ret = readPopen(cmd)
 				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
 
-			OGF						= " 0x08"
-			if	True:
-				# setup broadcast message
-				OCF					= " 0x0008"
-				iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
-				uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
-				MAJ					= " 00 01"
-				MIN					= " 00 "+"0%x"%(int(pi))
-				txP					= " C5 00"
-				#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
-				cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCIForBeacon, OGF, OCF, iBeaconPrefix, uuid,  MAJ, MIN, txP)
-				ret = readPopen(cmd)
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
-
-
-			if 	rpiDataAcquistionMethod .find("hcidump" ) == 0:
-				restartLESCAN(useHCIForBeacon, logLevelStart, force=True )
-
-			if	True or rpiDataAcquistionMethod == "socket":
-				####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
-				#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
-				#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
-				#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
-				#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
-				cmd	 = "hcitool -i {} cmd{} 0x0006 00 10 00 20 03 00 00 00 00 00 00 00 00 07 00 &".format(useHCIForBeacon, OGF)
-				## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
-				ret = readPopen(cmd)
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
-				####################################LE Set Advertise Enable
-				#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + " 0x000a" + " 01"
-				time.sleep(0.1)
-				cmd	 = "hcitool -i {} cmd{} 0x000a 01 &".format(useHCIForBeacon, OGF)
-				ret = readPopen(cmd)
-				U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
-				time.sleep(0.1)
-
-
+			startHCIBroadCast(useHCIForBeacon, pi, startTime, logLevelStart)
 			ret = HCIs["ret"]
-		else:
-			ret =["",""]
 
 		if ret[1] != "":	
 			U.logger.log(20,"BLE start returned:\n{}error:>>{}<<".format(ret[0],ret[1]))
 			U.sendURL( data={"data":{"hciInfo":"err-BLE-start"}}, squeeze=False, wait=False )
 
 		else:
-				U.logger.log(20,"BLE start returned:\n{}my BLE mac# is >>{}<<, on bus:{}".format(ret[0], myBLEmac, bus))
-				if useHCIForBeacon in HCIs["hci"]:
-					if HCIs["hci"][useHCIForBeacon]["upDown"] == "DOWN":
-						if downCount > 1:
-							U.logger.log(20,"reboot requested,{} is DOWN using hciconfig ".format(useHCIForBeacon))
-							U.writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig FORCE".format(useHCIForBeacon))
-							U.sendURL( data={"data":{"hciInfo":"err-BLE-down"}}, squeeze=False, wait=False )
-							time.sleep(10)
-						downCount +=1
-						time.sleep(10)
-						return 0,  "", -1
-				else:
-					U.logger.log(30," {}  not in hciconfig list".format(useHCIForBeacon))
-					downCount += 1
+			U.logger.log(20,"BLE start returned:\n{}my BLE mac# is >>{}<<, on bus:{}".format(ret[0], myBLEmac, bus))
+			if useHCIForBeacon in HCIs["hci"]:
+				if HCIs["hci"][useHCIForBeacon]["upDown"] == "DOWN":
 					if downCount > 1:
-						U.sendURL( data={"data":{"hciInfo":"err-BLE-channel-missing"}}, squeeze=False, wait=False )
-						U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCIForBeacon))
+						U.logger.log(20,"reboot requested,{} is DOWN using hciconfig ".format(useHCIForBeacon))
 						U.writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig FORCE".format(useHCIForBeacon))
+						U.sendURL( data={"data":{"hciInfo":"err-BLE-down"}}, squeeze=False, wait=False )
 						time.sleep(10)
-					downCount += 1
+					downCount +=1
 					time.sleep(10)
 					return 0,  "", -1
+			else:
+				U.logger.log(30," {}  not in hciconfig list".format(useHCIForBeacon))
+				downCount += 1
+				if downCount > 1:
+					U.sendURL( data={"data":{"hciInfo":"err-BLE-channel-missing"}}, squeeze=False, wait=False )
+					U.logger.log(30,"reboot requested,{} is DOWN using hciconfig ".format(useHCIForBeacon))
+					U.writeFile("temp/rebootNeeded","bluetooth_startup {} is DOWN using hciconfig FORCE".format(useHCIForBeacon))
+					time.sleep(10)
+				downCount += 1
+				time.sleep(10)
+				return 0,  "", -1
 					
 				
 		if myBLEmac == "":
@@ -736,18 +803,6 @@ def combineLines(lines):
 		U.logger.log(20,"", exc_info=True)
 	return []
 
-	
-#################################
-def toReject(text):
-	global doRejects
-	try:
-		if not doRejects: return 
-
-		U.writeFile("temp/rejects", "{};{}\n".format(time.time(), text, writeOrAppend="a"))
-
-	except	Exception as e:
-		if "{}".format(e).find("Read-only file system:") >-1:
-			U.doReboot(tt=0)
 
 #################################
 def fixOldNames():
@@ -3911,7 +3966,7 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		if len(mfgData) < 20: 		return sensor, tx,  "" 
 		itrackID 		= mfgData[0:4] # == 4B 4D
 		rMAC     		= mfgData[6:18] # == 28 89 F9 A7 DD E2
-		bat      		= mfgData[18:20] # == 28 89 F9 A7 DD E2
+		bat      		= mfgData[18:20] # == 
 		bPressed		= mfgData[5:6]   # == z
 		typeCode 		= mfgData[4:5]   # == y
 		backFromConnect	= typeCode == "0" # ==y
@@ -7201,7 +7256,6 @@ def execbeaconloop(test):
 	global lastLESCANrestart
 	global beaconsThisReadCycle, beacon_ExistingHistory
 	global reasonMax 
-	global doRejects
 	global readFrom
 	global ignoreMAC
 	global restartBLE
@@ -7253,7 +7307,6 @@ def execbeaconloop(test):
 	BLEcollectStartTime		= -1
 	sendAfterSeconds		= 60.
 	sendAfterSecsOfLastMsg	= sendAfterSeconds*1.0
-	doRejects				= False
 	lastLESCANrestart		= 0
 	ListenProcessFileHandle =""
 	readbuffer				= ""

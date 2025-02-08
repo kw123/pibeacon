@@ -12,7 +12,8 @@
     for serial: connect the 4 cables to +5V, gnd, T to RXD, R to TCD (pins 4,6,8,10). Set switch to uart on sensor
        on RPi: sudo raspi-config: Interface Options/Serial Port: DISABLE login, ENABLE serial hardware port 
     pi 4 and faster can do i2c, but is sometimes unstable. Pi 2 and pi0 are not stable with i2c with THIS sensor, use uart/serial with them
-    uart/serial works well
+    pi0w does not support serial and bluetooth together. Use "rpi sensor only". Then the rpi will not participate in detecting bluetooth devices, only gpio, and i2c type sensors
+    uart/serial works well on all rpi.
   In device edit 
      select the rpi the sensor is connected to.
      set keep awake = no controll word needed, it will continuously listen to commands

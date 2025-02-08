@@ -11,7 +11,7 @@
 ##  then to read each sensor read 
 ##     /sys/bus/w1/devices/<<sn>>/w1_slave
 ##
-##  also read config.txt to get a map of buschannel to GPIO mapping
+##  also read /boot/firmware/config.txt  or i older versions config.txt to get a map of buschannel to GPIO mapping
 ##  
 ##  then send every xx secs or if change data to indigo through socket or http.
 ##
@@ -23,9 +23,23 @@ import math
 
 import  sys, os, time, json, datetime,subprocess,copy
 
-import RPi.GPIO as GPIO
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+try:
+	#1/0 # use GPIO
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
+
 
 
 try: import Queue
@@ -75,7 +89,7 @@ def crc8(data):
 
 # ===========================================================================
 def checkIfReset(needToReset):
-	global oneWireResetGpio, oneWireResetIsUpDown
+	global oneWireResetGpio, oneWireResetIsUpDown, GPIOZEROReset
 	global lastReset, noResetBefore
 	global resetTime, lastResetDateTime
 	global resetCounter, oneWireForceReboot
@@ -98,9 +112,17 @@ def checkIfReset(needToReset):
 		if time.time() - lastReset <  noResetBefore: return
 		U.logger.log(20,"doing a reset on GPIO:{} for {} secs, setting to:{} ".format(oneWireResetGpio, resetTime, oneWireResetIsUpDown))
 		upDown = oneWireResetIsUpDown == "up"
-		GPIO.output(oneWireResetGpio, upDown)
-		time.sleep(resetTime)
-		GPIO.output(oneWireResetGpio, not upDown)
+		if useGPIO:
+			GPIO.output(oneWireResetGpio, upDown)
+			time.sleep(resetTime)
+			GPIO.output(oneWireResetGpio, not upDown)
+		else:
+			if upDown: GPIOZEROReset.on()
+			else: GPIOZEROReset.off()
+			time.sleep(resetTime)
+			if upDown: GPIOZEROReset.off()
+			else: GPIOZEROReset.on()
+
 		time.sleep(7)
 		lastReset = time.time() + noResetBefore
 		lastResetDateTime = datetime.datetime.now().strftime(_defaultDateStampFormat)
@@ -132,26 +154,28 @@ dtoverlay=w1-gpio
 dtparam=gpiopin=17
 dtoverlay=w1-gpio
 dtparam=gpiopin=4   <-- this will be  busmaster 1
-or 
-oneWireGpios set in rpi device edit = [1,4,6,7,8..]
+ 
 		"""
 
 		if time.time() - lastmapBusmasterToGpio < 60: return  
 
 		doPrint = False
+		doPrint2 = False
 		lastmapBusmasterToGpio = time.time()
 		busMasterToGPIOOld = copy.copy(busMasterToGPIO)
 		newMapping = False
 		busMasterToGPIO = {}
 
-		if (oneWireGpios) == 0: #(use config.txt to check)
+		if len(oneWireGpios) == 0: #(use config.txt to check)
 			
+			if doPrint: U.logger.log(20,"reading bootFileName:{} ".format(bootFileName))
 			f = open(bootFileName,"r")
 			configTxt = f.read().split("\n")
 			f.close()
 			pinsFound = []
+			if doPrint: U.logger.log(20,"reading contents:{} ".format(configTxt))
 			for lll in configTxt:	
-				if doPrint: U.logger.log(20,"next line in config.txt>>{}<<  ".format(lll))
+				if doPrint2: U.logger.log(20,"next line in config.txt>>{}<<  ".format(lll))
 				if lll.find("dtparam=gpiopin=") > -1:
 					pinsFound.append(lll.split("=")[-1])
 					if doPrint: U.logger.log(20,"pinsFound:{}  ".format(pinsFound))
@@ -164,6 +188,9 @@ oneWireGpios set in rpi device edit = [1,4,6,7,8..]
 
 			if newMapping:
 				U.logger.log(20,"Changed or first mapping of busmaster channel to GPIO used:{} in \"`ls -o /sys/bus/w1/devices/`\" ".format(busMasterToGPIO))
+
+			if busMasterToGPIO == []:
+				U.logger.log(20,"noting setup in config.txt  no \"dtparam=gpiopin=..\" ")
 
 
 		else:  # use oneWireGpios set in rpi device edit 
@@ -196,19 +223,21 @@ def enableoneWireGPIO():
 
 	try:
 
-		if len(oneWireGpios) == 0: return # not setup
+		if len(oneWireGpios) == 0: 
+			U.logger.log(20," oneWireGpios == 0 return ")
+			return # not setup ??
 
 		# check if everythings is already done:
 		fnameForData = "{}temp/{}.busmaster".format(G.homeDir,G.program)
 		oldData, inRaw = U.readJson(fnameForData)
-		if oldData.get("oneWireGpios",[] ) == oneWireGpios:
+		if inRaw != "" and oldData.get("oneWireGpios",[] ) == oneWireGpios:
 			if len(oldData.get("busMasterToGPIO",{}) ) == len(oneWireGpios):
 				busMasterToGPIO = oldData.get("busMasterToGPIO",{})
 				U.logger.log(20," already done: oneWireGpios:{} - busMasterToGPIO:{}".format(oneWireGpios, busMasterToGPIO))
 				return 
 
 		# another check
-		U.logger.log(20," (1) {} -- already done?: {}".format(oneWireGpios, oneWireGpios == oneWireGpiosLast))
+		U.logger.log(20," (1) oneWireGpios: {} -- already done?: {}".format(oneWireGpios, oneWireGpios == oneWireGpiosLast))
 		if oneWireGpios == oneWireGpiosLast: return 
 
 		bmActive = []
@@ -226,7 +255,7 @@ def enableoneWireGPIO():
 
 		# all done?
 		if len(bmActive) == len(oneWireGpios):
-			U.logger.log(20,"all busmasters active: {}  n: {} done ".format(bmActive, len(oneWireGpios)))
+			U.logger.log(20,"all busmasters active: {}  n: {}={} done/ok ".format(bmActive, len(oneWireGpios), oneWireGpios))
 			return
 
 		# here we do the work, setup the pgms and busmasters
@@ -239,8 +268,9 @@ def enableoneWireGPIO():
 			U.echoLastAlive(G.program) # prevent master from restarting this pgm
 
 			# one by one
-			ret = readPopen("sudo dtoverlay w1-gpio gpiopin={} pullup=0".format(gpio))
-			U.logger.log(20,"adding busmaster: {} result:{}".format(gpio, ret))
+			cmd = "sudo dtoverlay w1-gpio gpiopin={} pullup=0".format(gpio)
+			ret = readPopen(cmd)
+			U.logger.log(20,"adding busmaster: \"{}\"  result:{}".format(cmd, ret))
 
 			# check if it is done
 			found = False
@@ -264,7 +294,7 @@ def enableoneWireGPIO():
 		U.logger.log(20,"busMasterToGPIO:{} ".format(busMasterToGPIO))
 
 		# save stuff for nect time 
-		oneWireGpiosLast = oneWireGpios
+		oneWireGpiosLast = copy.copy(oneWireGpios)
 		busMasterToGPIOOld = copy.copy(busMasterToGPIO)
 		U.writeJson(fnameForData, { "busMasterToGPIO":busMasterToGPIO,"oneWireGpios":oneWireGpios})
 
@@ -303,6 +333,9 @@ def readOneChannel(busMaster):
 			while not readQueue[busMaster].empty():
 				Nsensors +=1
 				sn, devId, gpio = readQueue[busMaster].get()
+				if gpio == "":
+					if doPrint1: U.logger.log(20,"{:>5.2f}.. busmaster{} readQueue return Nsensors:{} sn:{}, devId:{}, gpio:{} ".format(time.time()-tStart, busMaster, Nsensors, sn, devId, gpio ))
+					continue
 				gpio = int(gpio)
 				if doPrint1: U.logger.log(20,"{:>5.2f}.. busmaster{} readQueue loop not empty Nsensors:{} sn:{}, devId:{}, gpio:{} ".format(time.time()-tStart, busMaster, Nsensors, sn, devId, gpio ))
 				retData["data"][busMaster][sn] = {"temp": -995,"devId":  serialNumberToDevId.get(sn,"-1"), "gpioUsed":gpio }
@@ -680,6 +713,7 @@ def readParams():
 		global oneWireAddNewSensors
 		global serialNumberToDevId, devIdToSerialNumber
 		global oneWireResetGpio, oneWireResetIsUpDown, lastBadRead, oneWireGpios, oneWireGpiosOld, oneWireForceReboot
+		global GPIOZEROReset
 
 		rCode= False
 		#U.logger.log(20," reading params")
@@ -708,7 +742,7 @@ def readParams():
 		if "distanceUnits"			in inp: distanceUnits=			(inp["distanceUnits"])
 		if "sensors"				in inp: sensors =				(inp["sensors"])
 		if "sensorRefreshSecs"		in inp: sensorRefreshSecs = 	float(inp["sensorRefreshSecs"])
-		sensorRefreshSecs = 20
+		#sensorRefreshSecs = 20 # 
 		if "oneWireAddNewSensors" 	in inp: oneWireAddNewSensors = 	(inp["oneWireAddNewSensors"])
 		oneWireForceReboot = 	int(inp.get("oneWireForceReboot","-1"))
 
@@ -742,8 +776,11 @@ def readParams():
 		try: 
 			oneWireResetGpio = int(oneWireResetGpio)
 			upDown = oneWireResetIsUpDown == "up"
-			GPIO.setup(oneWireResetGpio, GPIO.OUT)
-			GPIO.output(oneWireResetGpio, not upDown)
+			if useGPIO:
+				GPIO.setup(oneWireResetGpio, GPIO.OUT)
+				GPIO.output(oneWireResetGpio, not upDown)
+			else:
+				GPIOZEROReset = gpiozero.LED(oneWireResetGpio, initial_value=not upDown )
 		except: pass
 
 
@@ -774,7 +811,7 @@ def execWire():
 	global gpioUsed
 	global lastmapBusmasterToGpio, busMasterToGPIO
 	global devIdToSerialNumber, serialNumberToDevId
-	global oneWireResetGpio, oneWireResetIsUpDown
+	global oneWireResetGpio, oneWireResetIsUpDown, GPIOZEROReset
 	global lastReset, noResetBefore, lastBadRead
 	global resetTime, lastResetDateTime, sendMetaData
 	global oneWireGpios,oneWireGpiosLast
@@ -869,10 +906,10 @@ def execWire():
 		
 			delta =-1
 			changed = 0
+			xxx = -1
 
 			if  time.time()-lastMsg >  G.sendToIndigoSecs  or time.time()-lastMsg > 200:	 
 				changed = 1
-
 			else:
 				if lastData == {}: 
 					changed = 2
@@ -910,17 +947,16 @@ def execWire():
 								for nnn in range(nSens):
 									for serialNumber in data[sens][devid]["temp"][nnn]:
 										if serialNumber in lastData[sens][devid]["temp"][nnn]: 
-											#U.logger.log(20, " changed indicator:{}, sending url: {}".format(changed, data))
-											xxx = U.testBad( data[sens][devid]["temp"][nnn][serialNumber], lastData[sens][devid]["temp"][nnn][serialNumber], xxx )
-											if xxx > (G.deltaChangedSensor/100.): 
-												changed = xxx
+											xxx = U.testBad( data[sens][devid]["temp"][nnn][serialNumber], lastData[sens][devid]["temp"][nnn][serialNumber], xxx, deltaAbs=0.5) # 0.5C 
+											if xxx > 4./100.: # = 2% (delta/sum(this-last))
+												changed = 10
+												if doPrint: U.logger.log(20, " changed indicator:{}, sending url: {}".format(changed, data))
 												break
 										else:
-											changed = 10
+											changed = 11
 											break
 							except  Exception as e:
 								U.logger.log(20,"v2", exc_info=True)
-								#print e
 								#print lastData[sens][dd]
 								#print data[sens][dd]
 								changed = 7
@@ -948,7 +984,7 @@ def execWire():
 			checkIfReset(needToReset)
 
 
-			tt= time.time()
+			tt = time.time()
 			NSleep = int(sensorRefreshSecs)
 			if tt- lastregularCycle > sensorRefreshSecs:
 				regularCycle = True

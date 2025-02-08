@@ -10,7 +10,6 @@
 
 import sys, os, time, json, datetime, subprocess, copy
 import smbus
-import RPi.GPIO as GPIO
 import time
 import datetime
 
@@ -18,6 +17,23 @@ import datetime
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
+
+try:
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
+
 
 G.program = "as3935"
 
@@ -406,6 +422,7 @@ def startSensor(devId):
 	global startTime
 	global as3935sensor 
 	global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO, noiseFlorSet,calibrationDynamic, noiseFloor, CapValue
+	global PIZEROGPIO
 	
 	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
 	startTime =time.time()
@@ -435,23 +452,24 @@ def startSensor(devId):
 
 	U.muxTCA9548Areset()
 
-	try:	GPIO.setmode(GPIO.BCM)
-	except: pass
-	try:	GPIO.remove_event_detect(interruptGPIO)
-	except: pass
+	if useGPIO:
+		GPIO.setup(interruptGPIO, GPIO.IN)
+		GPIO.add_event_detect(interruptGPIO, GPIO.RISING, callback=handle_interrupt)
+	else:
+		PIZEROGPIO[interruptGPIO] = gpiozero.Button(interruptGPIO, pull_up=True) 
+		PIZEROGPIO[interruptGPIO].when_pressed  = handle_interrupt 
 
-	GPIO.setup(interruptGPIO, GPIO.IN)
-	GPIO.add_event_detect(interruptGPIO, GPIO.RISING, callback=handle_interrupt)
+
 	U.logger.log(30, "end of event setup" )
 	return 
 
 #################################
-def handle_interrupt(channel):
+def handle_interrupt(channel=0):
 	global as3935sensor,sensors, sensor, lastEvent, lastTime, lastSend, restartNeededCounter, interruptGPIO, calibrationDynamic
 	global noiseFlorSet
 	time.sleep(0.003)
 
-	if interruptGPIO != channel: return
+	#if interruptGPIO != channel: return
 	
 	if sensor in sensors:
 		data = {"sensors": {sensor:{}}}
@@ -528,10 +546,11 @@ global startTime, reStartReq
 global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
 global badSensor
 global lastEvent,lastTime,lastSend,restartNeededCounter, CapValue
-
+global PIZEROGPIO
 
 global inside, minStrikes, tuneCapacitor, minNoiseFloor,interruptGPIO, noiseFlorSet, calibrationDynamic,noiseFloor
 
+PIZEROGPIO					= {}
 CapValue					= {0:"0",1:"8",2:"16",3:"24",4:"32",5:"40",6:"48",7:"56",8:"64",9:"72",10:"80",11:"88",12:"96",13:"104",14:"112",15:"120"}
 inside						= 0
 minStrikes					= 1

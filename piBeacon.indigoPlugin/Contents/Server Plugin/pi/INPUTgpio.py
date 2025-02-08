@@ -13,7 +13,22 @@
 import	sys, os, subprocess, copy
 import	time,datetime
 import	json
-import	RPi.GPIO as GPIO  
+try:
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+	import gpiozero
+	from gpiozero.pins.pigpio import PiGPIOFactory
+	from gpiozero import Device
+	Device.pin_factory = PiGPIOFactory()
+	useGPIO = False
+except:
+	try:
+		import RPi.GPIO as GPIO
+		GPIO.setmode(GPIO.BCM)
+		GPIO.setwarnings(False)
+		useGPIO = True
+	except: pass
+
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -77,12 +92,12 @@ def readParams():
  
 	   
 def getINPUTgpio(all, sens):
-		global INPUTlastvalue, INPUTcount
+		global INPUTlastvalue, INPUTcount, GPIOZERO
 		d = {}
 		new = False
 		try:
 				#U.logger.log(20, u" all{}, sens:{}".format(all, sens))
-				for n in range(len(sens["INPUTS"])):
+			for n in range(len(sens["INPUTS"])):
 					if "gpio" not in sens["INPUTS"][n]: continue
 					if "lowHighAs" in  sens:
 						lowHighAs =	 sens["lowHighAs"]
@@ -90,12 +105,22 @@ def getINPUTgpio(all, sens):
 						lowHighAs = "0"
 					gpioPIN = int(sens["INPUTS"][n]["gpio"])
 					count = sens["INPUTS"][n]["count"]
-					if lowHighAs =="0":
-						if GPIO.input(gpioPIN) ==0: dd="1"
-						else:						dd="0"
+					if useGPIO:
+						if lowHighAs == "0":
+							if GPIO.input(gpioPIN) == 0:	dd = "1"
+							else:							dd = "0"
+						else:
+							if GPIO.input(gpioPIN) == 0:	dd = "0"
+							else:							dd = "1"
 					else:
-						if GPIO.input(gpioPIN) ==0: dd="0"
-						else:						dd="1"
+						if lowHighAs == "0":
+							if GPIOZERO[gpioPIN].value:		dd = "1"
+							else:							dd = "0"
+						else:
+							if not GPIOZERO[gpioPIN].value:	dd = "0"
+							else:							dd = "1"
+					#U.logger.log(20, "pin:{},  dd:{}".format(gpioPIN, dd))
+
 					if all:
 						if count != "off":
 							if count == "up":
@@ -134,12 +159,12 @@ def getINPUTgpio(all, sens):
 
 
 def startGPIO():
-	global sensors, INPUTcount, lastGPIO
+	global sensors, INPUTcount, lastGPIO, GPIOZERO
 	try:
 		lastGPIO={}
 		for nn in range(30):
-			lastGPIO[nn] =""
-		GPIO.setmode(GPIO.BCM)
+			lastGPIO[nn] = ""
+		if useGPIO: GPIO.setmode(GPIO.BCM)
 		for n in range(30):
 			sensor="INPUTgpio-"+str(n)
 			if sensor not in sensors: continue
@@ -154,14 +179,24 @@ def startGPIO():
 					count	= ss[nn]["count"]
 					if	 count == "off":
 						INPUTcount[str(gpioPIN)] = 0
-					if	 theType == "open":
-						GPIO.setup(gpioPIN, GPIO.IN)
-					elif theType == "high":
-						GPIO.setup(gpioPIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
-					elif theType == "low":
-						GPIO.setup(gpioPIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-					elif theType == "inOpen":
-						GPIO.setup(gpioPIN, GPIO.IN)
+					if useGPIO:
+						if	 theType == "open":
+							GPIO.setup(gpioPIN, GPIO.IN)
+						elif theType == "high":
+							GPIO.setup(gpioPIN, GPIO.IN, pull_up_down=GPIO.PUD_UP)
+						elif theType == "low":
+							GPIO.setup(gpioPIN, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
+						elif theType == "inOpen":
+							GPIO.setup(gpioPIN, GPIO.IN)
+					else:
+						if	 theType == "open":
+							GPIOZERO[gpioPIN] = gpiozero.Button(gpioPIN, pull_up=None, active_state=True) 
+						elif theType == "high":
+							GPIOZERO[gpioPIN] = gpiozero.Button(gpioPIN, pull_up=True) 
+						elif theType == "low":
+							GPIOZERO[gpioPIN] = gpiozero.Button(gpioPIN, pull_up=False) 
+						elif theType == "inOpen":
+							GPIOZERO[gpioPIN] = gpiozero.Button(gpioPIN, pull_up=None, active_state=True) 
 		return
 	except	Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -175,6 +210,9 @@ global sList,sensors
 global INPUTMapR
 global sensors,lastGPIO
 global oldRaw, lastRead
+global GPIOZERO
+
+GPIOZERO			= {}
 oldRaw				= ""
 lastRead			= 0
 
@@ -195,15 +233,12 @@ U.setLogging()
 
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
 
-#  Possible answers are 0 = Compute Module, 1 = Rev 1, 2 = Rev 2, 3 = Model B+/A+
-piVersion = GPIO.RPI_REVISION
-
 sensor			  = G.program
 sensors			  = {}
 sList			  = ""
 loopCount		  = 0
 
-U.logger.log(30, "starting "+G.program+" program")
+U.logger.log(20, "starting {}program, useGPIO:{}".format(G.program , useGPIO))
 
 readParams()
 startGPIO()

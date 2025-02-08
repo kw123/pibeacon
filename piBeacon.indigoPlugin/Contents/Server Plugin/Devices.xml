@@ -4254,6 +4254,24 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+
+			<Field id="simpleSeparator88" type="separator"/>
+			<Field id="label88"   type="label"   fontColor="green" >
+				<Label>==  send time to beacon</Label>
+			</Field>
+
+			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number">
+				<Label>select rPi to use for set time </Label>
+				<List class="self" filter="" method="filterPibeaconOne" dynamicReload="false" />
+			</Field>
+
+			<Field  id="buttonSetTime" type="button"    >
+				<Label>set time to current time on device </Label><Title>EXECUTE</Title> <CallbackMethod>sendSetTimeAndZoneOnDeviceCALLBACKmenu</CallbackMethod>
+			</Field>
+
+
+
+
 		</ConfigUI>
 
 		<States>
@@ -4453,6 +4471,9 @@ xx_Count_groupname_ .. Home, Away</Label>
 - If you leave it blank the defauult device state icon will be used
 </Label>
 			</Field>
+
+
+
 
 		</ConfigUI>
 
@@ -10263,7 +10284,23 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="gpioPin"   type="menu" defaultValue="17" >
 				<Label>which GPIO-pin is the DHT connected to:</Label>
-			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
+				<List>
+					<Option value="17"  >17 left </Option>
+					<Option value="27"  >27</Option>
+					<Option value="22"  >22</Option>
+					<Option value="5"   >5</Option>
+					<Option value="6"   >6</Option>
+					<Option value="13"  >13</Option>
+					<Option value="19"  >19</Option>
+					<Option value="26"  >26</Option>
+					<Option value="23"  >23 right</Option>
+					<Option value="24"  >24</Option>
+					<Option value="25"  >25</Option>
+					<Option value="12"  >12</Option>
+					<Option value="16"  >16</Option>
+					<Option value="20"  >20</Option>
+					<Option value="21"  >21</Option>
+				</List>
 			</Field>
 
 
@@ -20035,6 +20072,7 @@ use bit max value, not actual voltage for feedVolt </Label>
 
 			<Field id="comandList" type="textfield"  hidden="true"></Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 
 			<Field id="infoLabelDF2301Q" type="label">
 				<Label>Setup DF2301Q on individual rPis 
@@ -20056,7 +20094,7 @@ trigger on "any change" state "sensorValue"";
 				<Label>select rPi-server to which the Sensor is connect to:</Label>
 			</Field>
 
-			<Field id="i2cOrUart" type="menu"     defaultValue="i2c"> <Label>use I2C or UART (serial):</Label>
+			<Field id="i2cOrUart" type="menu"     defaultValue="uart"> <Label>use I2C or UART (serial):</Label>
 				<List>
 					<Option value="i2c"   >use i2c</Option>
 					<Option value="uart"  >use uart</Option>
@@ -20070,6 +20108,7 @@ trigger on "any change" state "sensorValue"";
 				<Label> connect:+5V, gnd, T to RXD, R to TCD. (pins 4,6,8,10)
 Set switch 1 to uart
 on RPi: sudo raspi-config: Interface Options/Serial Port: DISABLE login, ENABLE serial hardware port 
+PI0 does not support serial and Bluetooth services at the same time. (At leat I have not been able to make it work)
 </Label>
 			</Field>
 
@@ -20158,9 +20197,6 @@ for uart/serial interface, the key word has to be heard once. Then it can stay a
 			<Field id="controllWord19" type="textfield"    defaultValue="custom command"> <Label>id 19: custom command:</Label>	</Field>
 			<Field id="controllWord20" type="textfield"    defaultValue="custom command"> <Label>id 20: custom command:</Label>	</Field>
 			<Field id="controllWord21" type="textfield"    defaultValue="custom command"> <Label>id 21: custom command:</Label>	</Field>
-
-
-
 
 			<Field id="simpleSeparatorline00" type="separator"/>
 			<Field id="simpleSeparatorline01" type="separator"/>
@@ -20327,37 +20363,31 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Do a restart of connection to sensor:</Label>
 			</Field>
 
-			<Field id="refreshRepeat"   type="menu" defaultValue="200"  >
+			<Field id="refreshRepeat"   type="menu" defaultValue="200"  tooltip="is set to 220 if keep awake on, setting keep awake = on sets awake on for 255 secs on the sensor hardware, hence a refresh of 220 secs re-sets that keep away to on 25 secs before it expires" >
 				<List>
 					<Option value="15"   			> every 15 secs</Option>
 					<Option value="30"   			> every 30 secs</Option>
 					<Option value="50"   			> every 50 secs</Option>
 					<Option value="100"   			> every 100 secs</Option>
 					<Option value="200"   			> every 200 secs</Option>
+					<Option value="220"   			> every 220 secs</Option>
 					<Option value="400"   			> every 400 secs</Option>
 					<Option value="600"   			> every 600 secs</Option>
 				</List>
-				<Label>Send parameters to sensor (volume, mute..):</Label>
+				<Label>Send parameters to sensor =220 if KEEP AWAKE:</Label>
 			</Field>
 
-			<Field id="uartSleepAfterWrite"   type="menu" defaultValue="100"  >
+			<Field id="uartSleepAfterWrite"   type="menu" defaultValue="100"   visibleBindingId="i2cOrUart" visibleBindingValue="uart">
 				<List>
-					<Option value="70"   			> 70 msec</Option>
 					<Option value="100"   			> 100 msec</Option>
-					<Option value="150"   			> 150 msec</Option>
-					<Option value="200"   			> 200 msec</Option>
 				</List>
 				<Label>Sleep after write to uart/serial port:</Label>
 			</Field>
 
 
-			<Field id="i2cSleepAfterWrite"   type="menu" defaultValue="200"  >
+			<Field id="i2cSleepAfterWrite"   type="menu" defaultValue="200"   visibleBindingId="i2cOrUart" visibleBindingValue="i2c">
 				<List>
-					<Option value="150"   			> 150 msec</Option>
 					<Option value="200"   			> 200 msec</Option>
-					<Option value="300"   			> 300 msec</Option>
-					<Option value="400"   			> 400 msec</Option>
-					<Option value="500"   			> 500 msec</Option>
 				</List>
 				<Label>Sleep after read/write to i2c port:</Label>
 			</Field>
@@ -21685,6 +21715,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>countsPerMinuteMaxToday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMaxToday</ControlPageLabel>
 			</State>
+			<State id="countPerMinuteMaxTodayAt">
+				<ValueType>string</ValueType>
+				<TriggerLabel>countPerMinuteMaxTodayAt</TriggerLabel>
+				<ControlPageLabel>countPerMinuteMaxTodayAt</ControlPageLabel>
+			</State>
 			<State id="countPerMinuteMinToday">
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMinToday</TriggerLabel>
@@ -21694,6 +21729,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>countsPerMinuteMaxYesterday</TriggerLabel>
 				<ControlPageLabel>countsPerMinuteMaxYesterday</ControlPageLabel>
+			</State>
+			<State id="countPerMinuteMaxYesterdayAt">
+				<ValueType>string</ValueType>
+				<TriggerLabel>countPerMinuteMaxYesterdayAt</TriggerLabel>
+				<ControlPageLabel>countPerMinuteMaxYesterdayAt</ControlPageLabel>
 			</State>
 			<State id="countPerMinuteMinYesterday">
 				<ValueType>Float</ValueType>
@@ -21762,6 +21802,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
@@ -21956,6 +21997,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
@@ -22165,6 +22207,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
@@ -22414,6 +22457,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false"/>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
@@ -22658,6 +22702,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
@@ -22874,10 +22919,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
-
 			<Field id="piDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
 			<Field id="infoLabeTypeOfInput" type="label"  visibleBindingId="piDone"    visibleBindingValue="true" >
@@ -23050,10 +23095,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
-
 			<Field id="piDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
 			<Field id="infoLabeTypeOfInput" type="label"  visibleBindingId="piDone"    visibleBindingValue="true" >
@@ -23261,10 +23306,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONI</CallbackMethod>
 			</Field>
-
 			<Field id="piDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
 			<Field id="infoLabeTypeOfInput" type="label"  visibleBindingId="piDone"    visibleBindingValue="true" >
@@ -23710,8 +23755,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="useWhichGPIO" type="menu"      defaultValue="pig-threads" tooltip="- must be same for all switches on the same RPI" >
 				<Label>use which method to get GPIO signals:</Label>
 				<List>
-					<Option value="rpi-threads"       >rpi.gpio w thread and event queue up to 100 Hz</Option>
-					<Option value="rpi-simpleEvents"  >rpi.gpio  events directly anlyzed up to 20 Hz</Option>
 					<Option value="pig-threads"       >pigpio w threads and event queue fastest method  up to 200Hz = 5mSecs></Option>
 				</List>
 			</Field>
@@ -23890,8 +23933,11 @@ Indigo gets updated at least every 90 secs or when a measuremrnt has a change la
 			</Field>
 
 
+			<Field id="labeldeltaDist" type="label">
+				<Label>Send value to indigo if both are triggered delta dist absolut and %:</Label>
+			</Field>
 			<Field id="deltaDistAbs" type="menu"     defaultValue="5" hidden="no" >
-				<Label>send if delta Dist absolute[cm] (and w %):</Label>
+				<Label>..   send if delta Dist &gt; absolute[cm]:</Label>
 				<List>
 					<Option value="0.5"  > 0.5</Option>
 					<Option value="1"    > 1</Option>
@@ -23909,12 +23955,12 @@ Indigo gets updated at least every 90 secs or when a measuremrnt has a change la
 			</Field>
 
 			<Field id="deltaDist" type="menu"     defaultValue="5" hidden="no"  >
-				<Label>delta dist(%) to trigger update( and w abs):</Label>
+				<Label>..   send if delta Dist  &gt;%:</Label>
 				<List>
 					<Option value="1"    > 1</Option>
 					<Option value="2"    > 2</Option>
 					<Option value="3"    > 3</Option>
-					<Option value="5"    > 5 lower value suggested</Option>
+					<Option value="5"    > 5 (default)</Option>
 					<Option value="7"    > 7</Option>
 					<Option value="10"   > 10</Option>
 					<Option value="15"   > 15</Option>
@@ -23924,8 +23970,11 @@ Indigo gets updated at least every 90 secs or when a measuremrnt has a change la
 				</List>
 			</Field>
 
+			<Field id="labellocaldisplay" type="label">
+				<Label>Local display:</Label>
+			</Field>
 			<Field id="dUnits" type="menu"     defaultValue="cm" hidden="no">
-				<Label>units used in local display:</Label>
+				<Label>.. Units used in local display:</Label>
 				<List>
 					<Option value=""       >use default</Option>
 					<Option value="cm"     >cm</Option>
@@ -23935,20 +23984,23 @@ Indigo gets updated at least every 90 secs or when a measuremrnt has a change la
 				</List>
 			</Field>
 
+			<Field id="labeloffsets" type="label">
+				<Label>Value corrections::</Label>
+			</Field>
 			<Field id="offset" type="textfield"     defaultValue="0" hidden="no">
-				<Label>add offset to measured value:</Label>
+				<Label>.. add offset to measured value:</Label>
 			</Field>
 
 			<Field id="multiply" type="textfield"     defaultValue="1" hidden="no">
-				<Label>multiply value with (after offset):</Label>
+				<Label>.. multiply value with (after offset):</Label>
 			</Field>
 
 			<Field id="cutMax" type="textfield"     defaultValue="999999" hidden="no">
-				<Label>Cut off at raw max value::</Label>
+				<Label>.. cut off at raw max value:</Label>
 			</Field>
 
 			<Field id="cutMin" type="textfield"     defaultValue="-999999" hidden="no">
-				<Label>Cut off at raw min value::</Label>
+				<Label>.. cut off at raw min value:</Label>
 			</Field>
 
 
@@ -26767,6 +26819,7 @@ This device will get its battery level from its brother device,
 				<Label>select rPi-server to which the OUTPUT is connect to:</Label>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONO</CallbackMethod>
 			</Field>
@@ -26841,6 +26894,7 @@ This device will get its battery level from its brother device,
 				<Label>select rPi-server to which the OUTPUT is connect to:</Label>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONO</CallbackMethod>
 			</Field>
@@ -26903,6 +26957,7 @@ This device will get its battery level from its brother device,
 				<Label>select rPi-server to which the OUTPUT is connect to:</Label>
 			</Field>
 
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
 			<Field  id="buttonPiNumber" type="button"    >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmPiNumberBUTTONO</CallbackMethod>
 			</Field>
@@ -26940,7 +26995,6 @@ This device will get its battery level from its brother device,
 			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
 			</Field>
-
 
 			<Field id="deviceDefs" type="textfield"        defaultValue="" hidden="YES"> </Field>
 			<Field id="pinMappings" type="textfield"       defaultValue=""  readonly="yes"> </Field>

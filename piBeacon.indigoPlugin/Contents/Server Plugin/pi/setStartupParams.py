@@ -44,10 +44,10 @@ def execUpdate():
 	if not os.path.isfile("{}setStartupParams.done".format(homeDir)):
 		
 		actions = ["/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_behaviour B2",
-				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_wait 0",
+#				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_wait 1",
 				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_i2c 0",
-				  #"/usr/bin/sudo /usr/bin/raspi-config nonint do_leds 0",#  does not work 
-				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_splash 0",
+				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_leds 0",
+				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_splash 1",
 				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_expand_rootfs"]
 	
 		for action in actions:
@@ -57,10 +57,10 @@ def execUpdate():
 		readPopen("echo finished > {}setStartupParams.done".format(homeDir))
 		U.logger.log(20, "finished w setting startup params, need to wait for other installs to finish")
 		time.sleep(30)
-		for ii in range(30):
+		for ii in range(200):
 			if not U.pgmStillRunning("checkForIncl"): break
-			U.logger.log(20, "checkForIncl still running, continue to wait before reboot")
-			time.sleep(10) # wait max 300 secs
+			U.logger.log(20, "checkForIncl still running")
+			time.sleep(10)
 		U.logger.log(20, "finished w setting startup params, need to reboot, will do in 10 secs")
 		U.doReboot(tt=10., text="one time restart after raspi-config params set")
 

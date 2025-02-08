@@ -700,18 +700,6 @@ def combineLines(lines):
 		U.logger.log(20,"", exc_info=True)
 	return []
 
-	
-#################################
-def toReject(text):
-	global doRejects
-	try:
-		if not doRejects: return 
-
-		U.writeFile("temp/rejects", "{};{}\n".format(time.time(), text, writeOrAppend="a"))
-
-	except	Exception as e:
-		if "{}".format(e).find("Read-only file system:") >-1:
-			U.doReboot(tt=0)
 
 #################################
 def fixOldNames():
@@ -7086,7 +7074,6 @@ def execbeaconloop(test):
 	global lastLESCANrestart
 	global beaconsThisReadCycle, beacon_ExistingHistory
 	global reasonMax 
-	global doRejects
 	global readFrom
 	global ignoreMAC
 	global restartBLE
@@ -7135,7 +7122,6 @@ def execbeaconloop(test):
 	BLEcollectStartTime		= -1
 	sendAfterSeconds		= 60.
 	sendAfterSecsOfLastMsg	= sendAfterSeconds*1.0
-	doRejects				= False
 	lastLESCANrestart		= 0
 	ListenProcessFileHandle =""
 	readbuffer				= ""

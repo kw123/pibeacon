@@ -7,7 +7,7 @@ set timeout [lindex $argv 4 ]
 
 set timeout $timeout
 
-if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn sftp -o ConnectTimeout=20 $userID@$ipNumber}
+if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
 
 if {$authKeyOrPassword == "assword"} { 
     expect {
@@ -23,9 +23,9 @@ if {$authKeyOrPassword == "assword"} {
 }
 
 expect "pi@" { 
-	send "tail -1000 /var/log/pibeacon.log\r"
+	send "tail -1000 /var/log/pibeacon\r"
 	sleep 1
-	send "echo 'end token' > ~temp/dummy\r"
+	send "echo 'end token' > ~/pibeacon/temp/dummy\r"
 }
 expect "end token" {send "exit\r"}
 set timeout 0.1
