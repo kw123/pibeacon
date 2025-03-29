@@ -57,7 +57,7 @@ except ImportError:
 __version__ = "1.4.0"
 __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_SCD4X.git"
 
-SCD4X_DEFAULT_ADDR = 0x62
+_SCD4X_DEFAULT_ADDR = 0x62
 _SCD4X_REINIT = 0x3646
 _SCD4X_FACTORYRESET = 0x3632
 _SCD4X_FORCEDRECAL = 0x362F
@@ -117,7 +117,7 @@ class SCD4X:
 
 	"""
 
-	def __init__(self, i2c_bus: I2C, address: int = SCD4X_DEFAULT_ADDR) -> None:
+	def __init__(self, i2c_bus: I2C, address: int = _SCD4X_DEFAULT_ADDR) -> None:
 		self.i2c_device = i2c_device.I2CDevice(i2c_bus, address)
 		self._buffer = bytearray(18)
 		self._cmd = bytearray(2)
@@ -453,7 +453,7 @@ class SENSORclass():
 		self.start_low_periodic_measurement()
 		return 
 
-	def set_altitude(self, meter):
+	def set_AltitudeCompensation(self, meter):
 		self.thisSensor.set_altitude(meter)
 		return
 
@@ -505,7 +505,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -537,7 +537,7 @@ def readParams():
 		sendToIndigoSecs = G.sendToIndigoSecs	
 		for devId in sensors[sensor]:
 			if devId not in sensorsOld[sensor]:
-				 sensorsOld[sensor][devId] = {}
+				sensorsOld[sensor][devId] = {}
 
 			try:
 				if devId not in deltaX: deltaX[devId]  = 2
@@ -600,11 +600,11 @@ def readParams():
 
 
 #################################
-def startSensor(devId, Co2Target="", reset=False):
+def startSensor(devId, CO2Target="", reset=False):
 	global sensors,sensor
 	global startTime
 	global SENSOR, i2c_bus
-	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
+	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCO2Target, altitudeCompensation
 	startTime =time.time()
 
 	
@@ -614,10 +614,10 @@ def startSensor(devId, Co2Target="", reset=False):
 			self.thisSensor.stop_periodic_measurement()
 			SENSOR[devId].thisSensor.soft_reset()
 			del SENSOR[devId]
-		if not reset and Co2Target != "": 
+		if not reset and CO2Target != "": 
 			self.thisSensor.stop_periodic_measurement()
-			SENSOR[devId].set_Force_self_calibration(Co2Target)
-			sensorCo2Target[devId]			= SENSOR[devId].thisSensor.get_Force_self_calibration()
+			SENSOR[devId].set_Force_self_calibration(CO2Target)
+			sensorCO2Target[devId]			= SENSOR[devId].thisSensor.get_Force_self_calibration()
 
 
 	if devId not  in SENSOR:
@@ -632,11 +632,11 @@ def startSensor(devId, Co2Target="", reset=False):
 					serialNumber[devId]				= "{}".format(SENSOR[devId].get_serialNumber()).replace("(","").replace(")","").replace(" ","")
 				except: pass
 
-				if Co2Target != "": 
-					U.logger.log(20," setting co2 calib. to:{}".format(Co2Target))
-					if Co2Target != 400:
+				if CO2Target != "": 
+					U.logger.log(20," setting co2 calib. to:{}".format(CO2Target))
+					if CO2Target != 400:
 						sensors[sensor][devId]["autoCalibration"] = "0"
-					SENSOR[devId].set_Force_self_calibration(Co2Target)
+					SENSOR[devId].set_Force_self_calibration(CO2Target)
 
 				if sensors[sensor][devId]["altitudeCompensation"] != "": 
 					SENSOR[devId].set_AltitudeCompensation(int(sensors[sensor][devId]["altitudeCompensation"]))
@@ -650,9 +650,9 @@ def startSensor(devId, Co2Target="", reset=False):
 
 				AutocalibWas					= SENSOR[devId].get_auto_self_calibration_active()
 				altitudeCompensation[devId]		= SENSOR[devId].get_AltitudeCompensation()
-				sensorCo2Target[devId]			= SENSOR[devId].get_Force_self_calibration()
+				sensorCO2Target[devId]			= SENSOR[devId].get_Force_self_calibration()
 				sensorTemperatureOffset[devId]	= SENSOR[devId].get_TemperatureOffset()
-				U.logger.log(20," serialNumber: {}, auto-calibration was set to: {:}, temperature offset was:{}, Co2 target:{}, altitudeCompensation:{}".format(serialNumber[devId], AutocalibWas, sensorTemperatureOffset[devId], sensorCo2Target[devId], altitudeCompensation[devId]) )
+				U.logger.log(20," serialNumber: {}, auto-calibration was set to: {:}, temperature offset was:{}, CO2 target:{}, altitudeCompensation:{}".format(serialNumber[devId], AutocalibWas, sensorTemperatureOffset[devId], sensorCO2Target[devId], altitudeCompensation[devId]) )
 
 				autoCalibration[devId]			= SENSOR[devId].get_auto_self_calibration_active()
 				sensorTemperatureOffset[devId]	= SENSOR[devId].get_TemperatureOffset()
@@ -668,7 +668,7 @@ def startSensor(devId, Co2Target="", reset=False):
 			time.sleep(2)
 
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
@@ -681,7 +681,7 @@ def startSensor(devId, Co2Target="", reset=False):
 def getValues(devId):
 	global sensor, sensors,	 SENSOR, badsensorCountCO2
 	global startTime, sendToIndigoSecs, sensorMode
-	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
+	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCO2Target, altitudeCompensation
 	global badSensor
 
 	
@@ -709,13 +709,13 @@ def getValues(devId):
 
 		try:
 			data = {"temp":	round(temp,1), "CO2": int(CO2), "hum": int(hum), "serialNumber":serialNumber[devId], "autoCalibration": autoCalibration[devId], 
-					"sensorTemperatureOffset": sensorTemperatureOffset[devId],"sensorCo2Target":sensorCo2Target[devId], "altitudeCompensation":altitudeCompensation[devId],
+					"sensorTemperatureOffset": sensorTemperatureOffset[devId],"sensorCO2Target":sensorCO2Target[devId], "altitudeCompensation":altitudeCompensation[devId],
 					 "fastSlowRead":sensors[sensor][devId].get("fastSlowRead","fast")} 
 			badsensorCountCO2[devId]  = 0
 			return data
 		except:
 			if badsensorCountCO2[devId] > 5: return  "badSensor"
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"end of getValues", exc_info=True)
 	if badsensorCountCO2[devId]  > 5: return "badSensor"
 	return ""
@@ -731,14 +731,14 @@ def execSensor():
 	global oldRaw, lastRead
 	global startTime, sendToIndigoSecs, sensorRefreshSecs, lastMeasurement
 	global serialNumber
-	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
+	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCO2Target, altitudeCompensation
 	global badSensor
 
 	badSensor					= 0
 	serialNumber				= {}
 	sensorTemperatureOffset		= {}
 	autoCalibration				= {}
-	sensorCo2Target				= {}
+	sensorCO2Target				= {}
 	altitudeCompensation		= {}
 	sensorMode					= {}
 	sendToIndigoSecs			= 20
@@ -795,21 +795,21 @@ def execSensor():
 				for devId in sensors[sensor]:
 					if devId not in badsensorCountCO2: badsensorCountCO2[devId] = 0
 					if devId not in notReadyCountCO2: notReadyCountCO2[devId] = 0
-					Co2Target = U.checkNewCalibration(G.program)
-					if Co2Target:
+					CO2Target = U.checkNewCalibration(G.program)
+					if CO2Target:
 						try:	del SENSOR[devId]
 						except:	pass
-						U.logger.log(20," Co2Target:{}".format(Co2Target))
+						U.logger.log(20," CO2Target:{}".format(CO2Target))
 
-						if type(Co2Target) == type({}):
-							Co2Target["value"] = max(400, int(Co2Target["value"]))
-							startSensor(devId, Co2Target=Co2Target["value"]) # set co2 to lowest value
+						if type(CO2Target) == type({}):
+							CO2Target["value"] = max(400, int(CO2Target["value"]))
+							startSensor(devId, CO2Target=CO2Target["value"]) # set co2 to lowest value
 						else:	
-							startSensor(devId, Co2Target=440) # set co2 to lowest value
+							startSensor(devId, CO2Target=440) # set co2 to lowest value
 
 					if U.checkResetFile(G.program):
 						U.logger.log(20," resetting sensor")
-						startSensor(devId, Co2Target=430, reset=True) # 
+						startSensor(devId, CO2Target=430, reset=True) # 
 
 
 					if devId not in lastValues: 
@@ -851,8 +851,8 @@ def execSensor():
 							U.restartMyself(param="", reason="co2 value to low",doPrint=True,python3=True)
 
 						elif badsensorCountCO2[devId]  > 6:
-							sensorCo2Target[devId] += 30	
-							startSensor(devId, Co2Target=sensorCo2Target[devId], reset=True) # 
+							sensorCO2Target[devId] += 30	
+							startSensor(devId, CO2Target=sensorCO2Target[devId], reset=True) # 
 							continue
 
 						elif badsensorCountCO2[devId]  == 7:
@@ -898,7 +898,7 @@ def execSensor():
 			time.sleep( max(0, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 			lastMeasurement = time.time()
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 

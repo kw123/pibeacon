@@ -804,7 +804,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -934,7 +934,7 @@ def readParams():
 
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
@@ -983,7 +983,7 @@ def startSensor(devId):
 		try:
 			time.sleep(1)
 			BMEsensor[devId]  	= BME680(i2c_addr=i2cAdd)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			BMEsensor[devId] =""
 			U.muxTCA9548Areset()
@@ -1101,7 +1101,7 @@ def getValues(devId):
 			else: return ""
 			#U.logger.log(20,"BME680:{}".format(data))
 			return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
@@ -1253,7 +1253,7 @@ while True:
 		time.sleep( max(0, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 		lastMeasurement = time.time()
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

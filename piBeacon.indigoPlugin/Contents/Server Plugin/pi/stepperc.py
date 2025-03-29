@@ -135,7 +135,7 @@ def move(delay, steps, direction):
 		if ii > 8: ii=1
 		if ii < 1: ii=8
 		setStep(Seq[ii])
-	 	lastStep = ii
+		lastStep = ii
 		time.sleep(delay)
 	setOFF()
 	return iSteps
@@ -301,14 +301,14 @@ def clock(speed, HHAmPM):
 
 	hour, minute, second, secSinMidnit, hour12, secSinMidnit2 		= getTime(speed, HHAmPM)
 
-	xx										 						= findLeftRight()
+	xx																= findLeftRight()
 
 	if not HHAmPM:	waitBetweenSteps = secondsTotalInDay     / maxStepsUsed 
 	else: 			waitBetweenSteps = secondsTotalInHalfDay / maxStepsUsed 
 
 	totalSteps 														= 0
-	t0				 												= time.time()
-	blinkHour		 												= -1
+	t0																= time.time()
+	blinkHour														= -1
 	sleepDefault													= waitBetweenSteps/5*speed
 	rewindDone 														= True
 	nextStep 														= 1

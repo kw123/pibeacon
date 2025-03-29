@@ -444,7 +444,7 @@ class APDS9960():
 				#print	"gesture bits:", val, out 
 				if( not self.WriteDataByte( self.APDS9960_GCONF4,out) ): return False
 				return True
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return False
 
@@ -535,7 +535,7 @@ class APDS9960():
 					#/* Determine best guessed gesture and clean up */
 					time.sleep(self.FIFO_PAUSE_TIME)
 					return motion, nearFar,UPdown,LEFTright
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 			return motion, nearFar,UPdown,LEFTright
 			
@@ -749,7 +749,7 @@ class APDS9960():
 				else									 : nearFAR = "MIDDLE"
 
 				U.logger.log(10,	"motion:"+ motion +";  nearFAR:"+nearFAR)  
-			except	Exception as e:
+			except Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					U.logger.log(30, "leftD:{}".format(leftD))
 			return motion ,nearFAR, udDel, lrDel	   
@@ -1653,7 +1653,7 @@ class APDS9960():
 			try:
 				#print	u"WriteByte"
 				self.BUS.write_quick(self.address) 
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return False
 			return True
@@ -1671,7 +1671,7 @@ class APDS9960():
 				#print	u"WriteDataByte",hex(val), hex(reg)
 				self.BUS.write_byte_data(self.address,reg, val)
 				return True
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return False	   
 		
@@ -1691,7 +1691,7 @@ class APDS9960():
 				for i in range(ll):
 					self.BUS.write_block_data(self.address,val[i])
 				return True
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return False	   
 
@@ -1705,7 +1705,7 @@ class APDS9960():
 		def ReadDataByte(self, reg):
 			try:
 				val = self.BUS.read_byte_data(self.address,reg)
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return False, 0
 			#print	u"ReadDataByte return",hex(reg), hex(val)
@@ -1730,7 +1730,7 @@ class APDS9960():
 					lenOUT+=1
 				#print "ReadDataBlock", i+1, val 
 				return lenOUT, val
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return -1, []
 
@@ -1745,7 +1745,7 @@ class APDS9960():
 				lenOUT= len(ret)
 				#print "ReadDataBlock",ret
 				return lenOUT, ret
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return -1, []
 
@@ -1773,7 +1773,7 @@ class APDS9960():
 					
 				#print "ReadDataBlock", lenOut, val2
 				return lenOut, val2
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				return -1, []
 
@@ -1866,7 +1866,7 @@ def getinput(devid):
 				lastColorTime				= tt
 		
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	sensorDev.clearGestureFIFO()
 	return data
@@ -1892,7 +1892,7 @@ def readParams():
 
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -2023,7 +2023,7 @@ def readParams():
 			sensorsOld= copy.copy(sensors)
 
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 #################################
@@ -2162,7 +2162,7 @@ while True:
 					break
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

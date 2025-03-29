@@ -67,7 +67,7 @@ def writeRejects():
 		r=r.replace(" ","")
 		## pi#;9637500; UUID; ff4c000c0e00b60bbd8008f77d53-28183-15529;  71:21:38:7D:33:DA
 		#print r
-		logger.log(20,Macs: " +r)
+		logger.log(20,"Macs: " +r)
 		items   = r.split(";")
 		rPi	 = items[0]
 		try:
@@ -82,8 +82,8 @@ def writeRejects():
 		mac	 = items[4]
 		
 		if mac not in  rejectExisting:
-			 rejectExisting[mac]={"uuid":uuid,"first":timeSt,"last":timeSt,"reason":reason,"count":1,"rPi":rPi}
-			 #print "adding "+ mac
+			rejectExisting[mac]={"uuid":uuid,"first":timeSt,"last":timeSt,"reason":reason,"count":1,"rPi":rPi}
+			#print "adding "+ mac
 		else: 
 			try:
 				if  rejectExisting[mac]["last"] < timeSt:
@@ -128,8 +128,8 @@ def writeRejects():
 		out1.append(out0[lastDate[ii][1]])
 		logger.log(20,+"{} {}".format(lastDate[ii], out0[lastDate[ii][1]]) )
 	
-	if nRejects>0:
-		logger.log(20,nunber of macs rejected: %d"%nRejects) 
+	if nRejects > 0:
+		logger.log(20,"nunber of macs rejected:{}".format(nRejects) )
 		out1[n-1] = out1[n-1].strip(",")
 		f=open(dataDir+"rejectedByPi.json","w")
 		f.write("{")

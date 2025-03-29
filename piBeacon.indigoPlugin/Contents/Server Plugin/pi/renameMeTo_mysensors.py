@@ -26,7 +26,7 @@ def readParams():
 
         sensorList  = "0"
         oldfreeParameter = copy.copy(freeParameter)
-        inp,inRaw = U.doRead()
+        inp, inRaw, x = U.doRead()
 
         U.getGlobalParams(inp)
         if "sensors"            in inp:  sensors =                   (inp["sensors"])
@@ -134,7 +134,7 @@ while True:  # loop for ever
             if loopCount %20 ==0:
                 U.echoLastAlive(G.program)
 
-        except  Exception, e :
+        except  Exception as e :
             U.logger.log(20,"", exc_info=True)
 
         time.sleep(sensorRefreshSecs) # sleep the requested amount

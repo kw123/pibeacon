@@ -21,7 +21,7 @@ G.program = "tmp117"
 # ===========================================================================
 class SENSOR:
 
-	 # Constructor
+	# Constructor
 	def __init__(self, i2cAddress=72):
 
 		i2c = board.I2C()  # uses board.SCL and board.SDA
@@ -50,7 +50,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -117,7 +117,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 
 
@@ -140,7 +140,7 @@ def getValues(devId):
 		badSensor = 0
 		U.muxTCA9548Areset()
 		return data
-	except	Exception as e:
+	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(20,"", exc_info=True)
 			U.logger.log(20,u"temp>>{}".format(temp)+"<<")
@@ -256,7 +256,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

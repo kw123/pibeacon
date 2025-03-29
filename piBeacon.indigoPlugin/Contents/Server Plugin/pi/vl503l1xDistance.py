@@ -366,7 +366,7 @@ def readParams():
 
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return True
 		if lastRead2 == lastRead: return True
 		lastRead	= lastRead2
@@ -533,7 +533,7 @@ def startSensor():
 				try:
 					U.logger.log(20, "==== setting up sensor class xshut for devid:{}, xShutPin:{} i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
 					sensCl[devId] = VL53L1X(i2c)
-				except	Exception as e:
+				except Exception as e:
 					U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 					if not checkI2cNPresent(i2cNumbers[devId]):
 						time.sleep(5)
@@ -574,7 +574,7 @@ def startSensor():
 		time.sleep(0.5)
 		return 
 
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			if not checkI2cNPresent(i2cNumbers[devId]):
 				time.sleep(5)
@@ -589,7 +589,7 @@ def checkI2cOnline():
 		i2cChannelsActive = U.geti2cIntChannels()
 		#U.logger.log(20, "====== i2cchannels:{}".format(i2cChannelsActive))
 		lastI2cCheck = time.time()
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 
@@ -600,7 +600,7 @@ def checkI2cNPresent(i2cN):
 		if i2cN in i2cChannelsActive: return True
 		U.logger.log(20, "i2cNumbers[devId]:{} not in active i2cchannels:{}".format(i2cN, i2cChannelsActive))
 		lastI2cCheck = time.time() -100
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return False
 
@@ -916,7 +916,7 @@ def execVL503I1():
 						if loopCount == 1:
 							break
 						else:
-							if	 	 textTest and dist == "": 					sendText = "returning empty, "
+							if		 textTest and dist == "": 					sendText = "returning empty, "
 							elif 	 textTest and dist == "badSensor": 			sendText = "redoing,"
 							elif 	 textTest and dist == "badi2c": 			sendText = "badi2c , redoing,"
 							elif 	 textTest and dist == "dataready": 			sendText = "not dataready , redoing,"

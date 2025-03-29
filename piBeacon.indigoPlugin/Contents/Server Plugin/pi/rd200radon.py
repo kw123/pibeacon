@@ -32,7 +32,7 @@ class RD200M:
 	cmd_RESET 			= 0xA0	# RD200M reset
 	cmd_SET_PERIOD 		= 0xA1	# Set data transfer period
 	cmd_RESULT_RETURN 	= 0x10	# Read all data (receive only)
-	cmd_test		 	= 0x02	# Read all data (receive only)
+	cmd_test			= 0x02	# Read all data (receive only)
 
 	status = {0x00: 'Measurement between power on and 200s',
 			  0x01: 'Measurement between 200s and 1h',
@@ -192,7 +192,7 @@ class RD200M:
 							self.logger.warning("Checksum error, ignoring received data '{}'".format(binascii.hexlify(response).decode()))
 					else:
 						self.logger.debug("Received '{}'".format(binascii.hexlify(response).decode()))
-		except	Exception, e :
+		except Exception as e :
 				self.logger.debug("", exc_info=True)
 
 

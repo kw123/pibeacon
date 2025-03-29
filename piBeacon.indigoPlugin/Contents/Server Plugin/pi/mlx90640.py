@@ -91,7 +91,7 @@ class MLX90640():
 			self.alphaCorrR2 = 1
 			self.alphaCorrR3 = 1 + self.KsTo2*(self.CT3-0)
 			self.alphaCorrR4 = self.alphaCorrR3*(1+self.KsTo3*(self.CT4-self.CT3))
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		
 	def getRegs(self,reg,num):
@@ -111,7 +111,7 @@ class MLX90640():
 		ret = 0
 		try:
 			ret = math.sqrt(math.sqrt(max(0.,num)))
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return ret 
 
@@ -390,11 +390,11 @@ class MLX90640():
 			ret = self.root4((VIRcomp/(alphacomp*(1-self.KsTo2*273.15)+Sx))+Tar) - 273.15
 			#print i,j, pixOs, ret
 			return ret
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return 0
 
- # ===========================================================================
+#===========================================================================
 # read params
 # ===========================================================================
 
@@ -410,7 +410,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -517,7 +517,7 @@ def readParams():
 
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		
 
@@ -572,12 +572,12 @@ def startSensor(devId,i2cAddress):
 				try:
 					U.logger.log(30, u" i2cAdd {}".format(i2cAdd) )
 					sensorClass[devId]  =	  MLX90640(address=i2cAdd)
-				except	Exception as e:
+				except Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					sensorClass[devId] =""
 				time.sleep(1)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -604,11 +604,11 @@ def convertPixels(oldPix,pix,nx,ny):
 			for ii in range(nx):
 				for jj in range(ny):
 					if  pix[ii][jj] > 60 or  pix[ii][jj] < -10 or abs(pix[ii][jj]-aveV) > 20:
-						 pix[ii][jj] = round(aveV,1)
+						pix[ii][jj] = round(aveV,1)
 
 					if pix[ii][jj] > maxV: maxV= pix[ii][jj]
 					if pix[ii][jj] < minV: minV= pix[ii][jj]
-					delta		 	=   (pix[ii][jj] - oldPix[ii][jj]) / max(0.1, pix[ii][jj]+oldPix[ii][jj]) 
+					delta			=   (pix[ii][jj] - oldPix[ii][jj]) / max(0.1, pix[ii][jj]+oldPix[ii][jj]) 
 					movement		+=  ( delta )
 					movementabs		+=  ( delta*delta )
 					uniformity 		+= (pix[ii][jj]- aveV)**2
@@ -625,7 +625,7 @@ def convertPixels(oldPix,pix,nx,ny):
 				"MovementAbs":			round(movementabs, 6)}
 			ret["rawData"] =json.dumps(pix).replace(" ","")
 			return ret
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return ""
 
@@ -673,12 +673,12 @@ def getValues(devId):
 		#print rawData
 		val = convertPixels(oldPix[devId],rawData,nx,ny)
 		val["AmbientTemperature"] = round(float(  (ord(ddd[1540]) + ord(ddd[1541])*256) )/100.,1)
-		 ##  [maxV, minV, aveV, uniformity, movement, movementabs]
+		##  [maxV, minV, aveV, uniformity, movement, movementabs]
 		oldPix[devId] = copy.deepcopy(rawData)
 
 		#U.logger.log(30, " pix {}".format( pix[devId]))
 		badSensor = 0
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
@@ -825,7 +825,7 @@ while True:
 		#else:				 loopSleep = sensorRefreshSecs
 		if not quick:
 			time.sleep(loopSleep)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

@@ -73,7 +73,7 @@ def signedIntfrom16(string):
 	try:
 		intNumber = int(string,16)
 		if intNumber > 32767: intNumber -= 65536
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		return 0
 	return intNumber
@@ -95,7 +95,7 @@ def checkIFQuickRequested():
 				if macList[ml]["type"] == "isBLElongConnectDevice":
 					macList[ml]["lastTesttt"]  = 0.
 					macList[ml]["nextRead"]  = 0.
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -214,7 +214,7 @@ def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., battery
 		batteryLowVsTemp			= (1. + 0.7*min(0.,temp-10.)/100.) * batteryVoltAt0 # (changes to 0.9* 2700 @ 0C; to = 0.8*2700 @-10C )
 		batteryLevel 				= int(min(100.,max(0.,100.* (batteryVoltage - batteryLowVsTemp)/(batteryVoltAt100-batteryLowVsTemp))))
 		return batteryLevel
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 0
 
@@ -597,7 +597,7 @@ def tryToConnectSocket(thisMAC,BLEtimeout,devId):
 			U.logger.log(20,"", exc_info=True)
 			U.restartMyself(reason="sock.recv error", delay = 10)
 
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 	U.logger.log(10, "{} retdata:{}".format(thisMAC, retdata))
 	BLEsocketErrCount = 0
@@ -1629,10 +1629,11 @@ def readParams():
 			InParams = json.loads(f.read().strip("\n"))
 			f.close()
 			BLEconnectLastUp	 = InParams.get("BLEconnectLastUp", {})
-		except: pass
+		except: 
+			BLEconnectLastUp = {}
+			
 
-
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return False
 		if lastRead2 == lastRead: return False
 		lastRead  = lastRead2
@@ -1781,7 +1782,7 @@ def readParams():
 					if macList[thisMAC]["type"] == "BLEconnect": 
 						macList[thisMAC]["iPhoneRefreshDownSecs"] = macListNew[thisMAC]["iPhoneRefreshDownSecs"]
 						macList[thisMAC]["iPhoneRefreshUpSecs"]	  = macListNew[thisMAC]["iPhoneRefreshUpSecs"]
-						macList[thisMAC]["BLEtimeout"]	 		  = macListNew[thisMAC]["BLEtimeout"]
+						macList[thisMAC]["BLEtimeout"]			  = macListNew[thisMAC]["BLEtimeout"]
 					elif macList[thisMAC]["type"] == "isBLElongConnectDevice": 
 						macList[thisMAC]["updateIndigoTiming"]	  = macListNew[thisMAC]["updateIndigoTiming"]
 
@@ -1842,7 +1843,7 @@ def readParams():
 			#U.logger.log(30, u"macList:{}".format(macList))
 			return True
 			
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return False
 
@@ -1924,7 +1925,7 @@ def tryToConnectToBLEconnect(thisMAC, BLEid):
 			macList[thisMAC]["up"] = False
 		return 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 

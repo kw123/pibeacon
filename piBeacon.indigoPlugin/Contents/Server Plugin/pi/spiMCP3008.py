@@ -143,7 +143,7 @@ def readParams():
 
         rCode= False
 
-        inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+        inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
         if inp == "": return rCode
         if lastRead2 == lastRead: return rCode
         lastRead  = lastRead2

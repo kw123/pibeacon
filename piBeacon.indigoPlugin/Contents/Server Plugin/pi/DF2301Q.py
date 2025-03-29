@@ -253,8 +253,8 @@ class DFRobot_DF2301Q_I2C():
 class DFRobot_DF2301Q_UART():
 
 	#  this is just the squence number of the data bytes received has no further meaning
-	REV_STATE_HEAD0	 	= 0x00
-	REV_STATE_HEAD1	 	= 0x01
+	REV_STATE_HEAD0		= 0x00
+	REV_STATE_HEAD1		= 0x01
 	REV_STATE_LENGTH0 	= 0x02
 	REV_STATE_LENGTH1 	= 0x03
 	REV_STATE_TYPE		= 0x04
@@ -266,13 +266,13 @@ class DFRobot_DF2301Q_UART():
 	REV_STATE_TAIL		= 0x0a
 
 	class uart_msg():
-		'''!
+		"""!
 			@brief Class for serial data frame struct
-		'''
+		"""
 		def __init__(self):
-			'''!
+			"""!
 				@brief sensor_status structure init
-			'''
+			"""
 			self.header = 0
 			self.data_length = 0
 			self.msg_type = 0
@@ -281,9 +281,9 @@ class DFRobot_DF2301Q_UART():
 			self.msg_data = [0] * 8
 
 	def __init__(self, serialPortName=DF2301Q_UART_PORT_NAME, sleepAfterWrite=DF2301Q_UART_sleepAfterReadWrite ):
-		'''!
+		"""!
 			@brief Module UART communication init
-		'''
+		"""
 		self.sleepAfterWrite = sleepAfterWrite/1000.
 		self.debug = 0
 		self.uart_cmd_ID = 0
@@ -321,10 +321,10 @@ class DFRobot_DF2301Q_UART():
 
 
 	def get_CMDID(self):
-		'''!
+		"""!
 			@brief Get the ID corresponding to the command word
 			@return Return the obtained command word ID, returning 0 means no valid ID is obtained
-		'''
+		"""
 		data_rev_count, allChar = self._recv_packet() # is always 1 for cmd_id 
 		return self.uart_cmd_ID			# set in _recv_packet;  !=0 if new  ok data, 0 otherwise
 
@@ -364,7 +364,7 @@ class DFRobot_DF2301Q_UART():
 
 
 	def setting_CMD(self, set_type, set_value):
-		'''!
+		"""!
 			@brief Set commands of the module
 			@param set_type - Set type
 			@n			 DF2301Q_UART_MSG_CMD_SET_VOLUME : Set volume, the set value range 1-7  # uart is from 0-20 ???
@@ -372,7 +372,7 @@ class DFRobot_DF2301Q_UART():
 			@n			 DF2301Q_UART_MSG_CMD_SET_MUTE : Mute mode; set value 1: mute, 0: unmute
 			@n			 DF2301Q_UART_MSG_CMD_SET_WAKE_TIME : Wake-up duration; the set value range 0-255  ### does not work 
 			@param set_value - Set value, refer to the set type above for the range
-		'''
+		"""
 		msg = self.uart_msg()
 		msg.msg_type = DF2301Q_UART_MSG_TYPE_CMD_DOWN
 		msg.msg_cmd = DF2301Q_UART_MSG_CMD_SET_CONFIG
@@ -410,9 +410,9 @@ class DFRobot_DF2301Q_UART():
 
 
 	def setting_Notify(self, set_type, set_cmd, set_value):
-		'''!
+		"""!
 			@brief Set commands of the module
-		'''
+		"""
 		msg = self.uart_msg()
 		msg.msg_type = set_type
 		msg.msg_cmd = set_cmd
@@ -434,10 +434,10 @@ class DFRobot_DF2301Q_UART():
 
 
 	def play_CMDID(self, CMDID):
-		'''!
+		"""!
 			@brief Play the corresponding reply audio according to the command word ID
 			@param CMDID - Command word ID
-		'''
+		"""
 		if self.debug > 1: U.logger.log(20, "value:{}".format(CMDID) )
 		msg = self.uart_msg()
 		msg.msg_type = DF2301Q_UART_MSG_TYPE_CMD_DOWN
@@ -453,9 +453,9 @@ class DFRobot_DF2301Q_UART():
 
 
 	def reset_module(self):
-		'''!
+		"""!
 			@brief Reset the module
-		'''
+		"""
 		try:
 			if self.debug > 1: U.logger.log(20, "value:{}".format("") )
 			msg = self.uart_msg()
@@ -476,10 +476,10 @@ class DFRobot_DF2301Q_UART():
 
 
 	def _send_packet(self, msg):
-		'''
+		"""
 			@brief Write data through UART
 			@param msg - Data packet to be sent
-		'''
+		"""
 		try:
 			chk_sum = 0x0000
 			data = []
@@ -516,10 +516,10 @@ class DFRobot_DF2301Q_UART():
 
 
 	def _recv_packet(self):
-		'''
+		"""
 			@brief Read data through UART
 			@param msg - Buffer for receiving data packet
-		'''
+		"""
 
 		self.uart_cmd_ID = 0  # for next iteration
 		msg = self.uart_msg()
@@ -640,18 +640,18 @@ class DFRobot_DF2301Q_UART():
 					pass
 
 
-				if tt == DF2301Q_UART_MSG_TYPE_NOTIFY:			 	 																	# A3 
-					if  cc == DF2301Q_UART_MSG_CMD_NOTIFY_STATUS:  	 																	# 9A
+				if tt == DF2301Q_UART_MSG_TYPE_NOTIFY:				 																	# A3 
+					if  cc == DF2301Q_UART_MSG_CMD_NOTIFY_STATUS:  																		# 9A
 						try:	iData = int(data[-1][2:],16)
 						except:	iData = 0
 						#U.logger.log(20, "iData >>{},{}<<".format(data[-1], iData))
-						if   iData == DF2301Q_UART_MSG_DATA_NOTIFY_POWERON:			responses[ii] = 800 # power on 	 								# B0
+						if   iData == DF2301Q_UART_MSG_DATA_NOTIFY_POWERON:			responses[ii] = 800 # power on 									# B0
 						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_WAKEUPENTER:		responses[ii] = 801 # wake up   								# 91
 						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_WAKEUPEXIT:		responses[ii] = 802 # wake up exit								# B2
 						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_PLAYSTART:		responses[ii] = 803 # PLAYSTART									# B3
 						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_PLAYEND:			responses[ii] = 804 # PLAYEND									# B4
 
-				elif tt == DF2301Q_UART_MSG_TYPE_ACK:	 																				# A2
+				elif tt == DF2301Q_UART_MSG_TYPE_ACK:																					# A2
 					if cc == DF2301Q_UART_MSG_CMD_SET_CONFIG:						responses[ii] = 820 # config command received sucessully		# 96
 					if cc == DF2301Q_UART_MSG_CMD_RESET_MODULE:						responses[ii] = 821 # reset module								# 95
 
@@ -665,7 +665,7 @@ class DFRobot_DF2301Q_UART():
 				for res in responses:
 					if self.uart_cmd_ID  < res: self.uart_cmd_ID  = res
 
-		except	Exception as e:
+		except Exception as e:
 			pass
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
@@ -675,7 +675,7 @@ class DFRobot_DF2301Q_UART():
 				for ii in range(len(length)):
 					U.logger.log(20, "   #:{},  length:{:1}, typ:{:2},  cmd:{:2}; chksum:{:4}, seq:{:3d}=={:<3d} replySeq?,  data:{:<6} {}, resp:{}=={} ".format(ii, length[ii], typ[ii], cmd[ii] , chksum[ii] , seq[ii], replySeq[ii], data[ii], data[ii][0:2], responses[ii],  self.commandList.get(str(responses[ii]),"") ) )
 	 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 		return data_rev_count, allChar
@@ -698,10 +698,11 @@ def readParams():
 	global lastReset, restartConnectionCounter, badSensor
 	global logLevel, tmpMuteOff, learningOn, expectResponse, currentMute, setWakeTime
 	global GPIOZERO
+	global reactOnlyToCommands, maxCommandId, minErrorCmdID, offCommand
 	try:
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead	 = lastRead2
@@ -752,11 +753,47 @@ def readParams():
 			if devId not in sleepAfterWrite: 			sleepAfterWrite[devId] 				= 200
 			if devId not in setWakeTime: 				setWakeTime[devId] 					= 200
 			if devId not in serialPortName: 			serialPortName[devId] 				= "serial0"
-
+			if devId not in reactOnlyToCommands: 		reactOnlyToCommands[devId] 			= [x for x in range(maxCommandId)]
 
 			commandList[devId] = {}
+			reactCmds = []
+			errCmds = []
 			if "commandList" in sensors[sensor][devId]:
 				commandList[devId] = json.loads(sensors[sensor][devId].get("commandList","{}"))
+				offCommandID = 255
+				for ii in commandList[devId]:
+					try:
+						xx = int(ii)
+						if xx > maxCommandId: maxCommandId = xx
+						reactCmds.append(xx)
+						if commandList[devId].find("off"): offCommandID = xx
+					except: pass
+				maxCommandId +=1
+
+				for ii in commandList[devId]:
+					try:
+						xx = int(ii)
+						if xx >= offCommandID: errCmds.append(xx)
+					except: pass
+				reactOnlyToCommands[devId] = copy.copy(reactCmds)
+
+			if "reactOnlyToCommands" in sensors[sensor][devId]:
+				xx = sensors[sensor][devId].get("reactOnlyToCommands","all")
+				reactOnlyToCommands[devId] = copy.copy(reactCmds)
+
+				if xx not in ["all",""]:
+					yy = xx.split(",")
+					if len(yy) > 0:
+						try:
+							rr = copy.copy(errCmds)
+							for x in yy:
+								try: 	rr.append(int(x))
+								except: pass
+							if len(rr) > len(errCmds): reactOnlyToCommands[devId] = rr
+						except Exception as e: 
+							U.logger.log(20, "devId:{}; error reactOnlyToCommands:{}   rr:{}, e:{}".format(devId, xx, rr, e) )
+							pass
+			U.logger.log(20, "devId:{}; reactOnlyToCommands:{} ".format(devId, reactOnlyToCommands) )
 
 			if "logLevel" in sensors[sensor][devId]:
 				if str(logLevel) != sensors[sensor][devId].get("logLevel","0"): upd = True
@@ -837,7 +874,7 @@ def readParams():
 						if resetPowerGPIO not in ["",0,-1]:
 							if logLevel > 0: U.logger.log(20, "devId:{}; checking parameters file for  resetPowerGPIO:{} enabled?".format(devId, resetPowerGPIO) )
 							resetPowerGPIO = int(resetPowerGPIO)
-							gpioUsed[-1] == 1
+							gpioUsed[-1] = 1
 							if useGPIO:
 								GPIO.setup(resetPowerGPIO, GPIO.OUT)
 								GPIO.output(resetPowerGPIO, 1)
@@ -965,7 +1002,7 @@ def startSensor(devId):
 				#if logLevel > 0: U.logger.log(20, "devId:{}; commandList:{}".format(devId, str(commandList[devId])[0:100] ))
 				SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite[devId], logLevel=logLevel, commandList=commandList[devId] )
 				lastRestart	= time.time()
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			if str(e).find("could not open port /dev/") > -1:
 				data = {"sensors":{sensor:{devId:"badsenor_error:bad_port_setting_/dev/"+serialPortName[devId]}}}
@@ -1125,7 +1162,7 @@ def checkIfRestartConnection(devId, force=False):
 			lastRead					= 0
 			lastRestart					= time.time()
 			startSensor(devId)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return
 
@@ -1145,7 +1182,7 @@ def checkIfRestart(force=False):
 
 		U.restartMyself(param="", reason="reset_requested", doPrint=True)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return
 
@@ -1161,7 +1198,7 @@ def checkIfReset():
 			sendReset(devId)
 			checkIfRestartConnection(devId, force=True)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return
 
@@ -1176,9 +1213,9 @@ def sendReset(devId):
 
 #################################
 def checkIfCommand():
-	'''!
+	"""!
 		read json file commandFile and execute commands read from that file
-	'''
+	"""
 	global logLevel, SENSOR
 	try:
 		if not os.path.isfile(GLOB_commandFile): return
@@ -1219,10 +1256,10 @@ def checkIfCommand():
 				checkIfRestartConnection(devId, force=True)
 				getValues(devId, wait=0.1)
 			if "restart" 		in data: 
-				checkIfRestart(devId, force=True)
+				checkIfRestart(force=True)
 				getValues(devId, wait=0.1)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return
 
@@ -1236,6 +1273,7 @@ def getValues(devId, wait=0):
 	global i2cOrUart
 	global cmdQueue, anyCmdDefined
 	global logLevel, firstCmdReceived, lastCMDID
+	global reactOnlyToCommands
 
 	try:
 		CMDID = 0
@@ -1248,7 +1286,7 @@ def getValues(devId, wait=0):
 		for ii in range(1):
 			try:
 				CMDID = SENSOR[devId].get_CMDID()
-			except	Exception as e:
+			except Exception as e:
 				if logLevel > 0: U.logger.log(20, "devID:{}; error in received CMDID: {:3d}, badSensorCount:{}, error:{}".format(devId, CMDID, badSensor[devId], e)  )
 				badSensor[devId] += 1
 				if badSensor[devId] > 2:
@@ -1273,6 +1311,9 @@ def getValues(devId, wait=0):
 				setMute(devId, True, CMDID=CMDID)
 			else:
 				setMute(devId, False)
+
+		if CMDID not in reactOnlyToCommands[devId]:
+			return {"cmd":0}  
 
 		if CMDID == 255 :
 			time.sleep(2)
@@ -1303,7 +1344,7 @@ def getValues(devId, wait=0):
 					checkifRefreshSetup(devId, restart=True, upd=True)
 
 		if badSensor[devId] > 1:
-			 U.logger.log(20, "devID:{}; reset bad sensor count after {:} bad sensor readings".format(devId, badSensor[devId])  )
+			U.logger.log(20, "devID:{}; reset bad sensor count after {:} bad sensor readings".format(devId, badSensor[devId])  )
 
 		if CMDID != 0:
 			lastValidCmd = time.time()
@@ -1312,7 +1353,7 @@ def getValues(devId, wait=0):
 		badSensor[devId] = 0
 		return {"cmd":CMDID}
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 	badSensor[devId] += 1
@@ -1348,7 +1389,7 @@ def checkResetPower():
 				time.sleep(1)
 				GPIOZERO[gpioNumberForCmdAction[ii]].on()
 			return True
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return False
 
@@ -1413,14 +1454,14 @@ def cmdCheckIfGPIOon():
 								anyOn = True
 
 
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 				time.sleep(10)
 
 			if anyOn: 	time.sleep(0.2)
 			else: 		time.sleep(0.1)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	if logLevel > 0: U.logger.log(20, "ended  loop, state:{}".format(threadCMD["state"] ))
 
@@ -1487,7 +1528,7 @@ def cmdCheckSerialPort( devId, reboot=True):
 						U.sendURL({"sensors":{sensor:{devId:{"cmd":904}}}}, wait=False)
 
 				if reboot:
-					U.doWriteSimpleFile(G.homeDir+"temp/rebootNeeded", "configuring serial port")
+					U.setRebootRequest("configuring serial port")
 					time.sleep(10000)
 				else:
 					U.logger.log(20, "serial port configured properly")
@@ -1511,9 +1552,9 @@ def cmdCheckSerialPort( devId, reboot=True):
 			U.logger.log(20, " {}".format(msg))
 			U.sendURL({"sensors":{sensor:{devId:{"cmd":900}}}}, wait=False)
 			time.sleep(10000)
-			U.doWriteSimpleFile(G.homeDir+"temp/rebootNeeded", "adding serial port")
+			U.setRebootRequest("adding serial port")
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 	return False
@@ -1539,8 +1580,13 @@ def execSensorLoop():
 	global learningOn
 	global lastReset, expectResponse, restartConnectionCounter, setWakeTime
 	global GPIOZERO
+	global reactOnlyToCommands, maxCommandId, minErrorCmdID,offCommand
 
 
+	reactOnlyToCommands				= {}
+	offCommand						= 255
+	maxCommandId					= 1000
+	minErrorCmdID					= 700
 	GPIOZERO						= {}
 	restartConnectionCounter		= {}
 	expectResponse					= {}
@@ -1681,7 +1727,7 @@ def execSensorLoop():
 			lastMeasurement = time.time()
 
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			time.sleep(5.)
 

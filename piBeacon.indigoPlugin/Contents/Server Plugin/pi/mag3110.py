@@ -52,7 +52,7 @@ class THESENSORCLASS():
 			if self.enableCalibration:	
 				self.calibrations= U.loadCalibration(self.calibrationFile)
 				U.magCalibrate(self, force = False,calibTime=5)
-		except Exception ,e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return
 
@@ -64,7 +64,7 @@ class THESENSORCLASS():
 			#pylint: disable=unused-variable
 			byte = self.bus.read_byte_data(self.address, 1)
 			U.logger.log(10,'Found compass at {0}'.format(self.address))
-		except Exception ,e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return False
 
@@ -136,7 +136,7 @@ def readParams():
 	global oldRaw, lastRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -159,7 +159,7 @@ def readParams():
 			 
 		theSENSORdict = U.cleanUpSensorlist( sensors[sensor], theSENSORdict)	   
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 #################################
@@ -173,7 +173,7 @@ def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declina
 				theSENSORdict[devId].calibrate(calibTime=5)
 		else:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress,  magDivider= magDivider, enableCalibration=enableCalibration, declination=declination, offsetTemp =offsetTemp)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -198,7 +198,7 @@ def getValues(devId):
 		for xx in data:
 			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return {"MAG":"bad"}
 
@@ -278,7 +278,7 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

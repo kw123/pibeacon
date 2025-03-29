@@ -54,7 +54,7 @@ class THESENSORCLASS:
 			self.bus.write_byte_data(self.address, 0x00, 0x70) # 8 Average, 15 Hz, normal measurement
 			self.bus.write_byte_data(self.address, 0x01, magResolution<< 5) # Scale = bits 5,6,7
 			self.bus.write_byte_data(self.address, 0x02, 0x00) # Continuous measurement
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 	def twos_complement(self,val, len):
 		# Convert twos compliment to integer
@@ -89,7 +89,7 @@ def readParams():
 	global oldRaw, lastRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -111,7 +111,7 @@ def readParams():
 		 
 		theSENSORdict = U.cleanUpSensorlist( sensors[sensor], theSENSORdict)	   
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 #################################
@@ -126,7 +126,7 @@ def startTheSensor(devId, i2cAddress, magResolution, declination, magOffset, mag
 		else:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress, magResolution = magResolution, enableCalibration=enableCalibration, magDivider=magDivider, declination = declination)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -146,7 +146,7 @@ def getValues(devId):
 		for xx in data:
 			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return {"MAG":"bad"}
 
@@ -218,7 +218,7 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

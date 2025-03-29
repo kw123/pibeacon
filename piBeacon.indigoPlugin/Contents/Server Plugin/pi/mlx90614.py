@@ -367,7 +367,7 @@ def doDisplay():
 							p = "%9d" % p; pu = 'P[Pa]'
 						p=p.strip(); pu=pu.strip()	  
 						if devType not in ["sh1106","ssd1306"]:
-							fillT.+=[255,0,0]
+							fillT += [255,0,0]
 						posText0.append([nPages*dx+x0T,nPages*dy+ posy0])
 						posText1.append([nPages*dx+x1V,nPages*dy+ posy1])
 						if theText[ii] !="":
@@ -425,7 +425,7 @@ def doDisplay():
 				
 
 			if showDateTime =="1":
-				 sensorPages = nPages -2
+				sensorPages = nPages -2
 			else:
 				sensorPages	 = nPages
 				
@@ -473,11 +473,11 @@ def doDisplay():
 			try:
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
-			except	Exception as e:
+			except Exception as e:
 				if "{}".format(e).find("No space left on device") >-1:
 					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
 		return 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -524,7 +524,7 @@ def incrementBadSensor(devId,sensor,data):
 			if devId not in data[sensor]: data[sensor][devId]={}
 			data[sensor][devId]["badSensor"]=True
 			badSensors[devId] =0
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return data 
 
@@ -541,7 +541,7 @@ def readParams():
 	global oldRaw, lastRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -582,7 +582,7 @@ def readParams():
 				
 			
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -713,7 +713,7 @@ def getMLX90614(sensor, data):
 					putValText(sensors[sensor][devId],[t,a],["temp","AmbientTemperature"])
 				else:
 					data= incrementBadSensor(devId,sensor,data)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		if sensor in data["sensors"] and data["sensors"][sensor]=={}: del data["sensors"][sensor]
 		U.muxTCA9548Areset()
@@ -800,7 +800,7 @@ while True:
 					continue
 				if "temp" in  data["sensors"][sensor][devId]:
 					if abs(data["sensors"][sensor][devId]["temp"] - lastValue[devId]["temp"])/max(0.1,data["sensors"][sensor][devId]["temp"] + lastValue[devId]["temp"])*2. > G.deltaX[devId]:
-						 retCode = "sendNow" 
+						retCode = "sendNow" 
 					#print retCode, G.deltaX[devId],data["sensors"][sensor][devId],	 lastValue[devId], abs(data["sensors"][sensor][devId]["temp"] - lastValue[devId]["temp"])/max(0.1,data["sensors"][sensor][devId]["temp"] + lastValue[devId]["temp"])*2.
 					if (  (time.time() - G.lastAliveSend > abs(G.sensorRefreshSecs) or quick or retCode=="sendNow" )  and (time.time() - G.lastAliveSend > G.minSendDelta) ):
 
@@ -825,13 +825,10 @@ while True:
 				lastRead = tt
 		time.sleep(0.3)
 		#print "end of loop", loopCount
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
-try: 	G.sendThread["run"] = False; time.sleep(1)
-except: pass
+try:	G.sendThread["run"] = False; time.sleep(1)
+except:	pass
 sys.exit(0)
-		
-		
-		
- 
+

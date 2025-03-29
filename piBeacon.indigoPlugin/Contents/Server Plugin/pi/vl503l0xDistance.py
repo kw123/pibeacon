@@ -722,7 +722,7 @@ def readParams():
 	global firstRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return True
 		if lastRead2 == lastRead: return True
 		lastRead   = lastRead2
@@ -888,7 +888,7 @@ def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
 def getDist(devId):
 	global sensor, sensors, badSensor, sensCl
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
-	global acuracyDistanceMode, acuracyDistanceModeOld, 
+	global acuracyDistanceMode, acuracyDistanceModeOld
 
 	try:
 		if acuracyDistanceModeOld != acuracyDistanceMode:

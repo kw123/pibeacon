@@ -22,9 +22,10 @@ G.program = "myoutput"
 #  ===========================================================================
 
 def readParams():
-    inp,inpRaw = U.doRead()
-    if inp == "": return
+	inp, inpRaw, x = U.doRead()
+	if inp == "": return
 	U.getGlobalParams(inp)
+
 
 # ===========================================================================
 # Main
@@ -33,33 +34,32 @@ def readParams():
 U.setLogging()
 
 try:
-        readParams()
+		readParams()
 
-        myPID = str(os.getpid())
-        U.killOldPgm(myPID,"myoutput.py")# kill  old instances of myself if they are still running
+		myPID = str(os.getpid())
+		U.killOldPgm(myPID,"myoutput.py")# kill  old instances of myself if they are still running
 
-        U.logger.log(30, "myoutput  received text :{}".format(sys.argv))
+		U.logger.log(30, "myoutput  received text :{}".format(sys.argv))
 
-        # rest is up to you  the text indgo has send is in sys.argv[1] [2] ....
-        if len(sys.argv) >1 :
-            text = sys.argv[1]
+		# rest is up to you  the text indgo has send is in sys.argv[1] [2] ....
+		if len(sys.argv) >1 :
+			text = sys.argv[1]
 
-            #eg reboot if you send the reboot command
-            if "{}".format(text).find("reboot") > -1 :
-                subprocess.call("reboot", shell=True)
+			#eg reboot if you send the reboot command
+			if "{}".format(text).find("reboot") > -1 :
+				subprocess.call("reboot", shell=True)
 
 
-            # if set gpoio high ..
-            elif "{}".format(text).find("gpio 21 high") > -1:
-                import RPi.GPIO as GPIO
-                GPIO.setmode(GPIO.BCM)
-                GPIO.setwarnings(False)
-                GPIO.setup(21, GPIO.OUT)
-                GPIO.output(21, True)
+				# if set gpoio high ..
+			elif "{}".format(text).find("gpio 21 high") > -1:
+				import RPi.GPIO as GPIO
+				GPIO.setmode(GPIO.BCM)
+				GPIO.setwarnings(False)
+				GPIO.setup(21, GPIO.OUT)
+				GPIO.output(21, True)
 
 
 except  Exception as e:
-        U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 exit(0)
-

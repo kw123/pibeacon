@@ -170,12 +170,12 @@ class AMG88xx_class(object):
 			#set to 10 FPS
 			self._fpsc.FPS = AMG88xx_FPS_10
 			self.bus.write_byte_data(self.i2c_addr,AMG88xx_FPSC, self._fpsc.get())
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return 
 
 	def readU16(self, reg, little_endian=True):
-		"Reads an unsigned 16-bit value from the I2C device"
+		"""Reads an unsigned 16-bit value from the I2C device"""
 		try:
 			result = self.bus.read_word_data(self.i2c_addr,reg)
 			# Swap bytes if using big endian because read_word_data assumes little
@@ -183,23 +183,23 @@ class AMG88xx_class(object):
 			if not little_endian:
 				result = ((result << 8) & 0xFF00) + (result >> 8)
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readS16(self, reg, little_endian=True):
-		"Reads a signed 16-bit value from the I2C device"
+		"""Reads a signed 16-bit value from the I2C device"""
 		try:
 			result = self.readU16(reg,little_endian)
 			if result > 32767: result -= 65536
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def write8(self, reg, value):
-		"Writes an 8-bit value to the specified register/address"
+		"""Writes an 8-bit value to the specified register/address"""
 		try:
 			self.bus.write_byte_data(self.i2c_addr, reg, value)
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 
@@ -338,7 +338,7 @@ class AMG88xx_class(object):
 
 
 			return buf, maxV, minV, aveV, nVal, ambtemp, uniformity, movement, movementabs
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return ""
 
@@ -357,7 +357,7 @@ class AMG88xx_class(object):
 			return float((val-4096))
 
 
- # ===========================================================================
+# ===========================================================================
 # read params
 # ===========================================================================
 
@@ -372,7 +372,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -456,7 +456,7 @@ def readParams():
 
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		
 
@@ -476,7 +476,7 @@ def startSensor(devId,i2cAddress):
 	try:
 		amg88xxsensor[devId]  =	 AMG88xx_class(address=i2cAdd)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		amg88xxsensor[devId] =""
 	time.sleep(.1)
@@ -517,7 +517,7 @@ def getValues(devId):
 				"rawData":				json.dumps(oldPixels[devId]).replace(" ","")}
 		U.logger.log(0, "{}".format(ret)) 
 		badSensor = 0
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
@@ -660,7 +660,7 @@ while True:
 		#else:				 loopSleep = sensorRefreshSecs
 		if not quick:
 			time.sleep(loopSleep)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

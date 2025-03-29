@@ -190,7 +190,7 @@ dtparam=gpiopin=4   <-- this will be  busmaster 1
 				U.logger.log(20,"Changed or first mapping of busmaster channel to GPIO used:{} in \"`ls -o /sys/bus/w1/devices/`\" ".format(busMasterToGPIO))
 
 			if busMasterToGPIO == []:
-				U.logger.log(20,"noting setup in config.txt  no \"dtparam=gpiopin=..\" ")
+				U.logger.log(20,"nothing setup in config.txt  no \"dtparam=gpiopin=..\" ")
 
 
 		else:  # use oneWireGpios set in rpi device edit 
@@ -720,7 +720,7 @@ def readParams():
 
 		
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return rCode
 		if lastRead2 == lastRead: return rCode
 		lastRead  = lastRead2
@@ -735,7 +735,7 @@ def readParams():
 
 		U.getGlobalParams(inp)
 		if "enableSPIpinsAsGpio"	in inp: enableSPIpinsAsGpio=	(inp["enableSPIpinsAsGpio"])
-		if "enableTXpinsAsGpio"		in inp: enableTXpinsAsGpio=	 	(inp["enableTXpinsAsGpio"])
+		if "enableTXpinsAsGpio"		in inp: enableTXpinsAsGpio=		(inp["enableTXpinsAsGpio"])
 		if "output"					in inp: output=					(inp["output"])
 		if "tempUnits"				in inp: tempUnits=				(inp["tempUnits"])
 		if "pressureUnits"			in inp: pressureUnits=			(inp["pressureUnits"])
@@ -845,7 +845,7 @@ def execWire():
 	tempUnits		   		="Celsius"
 	loopCount		   		= 0
 	sensorList		  		= ""
-	sensors			 		= {}
+	sensors					= {}
 	enableTXpinsAsGpio  	= "0"
 	enableSPIpinsAsGpio 	= "0"
 	authentication	  		= "digest"
@@ -886,7 +886,7 @@ def execWire():
 	lastRead			= tt
 	regularCycle		= True
 	lastData			= {}
-	xxx				 	= -1
+	xxx					= -1
 	doPrint 			= False
 
 	sens = G.program

@@ -150,7 +150,7 @@ class ccs811_class(object):
 		
 			#default to read every second
 			self.setDriveMode(mode)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		
 
@@ -198,24 +198,24 @@ class ccs811_class(object):
 				
 				else:
 					return 0
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return	0		
 
 
 	def setEnvironmentalData(self, humidity, temperature):
 
-		''' Humidity is stored as an unsigned 16 bits in 1/512%RH. The
+		""" Humidity is stored as an unsigned 16 bits in 1/512%RH. The
 		default value is 50% = 0x64, 0x00. As an example 48.5%
-		humidity would be 0x61, 0x00.'''
+		humidity would be 0x61, 0x00.
 		
-		''' Temperature is stored as an unsigned 16 bits integer in 1/512
+		Temperature is stored as an unsigned 16 bits integer in 1/512
 		degrees there is an offset: 0 maps to -25C. The default value is
 		25C = 0x64, 0x00. As an example 23.5% temperature would be
 		0x61, 0x00.
 		The internal algorithm uses these values (or default values if
 		not set by the application) to compensate for changes in
-		relative humidity and ambient temperature.'''
+		relative humidity and ambient temperature."""
 
 		pp			= int(temperature)
 		fractional	= temperature - pp
@@ -280,32 +280,32 @@ class ccs811_class(object):
 	def writeList(self, command,buf):
 		try:
 			self.bus.write_i2c_block_data(self.i2c_address, command, buf)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 
 	def readList(self, command,	 length):
 		try:
 			return self.bus.read_i2c_block_data(self.i2c_address,command,length)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return []
 
 	def readU8(self, reg):
 		try:
 			return	self.bus.read_byte_data(self.i2c_address, reg)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0
 
 	def write8(self, reg,value):
 		try:
 			self.bus.write_byte_data(self.i2c_address, reg, value)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 
 
 
- # ===========================================================================
+# ===========================================================================
 # read params
 # ===========================================================================
 
@@ -319,7 +319,7 @@ def readParams():
 	try:
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -402,7 +402,7 @@ def readParams():
 			pass
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		
 
@@ -434,7 +434,7 @@ def startSensor(devId,i2cAddress):
 		try: temp = ccs811sensor[devId].calculateTemperature()
 		except: pass
 				
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		ccs811sensor[devId]	  =""
 	time.sleep(.1)
@@ -554,7 +554,7 @@ def getValues(devId):
 			countVOC  = 0
 			lastVOC	  = VOC
 			lastTemp  = TEMP
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
@@ -705,7 +705,7 @@ while True:
 			time.sleep(5)
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

@@ -23,7 +23,7 @@ import	piBeaconGlobals as G
 def readParams():
 		global oldParams, actions
 
-		inp,inpRaw = doRead()
+		inp, inpRaw, x = U.doRead()
 		if inp == "": return
 
 		if inpRaw == oldParams: return
@@ -38,7 +38,7 @@ def doActions():
 			return
 
 ### actions: [{1},{2},{3}]
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 
@@ -90,7 +90,7 @@ def execMain():
 			doActions()
 	
 			time.sleep(0.1)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 

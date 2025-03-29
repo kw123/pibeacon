@@ -243,7 +243,7 @@ class max31865(object):
 								delta = newDelta
 					#print ii, temp, temp_C_numpy, delta
 					if delta < 10: temp = temp_C_numpy
-				except	Exception as e:
+				except Exception as e:
 					U.logger.log(30,"", exc_info=True)
 		
 		if temp_C < 0:
@@ -268,7 +268,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -367,7 +367,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -385,7 +385,7 @@ def getValues(devId):
 		data = {"temp":round(temp,3)}
 		badSensor = 0
 		return data
-	except	Exception as e:
+	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"temp>>{}<<".format(temp))
@@ -504,7 +504,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

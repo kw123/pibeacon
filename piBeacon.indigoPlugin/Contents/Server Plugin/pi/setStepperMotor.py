@@ -52,7 +52,7 @@ def readParams():
 
 		changed =0
 		inpLast= inp
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 
 
 		if inp == "": 
@@ -67,7 +67,7 @@ def readParams():
 		 
 
 
-		if "output"					in inp:	 output=			 			   (inp["output"])
+		if "output"					in inp:	 output=						   (inp["output"])
 		#### G.debug = 2 
 		if G.program not in output:
 			U.logger.log(30, G.program+ " is not in parameters = not enabled, stopping "+ G.program+".py" )
@@ -87,7 +87,7 @@ def readParams():
 
 			if not ( mt.find("unipolar") > -1 or mt.find("bipolar") > -1 or mt.find("DRV8834") > -1 or mt.find("A4988") > -1 ): continue
 
- 			if "motorType"		 	in theDict: motorType[devId]				 		=	mt
+			if "motorType"			in theDict: motorType[devId]						=	mt
 			changed = 1
 
 		
@@ -206,7 +206,7 @@ def readParams():
 
 		return changed
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		time.sleep(10)
 		return 3
@@ -358,7 +358,7 @@ def setMotorWake(devId):
 
 # ------------------	------------------ 
 def doMove(devId): #steps, delay, direction, stopForGPIO):
- 	global actionQueue
+	global actionQueue
 	global stopThread
 
 	while True:

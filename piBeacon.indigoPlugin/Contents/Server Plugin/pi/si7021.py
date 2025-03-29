@@ -19,7 +19,7 @@ G.program = "si7021"
 # ===========================================================================
 class si7021:
 
-	 # Constructor
+	# Constructor
 	def __init__(self, i2cAddress=""):
 
 
@@ -45,10 +45,10 @@ class si7021:
 			#print "temp", r1, r2 
 			temp = ( (r1 * 256 + r2) * 175.72 / 65536.0) - 46.85 
 			return temp,hum
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return "",""
- # ===========================================================================
+#===========================================================================
 # read params
 # ===========================================================================
 
@@ -62,7 +62,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -128,7 +128,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -150,7 +150,7 @@ def getValues(devId):
 		badSensor = 0
 		U.muxTCA9548Areset()
 		return data
-	except	Exception as e:
+	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"temp>>{}<<".format(temp) )
@@ -269,7 +269,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

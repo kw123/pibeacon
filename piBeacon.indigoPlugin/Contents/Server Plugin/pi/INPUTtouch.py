@@ -250,7 +250,7 @@ class MPR121():
 		# Check CDT, SFI, ESI configuration is at default values.
 		c = self._i2c_retry(self.readU8, MPR121_CONFIG2)
 		if c != 0x24:
-		   return False
+			return False
 		# Set threshold for touch and release to default values.
 		self.set_thresholds(TOU_THRESH, REL_THRESH)
 		# Configure baseline filtering control registers.
@@ -380,7 +380,7 @@ def getTouched16Serial(np):
 
 		return keys
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -399,7 +399,7 @@ def getTouched16i2c(np):
 				if data[1] & jj !=0: keys[ii +8]=1
 			# pins[i] = 0/1 for i ..0..16 if pressed 
 		return keys
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -426,7 +426,7 @@ def getTouched12i2c(np):
 			channelData[i] = (pin_bit & currentTap !=0) &0x01
 		return channelData
 
-	except	Exception as e:
+	except Exception as e:
 		restartCount+=1
 		U.logger.log(30,"", exc_info=True)
 
@@ -442,7 +442,7 @@ def readParams():
 		INPUTcount = U.checkresetCount(INPUTcount)
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -557,7 +557,7 @@ def getINPUTcapacitor(sensors,data,devType, NPads):
 					data[sensName][devId] = copy.copy(d)
 		if new: U.writeINPUTcount(INPUTcount)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 	return data,new
@@ -660,13 +660,11 @@ while True:
 
 		loopCount+=1
 		time.sleep(shortWait)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 
-try: 	G.sendThread["run"] = False; time.sleep(1)
-except: pass
+try:	G.sendThread["run"] = False; time.sleep(1)
+except:	pass
 
 sys.exit(0)
-
-	   

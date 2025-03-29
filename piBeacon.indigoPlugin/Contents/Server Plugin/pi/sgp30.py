@@ -173,7 +173,7 @@ class SGP30_class:
 	def testSensor(self):
 		return self.command('measure_test')
 
- # ===========================================================================
+#===========================================================================
 # read params
 # ===========================================================================
 
@@ -187,7 +187,7 @@ def readParams():
 	try:
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -260,7 +260,7 @@ def readParams():
 			pass
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		print(sensors[sensor])
 		
@@ -294,7 +294,7 @@ def startSensor(devId, lastPowerUp=0, init=0):
 		#testSensor = sensorClass[devId].testSensor()
 		#U.logger.log(30, "SGP30 sensortest   #{}".format(hex(testSensor) ) )
 		#time.sleep(10)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(20, u"****  startup sensor did not work ****")
 		sensorClass[devId]  = ""
@@ -342,7 +342,7 @@ def startSensor2(devId, lastPowerUp=0, init=0):
 			threadDict[devId]["pause"] = False
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	time.sleep(.1)
 	return 
@@ -364,7 +364,7 @@ def warmUp(devId):
 		if ii < 29: U.logger.log(20,     "try:{:2d} warmup finished: CO2= {}, VOC= {}".format(ii,co2, voc) )
 		else: 		U.logger.log(20,     "****    warmup NOT finished: CO2= {}, VOC= {}".format(co2, voc) )
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(20, "****    warmup NOT finished")
 		sensorClass[devId]	 = ""
@@ -380,7 +380,7 @@ def getBaseLine(devId):
 		U.logger.log(20, "**** baseline from sensor: CO2eq ={}, TVOC = {}".format(co2Base, vocBase) )
 		if vocBase > 0 and co2Base > 0:
 			U.writeJson(G.homeDir+G.program+".baseline", {"co2Base":co2Base, "vocBase":vocBase} )
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(20, "****    could not read baseline from device")
 	return 
@@ -396,7 +396,7 @@ def readBaseLine(devId):
 					lastUpdateTime = os.stat(G.homeDir+G.program+".baseline").st_mtime
 				else:
 					lastUpdateTime  = time.time() -(24*60*60)*99
-		except	Exception as e:
+		except Exception as e:
 				lastUpdateTime = time.time() -(24*60*60)*99
 		if time.time() - lastUpdateTime > (24*60*60)*2: 
 			U.logger.log(20, "**** baseline file too old to be used: {:.1f} days or older".format( (time.time() - lastUpdateTime)/(24*60*60) ) )
@@ -410,7 +410,7 @@ def readBaseLine(devId):
 			else:
 				U.logger.log(20, "**** baseline read from file:  NOT mature yet (co2Base  < 10)" )
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -427,7 +427,7 @@ def setBaseLine(devId):
 	try:	
 		U.logger.log(20, "setting baseline to : CO2eq ={}, TVOC = {}".format(co2Base, vocBase) )
 		sensorClass[devId].set_baseline(co2Base, vocBase)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -508,7 +508,7 @@ def getValues(devId):
 								U.logger.log(20,"lastCO2:{}, lastVOC:{}, n:{}, ii:{}, co2eq:{}, tvoc:{}, CO2/n:{}, VOC/n:{}".format(lastCO2, lastVOC, n, ii, co2eq, tvoc, CO2/n, VOC/n))
 								if n > 6: break
 						if CO2 == 0 or n ==0: 
-							 badSensor+=1
+							badSensor+=1
 						elif CO2/n > 59999 or VOC/n > 59999: 
 							startSensor2(devId, init=-1)
 							continue
@@ -517,7 +517,7 @@ def getValues(devId):
 							lastVOC =  VOC/n
 							values	 = {"CO2": int(CO2/n), "VOC":int(VOC/n)}
 							badSensor = 0
-					except	Exception as e:
+					except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 						badSensor+=1
 					if badSensor >3: values = "badSensor"
@@ -654,7 +654,7 @@ while True:
 				readParams()
 				lastRead = time.time()
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 

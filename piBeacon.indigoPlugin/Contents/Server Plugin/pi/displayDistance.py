@@ -26,26 +26,26 @@ def formatNumber(data, distanceUnits):
 			dist1 = float(data)	 
 			dist  = float(data)	 
 			if	 distanceUnits =="cm" or distanceUnits =="0.01":
-			   ud = "cm"
-			   dist0 = ("%8.1f"%(dist)).replace(" ","")
+				ud = "cm"
+				dist0 = ("%8.1f"%(dist)).replace(" ","")
 			elif   distanceUnits =="inches" or distanceUnits =="0.0254":
-			   ud = 'in'
-			   dist = dist/2.54
-			   dist0 = ("%7.1f"%(dist)).replace(" ","")
+				ud = 'in'
+				dist = dist/2.54
+				dist0 = ("%7.1f"%(dist)).replace(" ","")
 			elif   distanceUnits =="feet" or distanceUnits =="0.348":
-			   ud = 'ft'
-			   dist = dist*0.0348
-			   dist0 = ("%7.1f"%(dist)).replace(" ","")
+				ud = 'ft'
+				dist = dist*0.0348
+				dist0 = ("%7.1f"%(dist)).replace(" ","")
 			elif  distanceUnits =="yard" or distanceUnits =="0.9144":
-			   ud = "yd"
-			   dist = dist*0.009144
-			   dist0 = ("%8.2f"%(dist)).replace(" ","")
+				ud = "yd"
+				dist = dist*0.009144
+				dist0 = ("%8.2f"%(dist)).replace(" ","")
 			else:
-			   ud = "m"
-			   dist = dist*0.01
-			   dist0 = ("%8.2f"%(dist)).replace(" ","")
+				ud = "m"
+				dist = dist*0.01
+				dist0 = ("%8.2f"%(dist)).replace(" ","")
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return dist1, dist, dist0, ud
 
@@ -65,7 +65,7 @@ def startDisplay(outputType):
 		displayPyPgm = outputType
 		if displayPyPgm == "neopixel": displayPyPgm+="3"
 		subprocess.call("{} {}.py &".format(pythonCMD, displayPyPgm, G.homeDir) , shell=True )
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -354,12 +354,12 @@ def displayDistance(dist, sensor, sensors, output, distanceUnits):
 				U.logger.log(30,"", exc_info=True)
 				time.sleep(0.1)
 				f=open(outName,"a"); f.write(json.dumps(out)+"\n"); f.close()
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				subprocess.call("rm "+outName, shell=True)
 		return 
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 	return

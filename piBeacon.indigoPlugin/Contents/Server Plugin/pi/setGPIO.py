@@ -39,7 +39,7 @@ except:
 	exit()
 
 
-inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=0)
+inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=0)
 U.getGlobalParams(inp)
 U.getIPNumber() 
 
@@ -82,7 +82,7 @@ try:
 	else:						nPulses = 0
 	if "analogValue" in values: bits = max(0.,min(100.,float(values["analogValue"])))
 	else:						bits = 0
-except	Exception as e:
+except Exception as e:
 	U.logger.log(30,"", exc_info=True)
 	exit(0)
 
@@ -135,7 +135,7 @@ try:
 			value = (100-bits)	# duty cycle on xx hz
 		else:
 			value =   bits	 # duty cycle on xxx hz 
-		U.logger.log(20, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM)
+		U.logger.log(20, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM))
 
 		if value >0:
 			U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
@@ -187,7 +187,7 @@ try:
 			
 
 
-except	Exception as e:
+except Exception as e:
 	U.logger.log(30,"", exc_info=True)
 
 exit(0)

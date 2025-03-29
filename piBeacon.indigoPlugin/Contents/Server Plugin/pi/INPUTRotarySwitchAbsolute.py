@@ -61,7 +61,7 @@ def readParams():
 		global oldRaw, lastRead, nInputs, INPUTS, nBits
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -165,7 +165,7 @@ def getINPUTgpio(devId):
 
 			elif INPUTS[devId]["codeType"].find("bourns8Bit")>-1:	value = burnsTableToInt(value)
 
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 	return {"INPUT":value}
 
@@ -285,7 +285,7 @@ def startGPIOzero(devId):
 			for n in range(len(INPUTS[devId]["pinO"])):
 				GPIOZERO[gpioPIN]["pinO"][n] = gpiozero.LED(INPUTS[devId]["pinO"][n], initial_value=True) 
 		return
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30,"start {}  {}".format(G.program, sensors))
 	return
@@ -301,7 +301,7 @@ def startGPIO(devId):
 				GPIO.setup( INPUTS[devId]["pinO"][n], GPIO.OUT)
 				GPIO.output(INPUTS[devId]["pinO"][n], 1)
 		return
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30,"start {}  {}".format(G.program, sensors))
 	return
@@ -394,7 +394,7 @@ def execMain():
 	
 			loopCount+=1
 			time.sleep(shortWait)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 	

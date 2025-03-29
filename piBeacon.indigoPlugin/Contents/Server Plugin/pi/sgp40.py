@@ -183,19 +183,19 @@ class DFRobot_VOCAlgorithm:
 		for n in range(0,2):
 			while (bit):
 				if (num >= result + bit):
-				    num = num-(result + bit)&0xFFFFFFFF
-				    result = (result >> 1) + bit
+					num = num-(result + bit)&0xFFFFFFFF
+					result = (result >> 1) + bit
 				else:
-				    result = (result >> 1)
+					result = (result >> 1)
 				bit >>= 2
 			if n==0:
 				if num > 65535:
-				    num = (num -result)&0xFFFFFFFF
-				    num = ((num << 16) - 0x8000)&0xFFFFFFFF
-				    result = ((result << 16) + 0x8000)&0xFFFFFFFF
+					num = (num -result)&0xFFFFFFFF
+					num = ((num << 16) - 0x8000)&0xFFFFFFFF
+					result = ((result << 16) + 0x8000)&0xFFFFFFFF
 				else:
-				    num = ((num << 16)&0xFFFFFFFF)
-				    result =((result << 16)&0xFFFFFFFF)
+					num = ((num << 16)&0xFFFFFFFF)
+					result =((result << 16)&0xFFFFFFFF)
 				bit = 1 << 14
 		if (num > result):
 				result+=1
@@ -243,13 +243,13 @@ class DFRobot_VOCAlgorithm:
 		self._vocalgorithm__adaptive_lowpass__init()
 		self._vocalgorithm__adaptive_lowpass__set_parameters()
 	
-	def _vocalgorithm_get_states(self,state0,state1):
+	def _vocalgorithm_get_states(self):
 		state0 = self._vocalgorithm__mean_variance_estimator__get_mean()
 		state1 = _vocalgorithm__mean_variance_estimator__get_std()
-		return state0,state1
+		return state0, state1
 	
 	def _vocalgorithm_set_states(self,state0,state1):
-		self._vocalgorithm__mean_variance_estimator__set_states(params, state0, state1, self._f16(VOCALGORITHM_PERSISTENCE_UPTIME_GAMMA))
+		self._vocalgorithm__mean_variance_estimator__set_states( state0, state1, self._f16(VOCALGORITHM_PERSISTENCE_UPTIME_GAMMA))
 		self.params.msraw = state0
 	
 	def _vocalgorithm_set_tuning_parameters(self, voc_index_offset, learning_time_hours, gating_max_duration_minutes, std_initial):
@@ -265,9 +265,9 @@ class DFRobot_VOCAlgorithm:
 		else:
 			if (((sraw > 0) and (sraw < 65000))):
 				if ((sraw < 20001)):
-				    sraw = 20001
+					sraw = 20001
 				elif((sraw > 52767)):
-				    sraw = 52767
+					sraw = 52767
 				self.params.msraw = self._fix16_from_int((sraw - 20000))
 			self.params.mvoc_index =self._vocalgorithm__mox_model__process(self.params.msraw)
 			self.params.mvoc_index =self._vocalgorithm__sigmoid_scaled__process(self.params.mvoc_index)
@@ -294,11 +294,11 @@ class DFRobot_VOCAlgorithm:
 		self.params.m_mean_variance_estimator_sraw_offset = self._f16(0.)
 		self.params.m_mean_variance_estimator_std = std_initial
 		self.params.m_mean_variance_estimator_gamma =self._fix16_div(self._f16((VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__GAMMA_SCALING *(VOCALGORITHM_SAMPLING_INTERVAL / 3600.))\
-				                                                                  ),(tau_mean_variance_hours +self._f16((VOCALGORITHM_SAMPLING_INTERVAL / 3600.))))
+						                                                          ),(tau_mean_variance_hours +self._f16((VOCALGORITHM_SAMPLING_INTERVAL / 3600.))))
 		self.params.m_mean_variance_estimator_gamma_initial_mean =self._f16(((VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__GAMMA_SCALING *VOCALGORITHM_SAMPLING_INTERVAL) \
-				                                                                /(VOCALGORITHM_TAU_INITIAL_MEAN + VOCALGORITHM_SAMPLING_INTERVAL)))
+						                                                        /(VOCALGORITHM_TAU_INITIAL_MEAN + VOCALGORITHM_SAMPLING_INTERVAL)))
 		self.params.m_mean_variance_estimator_gamma_initial_variance = self._f16(((VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__GAMMA_SCALING *VOCALGORITHM_SAMPLING_INTERVAL) \
-				                                                                     /(VOCALGORITHM_TAU_INITIAL_VARIANCE + VOCALGORITHM_SAMPLING_INTERVAL)))
+						                                                             /(VOCALGORITHM_TAU_INITIAL_VARIANCE + VOCALGORITHM_SAMPLING_INTERVAL)))
 		self.params.m_mean_variance_estimator_gamma_mean = self._f16(0.)
 		self.params.m_mean_variance_estimator__gamma_variance = self._f16(0.)
 		self.params.m_mean_variance_estimator_uptime_gamma = self._f16(0.)
@@ -330,8 +330,8 @@ class DFRobot_VOCAlgorithm:
 		sigmoid_gamma_mean =self._vocalgorithm__mean_variance_estimator___sigmoid__process(self.params.m_mean_variance_estimator_uptime_gamma)
 		gamma_mean =(self.params.m_mean_variance_estimator_gamma +(self._fix16_mul((self.params.m_mean_variance_estimator_gamma_initial_mean -self.params.m_mean_variance_estimator_gamma),sigmoid_gamma_mean)))
 		gating_threshold_mean =(self._f16(VOCALGORITHM_GATING_THRESHOLD)\
-				                +(self._fix16_mul(self._f16((VOCALGORITHM_GATING_THRESHOLD_INITIAL -VOCALGORITHM_GATING_THRESHOLD)),\
-				                 self._vocalgorithm__mean_variance_estimator___sigmoid__process(self.params.m_mean_variance_estimator_uptime_gating))))
+						        +(self._fix16_mul(self._f16((VOCALGORITHM_GATING_THRESHOLD_INITIAL -VOCALGORITHM_GATING_THRESHOLD)),\
+						         self._vocalgorithm__mean_variance_estimator___sigmoid__process(self.params.m_mean_variance_estimator_uptime_gating))))
 		self._vocalgorithm__mean_variance_estimator___sigmoid__set_parameters(self._f16(1.),gating_threshold_mean,self._f16(VOCALGORITHM_GATING_THRESHOLD_TRANSITION))
 		
 		sigmoid_gating_mean =self._vocalgorithm__mean_variance_estimator___sigmoid__process(voc_index_from_prior)
@@ -342,13 +342,13 @@ class DFRobot_VOCAlgorithm:
 		sigmoid_gamma_variance =self._vocalgorithm__mean_variance_estimator___sigmoid__process( self.params.m_mean_variance_estimator_uptime_gamma)
 		
 		gamma_variance =(self.params.m_mean_variance_estimator_gamma +\
-				        (self._fix16_mul((self.params.m_mean_variance_estimator_gamma_initial_variance \
-				                          -self.params.m_mean_variance_estimator_gamma),\
-				                          (sigmoid_gamma_variance - sigmoid_gamma_mean))))
+						(self._fix16_mul((self.params.m_mean_variance_estimator_gamma_initial_variance \
+						                  -self.params.m_mean_variance_estimator_gamma),\
+						                  (sigmoid_gamma_variance - sigmoid_gamma_mean))))
 		
 		gating_threshold_variance =(self._f16(VOCALGORITHM_GATING_THRESHOLD) \
-				                    +(self._fix16_mul(self._f16((VOCALGORITHM_GATING_THRESHOLD_INITIAL -VOCALGORITHM_GATING_THRESHOLD)),\
-				                     self._vocalgorithm__mean_variance_estimator___sigmoid__process( self.params.m_mean_variance_estimator_uptime_gating))))
+						            +(self._fix16_mul(self._f16((VOCALGORITHM_GATING_THRESHOLD_INITIAL -VOCALGORITHM_GATING_THRESHOLD)),\
+						             self._vocalgorithm__mean_variance_estimator___sigmoid__process( self.params.m_mean_variance_estimator_uptime_gating))))
 		
 		self._vocalgorithm__mean_variance_estimator___sigmoid__set_parameters(self._f16(1.), gating_threshold_variance,self._f16(VOCALGORITHM_GATING_THRESHOLD_TRANSITION))
 		
@@ -357,10 +357,10 @@ class DFRobot_VOCAlgorithm:
 		self.params.m_mean_variance_estimator__gamma_variance =(self._fix16_mul(sigmoid_gating_variance, gamma_variance))
 		
 		self.params.m_mean_variance_estimator_gating_duration_minutes =(self.params.m_mean_variance_estimator_gating_duration_minutes \
-				                                                          +(self._fix16_mul(self._f16((VOCALGORITHM_SAMPLING_INTERVAL / 60.)),\
-				                                                                           ((self._fix16_mul((self._f16(1.) - sigmoid_gating_mean),\
-				                                                                                             self._f16((1. + VOCALGORITHM_GATING_MAX_RATIO))))\
-				                                                                              -self._f16(VOCALGORITHM_GATING_MAX_RATIO)))))
+						                                                  +(self._fix16_mul(self._f16((VOCALGORITHM_SAMPLING_INTERVAL / 60.)),\
+						                                                                   ((self._fix16_mul((self._f16(1.) - sigmoid_gating_mean),\
+						                                                                                     self._f16((1. + VOCALGORITHM_GATING_MAX_RATIO))))\
+						                                                                      -self._f16(VOCALGORITHM_GATING_MAX_RATIO)))))
 		
 		if ((self.params.m_mean_variance_estimator_gating_duration_minutes <self._f16(0.))):
 			self.params.m_mean_variance_estimator_gating_duration_minutes = self._f16(0.)
@@ -389,12 +389,12 @@ class DFRobot_VOCAlgorithm:
 			if ((c > self._f16(1440.))):
 				additional_scaling = self._f16(4.)
 			self.params.m_mean_variance_estimator_std = self._fix16_mul(self._fix16_sqrt((self._fix16_mul(additional_scaling,\
-				                                                                          (self._f16(VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__GAMMA_SCALING) -self.params.m_mean_variance_estimator__gamma_variance)))),\
-				                                                          self._fix16_sqrt(((self._fix16_mul(self.params.m_mean_variance_estimator_std,\
-				                                                                                            (self._fix16_div(self.params.m_mean_variance_estimator_std,\
-				                                                                                            (self._fix16_mul(self._f16(VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__GAMMA_SCALING),additional_scaling)))))) \
-				                                                                          +(self._fix16_mul((self._fix16_div((self._fix16_mul(self.params.m_mean_variance_estimator__gamma_variance,delta_sgp)),additional_scaling))\
-				                                                                          ,delta_sgp)))))
+						                                                                  (self._f16(VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__GAMMA_SCALING) -self.params.m_mean_variance_estimator__gamma_variance)))),\
+						                                                  self._fix16_sqrt(((self._fix16_mul(self.params.m_mean_variance_estimator_std,\
+						                                                                                    (self._fix16_div(self.params.m_mean_variance_estimator_std,\
+						                                                                                    (self._fix16_mul(self._f16(VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__GAMMA_SCALING),additional_scaling)))))) \
+						                                                                  +(self._fix16_mul((self._fix16_div((self._fix16_mul(self.params.m_mean_variance_estimator__gamma_variance,delta_sgp)),additional_scaling))\
+						                                                                  ,delta_sgp)))))
 			self.params.m_mean_variance_estimator_mean =(self.params.m_mean_variance_estimator_mean +(self._fix16_mul(self.params.m_mean_variance_estimator_gamma_mean,delta_sgp)))
 	
 	def _vocalgorithm__mean_variance_estimator___sigmoid__init(self):
@@ -442,7 +442,7 @@ class DFRobot_VOCAlgorithm:
 				return ((self._fix16_div((self._f16(VOCALGORITHM_SIGMOID_L) + shift),(self._f16(1.) + self._fix16_exp(x)))) -shift)
 			else:
 				return (self._fix16_mul((self._fix16_div(self.params.m_sigmoid_scaled_offset,self._f16(VOCALGORITHM_VOC_INDEX_OFFSET_DEFAULT))),\
-				                         (self._fix16_div(self._f16(VOCALGORITHM_SIGMOID_L),(self._f16(1.) + self._fix16_exp(x))))))
+						                 (self._fix16_div(self._f16(VOCALGORITHM_SIGMOID_L),(self._f16(1.) + self._fix16_exp(x))))))
 	
 	def _vocalgorithm__adaptive_lowpass__init(self):
 		self._vocalgorithm__adaptive_lowpass__set_parameters()
@@ -471,7 +471,7 @@ class DFRobot_VOCAlgorithm:
 		a3 = (self._fix16_div(self._f16(VOCALGORITHM_SAMPLING_INTERVAL),(self._f16(VOCALGORITHM_SAMPLING_INTERVAL) + tau_a)))
 		self.params.m_adaptive_lowpass_x3 =((self._fix16_mul((self._f16(1.) - a3), self.params.m_adaptive_lowpass_x3)) +(self._fix16_mul(a3, sample)))
 		return self.params.m_adaptive_lowpass_x3
- 	
+		
 ## copied from https://github.com/DFRobot/DFRobot_BMP388/blob/master/raspbarry/example/I2CReadTemperature/I2CReadTemperature.py
 ## with some simplification ie i2c setup
 """ 
@@ -493,13 +493,13 @@ class DFRobot_SGP40:
 	TEST_OK_L                                        = 0x00
 	CMD_HEATER_OFF_H                                 = 0x36
 	CMD_HEATER_OFF_L                                 = 0x15
-		                                             
+			                                         
 	CMD_MEASURE_TEST_H                               = 0x28
 	CMD_MEASURE_TEST_L                               = 0x0E
-		                                             
+			                                         
 	CMD_SOFT__reset_H                                = 0x00
 	CMD_SOFT__reset_L                                = 0x06
-		                                             
+			                                         
 	CMD_MEASURE_RAW_H                                = 0x26
 	CMD_MEASURE_RAW_L                                = 0x0F
 
@@ -548,7 +548,7 @@ class DFRobot_SGP40:
 		self.__my_vocalgorithm.vocalgorithm_init()
 		timeOne = int(time.time())
 		while(int(time.time())-timeOne<duration):
-		    self.get_voc_index()
+			self.get_voc_index()
 		return self.__measure_test()
 		
 	def measure_raw(self):
@@ -563,9 +563,9 @@ class DFRobot_SGP40:
 		time.sleep(self.DURATION_READ_RAW_VOC)
 		raw = self.__i2cbus.read_i2c_block_data(self.__i2c_addr,self.OFFSET,3)
 		if self.__check__crc(raw) == 0:
-		  return raw[0]<<8 | raw[1]
+			return raw[0]<<8 | raw[1]
 		else:
-		  return -1
+			return -1
 		
 	def get_voc_index(self):
 		""" Measure VOC index after humidity compensation
@@ -578,10 +578,10 @@ class DFRobot_SGP40:
 		"""
 		raw = self.measure_raw()
 		if raw<0:
-		    return -1
+			return -1
 		else:
-		    vocIndex = self.__my_vocalgorithm.vocalgorithm_process(raw)
-		    return vocIndex
+			vocIndex = self.__my_vocalgorithm.vocalgorithm_process(raw)
+			return vocIndex
 		  
 	def __data_transform(self):
 		""" Convert environment parameters
@@ -607,10 +607,10 @@ class DFRobot_SGP40:
 		time.sleep(self.DURATION_WAIT_MEASURE_TEST)
 		raw = self.__i2cbus.read_i2c_block_data(self.__i2c_addr,self.OFFSET,2)
 		if raw[0] == self.TEST_OK_H and raw[1] == self.TEST_OK_L :
-		    return 0
+			return 0
 		else:
-		    return 1
-		    
+			return 1
+			
 	def __reset(self):
 		""" Sensor reset
 		
@@ -633,7 +633,7 @@ class DFRobot_SGP40:
 		"""
 		assert (len(raw) == 3)
 		if self.__crc(raw[0], raw[1]) != raw[2]:
-		    return -1
+			return -1
 		return 0
 
 	def __crc(self,data_1,data_2):
@@ -646,13 +646,13 @@ class DFRobot_SGP40:
 		crc = 0xff
 		list = [data_1,data_2]
 		for i in range(0,2):
-		    crc = crc^list[i]
-		    for bit in range(0,8):
-		        if(crc&0x80):
-		            crc = ((crc <<1)^0x31)
-		        else:
-		            crc = (crc<<1)
-		    crc = crc&0xFF
+			crc = crc^list[i]
+			for bit in range(0,8):
+				if(crc&0x80):
+					crc = ((crc <<1)^0x31)
+				else:
+					crc = (crc<<1)
+			crc = crc&0xFF
 		return crc
 # ===========================================================================
 # read params
@@ -669,7 +669,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -742,7 +742,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
@@ -762,7 +762,7 @@ def startSensor(devId):
 			time.sleep(1)
 			SENSOR[devId]  = DFRobot_SGP40(bus = 1,relative_humidity = 50,temperature_c = 25)
 			SENSOR[devId].begin(10)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
@@ -789,7 +789,7 @@ def getValues(devId):
 				"VOC": VOC
 				}
 		return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
@@ -919,7 +919,7 @@ while True:
 		time.sleep( max(5, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 		lastMeasurement = time.time()
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

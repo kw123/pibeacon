@@ -96,7 +96,7 @@ def getDATAdht(DHTpinI,Type,devId):
 					time.sleep(3)
 			lastSensorRead[devId] = time.time() 
 			return t , h 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 			U.logger.log(20, u" pin: "+ str(DHTpinI)+" return value: t={}".format(t)+"; h={}".format(h) )
 		lastSensorRead[devId] = time.time() 
@@ -112,7 +112,7 @@ def getDHTdata():
 			dhtData[devId] = {"temp":"","hum":""}
 			t,h = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"], devId  )
 			dhtData[devId] = {"temp":t,"hum":h}
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return dhtData
 
@@ -143,7 +143,7 @@ def getDHT(dataI):
 					time.sleep(0.1)
 				else:
 					dataI = incrementBadSensor(devId, data)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 	if sensor in dataI and data[sensor]== {}: del dataI[sensor]
@@ -163,7 +163,7 @@ def incrementBadSensor(devId, dataI, theText="badSensor"):
 			if devId not in dataI[sensor]: dataI[sensor][devId]={}
 			dataI[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, u"theText{}".format(theText))
 	return dataI
@@ -187,7 +187,7 @@ def readParams():
 
 		rCode= False
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return rCode
 		if lastRead2 == lastRead: return rCode
 		lastRead  = lastRead2
@@ -315,7 +315,7 @@ while True:
 							if xxx > (G.deltaChangedSensor/100.): 
 								changed = xxx
 								break
-						except	Exception as e:
+						except Exception as e:
 							#print e
 							#print lastData[sens][dd]
 							#print data[sens][dd]
@@ -328,7 +328,7 @@ while True:
 			try:
 				#U.logger.log(10, u"sending url: {}".format(data))
 				U.sendURL({"sensors":data})
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 			time.sleep(0.05)
 
@@ -353,7 +353,7 @@ while True:
 			if tt - lastRead > 5:
 				lastRead = tt
 				U.checkIfAliveNeedsToBeSend()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 sys.exit(0)

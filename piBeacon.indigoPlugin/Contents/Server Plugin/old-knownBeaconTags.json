@@ -1959,7 +1959,7 @@
 		 "lastFailedTryTime":		0,
 		 "lastFailedTryCount":		0,
 		 "devId": 			0 
-	}
+	},
 	"OUTPUTswitchbotCurtain3":{
 		 "blehandle":				"10",
 		 "blehandleStatus":			"0f",

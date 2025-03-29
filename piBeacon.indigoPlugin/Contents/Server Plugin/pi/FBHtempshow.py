@@ -32,7 +32,7 @@ def readParams():
 
 		changed = 0
 		inpLast = inp
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 
 		if inp == "": 
 			inp = inpLast
@@ -63,7 +63,7 @@ def readParams():
 
 		return changed
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(10)
 		return 3
@@ -184,7 +184,7 @@ def checkNewtempfile():
 		for ii in range(11):
 				temp = ii*2
 				xpos = int(  scaleStartDotsX +  max(-10,min(maxDotsX, temp*dotsPerC - tempTextSize) ))
-				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorTempLabel,	 	"position":[xpos,y0], 				"display": "wait", 		"text":"{}".format(temp+tposZero), "font":font})
+				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorTempLabel,		"position":[xpos,y0], 				"display": "wait", 		"text":"{}".format(temp+tposZero), "font":font})
 
 		# values
 		for name, value, color, xpos, setpointHeat, LEVEL, roomTemperature in theList:
@@ -192,22 +192,22 @@ def checkNewtempfile():
 			dyAst= int(lineSpacing*.2)
 
 			if setpointHeat >= 0:
-				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorTarget,	 		"position":[setpointHeat,y], 		"display": "wait", 		"text":"T", 						"font":font})
+				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorTarget,			"position":[setpointHeat,y], 		"display": "wait", 		"text":"T", 						"font":font})
 			if roomTemperature >= 0:
-				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorRoomT,	 		"position":[roomTemperature,y], 	"display": "wait", 		"text":"R", 						"font":font})
+				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorRoomT,			"position":[roomTemperature,y], 	"display": "wait", 		"text":"R", 						"font":font})
 
 			if LEVEL > 0:
 				out["command"].append({"type": "text",	"width":tempTextSize,	"fill":colorValvePos, 		"position":[valvePosPix,y], 		"display": "wait", 		"text":"{:3d}".format(LEVEL), 	"font":font})
 
 			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":colorTempLabel,		"position":[10,y], 					"display": "wait", 		"text":name, 						"font":font})
-			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":color,	 			"position":[tempNumberPosPix,y], 	"display": "wait", 		"text":value, 						"font":font})
-			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":color,	 			"position":[xpos,y+dyAst],			"display": "wait", 		"text":"*", 						"font":font})
+			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":color,				"position":[tempNumberPosPix,y], 	"display": "wait", 		"text":value, 						"font":font})
+			out["command"].append({"type": "text",		"width":tempTextSize,	"fill":color,				"position":[xpos,y+dyAst],			"display": "wait", 		"text":"*", 						"font":font})
 
 		out["command"].append({"type":"dateString",  	"width":dateWidthPix,  	"fill":colorWhite,			"position": datePosPix,   			"display": "wait", 		"text":"%a, %b  %d, %Y %H:%M:%S", 	"font":font} )
-		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorTarget,	 		"position":legendPix1, 				"display": "wait", 		"text":"T=Target", 					"font":font })
-		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorRoomT,	 		"position":legendPix2, 				"display": "wait", 		"text":"R=RoomT", 					"font":font })
-		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":tempOK,	 			"position":legendPix3, 				"display": "wait", 		"text":"*=WaterT", 					"font":font })
-		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorHeader,	 		"position":[10,y0], 				"display": "immediate", "text":"V#,       Pos,  T", 		"font":font })
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorTarget,			"position":legendPix1, 				"display": "wait", 		"text":"T=Target", 					"font":font })
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorRoomT,			"position":legendPix2, 				"display": "wait", 		"text":"R=RoomT", 					"font":font })
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":tempOK,				"position":legendPix3, 				"display": "wait", 		"text":"*=WaterT", 					"font":font })
+		out["command"].append({"type": "text",			"width":frameTextSize,	"fill":colorHeader,			"position":[10,y0], 				"display": "immediate", "text":"V#,       Pos,  T", 		"font":font })
 
 		lastOut = time.time()
 		outName = G.homeDir+"temp/display.inp"
@@ -219,7 +219,7 @@ def checkNewtempfile():
 			time.sleep(15 -(time.time() - lastOut))
 	
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		lastOut = 0
 		time.sleep(3)

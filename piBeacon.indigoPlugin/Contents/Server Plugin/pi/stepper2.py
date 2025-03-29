@@ -49,7 +49,7 @@ def move(delay, steps, direction):
 		if ii < 1: ii=8
 		setStep(Seq[ii])
 		time.sleep(delay)
-	 	lastStep = ii
+		lastStep = ii
 
 
 setStep(Seq[0])
@@ -62,4 +62,3 @@ while True:
 	setStep(Seq[0])
 	move(float(delay) / 1000.0, int(stepsB),-1)
 	setStep(Seq[0])
- 

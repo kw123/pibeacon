@@ -252,7 +252,7 @@ class SCD30:
 			rh_percent = interpret_as_float((data[4] << 16) | data[5])
 
 			return (co2_ppm, temp_celsius, rh_percent)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 
@@ -431,7 +431,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -465,7 +465,7 @@ def readParams():
 		sendToIndigoSecs = G.sendToIndigoSecs	
 		for devId in sensors[sensor]:
 			if devId not in sensorsOld[sensor]:
-				 sensorsOld[sensor][devId] = {}
+				sensorsOld[sensor][devId] = {}
 
 			try:
 				if devId not in deltaX: deltaX[devId]  = 2
@@ -571,7 +571,7 @@ def startSensor(devId, Co2Target="", reset=False):
 			autoCalibration[devId]			= SENSOR[devId].scd30.get_auto_self_calibration_active()
 			sensorTemperatureOffset[devId]	= SENSOR[devId].scd30.get_temperature_offset()
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
@@ -606,7 +606,7 @@ def getValues(devId):
 			return data
 		except: 
 			if badsensorCountCO2[devId] > 5: return  "badSensor"
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	if badsensorCountCO2[devId] > 5: return "badSensor"
 	return ""
@@ -768,7 +768,7 @@ def execSensor():
 			time.sleep( max(0, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 			lastMeasurement = time.time()
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 

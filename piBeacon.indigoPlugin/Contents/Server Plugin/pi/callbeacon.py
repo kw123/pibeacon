@@ -102,8 +102,8 @@ subprocess.call("rm {}restartCount > 			/dev/null 2>&1 ".format(homeDir), shell=
 
 # call main program
 cmd1 = "cd {}; nohup /bin/bash master.sh  {} & ".format(homeDir, usePython3)
-logger.log(30," -4-  callbeacon {}".format(cmd1) )
 
+logger.log(30," -4-  callbeacon {}".format(cmd1) )
 subprocess.call(cmd1, shell=True)
 
 

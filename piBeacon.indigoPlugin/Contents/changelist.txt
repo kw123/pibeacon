@@ -1,10 +1,10 @@
-added features / changes in added features / changes in v2022.184.130 @ 2025-02-07
+added features / changes in added features / changes in v2022.184.133 @ 2025-03-27
 ==================================================
 
-1. this version will fully configure a new micro SSD. No need to for any raspi-config to set Onewire i2c on/off or install new libraries.
+1. this version willFULLY CONFIGURE  a new micro SSD. No need to for any raspi-config to set Onewire i2c on/off or install new libraries.
     it supports RPI-OS 11(bullseye) and 12 (bookworm) 32 bit and 64 bit
     The module GPIO is not supported by the new OSes anymore. The programs on the PRI now uses PIGPIO and GPIOZERO to write and read pins on the rpi - that was a major effort.
-    Older OSes are still supported with GPIO. so no need to upgrade the RPI OS. but suggested to at leas V11 for security updates on your RPI.
+    Older OSes are still supported with GPIO. so no need to upgrade the RPI OS. But suggested to at least V11 for security updates on your RPI.
 
 2. added menu and action to set any pibeacon device state, just in case
 
@@ -19,6 +19,15 @@ added features / changes in added features / changes in v2022.184.130 @ 2025-02-
    this is to cover ie musegear / iTrack beacons. they send battery level with every package, but it only gets changed after a button press or connect.
    the plugin uses both message as well as connect to beacon through ble. this is scheduled 3 times a day, but only when last update is older that 17 hours.
    to avoid preventing a "real" update the battery info is used only once a day or when changed.
+
+6. made ALL functions methods etc py3 and latest rpi op-sys(bookworm) compatible
+
+7. fixed some formatting eg Co2 -> CO2
+
+8. added AUTO RECOVERY when an rpi ssd is replaced. the ssd on the rpi will be automatically configured.
+   You still need to make the SSD with the Raspberry Pi Imager 
+   The userid, password and ip # has to setup correctly in the plugin. ANYTHING else is automated.
+
 
 
 added features / changes in added features / changes in v2022.183.130 @ 2025-01-25

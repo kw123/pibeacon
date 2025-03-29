@@ -37,7 +37,7 @@ def setupTempDir():
 		if readPopen("df | grep tempfs ")[0].find(G.homeDir+"temp") == -1:
 			subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
 		subprocess.call("sudo rm "+G.homeDir+"temp/*", shell=True)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 

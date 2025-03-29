@@ -32,7 +32,7 @@ def readParams():
 	try:
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return False
 		if lastRead2 == lastRead: return False
 		lastRead   = lastRead2
@@ -333,7 +333,7 @@ lastSend			= 0
 lastDisplay			= 0
 maxDeltaSpeed		= 40. # = mm/sec
 lastRead			= time.time()
-G.lastAliveSend	 	= time.time() -1000
+G.lastAliveSend		= time.time() -1000
 lastLux				= -999999
 lastLux2			= 0
 tt0					= time.time()
@@ -431,7 +431,3 @@ while True:
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
 sys.exit(0)
-		
-		
-		
- 

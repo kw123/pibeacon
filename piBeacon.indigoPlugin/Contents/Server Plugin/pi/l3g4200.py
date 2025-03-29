@@ -41,7 +41,7 @@ class THESENSORCLASS:
 
 			self.L3G4200SetCalibration()
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return 
 
@@ -98,7 +98,7 @@ class THESENSORCLASS:
 				zGyro -= 65536
 
 			return xGyro, yGyro, zGyro
-		except	Exception as e:
+		except Exception as e:
 			pass
 		return -9999999999990,0,0
 
@@ -110,7 +110,7 @@ class THESENSORCLASS:
 				temp -= 128
 			temp = 128 - temp  - 90	 # it goes down with rising temp so 128 - temp	- fudge factor 
 			return float(int(temp))
-		except	Exception as e:
+		except Exception as e:
 			pass
 		return -99	  
 		
@@ -125,7 +125,7 @@ def readParams():
 	global oldRaw, lastRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -161,7 +161,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 
 
@@ -181,7 +181,7 @@ def getValues(devId):
 			U.logger.log(10, "{}".format(data))
 			badSensor = 0
 			return data
-		except	Exception as e:
+		except Exception as e:
 			if badSensor > 2 and badSensor < 5: 
 				U.logger.log(30,"", exc_info=True)
 			badSensor+=1
@@ -257,7 +257,7 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

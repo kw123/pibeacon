@@ -5,7 +5,7 @@ import	sys, os, subprocess, copy
 import	time,datetime
 from PIL import ImageFont, ImageDraw, Image
 import json
-	sys.path.append(os.getcwd())
+sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
@@ -43,7 +43,7 @@ try:
 	im = Image.open("/home/pi/pibeacon/displayfiles/"+xxx)
 	out = im.convert("1")
 	out.save("/home/pi/pibeacon/displayfiles/"+xxx, "PNG")
-except	Exception as e:
+except Exception as e:
 	U.logger.log(30,"", exc_info=True)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

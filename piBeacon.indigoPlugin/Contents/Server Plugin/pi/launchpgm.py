@@ -26,7 +26,7 @@ def readParams():
 
 		sensorList	= "0"
 		oldlaunchCommand = copy.copy(launchCommand)
-		inp,inRaw = U.doRead()
+		inp, inRaw, x = U.doRead()
 
 		U.getGlobalParams(inp)
 		if "sensors"			in inp:	 sensors =					 (inp["sensors"])
@@ -68,7 +68,7 @@ def stopSensors(launchCmd):
 			U.killOldPgm(myPID, launchCmd)
 			## add any init code here for address # addr
 			U.logger.log(30, u"stopping	{}".format(launchCmd) )
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
@@ -81,7 +81,7 @@ def startSensors(launchCmd):
 			subprocess.call(launchCmd+" &", shell=True)
 			## add any init code here for address # addr
 			U.logger.log(30, u"starting	{}".format(launchCmd) )
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
@@ -95,7 +95,7 @@ def checkIfRunning(check):
 				return "running" if U.pgmStillRunning(check) else "not running"
 			else: 
 				return "not checked"
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"checking used: {}".format(check) )
 
@@ -166,7 +166,7 @@ while True:	 # loop for ever
 			if loopCount %20 ==0:
 				U.echoLastAlive(G.program)
 
-		except	Exception, e :
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 		time.sleep(sensorRefreshSecs) # sleep the requested amount

@@ -278,7 +278,7 @@ def readParams():
 	try:
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -409,7 +409,7 @@ def readParams():
 			pass
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30,"{}".format(sensors[sensor]) ) 
 		
@@ -440,7 +440,7 @@ def startSensor(devId):
 			badSensor = True
 		else: badSensor = False
 						
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		data={"sensors":{sensor:{devId:{"eventType":"badsensor"}}}}
 		badSensor = True

@@ -122,7 +122,7 @@ f= open(G.homeDir+"temp/BLEAnalysis.data","w")
 f.write(out)
 f.close()
 
-print json.dumps(MACs, sort_keys=True, indent=2)
+print( "{}".format(json.dumps(MACs, sort_keys=True, indent=2)))
 
 f= open(G.homeDir+"temp/BLEAnalysis.json","w")
 f.write(json.dumps(MACs, sort_keys=True, indent=2) )

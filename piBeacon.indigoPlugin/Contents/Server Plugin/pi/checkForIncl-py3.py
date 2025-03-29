@@ -118,16 +118,6 @@ def execInstall():
 					break
 
 
-
-	if "seesaw" not in notSupported:
-		logger.log(20,"check adafruit-circuitpython-seesaw"  )
-		try:
-			from adafruit_seesaw.seesaw import Seesaw
-		except:
-			logger.log(20,"sudo pip3 install {}  adafruit-circuitpython-seesaw".format(usebreakOption) )
-			readPopen("sudo pip3 install {}  adafruit-circuitpython-seesaw".format(usebreakOption))
-
-
 	if "pigpio" not in notSupported:
 		logger.log(20,"check pigpio"  )
 		try:
@@ -138,6 +128,32 @@ def execInstall():
 		except:
 			logger.log(20,"sudo apt-get install -y pigpio python3-pigpio ".format(usebreakOption) )
 			ret = readPopen("sudo apt-get install -y pigpio python3-pigpio ")
+
+
+	if "pexpect" not in notSupported:
+		logger.log(20,"check pexpect"  )
+		try:
+			import pexpect
+		except:
+			logger.log(20,"sudo pip3 install  "+usebreakOption+ " adafruit-circuitpython-tmp117" )
+			readPopen("sudo pip3 install  "+usebreakOption+ "  pexpect")
+
+
+	if "expect" not in notSupported:
+		logger.log(20,"check expect"  )
+		ret = readPopen("which expect")
+		if ret[0].find("/usr/bin/expect") == -1:
+			readPopen("sudo apt-get install -y expect")
+
+
+
+	if "seesaw" not in notSupported:
+		logger.log(20,"check adafruit-circuitpython-seesaw"  )
+		try:
+			from adafruit_seesaw.seesaw import Seesaw
+		except:
+			logger.log(20,"sudo pip3 install {}  adafruit-circuitpython-seesaw".format(usebreakOption) )
+			readPopen("sudo pip3 install {}  adafruit-circuitpython-seesaw".format(usebreakOption))
 
 
 	if "neopixel" not in notSupported:
@@ -184,22 +200,6 @@ def execInstall():
 		except Exception as e:
 			logger.log(20,"sudo pip3 install  "+usebreakOption+ " Adafruit_DHT" )
 			readPopen("sudo pip3 install  "+usebreakOption+ " Adafruit_DHT") 
-
-
-	if "pexpect" not in notSupported:
-		logger.log(20,"check pexpect"  )
-		try:
-			import pexpect
-		except:
-			logger.log(20,"sudo pip3 install  "+usebreakOption+ " adafruit-circuitpython-tmp117" )
-			readPopen("sudo pip3 install  "+usebreakOption+ "  pexpect")
-
-
-	if "expect" not in notSupported:
-		logger.log(20,"check expect"  )
-		ret = readPopen("which expect")
-		if ret[0].find("/usr/bin/expect") == -1:
-			readPopen("sudo apt-get install -y expect")
 
 
 	if True:

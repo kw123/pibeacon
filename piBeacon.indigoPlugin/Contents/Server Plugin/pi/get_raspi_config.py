@@ -117,7 +117,7 @@ def execRaspi(params):
 		else:				print("starting with logging to console writing results to: {}".format(pFile))
 
 		if os.path.exists(pFile):
-		  os.remove(pFile)
+			os.remove(pFile)
 
 		#print("======starting:2")
 		yy = {}

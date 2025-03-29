@@ -150,11 +150,11 @@ def readNewParams(force=0, init=False):
 	global GPIOZEROveto
 
 	try:	
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": 
 			subprocess.call("cp "+G.homeDir+"parameters  "+G.homeDir+"temp/parameters", shell=True)
 			time.sleep(1)
-			inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+			inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 
 
 		if force == 0:
@@ -182,6 +182,7 @@ def readNewParams(force=0, init=False):
 		if BLEconnectUseHCINoOld != "" and BLEconnectUseHCINoOld != G.BLEconnectUseHCINo:
 			U.restartMyself(reason="new hci-BLEconnect defs, need to restart master", doPrint =True, python3=usePython3)
 		BLEconnectUseHCINoOld = copy.copy(G.BLEconnectUseHCINo)
+
 
 		if "batteryMinPinActiveTimeForShutdown" 	in inp:	batteryMinPinActiveTimeForShutdown = float(inp["batteryMinPinActiveTimeForShutdown"])
 		if "enableiBeacons"							in inp:	enableiBeacons =					inp["enableiBeacons"]
@@ -869,9 +870,9 @@ def checkIfAliveFileOK(sensor,force=""):
 				f = open(G.homeDir+"temp/alive."+sensor,"r")
 				data =f.read()
 				data =data.strip("\n")
-				lastUpdate=float(data)
+				lastUpdate = float(data)
 				f.close()
-			except	Exception as e:
+			except Exception as e:
 				time.sleep(0.2)
 				if os.path.isfile(G.homeDir+"temp/alive."+sensor):
 						f = open(G.homeDir+"temp/alive."+sensor,"r")
@@ -885,7 +886,7 @@ def checkIfAliveFileOK(sensor,force=""):
 					try: f.close()
 					except: pass
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			lastUpdate = 0
 		#print "alive test 2 for " , sensor, data
@@ -970,15 +971,15 @@ def rebootWatchDog():
 		U.logger.log(30,"", exc_info=True)
 
 
+				
+
 ####################      #########################
 def checkIfRebootRequest():
 	global usePython3, mustUsePy3
 	###print "into checkIfRebootRequest"
-	if	os.path.isfile(G.homeDir+"temp/rebootNeeded"):
-		f = open(G.homeDir+"temp/rebootNeeded") 
-		reason = f.read()
-		f.close()
-		os.remove(G.homeDir+"temp/rebootNeeded")
+	reason = U.checkifRebootRequested()
+	if reason != "":
+		U.resetRebootRequest()
 		for ii in range(30):
 			if os.path.isfile(G.homeDir+"includepy2.done"): break
 			time.sleep(10)
@@ -1008,12 +1009,9 @@ def checkIfRebootRequest():
 
 
 	#print "into checkIfRebootRequest restartNeeded" , os.path.isfile(G.homeDir+"temp/restartNeeded")
-	if	os.path.isfile(G.homeDir+"temp/restartNeeded"):
-		#print "into checkIfRebootRequest restartNeeded" , os.path.isfile(G.homeDir+"temp/restartNeeded")
-		f=open(G.homeDir+"temp/restartNeeded","r") 
-		reason = f.read()
-		f.close()
-		os.remove(G.homeDir+"temp/restartNeeded")
+	reason = U.checkifRestartRequested()
+	if reason != "":
+		U.resetRestartRequest()
 		if reason.find("bluetooth_startup")>-1:
 			count = 0
 			if	os.path.isfile(G.homeDir+"temp/restartCount"):
@@ -1837,23 +1835,21 @@ def fixCallbeacon(sleepTime):
 		writeOut = ""
 		test     = ""
 		py3 = "usePy3" if usePython3 else ""
+		if sleepTime == "0":
+			test = 'cmd1 = "cd {}; nohup /bin/bash master.sh  {} & ".format(homeDir, usePython3)'
+		else:
+			test = 'cmd1 = "sleep '+sleepTime+ ';cd {}; nohup /bin/bash master.sh '+py3+' > /dev/null 2>&1 & ".format(homeDir)'
+
 		for line in callbeacon:
-			if line.find("master.sh ")>-1 and writeOut =="":
-				if sleepTime == "0":
-					test = 'subprocess.call("cd {}; nohup /bin/bash master.sh '+py3+' > /dev/null 2>&1 & ".format(homeDir), shell=True)'
-				else:
-					test = 'subprocess.call("sleep '+sleepTime+ ';cd {}; nohup /bin/bash master.sh '+py3+' > /dev/null 2>&1 & ".format(homeDir), shell=True)'
-				if line == test:
-					break
-				else:
-					out+=test+"\n"
-					if test.find("sleep") > -1:	writeOut =" new sleep time"
-					else: 						writeOut ="set sleep to 0"
+			if line.find("master.sh ") > -1 and writeOut == "" and line != test:
+					out += test+"\n"
+					if test.find("sleep") > -1:	writeOut = " new sleep time"
+					else: 						writeOut = "set sleep to 0"
 			else:
-				out+=line+"\n"
+				out += line+"\n"
 
 		if writeOut != "":
-			f=open("/home/pi/pibeacon/callbeacon.py","w")
+			f = open("/home/pi/pibeacon/callbeacon.py","w")
 			f.write(out)
 			f.close()
 
@@ -2513,7 +2509,6 @@ def execMaster():
 		global lastSensorRunningCheck
 
 
-
 		lastSensorRunningCheck			= time.time()
 		programsThatShouldBeRunning 	= {}
 		programsThatShouldBeRunningOld	= {}
@@ -2759,9 +2754,9 @@ def execMaster():
 			time.sleep(50)
 			exit()
 
-		if os.path.isfile(G.homeDir+"temp/rebootNeeded"): 	os.remove(G.homeDir+"temp/rebootNeeded")
-		if os.path.isfile(G.homeDir+"temp/restartNeeded"):	os.remove(G.homeDir+"temp/restartNeeded")
-
+		U.resetRebootRequest()
+		U.resetRestartRequest()
+		
 		copySupplicantToBoot(adhocWifiStarted)
 
 		beforeLoop			 = False
@@ -2816,7 +2811,7 @@ def execMaster():
 			loopCount += 1
 
 			if loopCount == 3 or loopCount%10 == 0:
-		 		subprocess.call(pyCommand+" killSudos.py &", shell=True)
+				subprocess.call(pyCommand+" killSudos.py &", shell=True)
 
 			if abs(tAtLoopSTart	 - time.time()) > 30:
 				if G.networkType.find("indigo") >-1 and G.wifiType == "normal":

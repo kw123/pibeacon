@@ -132,7 +132,7 @@
 you can set length of on/off and time between pulses.
 it supports 2 modes: batch and interactive these are 2 ways of using gatttool
 
-You can also use this action to setup a direct action bewteen 2 rpi using a BLE on/off sensor as a trigger and a switchbot as a target
+You can also use this action to setup a direct action between 2 rpi using a BLE on/off sensor as a trigger and a switchbot as a target
   This will work w/o indigo beeing up. This is not stored as an indigo action
 
 Make sure the switch bot is properly configured,  ie as press or normal
@@ -569,7 +569,7 @@ After delete you can save or cancel the action and later delete it</Label>
 			    <Label>select rPi #</Label>
 			</Field>
 			<Field id="text"  type="textfield" default=""	>
-			<Label>Enter text to be send to myoutput.py:</Label>
+			<Label>Enter text to be sent to myoutput.py:</Label>
 			</Field>
 			<Field id="startAtDateTime"	 type="textfield" default="0">
 			    <Label>Start: delay by secs or set Date YYYY-mm-dd HH:MM:SS when to start:</Label>
@@ -1709,7 +1709,7 @@ Then there are elements in each loop that can be shown
    Each element can be set to be shown off/on/off in seconds interval. 
        This way you can overlay elements and show them in sequence in a part of the screen
 The action menu offers 70 elements, you can use python script for more elements-
-   the are presented in a section of ten. You must select the section to edit them 
+   they are presented in a section of ten. You must select the section to edit them 
    enable debug output devices and copy the example script and expand in indigo action script
     </Label> </Field>
 			
@@ -3023,7 +3023,7 @@ Then there are actions in each set (steps/sleep)
      -or after all elements have been defined (use wait until all .. and immediate for the last element)
      </Label> </Field>
 			
-			<Field   id="OneTime" type="label"><Label>One time function executed before elements.... </Label> </Field>
+			<Field   id="OneTime" type="label"><Label>One time function executed before elements.. </Label> </Field>
 
 			 <Field id="repeat"  type="menu" default="9999999" >
 			    <List>
@@ -3842,7 +3842,7 @@ this will pause the sensor, will just sleep, but any other action already initat
 		<ConfigUI>
 			  <Field id="piServerNumber"   type="menu" defaultValue="all" tooltip="" >
 			   <Label>select rPi to use for query, use ALL for optimized distribution</Label>
-			    <List class="self" filter="" method="filterPiBLE" dynamicReload="false"/>
+			    <List class="self" filter="blue" method="filterPiDInclAll" dynamicReload="false"/>
 			 </Field>
 			<Field id="beepTime" type="menu" defaultValue="0">
 				<Label>do a beep before battery cmd</Label>
@@ -3921,7 +3921,7 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 			 <Label>Calibration of sensors</Label>
 			 <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="" >
 			    <Label>select rPi #</Label>
-			    <List class="self" filter="" method="filterPiNoAll" dynamicReload="False"/>
+			    <List class="self" filter="" method="filterPiDInclAll" dynamicReload="False"/>
 			 </Field>
 			 <Field id="typeId"   type="menu" defaultValue="all" tooltip="" >
 			  <List>
@@ -4019,6 +4019,37 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 
 		</ConfigUI>
     </Action>
+
+	<Action id="setDevProp">
+		<Name>Set a property of any piBeacon Indigo device to ..</Name>
+		<CallbackMethod>executeOverwriteButtonStateAction</CallbackMethod>
+		<ConfigUI>
+			<Field     id="MSG" type="textfield" defaultValue="">
+				<Label>MSG from plugin:</Label>
+			</Field>
+			<Field     id="devId" type="menu" defaultValue="0">
+				<Label>select device:</Label>
+				<List class="self" filter="all" method="filterallDevicesReturnDevID"  dynamicReload="false" />
+			</Field>
+
+			<Field  id="refreshCallbackMethod" type="textfield" defaultValue="menuRefreshCallback" hidden="true"></Field>
+
+			<Field id="propertyName" type="menu"> 
+				<Label>select property name to be overwritten</Label> 
+				<List class="self"  filter="" method="selectPropertyforChange"  dynamicReload="true" />
+			</Field>
+
+			<Field id="oldValue" type="textfield" readonly="true"> 
+				<Label>old value of state</Label> 
+			</Field>
+
+			<Field id="newValue" type="textfield"> 
+				<Label>new value for state</Label> 
+			</Field>
+
+		</ConfigUI>
+    </Action>
+
 
     <Action id="restartPlugin">
 		<Name>Restart the plugin </Name>

@@ -30,7 +30,7 @@ def readParams():
     global oldRaw, lastRead
     try:
 
-        inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+        inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
         if inp == "": return 
         if lastRead2 == lastRead: return 
         lastRead   = lastRead2
@@ -73,7 +73,7 @@ def readNew():
     global fastFreq, fastMute,fastMono,fastScan,fastMinSignal, inp, inpRawOld, newCommand, restart
     global defFreq, mute, mono, highCut, noiseCancel, bandLimit, DTCon, PLLREF, XTAL, HLSI, devIdFound
 
-    inpNew,inpRaw = U.doRead(inFile=G.homeDir+G.program+".set")
+    inpNew, inpRaw, x = U.doRead(inFile=G.homeDir+G.program+".set")
     if inpNew == "": return
     try:    
         newCommand = True
@@ -258,7 +258,7 @@ class tea5767:
             try:
                 self.bus.write_i2c_block_data(self.add, freqH, data) # Setting a new frequency to the circuit 
                 break
-            except Exception , e:
+            except Exception as e:
                pass
         if scan ==1 :  
             time.sleep(0.3)

@@ -57,9 +57,9 @@ def startSensor(devId,i2cADR):
 		if devId not in SENSOR:
 			SENSOR[devId]=SENSORclass(address=i2cADR) 
 			#                       measure every 800mS, 	not Man= autorange, all cur goes into ADC,  not used if manual =0
-	 		SENSOR[devId].setParams(cont=0, 		   		manual=0, 			cdr=0, 					timer=0)
+			SENSOR[devId].setParams(cont=0, 		   		manual=0, 			cdr=0, 					timer=0)
 			return 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 	return 
 
@@ -83,7 +83,7 @@ def getValues():
 				values[devId] = {"illuminance":round(SENSOR[devId].getLuminosity(),2)}
 		badSensor = 0
 		return values
-	except	Exception as e:
+	except Exception as e:
 		badSensor += 1
 		U.logger.log(30,"", exc_info=True)
 	return values
@@ -101,7 +101,7 @@ def readParams():
 	global oldRaw, lastRead
 
 	try:
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -156,7 +156,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 #################################

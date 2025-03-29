@@ -22,22 +22,20 @@
     Userid, password, IP number, basic parameters. 
 Then the plugin will login (ssh userid@ip ... with EXPECT) to the rPi 
     and update all programs and config files and reboot the RPI,
-When done click  CONFIRM to start sending to rPi. 
+When done click  CONFIRM rPi Config SAVE to start sending to rPi. 
 Then the rPi will start sending data to plugin 
     and will create an indigo RPI device and iBeacons devices 
     as they get detected</Label>
 			</Field>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
-				<List class="self" filter="" method="filterPiD" dynamicReload="true" />
+				<List class="self" filter="blue,sensor" method="filterPiDONoff" dynamicReload="true" />
 				<Label>select rPi to configure:</Label>
 			</Field>
-			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="menuRefreshCallback"/>
-<!-->			<Field id="confirmPiServer" type="button" tooltip="select pi- server number and then click on confirm ">
+			<Field id="confirmPiServer" type="button" tooltip="select pi- server number and then click on confirm ">
 				<Label>Confirm rPi</Label>
 				<Title>CONFIRM</Title>
 				<CallbackMethod>buttonConfirmPiServerCALLBACK</CallbackMethod>
 			</Field>
--->
 			<Field id="MSG" type="textfield" defaultValue="">
 				<Label> message from Plugin:</Label>
 			</Field>
@@ -78,6 +76,17 @@ Then the rPi will start sending data to plugin
 					<Option value="rebootloop-pingBoot">reboot rPi </Option>
 				</List>
 			</Field>
+			<Field enabledBindingId="enablePiEntries" id="expectTimeout" type="menu" defaultValue="20">
+				 <List>
+					<Option value="10"    >10 secs fast connection and fast rpi</Option>
+					<Option value="15"     >15 secs</Option>
+					<Option value="20"     >20 secs  default</Option>
+					<Option value="25"     >25 secs</Option>
+					<Option value="30"     >30 secs</Option>
+					<Option value="40"     >40 secs slow connection eg wifi and slow rpi</Option>
+				  </List>
+				<Label>timeout for expect connect to rpi:</Label>
+			</Field>
 			<Field enabledBindingId="enablePiEntries" id="confirmPiServerConfig" type="button" tooltip="">
 				<Label>Confirm rPi Config</Label>
 				<Title>SAVE</Title>
@@ -97,7 +106,7 @@ Then the rPi will start sending data to plugin
 
 			<Field id="configurePi" type="menu" defaultValue="999" tooltip="This will send all config files/ reboot .. to the selected rpi server ">
 				<Label>Select rPi server #:</Label>
-				<List class="self" filter="" method="filterPi" dynamicReload="false" />
+				<List class="self" filter="blue,sensor" method="filterPiDInclAll" dynamicReload="false" />
 			</Field>
 			<Field id="buttonSendOnlyParams" type="button" tooltip="send config file to rPis">
 				<Label>click to</Label>
@@ -179,6 +188,11 @@ Then the rPi will start sending data to plugin
 				<Title>get rPi system stats to logfile</Title>
 				<CallbackMethod>buttonGetSystemParametersCALLBACK</CallbackMethod>
 			</Field>
+			<Field id="buttonCheckIfInstallOk" type="button" tooltip="login, do ls /home/pi ; output in plugin.log">
+				<Label>click to</Label>
+				<Title>check if rPi install is done</Title>
+				<CallbackMethod>buttonCheckIfInstallOkCALLBACK</CallbackMethod>
+			</Field>
 			<Field id="buttonStopConfig" type="button" tooltip=" stop any send activity ">
 				<Label>click to</Label>
 				<Title>==== STOP any send/action in progress ====</Title>
@@ -198,7 +212,7 @@ Then the rPi will start sending data to plugin
 			</Field>
 			<Field id="anyCmdText" type="textfield" defaultValue="ls" tooltip="">
 				<Label>command:</Label>
-				<List class="self" filter="" method="filterPi" dynamicReload="false" />
+				<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 			</Field>
 			<Field id="buttonanycommand" type="button" tooltip="enter any unix command send through socket connection">
 				<Label>click to</Label>
@@ -215,7 +229,7 @@ Then the rPi will start sending data to plugin
 			</Field>
 			<Field id="PINumberForIPChange" type="menu" defaultValue="999">
 				<Label>change IP number of rPi#:</Label>
-				<List class="self" filter="" method="filterPi" dynamicReload="false" />
+				<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 			</Field>
 <!-->
 			<Field id="buttonconfirmPIforIPChange" type="button" tooltip="this will change the ip number used to contact the rPI server. It will send all NEW config and program files to the old ip address then reboot rPi">
@@ -540,7 +554,7 @@ Other beacons that send the battery level every second
 			</Field>
 			<Field id="piServerNumber" type="menu" defaultValue="all" tooltip="select pi- server number and then click on confirm ">
 				<Label>select rPi to use for query, use ALL for optimized distribution</Label>
-				<List class="self" filter="" method="filterPiBLE" dynamicReload="false" />
+				<List class="self" filter="blue" method="filterPiDInclAll" dynamicReload="false" />
 			</Field>
 			<Field id="devIdOfBeacon" type="menu" defaultValue="">
 				<Label>select beacon from list (or all):</Label>
@@ -608,8 +622,8 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 				</List>
 			</Field>
 			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number ">
-				<Label>select rPi to use for beep or choose closest</Label>
-				<List class="self" filter="" method="filterPibeaconOne" dynamicReload="false" />
+				<Label>select rPi to use for beep or choose closest (all)</Label>
+				<List class="self" filter="blue" method="filterPiDInclAll" dynamicReload="false" />
 			</Field>
 			<Field id="execAll" type="button">
 				<Label> ....after selection click</Label>
@@ -640,7 +654,7 @@ This can be used to get the MAC# of new beacons to be added or
 You should not run it more often than once a minute</Label>
 			</Field>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
-				<List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true" />
+				<List class="self" filter="blue" method="filterPiD" dynamicReload="true" />
 				<Label>Select rPi-server to request report:</Label>
 			</Field>
 			<Field id="minRSSI" type="menu" defaultValue="-60" tooltip=" the low (higher - number), the more beacons will be used">
@@ -685,7 +699,7 @@ is on your RPI in ~/pibeacon/temp/hcidump.data</Label>
 If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 messages or max 10 seconds</Label>
 			</Field>
            <Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
-				<List class="self" filter="" method="filterPiOnlyBlue" dynamicReload="true" />
+				<List class="self" filter="blue" method="filterPiD" dynamicReload="true" />
 				<Label>Select rPi-server to request report from:</Label>
 			</Field>
 			<Field id="printBLEreportLabel1" type="label">
@@ -856,7 +870,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<Label>Enable tracking of ALL raw data from a specific RPI</Label>
 			</Field>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number">
-				<List class="self" filter="" method="filterPiDONoff" dynamicReload="true" />
+				<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="true" />
 				<Label>select rPi to track:</Label>
 			</Field>
 			<Field id="idbuttontrackRPImessages" type="button" tooltip="">
@@ -1009,6 +1023,41 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 		</ConfigUI>
 	</MenuItem>
 
+	<MenuItem id="setDevProp">
+		<Name>Set a property of any piBeacon Indigo device to ..</Name>
+		<ConfigUI>
+			<Field     id="MSG" type="textfield" defaultValue="">
+				<Label>MSG from plugin:</Label>
+			</Field>
+			<Field     id="devId" type="menu" defaultValue="0">
+				<Label>select device:</Label>
+				<List class="self" filter="all" method="filterallDevicesReturnDevID"  dynamicReload="false" />
+			</Field>
+
+			<Field  id="refreshCallbackMethod" type="textfield" defaultValue="menuRefreshCallback" hidden="true"></Field>
+
+			<Field id="propertyName" type="menu"> 
+				<Label>select property name to be overwritten</Label> 
+				<List class="self"  filter="" method="selectPropertyforChange"  dynamicReload="true" />
+			</Field>
+
+			<Field id="oldValue" type="textfield" readonly="true"> 
+				<Label>old value of property</Label> 
+			</Field>
+
+			<Field id="newValue" type="textfield"> 
+				<Label>new value for property</Label> 
+			</Field>
+
+
+			<Field id="executeOverwrite" type="button"> 
+				<Label>overwrite now</Label> 
+				<Title>OVERWRITE</Title><CallbackMethod>executeOverwriteButtonProperty</CallbackMethod>
+			</Field>
+
+		</ConfigUI>
+	</MenuItem>
+
 	<MenuItem id="d20">
 		<Name>-------------manage sensor   devices  ----------</Name>
 	</MenuItem>
@@ -1149,7 +1198,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Label>Reset or  Request new data from rPi sensors</Label>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<Label>select rPi #</Label>
-				<List class="self" filter="" method="filterPiNoAll" dynamicReload="false" />
+				<List class="self" filter="blue,sensor" method="filterPiDInclAll" dynamicReload="false" />
 			</Field>
 			<Field id="typeId" type="menu" defaultValue="all" tooltip="">
 				<List>
@@ -1206,7 +1255,7 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 			<Label>Calibration of sensors</Label>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<Label>select rPi #</Label>
-				<List class="self" filter="" method="filterPiNoAll" dynamicReload="false" />
+				<List class="self" filter="blue,sensor" method="filterPiDInclAll" dynamicReload="false" />
 			</Field>
 			<Field id="typeId" type="menu" defaultValue="all" tooltip="">
 				<List>
@@ -1664,7 +1713,7 @@ Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</
 			<Label>send command string to myoutput.py program on rPi</Label>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<Label>select rPi #</Label>
-				<List class="self" filter="" method="filterPi" dynamicReload="false" />
+				<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 			</Field>
 			<Field id="text" type="textfield" default="">
 				<Label>Enter text to be send to myoutput.py:</Label>
@@ -1682,7 +1731,7 @@ Setting ON and OFF time to zero will take the switchbot 2.7 seconds to execute</
 			<Label>Play sound file on rPi</Label>
 			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm ">
 				<Label>select rPi #</Label>
-				<List class="self" filter="" method="filterPi" dynamicReload="false" />
+				<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 			</Field>
 			<Field id="cmd" type="menu" defaultValue="omxplayer" tooltip="">
 				<List>

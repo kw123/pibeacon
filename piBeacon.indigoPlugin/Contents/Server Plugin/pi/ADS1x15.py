@@ -182,7 +182,7 @@ class ADS1x15:
 			self.bus 		= smbus.SMBus(1)
 			self.address 	= address
 			self.debug 		= debug
-		except	Exception as e:
+		except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 
 	def readADC(self, channel=0, pga=6144, sps=250, singleOrDiff="single"):
@@ -259,7 +259,7 @@ class ADS1x15:
 			if self.debug: U.logger.log(20,  "sps:{}, pga:{}, channel:{}, val:{}, result:{}".format( sps, pga, channel, val, result))
 			return val
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(32,"", exc_info=True)
 		return ""
 #
@@ -272,7 +272,7 @@ def startSensor(devId,i2cADR):
 			#U.logger.log(30, u"starting devId:{}".format(devId))
 			SENSOR[devId]=ADS1x15(address=i2cADR) 
 			return 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -311,7 +311,7 @@ def getValues():
 		#U.logger.log(20, u"getValues   v:{}".format( values))
 		badSensor = 0
 		return values
-	except	Exception as e:
+	except Exception as e:
 		badSensor += 1
 		U.logger.log(30,"", exc_info=True)
 	return values
@@ -329,7 +329,7 @@ def readParams():
 	global oldRaw, lastRead
 
 	try:
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 
 		#U.logger.log(20, " comparisons: {}, {},  {}, ".format(inp == "",lastRead2 == lastRead, inpRaw == oldRaw ) )
 
@@ -410,7 +410,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 #################################

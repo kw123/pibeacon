@@ -73,7 +73,7 @@ TMP006_CFG_DRDY		= 0x0080
 # ===========================================================================
 class TMP006:
 
-	 # Constructor
+	# Constructor
 	def __init__(self, i2cAddress=""):
 
 		self.debug = G.debug
@@ -147,7 +147,7 @@ class TMP006:
 		try:
 			Tdie = self.readRawDieTemperature()
 			return Tdie * 0.03125
-		except	Exception as e:
+		except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 		return ""
 		
@@ -183,66 +183,66 @@ class TMP006:
 			fVobj = (Vobj - Vos) + TMP006_C2*math.pow((Vobj - Vos), 2.0)
 			Tobj = math.sqrt(math.sqrt(math.pow(Tdie, 4.0) + (fVobj/S)))
 			return Tobj - 273.15
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return ""
 
 
 	def write8(self, reg, value):
-		"Writes an 8-bit value to the specified register/address"
+		"""""Writes an 8-bit value to the specified register/address"""
 		try:
 			self.bus.write_byte_data(self.address, reg, value)
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def write16(self, reg, value):
-		"Writes a 16-bit value to the specified register/address pair"
+		"""Writes a 16-bit value to the specified register/address pair"""
 		try:
 			self.bus.write_word_data(self.address, reg, value)
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def writeRaw8(self, value):
-		"Writes an 8-bit value on the bus"
+		"""Writes an 8-bit value on the bus"""
 		try:
 			self.bus.write_byte(self.address, value)
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def writeList(self, reg, list):
-		"Writes an array of bytes using I2C format"
+		"""Writes an array of bytes using I2C format"""
 		try:
 			self.bus.write_i2c_block_data(self.address, reg, list)
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readList(self, reg, length):
-		"Read a list of bytes from the I2C device"
+		"""Read a list of bytes from the I2C device"""
 		try:
 			results = self.bus.read_i2c_block_data(self.address, reg, length)
 			return results
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readU8(self, reg):
-		"Read an unsigned byte from the I2C device"
+		"""Read an unsigned byte from the I2C device"""
 		try:
 			result = self.bus.read_byte_data(self.address, reg)
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readS8(self, reg):
-		"Reads a signed byte from the I2C device"
+		"""Reads a signed byte from the I2C device"""
 		try:
 			result = self.bus.read_byte_data(self.address, reg)
 			if result > 127: result -= 256
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readU16(self, reg, little_endian=True):
-		"Reads an unsigned 16-bit value from the I2C device"
+		"""Reads an unsigned 16-bit value from the I2C device"""
 		try:
 			result = self.bus.read_word_data(self.address,reg)
 			# Swap bytes if using big endian because read_word_data assumes little
@@ -250,7 +250,7 @@ class TMP006:
 			if not little_endian:
 				result = ((result << 8) & 0xFF00) + (result >> 8)
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readU16BE(self, register):
@@ -260,13 +260,13 @@ class TMP006:
 
 
 	def readU16Rev(self, reg):
-		"Reads an unsigned 16-bit value from the I2C device with rev byte order"
+		"""Reads an unsigned 16-bit value from the I2C device with rev byte order"""
 		try:
 			lobyte = self.readU8(reg)
 			hibyte = self.readU8(reg+1)
 			result = (hibyte << 8) + lobyte
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readU16LE(self, register):
@@ -277,12 +277,12 @@ class TMP006:
 
 
 	def readS16(self, reg, little_endian=True):
-		"Reads a signed 16-bit value from the I2C device"
+		"""Reads a signed 16-bit value from the I2C device"""
 		try:
 			result = self.readU16(reg,little_endian)
 			if result > 32767: result -= 65536
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
 
 	def readS16BE(self, register):
@@ -291,13 +291,13 @@ class TMP006:
 		return self.readS16(register, little_endian=False)
 
 	def readS16Rev(self, reg):
-		"Reads a signed 16-bit value from the I2C device with rev byte order"
+		"""Reads a signed 16-bit value from the I2C device with rev byte order"""
 		try:
 			lobyte = self.readS8(reg)
 			hibyte = self.readU8(reg+1)
 			result = (hibyte << 8) + lobyte
 			return result
-		except IOError, err:
+		except IOError as err:
 			return self.errMsg()
  
 	def readS16LE(self, register):
@@ -312,7 +312,7 @@ class TMP006:
 
 
 
- # ===========================================================================
+#===========================================================================
 # read params
 # ===========================================================================
 
@@ -326,7 +326,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -394,7 +394,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -415,7 +415,7 @@ def getValues(devId):
 		badSensor = 0
 		U.muxTCA9548Areset()
 		return data
-	except	Exception as e:
+	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"temp>>{}".format(temp)+"<<")
@@ -535,7 +535,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

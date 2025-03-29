@@ -45,7 +45,7 @@ def readParams():
 		global useWhichGPIO, useThreads
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -180,7 +180,7 @@ def workQueue():
 				workEvent(items[0], stateA=items[1], stateB=items[2], tt=items[3])
 				if threadDict["stopThread"]: return 
 			time.sleep(0.2)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return
 
@@ -235,7 +235,7 @@ def startGPIO(devId):
 		
 
 		return
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30,"start {}  {} ".format(G.program, sensors))
 	return
@@ -297,7 +297,7 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 
 			executePinChange(devIDUsed, pin, stateA, stateB, tt)
 
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 			return 
@@ -364,7 +364,7 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 
 			IP["pinALastValue"] = stateA
 			IP["pinBLastValue"] = stateB
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -505,7 +505,7 @@ def execMain():
 					saveCounts()
 	
 			newData = False
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 	

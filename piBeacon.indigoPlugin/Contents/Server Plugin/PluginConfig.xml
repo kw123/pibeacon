@@ -223,28 +223,16 @@ All BEACONS, RPI, BLEconnect, and SENSORS device types have predefined groups an
 with indigo 2022 it ist strongly recommened NOT to use std indigo webserver anymore. use the direct socket option</Label>
 	</Field>
 
-	<Field id="IndigoOrSocket"   type="menu"  tooltip="web server wil go through curl to std indigo webserver, then update variables which will be read by plugin to update deviece states.
-Socket communication will go directly through socket communication to plugin that updates the device states etc." >
-		<List>
-			<Option value="indigo" >use indigo std web server - not recommended deprecating</Option>
-			<Option value="socket" >use direct socket communication </Option>
-		</List>    
-		<Label>use RPI to indigo comm: web server(deprecating) or through socket(recommended):</Label> 
-	</Field>
 
-	<Field id="portOfServer"   type="textfield"  visibleBindingId="IndigoOrSocket" visibleBindingValue="indigo" >
-		<Label>define IP-PORT of default Indigo web server (RPI to Indigo 8176):</Label> 
-	</Field>
-
-	<Field id="indigoInputPORT"   type="textfield"   visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field id="indigoInputPORT"   type="textfield"   >
 		<Label>define IP-PORT for socket communication (RPI to Indigo):</Label> 
 	</Field>
 
-	<Field    id="checkRPIipForReject"   type="checkbox"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field    id="checkRPIipForReject"   type="checkbox"  >
 		<Label>Check if ip used by rpi is registered (set to off if rpi is in subnet):</Label>
 	</Field>
 
-	<Field    id="blockNonLocalIp"   type="checkbox"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field    id="blockNonLocalIp"   type="checkbox"  >
 		<Label>Accept only local ip numbers to contact MAC:</Label>
 	</Field>
 
@@ -254,7 +242,7 @@ Socket communication will go directly through socket communication to plugin tha
 
 	<Field id="maxSocksErrorTime"   type="menu"  tooltip="if socket communication has issues ie short or incomplete packages this parameter 
 allows to set a threshold on when to report. Eg if set to 10: if 2 events happen within 10 minutes it is reported, otherwise not" 
-             visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+             >
 		<Label>Report on bad data received if time between bad msgs less xx minutes:</Label> 
     	<List>
 			<Option value="0"    >error reporting off</Option>
@@ -267,7 +255,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 		</List>    
 	</Field>
 
-	<Field id="compressRPItoPlugin"   type="menu"  visibleBindingId="IndigoOrSocket" visibleBindingValue="socket" >
+	<Field id="compressRPItoPlugin"   type="menu"  >
 		<List>
 			<Option value="5000"   >msg GT 5 KB </Option>
 			<Option value="10000"   >msg GT 10 KB </Option>
@@ -287,6 +275,14 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
    
 	<Field id="passwordOfServer"   type="textfield"  tooltip="used to enable storage of PNG files"  >
 		<Label>password for indigo For storing files:</Label> 
+	</Field>
+
+   
+	<Field id="enableAutoconfigEmptySSD"    type="checkbox"   >
+		<Label>enable auto config for new / replaced rpi:</Label> 
+	</Field>
+	<Field id="enableAutoconfigEmptySSDLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+		<Label>you can disable this normally, only when you replace / add an RPI enable this</Label>
 	</Field>
 
 
@@ -395,8 +391,8 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 		</List>
 	</Field>
 
-	<Field id="expectTimeout"   type="menu"  tooltip="used in expect when loggin into rPi " >
-		<Label>Timeout for sending fields to rPi:</Label>
+	<Field id="expectTimeout"   type="menu"  tooltip="used in expect when loggin into rPi is overwritten in rpi device edit" >
+		<Label>Timeout for sending config etc to rPi:</Label>
 		<List>
 			<Option value="5"    > 5 seconds</Option>
 			<Option value="10"   >10 seconds</Option>
@@ -441,7 +437,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 		<Label>Use which method on RPIs for beacon scanning read:</Label>
 		<List>
 			<Option value="hcidump" > using hcidump and lescan, has more functions</Option>
-			<Option value="socket"  > using python socket reading (old method)</Option>
+			<Option value="socket"  > using python socket reading (deprecating)</Option>
 		</List>
 	</Field>
 

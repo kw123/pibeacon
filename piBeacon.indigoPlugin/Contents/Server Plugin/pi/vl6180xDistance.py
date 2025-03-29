@@ -340,7 +340,7 @@ class vl6180x:
 					newG = self.gainList[gL]
 					self.set_register(self.__VL6180X_SYSALS_INTEGRATION_PERIOD, iPeriod &0xff)
 					if newG not in self.ALS_GAIN_ACTUAL:
-					   U.logger.log(30,"Invalid gain setting:{}  Setting to 20.  {}".format(newG, self.ALS_GAIN_ACTUAL))
+						U.logger.log(30,"Invalid gain setting:{}  Setting to 20.  {}".format(newG, self.ALS_GAIN_ACTUAL))
 					als_gain_actual = self.ALS_GAIN_ACTUAL.setdefault(newG, 20.)
 
 					reg = self.ALS_GAIN_REG.setdefault(newG, self.__ALS_GAIN_20)
@@ -452,7 +452,7 @@ def readParams():
 	global oldRaw, lastRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -466,14 +466,13 @@ def readParams():
 
 		
 		U.getGlobalParams(inp)
-		  
+		
 		if "sensorList"		 in inp:  sensorList=			 (inp["sensorList"])
 		if "sensors"			in inp:  sensors =			   (inp["sensors"])
 		if "distanceUnits"	  in inp:  distanceUnits=		  (inp["distanceUnits"])
 		
 		if "output"			 in inp:  output=				 (inp["output"])
-   
- 
+
 		if sensor not in sensors:
 			U.logger.log(30, "vl6180xDistance is not in parameters = not enabled, stopping vl6180xDistance.py" )
 			time.sleep(0.1)
@@ -657,7 +656,7 @@ lastTime			= {}
 lastSend			= 0
 lastDisplay			= 0
 lastRead			= time.time()
-G.lastAliveSend	 	= time.time() -1000
+G.lastAliveSend		= time.time() -1000
 lastLux   			= -999999
 lastLux2  			= 0
 distLast 			= -100

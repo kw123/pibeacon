@@ -22,7 +22,7 @@ import	piBeaconGlobals as G
 
 G.program = "lidar360"
 
-'''Simple and lightweight module for working with Lidar rangefinder scanners.
+"""Simple and lightweight module for working with Lidar rangefinder scanners.
 
 Usage example:
 
@@ -45,7 +45,7 @@ Usage example:
 >>> lidar.disconnect()
 
 For additional information please refer to the Lidar class documentation.
-'''
+"""
 import codecs
 import serial
 import struct
@@ -84,16 +84,16 @@ _HEALTH_STATUSES = {
 
 
 def _b2i(byte):
-	'''Converts byte to integer (for Python 2 compatability)'''
+	"""Converts byte to integer (for Python 2 compatability)"""
 	return byte if int(sys.version[0]) == 3 else ord(byte)
 
 class LidarException(Exception):
-	'''Basic exception class for Lidar'''
+	"""Basic exception class for Lidar"""
 
 
 
 class Lidar(object):
-	'''Class for communicating with Lidar rangefinder scanners'''
+	"""Class for communicating with Lidar rangefinder scanners"""
 
 	_serial_port = None  #: serial port connection
 	port = ''  #: Serial port name, e.g. /dev/ttyUSB0
@@ -103,7 +103,7 @@ class Lidar(object):
 
 	def __init__(self, port, baudrate=115200, timeout=1, logger=None, mSpeed=DEFAULT_MOTOR_PWM):
 		try:
-			'''Initilize Lidar object for communicating with the sensor.
+			"""Initilize Lidar object for communicating with the sensor.
 
 			Parameters
 			----------
@@ -115,7 +115,7 @@ class Lidar(object):
 				Serial port connection timeout in seconds (the default is 1)
 			logger : logging.Logger instance, optional
 				Logger instance, if none is provided new instance is created
-			'''
+			"""
 			self._motorSpeed = mSpeed
 			self._serial_port = None
 			self.port = port
@@ -126,13 +126,13 @@ class Lidar(object):
 				logger = logging.getLogger('Lidar')
 			self.connect()
 			self.start_motor()
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 
 	def _process_scan(self, raw):
 		try:
-			'''Processes input raw data and returns measurment data'''
+			"""Processes input raw data and returns measurment data"""
 			new_scan = bool(_b2i(raw[0]) & 0b1)
 			inversed_new_scan = bool((_b2i(raw[0]) >> 1) & 0b1)
 			quality = _b2i(raw[0]) >> 2
@@ -144,15 +144,15 @@ class Lidar(object):
 			angle = ((_b2i(raw[1]) >> 1) + (_b2i(raw[2]) << 7)) / 64.
 			distance = (_b2i(raw[3]) + (_b2i(raw[4]) << 8)) / 4.
 			return new_scan, quality, angle, distance
-		except	Exception as e:
+		except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 
 
 
 	def connect(self):
 		try:
-			'''Connects to the serial port with the name `self.port`. If it was
-			connected to another serial port disconnects from it first.'''
+			"""Connects to the serial port with the name `self.port`. If it was
+			connected to another serial port disconnects from it first."""
 			if self._serial_port is not None:
 				self.disconnect()
 			try:
@@ -162,16 +162,16 @@ class Lidar(object):
 					timeout=self.timeout, dsrdtr=True)
 			except serial.SerialException as err:
 				raise LidarException('{}-Failed to connect to the sensor due to: {}'.format(self.port, err) )
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def disconnect(self):
 		try:
-			'''Disconnects from the serial port'''
+			"""Disconnects from the serial port"""
 			if self._serial_port is None:
 				return
 			self._serial_port.close()
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def set_pwm(self, pwm):
@@ -179,12 +179,12 @@ class Lidar(object):
 			assert(0 <= pwm <=1)
 			payload = struct.pack("<H", int(pwm * MAX_MOTOR_PWM))
 			self._send_payload_cmd(SET_PWM_BYTE, payload)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def start_motor(self):
 		try:
-			'''Starts sensor motor'''
+			"""Starts sensor motor"""
 			U.logger.log(10,'{}-Starting motor'.format(self.port))
 			# For A1
 			self._serial_port.dtr = False
@@ -193,12 +193,12 @@ class Lidar(object):
 			self.set_pwm(self._motorSpeed)
 			self.motor_running = True
 			U.logger.log(20,'{}-Starting motor .. done'.format(self.port))
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def stop_motor(self):
 		try:
-			'''Stops sensor motor'''
+			"""Stops sensor motor"""
 			U.logger.log(20,'{}-Stoping motor'.format(self.port))
 			# For A2
 			self.set_pwm(0)
@@ -206,12 +206,12 @@ class Lidar(object):
 			# For A1
 			self._serial_port.dtr = True
 			self.motor_running = False
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def _send_payload_cmd(self, cmd, payload):
 		try:
-			'''Sends `cmd` command with `payload` to the sensor'''
+			"""Sends `cmd` command with `payload` to the sensor"""
 			U.logger.log(10,'{}-sending cmd:{} payload:{}'.format(self.port,cmd,payload ) )
 			size = struct.pack('B', len(payload))
 			req = SYNC_BYTE + cmd + size + payload
@@ -221,21 +221,21 @@ class Lidar(object):
 			req += struct.pack('B', checksum)
 			self._serial_port.write(req)
 			U.logger.log(10,'{}Command sent: {}'.format(self.port,req))
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def _send_cmd(self, cmd):
 		try:
-			'''Sends `cmd` command to the sensor'''
+			"""Sends `cmd` command to the sensor"""
 			req = SYNC_BYTE + cmd
 			self._serial_port.write(req)
 			U.logger.log(10,'{}-Command sent: {}'.format(self.port,req) )
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def _read_descriptor(self):
 		try:
-			'''Reads descriptor packet'''
+			"""Reads descriptor packet"""
 			descriptor = self._serial_port.read(DESCRIPTOR_LEN)
 			U.logger.log(10,'{}-Recieved descriptor: {}'.format(self.port,descriptor) )
 			if len(descriptor) != DESCRIPTOR_LEN:
@@ -244,29 +244,29 @@ class Lidar(object):
 				raise LidarException('{}-Incorrect descriptor starting bytes .. ok  first 2 calls '.format(self.port) )
 			is_single = _b2i(descriptor[-2]) == 0
 			return _b2i(descriptor[2]), is_single, _b2i(descriptor[-1])
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return "","",""
 	def _read_response(self, dsize):
 		try:
-			'''Reads response packet with length of `dsize` bytes'''
+			"""Reads response packet with length of `dsize` bytes"""
 			U.logger.log(10,'{}-Trying to read response: {} bytes'.format(self.port, dsize) )
 			data = self._serial_port.read(dsize)
 			U.logger.log(10,'{}-Recieved data len{}'.format(self.port,len(data)) )
 			if len(data) != dsize:
 				raise LidarException('{}-Wrong body size'.format(self.port) )
 			return data
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def get_info(self):
-		'''Get device information
+		"""Get device information
 
 		Returns
 		-------
 		dict
 			Dictionary with the sensor information
-		'''
+		"""
 		try:
 			self._send_cmd(GET_INFO_BYTE)
 			dsize, is_single, dtype = self._read_descriptor()
@@ -286,12 +286,12 @@ class Lidar(object):
 				'serialnumber': serialnumber,
 			}
 			return data
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def get_health(self):
 		try:
-			'''Get device health state. When the core system detects some
+			"""Get device health state. When the core system detects some
 			potential risk that may cause hardware failure in the future,
 			the returned status value will be 'Warning'. But sensor can still work
 			as normal. When sensor is in the Protection Stop state, the returned
@@ -304,7 +304,7 @@ class Lidar(object):
 				'Good', 'Warning' or 'Error' statuses
 			error_code : int
 				The related error code that caused a warning/error.
-			'''
+			"""
 			self._send_cmd(GET_HEALTH_BYTE)
 			dsize, is_single, dtype = self._read_descriptor()
 			if dsize != HEALTH_LEN:
@@ -317,40 +317,40 @@ class Lidar(object):
 			status = _HEALTH_STATUSES[_b2i(raw[0])]
 			error_code = (_b2i(raw[1]) << 8) + _b2i(raw[2])
 			return status, error_code
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def clear_input(self):
 		try:
-			'''Clears input buffer by reading all available data'''
+			"""Clears input buffer by reading all available data"""
 			self._serial_port.read_all()
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def stop(self):
 		try:
-			'''Stops scanning process, disables laser diode and the measurment
-			system, moves sensor to the idle state.'''
+			"""Stops scanning process, disables laser diode and the measurment
+			system, moves sensor to the idle state."""
 			U.logger.log(20,'{}-Stoping scanning'.format(self.port))
 			self._send_cmd(STOP_BYTE)
 			time.sleep(.001)
 			self.clear_input()
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def reset(self):
 		try:
-			'''Resets sensor core, reverting it to a similar state as it has
-			just been powered up.'''
+			"""Resets sensor core, reverting it to a similar state as it has
+			just been powered up."""
 			U.logger.log(20,'{}-Reseting the sensor'.format(self.port))
 			self._send_cmd(RESET_BYTE)
 			time.sleep(.002)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	def iter_measurments(self, max_buf_meas=500):
 		try:
-			'''Iterate over measurments. Note that consumer must be fast enough,
+			"""Iterate over measurments. Note that consumer must be fast enough,
 			otherwise data will be accumulated inside buffer and consumer will get
 			data with increaing lag.
 
@@ -371,7 +371,7 @@ class Lidar(object):
 			distance : float
 				Measured object distance related to the sensor's rotation center.
 				In millimeter unit. Set to 0 when measurment is invalid.
-			'''
+			"""
 			self.start_motor()
 			status, error_code = self.get_health()
 			U.logger.log(20,'{}-Health status: {} [{}]'.format(self.port, status, error_code) )
@@ -401,13 +401,13 @@ class Lidar(object):
 						U.logger.log(20, 'Too many measurments in the input buffer: {}  {} Clearing buffer... --{}'.format(data_in_buf//dsize, max_buf_meas, self.port) )
 						self._serial_port.read(data_in_buf//dsize*dsize)
 				yield self._process_scan(raw)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return 
 
 	def iter_scans(self, max_buf_meas=500, min_len=5):
 		try:
-			'''Iterate over scans. Note that consumer must be fast enough,
+			"""Iterate over scans. Note that consumer must be fast enough,
 			otherwise data will be accumulated inside buffer and consumer will get
 			data with increasing lag.
 
@@ -425,7 +425,7 @@ class Lidar(object):
 				List of the measurments. Each measurment is tuple with following
 				format: (quality, angle, distance). For values description please
 				refer to `iter_measurments` method's documentation.
-			'''
+			"""
 			scan = []
 			iterator = self.iter_measurments(max_buf_meas)
 			for new_scan, quality, angle, distance in iterator:
@@ -435,7 +435,7 @@ class Lidar(object):
 					scan = []
 				if quality > 0 and distance > 0:
 					scan.append((quality, angle, distance))
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return 
 
@@ -455,7 +455,7 @@ def readParams():
 	global sensorCLASS
 
 	try:
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -488,7 +488,7 @@ def readParams():
 			
 			if devId not in motorFrequency: 			motorFrequency[devId] 				= 0.3
 			if devId not in nContiguousAngles: 			nContiguousAngles[devId] 			= 5
-			if devId not in contiguousDeltaValue:		contiguousDeltaValue[devId]		 	= 5
+			if devId not in contiguousDeltaValue:		contiguousDeltaValue[devId]			= 5
 			if devId not in anglesInOneBin:				anglesInOneBin[devId] 				= 2
 			if devId not in triggerLast:				triggerLast[devId] 					= 4
 			if devId not in triggerCalibrated:			triggerCalibrated[devId] 			= 5
@@ -617,7 +617,7 @@ def readParams():
 
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		
 
@@ -665,7 +665,7 @@ def startSensor(devId, restart=False):
 					#sensorCLASS[devId].stop_motor()
 					#sensorCLASS[devId].disconnect()
 					#exit()
-				except	Exception as e:
+				except Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					time.sleep(1)
 					sensorCLASS[devId] = ""
@@ -705,7 +705,7 @@ def startSensor(devId, restart=False):
 
 		time.sleep(.1)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		sensorCLASS[devId] = ""
 		return False
@@ -831,7 +831,7 @@ def getValues(devId):
 						bin = min(useBins-1,int(phi/anglesInOneBin[devId]))
 						values[-1][bin] += float(v)
 						entries[-1][bin] += 1
-					except	Exception as e:
+					except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 
 				for ii in range(useBins):
@@ -852,7 +852,7 @@ def getValues(devId):
 						trV[nn]["current"]["nonZero"] = useBins-(entries[nn]).count(0)
 						for kk in ["current","calibrated"]:
 							if kk =="current":	kki = -1
-							else:			 	kki = 0 
+							else:				kki = 0 
 							if nn == 1 and kk =="current": continue
 							deltaList[kk] 	= []
 							upD[kk] 		= 0
@@ -916,7 +916,7 @@ def getValues(devId):
 										deltaList[kk] 	= []
 										upD[kk] 		= 0
 						trV[nn]["calibrated"]["nonZero"] = trV[0]["calibrated"]["nonZero"]	
-				except	Exception as e:
+				except Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					U.logger.log(20, u"trV {} kk{}, kki{}, nn:{}".format(trV, kk, kki, nn))
 				
@@ -997,7 +997,7 @@ def getValues(devId):
 					U.logger.log(20, "{}-testifSend:{};{};  dT:{:6.1f};  nM :{:3d}; nE: {:3d};   DELTA  Cont- L-GT: {};  L-LT: {};  E-GT: {};  E-LT: {}, trgcalibrated:{};  trgLast:{}".format(
 						 usbPortUsed[devId],test,test0, time.time() - tStart, nM, countNotcalibratedBins, trV[-1]["current"]["GT"], trV[-1]["current"]["LT"], trV[-1]["calibrated"]["GT"], trV[-1]["calibrated"]["LT"],  triggerCalibrated[devId], triggerLast[devId] )
 					 )
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 	U.logger.log(30, u"{}-exit getsensor due error in iter_measurments".format({ usbPortUsed[devId]}))
 	lastAliveSend[devId]  = 0
@@ -1109,7 +1109,7 @@ while True:
 				countMeasurements[devId]  = 0
 
 		time.sleep(loopSleep)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

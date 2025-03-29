@@ -456,7 +456,7 @@ class BNO055():
 			error = self._read_byte(BNO055_SYS_ERR_ADDR)
 			# Return the results as a tuple of all 3 values.
 			return (status, self_test, error)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 
 	def get_calibration_status(self):
@@ -489,7 +489,7 @@ class BNO055():
 		cal_data = list(self._read_bytes(ACCEL_OFFSET_X_LSB_ADDR, 22))
 		# Go back to normal operation mode.
 		if setMode :
-			 self._operation_mode()
+			self._operation_mode()
 		return cal_data
 
 	def set_calibration(self, data,setMode=True):
@@ -509,7 +509,7 @@ class BNO055():
 		self._write_bytes(ACCEL_OFFSET_X_LSB_ADDR, data)
 		# Go back to normal operation mode.
 		if setMode :
-			 self._operation_mode()
+			self._operation_mode()
 
 	def get_axis_remap(self):
 		"""Return a tuple with the axis remap register values.	This will return
@@ -601,7 +601,7 @@ class BNO055():
 		try:
 			heading, roll, pitch = self._read_vector(BNO055_EULER_H_LSB_ADDR)
 			return (heading/16.0, roll/16.0, pitch/16.0)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 		
@@ -612,7 +612,7 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_MAG_DATA_X_LSB_ADDR)
 			return (x/16.0, y/16.0, z/16.0)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
@@ -623,7 +623,7 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_GYRO_DATA_X_LSB_ADDR)
 			return (x/900.0, y/900.0, z/900.0)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
@@ -634,7 +634,7 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_ACCEL_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
@@ -645,7 +645,7 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_LINEAR_ACCEL_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
@@ -656,7 +656,7 @@ class BNO055():
 		try:
 			x, y, z = self._read_vector(BNO055_GRAVITY_DATA_X_LSB_ADDR)
 			return (x/100.0, y/100.0, z/100.0)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0,0,0
 
@@ -669,7 +669,7 @@ class BNO055():
 			# Scale values, see 3.6.5.5 in the datasheet.
 			scale = (1.0 / (1<<14))
 			return (x*scale, y*scale, z*scale, w*scale)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0,0,0,0
 
@@ -677,7 +677,7 @@ class BNO055():
 		"""Return the current temperature in Celsius."""
 		try:
 			return self._read_signed_byte(BNO055_TEMP_ADDR)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 		return 0
 		
@@ -716,7 +716,7 @@ def startBNO(devId, i2cAddress):
 				time.sleep(1)
 				U.restartMyself(reason=" init not working, sensor does not report properly (IDs =0 )", doPrint=False)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 # read params
 # ===========================================================================
@@ -729,7 +729,7 @@ def readParams():
 
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -775,7 +775,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 
 
@@ -787,7 +787,7 @@ def getValues(devId):
 	try:
 		data = {}
 		for ii in range(5):
-		   # Read the calibration status, 0=uncalibrated and 3=fully calibrated.
+			# Read the calibration status, 0=uncalibrated and 3=fully calibrated.
 			CALsys, CALgyro, CALaccel, CALmag = BNO055sensor[devId].get_calibration_status()
 			status = BNO055sensor[devId]._read_byte(BNO055_SYS_STAT_ADDR)&0b01111111
 			if CALsys < 2  or (CALgyro + CALaccel +CALmag) <4  or status !=0b00000101 :
@@ -853,7 +853,7 @@ def getValues(devId):
 		for xx in data:
 			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 	return {"MAG":"bad"}
 
@@ -941,7 +941,7 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 

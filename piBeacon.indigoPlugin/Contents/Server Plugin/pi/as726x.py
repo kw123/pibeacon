@@ -178,7 +178,7 @@ class Adafruit_AS726x(object):
 			self._norm = 16.*140. / (self._gain*self._integration_time*_counts_Per_mu_Watt)
 
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return
 
@@ -256,7 +256,7 @@ class Adafruit_AS726x(object):
 			state |= (Adafruit_AS726x.GAIN.index(val) << 4)
 			self._virtual_write(_AS726X_CONTROL_SETUP, state)
 			return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 
 	def set_Integration_time(self, val):
@@ -406,7 +406,7 @@ class Adafruit_AS726x(object):
 		self.__write_u8(_AS726X_SLAVE_WRITE_REG, value)
 
 
- # ===========================================================================
+#===========================================================================
 # read params
 # ===========================================================================
 
@@ -421,7 +421,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -522,7 +522,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 def setLED(devId,value):
@@ -535,7 +535,7 @@ def setLED(devId,value):
 			as726xsensor[devId].set_driver_led_current(value)
 			as726xsensor[devId].enable_driver_led(True)
 		U.muxTCA9548Areset()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -563,7 +563,7 @@ def getValues(devId):
 		U.muxTCA9548Areset()
 		return data
 
-	except	Exception as e:
+	except Exception as e:
 		if badSensor >-1 and badSensor < 5000: 
 			U.logger.log(30,"{}".format(data), exc_info=True)
 						
@@ -755,7 +755,7 @@ while True:
 		if rebootCount >20:
 			U.restartMyself(reason="badsensor")
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

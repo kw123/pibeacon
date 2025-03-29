@@ -102,7 +102,7 @@ def OUTPUTi2cRelay(command):
 						pulseUp = float(values.get("pulseUp",1))
 						pulseDown = float(values.get("pulseDown",1))
 						nPulses = int(values.get("nPulses",1))
-					except	Exception as e:
+					except Exception as e:
 						U.logger.log(20," error reading command values:{}".format(values))
 		
 
@@ -230,7 +230,7 @@ def setGPIO(command):
 					analogValue = min(100.,values.get("analogValue",-1))
 					if bits == -1: bits = analogValue
 					if bits == -1: bits = 0
-				except	Exception as e:
+				except Exception as e:
 					U.logger.log(20," error reading command values:{}".format(values))
 		
 		
@@ -377,7 +377,7 @@ def setGPIO(command):
 				U.logger.log(myDebug, "continuousUpDown finished" )
 
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 	U.logger.log(myDebug, "exit {}".format(command) )
@@ -403,7 +403,7 @@ def sleepForxSecs(sleepTime):
 			time.sleep(dt)
 			if sleepTime <= tDone: return False
 		return False
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		U.logger.log(20, "threadsActive{}".format(threadsActive))
 	return False
@@ -462,9 +462,9 @@ def execCMDS(nextItem):
 						f.write("{}".format(fc)) 
 						f.close()
 						if "touchFile" in nextItem and nextItem["touchFile"]:
-							subprocess.call("echo	 { } > {}temp/touchFile".format(time.time(), G.homeDir) , shell=True)
+							subprocess.call("echo	 {} > {}temp/touchFile".format(time.time(), G.homeDir) , shell=True)
 						subprocess.call("sudo chown -R  pi  "+G.homeDir, shell=True)
-					except	Exception as e:
+					except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 
@@ -479,7 +479,7 @@ def execCMDS(nextItem):
 						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
 						f.write(nextItem["device"]) 
 						f.close()
-				except	Exception as e:
+				except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 
@@ -494,7 +494,7 @@ def execCMDS(nextItem):
 						f = open(G.homeDir+"temp/beaconloop.beep","a")
 						f.write(nextItem["device"]+"\n") 
 						f.close()
-				except	Exception as e:
+				except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 
@@ -505,7 +505,7 @@ def execCMDS(nextItem):
 						f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","a")
 						f.write(nextItem["device"]+"\n") 
 						f.close()
-				except	Exception as e:
+				except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 
@@ -538,7 +538,7 @@ def execCMDS(nextItem):
 						f=open(G.homeDir+"temp/setStepperMotor.inp","a")
 						f.write(cmdOut+"\n")
 						f.close()
-					except	Exception as e:
+					except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 			
@@ -555,7 +555,7 @@ def execCMDS(nextItem):
 						f = open(G.homeDir+"display.inp","w")
 						f.write(cmdOut+"\n")
 						f.close()
-					except	Exception as e:
+					except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 
@@ -585,7 +585,7 @@ def execCMDS(nextItem):
 							f = open(G.homeDir+"neopixel.inp","w")
 							f.write(cmdOut+"\n")
 							f.close()
-					except	Exception as e:
+					except Exception as e:
 						U.logger.log(30,"", exc_info=True)
 				continue
 
@@ -697,7 +697,7 @@ def execCMDS(nextItem):
 								try: del execcommandsList[threadName]
 								except:pass
 
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 						continue
 
@@ -718,7 +718,7 @@ def execCMDS(nextItem):
 								try: del execcommandsList[threadName]
 								except:pass
 
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 						continue
 
@@ -728,7 +728,7 @@ def execCMDS(nextItem):
 						try:
 							pinI = int(nextItem["pin"])
 							pin = str(pinI)
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 							U.logger.log(20,"bad pin {}".format(nextItem))
 							continue
@@ -736,7 +736,7 @@ def execCMDS(nextItem):
 						if "aw" 				in nextItem: nextItem["analogwrite"] 		= nextItem["aw"]
 						if "cup" 				in nextItem: nextItem["continuousupdown"] 	= nextItem["cup"]
 						if "pu" 				in nextItem: nextItem["pulseup"] 			= nextItem["pu"]
-						if "pd" 				in nextItem: nextItem["pulsedown"]		 	= nextItem["pd"]
+						if "pd" 				in nextItem: nextItem["pulsedown"]			= nextItem["pd"]
 						if "np" 				in nextItem: nextItem["npulses"] 			= nextItem["np"]
 						if "analogwrite" 		in nextItem: values["analogwrite"] 			= float(nextItem.get("analogwrite",1))
 						if "continuousupdown" 	in nextItem: values["continuousUpDown"] 	= float(nextItem.get("continuousupdown",1))
@@ -761,7 +761,7 @@ def execCMDS(nextItem):
 						try:
 							pinI = int(nextItem["pin"])
 							pin = str(pinI)
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 							U.logger.log(20,"bad pin {}".format(nextItem))
 							continue
@@ -779,7 +779,7 @@ def execCMDS(nextItem):
 						if "aw" 				in nextItem: nextItem["analogwrite"] 		= nextItem["aw"]
 						if "cup" 				in nextItem: nextItem["continuousupdown"] 	= nextItem["cup"]
 						if "pu" 				in nextItem: nextItem["pulseup"] 			= nextItem["pu"]
-						if "pd" 				in nextItem: nextItem["pulsedown"]		 	= nextItem["pd"]
+						if "pd" 				in nextItem: nextItem["pulsedown"]			= nextItem["pd"]
 						if "np" 				in nextItem: nextItem["npulses"] 			= nextItem["np"]
 						if "analogwrite" 		in nextItem: values["analogwrite"] 			= float(nextItem.get("analogwrite",1))
 						if "continuousupdown" 	in nextItem: values["continuousUpDown"] 	= float(nextItem.get("continuousupdown",1))
@@ -800,7 +800,7 @@ def execCMDS(nextItem):
 							cmdOut= "/usr/bin/python "+G.homeDir+"myoutput.py "+text+" &"
 							U.logger.log(10,"cmd= %s"%cmdOut)
 							subprocess.call(cmdOut, shell=True)
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 						continue
 
@@ -816,7 +816,7 @@ def execCMDS(nextItem):
 							if cmdOut != "":
 								U.logger.log(10,"cmd= %s"%cmdOut)
 								subprocess.call("/usr/bin/python playsound.py '"+cmdOut+"' &" , shell=True)
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 						continue
 
@@ -843,7 +843,7 @@ def stopThreadsIfEnded(all=False):
 
 		for threadName in stopThreads:
 			stopExecCmd(threadName)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 				 
@@ -883,7 +883,7 @@ def execSimple(nextItem):
 			U.stopNTP()
 			return True
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return False
 
@@ -911,7 +911,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 		#U.logger.log(20, "===== ip:{}:  data:{}<\n\n".format(self.client_address[0], data))
 		try:
 			commands = json.loads(data.strip("\n"))
-		except	Exception as e:
+		except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 				U.logger.log(20,"bad command: json failed {}".format(data))
 				return
@@ -956,7 +956,7 @@ def setupexecThreads(nextItem):
 
 		return True
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return False
 
@@ -975,7 +975,7 @@ def stopExecCmd(threadName):
 			threadsActive[threadName]["state"] = "stop"
 			time.sleep(0.07)
 			#U.logger.log(20, "stop finished after wait thread={}".format(threadName))
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	try: 	del threadsActive[threadName]
 	except: pass
@@ -992,10 +992,8 @@ def getcurentCMDS():
 			except:	pass
 			return
 
-		if os.path.isfile(G.homeDir+"execcommandsList.current"):
-			f = open(G.homeDir+"execcommandsList.current","r")
-			readCmds = f.read()
-			f.close()
+		readCmds = U.doReadSimpleFile(G.homeDir+"execcommandsList.current")
+		if readCmds != "":
 			use = True
 			if len(readCmds) < 5: use = False 
 			else:
@@ -1010,7 +1008,7 @@ def getcurentCMDS():
 				keep[threadName] = execcommandsList[threadName]
 				try:
 					nextItem = execcommandsList[threadName]
-				except	Exception as e:
+				except Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					continue
 				setupexecThreads(nextItem)
@@ -1019,7 +1017,7 @@ def getcurentCMDS():
 			f.write(json.dumps(keep))
 			f.close()
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -1037,7 +1035,7 @@ def setupReadTempDirThread():
 		threadsActive[threadName]["thread"].start()
 		return True
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return False
 
@@ -1052,18 +1050,15 @@ def readTempDirThread():
 		#U.logger.log(20, "readTempDirThread looping trough:{}".format(G.homeDir+"temp/fileCommand.inp"))
 		time.sleep(1.5)
 		commands = {}
-		if os.path.isfile(fName):
-			#U.logger.log(20, "readTempDirThread file found:")
-			f = open(fName,"r")
+		rawRead = U.doReadSimpleFile(fName)
+		if rawRead != "":
 			try:
 				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
 				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "continuousUpDown", "values":{"nPulses":4, "pulseUp":2, "pulseDown":2},  "pin": "19"}]'
 				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "pulseUp", "values":{"pulseUp":2},  "pin": "19"}]'
-				reawRead = f.read().strip("\n")
-				commands = json.loads(reawRead)
+				commands = json.loads(rawRead.strip("\n"))
 			except:
-				U.logger.log(20, "readTempDirThread bad read:{}".format(reawRead))
-			f.close()
+				U.logger.log(20, "readTempDirThread bad read:{}".format(rawRead))
 			U.logger.log(20, "readTempDirThread commands:{}".format(commands))
 
 			os.remove(fName)
@@ -1086,7 +1081,7 @@ def readTempDirThread():
 def readParams():
 	global	output, useLocalTime, myPiNumber, inp, readOutput, readInput, execcommandsListAction, PWM, typeForPWM
 	global usePython3
-	inp,inpRaw = U.doRead()
+	inp, inpRaw, x = U.doRead()
 	if inp == "": return
 
 	U.getGlobalParams(inp)
@@ -1099,7 +1094,7 @@ def readParams():
 		readInput  = 			inp.get("input",{})
 		usePython3 =			inp.get("usePython3","") == "1"
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -1156,7 +1151,7 @@ if __name__ == "__main__":
 		# Create the server, binding on port 9999
 		server = socketserver.TCPServer((G.ipAddress, PORT), MyTCPHandler)
 
-	except	Exception as e:
+	except Exception as e:
 		####  trying to kill the process thats blocking the port# 
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "getting  socket does not work, trying to reset {}".format(PORT) )
@@ -1189,7 +1184,7 @@ if __name__ == "__main__":
 		try:	
 			# Create the server, binding on port eg 9999
 			server = socketserver.TCPServer((G.ipAddress, PORT), MyTCPHandler)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20, "getting  socket does not work, try restarting master  "+ str(PORT) )
 			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True)
 			exit()

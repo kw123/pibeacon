@@ -141,14 +141,14 @@ class thisSensorClass:
 				U.logger.log(20,  "---------------------------------------" )
 			return acumValues
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, " bad read, .. len{}   receivedCharacters:{}".format(len(rawData), rawData))
 		return "badSensor"
 
 
 
- # ===========================================================================
+#===========================================================================
 # read params
 # ===========================================================================
 
@@ -163,7 +163,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -261,7 +261,7 @@ def readParams():
 			U.logger.log(20,"empty sensorlist, exiting")
 			exit()
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30,"{}".format(sensors[sensor]) )
 		
@@ -280,7 +280,7 @@ def startSensor(devId):
 		sP = U.getSerialDEV() 
 		thisSensor[devId]  = thisSensorClass(serialPort = sP)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		thisSensor[devId] =""
 	return
@@ -313,7 +313,7 @@ def getValues(devId):
 			if G.debug >1: U.logger.log(20, "{}".format(data)) 
 			badSensor = 0
 			return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 	badSensor+=1
@@ -433,7 +433,7 @@ while True:
 							delta= current-lastValues2[devId][xx]
 							deltaN= max(deltaN,abs(delta) / max (0.5,(current+lastValues2[devId][xx])/2.))
 							lastValues[devId][xx] = current
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 				else:
 					continue
@@ -467,7 +467,7 @@ while True:
 				if quick: break
 				time.sleep(5.)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

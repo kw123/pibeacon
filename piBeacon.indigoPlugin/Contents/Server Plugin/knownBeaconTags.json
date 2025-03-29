@@ -2,7 +2,7 @@
 "input":
 {
   "BLEGardenaTimer": {
-	"rawPackages":"15 02 01 06   11 06 E4 6D DC 75 BF DD E5 84 1A 42 0E 0B 01 00 BD 98 -- type 06 17 bytes long", 
+	"rawPackages":"15 02 01 06   11 06   E4 6D DC 75 BF DD E5 84 1A 42 0E 0B 01 00 BD 98 -- type 06 17 bytes long and   1C  06 08   54 69 6D 65 72   14 FF   26 04 02 07 64 02 05 01 02 08 00 02 09 00 04 06 12 00 01  type 08 Timer + type FF other", 
     "Maj": "",
     "Min": "",
     "commands": {},

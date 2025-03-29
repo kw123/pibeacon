@@ -52,7 +52,7 @@ def readParams():
 	global PIGPIO
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -165,6 +165,10 @@ def getDistancePIGPIO(devId):
 		timeAtStart = time.time()
 		MAX = -1
 		MIN = 9999
+		if sensors[sensor][devId].get("smoothMeasurements",True):
+			maxGood = 1
+		else:
+			maxGood = 3
 		for kk in range(8):
 			time.sleep(0.03)
 			# send a short on pulse, first clear 
@@ -185,7 +189,7 @@ def getDistancePIGPIO(devId):
 					break
 			if bad:
 				badSensor += 1
-				U.logger.log(20, u"echo  not 1")
+				#U.logger.log(20, u"echo  not 1")
 				time.sleep(0.5)
 				continue
 
@@ -202,53 +206,46 @@ def getDistancePIGPIO(devId):
 			stopTime = time.time()
 
 			# delta is the round trip time
-			elapsed[good] = round((stopTime - startTime)* 17000.,2)  #17000 = 34000/2 ...  /2 due to round trip; 1 msec = 17 cm distance
+			xx = round((stopTime - startTime)* 17000.,1)  #17000 = 34000/2 ...  /2 due to round trip; 1 msec = 17 cm distance
+			if xx >= maxDistOff: continue 
+			if xx > maxRange: continue 
+			elapsed[good] = xx  #17000 = 34000/2 ...  /2 due to round trip; 1 msec = 17 cm distance
 			if   MAX < elapsed[good]: MAX = elapsed[good]
 			elif MIN > elapsed[good]: MIN = elapsed[good]
 			good += 1
 			if good == 3: break
+			if good >= maxGood: break
+
+		#U.logger.log(20,f"distances:  {elapsed}")
+
 
 		if badSensor > 30:	
 			badSensor = 0
 			return "badSensor"
 		if not echoStartOK: return ""
+		if good != 3: return ""
 
 		badSensor = 0
-		result = maxDistOff	
-		# take average 
 		elapsed = sorted(elapsed)
-		ll = len(elapsed)
-		#first remove non valid measurements
-		for ii in range(ll): 
-			if elapsed[-1] == maxDistOff:
-				elapsed.pop()
-		# how many meaurements left, if 3 
-		if good == 3:
-			for ii in range(good):
-				if   MAX == elapsed[ii]:
-					MAX = -1
-					continue
-				elif MIN == elapsed[ii]:
-					MIN = -1
-					continue
-				result = round(elapsed[ii],2)
-				break
 
-		elif len(elapsed) == 2:
-			result = round((elapsed[0]+elapsed[1])/2.,2)
+		if maxGood == 1: 
+			return elapsed[0]
 
-		elif len(elapsed) == 1:
-			result = elapsed[0] 
+		# check if smooth values
+		dx = elapsed[2] - elapsed[0]
+		# ignore if dx > 15% or 20 cm
+		if dx < 20. or dx < 0.3 * elapsed[0]/max(1,elapsed[2] + elapsed[0]):
+			return elapsed[1]
 
-		else: # not good out of range
-			result = maxRange
+		dx = elapsed[2] - elapsed[1]
+		if dx < 20. or dx < 0.3 * elapsed[1]/max(1,elapsed[2] + elapsed[1]):
+			return elapsed[1]
 
-		#U.logger.log(20, u"result		 {}, dist:{}[cm]".format( result, elapsed))
-		if result >  maxRange: 
-			#print "overflow"
-			return maxRange 
-		#print "res= ",result 
-		return  round(result , 2)
+		dx = elapsed[1] - elapsed[0]
+		if dx < 20. or dx < 0.3 * elapsed[1]/max(1,elapsed[1] + elapsed[0]):
+			return elapsed[1]
+
+		return ""
 
 	except  Exception as e:
 			U.logger.log(30,"", exc_info=True)
@@ -271,6 +268,10 @@ def getDistance(devId):
 		timeAtStart = time.time()
 		MAX = -1
 		MIN = 9999
+		if sensors[sensor][devId].get("smoothMeasurements",True):
+			maxGood = 1
+		else:
+			maxGood = 3
 		for kk in range(8):
 			time.sleep(0.03)
 			GPIO.output(triggerPin, True)
@@ -315,53 +316,43 @@ def getDistance(devId):
 				continue
 
 			# delta is the round trip time
-			elapsed[good] = round((stopTime - startTime)* 17000.,2)  #17000 = 34000/2 ...  /2 due to round trip; 1 msec = 17 cm distance
+			xx = round((stopTime - startTime)* 17000.,2)  #17000 = 34000/2 ...  /2 due to round trip; 1 msec = 17 cm distance
+			if xx >= maxDistOff: continue 
+			if xx > maxRange: continue 
+			elapsed[good]  = xx
 			if   MAX < elapsed[good]: MAX = elapsed[good]
 			elif MIN > elapsed[good]: MIN = elapsed[good]
 			good += 1
 			if good == 3: break
+			if good >= maxGood: break
 
 		if badSensor > 30:	
 			badSensor = 0
 			return "badSensor"
 		if not echoStartOK: return ""
+		if good != 3: return ""
 
 		badSensor = 0
-		result = maxDistOff	
-		# take average 
 		elapsed = sorted(elapsed)
-		ll = len(elapsed)
-		#first remove non valid measurements
-		for ii in range(ll): 
-			if elapsed[-1] == maxDistOff:
-				elapsed.pop()
-		# how many meaurements left, if 3 
-		if good == 3:
-			for ii in range(good):
-				if   MAX == elapsed[ii]:
-					MAX = -1
-					continue
-				elif MIN == elapsed[ii]:
-					MIN = -1
-					continue
-				result = round(elapsed[ii],2)
-				break
 
-		elif len(elapsed) == 2:
-			result = round((elapsed[0]+elapsed[1])/2.,2)
+		if maxGood == 1: 
+			return elapsed[0]
 
-		elif len(elapsed) == 1:
-			result = elapsed[0] 
+		# check if smooth values
+		dx = elapsed[2] - elapsed[0]
+		# ignore if dx > 10% or 20 cm
+		if dx < 20. or dx < 0.2* elapsed[0]/max(1,elapsed[2] + elapsed[0]):
+			return elapsed[1]
 
-		else: # not good out of range
-			result = maxRange
+		dx = elapsed[2] - elapsed[1]
+		if dx < 20. or dx < 0.2* elapsed[1]/max(1,elapsed[2] + elapsed[1]):
+			return elapsed[1]
 
-		#.logger.log(20, u"result		 {}, dist:{}[cm]".format( result, elapsed))
-		if result >  maxRange: 
-			#print "overflow"
-			return maxRange 
-		#print "res= ",result 
-		return  round(result , 2)
+		dx = elapsed[1] - elapsed[0]
+		if dx < 20. or dx < 0.2* elapsed[1]/max(1,elapsed[1] + elapsed[0]):
+			return elapsed[1]
+
+		return ""
 
 	except  Exception as e:
 			U.logger.log(30,"", exc_info=True)

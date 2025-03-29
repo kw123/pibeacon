@@ -20,7 +20,7 @@ import sys
 
 from math import pow
 
- 	
+
 ## copied from https://github.com/DFRobot/DFRobot_BMP388/blob/master/raspbarry/example/I2CReadTemperature/I2CReadTemperature.py
 ## with some simplification ie i2c setup
 class bmp388():
@@ -52,7 +52,7 @@ class bmp388():
 
 			self.get_calib_data()
 			self.set_config()
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
   
   
@@ -257,7 +257,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -339,7 +339,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
@@ -359,7 +359,7 @@ def startSensor(devId):
 		try:
 			time.sleep(1)
 			BMP388SENSOR[devId]  = bmp388(i2cAdd=i2cAdd)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 			BMP388SENSOR[devId] = ""
 			U.muxTCA9548Areset()
@@ -392,7 +392,7 @@ def getValues(devId):
 				"press": int(press)
 				}
 		return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
@@ -523,7 +523,7 @@ while True:
 		time.sleep( max(5, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 		lastMeasurement = time.time()
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

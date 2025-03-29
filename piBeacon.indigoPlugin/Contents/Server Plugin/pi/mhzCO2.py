@@ -74,7 +74,7 @@ class mhz16_class_i2c:
 			self.send(self.cmd_calibrateZero)
 			time.sleep(0.1)
 			return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
  
@@ -84,7 +84,7 @@ class mhz16_class_i2c:
 			self.send(self.cmd_measure)
 			self.parse(self.receive())
 			return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
  
@@ -150,7 +150,7 @@ class mhz16_class_i2c:
 					break
 				
 			return buf
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		return []
 
@@ -167,7 +167,7 @@ class mhz_class_serial:
 			self.beginData			= 4 
 			self.commandByteReturn = self.cmd_measure[2]
 		else:
-			self.cmd_measure	 	= [0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79] # does not work 
+			self.cmd_measure		= [0xFF,0x01,0x86,0x00,0x00,0x00,0x00,0x00,0x79] # does not work 
 			self.cmd_calibrateZero	= [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
 #			self.beginData		   = 2 
 			self.commandByteReturn = self.cmd_measure[2]
@@ -195,7 +195,7 @@ class mhz_class_serial:
 			self.send(self.cmd_measure)
 			self.parse(self.receive())
 			return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
 
@@ -206,7 +206,7 @@ class mhz_class_serial:
 			if r in self.amplification:
 				self.send(self.amplification[str(r)])
 				return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 #################################		 
@@ -215,7 +215,7 @@ class mhz_class_serial:
 			self.send(self.cmd_calibrateZero)
 			self.parse(self.receive())
 			return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 		self.co2 = -1
 
@@ -243,7 +243,7 @@ class mhz_class_serial:
 		self.raw = response
 		try: 
 			ll = len(response)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return 
 		if ll != 9: return
@@ -275,7 +275,7 @@ def readParams():
 	try:
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead 	= lastRead2
@@ -393,7 +393,7 @@ def readParams():
 			pass
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(20, "{}".format(sensors[sensor]))
 		
@@ -431,7 +431,7 @@ def startSensor(devId,i2cAddress):
 			time.sleep(1)
 			mhz16sensor[devId].start()
 						
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		mhz16sensor[devId] =""
 	time.sleep(.1)
@@ -448,7 +448,7 @@ def restartSensor():
 		time.sleep(7)
 		GPIO.output(calibrationPin, True)
 		time.sleep(0.1)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	time.sleep(.1)
 
@@ -478,7 +478,7 @@ def calibrateSensor(devId):
 
 		CO2offset[devId] = CO2normal[devId] - co2 
 		#print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	time.sleep(.1)
 
@@ -534,7 +534,7 @@ def getValues(devId,nMeasurements=5):
 			   ,"raw":			 ( round(raw,1)			   ) }
 		U.logger.log(10, "{}".format(ret)) 
 		badSensor = 0
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
@@ -729,7 +729,7 @@ while True:
 			time.sleep(5)
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

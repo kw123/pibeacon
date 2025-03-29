@@ -46,7 +46,7 @@ def applyIntensity(c):
 			ret[ii] = r
 		#U.logger.log(20, u"applyIntensity c: {}; ret: {};   {};   {};   {};   {}".format(c, ret, intensity, multIntensity, lightMaxDimForDisplay, lightMinDimForDisplay))
 		return ret
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, u"c: {}; int: {}; intmult: {}".format(c, intensity, multIntensity ))
 		return ret
@@ -328,7 +328,7 @@ def set_pixel(x, y, r, g, b):
 		index = get_index_from_xy(x, y)
 		if index is not None:
 			ws2812.setPixelColorRGB(index, r, g, b)
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 def get_pixel(x, y):
@@ -479,7 +479,7 @@ class draw():
 					y = int(x * m + b)
 					self.PIXELS[max(0,min(self.maxY1,y))][x]=applyIntensity(pos[4:7])
 			return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"pos {}".format(pos))
 
@@ -492,7 +492,7 @@ class draw():
 				self.PIXELS[0][x] = applyIntensity(pos[-3:])
 			#U.logger.log(30, u"draw line from {} to {}, w color:{}".format(xStart,xEnd, pos[-3:]))
 			return
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"pos {}".format(pos))
 
@@ -501,7 +501,7 @@ class draw():
 	def point(self,pos):
 		try:
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] =applyIntensity(pos[2:5])
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30, u"pos {}".format(pos))
 		return 
@@ -549,7 +549,7 @@ class draw():
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))] = applyIntensity(pos[kk][2:5])
 			else:		 
 				U.logger.log(30,u" error type:"+cType+" pos:{}".format(pos) )
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 
@@ -626,10 +626,10 @@ class draw():
 					#print " in show ",steps,speedOfChange,linearDATA, linearOld
 					for ii in range(int(steps)):
 						for index in range(LED_COUNT):
-							 red = max(0,min(255,int(  (linearDATA[index][0]- linearOld[index][0])*value+ linearOld[index][0]  )))
-							 gre = max(0,min(255,int(  (linearDATA[index][1]- linearOld[index][1])*value+ linearOld[index][1]  )))
-							 blu = max(0,min(255,int(  (linearDATA[index][2]- linearOld[index][2])*value+ linearOld[index][2]  )))
-							 ws2812.setPixelColorRGB(index,red,gre,blu)
+							red = max(0,min(255,int(  (linearDATA[index][0]- linearOld[index][0])*value+ linearOld[index][0]  )))
+							gre = max(0,min(255,int(  (linearDATA[index][1]- linearOld[index][1])*value+ linearOld[index][1]  )))
+							blu = max(0,min(255,int(  (linearDATA[index][2]- linearOld[index][2])*value+ linearOld[index][2]  )))
+							ws2812.setPixelColorRGB(index,red,gre,blu)
 						#print "in loop", delta,steps,value,red,gre,blu
 						ws2812.show()
 						value	  += delta 
@@ -667,14 +667,15 @@ class draw():
 				#print " end of loop ", jj 
 				
 				
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			U.logger.log(30," pixel len:{}".format(len(self.PIXELS))+"  {}".format(self.PIXELS)[0:100])
 			
 	def clear(self,RGB):
 		global LED_COUNT
 		for x in range(LED_COUNT):
-			ws2812.setPixelColorRGB(x,applyIntensity(RGB))
+			rgb = applyIntensity(RGB)
+			ws2812.setPixelColorRGB(x, rgb[0],  rgb[1],  rgb[2] )
 
 
 def readParams(pgmType=""):
@@ -688,7 +689,7 @@ def readParams(pgmType=""):
 	try:
 		retCode					= 0
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return retCode
 		if lastRead2 == lastRead: return retCode
 		lastRead   = lastRead2
@@ -762,20 +763,20 @@ def readParams(pgmType=""):
 					if "lightSensorOnForDisplay" in ddd:
 						try:	
 							lightSensorOnForDisplay = ddd["lightSensorOnForDisplay"]
-						except	Exception as e:
+						except Exception as e:
 								U.logger.log(30,"", exc_info=True)
 
 					if "lightSensorForDisplay-DevId-type" in ddd:
 						try:	
 							useLightSensorDevId =     ddd["lightSensorForDisplay-DevId-type"].split("-")[0]
 							useLightSensorType  =     ddd["lightSensorForDisplay-DevId-type"].split("-")[1]
-						except	Exception as e:
+						except Exception as e:
 								U.logger.log(30,"", exc_info=True)
 
 					if "lightSensorSlopeForDisplay" in ddd:
 						try:	
 							lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
-						except	Exception as e:
+						except Exception as e:
 								U.logger.log(30,"", exc_info=True)
 					if "lightMinDimForDisplay" in ddd:
 						try:	
@@ -787,7 +788,7 @@ def readParams(pgmType=""):
 						except: pass
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return	retCode
 					   
@@ -821,7 +822,7 @@ def saveLastCommands(items):
 		f = open(G.homeDir+"neopixel.last","w")
 		f.write(json.dumps(items))	
 		f.close()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 def readLastCommands():
@@ -831,7 +832,7 @@ def readLastCommands():
 			xxx = f.read()	
 			f.close()
 			return json.loads(xxx)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return []
 
@@ -870,7 +871,7 @@ def getLightSensorValue(force=False):
 		if useLightSensorType not in rr["sensors"]: 				return False
 		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return 
 		tt = float(rr["time"])
-		if tt == lastTimeLightSensorFile:						 	return False	
+		if tt == lastTimeLightSensorFile:							return False	
 
 		lightSensorValueREAD = -1
 		for devId in rr["sensors"][useLightSensorType]:
@@ -1071,13 +1072,13 @@ while True:
 				if len(item) < 1: continue
 				try:	
 					data = json.loads(item)
-				except	Exception as e:
+				except Exception as e:
 					if loop >0:
 						U.logger.log(30,"", exc_info=True)
 						U.logger.log(30,"{}".format(item)[0:100])
 					data = item
 				#print json.dumps(data,sort_keys=True, indent=2)
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"bad input {}".format(item) )
 				U.logger.log(30,"", exc_info=True)
 				continue
@@ -1399,7 +1400,7 @@ while True:
 															#print aa,"ii",ii
 															ll = lin[ii][2:]
 															lin[ii] =  [0,ii,rgb[0]+ll[0],rgb[1]+ll[1],rgb[2]+ll[2]]
-											except	Exception as e:
+											except Exception as e:
 												U.logger.log(30,"", exc_info=True)
 												U.logger.log(30, aa +"  {}".format(pos[aa]))
 									for ii in range(len(lin)):
@@ -1437,7 +1438,7 @@ while True:
 
 								if checkIfnewInput(): break
 								
-						except	Exception as e:
+						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
 					if checkIfnewInput(): break
 					if checkIfnewReboot(): break
@@ -1453,7 +1454,7 @@ while True:
 			if checkIfnewInput():
 				items = readNewInput()
 			redoItems = checkLightSensor()
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 				
 		if loop %20 ==0:
@@ -1464,7 +1465,7 @@ while True:
 		#print "neopixel sleep end item ", time.time() -ttx
 
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		items=[]
 

@@ -134,7 +134,7 @@ class INA219:
 				return float(othernew>>3) *self.ina219_busMultiplier 
 			else:
 				return float(  ((result[0] << 8) | (result[1]) ) >>3) *self.ina219_busMultiplier 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return ""
 		
@@ -148,7 +148,7 @@ class INA219:
 				return float(othernew) * self.ina219_ShuntVoltageMultiplier
 			else:
 				return (float((result[0] << 8) | (result[1])) * self.ina219_ShuntVoltageMultiplier)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return ""
 
@@ -162,7 +162,7 @@ class INA219:
 				return float(othernew )* self.ina219_currentMultiplier_mA
 			else:
 				return float((result[0] << 8) | (result[1])) *self.ina219_currentMultiplier_mA
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return ""
 
@@ -176,10 +176,10 @@ class INA219:
 				return float(othernew )* self.ina219_powerMutiplier_mW
 			else:
 				return float((result[0] << 8) | (result[1]) )* self.ina219_powerMutiplier_mW
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			return ""
- # ===========================================================================
+#===========================================================================
 # read params
 # ===========================================================================
 
@@ -193,7 +193,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -273,7 +273,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -299,7 +299,7 @@ def getValues(devId):
 			badSensor = 0
 			U.muxTCA9548Areset()
 			return data
-		except	Exception as e:
+		except Exception as e:
 			if badSensor >2 and badSensor < 5: 
 				U.logger.log(30,"", exc_info=True)
 				U.logger.log(30, u"Current>>{}".format(Current)+"<<")
@@ -418,7 +418,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

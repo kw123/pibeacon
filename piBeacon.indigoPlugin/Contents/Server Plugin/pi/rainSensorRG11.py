@@ -34,7 +34,7 @@ def readParams():
 		restart = False
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead  = lastRead2
@@ -133,7 +133,7 @@ def readParams():
 				bucketSize[kk] = bucketSize0[kk]*rainScaleFactor
 
 			
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 				
 
@@ -277,17 +277,17 @@ def GPIOchanged(gpio):
 
 		if status["currentMode"]  == "highSensitive":
 			if	 newRainTime[0] < switchToLowerSensitive["highSensitive"]: # require len(newRainTime) clicks
-				 if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
-				 if setModeTo("medSensitive", calledFrom="GPIOchanged3", force = True):
+				if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
+				if setModeTo("medSensitive", calledFrom="GPIOchanged3", force = True):
 					sendShortStatus(rainMsg["medSensitive"])
-					eventStartedList= [time.time()-(100) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
+					eventStartedList = [time.time()-(100) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
 
 
 
 		elif status["currentMode"]	== "medSensitive":
 			if	 newRainTime[0] <  switchToLowerSensitive["medSensitive"]: # require len(newRainTime) clicks
-				 if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
-				 if setModeTo("lowSensitive", calledFrom="GPIOchanged5", force = True):
+				if status["values"]["buckets"] > 0: checkIfMSGtoBeSend(force =True)
+				if setModeTo("lowSensitive", calledFrom="GPIOchanged5", force = True):
 					sendShortStatus(rainMsg["lowSensitive"])
 					eventStartedList= [time.time()-(100) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
 
@@ -450,7 +450,7 @@ def checkIfRelayON():
 					setModeTo("medSensitive", calledFrom="checkIfRelayON", powerCycle=False, force = False)
 					sendShortStatus(rainMsg["medSensitive"])
 					#eventStartedList = time.time()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -472,7 +472,7 @@ def checkIfMSGtoBeSend(force =False):
 			checkIfDownGradedNeeded( force = True )
 		U.writeRainStatus(status)
 		lastCalcCheck = time.time()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -734,7 +734,7 @@ while True:
 
 		loopCount+=1
 		time.sleep(shortWait)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 

@@ -66,7 +66,7 @@ class setupKillMyself:
 		if klillMyselfTimeout > 0 and time.time() - klillMyselfTimeout > 20: # need to ignore for some seconds, receiving signals at startup 
 			try: outputDev.delPy()
 			except: pass
-			U.logger.log(30, u"exiting display, received kill signal ")
+			U.logger.log(20, u"exiting display, received kill signal ")
 			os.kill(os.getpid(), signal.SIGTERM)
 			sys.exit()
 
@@ -88,8 +88,8 @@ class LCD1602():
 			time.sleep(0.005)
 			self.clear()			# Clear Screen
 			self.openlight()		# Enable the backlight
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 		return 
 			
 
@@ -118,8 +118,8 @@ class LCD1602():
 			time.sleep(0.002)
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 
 	def send_data(self,data):
 		try:
@@ -138,8 +138,8 @@ class LCD1602():
 			time.sleep(0.002)
 			buf &= 0xFB				  # Make EN = 0
 			self.write_word(buf)
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 
 
 	def clear(self):
@@ -173,63 +173,126 @@ def doInterrupt():
 		os.kill(os.getpid(), signal.SIGTERM)
 		return
 
-class bigScreen :
+class bigScreen:
 	screen = None
 	
+	#  error message : self.pygame.display.init()
+
 	def __init__(self,overwriteXmax=0,overwriteYmax=0, name="pibeacon display"):
 		global bigScreenSize, pygameInitialized
+		time.sleep(0.5)
+		## check display setup in /boot/firmware/config.txt
+		bootfileName = U.getBootFileName()
+		ddd = U.doReadSimpleFile(bootfileName)
+		if True:
+			# this must be in config.txt otherwise display does not work
+			checkfor = ["dtparam=audio=on","display_auto_detect=1","dtoverlay=vc4-kms-v3d","max_framebuffers=2"]
+
+			bad = []
+			for check in checkfor:
+				U.logger.log(20,"{} checking  for {}".format(bootfileName, check))
+				if "#"+check in ddd:
+					U.logger.log(20,"found :#{}, replacing ".format(check))
+					bad.append(check)
+					ddd = ddd.replace("#"+check, check)
+				elif "\n"+check not in ddd:
+					bad.append(check)
+					xxx = ddd.split("\n")
+					found = False
+					for ii in range(len(xxx)):
+						if xxx[ii] == "": # use first free line to insert missing item
+							xxx[ii] = "\n"+check+"\n"
+							ddd = "\n".join(xxx)
+							found = True
+							U.logger.log(20,"adding  :#{}, to empty line ".format(check))
+							break
+					if not found: # in case no empty lines, just attach to end
+						U.logger.log(20,"adding  :#{}, to end of file ".format(check))
+						ddd += "\n"+check
+					
+						
+			if bad != []:
+				U.logger.log(20,bootfileName+" not properly setup  missing:\n"+ str(bad)+" fixing through reboot")
+				U.sendURL(sendAlive="config.txt", text=bootfileName+" not properly setup  missing:  "+str(bad), squeeze=False, verbose=True, wait=False)
+				U.doWriteSimpleFile(bootfileName, ddd)
+				time.sleep(0.01)
+				ddd = 				U.logger.log(20, "\n\nnew config.txt file written:\n"+U.doReadSimpleFile(bootfileName))
+				U.setRebootRequest("display.py fixed "+bootfileName)
+			
+		try:
+			#print(" bf self\n")
+			self.pygame = pygame
+			#print(" bf init\n")
+			self.pygame.init()   
+			#print(" bf display.init\n")
+			self.pygame.display.init()   
+			#print(" bf list_modes\n")
+			self.sizeList = pygame.display.list_modes()
+			#print(" modes: {}\n".format(self.sizeList))
+			pygameInitialized = True
+		except Exception as e:
+			U.logger.log(30,"", exc_info=True)
+
+
+
 		U.echoLastAlive(G.program)
-		self.pygame=pygame
-		if not pygameInitialized:
-			self.pygame.init()
 		self.oldScreensize = [0,0]
 
 		try: 
 		##Ininitializes a new pygame screen using the framebuffer"
 		# Based on "Python GUI in Linux frame buffer"
 		# http://www.karoltomala.com/blog/?p=679
-			disp_no = os.getenv("DISPLAY")
+			found = ""
 			if not pygameInitialized:
-		
-				# Check which frame buffer drivers are available
-				# Start with fbcon since directfb hangs with composite output
-				drivers = ['fbcon', 'directfb', 'svgalib']
-				found = ""
-				for driver in drivers:
-					# Make sure that SDL_VIDEODRIVER is set
-					if not os.getenv('SDL_VIDEODRIVER'):
-						os.putenv('SDL_VIDEODRIVER', driver)
-					try:
-						self.pygame.display.init()
-					except	Exception as e:
-						U.logger.log(30,"", exc_info=True)
-						U.logger.log(30, u"Driver: {0} failed.".format(driver))
-						time.sleep(20)
-						continue
-					found = driver
-					break
+				try: 
+					U.logger.log(20, "self.pygame.display.init()")
+					self.pygame.display.init()
+					found = "simple"
+				except Exception as e:
+					U.logger.log(20,"", exc_info=True)
+					U.logger.log(20, "simple init did not work, try video drivers")
+					time.sleep(1)
+
+				if found == "":
+					# Check which frame buffer drivers are available
+					# Start with fbcon since directfb hangs with composite output
+					drivers = ['fbcon', 'directfb', 'svgalib']
+					for driver in drivers:
+						# Make sure that SDL_VIDEODRIVER is set
+						if not os.getenv('SDL_VIDEODRIVER'):
+							os.putenv('SDL_VIDEODRIVER', driver)
+						try:
+							self.pygame.display.init()
+						except Exception as e:
+							U.logger.log(20,"", exc_info=True)
+							U.logger.log(20, "Driver: {0} failed.".format(driver))
+							time.sleep(1)
+							continue
+						found = driver
+						break
 	
 				if found == "":
 					time.sleep(20)
 					raise Exception('No suitable video driver found!')
 					return 
-				U.logger.log(20, u"found: {}".format(driver)  )		 
+				U.logger.log(20, "found: {}".format(found)  )		 
 				
 
 			pygameInitialized = True
 
 			## ge sizeList:  eg =  [(1680, 1050), (1440, 900), (1280, 1024), (1280, 960), (1152, 864), (1024, 768), (832, 624), (800, 600), (720, 400), (640, 480)]
 			sizeList = self.pygame.display.list_modes()
-			U.logger.log(20, u"screen sizeList:{}".format(sizeList) )
+			U.logger.log(20, "screen sizeList:{}".format(sizeList) )
 			fullScreenSize = sizeList[0]  #self.pygame.display.Info().current_w, self.pygame.display.Info().current_h]
 
-			U.logger.log(20, u"Framebuffer 1: fullsize:{} - oldSize:{};  check if we want to overwrite supplied  x:{}; y:{}, displayResolution:{}".format(fullScreenSize, bigScreenSize, overwriteXmax, overwriteYmax, displayResolution) )
+			U.logger.log(20, "Framebuffer 1: fullsize:{} - oldSize:{};  check if we want to overwrite supplied  x:{}; y:{}, displayResolution:{}".format(fullScreenSize, bigScreenSize, overwriteXmax, overwriteYmax, displayResolution) )
 			for xy in sizeList:
 				if displayResolution[0] == xy[0] and displayResolution[1] == xy[1]:
 					fullScreenSize = xy
 					break
 			if self.oldScreensize != fullScreenSize:
 
+				disp_no = os.getenv("DISPLAY")
 				if disp_no:
 					U.logger.log(20, "using X display = {0}".format(disp_no))
 					if overwriteXmax == 0 and overwriteYmax == 0:
@@ -240,23 +303,25 @@ class bigScreen :
 						bigScreenSize[1] = min(int(overwriteYmax), fullScreenSize[1])
 					self.pygame.display.set_caption(name)
 					self.screen = self.pygame.display.set_mode(bigScreenSize)
-					U.logger.log(20, u"Framebuffer 2.a size: {};  overwrite x:{}; y:{}".format(bigScreenSize, overwriteXmax, overwriteYmax) )
+					U.logger.log(20, "Framebuffer 2.a size: {};  overwrite x:{}; y:{}".format(bigScreenSize, overwriteXmax, overwriteYmax) )
+					
+				# not X environment 
 				else:
 					if displayResolution != (0,0):
 						if False and (displayResolution[0] > fullScreenSize[0] or displayResolution[1] > fullScreenSize[1]):
 							bigScreenSize = fullScreenSize[0]
 						else:
 							bigScreenSize = displayResolution
-						U.logger.log(20, u"Framebuffer 2.b size: set to indigo-dev output def: {} vs available {}".format( bigScreenSize, fullScreenSize) )
+						U.logger.log(20, "Framebuffer 2.b size: set to indigo-dev output def: {} vs available {}".format( bigScreenSize, fullScreenSize) )
 						self.screen = self.pygame.display.set_mode(displayResolution, self.pygame.FULLSCREEN)
 					else:
 						bigScreenSize = fullScreenSize
 						self.screen = self.pygame.display.set_mode(sizeList[0], self.pygame.FULLSCREEN)
-						U.logger.log(20, u"Framebuffer 2.c size: {};  ignore overwrite x:{}; y:{}, use fullscreen  -  xterm not running".format(bigScreenSize, overwriteXmax, overwriteYmax) )
+						U.logger.log(20, "Framebuffer 2.c size: {};  ignore overwrite x:{}; y:{}, use fullscreen  -  xterm not running".format(bigScreenSize, overwriteXmax, overwriteYmax) )
 					subprocess.call("echo fullScreen > "+G.homeDir+"pygame.active", shell=True) # after this we can not do startx, need to reboot first
 
 			self.oldScreensize = fullScreenSize
-			U.logger.log(20, u"got screen object" )
+			U.logger.log(20, "got screen object" )
 
 			# Clear the screen to start
 			self.screen.fill((0, 0, 0))		   
@@ -264,13 +329,14 @@ class bigScreen :
 			self.pygame.font.init()
 			# Render the screen
 			self.pygame.display.update()
-		except	Exception as e:
-			U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+			U.logger.log(20,"", exc_info=True)
 			exit()
+		return 
 
 
 	def __del__(self):
-		"Destructor to make sure pygame shuts down, etc."
+		"""Destructor to make sure pygame shuts down, etc."""
 		try: pass#  no good !!!   self.pygame.quit()
 		except: pass
 	
@@ -410,9 +476,9 @@ class SSD1351:
 			self.__Setup() # Setup device screen.
 			#self.Clear() # Blank the screen.
 			return
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
-				U.logger.log(30, u"SPI likely not enabled")
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
+				U.logger.log(20, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
 		self.spi = spidev.SpiDev()
@@ -638,9 +704,9 @@ class st7735:
 			self.__Setup() # Setup device screen.
 			#self.Clear() # Blank the screen.
 			return
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
-				U.logger.log(30, u"SPI likely not enabled")
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
+				U.logger.log(20, u"SPI likely not enabled")
 
 	def __OpenSPI(self):
 		self.spi = spidev.SpiDev()
@@ -664,7 +730,7 @@ class st7735:
 		
 		
 	def SetOrientation(self,degrees):
-		"Set the display orientation to 0,90,180,or 270 degrees"
+		"""Set the display orientation to 0,90,180,or 270 degrees"""
 		if degrees==90: arg=0x60
 		elif degrees==180: arg=0xC0
 		elif degrees==270: arg=0xA0
@@ -1069,8 +1135,8 @@ def analogClockInit(inParms={}):
 			
 			## show first pic
 			analogClockShow()
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 		
 		return 
 		
@@ -1099,13 +1165,13 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 			fontF =	 mkfont(analogClockParams)
 
 			for minTicks in range(12):
-			   #print "ticks", angle0, pos
+				#print "ticks", angle0, pos
 				if analogClockParams["mode"][2] == "TicksNumbers":
 					if minTicks %3 ==0: continue
 				analogClockdrTheLine(float(3.14159*2./12. *	 minTicks), "ticks12")
 		   
 			for minTicks in range(4):
-			   #print "ticks", angle0, pos
+				#print "ticks", angle0, pos
 				if analogClockParams["mode"][2] != "TicksNumbers":
 					analogClockdrTheLine(float(3.14159*2./4.  *	 minTicks), "ticks4")
 				else:
@@ -1130,8 +1196,8 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 
 			 
 
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 		return 
 
 
@@ -1172,8 +1238,8 @@ def analogClockdrNumbers(angle,number,hand):
 			#print "number", angle,pos,number
 			
 			draw.text(pos, "{}".format(number), font=fontx[fontF], fill=(int(255.*multIntensity),int(255.*multIntensity),int(255.*multIntensity)))
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 
 
 def analogClockdrTheLine(angle,hand,ss=0):
@@ -1255,8 +1321,8 @@ def analogClockdrTheLine(angle,hand,ss=0):
 			return
 
 
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 
 
 
@@ -1264,8 +1330,8 @@ def analogClockdrTheLine(angle,hand,ss=0):
 def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 		try:
 			draw.ellipse( (x0 - widthX , y0 - widthY , x0 + widthX , y0 + widthY ), fill=fill, outline=outline)
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 
 
 ################### ###################	  analogClock  ############################################### END
@@ -1292,8 +1358,8 @@ def digitalClockInit(inParms={}):
 				if pp in inParms:
 					digitalClockParams[pp] = copy.copy(inParms[pp])
 			digitalClockShow()
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 		return 
 		
 	
@@ -1311,8 +1377,8 @@ def digitalClockShow(hours=True, minutes=True, seconds=True):
 			draw.text(P, nowST, font=fontx[fontF], fill=(int(fillD[0]*multIntensity),int(fillD[1]*multIntensity),int(fillD[2]*multIntensity)))
 			 
 
-		except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+		except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 		return 
 
 
@@ -1342,20 +1408,27 @@ def readParams():
 		global multIntensity, intensity, intensityDevice, lightSensorValue
 		global runLoop, displayResolution
 
+		#print(" readParams 1")
+
 		newRead		= False
-		inp,inpRaw,ttt = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw,ttt = U.doRead(lastTimeStamp=lastRead)
+		#print(f"readParams  inp: {inp}\n,raw:{inpRaw}\n, ttt:{ttt} ")
 		if ttt		== lastRead: return
 		if inp		== "": return
 		lastRead	= ttt
 		newRead		= True
 
+		#print(" readParams 2")
 		U.getGlobalParams(inp)
+		#print(" readParams 3")
 		if "output"				in inp:	 
 			output=				  (inp["output"])
 			if "display" in output:
 				for devid in output["display"]:
 					ddd = output["display"][devid][0]
-					if "devType"  not in ddd: continue
+					if "devType"  not in ddd: 
+						print(" devType not in parameters file: {}".format(output["display"]))
+						continue
 					devType		= ddd["devType"]
 						
 					i2cAddress = U.getI2cAddress(ddd, default=0)
@@ -1393,14 +1466,14 @@ def readParams():
 							try:	
 								useLightSensorDevId =     ddd["lightSensorForDisplayDevIdType"].split("-")[0]
 								useLightSensorType  =     ddd["lightSensorForDisplayDevIdType"].split("-")[1]
-							except	Exception as e:
-									U.logger.log(30,"", exc_info=True)
+							except Exception as e:
+									U.logger.log(20,"", exc_info=True)
 
 						if "lightSensorSlopeForDisplay" in ddd:
 							try:	
 								lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
-							except	Exception as e:
-									U.logger.log(30,"", exc_info=True)
+							except Exception as e:
+									U.logger.log(20,"", exc_info=True)
 						if "lightMinDimForDisplay" in ddd:
 							try:	
 								lightMinDimForDisplay = max(0.0, min(1., float(ddd["lightMinDimForDisplay"]) ) )
@@ -1424,7 +1497,7 @@ def readParams():
 			runLoop = False
 		if not runLoop:
 			subprocess.call("rm "+G.homeDir+"temp/display.inp > /dev/null 2>&1", shell=True)
-			U.logger.log(30, u"exiting display, output dev display not defined")
+			U.logger.log(20, u"exiting display, output dev display not defined")
 			try: outputDev.delPy()
 			except: pass
 			os.kill(os.getpid(), signal.SIGTERM)
@@ -1456,13 +1529,14 @@ def checkRGBcolor(inV, defColor, RGBtype="RGB", minIntValue= 0):
 				return retV
 			except:
 				return defColor
-	except	Exception as e:
+	except Exception as e:
 		return defColor
 
 
 def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 	global	maxPages, i2cAddress,lasti2cAddress, devType,devTypeLast, font, flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
 	global bigScreenSize
+	#print (" starting updateDevice\n devType:{}".format(devType))
 	port		= 1
 
 	ymax = 1
@@ -1531,15 +1605,15 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 			xmax = 160
 		elif devType.lower().find("screen")>-1:
 			if reset !="":
-				U.logger.log(20, u"resetting  screen output device")
+				U.logger.log(20, "resetting  screen output device")
 				outputDev = ""
 				if reset == "stop": return 
 
 			if outputDev == "":
-				os.putenv ( "SDL_VIDEODRIVER" , "fbcon" )
 				interrupter = threading.Thread(target=doInterrupt)
 				interrupter.start()
-				outputDev=bigScreen(overwriteXmax=overwriteXmax, overwriteYmax=overwriteYmax)
+				#print (" starting big screen \n") 
+				outputDev = bigScreen(overwriteXmax=overwriteXmax, overwriteYmax=overwriteYmax)
 				ymax = bigScreenSize[1]
 				xmax = bigScreenSize[0]
 				
@@ -1550,10 +1624,10 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 				xmax = 16
 		fontDir= G.homeDir+"fonts/"
 
-	except	Exception as e:
-			U.logger.log(30,"", exc_info=True)
+	except Exception as e:
+			U.logger.log(20,"", exc_info=True)
 			if "{}".format(e).find("fontDir") > 0:
-				U.logger.log(30," display device not properly setup.. display device interface (eg SPI ...) not properly setup..")
+				U.logger.log(20," display device not properly setup.. display device interface (eg SPI ...) not properly setup..")
 			time.sleep(2)
 			sys.exit()
 
@@ -1589,8 +1663,8 @@ def getScrollPages(data):
 				scrollDelayBetweenPages = float(data["scrollDelayBetweenPages"])
 			except: pass
 		return scrollPages, scrollDelay, scrollDelayBetweenPages, scrollxy
-	except	Exception as e:
-			U.logger.log(30,"", exc_info=True)
+	except Exception as e:
+			U.logger.log(20,"", exc_info=True)
 
 def setScrollPages(scrollxy,scrollPages):
 	global maxPages
@@ -1643,8 +1717,8 @@ def mkfont(cmd):
 					fontx[fontF] = ImageFont.load(fontDir+font)
 				elif  font.lower().find(".ttf")>-1:
 					fontx[fontF] = ImageFont.truetype(fontDir+font, int(fontw))
-			except	Exception as e:
-					U.logger.log(30,"", exc_info=True)
+			except Exception as e:
+					U.logger.log(20,"", exc_info=True)
 		else:
 			fontF = font+fontw
 	return fontF
@@ -1698,7 +1772,7 @@ def getLightSensorValue(force=False):
 		if useLightSensorType not in rr["sensors"]: 				return False
 		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return 
 		tt = float(rr["time"])
-		if tt == lastTimeLightSensorFile:						 	return False	
+		if tt == lastTimeLightSensorFile:							return False	
 
 		lightSensorValueREAD = -1
 		for devId in rr["sensors"][useLightSensorType]:
@@ -1822,7 +1896,7 @@ lightSensorOnForDisplay 	= False
 
 
 newRead						= True
-lastRead					= 0
+lastRead					= -999
 
 
 ####################SSD1351 pins
@@ -1835,33 +1909,33 @@ lastAlive  					= 0
 i2cAddress 					= 60
 
 ######### scroll params
-scrollxy		 			= ""
-lastScrollxy	 			= ""
+scrollxy					= ""
+lastScrollxy				= ""
 
-lastscrollPages	 			= 1
-scrollPages		 			= 1
-maxPages		 			= 9
+lastscrollPages				= 1
+scrollPages					= 1
+maxPages					= 9
 lastdevType					= ""
 devType						= "yy"
 
 font						= "Red Alert"
 fontx						= {"0": ImageFont.load_default()}
-intensityDevice	 			= 1.
-flipDisplay		 			= "0"
-intensity		 			= 1.
-loop			 			= 0
-lasti2cAddress	 			= 0
-outputDev		 			= ""
-matrix			 			= ""
+intensityDevice				= 1.
+flipDisplay					= "0"
+intensity					= 1.
+loop						= 0
+lasti2cAddress				= 0
+outputDev					= ""
+matrix						= ""
 startAtDateTime	  			= time.time()
 fontDir 					= G.homeDir+"fonts"
 
 readParams()
-
+#print ("devtype after read:{}\n".format(devType ))
 lasti2cAddress				= i2cAddress
 devTypeLast					= devType 
-items			 			= []
-myPID			 			= str(os.getpid())
+items						= []
+myPID						= str(os.getpid())
 
 U.setLogLevel()
 U.logger.log(0,"starting display")
@@ -1882,6 +1956,8 @@ except:
 time.sleep(0.1)
 #data = json.loads(items[0])
 U.echoLastAlive(G.program)
+
+
 
 fontDir,xmin,xmax,ymin,ymax,matrix,outputDev = updateDevice(outputDev,matrix)
 
@@ -1909,17 +1985,17 @@ while runLoop:
 				if len(item) < 4: continue
 				data		= json.loads(item)
 				#U.logger.log(20," data:{} .. ".format(str(data)[0:100]))
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(20,"bad input {}".format(item) )
 				U.logger.log(20,"", exc_info=True)
 				continue
 			
 			if devType != devTypeLast :	 # restart	myself if new device type
-				U.logger.log(30, " restarting due to new device type, old="+devTypeLast+" new="+"devType")
+				U.logger.log(20, " restarting due to new device type, old="+devTypeLast+" new="+"devType")
 				time.sleep(0.2)
 				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 			if i2cAddress != lasti2cAddress :  # restart  myself if new device type
-				U.logger.log(30, " restarting due to new device type, old={}, new=".format(lasti2cAddress, i2cAddress))
+				U.logger.log(20, " restarting due to new device type, old={}, new=".format(lasti2cAddress, i2cAddress))
 				time.sleep(0.2)
 				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 
@@ -1995,7 +2071,7 @@ while runLoop:
 					except: pass
 				U.logger.log(10, "=== 0 start new disp dev: = sizes:{} {}".format(xwindowSize, xwindows)  )
 				if 	xwindowSize != [0,0] and xwindows =="on":
- 					U.logger.log(10, "=== 1 start new disp dev")
+							U.logger.log(10, "=== 1 start new disp dev")
 
 				if resetInitial  !=""  or lastScrollxy != scrollxy or str(scrollPages) != str(lastscrollPages) or not imageDefined or (
 					(xwindowSize != [0,0] and (xwindowSize[0] != xmax or xwindowSize[1] != ymax) ) ):
@@ -2024,8 +2100,8 @@ while runLoop:
 			try:
 				if "delayAfterRepeat" in data: delayAfterRepeat		 = float(data["delayAfterRepeat"])
 				#U.logger.log(20, "reading delayAfterRepeat:{}".format(delayAfterRepeat))
-			except	Exception as e:
-				U.logger.log(30,"", exc_info=True)
+			except Exception as e:
+				U.logger.log(20,"", exc_info=True)
 				time.sleep(3)
 
 			if "startAtDateTime" in data:
@@ -2687,10 +2763,10 @@ while runLoop:
 
 						if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
-					except	Exception as e:
+					except Exception as e:
 						try:
-							U.logger.log(30,"", exc_info=True)
-							U.logger.log(30, "{}".format(cmd))
+							U.logger.log(20,"", exc_info=True)
+							U.logger.log(20, "{}".format(cmd))
 						except: # hard delete logfiles
 							subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
 							subprocess.call("sudo echo "" >  /var/log/pibeacon.log", shell=True)
@@ -2706,14 +2782,14 @@ while runLoop:
 				try: outputDev.delPy()
 				except: pass
 				klillMyselfTimeout = -1 # killing myself..
-				U.logger.log(30, " exiting - stop was requested ") 	
+				U.logger.log(20, " exiting - stop was requested ") 	
 				os.kill(os.getpid(), signal.SIGTERM)
 				runLoop = False
 				break
 
 			if os.path.isfile(G.homeDir+"temp/display.inp") :
 				readParams()
-				i2cAddress = U.getI2cAddress(data, default ="")
+				i2cAddress = U.getI2cAddress(data, default = "")
 				if i2cAddress != lasti2cAddress:
 					lasti2cAddress = i2cAddress
 
@@ -2727,7 +2803,7 @@ while runLoop:
 					try: outputDev.delPy()
 					except: pass
 					klillMyselfTimeout = -1 # killing myself..
-					U.logger.log(30, " exiting - stop was requested ") 	
+					U.logger.log(20, " exiting - stop was requested ") 	
 					os.kill(os.getpid(), signal.SIGTERM)
 					runLoop = False
 					break
@@ -2744,9 +2820,9 @@ while runLoop:
 			U.echoLastAlive(G.program)
 		loop +=1 
 
-	except	Exception as e:
-		U.logger.log(30,"", exc_info=True)
+	except Exception as e:
+		U.logger.log(20,"", exc_info=True)
 		items=[]
 
-U.logger.log(30, " exiting display end of loop") 	
+U.logger.log(20, " exiting display end of loop") 	
 sys.exit(0)		   

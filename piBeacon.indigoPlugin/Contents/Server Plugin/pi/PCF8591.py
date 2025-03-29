@@ -53,7 +53,7 @@ def getValues(devId):
 		data = {"INPUT":v}
 		#U.logger.log(20, u"devID {} v={}".format(devId, v))
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		data= ""
 		U.muxTCA9548Areset()
@@ -69,7 +69,7 @@ def startSensor(devId):
 			i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 			SENSOR[devId]=smbus.SMBus(1)
 			U.muxTCA9548Areset()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.muxTCA9548Areset()
 	return 
@@ -94,7 +94,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -154,7 +154,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 ###############################

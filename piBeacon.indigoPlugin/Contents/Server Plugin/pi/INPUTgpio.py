@@ -46,7 +46,7 @@ def readParams():
 		INPUTcount = U.checkresetCount(INPUTcount)
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -149,11 +149,11 @@ def getINPUTgpio(all, sens):
 									d["INPUT_" + str(n)] = INPUTcount[str(gpioPIN)]
 									new = True
 						else:
-							 if INPUTlastvalue[str(gpioPIN)] != dd:
-								 d["INPUT_"+str(n)] = dd
+							if INPUTlastvalue[str(gpioPIN)] != dd:
+								d["INPUT_"+str(n)] = dd
 					INPUTlastvalue[str(gpioPIN)] = dd
 					#U.logger.log(20, u" d{}, new:{}".format(d, new))
-		except	Exception as e:
+		except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 		return d,new
 
@@ -198,7 +198,7 @@ def startGPIO():
 						elif theType == "inOpen":
 							GPIOZERO[gpioPIN] = gpiozero.Button(gpioPIN, pull_up=None, active_state=True) 
 		return
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30,"startGPIO: {}".format(sensors))
 	return
@@ -318,7 +318,7 @@ while True:
 
 		loopCount+=1
 		time.sleep(shortWait)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 

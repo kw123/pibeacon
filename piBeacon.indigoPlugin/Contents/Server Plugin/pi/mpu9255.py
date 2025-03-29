@@ -416,7 +416,7 @@ def startSENSOR(devId, i2cAddress):
 		U.logger.log(30,"==== Start mpu9255 ===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
 		theSENSORdict[devId] = MPU9255(i2cAddress=i2cAddress)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -429,7 +429,7 @@ def readParams():
 	global oldRaw, lastRead
 	try:
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -473,7 +473,7 @@ def readParams():
 			####exit()
 			pass
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -493,7 +493,7 @@ def getValues(devId):
 		for xx in data:
 			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return {"MAG":"bad"}
 
@@ -577,7 +577,7 @@ while True:
 		if not quick:
 			time.sleep(G.sensorLoopWait)
 		
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)

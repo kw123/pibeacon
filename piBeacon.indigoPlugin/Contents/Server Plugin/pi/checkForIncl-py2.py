@@ -68,6 +68,11 @@ def execInstall():
 			logger.log(20,"", exc_info=True)
 			readPopen("sudo pip install smbus2")
 
+	if True:
+		logger.log(20,"check hcidump"  )
+		ret = readPopen("which hcidump")
+		if ret[0].find("/usr/bin/hcidump") == -1:
+			readPopen("sudo apt-get install -y bluez-hcidump")
 
 	if True:
 		logger.log(20,"check pigpio"  )
@@ -106,11 +111,6 @@ def execInstall():
 		if ret[0].find("/usr/bin/expect") == -1:
 			readPopen("sudo apt-get install -y expect")
 
-	if True:
-		logger.log(20,"check hcidump"  )
-		ret = readPopen("which hcidump")
-		if ret[0].find("/usr/bin/hcidump") == -1:
-			readPopen("sudo apt-get install -y bluez-hcidump")
 
 	logger.log(20,"check if apt install  is ok"  )
 	ret = readPopen("sudo apt --fix-broken install  -y")

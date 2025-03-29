@@ -443,7 +443,7 @@ def readParams():
 		if not doReadParameters: return
 		changed =0
 		inpLast= inp
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 
 		if inp == "": 
 			inp = inpLast
@@ -520,7 +520,7 @@ def readParams():
 
 		return changed
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		time.sleep(10)
 		return 3
@@ -723,7 +723,7 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 			if time.time() > timeWait or os.path.isfile(G.homeDir+"temp/neopixel.waiting"):
 				setNEOinput(out)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
@@ -771,7 +771,7 @@ def setupGPIOs():
 		GPIO.setup(gpiopinSET["up"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 		GPIO.setup(gpiopinSET["down"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 	return
@@ -798,7 +798,7 @@ def setExtraLEDoff():
 		if clockDict["extraLED"] !="":
 			clockDict["extraLED"] = ""
 			saveParameters()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return
 
@@ -874,7 +874,7 @@ def getCurrentPatterns():
 			if	 clockDict["marks"]["SS"]["marks"] == []:				marksONoff = 2
 			elif clockDict["marks"]["HH"]["marks"] == [0]:				marksONoff = 4
 			else:														marksONoff = 3
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
 
@@ -896,7 +896,7 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 			saveParameters()
 		if restart:
 			startNEOPIXEL(force=True)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		
 	return
@@ -915,7 +915,7 @@ def setHHMarksTo(yy):
 		else:
 			return  False
 		U.logger.log(20, "setHHMarksTo {}".format(xx))
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return True
 
@@ -936,7 +936,7 @@ def setMMModeTo(yy):
 			return  False
 		U.logger.log(20, "setMMModeTo {}".format(xx))
 		getCurrentPatterns()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return True
 
@@ -956,7 +956,7 @@ def setHHModeTo(yy):
 			return  False
 		U.logger.log(20, "setHHModeTo #{}".format(xx ))
 		getCurrentPatterns()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		U.logger.log(30, "ticksOptions {} ".format(ticksOptions))
 	return True
@@ -1010,7 +1010,7 @@ def saveParameters():
 		f = open(G.homeDir+"neopixelClock.clockDict","w")
 		f.write(json.dumps(clockDict, sort_keys=True, indent=2))
 		f.close()
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return
 
@@ -1122,12 +1122,12 @@ def setLightfromSensor():
 			#U.logger.log(20, "setLightfromSensor  bf restartstartNEOPIXEL")
 			try:
 				startNEOPIXEL(calledFrom=f"set light form sensor", force=True)
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
 			
 		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockDict["clockLightSet"], LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor) 
 		U.logger.log(10, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor))
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return
 
@@ -1629,7 +1629,7 @@ while True:
 		#U.logger.log(20,  "gpio values: A:{} b:{} C:{} U:{} D:{}".format(GPIO.input(gpiopinSET["setA"]), GPIO.input(gpiopinSET["setB"]),GPIO.input(gpiopinSET["setC"]),GPIO.input(gpiopinSET["up"]),GPIO.input(gpiopinSET["down"])))
 
 			
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"except at end of loop", exc_info=True)
 		time.sleep(10.)
 		if "{}".format(e).find("string indices must be integers") >-1:

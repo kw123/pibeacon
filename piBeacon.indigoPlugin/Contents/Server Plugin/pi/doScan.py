@@ -138,7 +138,7 @@ def doScan():
 def readParams():
 	global execcommands, PWM, typeForPWM, killMyselfAtEnd
 	killMyselfAtEnd = True
-	inp,inpRaw = U.doRead()
+	inp, inpRaw, x = U.doRead()
 	if inp == "": return
 	U.getGlobalParams(inp)
 

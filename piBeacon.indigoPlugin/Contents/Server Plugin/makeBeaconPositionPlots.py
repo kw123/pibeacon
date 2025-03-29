@@ -50,7 +50,7 @@ logLevel = plotData["logLevel"]
 logfileName=plotData["logFile"]
 #logLevel = True
 
-logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(asctime)s %(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
+logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(asctime)s makeBeaconPositionPlots %(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 
@@ -257,9 +257,9 @@ try:
 				pos[1] = max(0., min(pos[1], Yscale ))
 
 				# show the marker
-				try:	 distanceToRPI = this["distanceToRPI"] * 0.25
-				except:  distanceToRPI  = 1. / distanceUnits
-													     #1.7 meter= 6"         0.25 m = 1'
+				try:	distanceToRPI = this["distanceToRPI"] * 0.25
+				except: distanceToRPI  = 1. / distanceUnits
+				#1.7 meter= 6"         0.25 m = 1'
 				distanceToRPI = max( min( distanceToRPI, 1.7/distanceUnits ), 0.25/distanceUnits) 
 			
 				symbol = this["symbolType"].lower()

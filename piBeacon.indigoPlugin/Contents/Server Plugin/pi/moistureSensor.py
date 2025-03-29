@@ -102,7 +102,7 @@ def readParams():
 
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead   = lastRead2
@@ -213,7 +213,7 @@ def startSensor(devId,i2cAddress):
 				v = SENSOR[devId].getVersion()
 				U.logger.log(30, u"started chirp sensor, version={}".format(v) )
 	
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			SENSOR[devId] = ""
 			U.muxTCA9548Areset()
@@ -281,7 +281,7 @@ def getValues(devId):
 		#print (tempL, IlluminanceL, moistureL, data)
 		badSensor = 0
 		return data
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	badSensor += 1
 	if badSensor > 5: return "badSensor"
@@ -405,7 +405,7 @@ def execMoistureSensor():
 			time.sleep( max(0, (lastMeasurement+sensorRefreshSecs) - time.time() ) )
 			lastMeasurement = time.time()
 
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			time.sleep(5.)
 

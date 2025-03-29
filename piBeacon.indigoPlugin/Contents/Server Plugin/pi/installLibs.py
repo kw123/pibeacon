@@ -226,7 +226,7 @@ def setupLibs(upgradeOpSys):
 				cmd="cd "+G.homeDir0+"Adafruit_Python_GPIO; /usr/bin/python setup.py install"
 				ret=subprocess.Popen(cmd ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 				U.logger.log(30, "Adafruit_Python_GPIO return \n"+ ret[0]+"\n"+ret[1])
-			except	Exception as e:
+			except Exception as e:
 				U.logger.log(30, "Adafruit_Python_GPIO failed")
 
 
@@ -240,12 +240,12 @@ def setupLibs(upgradeOpSys):
 		
 def readNewParams():
 		global rebootCommand
-		inp,inpRaw = doRead()
+		inp, inpRaw = doRead()
 		if inp == "": return
 		if u"rebootCommand"			in inp: rebootCommand		  = inp["rebootCommand"]
 
 def doRead():
-	inp, inRaw ="",""
+	inp, inRaw = "",""
 	try:
 		f=open(G.homeDir+"parameters","r")
 		inRaw =f.read()

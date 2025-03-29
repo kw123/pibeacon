@@ -57,7 +57,7 @@ def readParams():
 		restart = False
 
 
-		inp,inpRaw,lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
 		if lastRead2 == lastRead: return
 		lastRead  = lastRead2
@@ -280,7 +280,7 @@ def readParams():
 		U.logger.log(10,"GPIOdict: {}".format(GPIOdict) )
 		#print coincidence
 
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 				
 
@@ -562,7 +562,7 @@ def execMain():
 
 			loopCount+=1
 			time.sleep(shortWait)
-		except	Exception as e:
+		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			time.sleep(5.)
 

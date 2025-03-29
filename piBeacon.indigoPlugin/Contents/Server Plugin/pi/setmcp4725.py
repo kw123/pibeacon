@@ -22,13 +22,13 @@ def setVoltage(bytes, persist=False):
 			bus.write_i2c_block_data(i2cAddress, 0x60, bytes)
 		else:
 			bus.write_i2c_block_data(i2cAddress, 0x40, bytes)
-	except	Exception as e:
+	except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 ###########
 def readParams():
 	global allowedGPIOoutputPins
-	inp,inpRaw = U.doRead()
+	inp, inpRaw, x = U.doRead()
 	if inp == "": return
 	U.getGlobalParams(inp)
 
@@ -45,8 +45,8 @@ command = json.loads(sys.argv[1])
 i2cAddress = U.getI2cAddress(command, default ="")
 
 if i2cAddress=="":
-    U.logger.log(30, "setmcp4725 bad command " + command + "  i2cAddress not included")
-    exit(1)
+	U.logger.log(30, "setmcp4725 bad command " + command + "  i2cAddress not included")
+	exit(1)
 	
 if "startAtDateTime" in command:
 	try:
@@ -104,7 +104,7 @@ badi2c =0
 if cmd =="analogWrite":
 	try:
 		setVoltage(bytes,persist=False)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	exit()
 
@@ -117,7 +117,7 @@ if cmd =="continuousUpDown":
 			time.sleep(pulseUp)
 			setVoltage([0,0],persist=False)
 			time.sleep(pulseDown)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	exit()
 	
@@ -126,7 +126,7 @@ if cmd =="pulseUp":
 		setVoltage(bytes,persist=False)
 		time.sleep(pulseUp)
 		setVoltage([0,0],persist=False)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	exit()
 	
@@ -135,7 +135,7 @@ if cmd =="pulseDown":
 		setVoltage([0,0],persist=False)
 		time.sleep(pulseDown)
 		setVoltage(bytes,persist=False)
-	except	Exception as e:
+	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	exit()
 	

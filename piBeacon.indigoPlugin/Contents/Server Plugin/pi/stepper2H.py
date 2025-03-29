@@ -133,7 +133,7 @@ def move(reduce, reduceS, delay, delayS, steps, direction):
 				setStep(Seq[ii],tune=reduceS)
 				time.sleep(delayS)
 
-	 	lastStep = ii
+		lastStep = ii
 
 
 setStep(Seq[0])
@@ -154,4 +154,4 @@ while True:
 	time.sleep(1)
 	move(reduce, reduceS , delay, delayS, stepsB,-1)
 	setStep(Seq[0])
- 
+
