@@ -1,0 +1,1 @@
+tail -F /home/pi/pibeacon/temp/messageSend

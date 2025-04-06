@@ -34,7 +34,7 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
 G.program = "BLEconnect"
-VERSION = 7.1
+VERSION = 7.2
 ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
 if sys.version[0] == "3": usePython3 = True
@@ -134,9 +134,9 @@ def startHCI():
 	HCIs = U.whichHCI()
 	"""
 	{'hci': {
-	u'hci0': {'bus': u'USB',  'BLEmac': u'5C:F3:70:6D:D9:4A', 'numb': 0, 'upDown': 'UP'}, 
-	u'hci1': {'bus': u'UART', 'BLEmac': u'DC:A6:32:6E:E6:D0', 'numb': 1, 'upDown': 'UP'}}, 
-	'ret': [u'hci1:\tType: Primary  Bus: UART\n\tBD Address: DC:A6:32:6E:E6:D0  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:218659024 acl:5 sco:0 events:6395583 errors:0\n\tTX bytes:5859 acl:4 sco:0 commands:226 errors:0\n\nhci0:\tType: Primary  Bus: USB\n\tBD Address: 5C:F3:70:6D:D9:4A  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:124594 acl:1716 sco:0 events:9040 errors:0\n\tTX bytes:68257 acl:870 sco:0 commands:5086 errors:0\n\n', u'']}
+	'hci0': {'bus': 'USB',  'BLEmac': '5C:F3:70:6D:D9:4A', 'numb': 0, 'upDown': 'UP'}, 
+	'hci2': {'bus': 'UART', 'BLEmac': 'DC:A6:32:6E:E6:D0', 'numb': 1, 'upDown': 'UP'}}, 
+	'ret': ['hci21:\tType: Primary  Bus: UART\n\tBD Address: DC:A6:32:6E:E6:D0  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:218659024 acl:5 sco:0 events:6395583 errors:0\n\tTX bytes:5859 acl:4 sco:0 commands:226 errors:0\n\nhci0:\tType: Primary  Bus: USB\n\tBD Address: 5C:F3:70:6D:D9:4A  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:124594 acl:1716 sco:0 events:9040 errors:0\n\tTX bytes:68257 acl:870 sco:0 commands:5086 errors:0\n\n', u'']}
 	"""
 	U.logger.log(20, "BLE(long)connect--HCIs read:  {}, hci used by beaconloop:{}, {}".format(HCIs, doNotUseHCI, doNotUseHCI))
 	if HCIs["hci"] != {}:
@@ -1929,6 +1929,24 @@ def tryToConnectToBLEconnect(thisMAC, BLEid):
 		U.logger.log(30,"", exc_info=True)
 	return 
 
+def tryDeltaTime(tt):
+	return 0
+	
+def hardresetHCI(hci):
+	
+	try:
+		cmd = "sudo hciconfig {} down".format(hci)
+		ret = readPopen(cmd) # enable bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}".format(cmd, ret)  )
+		cmd = "sudo invoke-rc.d bluetooth restart"
+		ret = readPopen(cmd) # enable bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}".format(cmd, ret)  )
+		cmd = "sudo hciconfig {} up".format(hci)
+		ret = readPopen(cmd) # enable bluetooth
+		U.logger.log(20,"cmd:{} .. ret:{}".format(cmd, ret) )
+	except Exception as e: 
+		U.logger.log(30,"", exc_info=True)
+	return 
 
 
 #################################
@@ -2127,14 +2145,21 @@ def execBLEconnect():
 				if not checkIfHCIup(useHCI):
 					U.logger.log(20, "requested a restart of BLE stack due to {} down ".format(useHCI))
 					#subprocess.call("echo xx > {}temp/BLErestart".format(G.homeDir), shell=True) # signal that we need to restart BLE
-					cmd = "sudo hciconfig {} reset".format(useHCI)
+					cmd = "sudo hciconfig {} down;sudo hciconfig {} up;".format(useHCI, useHCI)
 					ret = readPopen(cmd) # enable bluetooth
 					U.logger.log(20,"cmd:{} ".format(cmd)  )
 					time.sleep(1)
-					restartCount +=1
+					restartCount += 1
 					if not checkIfHCIup(useHCI): # simple restart did not woek, lets do a master restart 
-						U.writeFile("temp/restartNeeded", "bleconnect request")
+						hardresetHCI(useHCI)
+						
+						if checkIfHCIup(useHCI):
+							restartCount = 0
+							
+						if restartCount > 5:
+							U.writeFile("temp/restartNeeded", "bleconnect request")
 					else:
+						restartCount = 0
 						U.logger.log(20,"...restart fixed".format()  )
 
 

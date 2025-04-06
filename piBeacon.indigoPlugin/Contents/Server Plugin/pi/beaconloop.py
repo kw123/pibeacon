@@ -299,7 +299,7 @@ def checkIfHCIIsBlockedAndFix():
 
 
 #################################
-def hardrestHCI(hci, startTime):
+def hardresetHCI(hci, startTime):
 	try:
 		cmd = "sudo hciconfig {} down".format(hci)
 		ret = readPopen(cmd) # enable bluetooth
@@ -452,7 +452,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			U.logger.log(20,"checking hci:{}".format(hci)  )
 
 			if hardreset: 
-				hardrestHCI(hci, startTime)
+				hardresetHCI(hci, startTime)
 
 			elif reUse:
 				reuseHCI(hci, startTime)
@@ -7679,7 +7679,7 @@ def execbeaconloop(test):
 					U.logger.log(20, "time w/out any message: "+out)
 					if debugRestarts: U.echoText(G.restartLogfileName, out)
 					if stackrestartcount < 5:
-						U.logger.log(20, "restarting stack  due to no messages " )
+						U.logger.log(20, "restarting stack  due to no messages  ".format(dt1, nEmptyMessagesInARow) )
 						if rpiDataAcquistionMethod == "socket":
 							sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
 							restartBLE = time.time()

@@ -302,7 +302,7 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -320,7 +320,8 @@ set BOTH iBeacon and BLEconnect to external USB dongle, on some models you shoul
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -1562,7 +1563,7 @@ if you want to keep it running add an "&amp;" to the end </Label>
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -1580,7 +1581,8 @@ if you want to keep it running add an "&amp;" to the end </Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -2936,7 +2938,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true">  <Label>... trend time window for change:</Label>
@@ -2954,7 +2956,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -2986,7 +2989,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -3018,7 +3022,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -3489,7 +3494,7 @@ save ===
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -3507,7 +3512,8 @@ save ===
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -3539,7 +3545,8 @@ save ===
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -3746,7 +3753,7 @@ save===</Label>
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -3764,7 +3771,8 @@ save===</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -3926,7 +3934,7 @@ save ===
 			</Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -3944,7 +3952,8 @@ save ===
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -3976,7 +3985,8 @@ save ===
 			<Field id="AmbientTemperatur_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientTemperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -4228,7 +4238,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -4246,7 +4256,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -4278,7 +4289,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -4489,7 +4501,7 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -4507,7 +4519,8 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -4539,7 +4552,8 @@ You can find the MAC number using the plugin tool detect new beacons look for LY
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -4757,7 +4771,7 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			</Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -4775,7 +4789,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -4802,7 +4817,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -4833,7 +4849,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			<Field id="Formaldehyde_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Formaldehyde_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5057,7 +5074,7 @@ This Sensor does not display F only C ===</Label>
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -5075,7 +5092,8 @@ This Sensor does not display F only C ===</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5107,7 +5125,8 @@ This Sensor does not display F only C ===</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5308,7 +5327,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -5326,7 +5345,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5358,7 +5378,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for L
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5548,7 +5569,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -5566,7 +5587,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5598,7 +5620,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 			<Field id="Conductivity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Conductivity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5628,7 +5651,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 			<Field id="Moisture_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Moisture_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5659,7 +5683,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for X
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_trendDelta" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5849,7 +5874,7 @@ You can find the MAC number using the plugin tool detect new beacons look for
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -5867,7 +5892,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -5899,7 +5925,8 @@ You can find the MAC number using the plugin tool detect new beacons look for
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -6322,7 +6349,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -6340,7 +6367,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -6372,7 +6400,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -6611,7 +6640,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for T
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -6629,7 +6658,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for T
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -6661,7 +6691,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for T
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -6838,7 +6869,7 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -6856,7 +6887,8 @@ You can find the MAC number using the plugin tool detect new beacons, look for I
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -7067,7 +7099,7 @@ On off for single and double click as well as accelleration, temp and humdity ==
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -7085,7 +7117,8 @@ On off for single and double click as well as accelleration, temp and humdity ==
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -7117,7 +7150,8 @@ On off for single and double click as well as accelleration, temp and humdity ==
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -7632,7 +7666,7 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -7650,7 +7684,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -7680,7 +7715,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -7712,7 +7748,8 @@ You can find the MAC number either on back of beacon or use the plugin tool dete
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -7907,7 +7944,7 @@ Use the plugin tool detect new beacons ===
 			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -7925,7 +7962,8 @@ Use the plugin tool detect new beacons ===
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -8119,7 +8157,7 @@ Use the plugin tool detect new beacons ===
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -8137,7 +8175,8 @@ Use the plugin tool detect new beacons ===
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -8169,7 +8208,8 @@ Use the plugin tool detect new beacons ===
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -8974,7 +9014,7 @@ set trigger and sensitivity parameters ===
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -8992,7 +9032,8 @@ set trigger and sensitivity parameters ===
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -9024,7 +9065,8 @@ set trigger and sensitivity parameters ===
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -9281,7 +9323,7 @@ Currently the state rotation only works sometimes, not reliable
 
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -9299,7 +9341,8 @@ Currently the state rotation only works sometimes, not reliable
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -9559,7 +9602,7 @@ download Shelly BLE debug from appstore/ launch/ press button/ connect/ set beac
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -9577,7 +9620,8 @@ download Shelly BLE debug from appstore/ launch/ press button/ connect/ set beac
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -10726,7 +10770,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -10744,7 +10788,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -10776,7 +10821,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -10956,7 +11002,7 @@ You can use either red/grey/green or temperature icon in the status column: set 
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -10974,7 +11020,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -11006,7 +11053,8 @@ You can use either red/grey/green or temperature icon in the status column: set 
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -11551,7 +11599,7 @@ After you enable "add new onewire sensors" in RPi device edit the plugin will au
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -11569,7 +11617,8 @@ After you enable "add new onewire sensors" in RPi device edit the plugin will au
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -11776,7 +11825,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -11794,7 +11843,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -11826,7 +11876,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -11919,7 +11970,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -11937,7 +11988,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12084,7 +12136,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -12102,7 +12154,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12244,7 +12297,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -12262,7 +12315,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12407,7 +12461,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -12425,7 +12479,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12564,7 +12619,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -12582,7 +12637,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12614,7 +12670,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12765,7 +12822,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -12783,7 +12840,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12815,7 +12873,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12945,7 +13004,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -12963,7 +13022,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -12995,7 +13055,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13135,7 +13196,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -13153,7 +13214,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13185,7 +13247,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13324,7 +13387,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -13342,7 +13405,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13374,7 +13438,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13406,7 +13471,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="VOC_trendDelta" type="menu"  defaultValue="100" visibleBindingId="VOC_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13537,7 +13603,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -13555,7 +13621,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13587,7 +13654,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13728,7 +13796,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -13746,7 +13814,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13778,7 +13847,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13924,7 +13994,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -13942,7 +14012,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -13974,7 +14045,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -14005,7 +14077,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -14425,7 +14498,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 	
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -14443,7 +14516,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -14475,7 +14549,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -14622,7 +14697,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -14640,7 +14715,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -14672,7 +14748,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AmbientTemperatur_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientTemperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -14831,7 +14908,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -14849,7 +14926,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -14881,7 +14959,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AmbientTemperatur_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientTemperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -15013,7 +15092,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -15031,7 +15110,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -15472,7 +15552,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="VOC_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>VOC:</Label>					</Field>
 			<Field id="VOC_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="VOC_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -15490,7 +15570,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="VOC_trendDelta" type="menu"  defaultValue="100" visibleBindingId="VOC_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -15521,7 +15602,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="CO2_trendDelta" type="menu"  defaultValue="100" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -15703,7 +15785,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -15721,7 +15803,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -15753,7 +15836,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -15784,7 +15868,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="CO2_trendDelta" type="menu"  defaultValue="100" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -15996,7 +16081,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -16014,7 +16099,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -16046,7 +16132,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -16077,7 +16164,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="CO2_trendDelta" type="menu"  defaultValue="100" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -16256,7 +16344,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="VOC_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>VOC:</Label>					</Field>
 			<Field id="VOC_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="VOC_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -16274,7 +16362,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="VOC_trendDelta" type="menu"  defaultValue="100" visibleBindingId="VOC_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -16490,7 +16579,7 @@ It measures CO2 and temp using infrared light absorption
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="CO2_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>CO2:</Label>					</Field>
 			<Field id="CO2_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -16508,7 +16597,8 @@ It measures CO2 and temp using infrared light absorption
 			<Field id="CO2_trendDelta" type="menu"  defaultValue="100" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -16695,7 +16785,7 @@ It measures CO2 VOC
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -16713,7 +16803,8 @@ It measures CO2 VOC
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -16745,7 +16836,8 @@ It measures CO2 VOC
 			<Field id="CO2_trendDelta" type="menu"  defaultValue="100" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -16776,7 +16868,8 @@ It measures CO2 VOC
 			<Field id="VOC_trendDelta" type="menu"  defaultValue="100" visibleBindingId="VOC_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -17025,7 +17118,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -17043,7 +17136,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -17180,7 +17274,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -17198,7 +17292,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -17542,7 +17637,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -17560,7 +17655,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -17706,7 +17802,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
 			<Field id="White_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="White_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -17724,7 +17820,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="White_trendDelta" type="menu"  defaultValue="100" visibleBindingId="White_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -17755,7 +17852,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AmbientLight_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientLight_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -17902,7 +18000,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
 			<Field id="White_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="White_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -17920,7 +18018,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="White_trendDelta" type="menu"  defaultValue="100" visibleBindingId="White_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -17951,7 +18050,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AmbientLight_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientLight_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -18097,7 +18197,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
 			<Field id="White_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="White_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -18115,7 +18215,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="White_trendDelta" type="menu"  defaultValue="100" visibleBindingId="White_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -18565,7 +18666,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -18583,7 +18684,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -18614,7 +18716,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AmbientLight_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientLight_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -18645,7 +18748,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="IR_trendDelta" type="menu"  defaultValue="100" visibleBindingId="IR_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -18848,7 +18952,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
 			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
@@ -18866,7 +18970,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -18898,7 +19003,8 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="AmbientTemperatur_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientTemperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -19102,7 +19208,7 @@ you can setup
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="AmbientTemperature_EnableMinMax"	type="checkbox"	defaultValue="true" >		<Label>AmbientTemperature:</Label> </Field>
 			<Field id="AmbientTemperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="AmbientTemperature_EnableMinMax" visibleBindingValue="true">		<Label>AmbientTemperature trend min delta time:</Label>
@@ -19120,7 +19226,8 @@ you can setup
 			<Field id="AmbientTemperatur_trendDelta" type="menu"  defaultValue="100" visibleBindingId="AmbientTemperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -23557,6 +23664,18 @@ Connect the relay to the gpio and +5V, make sure that current demand is ok, gpio
 recommened is a relay with transitor switch in front!</Label>
 			</Field>
 
+
+			<Field id="resetGPIOClass"   type="menu" defaultValue="999999999"  tooltip="use for LED and relay on/off" >
+				<List>
+					<Option value="30"   			> every 30 secs</Option>
+					<Option value="300"   			> every 300 secs</Option>
+					<Option value="600"   			> every 600 secs</Option>
+					<Option value="999999999"   	> off</Option>
+				</List>
+				<Label>restart GPIO class every:</Label>
+			</Field>
+
+
 		</ConfigUI>
 		<States>
 		</States>
@@ -24072,7 +24191,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			<Field id="displayState" type="textfield"    defaultValue="status" hidden="YES"> </Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Moisture_EnableMinMax" 		type="checkbox"		defaultValue="true" >		<Label>Moisture:</Label> </Field>
 			<Field id="Moisture_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Moisture_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -24090,7 +24209,8 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			<Field id="Moisture_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Moisture_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -24121,7 +24241,8 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -28314,7 +28435,7 @@ distance up to 20 cm</Label>
 			</Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -28332,7 +28453,8 @@ distance up to 20 cm</Label>
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -28824,7 +28946,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			</Field>
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance:</Label> </Field>
 			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -28842,7 +28964,8 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -29027,7 +29150,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 
 
 			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
-				<Label>== Enable min/max/changed values and trend (up/down/const in last xx minutes) states</Label>
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
 			</Field>
 			<Field id="White_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>white:</Label>				</Field>
 			<Field id="White_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="White_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
@@ -29045,7 +29168,8 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="White_trendDelta" type="menu"  defaultValue="100" visibleBindingId="White_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>
@@ -29076,7 +29200,8 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
-					<Option value="25"    > 0.25 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
 					<Option value="50"    > 0.5 %</Option>
 					<Option value="100"   > 1 %</Option>
 					<Option value="150"   > 1.5 %</Option>

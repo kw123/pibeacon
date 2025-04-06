@@ -1,10 +1,10 @@
-added features / changes in added features / changes in v2022.184.133 @ 2025-03-27
+added features / changes in added features / changes in v2022.184.135 @ 2025-04-04
 ==================================================
 
-1. this version willFULLY CONFIGURE  a new micro SSD. No need to for any raspi-config to set Onewire i2c on/off or install new libraries.
+1. this version will FULLY CONFIGURE  a new micro SSD. No need to for any raspi-config to set Onewire, i2c, on/off or install new libraries.
     it supports RPI-OS 11(bullseye) and 12 (bookworm) 32 bit and 64 bit
     The module GPIO is not supported by the new OSes anymore. The programs on the PRI now uses PIGPIO and GPIOZERO to write and read pins on the rpi - that was a major effort.
-    Older OSes are still supported with GPIO. so no need to upgrade the RPI OS. But suggested to at least V11 for security updates on your RPI.
+    Older OSes are still supported with GPIO. So no need to upgrade the RPI OS. But suggested to at least V11(bullseye) for security updates on your RPI.
 
 2. added menu and action to set any pibeacon device state, just in case
 
@@ -28,6 +28,15 @@ added features / changes in added features / changes in v2022.184.133 @ 2025-03-
    You still need to make the SSD with the Raspberry Pi Imager 
    The userid, password and ip # has to setup correctly in the plugin. ANYTHING else is automated.
 
+9. reduced logging on rpi for display.py
+  
+10. added TREND states:   xxx_trend states for xxx = temperature humidity, pressure ... 
+      it shows vvvv,vvv,vv,v, = ^,^^,^^^,^^^^ for -8*x,-4*x....+8*x  depending on changes of the state value in the last yy minutes.  in device edit you can set time window (yy) and % change (x) to set limits for ^ v etc .
+        
+11. the plugin is not using the mac number anymore to ID the RPI. that created some issues when you used more than one BLE dongle (for BLECONNECT+ regular).
+    Sometimes a BLE dongle could be down and then the RPI would switch mac number to the one up and running. before the Plugin would switch the mac number (checking all kinds of things), 
+    but under certain circumstances it would get confused and replace the RPI device with a beacon devce.  
+    Now the plugin uses the RPI# (1-30) to ID the RPI and will use the submitted MAC number by the RPI as the current one.
 
 
 added features / changes in added features / changes in v2022.183.130 @ 2025-01-25

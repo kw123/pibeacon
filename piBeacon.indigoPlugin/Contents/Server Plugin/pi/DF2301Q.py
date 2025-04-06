@@ -23,13 +23,13 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 try:
 	import gpiozero
-	useGPIO = False
+	k_useGPIO = False
 except:
 	try:
 		import RPi.GPIO as GPIO
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
-		useGPIO = True
+		k_useGPIO = True
 	except: pass
 
 
@@ -699,6 +699,8 @@ def readParams():
 	global logLevel, tmpMuteOff, learningOn, expectResponse, currentMute, setWakeTime
 	global GPIOZERO
 	global reactOnlyToCommands, maxCommandId, minErrorCmdID, offCommand
+	global gpioUsed
+	global resetGPIOClass
 	try:
 
 
@@ -721,7 +723,6 @@ def readParams():
 
 
 
-		gpioUsed = [0,0,0,0,0,0,0,0,0,0]
 		for devId in sensors[sensor]:
 
 			# anything new?
@@ -754,6 +755,8 @@ def readParams():
 			if devId not in setWakeTime: 				setWakeTime[devId] 					= 200
 			if devId not in serialPortName: 			serialPortName[devId] 				= "serial0"
 			if devId not in reactOnlyToCommands: 		reactOnlyToCommands[devId] 			= [x for x in range(maxCommandId)]
+			if devId not in resetGPIOClass: 			resetGPIOClass[devId] 				= 999999999
+			resetGPIOClass[devId] = float(sensors[sensor][devId].get("resetGPIOClass",999999999))
 
 			commandList[devId] = {}
 			reactCmds = []
@@ -801,7 +804,7 @@ def readParams():
 			else:
 				logLevel = 0
 
-			restart = False
+			restart = ""
 			i2cOrUart[devId] =  sensors[sensor][devId].get("i2cOrUart","")	
 			if devId not in oldi2cOrUart or (i2cOrUart[devId] != "" and oldi2cOrUart[devId] != i2cOrUart[devId]):	restart = True
 			i2cOrUart[devId]  = copy.copy(i2cOrUart[devId])
@@ -833,7 +836,7 @@ def readParams():
 
 				serialPortName[devId] =  sensors[sensor][devId].get("serialPortName", DF2301Q_UART_PORT_NAME)	
 				if devId not in oldserialPortName or (serialPortName[devId] != "" and oldserialPortName[devId]  != serialPortName[devId]) :
-					restart = True
+					restart = "portname changed"
 				oldserialPortName[devId]  = copy.copy(serialPortName[devId])
 				time.sleep(4)
 			else:
@@ -845,100 +848,30 @@ def readParams():
 					sleepAfterWrite[devId] = 50.
 				oldSleepAfterWrite[devId] = copy.copy(sleepAfterWrite[devId])
 
-			upd = False
+			upd = ""
 			if devId not in SENSOR or restart:
-				upd = True
+				upd = "devid not present"
 				startSensor(devId)
 				if devId not in SENSOR:
 					return
 
 			if devId not in sensorOld: 
-				upd = True
+				upd = "devid not in old present"
 
 			elif "mute" in sensors[sensor][devId] and (upd or sensors[sensor][devId].get("mute") != sensorOld[devId].get("mute")):
-				upd = True
+				upd = "change in mute"
 
 			elif "volume" in sensors[sensor][devId] and ( sensors[sensor][devId].get("volume") != sensorOld[devId].get("volume")):
-				upd = True
+				upd = "change in volme"
 
 			elif "setWakeTime" in sensors[sensor][devId] and (sensors[sensor][devId].get("setWakeTime") != sensorOld[devId].get("setWakeTime")):
-				upd = True
+				upd = "change in wake time"
+
+			setGPIOreset(devIdSelect=devId)
+			setGPIOconfig(devIdSelect=devId)
 
 
-
-			if "resetPowerGPIO" in sensors[sensor][devId]:
-				if gpioUsed[-1] == 0: 
-					if ( resetPowerGPIO == "" or str(resetPowerGPIO) != sensors[sensor][devId].get("resetPowerGPIO","")	):
-						try:	resetPowerGPIO	= int(sensors[sensor][devId].get("resetPowerGPIO",""))
-						except:	resetPowerGPIO	= ""
-						if resetPowerGPIO not in ["",0,-1]:
-							if logLevel > 0: U.logger.log(20, "devId:{}; checking parameters file for  resetPowerGPIO:{} enabled?".format(devId, resetPowerGPIO) )
-							resetPowerGPIO = int(resetPowerGPIO)
-							gpioUsed[-1] = 1
-							if useGPIO:
-								GPIO.setup(resetPowerGPIO, GPIO.OUT)
-								GPIO.output(resetPowerGPIO, 1)
-							else:
-								GPIOZERO[resetPowerGPIO] = gpiozero.LED(resetPowerGPIO)
-								GPIOZERO[resetPowerGPIO].on()
-
-
-
-			for ii in range(1,5):
-				if gpioUsed[ii] == 1: continue
-				iis = str(ii)
-				try:
-					if "gpioNumberForCmdAction"+iis in sensors[sensor][devId]:
-						changed = False
-						if ( gpioNumberForCmdAction[ii] == "" or str(gpioNumberForCmdAction[ii])	!= sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,"") ):
-							try:	
-									gpioNumberForCmdAction[ii] 		= int(sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,""))
-									if gpioNumberForCmdAction[ii] not in range(2,27):
-										gpioNumberForCmdAction[ii]  = ""
-									else:
-										changed = True
-										gpioUsed[ii] = 1
-							except Exception as e:
-								U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-								gpioNumberForCmdAction[ii] 	= ""
-	
-						if ( gpioCmdForAction[ii] == "" 		or str(gpioCmdForAction[ii] ) 		!= sensors[sensor][devId].get("gpioCmdForAction"+iis,"") ):
-							try:	
-									gpioCmdForAction[ii]  			= int(sensors[sensor][devId].get("gpioCmdForAction"+iis,""))
-									changed = True
-									gpioUsed[ii] = 1
-							except:	gpioCmdForAction[ii] = ""
-	
-						if ( gpioOnTimeAction[ii] == "" 		or str(gpioOnTimeAction[ii] ) 		!= sensors[sensor][devId].get("gpioOnTimeAction"+iis,"") ):
-							try:	
-									gpioOnTimeAction[ii]  			= float(sensors[sensor][devId].get("gpioOnTimeAction"+iis,""))
-									changed = True
-									gpioUsed[ii] = 1
-							except:	gpioOnTimeAction[ii] = ""
-	
-						if ( gpioInverseAction[ii] == "" 		or str(gpioInverseAction[ii] ) 		!= sensors[sensor][devId].get("gpioInverseAction"+iis,"") ):
-							try:	
-									gpioInverseAction[ii]  			= sensors[sensor][devId].get("gpioInverseAction"+iis,"")
-									changed = True
-									gpioUsed[ii] = 1
-							except:	gpioInverseAction[ii] = ""
-	
-						if changed:
-							if gpioInverseAction[ii] in ["0","1"] and isinstance(gpioOnTimeAction[ii],float) and isinstance(gpioCmdForAction[ii], int) and isinstance(gpioNumberForCmdAction[ii], int):
-								if logLevel > 0: U.logger.log(20, "devId:{}; checking parameters file for #{}  gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} ".format(devId, ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii]  ) )
-								anyCmdDefined = True
-								if useGPIO:
-									GPIO.setup(gpioNumberForCmdAction[ii], GPIO.OUT)
-									GPIO.output(gpioNumberForCmdAction[ii], gpioInverseAction[ii] == "0")  
-								else:
-									GPIOZERO[gpioNumberForCmdAction[ii]] = gpiozero.LED(gpioNumberForCmdAction[ii])
-									getattr(GPIOZERO[gpioNumberForCmdAction[ii]], "on" if gpioInverseAction[ii] == "0" else "off")()
-
-				except Exception as e:
-					U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-
-
-			if upd and logLevel > 0: U.logger.log(20,"devId:{}; serialPortName:{},  setting volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}, refreshRepeat:{:.1f}, restartRepeat:{:.1f}, logLevel:{}".format(devId, serialPortName[devId], sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), setWakeTime[devId], keepAwake[devId], refreshRepeat[devId], restartRepeat[devId],logLevel) )
+			if upd and logLevel > 0: U.logger.log(20,"devId:{}; reason:{}, serialPortName:{},  setting volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}, refreshRepeat:{:.1f}, restartRepeat:{:.1f}, logLevel:{}".format(devId, upd, serialPortName[devId], sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), setWakeTime[devId], keepAwake[devId], refreshRepeat[devId], restartRepeat[devId],logLevel) )
 
 			if upd:
 				checkifRefreshSetup(devId, restart=restart, upd=upd)
@@ -961,6 +894,124 @@ def readParams():
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 		U.logger.log(20, "{}".format(sensors[sensor]))
 
+
+#################################
+def setGPIOreset(devIdSelect=0,force=False):
+	global sensors, sensor
+	global SENSOR
+	global logLevel
+	global GPIOZERO, resetPowerGPIO, gpioUsed
+	try:
+		if devIdSelect != 0: devIdList = [devIdSelect]
+		else:
+			devIdList = []
+			for xx in sensors[sensor]:
+				devIdList.append(xx)
+				
+		for devId in devIdList:
+			if "resetPowerGPIO" in sensors[sensor][devId]:
+				if gpioUsed[-1] == 0 or force: 
+					if force:
+						resetPowerGPIO == "" 
+					if ( resetPowerGPIO == "" or str(resetPowerGPIO) != sensors[sensor][devId].get("resetPowerGPIO","")):
+						try:	resetPowerGPIO	= int(sensors[sensor][devId].get("resetPowerGPIO",""))
+						except:	resetPowerGPIO	= ""
+						if resetPowerGPIO not in ["",0,-1]:
+							if logLevel > 0: U.logger.log(20, "devId:{}; checking parameters file for  resetPowerGPIO:{} enabled?".format(devId, resetPowerGPIO) )
+							resetPowerGPIO = int(resetPowerGPIO)
+							gpioUsed[-1] = 1
+							if k_useGPIO:
+								GPIO.setup(resetPowerGPIO, GPIO.OUT)
+								GPIO.output(resetPowerGPIO, 1)
+							else:
+								try: GPIOZERO[resetPowerGPIO].close()
+								except: pass
+								GPIOZERO[resetPowerGPIO] = gpiozero.LED(resetPowerGPIO)
+								GPIOZERO[resetPowerGPIO].on()
+	except Exception as e:
+		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+
+
+#################################
+def setGPIOconfig(devIdSelect=0, force=False):
+	global sensors, sensor
+	global SENSOR
+	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction, anyCmdDefined
+	global logLevel
+	global GPIOZERO, gpioUsed
+	try:
+		if devIdSelect != 0: devIdList = [devIdSelect]
+		else:
+			devIdList = []
+			for xx in sensors[sensor]:
+				devIdList.append(xx)
+
+		if logLevel > 0: U.logger.log(20, "starting  devIdSelect:{}, force:{}, devIds:{}".format(devIdSelect, force, devIdList) )
+		for devId in devIdList:
+			for ii in range(1,5):
+				if gpioUsed[ii] == 0 or force: 
+					iis = str(ii)
+					if force:
+						gpioNumberForCmdAction[ii] = ""
+						gpioCmdForAction[ii] = ""
+						gpioOnTimeAction[ii] = ""
+						gpioInverseAction[ii] = ""
+					try:
+						if "gpioNumberForCmdAction"+iis in sensors[sensor][devId]:
+							if logLevel > 1: U.logger.log(20, "setting #{}, devId:{}".format(iis, devId) )
+							changed = False
+							if ( gpioNumberForCmdAction[ii] == "" or str(gpioNumberForCmdAction[ii])	!= sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,"") ):
+								try:	
+										gpioNumberForCmdAction[ii] 		= int(sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,""))
+										if gpioNumberForCmdAction[ii] not in range(2,27):
+											gpioNumberForCmdAction[ii]  = ""
+										else:
+											changed = True
+											gpioUsed[ii] = 1
+								except Exception as e:
+									U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+									gpioNumberForCmdAction[ii] 	= ""
+
+							if ( gpioCmdForAction[ii] == "" 		or str(gpioCmdForAction[ii] ) 		!= sensors[sensor][devId].get("gpioCmdForAction"+iis,"") ):
+								try:	
+										gpioCmdForAction[ii]  			= int(sensors[sensor][devId].get("gpioCmdForAction"+iis,""))
+										changed = True
+										gpioUsed[ii] = 1
+								except:	gpioCmdForAction[ii] = ""
+
+							if ( gpioOnTimeAction[ii] == "" 		or str(gpioOnTimeAction[ii] ) 		!= sensors[sensor][devId].get("gpioOnTimeAction"+iis,"") ):
+								try:	
+										gpioOnTimeAction[ii]  			= float(sensors[sensor][devId].get("gpioOnTimeAction"+iis,""))
+										changed = True
+										gpioUsed[ii] = 1
+								except:	gpioOnTimeAction[ii] = ""
+
+							if ( gpioInverseAction[ii] == "" 		or str(gpioInverseAction[ii] ) 		!= sensors[sensor][devId].get("gpioInverseAction"+iis,"") ):
+								try:	
+										gpioInverseAction[ii]  			= sensors[sensor][devId].get("gpioInverseAction"+iis,"")
+										changed = True
+										gpioUsed[ii] = 1
+								except:	gpioInverseAction[ii] = ""
+
+							if logLevel > 2: U.logger.log(20, "devId:{}; checking parameters file for #{}  changed:{}; gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} conditions: gpioInverse==0/1:{}  gpioOnTime==float:{}  gpioCmd==int:{}  gpioNumber==int:{} ".format(devId, ii,changed, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii] , gpioInverseAction[ii] in ["0","1"] , isinstance(gpioOnTimeAction[ii],float) , isinstance(gpioCmdForAction[ii], int) , isinstance(gpioNumberForCmdAction[ii], int) ) )
+							if changed:
+								if gpioInverseAction[ii] in ["0","1"] and isinstance(gpioOnTimeAction[ii],float) and isinstance(gpioCmdForAction[ii], int) and isinstance(gpioNumberForCmdAction[ii], int):
+									if logLevel > 1: U.logger.log(20, "devId:{}; checking parameters file for #{}  gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} ".format(devId, ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii]  ) )
+									anyCmdDefined = True
+									if k_useGPIO:
+										GPIO.setup(gpioNumberForCmdAction[ii], GPIO.OUT)
+										GPIO.output(gpioNumberForCmdAction[ii], gpioInverseAction[ii] == "0")  
+									else:
+										try: GPIOZERO[gpioNumberForCmdAction[ii]].close()
+										except: pass
+										GPIOZERO[gpioNumberForCmdAction[ii]] = gpiozero.LED(gpioNumberForCmdAction[ii])
+										getattr(GPIOZERO[gpioNumberForCmdAction[ii]], "on" if gpioInverseAction[ii] == "0" else "off")()
+					except Exception as e:
+						U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+
+
+	except Exception as e:
+		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 
 #################################
@@ -1107,6 +1158,7 @@ def setNoExpectResponse(devId, calledfrom=""):
 	if logLevel > 1: U.logger.log(20, "devId:{}; setting  expectResponse to {:.1f}, called from:{}".format(devId, 9999999999, calledfrom ))
 	return 
 
+#################################
 def setExpectResponse(devId):
 	global expectResponse, logLevel
 	expectResponse[devId] = time.time() + GLOB_expectResponseAfter
@@ -1114,6 +1166,7 @@ def setExpectResponse(devId):
 
 	return 
 
+#################################
 def checkExpectResponse(devId):
 	global expectResponse, i2cOrUart, checkExpectResponse, restartConnectionCounter, minRestartConnectionTime
 
@@ -1180,7 +1233,7 @@ def checkIfRestart(force=False):
 			if not	force: U.logger.log(20, "==== doing restart ====, requested by plugin")
 			else:	force: U.logger.log(20, "==== doing restart ====, requested by program")
 
-		U.restartMyself(param="", reason="reset_requested", doPrint=True)
+		U.restartMyself(param="", reason="reset_requested "+GLOB_restartFile+" exists", doPrint=True)
 
 	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
@@ -1372,7 +1425,7 @@ def checkResetPower():
 		if str(resetPowerGPIO) not in ["","0","-1","1"]:  
 			# switch power off/on twice to reset i2c / serial on sensor
 			if logLevel > 0: U.logger.log(20, "power off/on twice with relay with gpio:{}".format(resetPowerGPIO))
-			if useGPIO:
+			if k_useGPIO:
 				GPIO.output(resetPowerGPIO, 0) # relay on (power off)
 				time.sleep(1)
 				GPIO.output(resetPowerGPIO, 1) # relay off (power on)
@@ -1416,11 +1469,16 @@ def cmdCheckIfGPIOon():
 	global cmdQueue, threadCMD
 	global logLevel, anyCmdDefined
 	global GPIOZERO
+	global resetGPIOClass
 
 	try:
 		if logLevel > 0: U.logger.log(20, "start  loop")
 		ledOn = [0,0,0,0,0]
 		anyOn = False
+		lastResetGPIO = {}
+		for devId in sensors[sensor]: 
+			lastResetGPIO[devId] = time.time()
+			
 		while threadCMD["state"] == "running":
 			try:
 				while not cmdQueue.empty():
@@ -1434,7 +1492,7 @@ def cmdCheckIfGPIOon():
 							if gpioCmdForAction[ii]  == 0 or (gpioCmdForAction[ii]  == 1 and cmd > 0) or  (gpioCmdForAction[ii]  == 2 and cmd > 1) or  (gpioCmdForAction[ii]  == 3 and cmd > 2) or  gpioCmdForAction[ii] == cmd:
 								ledOn[ii] = time.time()
 								if logLevel > 1: U.logger.log(20, "setting  item({}) GPIO{} on due to receiving cmd:{} ontime:{}, inv:{} ".format(ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii] ) )
-								if useGPIO:
+								if k_useGPIO:
 									GPIO.output(gpioNumberForCmdAction[ii], gpioInverseAction[ii] != "0")
 								else:
 									getattr(GPIOZERO[gpioNumberForCmdAction[ii]], "on" if gpioInverseAction[ii] != "0" else "off")()
@@ -1446,17 +1504,24 @@ def cmdCheckIfGPIOon():
 							if time.time() - ledOn[ii]  > gpioOnTimeAction[ii]:
 								ledOn[ii] = 0
 								if logLevel > 1: U.logger.log(20, "setting  item({}) GPIO{} on/off to receiving cmd:{} ontime:{}, inv:{} ".format(ii, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii] ) )
-								if useGPIO:
+								if k_useGPIO:
 									GPIO.output(gpioNumberForCmdAction[ii], gpioInverseAction[ii] == "0")
 								else:
 									getattr(GPIOZERO[gpioNumberForCmdAction[ii]], "on" if gpioInverseAction[ii] == "0" else "off")()
 							else:
 								anyOn = True
+				else:
+					for devId in sensors[sensor]: 
+						if time.time() - lastResetGPIO[devId] > resetGPIOClass[devId]:
+							lastResetGPIO[devId] = time.time()
+							setGPIOconfig(devIdSelect=devId, force=True)
+					
 
 
 			except Exception as e:
 				U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 				time.sleep(10)
+				checkIfRestart(force=True)
 
 			if anyOn: 	time.sleep(0.2)
 			else: 		time.sleep(0.1)
@@ -1581,8 +1646,11 @@ def execSensorLoop():
 	global lastReset, expectResponse, restartConnectionCounter, setWakeTime
 	global GPIOZERO
 	global reactOnlyToCommands, maxCommandId, minErrorCmdID,offCommand
+	global gpioUsed 
+	global resetGPIOClass
 
-
+	resetGPIOClass					= {}
+	gpioUsed 						= [0,0,0,0,0,0,0,0,0,0]
 	reactOnlyToCommands				= {}
 	offCommand						= 255
 	maxCommandId					= 1000

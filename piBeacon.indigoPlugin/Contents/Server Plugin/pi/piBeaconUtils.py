@@ -2453,7 +2453,7 @@ def execSend():
 						data["ts"]			= {"time":round(time.time(),2),"tz":tz}
 
 
-					if	sendAlive != "":
+					if	False and sendAlive != "":
 						logger.log(20, "cBY:{:<20}  data:{} ".format(G.program, data)) 
 
 

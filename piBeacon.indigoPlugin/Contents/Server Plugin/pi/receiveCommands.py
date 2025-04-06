@@ -415,7 +415,9 @@ def execCMDS(nextItem):
 	global py3Cmd, readOutput, readInput
 	global usePython3
 
-	threadName = threading.currentThread().getName()
+
+	try:	threadName = threading.current_thread()
+	except:	threadName = threading.currentThread()
 	#U.logger.log(G.debug*20, "{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
 
 	for ijji in range(1):
@@ -920,18 +922,21 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 			
 		for nextItem in commands:
 			if execSimple(nextItem): continue
-			setupexecThreads(nextItem)
+			setupexecThreads(nextItem, "socket")
  
 		readParams()
 		stopThreadsIfEnded()
 		return	 
 
 ### ----------------------------------------- ###
-def setupexecThreads(nextItem):
+def setupexecThreads(nextItem, source):
 	global inp
 	global threadsActive
+	global lastOut
+	global counter
 	try:
 		if "command" not in nextItem: return False
+		counter += 1
 		
 		threadName = ""
 		if "pin" in nextItem and nextItem["pin"] != "": 					threadName += "pin-"+str(nextItem["pin"])
@@ -943,16 +948,30 @@ def setupexecThreads(nextItem):
 			if threadsActive[threadName]["state"] != "stop":
 				stopExecCmd(threadName)
 			
-		U.logger.log(20, "starting thread={}, comment:{}".format(threadName, nextItem))
+		#U.logger.log(20, "starting thread={}".format(threadName))
 		threadsActive[threadName] = {"state":"running", "thread": threading.Thread(name=threadName, target=execCMDS, args=(nextItem,))}	
 		threadsActive[threadName]["thread"].daemon = True
 		threadsActive[threadName]["thread"].start()
 		threadsActive[threadName]["comment"] = nextItem
-
 		out = "{}".format(nextItem)
-		ll = min(len(out),100)
+		ll = min(len(out),50)
+		changed = ""
+		if len(lastOut) > 10:
+			for ii in range(len(out)):
+				if ii+1 > len(lastOut):
+					changed = out[ii:ii+10] 
+					break
+				if lastOut[ii] != out[ii]:
+					changed = ">>"+ out[ii:ii+10] + "<< != >>" + lastOut[ii:ii+10] + "<<"
+					break
+				
 		#U.logger.log(20,"thread started: {}, command:{} ".format(threadName, out))
-		U.logger.log(20,"thread started: {}, command:{} ... {}".format(threadName, out[:ll], out[-ll:] ))
+		if changed != "":
+			U.logger.log(20,"thread from:{:}, #:{:3d} started: {:}, command:{:} ... {:} changed:{:}".format(source, counter, threadName, out[:ll], out[-ll:],  changed))
+		else:
+			U.logger.log(20,"thread from:{:}, #:{:3d} started: {:}, command:{:} ... {:}".format(source,counter, threadName, out[:ll], out[-ll:]))
+		
+		lastOut = out
 
 		return True
 
@@ -970,7 +989,7 @@ def stopExecCmd(threadName):
 	global threadsActive
 	try:
 		if threadName in threadsActive:
-			U.logger.log(20, "stop issuing thread={}, comment: {}".format(threadName, threadsActive[threadName]["comment"] ))
+			#U.logger.log(20, "stop issuing thread={}, comment: {}".format(threadName, str(threadsActive[threadName]["comment"])[0:10]))
 			if threadsActive[threadName]["state"] == "stop": return 
 			threadsActive[threadName]["state"] = "stop"
 			time.sleep(0.07)
@@ -1011,7 +1030,7 @@ def getcurentCMDS():
 				except Exception as e:
 					U.logger.log(30,"", exc_info=True)
 					continue
-				setupexecThreads(nextItem)
+				setupexecThreads(nextItem, "current")
 
 			f = open(G.homeDir+"execcommandsList.current","w")
 			f.write(json.dumps(keep))
@@ -1066,7 +1085,7 @@ def readTempDirThread():
 				for nextItem in commands:
 					#U.logger.log(20, "readTempDirThread nextItem:{}".format(nextItem))
 					if execSimple(nextItem): continue
-					setupexecThreads(nextItem)
+					setupexecThreads(nextItem, "tempdir")
 
 
 			#'[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
@@ -1106,6 +1125,9 @@ if __name__ == "__main__":
 	global py3Cmd
 	global output
 	global usePython3
+	global lastOut, counter
+	counter				= 0
+	lastOut				= ""
 	PWM 				= 100
 	typeForPWM			= "GPIO"
 	myPID				= str(os.getpid())
