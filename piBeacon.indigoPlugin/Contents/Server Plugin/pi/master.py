@@ -2720,6 +2720,7 @@ def execMaster():
 		if os.path.isfile(G.homeDir+"temp/restartNeeded"):	os.remove(G.homeDir+"temp/restartNeeded")
 
 		checkRamDisk()
+		U.checkIfAliveNeedsToBeSend()
 
 		lastrebootWatchDogTime = time.time() - rebootWatchDogTime*60. +30.
 		subprocess.call("shutdown - c >/dev/null 2>&1", shell=True)
@@ -2803,6 +2804,7 @@ def execMaster():
 
 		U.logger.log(20,"=========START-10 setup done, normal loop")
 
+		U.checkIfAliveNeedsToBeSend()
 		checkTempForFanOnOff(force = True)
 		lastCheckAlive = time.time() -90
 

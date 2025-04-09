@@ -763,8 +763,10 @@ def checkifRebooting():
 def checkifRebootRequested():
 	if not os.path.isfile("{}temp/rebootNeeded".format(G.homeDir)): return ""
 	f = open(G.homeDir+"temp/rebootNeeded") 
-	reason = f.read()
+	try: reason = f.read()
+	except: reason = "other"
 	f.close()
+	if reason == "": return "other"
 	return reason
 
 #################################
@@ -2439,7 +2441,7 @@ def execSend():
 					escape 			= nextData["escape"]
 					forceCompress 	= nextData["forceCompress"]
 
-					subprocess.call("echo x > {}temp/sending".format(G.homeDir), shell=True)
+					subprocess.call("touch {}temp/sending".format(G.homeDir), shell=True)
 
 					data["program"]	  = G.program
 					data["pi"]		  = str(G.myPiNumber)
@@ -3409,14 +3411,12 @@ def testBad(newX, lastX, inXXX, deltaAbs=99999999.):
 #################################
 def checkIfAliveNeedsToBeSend():
 	try:
-		tt = time.time()
 		lastSend = 0
 		if os.path.isfile("{}temp/messageSend".format(G.homeDir)):
-			try:
-				lastSend = os.path.getmtime("{}temp/messageSend".format(G.homeDir))
-			except:
-				pass
-		if time.time() - lastSend> 330:	 # do we have to send alive signal to plugin?
+			try:  	lastSend = float(os.path.getmtime("{}temp/messageSend".format(G.homeDir)))
+			except:	lastSend = 0
+		#logger.log(20, "cBY:{:<20} last messageSend was {:.1f} sec ago".format(G.program, time.time() - lastSend ))
+		if time.time() - lastSend > 100:	 # do we have to send alive signal to plugin?
 			sendURL(sendAlive=True )
 	except Exception as e:
 		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -3440,7 +3440,7 @@ def checkIfPauseSensor(sensor):
 					logger.log(20, "cBY:{:<20} sleep for {}".format(G.program,sleepFor))
 					startSleep = time.time()
 					for ii in range(1000):
-						U.echoLastAlive(sensor)
+						echoLastAlive(sensor)
 						time.sleep(5)
 						if time.time() - startSleep >= sleepFor: break
 					logger.log(20, "cBY:{:<20} sleep ended".format(G.program))
@@ -3945,7 +3945,7 @@ def findString(string, filename):
 	if string == "": return 0
 
 	try:
-		text = U.doReadSimpleFile(filename).split("\n")
+		text = doReadSimpleFile(filename).split("\n")
 		for line in text:
 			if line.find(string) ==0:
 				return 2

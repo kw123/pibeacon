@@ -4601,8 +4601,6 @@ class Plugin(indigo.PluginBase):
 			self.lastValuesDictDevice = copy.copy(valuesDict)
 
 			if typeId == "DF2301Q":
-				try: 	int(valuesDict["resetPowerGPIO"] )
-				except:	valuesDict["resetPowerGPIO"] = "-1"
 				try: 	int(valuesDict["gpioNumberForCmdAction1"] )
 				except:	valuesDict["gpioNumberForCmdAction1"] = "-1"
 				try: 	int(valuesDict["gpioNumberForCmdAction2"] )
@@ -5288,10 +5286,13 @@ class Plugin(indigo.PluginBase):
 			doPrint = False
 			errorText = ""
 			update = 0
-			piUx = -1
-			try: 	piUx = valuesDict["piServerNumber"]
-			except: pass
-			pix = int(piUx)
+			pix =-1
+			try: 	pix = int(valuesDict["piServerNumber"])
+			except: 
+				self.indiLOG.log(30," validateDeviceConfigUi_sensors {}  bad pi#  {}".format(dev.name, valuesDict["piServerNumber"]))
+				return ( False, valuesDict, errorDict )
+
+			piUx = str(pix)
 			newAddress = ""
 			newDescription = ""
 
@@ -10128,7 +10129,7 @@ class Plugin(indigo.PluginBase):
 						xx["startAtDateTime"]	= startAtDateTime
 						countB += len(devices[piU2])
 						countP += 1
-						self.indiLOG.log(10,"getBeaconParameters request: {}".format(xx) )
+						#self.indiLOG.log(10,"getBeaconParameters request: {}".format(xx) )
 
 						if nDownAddWait: self.setCurrentlyBooting(minTime+10, setBy="getBeaconParameters (batteryLevel ..)")
 						nDownAddWait = False
@@ -13860,7 +13861,7 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,"bad data  Pi not integer:  {}".format(varNameIN) )
 				return
 
-			if self.trackRPImessages == pi:
+			if self.trackRPImessages == pi or pi == 14:
 				self.indiLOG.log(10,"pi# {} msg tracking: {} ".format(piU, varUnicode ) )
 
 			if piU not in _rpiList:
@@ -14003,7 +14004,7 @@ class Plugin(indigo.PluginBase):
 
 
 
-					if lastPi != "" and beaconUpdatedIds !=[]:
+					if lastPi != "" and beaconUpdatedIds != []:
 						self.findClosestiBeaconToRPI(lastPi, beaconUpdatedIds=beaconUpdatedIds, BeaconOrBLE="beacon")
 						self.executeUpdateStatesDict(calledFrom="workOnBeaconMessages(2)")
 					lastPi = ""
@@ -14182,7 +14183,7 @@ class Plugin(indigo.PluginBase):
 			if piMAC != "":
 				oldMAC = self.RPI[piU]["piMAC"]
 				if piMAC != oldMAC:
-					self.indiLOG.log(30,"MAC# from RPI message, has new MAC# {} changing to new BLE-MAC number, old MAC#{}--  pi# {}".format(piMAC, oldMAC, piU) )
+					self.indiLOG.log(30,"MAC# from RPI message, has new MAC# {} changing to new BLE-MAC number, old MAC#>>{}<<  pi# {}".format(piMAC, oldMAC, piU) )
 					#beaconRPI = piMAC
 				if self.isValidMAC(piMAC): ## len("11:22:33:44:55:66")
 						indigoId = int(self.RPI[piU]["piDevId"])
@@ -18846,14 +18847,14 @@ class Plugin(indigo.PluginBase):
 						existingIndigoId = dev.Id
 						self.RPI[fromPiU]["piDevId"] = dev.id
 						existingPiDev = dev
-						found = true
+						found = True
 						self.indiLOG.log(30,"handleRPIMessagePart RPI pi#= {};  piMACSend: {}; fixed to devId:".format(fromPiU, piMACSend, self.RPI[fromPiU]["piDevId"]) )
 						break
 					elif dev.address == piMACSend:
 						existingIndigoId = dev.id
 						self.RPI[fromPiU]["piDevId"] = dev.id
 						existingPiDev = dev
-						found = true
+						found = True
 						self.indiLOG.log(30,"handleRPIMessagePart RPI pi#= {};  piMACSend: {}; fixed to devId:".format(fromPiU, piMACSend, self.RPI[fromPiU]["piDevId"]) )
 						break
 						
@@ -20519,11 +20520,14 @@ class Plugin(indigo.PluginBase):
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","count","bounceTime","timeWindowForContinuousEvents",
 										"mac","type","INPUTdevId0","INPUTdevId1","INPUTdevId2","INPUTdevId3","coincidenceTimeInterval","updateIndigoTiming","updateIndigoDeltaTemp","updateIndigoDeltaAccelVector","updateIndigoDeltaMaxXYZ",
 										"usbPort","motorFrequency","nContiguousAngles","contiguousDeltaValue","triggerLast","triggerCalibrated","sendToIndigoEvery",
-										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetPowerGPIO","resetGPIOClass","logLevel","reactOnlyToCommands",
+										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetGPIOClass","logLevel","reactOnlyToCommands",
 										"gpioCmdForAction1","gpioNumberForCmdAction1","gpioOnTimeAction1","gpioInverseAction1",
 										"gpioCmdForAction2","gpioNumberForCmdAction2","gpioOnTimeAction2","gpioInverseAction2",
 										"gpioCmdForAction3","gpioNumberForCmdAction3","gpioOnTimeAction3","gpioInverseAction3",
 										"gpioCmdForAction4","gpioNumberForCmdAction4","gpioOnTimeAction4","gpioInverseAction4",
+										"gpioCmdForAction5","gpioNumberForCmdAction5","gpioOnTimeAction5","gpioInverseAction5",
+										"unixCmdVoiceNo1","unixCmdVoiceNo2","unixCmdVoiceNo3","unixCmdVoiceNo4","unixCmdVoiceNo5",
+										"unixCmdAction1","unixCmdAction2","unixCmdAction3","unixCmdAction4","unixCmdAction5",
 										"anglesInOneBin","measurementsNeededForCalib","sendPixelData","doNotUseDataRanges","minSignalStrength","relayType","python3","bleHandle"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate)
 							#if dev.id == 49344355: self.indiLOG.log(20,"pass 9 sens:{}".format(sens))

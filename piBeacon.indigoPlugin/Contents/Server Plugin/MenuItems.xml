@@ -76,12 +76,12 @@ Then the rPi will start sending data to plugin
 					<Option value="rebootloop-pingBoot">reboot rPi </Option>
 				</List>
 			</Field>
-			<Field enabledBindingId="enablePiEntries" id="expectTimeout" type="menu" defaultValue="20">
+			<Field enabledBindingId="enablePiEntries" id="expectTimeout" type="menu" defaultValue="25">
 				 <List>
-					<Option value="10"    >10 secs fast connection and fast rpi</Option>
+					<Option value="10"     >10 secs fast connection and fast rpi</Option>
 					<Option value="15"     >15 secs</Option>
-					<Option value="20"     >20 secs  default</Option>
-					<Option value="25"     >25 secs</Option>
+					<Option value="20"     >20 secs</Option>
+					<Option value="25"     >25 secs default</Option>
 					<Option value="30"     >30 secs</Option>
 					<Option value="40"     >40 secs slow connection eg wifi and slow rpi</Option>
 				  </List>

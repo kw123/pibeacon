@@ -70,7 +70,7 @@ Change here or in initial setup:</Label>
 					<Option value="rebootloop-pingBoot"  >reboot rPi </Option>
 				</List>
 			</Field>
-			<Field    id="expectTimeout"   type="menu" defaultValue="20">
+			<Field    id="expectTimeout"   type="menu" defaultValue="30">
 				 <List>
 					<Option value="10"     >10 secs fast connection and fast rpi</Option>
 					<Option value="15"     >15 secs</Option>
@@ -1179,7 +1179,7 @@ Change here or in initial setup:</Label>
 					<Option value="rebootloop-pingBoot"  >reboot rPi </Option>
 				</List>
 			</Field>
-			<Field    id="expectTimeout"   type="menu" defaultValue="20">
+			<Field    id="expectTimeout"   type="menu" defaultValue="30">
 				 <List>
 					<Option value="10"     >10 secs fast connection and fast rpi</Option>
 					<Option value="15"     >15 secs</Option>
@@ -23560,7 +23560,28 @@ Negative logic is used (state:on=low/ off=high) as most devices require a "low" 
 			</Field>
 
 
+
+
 			<Field id="simpleSeparatorline11" type="separator"/>
+			<Field id="unixCmdVoiceNo1"  type="textfield" defaultValue="-1" ><Label>voice command 1 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction1"   type="textfield" defaultValue=""   ><Label>Unix command action 1 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo2"  type="textfield" defaultValue="-1" ><Label>voice command 2 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction2"   type="textfield" defaultValue=""   ><Label>Unix command action 2 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo3"  type="textfield" defaultValue="-1" ><Label>voice command 3 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction3"   type="textfield" defaultValue=""   ><Label>Unix command action 3 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo4"  type="textfield" defaultValue="-1" ><Label>voice command 4 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction4"   type="textfield" defaultValue=""   ><Label>Unix command action 4 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo5"  type="textfield" defaultValue="-1" ><Label>voice command 5 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction5"   type="textfield" defaultValue=""   ><Label>Unix command action 5 for above voice command:</Label>	</Field>
+			<Field id="infoLabelfvoiceUnixAction" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>You can select a voice command # eg 103 to trigger a unix command executed on the rpi directly, eg:
+  pigs modes 17 w;pigs w 17 1;sleep 5;pigs w 17 0       to set gpio 17 up for 5 secs
+  echo "myreason" &gt; temp/rebootNeeded                    to restart the rpi properly through master.py
+  sudo python3 master.py &amp;                                          to restart master.py 
+  sudo python3 anypyprogram.py arguments &amp;           to start any py program
+  sudo sh anyshprogram                                                to start any shell script</Label>
+			</Field>
+
 			<Field id="simpleSeparatorline12" type="separator"/>
 
 
@@ -23674,7 +23695,6 @@ recommened is a relay with transitor switch in front!</Label>
 				</List>
 				<Label>restart GPIO class every:</Label>
 			</Field>
-
 
 		</ConfigUI>
 		<States>
