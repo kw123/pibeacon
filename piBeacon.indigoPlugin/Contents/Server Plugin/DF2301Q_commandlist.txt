@@ -136,10 +136,10 @@
 700: sensor alive
 
 === error message
-900: bad_port:_/dev/.. does not exist, check device edit and on rpi do: sudo raspi-config and set interfaces/serial: console off, hardware on
-903: serial port hard ware not enabled, rebooting, on rpi do: sudo raspi-config and set interfaces/serial: console off, hardware on
-904: CONSOLE is enabled, rebooting, on rpi do: sudo raspi-config and set interfaces/serial: console off, hardware on
-907: serial port hardware not enabled or CONSOLE is enabled, rebooting, on rpi do: sudo raspi-config and set interfaces/serial: console off, hardware on
+900: bad_port /dev/.. does not exist, check device edit and on rpi; sudo raspi-config and set interfaces/serial, console off, hardware on
+903: serial port hard ware not enabled, rebooting, on rpi; sudo raspi-config and set interfaces/serial: console off, hardware on
+904: CONSOLE is enabled, rebooting, on rpi; sudo raspi-config and set interfaces/serial, console off, hardware on
+907: serial port hardware not enabled or CONSOLE is enabled, rebooting, on rpi; sudo raspi-config and set interfaces/serial, console off, hardware on
 910: bad sensor
 
 === Learning-related commands

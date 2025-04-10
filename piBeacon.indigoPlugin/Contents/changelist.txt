@@ -1,4 +1,4 @@
-added features / changes in added features / changes in v2022.184.137 @ 2025-04-04
+added features / changes in added features / changes in v2022.184.138 @ 2025-04-10
 ==================================================
 
 1. this version will FULLY CONFIGURE  a new micro SSD. No need to for any raspi-config to set Onewire, i2c, on/off or install new libraries.

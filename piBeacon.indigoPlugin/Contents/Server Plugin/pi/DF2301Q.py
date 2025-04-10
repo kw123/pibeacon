@@ -758,6 +758,7 @@ def readParams():
 			if devId not in reactOnlyToCommands: 		reactOnlyToCommands[devId] 			= [x for x in range(maxCommandId)]
 			if devId not in resetGPIOClass: 			resetGPIOClass[devId] 				= 999999999
 			resetGPIOClass[devId] = float(sensors[sensor][devId].get("resetGPIOClass",999999999))
+			if devId not in ignoreUntilEndOfLearning:	ignoreUntilEndOfLearning[devId]		= -1
 			
 			for ii in range(1,6):
 				unixCmdAction[ii] =  sensors[sensor][devId].get("unixCmdAction"+str(ii),"")
@@ -859,13 +860,13 @@ def readParams():
 
 			upd = ""
 			if devId not in SENSOR or restart:
-				upd = "devid not present"
+				upd = "devId not present"
 				startSensor(devId)
 				if devId not in SENSOR:
 					return
 
 			if devId not in sensorOld: 
-				upd = "devid not in old present"
+				upd = "devId not in old present"
 
 			elif "mute" in sensors[sensor][devId] and (upd or sensors[sensor][devId].get("mute") != sensorOld[devId].get("mute")):
 				upd = "change in mute"
@@ -1037,12 +1038,12 @@ def startSensor(devId):
 
 #################################
 def setMute(devId, ON, CMDID=0):
-	global lastkeepAwake, SENSOR, tmpMuteOff, learningOn, currentMute
+	global lastkeepAwake, SENSOR, tmpMuteOff, learningOn, currentMute, ignoreUntilEndOfLearning
 	global logLevel
 	try:
 
 		if ON:
-			if not learningOn[devId]:
+			if  ignoreUntilEndOfLearning[devId] > 0 and not learningOn[devId]:
 				learningOn[devId] = True
 				tmpMuteOff[devId] = time.time() + 100
 				if logLevel > 0: U.logger.log(20, "devId:{}; set mute OFF  expires in {:.1f} secs".format(devId, tmpMuteOff[devId]-time.time()))
@@ -1300,7 +1301,7 @@ def getValues(devId, wait=0):
 	global i2cOrUart
 	global cmdQueue, anyCmdDefined
 	global logLevel, firstCmdReceived, lastCMDID
-	global reactOnlyToCommands, lastCMDID
+	global reactOnlyToCommands, lastCMDID, ignoreUntilEndOfLearning
 
 	try:
 		CMDID = 0
@@ -1337,10 +1338,22 @@ def getValues(devId, wait=0):
 				if logLevel > 0: U.logger.log(20, "devID:{}; received CMDID: {:3d}= {:20}, Last:{:3d} secs sinceLast:{:.2f}, skipping cmdid < 0.1 secs appart".format(devId, CMDID,  commandList[devId].get(str(CMDID),""), lastCMDID, time.time() - lastValidCmd) )
 			else:
 				if logLevel > 0: U.logger.log(20, "devID:{}; received CMDID: {:3d}= {:20}, Last:{:3d}, secs sinceLast:{:.2f}".format(devId, CMDID, commandList[devId].get(str(CMDID),""), lastCMDID, time.time() - lastValidCmd) )
-				if CMDID > 199 and CMDID < 209: # in learning mode? if yes make shure mute is off
-					setMute(devId, True, CMDID=CMDID)
+				# check for learning 
+				if ignoreUntilEndOfLearning[devId] != -1: # already in learning mode
+					if  CMDID in [203,208]:#   or not(CMDID > 199 and CMDID < 209)):	 # exit learning?
+						U.logger.log(20, "devID:{}; exit learning mode CMDID:{}, was :{}, set mute".format(devId, CMDID, ignoreUntilEndOfLearning[devId] )  )
+						U.sendURL({"sensors":{sensor:{devId:{"cmd":CMDID}}}}, wait=False)
+						ignoreUntilEndOfLearning[devId] = -1
+						setMute(devId, False, CMDID=CMDID)
 				else:
-					setMute(devId, False)
+					if CMDID > 199 and CMDID < 209: # in learning mode? if yes make shure mute is off
+						U.logger.log(20, "devID:{}; enter learning mode CMDID:{}".format(devId, CMDID )  )
+						ignoreUntilEndOfLearning[devId]  = CMDID
+						U.sendURL({"sensors":{sensor:{devId:{"cmd":CMDID}}}}, wait=False)
+						setMute(devId, True, CMDID=CMDID)
+					else:
+						setMute(devId, False)
+
 		lastCMDID = CMDID
 		
 		if CMDID not in reactOnlyToCommands[devId]:
@@ -1607,8 +1620,10 @@ def execSensorLoop():
 	global resetGPIOClass
 	global unixCmdVoiceNo, unixCmdAction
 	global lastCMDID
+	global ignoreUntilEndOfLearning
 	
 	
+	ignoreUntilEndOfLearning		= {}
 	lastCMDID						= -1
 	resetGPIOClass					= {}
 	gpioUsed 						= [0,0,0,0,0,0,0,0,0,0]
