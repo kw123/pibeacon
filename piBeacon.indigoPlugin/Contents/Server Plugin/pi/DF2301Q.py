@@ -1340,8 +1340,8 @@ def getValues(devId, wait=0):
 				if logLevel > 0: U.logger.log(20, "devID:{}; received CMDID: {:3d}= {:20}, Last:{:3d}, secs sinceLast:{:.2f}".format(devId, CMDID, commandList[devId].get(str(CMDID),""), lastCMDID, time.time() - lastValidCmd) )
 				# check for learning 
 				if ignoreUntilEndOfLearning[devId] != -1: # already in learning mode
-					if  CMDID in [203,208]:#   or not(CMDID > 199 and CMDID < 209)):	 # exit learning?
-						U.logger.log(20, "devID:{}; exit learning mode CMDID:{}, was :{}, set mute".format(devId, CMDID, ignoreUntilEndOfLearning[devId] )  )
+					if  CMDID in [203,207,208]:#   or not(CMDID > 199 and CMDID < 209)):	 # exit learning?
+						U.logger.log(20, "devID:{}; exit learning mode CMDID:{}, last cmdid was :{}, set mute back to device".format(devId, CMDID, ignoreUntilEndOfLearning[devId] )  )
 						U.sendURL({"sensors":{sensor:{devId:{"cmd":CMDID}}}}, wait=False)
 						ignoreUntilEndOfLearning[devId] = -1
 						setMute(devId, False, CMDID=CMDID)

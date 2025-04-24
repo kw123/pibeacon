@@ -23323,7 +23323,7 @@ use bit max value, not actual voltage for feedVolt </Label>
 			<Field id="infoLabelDF2301Q" type="label">
 				<Label>Setup DF2301Q on individual rPis 
 it returns command ID 0...208
-trigger on "any change" state "sensorValue""; 
+trigger on "any change" state "counter""; 
     condition "state sensor value" = command ID eg 103 for lights on
     then define your action</Label>
 			</Field>
@@ -23695,6 +23695,253 @@ recommened is a relay with transitor switch in front!</Label>
 				</List>
 				<Label>restart GPIO class every:</Label>
 			</Field>
+
+		</ConfigUI>
+		<States>
+		</States>
+
+	</Device>
+
+
+	<Device type="sensor" id="FaceGesture">     	<Name>INPUT face gesture sensor</Name>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+
+			<Field id="i2cAddress" type="textfield"   hidden="True" defaultValue="114"> </Field>
+
+			<Field id="comandList" type="textfield"  hidden="true"></Field>
+
+			<Field id="refreshCallbackMethod" type="textfield" hidden="true" defaultValue="deviceRefreshCallback"/>
+
+			<Field id="infoLabelDF2301Q" type="label">
+				<Label>Setup Face gesture sensor on individual rPis 
+it returns # of faces recognized (1-10), gesture command 1-5 with confidence level (0-100)
+trigger on "any change" state "counter"; 
+    condition "state sensor value" = gesture ID, eg 1 for gesture ok
+    then define your action</Label>
+			</Field>
+
+			<Field id="infoLabelDF2301Q0" type="label"  fontColor="green">
+				<Label>=== Set must define parameters</Label>
+			</Field>
+
+			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="true"/>
+				<Label>select rPi-server to which the Sensor is connect to:</Label>
+			</Field>
+
+			<Field id="i2cOrUart" type="menu"     defaultValue="uart"> <Label>use I2C or UART (serial):</Label>
+				<List>
+					<Option value="i2c"   >use i2c</Option>
+					<Option value="uart"  >use uart</Option>
+				</List>
+			</Field>
+
+			<Field id="serialPortName" type="textfield"     defaultValue="serial0" visibleBindingId="i2cOrUart" visibleBindingValue="uart" > 
+				<Label>name of serial port (serial0 serial1  check ls -l /dev/ on rpi):</Label>
+			</Field>
+			<Field id="uartLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="uart" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label> connect:+5V, gnd, T to RXD, R to TCD. (pins 4,6,8,10)
+Set switch 1 to uart
+on RPi: sudo raspi-config: Interface Options/Serial Port: DISABLE login, ENABLE serial hardware port 
+        The plugin should configure everything automatically
+PI zero V1 does not support serial and Bluetooth services at the same time. (At leat I have not been able to make it work)
+PI zero V2 works fine
+</Label>
+			</Field>
+
+			<Field id="i2cLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="i2c" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label> connect:+3V, gnd, C to SLC, D to SDA, (pins 1,3,5,9). 
+The i2c number is fixed: 0x72= 114</Label>
+			</Field>
+
+			<Field id="simpleSeparatorline01" type="separator"/>
+			<Field id="infoLabelDF2301Qgpios" type="label"  fontColor="green">
+				<Label>=== Here you can define a reactions to a received gesture commands, 
+        i.e. switch any GPIO on/off after receiving a valid gesture command</Label>
+			</Field>
+
+			<Field id="infoLabelfpio" type="label" >
+				<Label>You can connect an LED+100Ohm resistor to a gpio. (LED anode to +3.3V) 
+Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds</Label>
+			</Field>
+
+
+			<Field id="gpioNumberForCmdAction1"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(1):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction1"   type="textfield" defaultValue="0"  >
+				<Label>.. gesture command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="infoLabelDF2301cmdhelp" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>cmd options:
+ = 0: all gesture IDs, 1= gesture #1 ...</Label>
+			</Field>
+			<Field id="gpioOnTimeAction1"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction1"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
+
+			<Field id="reactOnlyToCommands" type="textfield"     defaultValue="all" hidden="no" >
+				<Label>Ignore all commands, but:</Label>
+			</Field>
+			<Field id="reactOnlyToCommandsLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>If gesture id is not listed it will be ignored by the program on the RPI, eg:
+all = accept all gesture ids 
+1,2 only accept command id 1,2
+</Label>
+			</Field>
+
+			<Field id="simpleSeparatorline02" type="separator"/>
+			<Field id="gpioNumberForCmdAction2"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(2):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction2"   type="textfield" defaultValue="103"  >
+				<Label>..gesture command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction2"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction2"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
+			<Field id="simpleSeparatorline03" type="separator"/>
+			<Field id="gpioNumberForCmdAction3"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(3):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction3"   type="textfield" defaultValue="104"  >
+				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction3"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction3"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
+			<Field id="simpleSeparatorline04" type="separator"/>
+			<Field id="gpioNumberForCmdAction4"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(4):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction4"   type="textfield" defaultValue="142"  >
+				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction4"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction4"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"   >on = low</Option>
+					<Option value="1"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
+			<Field id="infoLabelfgpioaction" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>You can select a voice command # eg 103 to trigger a GPIO on/off action for 0.5 sec 
+Negative logic is used (state:on=low/ off=high) as most devices require a "low" signal to activate</Label>
+			</Field>
+
+
+
+
+			<Field id="simpleSeparatorline11" type="separator"/>
+			<Field id="unixCmdVoiceNo1"  type="textfield" defaultValue="-1" ><Label>gesture command 1 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction1"   type="textfield" defaultValue=""   ><Label>Unix command action 1 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo2"  type="textfield" defaultValue="-1" ><Label>gesture command 2 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction2"   type="textfield" defaultValue=""   ><Label>Unix command action 2 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo3"  type="textfield" defaultValue="-1" ><Label>gesture command 3 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction3"   type="textfield" defaultValue=""   ><Label>Unix command action 3 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo4"  type="textfield" defaultValue="-1" ><Label>gesture command 4 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction4"   type="textfield" defaultValue=""   ><Label>Unix command action 4 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo5"  type="textfield" defaultValue="-1" ><Label>gesture command 5 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction5"   type="textfield" defaultValue=""   ><Label>Unix command action 5 for above voice command:</Label>	</Field>
+			<Field id="infoLabelfvoiceUnixAction" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>You can select a gesture #, eg 1 to trigger a unix command executed on the rpi directly, eg:
+  pigs modes 17 w;pigs w 17 1;sleep 5;pigs w 17 0       to set gpio 17 up for 5 secs
+  echo "myreason" &gt; temp/rebootNeeded                    to restart the rpi properly through master.py
+  sudo python3 master.py &amp;                                          to restart master.py 
+  sudo python3 anypyprogram.py arguments &amp;           to start any py program
+  sudo sh anyshprogram                                                to start any shell script</Label>
+			</Field>
+
+			<Field id="simpleSeparatorline12" type="separator"/>
+
+
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+
+
+			<Field id="simpleSeparatorline21" type="separator"/>
+			<Field id="simpleSeparatorline22" type="separator"/>
+			<Field id="infoLabelsleep" type="label"  fontColor="green">
+				<Label>=== EXPERTS ONLY </Label>
+			</Field>
+
+			<Field id="logLevel"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="0"	> off </Option>
+					<Option value="1"	> 1 </Option>
+					<Option value="2"	> 2 </Option>
+					<Option value="3"	> 3 max </Option>
+				</List>
+				<Label>Log level on rpi for this sensor:</Label>
+			</Field>
+
 
 		</ConfigUI>
 		<States>

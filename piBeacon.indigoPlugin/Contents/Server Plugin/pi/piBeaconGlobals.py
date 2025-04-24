@@ -192,6 +192,7 @@ specialSensorList =[ 	"amg88xx",
 						"vcnl4010Distance",
 						"vl6180xDistance",
 						"DF2301Q",
+						"FaceGesture",
 						"ultrasoundDistance"]
 isBLEdirectSensorDevice =["BLEdirectMiTempHumRound"]
 ## not used anymore BLEsensorTypes =      ["BLEmyBLUEt","BLERuuviTag", "BLEiBS01", "BLEiBS01T",  "BLEiBS01RG", "BLEiBS02", "BLEiBS03","BLEiBS03G","BLEiBS03T","BLEiBS03TP", "BLEiBS03RG", "BLEminewE8", "BLEiSensor-TempHum", "BLEiSensor-onOff", "BLEiSensor-on", "BLEiSensor-RemoteKeyFob","BLESatech"]
@@ -212,6 +213,7 @@ python3SensorsCanDo		= [	"ADS1x15",
 							"lsm303",
 							"display",
 							"Wire18B20",
+							"FaceGesture",
 							"DF2301Q"]
 python3Apps				= ["beaconloop", "BLEconnect", "copyToTemp", "receiveCommands"]
 

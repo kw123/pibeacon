@@ -1,3 +1,16 @@
+added features / changes in added features / changes in v2022.185.138 @ 2025-04-24
+==================================================
+
+1. added first beta version for face gesture sensor from df robot
+   it works basically and can be used. exception handling etc is not done properly yet ( restart, disconnect ...) 
+    it supports recognition of up to 10 faces and and gestures (1-5)
+     * - 1: LIKE (👍) - blue
+     * - 2: OK (👌) - green
+     * - 3: STOP (🤚) - red
+     * - 4: YES (✌️) - yellow
+     * - 5: SIX (🤙) - purple
+
+
 added features / changes in added features / changes in v2022.184.138 @ 2025-04-10
 ==================================================
 

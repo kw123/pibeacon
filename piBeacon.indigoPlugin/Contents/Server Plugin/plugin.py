@@ -459,6 +459,7 @@ _GlobalConst_allowedSensors = [
 	 "i2cBMExx",															 # temp / press/ hum /
 	 "bme680",																   # 
 	 "DF2301Q",																   # DF2301Q speach input 
+	 "FaceGesture",															   # face gesture input sensor
 	 "bmp388",																   # temp / press/ alt
 	 "tmp006",																   # temp rmote infrared
 	 "tmp007",																   # temp rmote infrared
@@ -704,6 +705,11 @@ _addingstates["lastCmd"]						= {"addTag":False, "States":{"lastCmd":"String"}}
 _addingstates["lastCmdAt"]						= {"addTag":False, "States":{"lastCmdAt":"String"}}
 _addingstates["lastCmd2"]						= {"addTag":False, "States":{"lastCmd2":"String"}}
 _addingstates["lastCmd2At"]						= {"addTag":False, "States":{"lastCmd2At":"String"}}
+_addingstates["faces"]							= {"addTag":False, "States":{"faces":"Integer"}}
+_addingstates["facesX"]							= {"addTag":False, "States":{"facesX":"Integer"}}
+_addingstates["facesY"]							= {"addTag":False, "States":{"facesY":"Integer"}}
+_addingstates["facesScore"]						= {"addTag":False, "States":{"facesScore":"Integer"}}
+_addingstates["cmdScore"]						= {"addTag":False, "States":{"cmdScore":"Integer"}}
 
 
 #which devtype has which state 
@@ -714,13 +720,18 @@ _stateListToDevTypes["previousEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1
 _stateListToDevTypes["currentEventType"]		= {"BLEShellyButton":1}
 _stateListToDevTypes["previousEventType"]		= {"BLEShellyButton":1}
 
-_stateListToDevTypes["cmd"]						= {"DF2301Q":1}
-_stateListToDevTypes["cmdAt"]					= {"DF2301Q":1}
-_stateListToDevTypes["lastCmd"]					= {"DF2301Q":1}
-_stateListToDevTypes["lastCmdAt"]				= {"DF2301Q":1}
-_stateListToDevTypes["lastCmd2"]				= {"DF2301Q":1}
-_stateListToDevTypes["lastCmd2At"]				= {"DF2301Q":1}
-_stateListToDevTypes["cmdText"]					= {"DF2301Q":1}
+_stateListToDevTypes["cmd"]						= {"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["cmdAt"]					= {"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["lastCmd"]					= {"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["lastCmdAt"]				= {"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["lastCmd2"]				= {"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["lastCmd2At"]				= {"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["cmdText"]					= {"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["faces"]					= {"FaceGesture":1}
+_stateListToDevTypes["facesScore"]				= {"FaceGesture":1}
+_stateListToDevTypes["facesX"]					= {"FaceGesture":1}
+_stateListToDevTypes["facesY"]					= {"FaceGesture":1}
+_stateListToDevTypes["cmdScore"]				= {"FaceGesture":1}
 
 _stateListToDevTypes["lastBatteryReplaced"]		= {"BLEiSensor-onOff":1, "BLEmeeblue-on":1, "BLEiSensor-on":1, "BLEiSensor-TempHum":1}
 _stateListToDevTypes["status"]					= {"garageDoor":1, "FBHtempshow":1}
@@ -728,7 +739,7 @@ _stateListToDevTypes["actualStatus"]			= {"OUTPUTswitchbotRelay":1, "OUTPUTi2cRe
 _stateListToDevTypes["inverse"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1}
 _stateListToDevTypes["initial"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1}
 _stateListToDevTypes["OUTPUT"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1, "setMCP4725":1, "setPCF8591dac":1, "display":1, "neopixel":1}
-_stateListToDevTypes["counter"]					= {"BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEgoveeTempHum":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEswitchbotContact":1 ,"DF2301Q":1}
+_stateListToDevTypes["counter"]					= {"BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEgoveeTempHum":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEswitchbotContact":1 ,"DF2301Q":1,"FaceGesture":1}
 _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
 _stateListToDevTypes["speed"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
@@ -4581,7 +4592,7 @@ class Plugin(indigo.PluginBase):
 	def deviceRefreshCallback(self, valuesDict, typeId="", devId=0):
 		try:
 			if typeId not in [
-						"DF2301Q"
+						"DF2301Q","FaceGesture"
 						#"OUTPUTgpio-1",  "OUTPUTgpio-1-ONoff", "OUTPUTi2cRelay",  "INPUTgpio-1", "INPUTgpio-4", "INPUTgpio-8","INPUTgpio-26",  "INPUTtouch-1", "INPUTtouch-4" , "INPUTtouch-12" , "INPUTtouch-16"
 						]:
 				return valuesDict
@@ -4601,6 +4612,29 @@ class Plugin(indigo.PluginBase):
 			self.lastValuesDictDevice = copy.copy(valuesDict)
 
 			if typeId == "DF2301Q":
+				try: 	int(valuesDict["gpioNumberForCmdAction1"] )
+				except:	valuesDict["gpioNumberForCmdAction1"] = "-1"
+				try: 	int(valuesDict["gpioNumberForCmdAction2"] )
+				except:	valuesDict["gpioNumberForCmdAction2"] = "-1"
+				try: 	int(valuesDict["gpioNumberForCmdAction3"] )
+				except:	valuesDict["gpioNumberForCmdAction3"] = "-1"
+				try: 	int(valuesDict["gpioNumberForCmdAction4"] )
+				except:	valuesDict["gpioNumberForCmdAction4"] = "-1"
+				try: 	int(valuesDict["keepAwake"] )
+				except:	valuesDict["keepAwake"] = "0"
+				try: 	int(valuesDict["refreshRepeat"] )
+				except:	valuesDict["refreshRepeat"] = "200"
+				try: 	int(valuesDict["refreshRepeat"] )
+				except:	valuesDict["refreshRepeat"] = "200"
+				try: 	int(valuesDict["resetGPIOClass"] )
+				except:	valuesDict["resetGPIOClass"] = "999999999"
+				if valuesDict["keepAwake"] == "1":
+					valuesDict["refreshRepeat"] = "220"
+				if valuesDict["i2cOrUart"] == "uart":
+					valuesDict["restartRepeat"] = "999999999999"
+				valuesDict["uartSleepAfterWrite"] = "100"
+				valuesDict["i2cSleepAfterWrite"] = "200"
+			if typeId == "FaceGesture":
 				try: 	int(valuesDict["gpioNumberForCmdAction1"] )
 				except:	valuesDict["gpioNumberForCmdAction1"] = "-1"
 				try: 	int(valuesDict["gpioNumberForCmdAction2"] )
@@ -5089,7 +5123,7 @@ class Plugin(indigo.PluginBase):
 			else:						new = False
 			newMAC = valuesDict["newMACNumber"].upper()
 			valuesDict["newMACNumber"] = newMAC
-			if not self.isValidMAC(newMAC):
+			if not self.isValidMAC(newMAC) and newMAC.find(":00:pi") == -1:
 				valuesDict["newMACNumber"] = beacon
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "bad Mac Number:"+newMAC)
 				return ( False, valuesDict, errorDict )
@@ -5287,10 +5321,11 @@ class Plugin(indigo.PluginBase):
 			errorText = ""
 			update = 0
 			pix =-1
-			try: 	pix = int(valuesDict["piServerNumber"])
-			except: 
-				self.indiLOG.log(30," validateDeviceConfigUi_sensors {}  bad pi#  {}".format(dev.name, valuesDict["piServerNumber"]))
-				return ( False, valuesDict, errorDict )
+			if "rPiEnable0" not in valuesDict and "piServerNumber" in valuesDict:
+				try: 	pix = int(valuesDict["piServerNumber"])
+				except: 
+					self.indiLOG.log(30," validateDeviceConfigUi_sensors {}  bad pi#  {}".format(dev.name, valuesDict["piServerNumber"]))
+					return ( False, valuesDict, errorDict )
 
 			piUx = str(pix)
 			newAddress = ""
@@ -5459,6 +5494,9 @@ class Plugin(indigo.PluginBase):
 					for ii in range(4,22):
 						cc[str(ii)] = props.get("controllWord"+str(ii), "text not set")
 					valuesDict["commandList"] = json.dumps(cc)
+
+				if typeId.find("FaceGesture") >-1:
+					pass
 
 				if typeId.find("bme680") >-1:
 					if   valuesDict["calibrateSetting"] == "setFixedValue": valuesDict["description"] += ", set calib to "+ valuesDict["setCalibrationFixedValue"]
@@ -15400,6 +15438,10 @@ class Plugin(indigo.PluginBase):
 						self.updateDF2301Q(dev, props, data, pi)
 						continue
 
+					if sensor == "FaceGesture" :
+						self.updateFaceGesture(dev, props, data, pi)
+						continue
+
 					if sensor == "i2cTCS34725" :
 						self.updateRGB(dev, props, data, whichKeysToDisplay)
 						continue
@@ -18326,6 +18368,67 @@ class Plugin(indigo.PluginBase):
 		return 
 
 
+####-------------------------------------------------------------------------####
+	def updateFaceGesture(self, dev, props, data, pi):
+		try:
+			if "cmd" in data: 
+				cmdId = data["cmd"]
+				if isinstance(cmdId, str):
+					self.indiLOG.log(30,"updateDF2301Q, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, cmdId) )
+					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+					if dev.states["status"] != cmdId: 
+						self.addToStatesUpdateDict(dev.id, "status", cmdId)
+						self.addToStatesUpdateDict(dev.id, "sensorValue", -1, uiValue="error, see logfile, status"  )
+					return 
+
+				if cmdId == 700:
+					#self.indiLOG.log(30,"updateFaceGesture, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, cmdId) )
+					# this is only alive message
+					return 
+					
+				if cmdId == 900:
+					self.indiLOG.log(30,"updateFaceGesture, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, data) )
+					return 
+
+				faces 				=  data.get("faces",0)
+				if cmdId == 0 and faces == 0:
+					self.indiLOG.log(20,"updateFaceGesture, {}:nothing new .. msg from RPI-{}: gesture:{}, faces:{}".format(dev.name, pi, cmdId, faces) )
+					return 
+
+				cmdText 			= "{}:{}".format(cmdId, data.get("cmdText","no text"))
+				cmdScore 			=  data.get("cmdScore",0)
+				facesScore 			=  data.get("facesScore",0)
+				facesX				=  data.get("facesX",0)
+				facesY				=  data.get("facesY",0)
+
+				self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
+				self.addToStatesUpdateDict(dev.id, "lastCmd2At", dev.states["lastCmdAt"] )
+
+				self.addToStatesUpdateDict(dev.id, "lastCmd", str(dev.states["cmd"])+":"+ dev.states["cmdText"])
+				self.addToStatesUpdateDict(dev.id, "lastCmdAt", dev.states["cmdAt"] )
+
+				if dev.states["status"] != "ok": self.addToStatesUpdateDict(dev.id, "status", "ok" )
+				if dev.states["sensorValue"] != cmdId:
+
+					self.addToStatesUpdateDict(dev.id, "faces", faces )
+					self.addToStatesUpdateDict(dev.id, "facesX", facesX )
+					self.addToStatesUpdateDict(dev.id, "facesY", facesY )
+					self.addToStatesUpdateDict(dev.id, "facesScore", facesScore )
+					self.addToStatesUpdateDict(dev.id, "cmdScore", cmdScore )
+					self.addToStatesUpdateDict(dev.id, "cmd", cmdId )
+					self.addToStatesUpdateDict(dev.id, "cmdText",  cmdText )
+					self.addToStatesUpdateDict(dev.id, "sensorValue", cmdId, uiValue=cmdText  )
+				self.addToStatesUpdateDict(dev.id, "cmdAt",  datetime.datetime.now().strftime(_defaultDateStampFormat) )
+
+				try: 	counter = int(dev.states.get("counter",0))
+				except: counter = 0
+				self.addToStatesUpdateDict(dev.id, "counter", counter+1)
+				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+				return 
+		
+		except Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"dev:{}; pi:{}; data:{}".format(dev.name, pi, data), exc_info=True)
+		return 
 
 ####-------------------------------------------------------------------------####
 	def updateDF2301Q(self, dev, props, data, pi):
@@ -18366,7 +18469,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
 					self.addToStatesUpdateDict(dev.id, "lastCmd2At", dev.states["lastCmdAt"] )
 	
-					self.addToStatesUpdateDict(dev.id, "lastCmd", dev.states["cmd"]+":"+ dev.states["cmdText"])
+					self.addToStatesUpdateDict(dev.id, "lastCmd", str(dev.states["cmd"])+":"+ dev.states["cmdText"])
 					self.addToStatesUpdateDict(dev.id, "lastCmdAt", dev.states["cmdAt"] )
 	
 					if dev.states["status"] != "ok": self.addToStatesUpdateDict(dev.id, "status", "ok" )
