@@ -1230,7 +1230,7 @@ class TCS34725:
 		# Make sure we're actually connected
 		result = self.__readU8(self.__TCS34725_ID)
 		if (result != 0x44):
-			return -1
+			return
 
 		# Set default integration time and gain
 		self.setIntegrationTime(integrationTime)

@@ -509,7 +509,7 @@ def batchGattcmd(useHCI, thisMAC, cc, expectedTag, nBytes=0, retryCMD=3, verbose
 		cmd = "/usr/bin/timeout -s SIGKILL {} /usr/bin/gatttool -i {} -b {} {}".format(timeout, useHCI,  thisMAC, cc) 
 		if verbose: U.logger.log(20,"{} cmd:{} ;  expecting: '{}'; nbytes:{}, retryCMD:{}, switchBotPresent:{}; switchbotActive:{}; timeout:{}".format(thisMAC, cmd, expectedTag, nBytes, retryCMD, switchBotPresent, switchbotActive, timeout))
 		for kk in range(retryCMD):
-			if checkIfSwitchbotStopAND(thisMAC): return 
+			if checkIfSwitchbotStopAND(thisMAC): return []
 			#if verbose: U.logger.log(20,"try#:{}, switchBotPresent:{}; switchbotActive:{} ".format(kk, switchBotPresent, switchbotActive))
 			ret = readPopen(cmd)
 			if ret[0].find(expectedTag) > -1:
@@ -978,7 +978,7 @@ def checkSwitchbotForCmd():
 	switchbotStop 		= {}
 	maxwaitForSwitchBot	= 60
 	switchbotActive		= ""
-	nonswitchbotActive	= ""; currentActiveSwitchbotMAC = ""
+	nonswitchbotActive	= ""
 	lastSwitchbotCMD	= {}
 
 	while threadDictReadSwitchbot["state"] != "stop":
@@ -1021,7 +1021,7 @@ def checkSwitchbotForCmd():
 				while not switchbotQueue.empty():
 					yy, xx = switchbotQueue.get()
 					if "mac" in xx and xx["mac"] == thisMAC: continue
-					tempList.append(xx,yy)
+					tempList.append((xx,yy))
 				if len(tempList) > 0:
 					for yy, xx in tempList:
 						switchbotQueue.put([yy,xx])

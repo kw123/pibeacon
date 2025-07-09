@@ -23347,22 +23347,47 @@ trigger on "any change" state "counter"";
 				</List>
 			</Field>
 
-			<Field id="serialPortName" type="textfield"     defaultValue="serial0" visibleBindingId="i2cOrUart" visibleBindingValue="uart" > 
-				<Label>name of serial port (serial0 serial1  check ls -l /dev/ on rpi):</Label>
+			<Field id="serialPortName" type="menu"     defaultValue="serial0" visibleBindingId="i2cOrUart" visibleBindingValue="uart" > 
+				<Label>name of serial port (serial0, usb0..  check ls -l /dev/ on rpi):</Label>
+				<List>
+					<Option value="ttyS0"    >use std ttyS0</Option>
+					<Option value="serial0"  >use std serial0</Option>
+					<Option value="ttyUSB*"  >use USBx pick any available</Option>
+				</List>
 			</Field>
 			<Field id="uartLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="uart" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
-				<Label> connect:+5V, gnd, T to RXD, R to TCD. (pins 4,6,8,10)
+				<Label> connect:+5V, gnd, T to RXD, R to TCD. (pins 4,6,8,10) or use USB to serial converter
 Set switch 1 to uart
 on RPi: sudo raspi-config: Interface Options/Serial Port: DISABLE login, ENABLE serial hardware port 
         The plugin should configure everything automatically
+If you use a USB to serial converter you can use as many devices as you like on the same RPI
+  the USB channels are assigned randomly. Hence there is no way to determin from which of the sensors the signal comes.        
 PI zero V1 does not support serial and Bluetooth services at the same time. (At leat I have not been able to make it work)
-PI zero V2 works fine
+PI zero V2 works fine with both.
 </Label>
 			</Field>
 
 			<Field id="i2cLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="i2c" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label> connect:+3V, gnd, C to SLC, D to SDA, (pins 1,3,5,9). 
 The i2c number is fixed: 0x64 = 100, i2c is not stable on rpi2 or rpi0w, set switch 1 to i2c</Label>
+			</Field>
+			
+			<Field id="ignoreSameCommands" type="menu"     defaultValue="-1"  > 
+				<Label>Ignore same commands if received within:</Label>
+				<List>
+					<Option value="-1"  >use all commands</Option>
+					<Option value="0.5" >0.5 secs</Option>
+					<Option value="1.0" >1.0 secse</Option>
+					<Option value="2."  >2.0 secs</Option>
+					<Option value="3."  >3.0 secs</Option>
+					<Option value="4."  >4.0 secs</Option>
+					<Option value="5."  >5.0 secs</Option>
+					<Option value="6."  >6.0 secs</Option>
+					<Option value="7."  >7.0 secs</Option>
+					<Option value="8."  >8.0 secs</Option>
+					<Option value="9."  >9.0 secs</Option>
+					<Option value="10." >10.0 secs</Option>
+				</List>
 			</Field>
 
 			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute speaker:</Label>
@@ -23478,8 +23503,8 @@ Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds
 			</Field>
 			<Field id="gpioInverseAction1"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
@@ -23502,16 +23527,18 @@ can be used to set turn on/off GPIO for LED use more specifically
 				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(2):</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
+			
 			<Field id="gpioCmdForAction2"   type="textfield" defaultValue="103"  >
-				<Label>..voice command # for trigger (1,2,3,x see explanation):</Label>
+				<Label>..voice command # for trigger (1,2,3,x see explanation):
+ 999 = use for hard reset in case of comm problem):</Label>
 			</Field>
 			<Field id="gpioOnTimeAction2"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
 			</Field>
 			<Field id="gpioInverseAction2"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
@@ -23529,8 +23556,8 @@ can be used to set turn on/off GPIO for LED use more specifically
 			</Field>
 			<Field id="gpioInverseAction3"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
@@ -23548,11 +23575,67 @@ can be used to set turn on/off GPIO for LED use more specifically
 			</Field>
 			<Field id="gpioInverseAction4"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
+
+			<Field id="simpleSeparatorline05" type="separator"/>
+			<Field id="gpioNumberForCmdAction5"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(5):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction5"   type="textfield" defaultValue="142"  >
+				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction5"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction5"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+			<Field id="simpleSeparatorline06" type="separator"/>
+			<Field id="gpioNumberForCmdAction6"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(6):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction6"   type="textfield" defaultValue="142"  >
+				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction6"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction6"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+			<Field id="simpleSeparatorline07" type="separator"/>
+			<Field id="gpioNumberForCmdAction7"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(7):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction7"   type="textfield" defaultValue="142"  >
+				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction7"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction7"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+
 
 			<Field id="infoLabelfgpioaction" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>You can select a voice command # eg 103 to trigger a GPIO on/off action for 0.5 sec 
@@ -23573,6 +23656,10 @@ Negative logic is used (state:on=low/ off=high) as most devices require a "low" 
 			<Field id="unixCmdAction4"   type="textfield" defaultValue=""   ><Label>Unix command action 4 for above voice command:</Label>	</Field>
 			<Field id="unixCmdVoiceNo5"  type="textfield" defaultValue="-1" ><Label>voice command 5 to trigger unix command:</Label></Field>
 			<Field id="unixCmdAction5"   type="textfield" defaultValue=""   ><Label>Unix command action 5 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo6"  type="textfield" defaultValue="-1" ><Label>gesture command 6 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction6"   type="textfield" defaultValue=""   ><Label>Unix command action 6 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo7"  type="textfield" defaultValue="-1" ><Label>gesture command 7 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction7"   type="textfield" defaultValue=""   ><Label>Unix command action 7 for above voice command:</Label>	</Field>
 			<Field id="infoLabelfvoiceUnixAction" type="label" fontSize="small" fontColor="darkgrey">
 				<Label>You can select a voice command # eg 103 to trigger a unix command executed on the rpi directly, eg:
   pigs modes 17 w;pigs w 17 1;sleep 5;pigs w 17 0       to set gpio 17 up for 5 secs
@@ -23745,16 +23832,23 @@ trigger on "any change" state "counter";
 				</List>
 			</Field>
 
-			<Field id="serialPortName" type="textfield"     defaultValue="serial0" visibleBindingId="i2cOrUart" visibleBindingValue="uart" > 
-				<Label>name of serial port (serial0 serial1  check ls -l /dev/ on rpi):</Label>
+			<Field id="serialPortName" type="menu"     defaultValue="serial0" visibleBindingId="i2cOrUart" visibleBindingValue="uart" > 
+				<Label>name of serial port (serial0, usb0..  check ls -l /dev/ on rpi):</Label>
+				<List>
+					<Option value="ttyS0"    >use std ttyS0</Option>
+					<Option value="serial0"  >use std serial0</Option>
+					<Option value="ttyUSB*"  >use USBx pick any available</Option>
+				</List>
 			</Field>
 			<Field id="uartLabel" type="label" visibleBindingId="i2cOrUart" visibleBindingValue="uart" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
-				<Label> connect:+5V, gnd, T to RXD, R to TCD. (pins 4,6,8,10)
-Set switch 1 to uart
+				<Label> connect:+5V, gnd, T to RXD, R to TCD. (pins 4,6,8,10) or use USB to serial converter
+Set switch to uart
 on RPi: sudo raspi-config: Interface Options/Serial Port: DISABLE login, ENABLE serial hardware port 
         The plugin should configure everything automatically
+If you use a USB to serial converter you can use as many devices as you like on the same RPI
+  the USB channels are assigned randomly. Hence there is no way to determin from which of the sensors the signal comes.        
 PI zero V1 does not support serial and Bluetooth services at the same time. (At leat I have not been able to make it work)
-PI zero V2 works fine
+PI zero V2 works fine with both.
 </Label>
 			</Field>
 
@@ -23762,6 +23856,79 @@ PI zero V2 works fine
 				<Label> connect:+3V, gnd, C to SLC, D to SDA, (pins 1,3,5,9). 
 The i2c number is fixed: 0x72= 114</Label>
 			</Field>
+			
+			<Field id="ignoreSameCommands" type="menu"     defaultValue="-1"  > 
+				<Label>ignore same commands if received within:</Label>
+				<List>
+					<Option value="-1"  >use all commands</Option>
+					<Option value="0.5" >0.5 secs</Option>
+					<Option value="1.0" >1.0 secs</Option>
+					<Option value="2."  >2.0 secs</Option>
+					<Option value="3."  >3.0 secs</Option>
+					<Option value="4."  >4.0 secs</Option>
+					<Option value="5."  >5.0 secs</Option>
+					<Option value="6."  >6.0 secs</Option>
+					<Option value="7."  >7.0 secs</Option>
+					<Option value="8."  >8.0 secs</Option>
+					<Option value="9."  >9.0 secs</Option>
+					<Option value="10." >10.0 secs</Option>
+				</List>
+			</Field>
+
+
+			<Field id="faceDetectionThreshold" type="menu"     defaultValue="80"  > 
+				<Label>face detection threshold (%)</Label>
+				<List>
+					<Option value="100" >100</Option>
+					<Option value="95"  >95</Option>
+					<Option value="90"  >90</Option>
+					<Option value="80"  >80</Option>
+					<Option value="70"  >70</Option>
+					<Option value="60"  >60</Option>
+					<Option value="50"  >50</Option>
+					<Option value="40"  >40</Option>
+					<Option value="30"  >30</Option>
+					<Option value="30"  >30</Option>
+					<Option value="20"  >20</Option>
+					<Option value="10"  >10</Option>
+				</List>
+			</Field>
+			
+			<Field id="gestureDetectionThreshold" type="menu"     defaultValue="80"  > 
+				<Label>gesture detection threshold (%):</Label>
+				<List>
+					<Option value="100" >100</Option>
+					<Option value="95"  >95</Option>
+					<Option value="90"  >90</Option>
+					<Option value="80"  >80</Option>
+					<Option value="70"  >70</Option>
+					<Option value="60"  >60</Option>
+					<Option value="50"  >50</Option>
+					<Option value="40"  >40</Option>
+					<Option value="30"  >30</Option>
+					<Option value="30"  >30</Option>
+					<Option value="20"  >20</Option>
+					<Option value="10"  >10</Option>
+				</List>
+			</Field>
+			
+			<Field id="detectionRange" type="menu"     defaultValue="100"  > 
+				<Label>detection range 0-100:</Label>
+				<List>
+					<Option value="100" >100</Option>
+					<Option value="95"  >95</Option>
+					<Option value="90"  >90</Option>
+					<Option value="80"  >80</Option>
+					<Option value="70"  >70</Option>
+					<Option value="60"  >60</Option>
+					<Option value="50"  >50</Option>
+					<Option value="40"  >40</Option>
+					<Option value="30"  >30</Option>
+					<Option value="20"  >20</Option>
+					<Option value="10"  >10</Option>
+				</List>
+			</Field>
+
 
 			<Field id="simpleSeparatorline01" type="separator"/>
 			<Field id="infoLabelDF2301Qgpios" type="label"  fontColor="green">
@@ -23791,13 +23958,11 @@ Eg when a valid command (cmdID >0) is received the LED will go on for xx seconds
 			</Field>
 			<Field id="gpioInverseAction1"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
-
-
 			<Field id="reactOnlyToCommands" type="textfield"     defaultValue="all" hidden="no" >
 				<Label>Ignore all commands, but:</Label>
 			</Field>
@@ -23814,15 +23979,16 @@ all = accept all gesture ids
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 			<Field id="gpioCmdForAction2"   type="textfield" defaultValue="103"  >
-				<Label>..gesture command # for trigger (1,2,3,x see explanation):</Label>
+				<Label>..gesture command # for trigger 
+(1,2,3,x .., 99= use for hard reset in case of comm problem):</Label>
 			</Field>
 			<Field id="gpioOnTimeAction2"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
 			</Field>
 			<Field id="gpioInverseAction2"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
@@ -23833,15 +23999,15 @@ all = accept all gesture ids
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 			<Field id="gpioCmdForAction3"   type="textfield" defaultValue="104"  >
-				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
+				<Label>gesture command # for trigger (1,2,3,x see explanation):</Label>
 			</Field>
 			<Field id="gpioOnTimeAction3"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
 			</Field>
 			<Field id="gpioInverseAction3"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
@@ -23852,15 +24018,69 @@ all = accept all gesture ids
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 			<Field id="gpioCmdForAction4"   type="textfield" defaultValue="142"  >
-				<Label>voice command # for trigger (1,2,3,x see explanation):</Label>
+				<Label>gesture command # for trigger (1,2,3,x see explanation):</Label>
 			</Field>
 			<Field id="gpioOnTimeAction4"   type="textfield" defaultValue="1"  >
 				<Label>.. how long should should it be on(secs):</Label>
 			</Field>
 			<Field id="gpioInverseAction4"   type="menu" defaultValue="0"  >
 				<List>
-					<Option value="0"   >on = low</Option>
-					<Option value="1"   >on = high</Option>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+			<Field id="simpleSeparatorline05" type="separator"/>
+			<Field id="gpioNumberForCmdAction5"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(5):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction5"   type="textfield" defaultValue="142"  >
+				<Label>gesture command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction5"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction5"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+			<Field id="simpleSeparatorline06" type="separator"/>
+			<Field id="gpioNumberForCmdAction6"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(6):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction6"   type="textfield" defaultValue="142"  >
+				<Label>gesture command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction6"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction6"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
+				</List>
+				<Label>.. On off state:</Label>
+			</Field>
+			<Field id="simpleSeparatorline07" type="separator"/>
+			<Field id="gpioNumberForCmdAction7"   type="menu" defaultValue="-1"  >
+				<Label>Turn on/off GPIO if cmd = #xx received, select GPIO(7):</Label>
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+			</Field>
+			<Field id="gpioCmdForAction7"   type="textfield" defaultValue="142"  >
+				<Label>gesture command # for trigger (1,2,3,x see explanation):</Label>
+			</Field>
+			<Field id="gpioOnTimeAction7"   type="textfield" defaultValue="1"  >
+				<Label>.. how long should should it be on(secs):</Label>
+			</Field>
+			<Field id="gpioInverseAction7"   type="menu" defaultValue="0"  >
+				<List>
+					<Option value="1"   >on = low</Option>
+					<Option value="0"   >on = high</Option>
 				</List>
 				<Label>.. On off state:</Label>
 			</Field>
@@ -23884,6 +24104,10 @@ Negative logic is used (state:on=low/ off=high) as most devices require a "low" 
 			<Field id="unixCmdAction4"   type="textfield" defaultValue=""   ><Label>Unix command action 4 for above voice command:</Label>	</Field>
 			<Field id="unixCmdVoiceNo5"  type="textfield" defaultValue="-1" ><Label>gesture command 5 to trigger unix command:</Label></Field>
 			<Field id="unixCmdAction5"   type="textfield" defaultValue=""   ><Label>Unix command action 5 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo6"  type="textfield" defaultValue="-1" ><Label>gesture command 6 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction6"   type="textfield" defaultValue=""   ><Label>Unix command action 6 for above voice command:</Label>	</Field>
+			<Field id="unixCmdVoiceNo7"  type="textfield" defaultValue="-1" ><Label>gesture command 7 to trigger unix command:</Label></Field>
+			<Field id="unixCmdAction7"   type="textfield" defaultValue=""   ><Label>Unix command action 7 for above voice command:</Label>	</Field>
 			<Field id="infoLabelfvoiceUnixAction" type="label" fontSize="small" fontColor="darkgrey">
 				<Label>You can select a gesture #, eg 1 to trigger a unix command executed on the rpi directly, eg:
   pigs modes 17 w;pigs w 17 1;sleep 5;pigs w 17 0       to set gpio 17 up for 5 secs

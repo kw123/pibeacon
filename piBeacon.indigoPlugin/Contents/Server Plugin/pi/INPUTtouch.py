@@ -226,7 +226,7 @@ class MPR121():
 
 
 
-	def begin(self, i2c=None, **kwargs):
+	def begin(self, **kwargs):
 		"""Initialize communication with the MPR121. 
 
 		Can specify a custom I2C address for the device using the address 
@@ -492,7 +492,6 @@ def readParams():
 							SCLPin = 22 
 					if devClass16Serial =="":
 						startTouch16Serial()
-						devClass16i2Serial = "started"
 
 				elif devType == "16i2c":
 					if devClass16i2c =="":

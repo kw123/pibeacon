@@ -61,7 +61,7 @@ class setupKillMyself:
 		signal.signal(signal.SIGINT, self.doExit)
 		signal.signal(signal.SIGTERM, self.doExit)
 
-	def doExit(self, signum, frame):
+	def doExit(self, signum, xxx):
 		global klillMyselfTimeout
 		if klillMyselfTimeout > 0 and time.time() - klillMyselfTimeout > 20: # need to ignore for some seconds, receiving signals at startup 
 			try: outputDev.delPy()
@@ -93,15 +93,15 @@ class LCD1602():
 		return 
 			
 
-	def write_word(self, data):
-		temp = data
+	def write_word(self, xxxx):
+		temp = xxxx
 		if self.BLEN == 1:
 			temp |= 0x08
 		else:
 			temp &= 0xF7
 		self.BUS.write_byte(self.LCD_ADDR ,temp)
 
-	def send_command(self,comm):
+	def send_command(self, comm):
 		try:
 			# Send bit7-4 firstly
 			buf = comm & 0xF0
@@ -121,10 +121,10 @@ class LCD1602():
 		except Exception as e:
 				U.logger.log(20,"", exc_info=True)
 
-	def send_data(self,data):
+	def send_data(self, xxx):
 		try:
 			# Send bit7-4 first
-			buf = data & 0xF0
+			buf = xxx & 0xF0
 			buf |= 0x05				  # RS = 1, RW = 0, EN = 1
 			self.write_word(buf)
 			time.sleep(0.002)
@@ -132,7 +132,7 @@ class LCD1602():
 			self.write_word(buf)
 
 			# Send bit3-0 second
-			buf = (data & 0x0F) << 4
+			buf = (xxx & 0x0F) << 4
 			buf |= 0x05				  # RS = 1, RW = 0, EN = 1
 			self.write_word(buf)
 			time.sleep(0.002)
@@ -148,16 +148,16 @@ class LCD1602():
 	def openlight(self):  # Enable the backlight
 		self.BUS.write_byte(self.LCD_ADDR,0x08)
 
-	def write(self,x, y, str):
-		x =max(0,min(x,15))
-		y =max(0,min(y, 1))
+	def write(self,x, y, yyy):
+		x = max(0,min(x,15))
+		y = max(0,min(y, 1))
 
 		# Move cursor
 		addr = 0x80 + 0x40 * y + x
 		self.send_command(addr)
 
-		for chr in str:
-			self.send_data(ord(chr))
+		for xxx in yyy:
+			self.send_data(ord(xxx))
 
 	def destroy(self):
 		del self.BUS
@@ -197,12 +197,12 @@ class bigScreen:
 					ddd = ddd.replace("#"+check, check)
 				elif "\n"+check not in ddd:
 					bad.append(check)
-					xxx = ddd.split("\n")
+					zzz = ddd.split("\n")
 					found = False
-					for ii in range(len(xxx)):
-						if xxx[ii] == "": # use first free line to insert missing item
-							xxx[ii] = "\n"+check+"\n"
-							ddd = "\n".join(xxx)
+					for ii in range(len(zzz)):
+						if zzz[ii] == "": # use first free line to insert missing item
+							zzz[ii] = "\n"+check+"\n"
+							ddd = "\n".join(zzz)
 							found = True
 							U.logger.log(20,"adding  :#{}, to empty line ".format(check))
 							break
@@ -216,7 +216,7 @@ class bigScreen:
 				U.sendURL(sendAlive="config.txt", text=bootfileName+" not properly setup  missing:  "+str(bad), squeeze=False, verbose=True, wait=False)
 				U.doWriteSimpleFile(bootfileName, ddd)
 				time.sleep(0.01)
-				ddd = 				U.logger.log(20, "\n\nnew config.txt file written:\n"+U.doReadSimpleFile(bootfileName))
+				U.logger.log(20, "\n\nnew config.txt file written:\n"+U.doReadSimpleFile(bootfileName))
 				U.setRebootRequest("display.py fixed "+bootfileName)
 			
 		try:
@@ -488,18 +488,18 @@ class SSD1351:
 		self.spi.cshigh = False
 		return
 
-	def __WriteCommand(self, data):
+	def __WriteCommand(self, zzz):
 		if useGPIO:	GPIO.output(self.dc, self.COMMAND)
 		else:		self.GPIOZERO[self.dc].off()
-		if isinstance(data, list) or isinstance(data, tuple):
-			self.spi.xfer(data)
+		if isinstance(zzz, list) or isinstance(zzz, tuple):
+			self.spi.xfer(zzz)
 		return
 
-	def __WriteData(self, data):
-		if useGPIO:	GPIO.output(self.dc, self.DATA)
+	def __WriteData(self, zzz):
+		if useGPIO:	GPIO.output(self.dc, zzz)
 		else:		self.GPIOZERO[self.dc].on()
-		if isinstance(data, list) or isinstance(data, tuple):
-			self.spi.xfer(data)
+		if isinstance(data, list) or isinstance(zzz, tuple):
+			self.spi.xfer(zzz)
 		return
 		
 	def restart0(self):
@@ -769,18 +769,18 @@ class st7735:
 		self.clearScreen()
 		return
 
-	def __WriteCommand(self, data):
+	def __WriteCommand(self, zzz):
 		if useGPIO:	GPIO.output(self.dc, self.COMMAND)
 		else:		self.GPIOZERO[dc].off()
-		if isinstance(data, list) or isinstance(data, tuple):
-			self.spi.writebytes(data)
+		if isinstance(zzz, list) or isinstance(zzz, tuple):
+			self.spi.writebytes(zzz)
 		return
 
-	def __WriteData(self, data):
-		if useGPIO:	GPIO.output(self.dc, self.DATA)
+	def __WriteData(self, zzz):
+		if useGPIO:	GPIO.output(self.dc, zzz)
 		else:		self.GPIOZERO[dc].on()
-		if isinstance(data, list) or isinstance(data, tuple):
-			self.spi.writebytes(data)
+		if isinstance(zzz, list) or isinstance(zzz, tuple):
+			self.spi.writebytes(zzz)
 		return
 		
 
@@ -880,7 +880,7 @@ class sh1106():
 		assert(image.size[0] == self.width)
 		assert(image.size[1] == self.height)
 
-		pix = list(image.getdata())
+		zzz = list(image.getdata())
 		page = 0xB0
 		step = self.width * 8
 		for y in range(0, self.pages * step, step):
@@ -893,14 +893,14 @@ class sh1106():
 			for x in range(self.width):
 				byte = 0
 				for n in range(0, step, self.width):
-					byte |= (pix[x + y + n] & 0x01) << 8
+					byte |= (zzz[x + y + n] & 0x01) << 8
 					byte >>= 1
 
 				buf.append(byte)
 
 			self.data(buf)
 
-	def display1(self, pix):
+	def display1(self, zzz):
 		# will receive just the bits, not the image
 		page = 0xB0
 		step = self.width * 8
@@ -914,7 +914,7 @@ class sh1106():
 			for x in range(self.width):
 				byte = 0
 				for n in range(0, step, self.width):
-					byte |= (pix[x + y + n] & 0x01) << 8
+					byte |= (zzz[x + y + n] & 0x01) << 8
 					byte >>= 1
 
 				buf.append(byte)
@@ -928,16 +928,16 @@ class sh1106():
 		"""
 		assert(len(cmd) <= 32)
 		self.bus.write_i2c_block_data(self.addr, self.cmd_mode, list(cmd))
-	def data(self, data):
+	def data(self, zzz):
 		"""
 		Sends a data byte or sequence of data bytes through to the
 		device - maximum allowed in one transaction is 32 bytes, so if
 		data is larger than this it is sent in chunks.
 		"""
-		for i in range(0, len(data), 32):
+		for i in range(0, len(zzz), 32):
 			self.bus.write_i2c_block_data(self.addr,
 										  self.data_mode,
-										  list(data[i:i+32]))
+										  list(zzz[i:i+32]))
 
 
 class ssd1306():
@@ -1004,7 +1004,7 @@ class ssd1306():
 
 		self.data(buf)
 
-	def display1(self, pix):
+	def display1(self, zzz):
 		# will receive just the bits, not the image
 		page = 0xB0
 		step = self.width * 8
@@ -1018,7 +1018,7 @@ class ssd1306():
 			for x in range(self.width):
 				byte = 0
 				for n in range(0, step, self.width):
-					byte |= (pix[x + y + n] & 0x01) << 8
+					byte |= (zzz[x + y + n] & 0x01) << 8
 					byte >>= 1
 
 				buf.append(byte)
@@ -1032,16 +1032,16 @@ class ssd1306():
 		"""
 		assert(len(cmd) <= 32)
 		self.bus.write_i2c_block_data(self.addr, self.cmd_mode, list(cmd))
-	def data(self, data):
+	def data(self, zzz):
 		"""
 		Sends a data byte or sequence of data bytes through to the
 		device - maximum allowed in one transaction is 32 bytes, so if
 		data is larger than this it is sent in chunks.
 		"""
-		for i in range(0, len(data), 32):
+		for i in range(0, len(zzz), 32):
 			self.bus.write_i2c_block_data(self.addr,
 										  self.data_mode,
-										  list(data[i:i+32]))
+										  list(zzz[i:i+32]))
 
 
 class const:
@@ -1075,8 +1075,9 @@ class const:
 
 
 ################### ###################	 analogClock  ############################################### START
-def analogClockInit(inParms={}):
+def analogClockInit(inParms=None):
 		global analogClockParams, minStartForNegative
+		if inParms is None: inParms= {}
 		defparams = {"ticks12": {"start":0.9,  "end":1.0,  "width":6,  "fill":(150,150,150)}, ## ticks every 5 minutes
 					 "ticks4":	{"start":0.77, "end":1.0,  "width":6,  "fill":(150,150,150)}, ## ticks at 0,15,30,45
 					 "hh":		{"start":0.0,  "end":0.55, "width":35, "fill":(255,0,0)	   }, ## hour  hand params
@@ -1338,9 +1339,10 @@ def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 	
 
 ################### ###################	 digitalClock  ############################################### START
-def digitalClockInit(inParms={}):
+def digitalClockInit(inParms=None):
 		global intensity, intensityDevice
 		global digitalClockParams, minStartForNegative
+		if inParms is None: inParms= {}
 		defparams = {"position":[0,0],													  ## top left corner
 					 "width":	40,														  ## font size 
 					 "fill":	[255,255,255],											  ## color of digits
@@ -1367,11 +1369,11 @@ def digitalClockInit(inParms={}):
 def digitalClockShow(hours=True, minutes=True, seconds=True):
 		global multIntensity
 		try:
-			P	   = digitalClockParams["position"]
-			fillD  = digitalClockParams["fill"]
-			format = digitalClockParams["format"]
+			P		= digitalClockParams["position"]
+			fillD 	= digitalClockParams["fill"]
+			fmrt 	= digitalClockParams["format"]
 
-			nowST = datetime.datetime.now().strftime(format)
+			nowST = datetime.datetime.now().strftime(fmrt)
 			fontF =	 mkfont(digitalClockParams)
 
 			draw.text(P, nowST, font=fontx[fontF], fill=(int(fillD[0]*multIntensity),int(fillD[1]*multIntensity),int(fillD[2]*multIntensity)))
@@ -1607,7 +1609,7 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 			if reset !="":
 				U.logger.log(20, "resetting  screen output device")
 				outputDev = ""
-				if reset == "stop": return 
+				if reset == "stop": return "",xmin,xmax,ymin,ymax,matrix,outputDev
 
 			if outputDev == "":
 				interrupter = threading.Thread(target=doInterrupt)
@@ -1770,7 +1772,7 @@ def getLightSensorValue(force=False):
 		if "sensors" not in rr: 									return False
 		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
 		if useLightSensorType not in rr["sensors"]: 				return False
-		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return 
+		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return False
 		tt = float(rr["time"])
 		if tt == lastTimeLightSensorFile:							return False	
 
@@ -1779,7 +1781,7 @@ def getLightSensorValue(force=False):
 			if devId == useLightSensorDevId:
 				lightSensorValueREAD = float(rr["sensors"][useLightSensorType][devId]["light"])
 				break
-		if lightSensorValueREAD ==-1 : return 
+		if lightSensorValueREAD ==-1 : return False
 		lastTimeLightSensorFile = tt
 
 		#U.logger.log(20, "lightSensorValue 2")

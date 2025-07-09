@@ -283,6 +283,7 @@ class tea5767:
             #print "scan data returned", [format(data[kk],'#010b') for kk in range(5)]
             #print "sca.. freq", freq, freqR, "RF", RF, "BLF" ,BLF,"Stero" ,Stero,"Signal" ,Signal,"chip" ,chip
             return res
+        return ""
 
 
     def off(self):

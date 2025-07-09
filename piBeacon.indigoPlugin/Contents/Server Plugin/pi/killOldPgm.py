@@ -61,7 +61,7 @@ try:
 			pid=int(items[1])
 			if pid == int(myPID): continue
 			if pid == int(myOwnPID): continue
-			if verbose: U.logger.log(20, u"== ext-kill== 3 killing {}  {}  {}, pid={}, line:{}".format( pgmToKill, param1, param2, pid, (" ").join(items[8:])) )
+			if verbose: U.logger.log(20, u"== ext-kill== 3 killing {}  {}  {}, pid={}, line:{}".format( pgmToKill, param1, param2, pid, " ".join(items[8:])) )
 			xlist += str(pid)+ " "
 			count += 1
 		if len(xlist) > 3:

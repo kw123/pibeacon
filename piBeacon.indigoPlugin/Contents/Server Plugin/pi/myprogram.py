@@ -93,7 +93,7 @@ def readParams():
         if inp == "": return rCode
         if lastRead2 == lastRead: return rCode
         lastRead  = lastRead2
-        if inpRaw == oldRaw: return 
+        if inpRaw == oldRaw: return rCode
         oldRaw     = inpRaw
 
         oldSensor  = sensorList

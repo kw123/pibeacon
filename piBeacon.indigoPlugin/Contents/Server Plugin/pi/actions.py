@@ -61,7 +61,6 @@ def execMain():
 	
 	U.setLogging()
 	
-	loopCount		  = 0
 	U.logger.log(30, "starting action program")
 	readParams()
 	# check if everything is installed
@@ -70,8 +69,6 @@ def execMain():
 	subprocess.call("echo "+str(lastAliveFile)+" > "+ G.homeDir+"temp/alive.action  &", shell=True)
 	
 	
-	
-	tStart = time.time() 
 	
 	while True:
 		try:

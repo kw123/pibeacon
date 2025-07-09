@@ -13,6 +13,7 @@
 import	sys, os, subprocess, copy
 import	time,datetime
 import	json
+useGPIO = False
 try:
 	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
 		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)

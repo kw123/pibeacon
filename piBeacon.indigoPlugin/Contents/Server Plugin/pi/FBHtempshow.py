@@ -115,7 +115,6 @@ def checkNewtempfile():
 		colorTarget			= [0,100,100]
 		colorRoomT			= [200,0,200]
 		colorValvePos		= [100,100,0]
-		colorTempOK 		= [0,100,0]
 		colorTempHIGH		= [100,0,0]
 		colorTempLOW		= [0,0,100]
 		colorTempBadHigh	= [200,0,0]
@@ -242,7 +241,6 @@ def fbhexec():
 	lastRead					= 0
 	inpRaw						= ""
 	inp							= ""
-	debug						= 5
 	sensor						= G.program
 	U.setLogging()
 
@@ -266,8 +264,6 @@ def fbhexec():
 	U.echoLastAlive(G.program)
 
 		
-	sleepTime		= 5
-
 	G.lastAliveSend	= time.time() -1000
 	loopCounter			= 0
 
@@ -279,7 +275,7 @@ def fbhexec():
 
 		loopCounter += 1
 
-		ret = readParams() 
+		readParams()
 		checkNewtempfile()
 		time.sleep(5)
 		if not U.pgmStillRunning("display.py"):

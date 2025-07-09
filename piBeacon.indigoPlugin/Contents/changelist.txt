@@ -1,4 +1,19 @@
-added features / changes in added features / changes in v2022.185.138 @ 2025-04-24
+added features / changes in added features / changes in v2022.185.139 @ 2025-04-24
+==================================================
+1. fully support face and gesture sensor together with DF2301Q
+   Have a box with 3 DF2301Q connected through USB to serial converters and one face gesture sensor on i2c
+    it drives a somfy RF remote (up/down/stop) through gpio and opto couplers hat simulate button presses.
+  Both sensor have an option to drive directly gpios on the rpi or issue unix commands, set in device edit.
+  As the i2c connection is not stable (hangs about 1/day) you have the option to reset the sensor through a relay that toggles the power, see drawing.
+    that is done automatically when detected
+  
+2. various little improvements 
+	exception handling 
+	fixed python compiler warnings (different return types etc)
+
+
+
+added features / changes in added features / changes in v2022.185.139 @ 2025-04-24
 ==================================================
 
 1. added first beta version for face gesture sensor from df robot
@@ -9,6 +24,8 @@ added features / changes in added features / changes in v2022.185.138 @ 2025-04-
      * - 3: STOP (🤚) - red
      * - 4: YES (✌️) - yellow
      * - 5: SIX (🤙) - purple
+
+2. added reboot rpi if error "Network is unreachable", this might be due to hung wifi, will reboot if failed tries >20 in a row
 
 
 added features / changes in added features / changes in v2022.184.138 @ 2025-04-10

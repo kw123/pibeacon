@@ -76,6 +76,7 @@ class SGP30_class:
 		self._i2c_dev.i2c_rdwr(msg_w)
 		time.sleep(0.025)  # Suitable for all commands except 'measure_test'
 
+		verified = []
 		if response_len > 0:
 			# Each parameter is a word (2 bytes) followed by a CRC (1 byte)
 			msg_r = self._i2c_msg.read(self._i2c_addr, response_len * 3)
@@ -87,14 +88,14 @@ class SGP30_class:
 				'>' + ('HB' * response_len),
 				buf)
 
-			verified = []
 			for i in range(response_len):
 				offset = i * 2
 				value, crc = response[offset:offset + 2]
 				if crc != self.calculate_crc(value):
 					raise RuntimeError("Invalid CRC in response from SGP30: {:02x} != {:02x}", crc, self.calculate_crc(value), buf)
 				verified.append(value)
-			return verified
+		return verified
+		
 
 	def calculate_crc(self, data):
 		"""Calculate an 8-bit CRC from a 16-bit word

@@ -19,7 +19,6 @@ try:
 	import pigpio
 	useGPIO = False
 except  Exception as e:
-	print(f"{e}")
 	try:
 		import RPi.GPIO as GPIO
 		GPIO.setmode(GPIO.BCM)
@@ -35,7 +34,7 @@ import  piBeaconGlobals as G
 import  displayDistance as DISP
 G.program = "ultrasoundDistance"
 
-version = 2.2
+version = 2.3
 
 
 
@@ -115,8 +114,7 @@ def readParams():
 			try:
 				if "displayEnable" in sensors[sensor][devId]: 
 					displayEnable = sensors[sensor][devId]["displayEnable"]
-			except:
-				display = False	
+			except: pass
 
 
 			try:	deltaDist[devId] = float(sensors[sensor][devId].get("deltaDist",10))/100. # its in %
@@ -162,7 +160,6 @@ def getDistancePIGPIO(devId):
 		good = 0
 		echoStartOK = False
 		#read up to 6 times until 3 good measurements, then take average  
-		timeAtStart = time.time()
 		MAX = -1
 		MIN = 9999
 		if sensors[sensor][devId].get("smoothMeasurements",True):
@@ -177,7 +174,6 @@ def getDistancePIGPIO(devId):
 			PIGPIO.write(triggPin,1)
 			time.sleep(0.000001)
 			PIGPIO.write(triggPin,0)
-			#U.logger.log(20, "send pulse stop {}".format(time.time()-timeAtStart))
 
 			#wait for echo to start
 			bad = False
@@ -265,7 +261,6 @@ def getDistance(devId):
 		good = 0
 		echoStartOK = False
 		#read up to 6 times until 3 good measurements, then take average  
-		timeAtStart = time.time()
 		MAX = -1
 		MIN = 9999
 		if sensors[sensor][devId].get("smoothMeasurements",True):
@@ -369,8 +364,6 @@ def execMain():
 	global PIGPIO
 	
 	PIGPIO						= ""
-	distanceOffset				= {}
-	distanceMax					= {}
 	maxRange					= 555.
 	oldRaw						= ""
 	lastRead					= 0
@@ -383,11 +376,8 @@ def execMain():
 	sensors						= {}
 	sensor						= G.program
 	quick						= False
-	lastMsg						= 0
 	mode						= 0
-	display						= "0"
 	output						= {}
-	delta						= 0
 	sendEvery					= 55. # send at least every xx secs msg to indigo even if no trigger
 	U.setLogging()
 	
@@ -411,9 +401,6 @@ def execMain():
 	
 	lastDist			= {}
 	lastTime			= {}
-	lastData			= {}
-	lastSend			= 0
-	lastDisplay			= 0
 	G.lastAliveSend		= time.time() -1000
 	lastRead 			= time.time()
 	badSensor 			= 0

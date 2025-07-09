@@ -34,7 +34,7 @@ def getValues(devId):
 
 	try:
 		data = ""
-		if str(devId) not in SENSOR:  return 
+		if str(devId) not in SENSOR:  return data
 		v = 0
 		i2cAdd =U.muxTCA9548A(sensors[sensor][devId])
 		inp = input[devId].split("-")

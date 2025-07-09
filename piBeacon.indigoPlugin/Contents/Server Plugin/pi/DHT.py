@@ -185,13 +185,13 @@ def readParams():
 		global output
 		global oldRaw, lastRead
 
-		rCode= False
+		rCode = False
 
 		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return rCode
 		if lastRead2 == lastRead: return rCode
 		lastRead  = lastRead2
-		if inpRaw == oldRaw: return 
+		if inpRaw == oldRaw: return rCode
 		oldRaw	   = inpRaw
 
 		oldSensor  = sensorList
@@ -204,14 +204,15 @@ def readParams():
 		if "sensors"			  in inp: sensors =				   (inp["sensors"])
 		#if "sensorRefreshSecs"	  in inp: sensorRefreshSecs = float(inp["sensorRefreshSecs"])
 
-		sensorList=""
+		rCode = True
+		sensorList = ""
 		for sens in sensors:
 			sensorList+=sens.split("-")[0]+","
 
 		if sensorList.find("DHT") ==-1:
 			U.logger.log(30,"no {} sensor defined, exiting ".format(G.program ))
 			exit()
-		return 
+		return rCode
 
 
 #################################

@@ -189,7 +189,7 @@ dtparam=gpiopin=4   <-- this will be  busmaster 1
 			if newMapping:
 				U.logger.log(20,"Changed or first mapping of busmaster channel to GPIO used:{} in \"`ls -o /sys/bus/w1/devices/`\" ".format(busMasterToGPIO))
 
-			if busMasterToGPIO == []:
+			if busMasterToGPIO == {}:
 				U.logger.log(20,"nothing setup in config.txt  no \"dtparam=gpiopin=..\" ")
 
 
@@ -219,7 +219,7 @@ dtparam=gpiopin=26
 	"""
 # ===========================================================================
 def enableoneWireGPIO():
-	global sensors, oneWireGpios,oneWireGpiosLast, lastmapBusmasterToGpio, busMasterToGPIOOld, busMasterToGPIO
+	global sensors, oneWireGpios,oneWireGpiosLast, lastmapBusmasterToGpio, busMasterToGPIO
 
 	try:
 
@@ -295,7 +295,6 @@ def enableoneWireGPIO():
 
 		# save stuff for nect time 
 		oneWireGpiosLast = copy.copy(oneWireGpios)
-		busMasterToGPIOOld = copy.copy(busMasterToGPIO)
 		U.writeJson(fnameForData, { "busMasterToGPIO":busMasterToGPIO,"oneWireGpios":oneWireGpios})
 
 		time.sleep(10)  # wait until sensors are recognized by system, takes some secs 
@@ -410,7 +409,6 @@ def get18B20(sensor):
 	doPrint1 = False
 	doPrint2 = False
 	doPrint3= False
-	doPrint4= False
 	doPrint5= False
 	doPrint6= False
 	foundId = -1
@@ -427,7 +425,6 @@ def get18B20(sensor):
 		gpioUsed =  "-1"
 		try:
 			if doPrint: U.logger.log(20,"starting new read of sensors".format())
-			ret = {}
 			linesDir = readPopen("ls -o /sys/bus/w1/devices/")[0].strip("\n").split("\n")
 			"""
 this looks like:
@@ -547,7 +544,7 @@ looking for the string at the end, eg: 28-3ce104570a38 and bus master # here 1..
 						#if doPrint: U.logger.log(20,"{:>5.2f}..  serialNumber in sensors".format(time.time()-tStart))
 						if serialNumber in lastGoodRead and abs(lastGoodRead[serialNumber]["temp"] - temp) > 10 and (time.time() - lastGoodRead[serialNumber]["time"] < 50):
 							if True: U.logger.log(
-												20,"{:>5.2f}..  {} has too big a change;  newV: {:.1f}, oldV: {}  ignore for {} secs".format(time.time()-tStart, serialNumber, temp, lastGoodRead[serialNumber]["temp"], 50 - (time.time() - lastGoodRead[serialNumber]["time"]) )
+												20,"{:>5.2f}..  {} has too big a change;  newV: {:}, oldV: {}  ignore for {} secs".format(time.time()-tStart, serialNumber, temp, lastGoodRead[serialNumber]["temp"], 50 - (time.time() - lastGoodRead[serialNumber]["time"]) )
 												)
 							continue 
 						else:
@@ -615,7 +612,7 @@ looking for the string at the end, eg: 28-3ce104570a38 and bus master # here 1..
 	try:
 		for serialNumber in lastGoodRead:
 			devId = lastGoodRead[serialNumber].get("devId","-1")
-			# aignore this sensor?
+			# ignore this sensor?
 			#if doPrint: U.logger.log(20,"check if we need to use old data serialNumber:{},".format(serialNumber))
 
 			#  data needed for this sensor?
@@ -724,11 +721,9 @@ def readParams():
 		if inp == "": return rCode
 		if lastRead2 == lastRead: return rCode
 		lastRead  = lastRead2
-		if inpRaw == oldRaw: return 
+		if inpRaw == oldRaw: return rCode
 		oldRaw	 = inpRaw
 
-		oldSensor  = sensorList
-		sensorsOld = copy.copy(sensors)
 		oneWireGpiosOld = oneWireGpios
 
 		#U.logger.log(20," read   params")
@@ -770,7 +765,7 @@ def readParams():
 
 		U.logger.log(20,"serialNumberToDevId:{}  ".format(serialNumberToDevId))
 
-
+		rCode = True
 		oneWireResetGpio = 		inp.get("oneWireResetGpio","")
 		oneWireResetIsUpDown = 	inp.get("oneWireResetIsUpDown","up")
 		try: 
@@ -784,7 +779,7 @@ def readParams():
 		except: pass
 
 
-		return
+		return rCode
 
 
 
@@ -848,9 +843,6 @@ def execWire():
 	sensors					= {}
 	enableTXpinsAsGpio  	= "0"
 	enableSPIpinsAsGpio 	= "0"
-	authentication	  		= "digest"
-	quick			   		= False
-	output			  		= {}
 	U.setLogging()
 
 	myPID	   = str(os.getpid())
@@ -868,8 +860,7 @@ def execWire():
 	enableoneWireGPIO()
 	U.echoLastAlive(G.program)
 
-	NSleep= int(sensorRefreshSecs)
-	if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
+	if G.networkType  in G.useNetwork and U.getNetwork() == "off":
 		if U.getIPNumber() > 0:
 			U.logger.log(20,"no ip number working, giving up")
 			time.sleep(10)
@@ -879,14 +870,12 @@ def execWire():
 	tStartProgram 		= time.time()
 	tt				  	= time.time()
 	badSensors		  	= {}
-	lastData			= {}
 	lastMsg				 = 0
 	G.tStart			= tt
 	lastregularCycle	= tt
 	lastRead			= tt
 	regularCycle		= True
 	lastData			= {}
-	xxx					= -1
 	doPrint 			= False
 
 	sens = G.program
@@ -903,8 +892,6 @@ def execWire():
 			if doPrint: U.logger.log(20," data :{}".format(data))
 
 			loopCount +=1
-		
-			delta =-1
 			changed = 0
 			xxx = -1
 

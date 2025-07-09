@@ -38,10 +38,10 @@ def execKill(pgmtype):
 				pid = int(items[1])
 				if pid != myOwnPID: 
 		
-					if verbose: U.logger.log(20, "==kill sudos killing line:{}".format( (" ").join(items[7:])) )
+					if verbose: U.logger.log(20, "==kill sudos killing line:{}".format( " ".join(items[7:])) )
 					xlist += str(pid)+ " "
 					count += 1
-					killedpgms += (" ").join(items[7:])+";"
+					killedpgms += " ".join(items[7:])+";"
 
 		if len(xlist) > 2:
 			if verbose:  U.logger.log(20, "== ext-kill /usr/bin/sudo kill -9 {} ".format(xlist) )

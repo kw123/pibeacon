@@ -19,6 +19,7 @@ try:
 	#1/0 # use GPIO
 	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
 		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+		time.sleep(2)
 	import gpiozero
 	from gpiozero.pins.pigpio import PiGPIOFactory
 	from gpiozero import Device
@@ -40,19 +41,20 @@ import	piBeaconGlobals as G
 
 G.program = "receiveCommands"
 
-allowedCommands=["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","restartDevice",
+allowedCommands = ["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","restartDevice",
 				"startCalibration","getBeaconParameters","beepBeacon","updateTimeAndZone","file","BLEreport","BLEAnalysis","trackMac"]
 
 externalGPIO = False
 
-mapCmds			= {"pu":"pulseUp","pd":"pulseDown","cup":"continuousUpDown","aw":"analogWrite"}
+mapCmds	= {"pu":"pulseUp","pd":"pulseDown","cup":"continuousUpDown","aw":"analogWrite"}
 ####-------------------------------------------------------------------------####
 def readPopen(cmd):
-		try:
-			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-			return ret.decode('utf_8'), err.decode('utf_8')
-		except Exception as e:
-			U.logger.log(20,"", exc_info=True)
+	global DEBUG
+	try:
+		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		return ret.decode('utf_8'), err.decode('utf_8')
+	except Exception as e:
+		U.logger.log(20,"", exc_info=True)
 
 ### ----------------------------------------- ###
 ### ---------exec commands start------------- ###
@@ -62,21 +64,22 @@ def readPopen(cmd):
 def OUTPUTi2cRelay(command):
 	global myPID
 	global threadsActive
+	global DEBUG
 	try:
 		devType = "OUTPUTi2cRelay"
 
 		for iii in range(1):
-			U.logger.log(G.debug*20, "OUTPUTi2cRelay command:{}".format(command) )
+			U.logger.log(DEBUG, "OUTPUTi2cRelay command:{}".format(command) )
 			if "cmd" in command:
 				cmd = command["cmd"]
 				if False and cmd not in allowedCommands:
-					U.logger.log(20, "OUTPUTi2cRelay pid={}d, bad command {}  allowed only: {}".format(myPID, command , allowedCommands )  )
+					U.logger.log(DEBUG, "OUTPUTi2cRelay pid={}d, bad command {}  allowed only: {}".format(myPID, command , allowedCommands )  )
 					exit(1)
 
 			if "pin" in command:
 				pin= int(command["pin"])
 			else:
-				U.logger.log(20, "setGPIO pid={}, pin not included,  bad command {}".format(myPID,command) )
+				U.logger.log(DEBUG, "setGPIO pid={}, pin not included,  bad command {}".format(myPID,command) )
 				exit(1)
 
 			DEVICE_BUS = 1
@@ -103,7 +106,7 @@ def OUTPUTi2cRelay(command):
 						pulseDown = float(values.get("pulseDown",1))
 						nPulses = int(values.get("nPulses",1))
 					except Exception as e:
-						U.logger.log(20," error reading command values:{}".format(values))
+						U.logger.log(30," error reading command values:{}".format(values))
 		
 
 			inverseGPIO = False
@@ -128,37 +131,33 @@ def OUTPUTi2cRelay(command):
 
 			if cmd == "up":
 				bus.write_byte_data(i2cAddress, pin, up)
-				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, up))
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+				U.logger.log(DEBUG, "relay {} {} {} ".format(i2cAddress, pin, up))
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
 			elif cmd == "down":
-				U.logger.log(20, "relay {} {} {} ".format(i2cAddress, pin, down))
+				U.logger.log(DEBUG, "relay {} {} {} ".format(i2cAddress, pin, down))
 				bus.write_byte_data(i2cAddress, pin,down)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
 			elif cmd in ["pulseUp","pulseup"]:
 				bus.write_byte_data(i2cAddress, pin, up)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 				if sleepForxSecs(pulseUp): break
 				bus.write_byte_data(i2cAddress, pin, down)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 
 			elif cmd in ["pulseDown","pulsedown"]:
 				bus.write_byte_data(i2cAddress, pin, down)
 				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":off}}}})
 				if sleepForxSecs(pulseDown): break
 				bus.write_byte_data(i2cAddress, pin, up)
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTi2cRelay":{devId:{"actualGpioValue":on}}}})
 
 			elif cmd in ["continuousUpDown","continuousupdown"]:
 				for ii in range(nPulses):
-
 					bus.write_byte_data(i2cAddress, pin, up)
-
 					if sleepForxSecs(pulseUp): break
-
 					bus.write_byte_data(i2cAddress, pin, down)
-
 					if sleepForxSecs(pulseDown): break
 
 			U.removeOutPutFromFutureCommands(pin, devType)
@@ -171,13 +170,12 @@ def OUTPUTi2cRelay(command):
 def setGPIO(command):
 	global PWM, myPID, typeForPWM
 	global threadsActive
+	global DEBUG
+	global GPIOZERO
 	devType = "OUTPUTgpio"
 
 
-	GPIOZERO = ""
-	G.debug = 20
-	myDebug = G.debug
-	#U.logger.log(20, "{:.2f} into setGPIO command:{}".format(time.time() , command))
+	#U.logger.log(DEBUG, "{:.2f} into setGPIO command:{}".format(time.time() , command))
 
 	for iiii in range(1):
 		try:	PWM = int(command["PWM"])
@@ -199,13 +197,13 @@ def setGPIO(command):
 		if "cmd" in command:
 			cmd = command["cmd"]
 			if False and cmd not in allowedCommands:
-				U.logger.log(20, "setGPIO pid={}, bad command{}  allowed only: {}".format(myPID, command, allowedCommands)  )
+				U.logger.log(DEBUG, "setGPIO pid={}, bad command{}  allowed only: {}".format(myPID, command, allowedCommands)  )
 				exit(1)
 
 		if "pin" in command:
 			pin = int(command["pin"])
 		else:
-			U.logger.log(20, "setGPIO pid={}, pin not included,  bad command {}".format(myPID, command) )
+			U.logger.log(DEBUG, "setGPIO pid={}, pin not included,  bad command {}".format(myPID, command) )
 			exit(1)
 
 
@@ -218,7 +216,8 @@ def setGPIO(command):
 		pulseUp = float(command.get("pulseUp",1))
 		pulseDown = float(command.get("pulseDown",1))
 		nPulses = float(command.get("nPulses",1))
-
+		disableGPIOafterPulse = command.get("disableGPIOafterPulse",True)
+		
 		if "values" in command:
 			values =  command.get("values",{})
 			if values != {}:
@@ -231,7 +230,7 @@ def setGPIO(command):
 					if bits == -1: bits = analogValue
 					if bits == -1: bits = 0
 				except Exception as e:
-					U.logger.log(20," error reading command values:{}".format(values))
+					U.logger.log(30," error reading command values:{}".format(values))
 		
 		
 
@@ -246,7 +245,7 @@ def setGPIO(command):
 			devId = str(command["devId"])
 		else: devId = "0"
 
-		U.logger.log(20, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, useGPIO:{}, command:{} ".format(time.time(), cmd, pin,useGPIO,  command) )
+		U.logger.log(DEBUG, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, useGPIO:{}, command:{} ".format(time.time(), cmd, pin, useGPIO,  command) )
 		try:
 			if inverseGPIO: 
 				up   = 0
@@ -264,27 +263,29 @@ def setGPIO(command):
 				OFF  = "off"
 
 			if cmd == "up":
-				U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, on) )
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
+				U.logger.log(DEBUG, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, on) )
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 				if useGPIO:
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, up)
 				else:
-					GPIOZERO = gpiozero.LED(pin)
-					getattr(GPIOZERO, ON)()
+					if pin not in GPIOZERO:
+						GPIOZERO[pin] = gpiozero.LED(pin)
+					getattr(GPIOZERO[pin], ON)()
 					if sleepForxSecs(1000000000): 
 						break
 		
 
 			elif cmd == "down":
-				U.logger.log(myDebug, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, off) )
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
+				U.logger.log(DEBUG, "{:.2f} setGPIO pin={}; set output to {}".format(time.time(), pin, off) )
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 				if useGPIO:
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, down)
 				else:
-					GPIOZERO = gpiozero.LED(pin)
-					getattr(GPIOZERO, OFF)()
+					if pin not in GPIOZERO:
+						GPIOZERO[pin] = gpiozero.LED(pin)
+					getattr(GPIOZERO[pin], OFF)()
 					if sleepForxSecs(1000000000): 
 						break
 
@@ -294,14 +295,14 @@ def setGPIO(command):
 				else:
 					value =   bits	 # duty cycle on xxx hz 
 				value = int(value)
-				U.logger.log(myDebug, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
+				U.logger.log(DEBUG, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
 				if value > 0:
 					U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
 				else:
 					U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"low"}}}})
 
 				if typeForPWM == "PIGPIO": 	
-					#U.logger.log(20, "..  setting PIGPIO {}  {}  {}".format(pwmFreq, pwmRange,  value) )
+					#U.logger.log(DEBUG, "..  setting PIGPIO {}  {}  {}".format(pwmFreq, pwmRange,  value) )
 					PIGPIO.set_mode(pin, pigpio.OUTPUT)
 					PIGPIO.set_PWM_frequency(pin, pwmFreq)
 					PIGPIO.set_PWM_range(pin, pwmRange)
@@ -315,87 +316,95 @@ def setGPIO(command):
 						if sleepForxSecs(1000000000): break
 					else:
 						v = float(value) / 100.
-						#U.logger.log(myDebug, "analogWrite action pin = {}  value:{}, v:{}".format(pin,  value, v) )
-						GPIOZERO = gpiozero.PWMLED(pin, frequency=1000)
-						GPIOZERO.value = v
+						#U.logger.log(DEBUG, "analogWrite action pin = {}  value:{}, v:{}".format(pin,  value, v) )
+						if pin not in GPIOZERO:
+							GPIOZERO[pin] = gpiozero.PWMLED(pin, frequency=1000)
+						GPIOZERO[pin].value = v
 						if sleepForxSecs(1000000000): 
 							break
 
-			elif cmd in ["pulseUp","pulseup"]: # ignoe inverse
-				U.logger.log(myDebug, "pulseDown action pin = {} start, pulseDown:{}, inverseGPIO:{}, useGPIO:{}".format(pin,  pulseDown, inverseGPIO, useGPIO) )
+			elif cmd in ["pulseUp","pulseup"]:
+				U.logger.log(DEBUG, "pulseUp action pin = {} start, pulseLen:{} inverseGPIO:{}, useGPIO:{}".format(pin,  pulseUp, inverseGPIO, useGPIO) )
 				if useGPIO:
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, up)
 				else:
-					GPIOZERO = gpiozero.LED(pin)
-					getattr(GPIOZERO, ON)()
+					GPIOZERO[pin] = gpiozero.LED(pin)
+					getattr(GPIOZERO[pin], ON)()
 
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 				if sleepForxSecs(pulseUp): break
 				if useGPIO:
 					GPIO.output(pin, down)
 				else:
-					getattr(GPIOZERO, OFF)()
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
+					getattr(GPIOZERO[pin], OFF)()
+					if disableGPIOafterPulse: GPIOZERO[pin].close()
+					
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 
-			elif cmd in ["pulseDown","pulsedown"]: # ignoe inverse
-				U.logger.log(myDebug, "pulseDown action pin = {} start, pulseDown:{}, inverseGPIO:{}".format(pin,  pulseDown, inverseGPIO) )
+			elif cmd in ["pulseDown","pulsedown"]: 
+				U.logger.log(DEBUG-10, "pulseDown action pin = {} start, pulseDown:{}, inverseGPIO:{}".format(pin,  pulseDown, inverseGPIO) )
 				if useGPIO:
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, down)
 				else:
-					GPIOZERO = gpiozero.LED(pin)
-					getattr(GPIOZERO, OFF)()
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
+					if pin not in GPIOZERO:
+						GPIOZERO[pin] = gpiozero.LED(pin)
+					getattr(GPIOZERO[pin], OFF)()
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 				if sleepForxSecs(pulseDown): break
-				U.logger.log(myDebug, "pulseDown action pin = {} back up".format(pin) )
+				U.logger.log(DEBUG-10, "pulseDown action pin = {} back up".format(pin) )
 				if useGPIO:
 					GPIO.output(pin, up)
 				else:
-					getattr(GPIOZERO, ON)()
-				if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
+					getattr(GPIOZERO[pin], ON)()
+				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 
-			elif cmd in ["continuousUpDown","continuousupdown"]: # ignoe inverse
+			elif cmd in ["continuousUpDown","continuousupdown"]:
 				if useGPIO:
 					GPIO.setup(pin, GPIO.OUT)
 				else:
-					GPIOZERO = gpiozero.LED(pin)
-				#U.logger.log(myDebug, "continuousUpDown pin = {} start, pulseUp:{}, pulseDown:{}, nPulses:{}".format(pin,  pulseUp, pulseDown, nPulses) )
+					if pin not in GPIOZERO:
+						GPIOZERO[pin] = gpiozero.LED(pin)
+				#U.logger.log(DEBUG, "continuousUpDown pin = {} start, pulseUp:{}, pulseDown:{}, nPulses:{}".format(pin,  pulseUp, pulseDown, nPulses) )
 				for ii in range(nPulses):
 					if useGPIO:
 						GPIO.output(pin, up)
 					else:
-						GPIOZERO.on()
-					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
+						GPIOZERO[pin].on()
+					if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 					if sleepForxSecs(pulseUp): pass
 					if useGPIO:
 						GPIO.output(pin, down)
 					else:
-						GPIOZERO.off()
+						GPIOZERO[pin].off()
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 					if sleepForxSecs(pulseDown): break
-				U.logger.log(myDebug, "continuousUpDown finished" )
+				U.logger.log(DEBUG, "continuousUpDown finished" )
 
 
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
-	U.logger.log(myDebug, "exit {}".format(command) )
+	U.logger.log(DEBUG, "exit {}".format(command) )
 	U.removeOutPutFromFutureCommands(pin, devType)
-	if GPIOZERO != "": GPIOZERO.close()
+	if pin in GPIOZERO:
+		GPIOZERO[pin].close()
+		del GPIOZERO[pin]
 
 	return 
 
 
 ### ----------------------------------------- ###
 def sleepForxSecs(sleepTime):
+	global DEBUG
 	global threadsActive
 	try:
 		tDone 	= 0
 		dt 		= 0.05
-		try: threadName = threading.currentThread().getName()
+		try: threadName = threading.current_thread().name
 		except: return True
-		#U.logger.log(20, "threadName:{}, wait for {} secs".format(threadName, sleepTime))
+		#U.logger.log(DEBUG, "threadName:{}, wait for {} secs".format(threadName, sleepTime))
 		while True:
 			tDone += dt
 			if threadName not in threadsActive: return True
@@ -405,7 +414,7 @@ def sleepForxSecs(sleepTime):
 		return False
 	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
-		U.logger.log(20, "threadsActive{}".format(threadsActive))
+		U.logger.log(DEBUG, "threadsActive{}".format(threadsActive))
 	return False
 
 ### ----------------------------------------- ###
@@ -414,15 +423,16 @@ def execCMDS(nextItem):
 	global execcommands, PWM
 	global py3Cmd, readOutput, readInput
 	global usePython3
+	global DEBUG
 
 
 	try:	threadName = threading.current_thread()
 	except:	threadName = threading.currentThread()
-	#U.logger.log(G.debug*20, "{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
-
+	#U.logger.log(DEBUG, "{:.2f} into execCMDS, thread name:{}".format(time.time(), threadName))
+	DEBUG = 20
+	
 	for ijji in range(1):
 
-			#U.logger.log(20,"{:.2f} nextItem command: {}".format(time.time(), nextItem))
 
 
 			delayStart = min(1000000, max(0,U.calcStartTime(nextItem,"startAtDateTime")-time.time()))
@@ -446,6 +456,12 @@ def execCMDS(nextItem):
 				restoreAfterBoot="0"
 
 
+			if "debug" in nextItem:
+				try: 	DEBUG = int(nextItem.get("debug",20))
+				except:	DEBUG = 20
+
+			#U.logger.log(20,"debug:{} cmd: {}".format(DEBUG, cmd))
+			
 			if cmd == "general":
 				if "cmdLine" in nextItem:
 					subprocess.call(nextItem["cmdLine"] , shell=True)	 
@@ -459,7 +475,7 @@ def execCMDS(nextItem):
 						m = "w"
 						if "fileMode" in nextItem and nextItem["fileMode"].lower() == "a": m = "a"
 						fc = json.dumps(nextItem["fileContents"])
-						U.logger.log(20,"write to nextItem {}  {}".format(nextItem["fileName"], fc ))
+						U.logger.log(DEBUG,"write to nextItem {}  {}".format(nextItem["fileName"], fc ))
 						f = open(nextItem["fileName"], m)
 						f.write("{}".format(fc)) 
 						f.close()
@@ -473,11 +489,11 @@ def execCMDS(nextItem):
 
 			if cmd == "getBeaconParameters":
 				if delayStart > 0 and delayStart < 10000000: 
-					U.logger.log(20,"{:.2f} delay start by: {}".format(time.time(), delayStart))
+					U.logger.log(DEBUG,"{:.2f} delay start by: {}".format(time.time(), delayStart))
 					if sleepForxSecs(delayStart):
 						return 
 				try:
-						U.logger.log(20, "execcmd. getBeaconParameters, write: ={}".format(nextItem["device"]))
+						U.logger.log(DEBUG, "execcmd. getBeaconParameters, write: ={}".format(nextItem["device"]))
 						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
 						f.write(nextItem["device"]) 
 						f.close()
@@ -488,11 +504,11 @@ def execCMDS(nextItem):
 
 			if cmd == "beepBeacon":
 				if delayStart > 0 and delayStart < 10000000: 
-					U.logger.log(20,"{:.2f} delay start by: {}".format(time.time(), delayStart))
+					U.logger.log(DEBUG,"{:.2f} delay start by: {}".format(time.time(), delayStart))
 					if sleepForxSecs(delayStart):
 						return 
 				try:
-						U.logger.log(20, "execcmd. beep, write: ={}".format(str(nextItem["device"])[:20]))
+						U.logger.log(DEBUG, "execcmd. beep, write: ={}".format(str(nextItem["device"])[:20]))
 						f = open(G.homeDir+"temp/beaconloop.beep","a")
 						f.write(nextItem["device"]+"\n") 
 						f.close()
@@ -503,7 +519,7 @@ def execCMDS(nextItem):
 
 			if cmd == "updateTimeAndZone":
 				try:
-						U.logger.log(20, "execcmd. updateTimeAndZone, write: ={}".format(str(nextItem["device"])[:20]))
+						U.logger.log(DEBUG, "execcmd. updateTimeAndZone, write: ={}".format(str(nextItem["device"])[:20]))
 						f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","a")
 						f.write(nextItem["device"]+"\n") 
 						f.close()
@@ -521,7 +537,7 @@ def execCMDS(nextItem):
 					if "mac" in nextItem: 
 						subprocess.call("echo '"+nextItem["mac"]+"' > "+G.homeDir+"temp/beaconloop.trackmac", shell=True)
 					else:
-						U.logger.log(20, "trackMac, no mac number supplied")
+						U.logger.log(DEBUG, "trackMac, no mac number supplied")
 					continue
 
 
@@ -579,7 +595,7 @@ def execCMDS(nextItem):
 							pgm ="neopixel3.py"
 						if	not U.pgmStillRunning(pgm[:-3]+".py"):
 							subprocess.call("{}{}{} &".format(py, G.homeDir, pgm), shell=True)
-							U.logger.log(20,">>>>>> starting pgm: {}{}{} &".format(py, G.homeDir, pgm))
+							U.logger.log(DEBUG,">>>>>> starting pgm: {}{}{} &".format(py, G.homeDir, pgm))
 						else:
 							f=open(G.homeDir+"temp/neopixel.inp","a")
 							f.write(cmdOut+"\n")
@@ -593,7 +609,7 @@ def execCMDS(nextItem):
 
 
 			if False and cmd not in allowedCommands:
-				U.logger.log(20,"bad cmd (9) dev:{} not in allowed commands {} \n{}".format(device, cmd,  allowedCommands))
+				U.logger.log(DEBUG,"bad cmd (9) dev:{} not in allowed commands {} \n{}".format(device, cmd,  allowedCommands))
 				continue
 
 
@@ -732,7 +748,7 @@ def execCMDS(nextItem):
 							pin = str(pinI)
 						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
-							U.logger.log(20,"bad pin {}".format(nextItem))
+							U.logger.log(DEBUG,"bad pin {}".format(nextItem))
 							continue
 
 						if "aw" 				in nextItem: nextItem["analogwrite"] 		= nextItem["aw"]
@@ -754,7 +770,7 @@ def execCMDS(nextItem):
 							except: pass
 						if cmd == "disable":
 							continue
-						cmdJ= {"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"PWM":PWM, "devId":devId}
+						cmdJ= {"pin":pin,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":DEBUG,"PWM":PWM, "devId":devId}
 						setGPIO(cmdJ)
 						continue
 
@@ -765,7 +781,7 @@ def execCMDS(nextItem):
 							pin = str(pinI)
 						except Exception as e:
 							U.logger.log(30,"", exc_info=True)
-							U.logger.log(20,"bad pin {}".format(nextItem))
+							U.logger.log(DEBUG,"bad pin {}".format(nextItem))
 							continue
 						#print "pin ok"
 						if "values" in nextItem: values= nextItem["values"]
@@ -791,7 +807,7 @@ def execCMDS(nextItem):
 
 						if cmd =="disable":
 							continue
-						cmdJ= {"pin":pinI,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":G.debug,"i2cAddress":nextItem["i2cAddress"], "devId":devId}
+						cmdJ= {"pin":pinI,"cmd":cmd,"startAtDateTime":startAtDateTime,"values":values, "inverseGPIO": inverseGPIO,"debug":DEBUG,"i2cAddress":nextItem["i2cAddress"], "devId":devId}
 
 						OUTPUTi2cRelay(cmdJ)
 						continue
@@ -814,7 +830,7 @@ def execCMDS(nextItem):
 							elif cmd  == "aplay":
 								cmdOut = json.dumps({"player":"aplay","file":G.homeDir+"soundfiles/"+nextItem["soundFile"]})
 							else:
-								U.logger.log(20, "bad command : player not right =" + cmd)
+								U.logger.log(DEBUG, "bad command : player not right =" + cmd)
 							if cmdOut != "":
 								U.logger.log(10,"cmd= %s"%cmdOut)
 								subprocess.call("/usr/bin/python playsound.py '"+cmdOut+"' &" , shell=True)
@@ -822,7 +838,7 @@ def execCMDS(nextItem):
 							U.logger.log(30,"", exc_info=True)
 						continue
 
-			U.logger.log(20,"bad device number/number: "+device)
+			U.logger.log(20,"bad device :{}-".format(device))
 	if len(execcommandsList) >0:
 		f = open(G.homeDir+"execcommandsList.current","w")
 		f.write(json.dumps(execcommandsList))
@@ -835,6 +851,7 @@ def execCMDS(nextItem):
 ### ----------------------------------------- ###
 def stopThreadsIfEnded(all=False):
 	global threadsActive
+	global DEBUG
 	try:
 		stopThreads = {}
 		for threadName in threadsActive:
@@ -851,6 +868,7 @@ def stopThreadsIfEnded(all=False):
 				 
 ### ----------------------------------------- ###
 def execSimple(nextItem):
+	global DEBUG
 	global inp
 	if "command" not in nextItem:		 return False
 	if nextItem["command"] != "general": return False
@@ -900,6 +918,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 	### ----------------------------------------- ###
 	def handle(self):
+		global DEBUG
 		global threadsActive
 		# self.request is the TCP socket connected to the client
 		data = ""
@@ -910,7 +929,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				break
 			data += buffer.strip()
 		
-		#U.logger.log(20, "===== ip:{}:  data:{}<\n\n".format(self.client_address[0], data))
+		#U.logger.log(DEBUG, "===== ip:{}:  data:{}<\n\n".format(self.client_address[0], data))
 		try:
 			commands = json.loads(data.strip("\n"))
 		except Exception as e:
@@ -918,7 +937,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				U.logger.log(20,"bad command: json failed {}".format(data))
 				return
 
-		#U.logger.log(20, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
+		#U.logger.log(DEBUG, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
 			
 		for nextItem in commands:
 			if execSimple(nextItem): continue
@@ -934,6 +953,7 @@ def setupexecThreads(nextItem, source):
 	global threadsActive
 	global lastOut
 	global counter
+	global DEBUG
 	try:
 		if "command" not in nextItem: return False
 		counter += 1
@@ -942,13 +962,13 @@ def setupexecThreads(nextItem, source):
 		if "pin" in nextItem and nextItem["pin"] != "": 					threadName += "pin-"+str(nextItem["pin"])
 		elif "device" in nextItem and nextItem["device"] != "":				threadName = nextItem["device"]
 		elif "i2cAddress" in nextItem and nextItem["i2cAddress"] != "": 	threadName += "-"+str(nextItem["i2cAddress"])
-		if threadName =="":													threadName = nextItem["command"]
+		if threadName == "":												threadName = nextItem["command"]
 
 		if threadName in threadsActive:
 			if threadsActive[threadName]["state"] != "stop":
 				stopExecCmd(threadName)
 			
-		#U.logger.log(20, "starting thread={}".format(threadName))
+		#U.logger.log(DEBUG, "starting thread={}".format(threadName))
 		threadsActive[threadName] = {"state":"running", "thread": threading.Thread(name=threadName, target=execCMDS, args=(nextItem,))}	
 		threadsActive[threadName]["thread"].daemon = True
 		threadsActive[threadName]["thread"].start()
@@ -967,9 +987,9 @@ def setupexecThreads(nextItem, source):
 				
 		#U.logger.log(20,"thread started: {}, command:{} ".format(threadName, out))
 		if changed != "":
-			U.logger.log(20,"thread from:{:}, #:{:3d} started: {:}, command:{:} ... {:} changed:{:}".format(source, counter, threadName, out[:ll], out[-ll:],  changed))
+			U.logger.log(DEBUG,"thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:} changed:{:}".format(source, counter, threadName, out[:ll], out[-ll:],  changed))
 		else:
-			U.logger.log(20,"thread from:{:}, #:{:3d} started: {:}, command:{:} ... {:}".format(source,counter, threadName, out[:ll], out[-ll:]))
+			U.logger.log(DEBUG,"thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:}".format(source,counter, threadName, out[:ll], out[-ll:]))
 		
 		lastOut = out
 
@@ -987,13 +1007,14 @@ def setupexecThreads(nextItem, source):
 def stopExecCmd(threadName):
 	global inp
 	global threadsActive
+	global DEBUG
 	try:
 		if threadName in threadsActive:
-			#U.logger.log(20, "stop issuing thread={}, comment: {}".format(threadName, str(threadsActive[threadName]["comment"])[0:10]))
+			#U.logger.log(DEBUG, "stop issuing thread={}, comment: {}".format(threadName, str(threadsActive[threadName]["comment"])[0:10]))
 			if threadsActive[threadName]["state"] == "stop": return 
 			threadsActive[threadName]["state"] = "stop"
 			time.sleep(0.07)
-			#U.logger.log(20, "stop finished after wait thread={}".format(threadName))
+			#U.logger.log(DEBUG, "stop finished after wait thread={}".format(threadName))
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	try: 	del threadsActive[threadName]
@@ -1004,6 +1025,7 @@ def stopExecCmd(threadName):
 ### ----------------------------------------- ###
 def getcurentCMDS():
 	global	execcommandsList, output, execcommandsListAction
+	global DEBUG
 	try:
 		execcommandsList = {}
 		if execcommandsListAction == "delete":
@@ -1046,6 +1068,7 @@ def getcurentCMDS():
 ### -- read from file in temp dir and then execute command--- ###
 ### ----------------------------------------- ###
 def setupReadTempDirThread():
+	global DEBUG
 	global threadsActive
 	threadName = "readTempDir"
 	try:
@@ -1060,35 +1083,49 @@ def setupReadTempDirThread():
 
 ### ----------------------------------------- ###
 def readTempDirThread():
+	global DEBUG
 	global threadsActive
 	threadName = "readTempDir"
-	fName = G.homeDir+"temp/file.cmd"	
+	fName = G.homeDir+"temp/receiveCommands.input"	
+	tempcmdCount = 0
+	U.logger.log(DEBUG, "readTempDirThread started: state:{}".format( threadsActive[threadName]["state"]))
+	lastlog = time.time()
+	try:
+		while  threadsActive[threadName]["state"] == "running":
+	
+			time.sleep(0.05)
+			commandList = []
+			rawRead = U.doReadSimpleFile(fName)
+				
+			if rawRead != "":
+				try:
+					# should be something like this:  '[{"device": "OUTPUTgpio-1", "devId:"1234", "command": "up", "pin": "19"}]'
+					# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "continuousUpDown", "values":{"nPulses":4, "pulseUp":2, "pulseDown":2},  "pin": "19"}]'
+					# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "pulseUp", "values":{"pulseUp":2},  "pin": "19"}]'
+					for line in rawRead.split("\n"):
+						if len(line) > 2:
+							commandList.append(json.loads(line))
+				except:
+					U.logger.log(DEBUG, "readTempDirThread bad read:{}".format(rawRead))
+				U.logger.log(20, "from file:{}".format(commandList))
+	
+				subprocess.call("sudo rm  "+fName+" > /dev/null 2>&1 ", shell=True)
 
-	U.logger.log(20, "readTempDirThread started:")
-	while  threadsActive[threadName]["state"] == "running":
-		#U.logger.log(20, "readTempDirThread looping trough:{}".format(G.homeDir+"temp/fileCommand.inp"))
-		time.sleep(1.5)
-		commands = {}
-		rawRead = U.doReadSimpleFile(fName)
-		if rawRead != "":
-			try:
-				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
-				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "continuousUpDown", "values":{"nPulses":4, "pulseUp":2, "pulseDown":2},  "pin": "19"}]'
-				# should be something like this:  '[{"device": "OUTPUTgpio-1", "command": "pulseUp", "values":{"pulseUp":2},  "pin": "19"}]'
-				commands = json.loads(rawRead.strip("\n"))
-			except:
-				U.logger.log(20, "readTempDirThread bad read:{}".format(rawRead))
-			U.logger.log(20, "readTempDirThread commands:{}".format(commands))
-
-			os.remove(fName)
-			if commands != {}:
-				for nextItem in commands:
-					#U.logger.log(20, "readTempDirThread nextItem:{}".format(nextItem))
-					if execSimple(nextItem): continue
-					setupexecThreads(nextItem, "tempdir")
-
-
+				if commandList != []:
+					for commands in commandList:
+						for nextItem in commands:
+							U.logger.log(DEBUG, "readTempDirThread nextItem:{}".format(nextItem))
+							if execSimple(nextItem): continue
+							tag = str(time.time())
+							tempcmdCount += 1
+							setupexecThreads(nextItem, "tempdir"+str(tempcmdCount))
+	
+	
 			#'[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
+	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
+
+	U.logger.log(DEBUG, "readTempDirThread exit")
 
 ### ----------------------------------------- ###
 ### -- END read from file in temp dir and then execute command--- ###
@@ -1099,9 +1136,12 @@ def readTempDirThread():
 ### ----------------------------------------- ###
 def readParams():
 	global	output, useLocalTime, myPiNumber, inp, readOutput, readInput, execcommandsListAction, PWM, typeForPWM
-	global usePython3
+	global usePython3, tempcmdCount
+	global DEBUG
+
 	inp, inpRaw, x = U.doRead()
 	if inp == "": return
+	tempcmdCount = 0
 
 	U.getGlobalParams(inp)
 	try:
@@ -1126,6 +1166,11 @@ if __name__ == "__main__":
 	global output
 	global usePython3
 	global lastOut, counter
+	global DEBUG
+	global GPIOZERO
+	
+	GPIOZERO			= {}
+	DEBUG				= 10
 	counter				= 0
 	lastOut				= ""
 	PWM 				= 100
@@ -1134,6 +1179,11 @@ if __name__ == "__main__":
 	threadsActive		= {}
 	execcommandsList	= {}
 	output				= {}
+
+
+	py3Cmd = "/usr/bin/python "
+	if sys.version[0] == "3" or usePython3:
+		py3Cmd = "/usr/bin/python3 "
 
 	PORT = int(sys.argv[1])
 
@@ -1146,28 +1196,25 @@ if __name__ == "__main__":
 	readParams()
 
 	if U.getNetwork() == "off":
-		U.logger.log(20, "network not active, sleeping ")
+		U.logger.log(DEBUG, "network not active, sleeping ")
 		time.sleep(500)# == 500 secs
 		exit(0)
 	# if not connected to network pass
 		
 		
 	if G.wifiType != "normal": 
-		U.logger.log(20, "no need to receiving commands in adhoc mode pausing receive GPIO commands")
+		U.logger.log(DEBUG, "no need to receiving commands in adhoc mode pausing receive GPIO commands")
 		time.sleep(500)
 		exit(0)
-	U.logger.log(20, "proceding with normal on no ad-hoc network")
+	U.logger.log(DEBUG, "proceding with normal on no ad-hoc network")
 
 	U.getIPNumber()
 	
 	getcurentCMDS()
-	py3Cmd = "/usr/bin/python"
-	if sys.version[0] == "3" or usePython3:
-		py3Cmd = "/usr/bin/python3"
 
 	setupReadTempDirThread()
 
-	U.logger.log(20,"started, listening to port: "+ str(PORT))
+	U.logger.log(20,"starting, listening to port: "+ str(PORT))
 	restartMaster = False
 	try:	
 		# Create the server, binding on port 9999
@@ -1175,12 +1222,12 @@ if __name__ == "__main__":
 
 	except Exception as e:
 		####  trying to kill the process thats blocking the port# 
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "getting  socket does not work, trying to reset {}".format(PORT) )
+		#U.logger.log(30,"", exc_info=True)
+		U.logger.log(30, "getting  socket does not work, trying to reset port {}".format(PORT) )
 		ret = readPopen("sudo ss -apn | grep :{}".format(PORT))[0]
 		lines = ret.split("\n")
 		for line in lines:
-			U.logger.log(20, line) 
+			U.logger.log(DEBUG, line) 
 			pidString = line.split(",pid=")
 			for ppp in pidString:
 				pid = ppp.split(",")[0]
@@ -1191,24 +1238,27 @@ if __name__ == "__main__":
 				except: continue
 
 				if len (subprocess.Popen("ps -ef | grep "+str(pid)+"| grep -v grep | grep master.py",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]) >5:
-					restartMaster=True
+					restartMaster = True
 					# will need to restart the whole things
-				U.logger.log(20, "killing task with : pid= %d"% pid )
+				U.logger.log(DEBUG, "killing task with : pid= %d"% pid )
 				ret = subprocess.Popen("sudo kill -9 "+str(pid),shell=True)
 				time.sleep(0.2)
 
 
+		cmd = py3Cmd + G.homeDir+"master.py  &"
 		if restartMaster:
-			U.logger.log(20, "killing taks with port = "+str(PORT)+"	 did not work, restarting everything")
-			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+			U.logger.log(20, "getting  socket port ={} does not work, try restarting master {} ".format(PORT, cmd) )
+			subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 			exit()
 			
 		try:	
 			# Create the server, binding on port eg 9999
+			U.logger.log(20, "starting  socketserver")
 			server = socketserver.TCPServer((G.ipAddress, PORT), MyTCPHandler)
+
 		except Exception as e:
-			U.logger.log(20, "getting  socket does not work, try restarting master  "+ str(PORT) )
-			subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py  &",shell=True)
+			U.logger.log(20, "getting  socket port ={} does not work, try restarting master {} ".format(PORT, cmd) )
+			subprocess.Popen(cmd, shell=True)
 			exit()
 
 	# Activate the server; this will keep running until you interrupt the program with Ctrl-C

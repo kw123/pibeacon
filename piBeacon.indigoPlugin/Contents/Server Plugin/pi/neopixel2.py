@@ -340,7 +340,7 @@ def get_pixel(x, y):
 	if index is not None:
 		pixel = ws2812.getPixelColorRGB(index)
 		return int(pixel.r), int(pixel.g), int(pixel.b)
-
+	return 0,0,0
 
 def set_all(r, g, b):
 	"""Set all pixels to a specific colour"""
@@ -869,7 +869,7 @@ def getLightSensorValue(force=False):
 		if "sensors" not in rr: 									return False
 		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
 		if useLightSensorType not in rr["sensors"]: 				return False
-		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return 
+		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return False
 		tt = float(rr["time"])
 		if tt == lastTimeLightSensorFile:							return False	
 

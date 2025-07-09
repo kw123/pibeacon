@@ -69,7 +69,7 @@ def setLogging():
 	global failedURLimport
 
 	# regular logfile
-	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon".format(G.logDir),format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon".format(G.logDir),format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%Y-%m-%d-%H:%M:%S')
 	logger = logging.getLogger(__name__)
 
 	# permanent logfile in pibeacon directory only for serious restarts, in case log dir is ramdisk
@@ -82,7 +82,7 @@ def setLogging():
 	# console output
 	streamhandler = logging.StreamHandler()
 	streamhandler.setLevel(logging.WARNING)
-	streamformatter = logging.Formatter('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%Y-%d-%H:%M:%S')
+	streamformatter = logging.Formatter('console:   %(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s',datefmt='%H:%M:%S')
 	streamhandler.setFormatter(streamformatter)
 	logger.addHandler(streamhandler)
 
@@ -2421,9 +2421,10 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 #################################
 def execSend():
 	global varNanmes
-
+	global socketError
 
 	try:
+		socketError = 0
 		while G.sendThread["run"]:
 			time.sleep(1)
 			while not G.sendThread["queue"].empty():
@@ -2533,13 +2534,17 @@ def execSend():
 											time.sleep(1.)
 
 									except Exception as e:
-										logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-										logger.log(20, "cBY:{:<20} trying to send  bytes: {} --{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
+										errCode = str(e)
+										logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, errCode))
+										logger.log(20, "cBY:{:<20} trying to send  bytes: compr:{}, unc:{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
+										if errCode.find("Network is unreachable") >-1: socketError += 1
 										try:	soc.shutdown(socket.SHUT_RDWR)
 										except: pass
 										try:	soc.close()
 										except: pass
 										time.sleep(3.)
+										if socketError > 20:
+											doReboot(text="bad network error count:{}".format(socketError))
 
 									# redo time stamp, at it is delayed ..
 									tz = time.tzname[1]
@@ -2547,6 +2552,7 @@ def execSend():
 									data["ts"]			= {"time":round(time.time(),2),"tz":tz}
 
 								if MSGwasSend:
+									socketError = 0
 									echoToMessageSend(dataC, "msg send, {} ---".format(compressedTag))
 									if ii !=4:
 										logger.log(20, "cBY:{:<20} +++ message was send sucessfully after initial error at {}. try +++".format(G.program, 5-ii))
@@ -2964,7 +2970,7 @@ def writeRainStatus(status):
 ######################################
 def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAction=""): # theAction can be 1 2 3 4 5
 	try:
-		if sensor not in sensors: return
+		if sensor not in sensors: return ""
 		for devId in sensors[sensor]:
 			sens = sensors[sensor][devId]
 			if (("actionUP"				in sens and	 sens["actionUP"]	!="") or

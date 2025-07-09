@@ -3,7 +3,8 @@
 home="/home/pi/pibeacon/"
 cd $home
 usePython3="/usr/bin/python"
-if [ $# != "0" ];then usePython3="/usr/bin/python3 -E";fi
+ARGS=0
+if [ $# -ne "$ARGS" ];then usePython3="/usr/bin/python3 -E";fi
 
 echo "This scripts checks every 90 secs if master.py is running --  if not,  will restart it, using $usePython3, mypid:$$"
 
@@ -32,7 +33,7 @@ while true; do
 					#echo "loop "$i 
 				done
 		else
-			sleep 1 # test is updating in progress, if yes ()==file upating exixts), dont restart master.py .. skip max 3 times
+			sleep 1 # test is updating in progress, if yes ()==file updating exits), dont restart master.py .. skip max 3 times
 			if [ -f $home"temp/updating" ] && [ $countUpdating -lt 3 ]
 			then
 				countUpdating=$(($countUpdating+1))

@@ -440,8 +440,8 @@ def readParams():
 	global doReadParameters
 	try:
 
-		if not doReadParameters: return
-		changed =0
+		changed = 0
+		if not doReadParameters: return changed
 		inpLast= inp
 		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 

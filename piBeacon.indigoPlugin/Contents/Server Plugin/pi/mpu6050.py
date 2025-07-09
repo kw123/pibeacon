@@ -134,9 +134,9 @@ class THESENSORCLASS:
 		"""
 		raw_data = self.bus.read_byte_data(self.address, self.ACCEL_CONFIG)
 
-		if raw is True:
+		if raw:
 			return raw_data
-		elif raw is False:
+		else:
 			if raw_data == self.ACCEL_RANGE_2G:
 				return 2
 			elif raw_data == self.ACCEL_RANGE_4G:
@@ -206,9 +206,9 @@ class THESENSORCLASS:
 		"""
 		raw_data = self.bus.read_byte_data(self.address, self.GYRO_CONFIG)
 
-		if raw is True:
+		if raw:
 			return raw_data
-		elif raw is False:
+		else:
 			if raw_data == self.GYRO_RANGE_250DEG:
 				return 250
 			elif raw_data == self.GYRO_RANGE_500DEG:

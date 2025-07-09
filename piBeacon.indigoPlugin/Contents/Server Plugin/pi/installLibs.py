@@ -34,7 +34,7 @@ def setupLibs(upgradeOpSys):
 			else:
 				time.sleep(10)
 				U.logger.log(30, "network setup wrong, need manual intervention ")
-				return	  
+				return reBootNeeded
 
 		U.logger.log(30, "==== testing config files and updating if needed")
 

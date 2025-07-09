@@ -12,6 +12,7 @@
 import	sys, os, subprocess, copy
 import	time,datetime
 import	json
+useGPIO = False
 try:
 	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
 		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
@@ -55,7 +56,7 @@ def readParams():
 
 	try:
 		restart = False
-
+		found = {}
 
 		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
 		if inp == "": return
@@ -63,8 +64,6 @@ def readParams():
 		lastRead  = lastRead2
 		if inpRaw == oldRaw: return
 		oldRaw	   = inpRaw
-
-		oldSensors		  = sensors
 
 		U.getGlobalParams(inp)
 		if "sensors"			in inp : sensors =				(inp["sensors"])
@@ -253,7 +252,7 @@ def readParams():
 				if "INPUTdevId0"				not in sss: continue
 				if "coincidenceTimeInterval"	not in sss: continue
 				if "minSendDelta"				not in sss: continue
-				if devIdC not in INPUTcount: INPUTcount[(devIdC)] = 0
+				if devIdC not in INPUTcount: INPUTcount[devIdC] = 0
 				coincidence2[devIdC]={}
 				coincidence2[devIdC]["gpios"] ={}
 				coincidence2[devIdC]["coincidenceTimeInterval"] = float(sens[devIdC]["coincidenceTimeInterval"])/1000.
@@ -355,7 +354,7 @@ def fillGPIOdict(gpioINT):
 			cEVENTtt = tt
 		elif  contEVENT[gpioINT] > 0 and tt - contEVENT[gpioINT] > ggg["timeWindowForContinuousEvents"]:
 			# was expired send off then send ON 
-			if (tt - ggg["lastsendContinuousEventEND"] > ggg["minSendDelta"]): 
+			if tt - ggg["lastsendContinuousEventEND"] > ggg["minSendDelta"]:
 				data["sensors"][sensor][ggg["devId"]]["continuous"]		 = -1
 				ggg["lastsendContinuousEventEND"] = tt
 				ggg["lastsendContinuousEvent"] = 0
@@ -398,17 +397,17 @@ def fillGPIOdict(gpioINT):
 						triggerC = False
 						break
 				if triggerC:		
-						try: 	INPUTcount[(devIdC)] +=1
-						except: INPUTcount[(devIdC)] = 1
+						try: 	INPUTcount[devIdC] +=1
+						except: INPUTcount[devIdC] = 1
 						coincidence[devIdC]["lastSend"] = tt
 						if "INPUTcoincidence" not in data["sensors"]: data["sensors"]["INPUTcoincidence"] = {}
 						if devIdC not in data["sensors"]["INPUTcoincidence"]: data["sensors"]["INPUTcoincidence"][devIdC] ={}
-						data["sensors"]["INPUTcoincidence"][devIdC]["count"] = INPUTcount[(devIdC)] 
+						data["sensors"]["INPUTcoincidence"][devIdC]["count"] = INPUTcount[devIdC]
 						if False:
 							out = ""
 							for gp in coincidence[devIdC]["gpios"]:
 								out+= "{}: {:.5f}; ".format(gp, tt- coincidence[devIdC]["gpios"][gp] )
-							U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[(devIdC)], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
+							U.logger.log(10, "coincidenceTrigger  devIdC:{:<12}; tt:{:.2f}; count:{};  GPIOS-dt:{}   window:{:.5f}, last send:{}, data:{}".format(devIdC, tt, INPUTcount[devIdC], out, coincidence[devIdC]["coincidenceTimeInterval"], coincidence[devIdC]["lastSend"], data)  )
 	if sensor in data["sensors"] or "INPUTcoincidence" in data["sensors"]:
 			if sensor in data["sensors"]:
 				data["sensors"][sensor][ggg["devId"]]["time"] = tt
@@ -427,7 +426,7 @@ def resetContinuousEvents():
 			igpio= int(gpio)
 			if	contEVENT[igpio] > 0:
 				if	tt - contEVENT[igpio]  > ggg["timeWindowForContinuousEvents"]:
-					if (tt - ggg["lastsendContinuousEventEND"] > ggg["minSendDelta"]): 
+					if tt - ggg["lastsendContinuousEventEND"] > ggg["minSendDelta"]:
 						contEVENT[igpio] =	-1
 						# was expired send off then send ON 
 						data = {"sensors":{sensor:{ggg["devId"]:{}}}}
@@ -453,7 +452,6 @@ def execMain():
 	lastRead		= 0
 	minSendDelta	= 50
 	sensor			= G.program
-	INPUTlastvalue	= ["-1" for i in range(100)]
 	INPUTcount		= {}
 	BURSTS			= [[]	  for i in range(50)]
 	contEVENT		= [0	  for i in range(50)]
@@ -493,9 +491,7 @@ def execMain():
 		time.sleep(10)
 		exit()
 
-	quick  = 0
-
-	G.tStart = time.time() 
+	G.tStart = time.time()
 	lastRead = time.time()
 	shortWait = 0.5
 	lastSend  = 0
@@ -503,13 +499,11 @@ def execMain():
 	
 	while True:
 		try:
-			tt= time.time()
 			newData = False
 		
 			resetContinuousEvents()
 
 			if loopCount %10 == 0:
-				quick = U.checkNowFile(G.program)
 				U.manageActions("-loop-")
 				if loopCount%5 == 0:
 					countReset = checkReset()
@@ -548,7 +542,7 @@ def execMain():
 				for devIdC in coincidence:
 					if ((time.time() - coincidence[devIdC]["lastSend"] >  G.sendToIndigoSecs) and loopCount > 3 ) or countReset:
 						if "INPUTcoincidence" not in data: data["sensors"]["INPUTcoincidence"] = {}
-						data["sensors"]["INPUTcoincidence"][devIdC] = {"count": INPUTcount[(devIdC)],"time":time.time()}
+						data["sensors"]["INPUTcoincidence"][devIdC] = {"count": INPUTcount[devIdC],"time":time.time()}
 						coincidence[devIdC]["lastSend"] = time.time()
 						newData = True
 				if newData:

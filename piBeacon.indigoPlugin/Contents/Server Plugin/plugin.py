@@ -1,4 +1,4 @@
-#! /usr/bin/env python
+#! /usr/bin/env python3
 # -*- coding: utf-8 -*-
 ####################
 # pibeacon Plugin
@@ -9,7 +9,7 @@
 #  compressed data
 #  other IO
 #
-#  
+#
 #
 
 
@@ -24,7 +24,7 @@ except:	pass
 try:	import builtins
 except:	pass
 
-try:	import past 
+try:	import past
 except:	pass
 
 import os
@@ -54,7 +54,7 @@ import logging
 import zlib
 
 import MAC2Vendor
-from checkIndigoPluginName import checkIndigoPluginName 
+from checkIndigoPluginName import checkIndigoPluginName
 #import pydevd_pycharm
 #pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True)
 
@@ -68,8 +68,8 @@ try: 	long
 except:	long = int
 
 ######### set new  pluginconfig defaults
-# this needs to be updated for each new property added to pluginProps. 
-# indigo ignores the defaults of new properties after first load of the plugin 
+# this needs to be updated for each new property added to pluginProps.
+# indigo ignores the defaults of new properties after first load of the plugin
 kDefaultPluginPrefs = {
 				"iBeaconFolderName":							"Pi_Beacons_new",
 				"iBeaconFolderVariablesName":					"piBeacons",
@@ -192,7 +192,7 @@ _rpiSensorList					 = [str(ii) for ii in range(_GlobalConst_numberOfiBeaconRPI, 
 _sqlLoggerDevTypes				 = ["isBeaconDevice", "isRPIDevice", "isRPISensorDevice", "isBLEconnectDevice", "isSensorDevice", "isBLESensorDevice","isBLElongConnectDevice"]
 _sqlLoggerDevTypesNotSensor		 = _sqlLoggerDevTypes[:-1]
 
-## this is to reduce writing to sql database 
+## this is to reduce writing to sql database
 _sqlLoggerIgnoreStates = {"isBeaconDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,status_ui,lastUpdateBatteryLevel,sensorvalue_ui,trigger,lastStatusChange,iBeacon,mfg_info"
 						, "isRPIDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,typeOfBeacon,closestRPIText,closestRPITextLast,displayStatus,status,status_ui,online,i2cactive,sensorvalue_ui,trigger,lastStatusChange,lastMessageFromRpi"
 						, "isBLEconnectDevice":		"Pi_00_Time,Pi_01_Time,Pi_02_Time,Pi_03_Time,Pi_04_Time,Pi_05_Time,Pi_06_Time,Pi_07_Time,Pi_08_Time,Pi_09_Time,Pi_10_Time,Pi_11_Time,Pi_12_Time,Pi_13_Time,Pi_14_Time,Pi_15_Time,Pi_16_Time,Pi_17_Time,Pi_18_Time,Pi_19_Time,TxPowerReceived,closestRPIText,closestRPITextLast,displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange"
@@ -457,8 +457,8 @@ _GlobalConst_allowedSensors = [
 	 "i2cBMPxx", "i2cT5403", "i2cBMP280", "i2cMS5803",						 # temp / press
 	 "i2cBMExx",															 # temp / press/ hum /
 	 "i2cBMExx",															 # temp / press/ hum /
-	 "bme680",																   # 
-	 "DF2301Q",																   # DF2301Q speach input 
+	 "bme680",																   #
+	 "DF2301Q",																   # DF2301Q speach input
 	 "FaceGesture",															   # face gesture input sensor
 	 "bmp388",																   # temp / press/ alt
 	 "tmp006",																   # temp rmote infrared
@@ -621,10 +621,10 @@ _devtypesToStates["allDevHaveThese"] = {}
 _devtypesToStates["allDevHaveThese"]["status"] = "String"	
 _devtypesToStates["allDevHaveThese"]["created"] = "String"	
 
-_devtypesToStates["output"] = {} 
+_devtypesToStates["output"] = {}
 
 
-# add min max ... to state name 
+# add min max ... to state name
 _devtypesToStates["realSensor"] 	= {"":"Real"	, "Trend":"String", "MinTodayAt":"String",	"MaxYesterdayAt":"String",	"MinYesterdayAt":"String",	"MaxTodayAt":"String",	"MinToday":"Real",		"MaxYesterday":"Real",		"MinYesterday":"Real",		"MaxToday":"Real",		"AveToday":"Real",		"AveYesterday":"Real",		"MeasurementsToday":"Number",	"MeasurementsYesterday":"Integer",	"ChangeMinutes05":"Real",		"ChangeMinutes10":"Real",		"ChangeMinutes20":"Real",		"ChangeHours01":"Real",		"ChangeHours02":"Real",		"ChangeHours06":"Real",		"ChangeHours12":"Real"  ,	"ChangeHours24":"Real",		"ChangeHours48":"Real"}
 _devtypesToStates["integerSensor"]	= {"":"Integer"	, "Trend":"String", "MinTodayAt":"String",	"MaxYesterdayAt":"String",	"MinYesterdayAt":"String",	"MaxTodayAt":"String",	"MinToday":"Integer",	"MaxYesterday":"Integer",	"MinYesterday":"Integer",	"MaxToday":"Integer",	"AveToday":"Integer",	"AveYesterday":"Integer",	"MeasurementsToday":"Integer",	"MeasurementsYesterday":"Integer",	"ChangeMinutes05":"Integer",	"ChangeMinutes10":"Integer",	"ChangeMinutes20":"Integer",	"ChangeHours01":"Integer",	"ChangeHours02":"Integer",	"ChangeHours06":"Integer",	"ChangeHours12":"Integer",	"ChangeHours24":"Integer",	"ChangeHours48":"Integer"}
 _devtypesToStates["String"]		= {"":"String"}
@@ -712,7 +712,7 @@ _addingstates["facesScore"]						= {"addTag":False, "States":{"facesScore":"Inte
 _addingstates["cmdScore"]						= {"addTag":False, "States":{"cmdScore":"Integer"}}
 
 
-#which devtype has which state 
+#which devtype has which state
 _stateListToDevTypes = {}
 _stateListToDevTypes["packetId"]				= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["currentEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
@@ -794,7 +794,7 @@ for dd in _GlobalConst_allowedOUTPUT:
 	_stateListToDevTypes["output"][dd] = 1
 
 
-## all sensors 
+## all sensors
 _stateListToDevTypes["sensorStates"]			= {}
 for xx in _GlobalConst_allowedSensors:
 	_stateListToDevTypes["sensorStates"][xx]			= 1
@@ -866,7 +866,7 @@ class Plugin(indigo.PluginBase):
 		formatter = LevelFormatter(fmt="%(msg)s", datefmt=_defaultDateStampFormat, level_fmts=formats, level_date=date_Format)
 
 		self.plugin_file_handler.setFormatter(formatter)
-		self.indiLOG = logging.getLogger("Plugin")  
+		self.indiLOG = logging.getLogger("Plugin")
 		self.indiLOG.setLevel(logging.THREADDEBUG)
 
 		self.indigo_log_handler.setLevel(logging.INFO)
@@ -888,11 +888,11 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40,"logger  enabled for     ERROR          ==> TEST ONLY ")
 			self.indiLOG.log(50,"logger  enabled for     CRITICAL       ==> TEST ONLY ")
 		self.indiLOG.log(10,"Plugin short Name       {}".format(self.pluginShortName))
-		self.indiLOG.log(10,"my PID                  {}".format(self.myPID))	 
-		self.indiLOG.log(10,"Achitecture             {}".format(platform.platform()))	 
-		self.indiLOG.log(10,"OS                      {}".format(platform.mac_ver()[0]))	 
-		self.indiLOG.log(10,"indigo V                {}".format(indigo.server.version))	 
-		self.indiLOG.log(10,"python V                {}.{}.{}".format(sys.version_info[0], sys.version_info[1] , sys.version_info[2]))	 
+		self.indiLOG.log(10,"my PID                  {}".format(self.myPID))	
+		self.indiLOG.log(10,"Achitecture             {}".format(platform.platform()))	
+		self.indiLOG.log(10,"OS                      {}".format(platform.mac_ver()[0]))	
+		self.indiLOG.log(10,"indigo V                {}".format(indigo.server.version))	
+		self.indiLOG.log(10,"python V                {}.{}.{}".format(sys.version_info[0], sys.version_info[1] , sys.version_info[2]))	
 
 		self.pythonPath = ""
 		if sys.version_info[0] >2:
@@ -922,8 +922,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def startup(self):
 		try:
-			if not checkIndigoPluginName(self, indigo): 
-				exit() 
+			if not checkIndigoPluginName(self, indigo):
+				exit()
 
 
 			if not self.moveToIndigoPrefsDir(self.indigoPluginDirOld, self.indigoPreferencesPluginDir):
@@ -1100,7 +1100,7 @@ class Plugin(indigo.PluginBase):
 		indigo.server.log('Called getEventConfigUiValues(self, pluginProps:{}, typeId:{}, eventId {}:'.format(pluginProps, typeId, eventId) )
 		valuesDict = pluginProps
 		errorMsgDict = indigo.Dict()
-		return (valuesDict, errorMsgDict)
+		return valuesDict, errorMsgDict
 
 
 ####-----------------	 ---------
@@ -1256,28 +1256,28 @@ class Plugin(indigo.PluginBase):
 							props["oneWireAddNewSensors"] = "0"
 							upd = True
 
-					if "newMACNumber" in props:   
+					if "newMACNumber" in props:
 						for z in props["newMACNumber"]:
 							if z.islower():
 								props["newMACNumber"] = props["newMACNumber"].upper()
 								upd = True
 								break
 
-					if "mac" in props:   
+					if "mac" in props:
 						for z in props["mac"]:
 							if z.islower():
 								props["mac"] = props["mac"].upper()
 								upd = True
 								break
 
-					if "macIfWOLsendToIndigoServerLabel" in props:   
+					if "macIfWOLsendToIndigoServerLabel" in props:
 						for z in props["macIfWOLsendToIndigoServerLabel"]:
 							if z.islower():
 								props["macIfWOLsendToIndigoServerLabel"] = props["mac"].upper()
 								upd = True
 								break
 
-					if "address" in props and self.isValidMAC(props["address"]):   
+					if "address" in props and self.isValidMAC(props["address"]):
 						for z in props["address"]:
 							if z.islower():
 								props["address"] = props["address"].upper()
@@ -1457,7 +1457,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			if mac not in self.beacons: return
 			lx = len(self.beacons[mac][area])
-			if lx < _rpiBeaconList:
+			if lx < len(_rpiBeaconList):
 				for ll in range(lx,len(_rpiBeaconList)):
 					self.beacons[mac][area].append({"distance": 99999, "lastSignal": 0, "rssi": -999})
 
@@ -1500,10 +1500,10 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 ####-------------------------------------------------------------------------####
-	def getDebugLevels(self, useMe=dict()):
+	def getDebugLevels(self, useMe=None):
 		try:
 			self.debugLevel	= []
-			if useMe == {}:
+			if useMe == None:
 				for d in _debugAreas:
 					if self.pluginPrefs.get("debug"+d, False): self.debugLevel.append(d)
 				self.showLoginTest = self.pluginPrefs.get("showLoginTest", True)
@@ -1594,7 +1594,7 @@ class Plugin(indigo.PluginBase):
 			self.devUpdateList				= {}
 
 			self.resetMinMaxDayDone 		= -1
-			self.totalTimeInFixConfig		= 0 
+			self.totalTimeInFixConfig		= 0
 			self.doRejects					= False
 
 			self.timeErrorCount				= [0 for ii in _rpiList]
@@ -1611,7 +1611,7 @@ class Plugin(indigo.PluginBase):
 
 			#### check for last up and send to rpi to avoid extra pings to phone if last up was recent ------
 			self.lastBLEconnectSeen = {} # updated when iphone is up with time stamp
-			self.BLEconnectSendStopToRpi = {} # used to collect info up, timestamp, mac devid 
+			self.BLEconnectSendStopToRpi = {} # used to collect info up, timestamp, mac devid
 			self.BLEconnectLastUp = {} # used to send info to rpis
 			#### check for last up and send to rpi to avoid extra pings to phone if last up was recent end
 
@@ -1841,14 +1841,14 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def setGroupStatus(self, force=False):
 		try:
-			## check if we should do the group variable check now 
-			if time.time() - self.setGroupStatusNextCheck < 0 and self.statusChanged == 0: return 
+			## check if we should do the group variable check now
+			if time.time() - self.setGroupStatusNextCheck < 0 and self.statusChanged == 0: return
 			if self.setGroupStatusNextCheck < 1: force = True
 			#self.indiLOG.log(20,"setGroupStatus at:{};   dt:{}, statusChanged:{}".format(datetime.datetime.now(), time.time() - self.setGroupStatusNextCheck, self.statusChanged ))
 
 
 			for group in  _GlobalConst_groupList+_GlobalConst_groupListDef:
-				if group not in self.groupStatusList: 
+				if group not in self.groupStatusList:
 					self.groupStatusList[group] = {}
 
 				self.groupStatusList[group]["nAway"] = 0
@@ -1887,7 +1887,7 @@ class Plugin(indigo.PluginBase):
 
 
 				elif dev.pluginProps.get("isSensorDevice",False):
-					if "groupMember" in dev.states and len(dev.states["groupMember"]) < 3: 
+					if "groupMember" in dev.states and len(dev.states["groupMember"]) < 3:
 						self.updateStateOnServerlog(dev, "groupMember","SENSOR")
 
 					dt = (datetime.datetime.now() - dev.lastChanged).seconds
@@ -1908,7 +1908,7 @@ class Plugin(indigo.PluginBase):
 					if member in groupNamesUsed:
 						usedMemberStates += member+"/"
 
-				## update list if a) forced;  b) a group deleted; c) state is empty  
+				## update list if a) forced;  b) a group deleted; c) state is empty
 				usedMemberStates = usedMemberStates.strip("/")
 				if force or usedMemberStates != dev.states["groupMember"]:
 					valuesDict = self.fillMemberListState( dev, dev.pluginProps, updateNow=True)
@@ -1928,7 +1928,7 @@ class Plugin(indigo.PluginBase):
 					if  "onOffState" in dev.states:
 						up = dev.states["onOffState"]
 					else: # this is for sensor, if no update in the last xx secs -> not up (xx def is 600 secs)
-						up = (datetime.datetime.now() - dev.lastChanged).seconds < self.awayWhenNochangeInSeconds or "onOffState" 
+						up = (datetime.datetime.now() - dev.lastChanged).seconds < self.awayWhenNochangeInSeconds or "onOffState"
 
 					if up:
 						if self.groupStatusList[group]["oneHome"] == "0":
@@ -1957,7 +1957,7 @@ class Plugin(indigo.PluginBase):
 						if varName in indigo.variables:
 							indigo.variable.delete(varName)
 
-			# now all home/ away 
+			# now all home/ away
 			for group in _GlobalConst_groupList+_GlobalConst_groupListDef:
 				#if group =="Guests":self.indiLOG.log(20,"setGroupStatus  group:{}, len(self.groupStatusList[group][members]:{}".format(group, len(self.groupStatusList[group]["members"])))
 				if len(self.groupStatusList[group]["members"]) > 0 and self.groupStatusList[group]["nAway"] == len(self.groupStatusList[group]["members"]):
@@ -2009,7 +2009,7 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		self.setGroupStatusNextCheck = time.time() +  self.setGroupStatusrepeat
 		self.statusChanged = 0
-		return 
+		return
 
 ######################################################################################
 	# Indigo Trigger Start/Stop
@@ -2163,7 +2163,7 @@ class Plugin(indigo.PluginBase):
 		for dev in indigo.devices.iter("props.isgarageDoorDevice"):
 			props = self.setupGarageDoor(dev, dev.pluginProps)
 			dev.replacePluginPropsOnServer(props)
-		return 
+		return
 
 
 ####-------------------------------------------------------------------------####
@@ -2225,17 +2225,17 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def alertGarageDoor(self, sensId):
 		try:
-			if sensId not in self.garageData["sensorIds"]: return 
+			if sensId not in self.garageData["sensorIds"]: return
 
 			for devId in self.garageData["garageIds"]:
 				garage = self.garageData["garageIds"][devId]
-				if sensId == garage["closeSensorID"]: 
+				if sensId == garage["closeSensorID"]:
 					garage["newData"] = True
 
-				elif sensId == garage["openSensorID"]: 
+				elif sensId == garage["openSensorID"]:
 					garage["newData"] = True
 
-				elif sensId == garage["movingSensorID"]: 
+				elif sensId == garage["movingSensorID"]:
 					garage["newData"] = True
 
 		except Exception as e:
@@ -2263,9 +2263,9 @@ class Plugin(indigo.PluginBase):
 				openOnOffState	= "onOffState"
 
 				lastMotion = dev.states["lastMotion"]
-				closedSt = dev.states["closed"] 
-				openedSt = dev.states["open"] 
-				stoppedSt = dev.states["stopped"] 
+				closedSt = dev.states["closed"]
+				openedSt = dev.states["open"]
+				stoppedSt = dev.states["stopped"]
 				if   garage["direction"] == 1:	directionText	= garage["textForOpening"]
 				elif garage["direction"] == -1:	directionText	= garage["textForClosing"]
 				else: 							directionText	= garage["textForMoving"]
@@ -2314,7 +2314,7 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(devId, "lastMagnetTriggered", garage["counter"])
 						if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 3. setting Nclosed, Nopen, Nstopped, {}, lastMotion:{}".format(dev.name, directionText, lastMotion))
 						garage["directionSwitched"] = False
-						openedSt = False 
+						openedSt = False
 					else:
 						self.addToStatesUpdateDict(devId, "status", garage["textForStopped"])
 						self.addToStatesUpdateDict(devId, "lastStop", datetime.datetime.now().strftime(_defaultDateStampFormat))
@@ -2323,7 +2323,7 @@ class Plugin(indigo.PluginBase):
 						garage["directionSwitched"] = False
 						stoppedSt = True
 						if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 4. setting stopped  {}".format(dev.name, garage["textForStopped"]))
-					garage["movingSensorStateValue"] = devMove.states[moveState] 
+					garage["movingSensorStateValue"] = devMove.states[moveState]
 
 				if garage["numberOfMagnets"] > 0:
 					posi = max(0, min(100, int( 100.*garage["counter"] / max(garage["numberOfMagnets"],1.) ) ))
@@ -2339,9 +2339,9 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"garage door {} 5. setting stopped {}, lastMovement:{}".format(dev.name, garage["textForStopped"], lastMotion))
 					stoppedSt = True
 
-				### this is for stuck in between 
-				if  ( stoppedSt 
-					and not closedSt 
+				### this is for stuck in between
+				if  ( stoppedSt
+					and not closedSt
 					and not openedSt
 					and not garage["directionSwitched"]):
 						secsWoMovement = (datetime.datetime.now() - datetime.datetime.strptime(lastMotion, _defaultDateStampFormat)).total_seconds()
@@ -2369,7 +2369,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def saveCARS(self, force=False):
 		try:
-			if force: 
+			if force:
 				for carId in copy.deepcopy(self.CARS["carId"]):
 					try: indigo.devices[int(carId)]
 					except Exception as e:
@@ -2461,14 +2461,14 @@ class Plugin(indigo.PluginBase):
 			self.checkIfCarsNeedUpdate()
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 
 
 ####-------------------------------------------------------------------------####
 	def checkIfCarsNeedUpdate(self):
 		try:
-			if len(self.checkCarsNeed) == 0: return 
+			if len(self.checkCarsNeed) == 0: return
 			for carId in copy.copy(self.checkCarsNeed):
 				if time.time() > self.checkCarsNeed[carId]:
 					if self.decideMyLog("CAR"): self.indiLOG.log(30,"checkIfCarsNeedUpdate:  updating id:{} ".format(carId) )
@@ -2650,7 +2650,7 @@ class Plugin(indigo.PluginBase):
 
 
 			else:  ## home
-				if (beaconBattery == "present" or beaconUSB == "on" or beaconKey == "present"):
+				if beaconBattery == "present" or beaconUSB == "on" or beaconKey == "present":
 
 					if	beaconUSB == "off" : # engine is off
 						if	 oldCarMotion == "arriving" and time.time() - self.CARS["carId"][indigoCarIds]["homeSince"] > 10:
@@ -2737,7 +2737,7 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("timeout waiting") > -1:
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 			self.indiLOG.log(40,"devId {} indigo lookup/save problem".format(carIds))
-			return
+			return {}
 
 		try:
 			if mode in ["init", "validate"]:
@@ -2914,7 +2914,7 @@ class Plugin(indigo.PluginBase):
 					allMinutes = 0
 					allDur = dur
 
-				timeLeft	= int(max(0,(dur )))
+				timeLeft	= int(max(0,dur ))
 				timeLeftAll = int(max(0,allDur-allMinutes +0.1) )
 				dur			= int(dur)
 				allDur		= int(allDur)
@@ -3160,7 +3160,7 @@ class Plugin(indigo.PluginBase):
 								xx=indigo.devices[int(devId)]
 								if self.RPI[piU][IO][typeID][devId] in [""]:
 									delDev[devId] = 2
-							except:	 
+							except:	
 								delDev[devId] = 1
 
 						for devId in delDev:
@@ -3259,7 +3259,7 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 			exit(1)
-		return 
+		return
 
 
 
@@ -3273,8 +3273,8 @@ class Plugin(indigo.PluginBase):
 				f = open(self.indigoPreferencesPluginDir + "changedValues.json", "r")
 				self.changedValues = json.loads(f.read())
 				f.close()
-				# check for -Version#, if not correct:  rest storage 
-				if version  not in self.changedValues: 
+				# check for -Version#, if not correct:  rest storage
+				if version  not in self.changedValues:
 					self.changedValues = {version:"version .. format is: indigoId:{stateList:[[timestamp:value],[timestamp:value],...]}"}
 
 				for devId in copy.copy(self.changedValues):
@@ -3303,7 +3303,7 @@ class Plugin(indigo.PluginBase):
 			f.close()
 		except Exception:
 			pass
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
 	def readfastBLEReaction(self):
@@ -3366,7 +3366,7 @@ class Plugin(indigo.PluginBase):
 				for tt in ["text","Maj","Min","commands","comment","correspondingSwitchbotDevice","dBm","pos","posDelta","useOnlyThisTagToAcceptBeaconMsgDefault","sequence","sensorFunctions","comment","subType","hexCode2","hexCode"]:
 					if tt not in self.knownBeaconTags["input"][tag]:
 						self.knownBeaconTags["input"][tag][tt] = ""
-						saveToFile = "missing: {}  {} ".format(tag, tt) 
+						saveToFile = "missing: {}  {} ".format(tag, tt)
 
 			for xx in self.knownBeaconTags:
 				for tag in self.knownBeaconTags[xx]:
@@ -3491,8 +3491,10 @@ class Plugin(indigo.PluginBase):
 		return
 
 ####-------------------------------------------------------------------------####
-	def getParamsFromFile(self, newName, oldName="", default={}): # called from read config for various input files
+	def getParamsFromFile(self, newName, oldName=None, default=None): # called from read config for various input files
 		try:
+			if oldName is None: oldName = ""
+			if default is None: default = {}
 			out = copy.deepcopy(default)
 			#self.indiLOG.log(10,"getParamsFromFile newName:{} oldName: {}; default:{}".format(newName, oldName, "{}".format(default)[0:100]))
 			if os.path.isfile(newName):
@@ -3500,12 +3502,12 @@ class Plugin(indigo.PluginBase):
 				
 					f = open(newName, "r")
 					out1	 = f.read()
-					out	 = json.loads(out1)
+					out		 = json.loads(out1)
 					f.close()
 					if oldName !="" and os.path.isfile(oldName):
 						subprocess.call("rm "+oldName, shell=True)
 				except Exception as e:
-					if "{}".format(e).find("None") == -1: 
+					if "{}".format(e).find("None") == -1:
 						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"getParamsFromFile newName:{}:  readfile:{}".format(newName, out1))
 					out = copy.deepcopy(default)
@@ -3519,7 +3521,7 @@ class Plugin(indigo.PluginBase):
 					f.close()
 					subprocess.call("rm "+oldName, shell=True)
 				except Exception as e:
-					if "{}".format(e).find("None") == -1: 
+					if "{}".format(e).find("None") == -1:
 						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"getParamsFromFile oldName:{}:  readfile:{}".format(oldName, out1))
 					out = copy.deepcopy(default)
@@ -3545,7 +3547,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.beaconPositionsData["piDir"]			= self.indigoPreferencesPluginDir+"plotPositions"
 			self.beaconPositionsData["logLevel"]		= "PlotPositions" in self.debugLevel
-			self.beaconPositionsData["logFile"]		= self.PluginLogFile
+			self.beaconPositionsData["logFile"]			= self.PluginLogFile
 			self.beaconPositionsData["distanceUnits"]	= self.distanceUnits
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -3724,7 +3726,7 @@ class Plugin(indigo.PluginBase):
 						deltaDist =0
 						for kk in range(2):
 							delD = Pii[kk]-Pjj[kk]
-							deltaDist+= (delD)**2
+							deltaDist+= delD**2
 							self.piToPiDistance[pi1][pi2][kk] =  delD
 							self.piToPiDistance[pi2][pi1][kk] = -delD
 						deltaDist = math.sqrt(deltaDist)
@@ -3759,14 +3761,16 @@ class Plugin(indigo.PluginBase):
 		return [0,0,0]
 
 ####-------------------------------------------------------------------------####
-	def fixConfig(self, checkOnly = ["all"], fromPGM=""):
+	def fixConfig(self, checkOnly = None, fromPGM=None):
 		try:
+			if checkOnly is None: checkOnly = ["all"]
+			if fromPGM is None: fromPGM = ""
 			startTime = time.time()
 			dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			saveRPI = False
 			if time.time() - self.oneWireResetNewDevices  > 0 and self.oneWireResetNewDevices > 0:
-				self.oneWireResetNewDevices =0 
-				self.indiLOG.log(20,"resetting one wire accept new devices due to expiration of timewindow.".format()) 
+				self.oneWireResetNewDevices =0
+				self.indiLOG.log(20,"resetting one wire accept new devices due to expiration of timewindow.".format())
 			try:
 				# dont do it too often
 				if time.time() - self.lastFixConfig < 25: return
@@ -3906,7 +3910,7 @@ class Plugin(indigo.PluginBase):
 						if dev.deviceTypeId == "car":
 							newP = self.setupCARS(dev.id,props,mode="init")
 							if newP["description"] != dev.description:
-								if self.decideMyLog("CAR"): self.indiLOG.log(10,"replacing car props {}  {}  {}".format(dev.name,  newP["description"], dev.description) )
+								if self.decideMyLog("CAR"): self.indiLOG.log(10,"fixConfig replacing car props {}  {}  {}".format(dev.name,  newP["description"], dev.description) )
 								dev.description =  newP["description"]
 								dev.replaceOnServer()
 								anyChange = True
@@ -3928,34 +3932,34 @@ class Plugin(indigo.PluginBase):
 							try:	pi = int(props.get("RPINumber",""),"-1")
 							except: continue
 							try:	beacon = props["address"]
-							except: beacon =""
+							except: beacon = ""
 							piU = "{}".format(pi)
 
 							if "ipNumberPi" in props and self.isValidIP(self.RPI[piU]["ipNumberPi"]) and self.RPI[piU]["ipNumberPi"] != props["ipNumberPi"]:
-								self.indiLOG.log(10,"{} fixing ipNumber in RPI device props to {}".format(dev.name, self.RPI[piU]["ipNumberPi"]))
+								self.indiLOG.log(20,"fixConfig {} fixing sipNumber in RPI device props to {}".format(dev.name, self.RPI[piU]["ipNumberPi"]))
 								dev.description = "Pi-{}-{}".format(pi,self.RPI[piU]["ipNumberPi"])
 								props["ipNumberPi"] = self.RPI[piU]["ipNumberPi"]
 								dev.replaceOnServer()
 								anyChange = True
 
 							if "ipNumberPi" in props and self.isValidIP(props["ipNumberPi"]) and self.RPI[piU]["ipNumberPi"] != props["ipNumberPi"]:
-								self.indiLOG.log(10,"{} fixing ipNumber in RPI device props to {}".format(dev.name, props["ipNumberPi"]))
+								self.indiLOG.log(20,"fixConfig {} fixing ipNumber in RPI device props to {}".format(dev.name, props["ipNumberPi"]))
 								self.RPI[piU]["ipNumberPi"]  = props["ipNumberPi"]
 								anyChange = True
 
 							if dev.id != self.RPI[piU]["piDevId"]:
-								self.indiLOG.log(10,"dev :{} fixing piDevId:{} in RPI".format(dev.name, dev.id) )
+								self.indiLOG.log(20,"fixConfig dev :{} fixing piDevId:{} in RPI".format(dev.name, dev.id) )
 								self.RPI[piU]["piDevId"]	 = dev.id
 								anyChange = True
 
 							if self.isValidMAC(beacon) or beacon.find("00:pi:"):
 								if self.RPI[piU]["piMAC"] != beacon:
-									self.indiLOG.log(10,"dev: {}  fixing piMAC:{} in RPI".format(dev.name, beacon))
+									self.indiLOG.log(20,"fixConfig dev: {}  fixing piMAC:{} in RPI".format(dev.name, beacon))
 									self.RPI[piU]["piMAC"]	   = beacon
 									anyChange = True
 
 								if  beacon not in self.beacons:
-									self.indiLOG.log(10,"dev: {}  adding piMAC:{} to beacons".format(dev.name, beacon))
+									self.indiLOG.log(20,"dev: {}  adding piMAC:{} to beacons".format(dev.name, beacon))
 									self.beacons[beacon] = copy.copy(_GlobalConst_emptyBeacon)
 									self.beacons[beacon]["useOnlyPrioTagMessageTypes"] = "0"
 									self.beacons[beacon]["enabled"] 			= dev.enabled
@@ -3971,12 +3975,12 @@ class Plugin(indigo.PluginBase):
 
 
 							if "userIdPi" in props and	 self.RPI[piU]["userIdPi"] != props["userIdPi"]:
-								self.indiLOG.log(10,"dev: {} fixing userIdPi in RPI".format(dev.name))
+								self.indiLOG.log(10,"fixConfig dev: {} fixing userIdPi in RPI".format(dev.name))
 								self.RPI[piU]["userIdPi"]	  = props["userIdPi"]
 								anyChange = True
 
 							if "passwordPi" in props and  self.RPI[piU]["passwordPi"] != props["passwordPi"]:
-								self.indiLOG.log(10,"dev: {} fixing passwordPi in RPI".format(dev.name))
+								self.indiLOG.log(10,"fixConfig fixConfig dev: {} fixing passwordPi in RPI".format(dev.name))
 								self.RPI[piU]["passwordPi"]	= props["passwordPi"]
 								anyChange = True
 
@@ -3984,6 +3988,7 @@ class Plugin(indigo.PluginBase):
 								beacon = dev.address
 								if self.isValidMAC(beacon):
 									if beacon not in self.beacons:
+										self.indiLOG.log(20,"fixConfig fixConfig dev: {} adding beacon() to beacons for rpi:{}".format(beacon, dev.name))
 										self.beacons[beacon] = copy.deepcopy(_GlobalConst_emptyBeacon)
 										self.beacons[beacon]["typeOfBeacon"] = "rPI"
 										self.beacons[beacon]["indigoId"] = dev.id
@@ -4023,7 +4028,8 @@ class Plugin(indigo.PluginBase):
 				if "all" in checkOnly or "beacon" in checkOnly:
 					# remove junk:
 					remove = []
-					for beacon in copy.deepcopy(self.beacons):
+					copyBeacon = copy.deepcopy(self.beacons)
+					for beacon in copyBeacon:
 						if not self.isValidMAC(beacon):  # !=17 length, remove junk
 							remove.append(beacon)
 							anyChange = True
@@ -4036,11 +4042,11 @@ class Plugin(indigo.PluginBase):
 						else:
 
 							for nn in _GlobalConst_emptyBeacon:
-								if nn not in self.beacons[beacon]:
+								if nn not in copyBeacon[beacon]:
 									self.beacons[beacon][nn] = copy.deepcopy(_GlobalConst_emptyBeacon[nn])
 									anyChange = True
 							delnn=[]
-							for nn in self.beacons[beacon]:
+							for nn in copyBeacon[beacon]:
 								if nn not in _GlobalConst_emptyBeacon:
 									delnn.append(nn)
 							for nn in delnn:
@@ -4053,13 +4059,13 @@ class Plugin(indigo.PluginBase):
 								pass
 
 
-							if self.beacons[beacon]["indigoId"] != 0:	# sync with indigo
+							if copyBeacon[beacon]["indigoId"] != 0:	# sync with indigo
 								try:
-									dev = indigo.devices[self.beacons[beacon]["indigoId"]]
+									dev = indigo.devices[copyBeacon[beacon]["indigoId"]]
 									props = dev.pluginProps
 									if	 dev.deviceTypeId != "beacon" and (dev.deviceTypeId.lower()) != "rpi":
 										try:
-											dev = indigo.devices[self.beacons[beacon]["indigoId"]]
+											dev = indigo.devices[copyBeacon[beacon]["indigoId"]]
 											self.indiLOG.log(30,"fixConfig fixing: beacon should not in beacon list: {}  {}  {}".format(beacon, dev.name, dev.deviceTypeId ) )
 										except:
 											self.indiLOG.log(30,"fixConfig fixing: beacon should not in beacon list: {} no name / device {}".format(beacon, dev.deviceTypeId ) )
@@ -4071,8 +4077,8 @@ class Plugin(indigo.PluginBase):
 
 									beaconAddr = props["address"]
 									if beaconAddr != beacon:
+										self.indiLOG.log(20,"fixConfig fixing: {}  indigo props[Address]:{}  beacon:{} is wrong beacon, devId:{}, setting beacon indigoid = 0, address in self.beacons:{}?\nbeaconsdict: {}\n\nbeaconsdictother: {}\n\nprops:{} ".format(dev.name, beaconAddr, beacon, self.beacons[beacon]["indigoId"], beaconAddr in self.beacons, self.beacons[beacon],self.beacons.get(beaconAddr,"empty"), props))
 										self.beacons[beacon]["indigoId"] = 0
-										self.indiLOG.log(10,"fixConfig fixing: {}  indigo props[Address]:{}  beacon:{} is wrong beacon, setting beacon indigoid = 0".format(dev.name, beaconAddr, beacon))
 										anyChange = True
 										continue
 
@@ -4128,8 +4134,13 @@ class Plugin(indigo.PluginBase):
 									piU = "{}".format(pi)
 									try:
 										if self.RPI[piU]["piDevId"] != self.beacons[beacon]["indigoId"]:
-											self.beacons[beacon]["indigoId"] =  self.RPI[piU]["piDevId"]
-											anyChange = True
+											if self.RPI[piU]["piMAC"] not in self.beacons:
+												self.indiLOG.log(20,"fixConfig must be fixed manually  rpi-beacon devId  {}, for beacon:{} linking beacons to RPI".format(self.RPI[piU]["piDevId"] , beacon))
+											else:
+												self.indiLOG.log(20,"fixConfig fixing rpi-beacon indigoId {}, rpi#:{} , for beacon:{} seting indigoId=0, RPINumber=-1 in beacons".format(self.beacons[beacon]["indigoId"], self.beacons[beacon]["RPINumber"], beacon))
+												self.beacons[beacon]["indigoId"] = 0
+												self.beacons[beacon]["RPINumber"] = "-1"
+
 										if self.RPI[piU]["PosX"] !=0 or self.RPI[piU]["PosY"] !=0 or self.RPI[piU]["PosZ"] !=0 :
 											dev   = indigo.devices[self.RPI[piU]["piDevId"]]
 											for xyz in ["PosX", "PosY", "PosZ"]:
@@ -4143,7 +4154,7 @@ class Plugin(indigo.PluginBase):
 										elif "{}".format(e).find("not found in database") >-1:
 											self.beacons[beacon]["indigoId"] = 0
 											anyChange = True
-											self.indiLOG.log(10,	"fixConfig anychange: (fix) set indigoID=0,  beacon, pi, devid {}".format(beacon) +"  "+ piU +"  {}".format(devId) )
+											self.indiLOG.log(20,	"fixConfig anychange: (fix) set indigoID=0,  beacon{}, pi:{}".format(beacon, piU) )
 											continue
 										else:
 											if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -4165,9 +4176,9 @@ class Plugin(indigo.PluginBase):
 				self.saveConfig(calledFrom="fixconfig")
 
 			self.executeUpdateStatesDict()
- 
+
 			self.totalTimeInFixConfig += time.time() - startTime
-			if self.decideMyLog("Special"): 
+			if self.decideMyLog("Special"):
 				self.indiLOG.log(10," cpu time used in fixconfig = {:.1f} secs, total time = {:.1f} secs".format(time.time() - startTime, self.totalTimeInFixConfig))
  			
 		except Exception as e:
@@ -4198,7 +4209,9 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def saveSensorMessages(self,devId="",item="", value=0):
+	def saveSensorMessages(self, devId=None, item=None, value=None):
+		if value is None: value = 0
+		if devId is None: devId = ""
 		try:
 			if devId != "":
 				self.checkSensorMessages(devId, item="lastMessage", default=value)
@@ -4220,13 +4233,13 @@ class Plugin(indigo.PluginBase):
 
 			if fName !="":
 				if toLog >0: self.indiLOG.log(toLog,"{}  json writing to fname:{} data:\n{} ".format(printText, fName, data ))
-				f=open(fName, "w")
+				f = open(fName, "w")
 				f.write(out)
 				f.close()
 			return out
 
 		except Exception as e:
-			if "{}".format(e).find("None") == -1: 
+			if "{}".format(e).find("None") == -1:
 				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"{}".format(data))
 		return ""
@@ -4446,7 +4459,7 @@ class Plugin(indigo.PluginBase):
 
 			if dev.deviceTypeId == "beacon":
 				typeOfBeacon = props["typeOfBeacon"]
-				beepable = False 
+				beepable = False
 				if typeOfBeacon in self.knownBeaconTags["input"]:
 					if "commands" in self.knownBeaconTags["input"][typeOfBeacon]:
 						if "beep" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]:
@@ -4485,7 +4498,7 @@ class Plugin(indigo.PluginBase):
 			if dev.deviceTypeId == "sprinkler":
 					self.sprinklerDeviceActive = True
 
-			# set prop to true/ false if ... Change5minutes ... states are present 
+			# set prop to true/ false if ... Change5minutes ... states are present
 			if  True:  # props.get("isMememberOfChangedValues","xx") == "xx":
 				addToProp = ""
 				for state in dev.states:
@@ -4494,13 +4507,13 @@ class Plugin(indigo.PluginBase):
 					if 	len( stateSplit ) != 2: continue
 
 					if stateSplit[0] in addToProp: continue
-						 
+						
 					if len( stateSplit[1] ) < 5: continue
 
-					if ( 
-						stateSplit[1].find("Minutes") > -1  or 
+					if (
+						stateSplit[1].find("Minutes") > -1  or
 						stateSplit[1].find("Hours") > -1
-						): 
+						):
 						addToProp += stateSplit[0]+","
 
 				addToProp = addToProp.strip(",")
@@ -4589,7 +4602,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 ### will be called every second when device is edited. must decide for which de type it is active
-	def deviceRefreshCallback(self, valuesDict, typeId="", devId=0):
+	def deviceRefreshCallback(self, valuesDict, typeId=None, devId=None):
 		try:
 			if typeId not in [
 						"DF2301Q","FaceGesture"
@@ -4678,10 +4691,10 @@ class Plugin(indigo.PluginBase):
 
 	###########################		DEVICE	#################################
 ####-------------------------------------------------------------------------####
-	def getDeviceConfigUiValues(self, pluginProps, typeId="", devId=0):
+	def getDeviceConfigUiValues(self, pluginProps, typeId=None, devId=None):
 		try:
 			self.last_filterValues = {}
-
+			if devId is None: devId = 0
 			theDictList =  super(Plugin, self).getDeviceConfigUiValues(pluginProps, typeId, devId)
 			dev = indigo.devices[devId]
 			props = dev.pluginProps
@@ -4720,14 +4733,14 @@ class Plugin(indigo.PluginBase):
 							
 						except:
 							if typeId == "rPI-Sensor":
-								for piU in _rpiSensorList:
+								for piU1 in _rpiSensorList:
 									if self.RPI[piU1]["piDevId"] == 0:
-										theDictList[0]["RPINumber"] = piU
+										theDictList[0]["RPINumber"] = piU1
 										break
 							else:
-								for piU in _rpiBeaconList:
+								for piU2 in _rpiBeaconList:
 									if self.RPI[piU2]["piDevId"] == 0:
-										theDictList[0]["RPINumber"] = piU
+										theDictList[0]["RPINumber"] = piU2
 										break
 
 						theDictList[0]["newIPNumber"]    		= self.RPI[piU]["ipNumberPi"]
@@ -4736,7 +4749,7 @@ class Plugin(indigo.PluginBase):
 						theDictList[0]["newauthKeyOrPassword"]	= self.RPI[piU]["authKeyOrPassword"]
 						theDictList[0]["expectTimeout"]			= self.RPI[piU]["expectTimeout"]
 						theDictList[0]["hostFileCheck"]			= self.RPI[piU]["hostFileCheck"]
-						if len(theDictList[0].get("oneWireGpios","")) == 0:  
+						if len(theDictList[0].get("oneWireGpios","")) == 0:
 							theDictList[0]["oneWireGpios"] = "4"
 
 						if typeId =="rPI" and piU == "-1":
@@ -4851,23 +4864,23 @@ class Plugin(indigo.PluginBase):
 				if thisPi == "-1":
 					valuesDict["enablePiNumberMenu"] = True
 					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad RPI Number")
-					return ( False, valuesDict, errorDict )
+					return False, valuesDict, errorDict
 
 				if not self.isValidIP(valuesDict["newIPNumber"]):
 					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad IP Number")
-					return ( False, valuesDict, errorDict )
+					return False, valuesDict, errorDict
 
 				if len(valuesDict["newpasswordPi"]) < 2:
 					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad password")
-					return ( False, valuesDict, errorDict )
+					return False, valuesDict, errorDict
 
 				if len(valuesDict["newuserIdPi"]) < 2:
 					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad userId for Pi")
-					return ( False, valuesDict, errorDict )
+					return False, valuesDict, errorDict
 		except Exception as e:
 			self.indiLOG.log(40,"setting up RPI--beacon Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 		try:
@@ -4927,7 +4940,7 @@ class Plugin(indigo.PluginBase):
 				return True, valuesDict
 
 			else:
-				return (False, valuesDict, errorDict )
+				return False, valuesDict, errorDict
 
 
 		except Exception as e:
@@ -4939,7 +4952,7 @@ class Plugin(indigo.PluginBase):
 
 		self.updateNeeded += " fixConfig "
 		valuesDict, errorDict = self.setErrorCode(valuesDict,errorDict,  "  ??   error .. ?? " )
-		return ( False, valuesDict, errorDict )
+		return False, valuesDict, errorDict
 
 
 
@@ -4982,7 +4995,7 @@ class Plugin(indigo.PluginBase):
 				valuesDict["macAddress"] = valuesDict["macAddress"].upper()
 			else:
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "bad Mac Number:"+valuesDict["macAddress"])
-				return ( False, valuesDict, errorDict )
+				return False, valuesDict, errorDict
 			BLEMAC = valuesDict["macAddress"].upper()
 
 			active = ""
@@ -5016,11 +5029,11 @@ class Plugin(indigo.PluginBase):
 
 			#indigo.server.log("validateDeviceConfigUi_BLEconnect  groupListUsedNames:{}   \ngroupStatusList{}:".format(self.groupListUsedNames, self.groupStatusList))
 
-			return (True, valuesDict, errorDict)
+			return True, valuesDict, errorDict
 		except Exception as e:
 			self.indiLOG.log(40,"setting up BLEconnect Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 ############
 	def fillMemberListState(self, dev, valuesDict, updateNow=False):
@@ -5054,10 +5067,10 @@ class Plugin(indigo.PluginBase):
 								del self.groupStatusList[group]["members"][devId]
 
 				elif group in _GlobalConst_groupListDef:
-					if ((group == "SENSOR" 		and dev.pluginProps.get("isSensorDevice",False) and dev.deviceTypeId != "BLEconnect") or 
-					    (group == "BEACON" 		and dev.deviceTypeId  == "beacon") or 
-					    (group == "PI" 			and dev.deviceTypeId  == "rPI") or 
-					    (group == "PI" 			and dev.deviceTypeId  == "rPI-Sensor") or 
+					if ((group == "SENSOR" 		and dev.pluginProps.get("isSensorDevice",False) and dev.deviceTypeId != "BLEconnect") or
+					    (group == "BEACON" 		and dev.deviceTypeId  == "beacon") or
+					    (group == "PI" 			and dev.deviceTypeId  == "rPI") or
+					    (group == "PI" 			and dev.deviceTypeId  == "rPI-Sensor") or
 					    (group == "BLEconnect" 	and dev.deviceTypeId  == "BLEconnect")
 					   ):
 						#self.indiLOG.log(20,"fillMemberListState test1")
@@ -5107,11 +5120,11 @@ class Plugin(indigo.PluginBase):
 				self.oneWireResetNewDevices	= time.time() + 60*60*2 # enable for 2 hours
 			self.rPiRestartCommand[int(thisPi)] 	= "master"
 			self.updateNeeded 					   += " fixConfig "
-			return (True, valuesDict, errorDict)
+			return True, valuesDict, errorDict
 		except Exception as e:
 			self.indiLOG.log(40,"setting up RPI-Sensor Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 
@@ -5126,7 +5139,7 @@ class Plugin(indigo.PluginBase):
 			if not self.isValidMAC(newMAC) and newMAC.find(":00:pi") == -1:
 				valuesDict["newMACNumber"] = beacon
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "bad Mac Number:"+newMAC)
-				return ( False, valuesDict, errorDict )
+				return False, valuesDict, errorDict
 
 			if valuesDict.get("oneWireAddNewSensors","0") == "1":
 				self.oneWireResetNewDevices	= time.time() + 60*60*2 # enable for 2 hours
@@ -5140,7 +5153,7 @@ class Plugin(indigo.PluginBase):
 						if self.RPI[piU2]["piMAC"] == newMAC:
 							self.indiLOG.log(10,"replacing RPI BLE mac failed. rpi already exists with this MAC number")
 							valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "bad beacon#, already exist as RPI")
-							return ( False, valuesDict, errorDict )
+							return False, valuesDict, errorDict
 
 					self.indiLOG.log(10,"replacing existing beacon")
 					if newMAC not in self.beacons:
@@ -5164,7 +5177,7 @@ class Plugin(indigo.PluginBase):
 					if self.RPI[piU2]["piMAC"] == newMAC:
 						self.indiLOG.log(10,"adding new RPI another RPI(#{}) has already that this MAC number:{}".format(piU2, newMAC ))
 						valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "bad beacon#, already exist as RPI")
-						return ( False, valuesDict, errorDict )
+						return False, valuesDict, errorDict
 				self.indiLOG.log(10,"setting up new RPI device for pi#{} mac#  {}".format(thisPi, newMAC) )
 				for ll in _GlobalConst_emptyrPiProps:
 					if ll not in valuesDict: valuesDict[ll]= _GlobalConst_emptyrPiProps[ll]
@@ -5220,11 +5233,11 @@ class Plugin(indigo.PluginBase):
 			self.updateNeeded += " fixConfig "
 			#if self.decideMyLog("UpdateRPI"): self.indiLOG.log(20,"validateDeviceConfigUi_rPI pi:{}, ipNumberPi props :{} self.RPI: {}".format(piU, props["ipNumberPi"] , self.RPI[piU]["ipNumberPi"], ))
 
-			return (True, valuesDict, errorDict)
+			return True, valuesDict, errorDict
 		except Exception as e:
 			self.indiLOG.log(40,"setting up RPI Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 
@@ -5269,13 +5282,13 @@ class Plugin(indigo.PluginBase):
 			else:
 				valuesDict["newMACNumber"] = beacon
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "bad Mac Number:"+beacon)
-				return ( False, valuesDict, errorDict )
+				return False, valuesDict, errorDict
 			self.beaconPositionsUpdated = 1
 
 			if not self.isValidMAC(beacon):
 				valuesDict["MSG"] = "bad Mac Number:"+beacon
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "bad Mac Number:"+beacon)
-				return ( False, valuesDict, errorDict )
+				return False, valuesDict, errorDict
 
 			self.beaconPositionsUpdated = 1
 
@@ -5305,11 +5318,11 @@ class Plugin(indigo.PluginBase):
 
 			#if self.decideMyLog("Special"): self.indiLOG.log(20,"at end: {}, typeId:{} valuesDict:{}".format(dev.name, typeId, valuesDict))
 
-			return ( True, valuesDict, errorDict )
+			return True, valuesDict, errorDict
 		except Exception as e:
 			self.indiLOG.log(40,"setting up iBeacon Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 
@@ -5323,9 +5336,9 @@ class Plugin(indigo.PluginBase):
 			pix =-1
 			if "rPiEnable0" not in valuesDict and "piServerNumber" in valuesDict:
 				try: 	pix = int(valuesDict["piServerNumber"])
-				except: 
+				except:
 					self.indiLOG.log(30," validateDeviceConfigUi_sensors {}  bad pi#  {}".format(dev.name, valuesDict["piServerNumber"]))
-					return ( False, valuesDict, errorDict )
+					return False, valuesDict, errorDict
 
 			piUx = str(pix)
 			newAddress = ""
@@ -5360,7 +5373,7 @@ class Plugin(indigo.PluginBase):
 				pi = int(piU2)
 
 				delpiu = True
-				if self.RPI[piU2]["piDevId"] >0 and self.RPI[piU2]["piOnOff"] == "1": 
+				if self.RPI[piU2]["piDevId"] >0 and self.RPI[piU2]["piOnOff"] == "1":
 					# for sensor on a singlerpi
 					if "piServerNumber" in valuesDict:
 						if pi == pix:
@@ -5407,7 +5420,7 @@ class Plugin(indigo.PluginBase):
 				if valuesDict["address"] != newAddress and newAddress !="":
 					valuesDict["address"] = newAddress
 
-				mac = valuesDict["address"] 
+				mac = valuesDict["address"]
 				if self.isValidMAC(mac):
 					for devBeacon in indigo.devices.iter("props.isBeaconDevice"):
 						if devBeacon.pluginProps.get("address","") == mac:
@@ -5423,9 +5436,9 @@ class Plugin(indigo.PluginBase):
 				if  typeId in _BLEsensorTypes or ("isBLElongConnectDevice" in valuesDict and valuesDict["isBLElongConnectDevice"]):
 					if not self.isValidMAC(valuesDict["mac"]):
 						valuesDict["MSG"] = "enter valid MAC number"
-						return ( False, valuesDict, errorDict )
+						return False, valuesDict, errorDict
 					valuesDict["address"] =  valuesDict["mac"].upper()
-					mac = valuesDict["address"] 
+					mac = valuesDict["address"]
 					if valuesDict.get("SupportsBatteryLevel",False):
 						for dev1 in indigo.devices.iter("props.isBeaconDevice"):
 							if dev1.address == mac:
@@ -5574,16 +5587,16 @@ class Plugin(indigo.PluginBase):
 			if errorText == "":
 				self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
 				if doPrint: self.indiLOG.log(30,"validateDeviceConfigUi_sensors  {} valuesDict:{}".format(dev.name, valuesDict))
-				return (True, valuesDict, errorDict )
+				return True, valuesDict, errorDict
 			else:
 				self.indiLOG.log(40,"validating device error:{}     fields:{}".format(errorText, valuesDict))
 				valuesDict, errorDict  = self.setErrorCode(valuesDict, errorDict,  errorText)
-				return ( False, valuesDict, errorDict )
+				return False, valuesDict, errorDict
 
 		except Exception as e:
 			self.indiLOG.log(40,"setting up iBeacon Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 
@@ -5672,11 +5685,11 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(10," piUpToDate pi: {}    value:{}".format(piU, self.RPI[piU]["piUpToDate"]))
 			self.indiLOG.log(10, "{}".format(valuesDict) )
 			self.updateNeeded += " fixConfig "
-			return (True, valuesDict, errorDict )
+			return True, valuesDict, errorDict
 		except Exception as e:
 			self.indiLOG.log(40,"setting up INPUTRotatary Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 
@@ -5714,12 +5727,12 @@ class Plugin(indigo.PluginBase):
 					pinMappings+= valuesDict["INPUT_{}".format(jj)]+", "
 			valuesDict["description"] = pinMappings.strip(", ")
 			self.updateNeeded += " fixConfig "
-			return ( True, valuesDict, errorDict )
+			return True, valuesDict, errorDict
 
 		except Exception as e:
 			self.indiLOG.log(40,"setting up INPUTRotatary Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "pgm error, check log")
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 ############ OUTPUTG  -------
@@ -5765,7 +5778,7 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict["piDone"] = False
 			valuesDict["stateDone"] = False
-			return (True, valuesDict, errorDict)
+			return True, valuesDict, errorDict
 
 		except Exception as e:
 			self.indiLOG.log(40,"setting up OUTPUT-FBHLine {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
@@ -5773,7 +5786,7 @@ class Plugin(indigo.PluginBase):
 				valuesDict, errorDict  = self.setErrorCode(valuesDict, errorDict, "pgm error, check log")
 			except Exception as e:
 				self.indiLOG.log(40,"setting up OUTPUT-FBH Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 
@@ -5858,7 +5871,7 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict["piDone"] = False
 			valuesDict["stateDone"] = False
-			return (True, valuesDict, errorDict)
+			return True, valuesDict, errorDict
 
 		except Exception as e:
 			self.indiLOG.log(40,"setting up OUTPUT-G Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
@@ -5866,7 +5879,7 @@ class Plugin(indigo.PluginBase):
 				valuesDict, errorDict  = self.setErrorCode(valuesDict, errorDict, "pgm error, check log")
 			except Exception as e:
 				self.indiLOG.log(40,"setting up OUTPUT-G Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
-			return ( False, valuesDict, errorDict )
+			return False, valuesDict, errorDict
 
 
 
@@ -5888,7 +5901,7 @@ class Plugin(indigo.PluginBase):
 					xmax = int(xxx[1])
 				except:
 					valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "devtype not defined for neopixel" )
-					return ( False, valuesDict, errorDict )
+					return False, valuesDict, errorDict
 
 				pixels = "; pix="
 				if valuesDict["pixelMenulist"] !="": pixels +=valuesDict["pixelMenulist"]
@@ -6002,7 +6015,7 @@ class Plugin(indigo.PluginBase):
 					if "mac" in valuesDict:
 						if not self.isValidMAC(valuesDict["mac"]):
 							valuesDict["MSG"] = "enter valid MAC number"
-							return ( False, valuesDict, errorDict )
+							return False, valuesDict, errorDict
 						self.RPI[piU]["output"][typeId]["{}".format(dev.id)]["mac"] = valuesDict["mac"]
 
 					sendupdateSwitchBot = False
@@ -6072,15 +6085,15 @@ class Plugin(indigo.PluginBase):
 			valuesDict["MSG"] = error
 			if error == "":
 				self.updateNeeded += " fixConfig "
-				return (True, valuesDict, errorDict)
+				return True, valuesDict, errorDict
 			else:
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  error )
-				return ( False, valuesDict, errorDict )
+				return False, valuesDict, errorDict
 
 		except Exception as e:
 			self.indiLOG.log(40,"setting up OUTPUT Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 			valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict, "pgm error, check log")
-		return ( False, valuesDict, errorDict )
+		return False, valuesDict, errorDict
 
 
 ####-------------------------------------------------------------------------####
@@ -6159,25 +6172,25 @@ class Plugin(indigo.PluginBase):
 
 
 		###########################		MENU  #################################
-	def buttonprintHelpMenu(self, valuesDict=None, typeId="", devId=0):
+	def buttonprintHelpMenu(self, valuesDict=None, typeId=None, devId=None):
 		self.printHelp()
 		return valuesDict
 ####-------------------------------------------------------------------------####
 ####-------------------------------------------------------------------------####
-	def printConfigMenu(self, valuesDict=None, typeId="", devId=0):
+	def printConfigMenu(self, valuesDict=None, typeId=None, devId=None):
 		self.printConfig()
 		return valuesDict
 ####-------------------------------------------------------------------------####
-	def buttonPrintGroupsCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonPrintGroupsCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.printGroups()
 		return valuesDict
 ####-------------------------------------------------------------------------####
-	def buttonPrintStatsCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonPrintStatsCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.printTCPIPstats(all="yes")
 		self.printUpdateStats()
 		return valuesDict
 ####-------------------------------------------------------------------------####
-	def resetStatsMenu(self, valuesDict=None, typeId=""):
+	def resetStatsMenu(self, valuesDict=None, typeId=None):
 		self.resetDataStats()
 
 ####-------------------------------------------------------------------------####
@@ -6193,19 +6206,19 @@ class Plugin(indigo.PluginBase):
 		return ret
 
 ####-------------------------------------------------------------------------####
-	def printDF2301QhelpMenuCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def printDF2301QhelpMenuCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.printDF2301QhelpDeviceCALLBACK()
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def printDF2301QhelpDeviceCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def printDF2301QhelpDeviceCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 
 		out = self.readDF2301Qhelp()
 
 		out += "\n======  predefined command IDs  with phrase"
 		out += self.DF2301Q_commandlistText
 
-		out += '\n=== IDs that can be set by you: ' 
+		out += '\n=== IDs that can be set by you: '
 		out += '\n   A. define custom command word on sensor as described above, remember the command id'
 		out += '\n   B. in device edit set the phrase for the command id. It will be use in dev states as string to map to command id'
 		out += '\nID   set to:'
@@ -6224,12 +6237,12 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def printDeviceDictCALLBACK(self, valuesDict=None, typeId=""):
-		devId= int(valuesDict["printDeviceDict"])
-		dev=indigo.devices[devId]
+	def printDeviceDictCALLBACK(self, valuesDict=None, typeId=None):
+		devId = int(valuesDict["printDeviceDict"])
+		dev = indigo.devices[devId]
 		self.myLog( theText = dev.name+"/{}".format(devId)+" -------------------------------",mType="printing dev info for" )
-		props=dev.pluginProps
-		states=dev.states
+		props = dev.pluginProps
+		states = dev.states
 		self.myLog( theText = "\n{}".format(props),mType="props:")
 		self.myLog( theText = "\n{}".format(states),mType="states:")
 		try:  self.myLog( theText = dev.description,mType="description:")
@@ -6244,7 +6257,7 @@ class Plugin(indigo.PluginBase):
 		except: pass
 		if "piServerNumber" in props:
 			if props["piServerNumber"]!="":
-				pi= int(props["piServerNumber"])
+				pi = int(props["piServerNumber"])
 				piU = "{}".format(pi)
 				self.myLog( theText = "pi#:{}\n{}".format(piU, self.writeJson(self.RPI[piU], fmtOn=True )),mType="RPI info:")
 		else:
@@ -6257,7 +6270,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmchangeLogfile(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmchangeLogfile(self, valuesDict=None, typeId=None, devId=None):
 		self.myLog( theText = "  starting to modify "+self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py')
 		if not os.path.isfile(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py'): return valuesDict
 		f = open(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py', "r")
@@ -6310,7 +6323,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmReversechangeLogfile(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmReversechangeLogfile(self, valuesDict=None, typeId=None, devId=None):
 
 		if os.path.isfile(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py.original'):
 			os.remove(self.indigoPath + 'IndigoWebServer/indigopy/indigoconn.py')
@@ -6329,7 +6342,7 @@ class Plugin(indigo.PluginBase):
 		if resetQueue:
 			for piU in self.RPI:
 				self.resetUpdateQueue(piU)
-			self.sleep(1.5) # give rest >2 cycles in execute commands to reset everything 
+			self.sleep(1.5) # give rest >2 cycles in execute commands to reset everything
 			
 		for piU in self.RPI:
 			self.setONErPiV(piU, item, value, resetQueue=False)
@@ -6341,7 +6354,7 @@ class Plugin(indigo.PluginBase):
 			if piU in self.RPI:
 				if resetQueue:
 					self.resetUpdateQueue(piU)
-					self.sleep(1.5) # give rest >2 cycles in execute commands to reset everything 
+					self.sleep(1.5) # give rest >2 cycles in execute commands to reset everything
 			
 				if self.RPI[piU]["ipNumberPi"] != "":
 					if self.RPI[piU]["piOnOff"] == "1":
@@ -6376,7 +6389,8 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterRPIForSensorForRpiAction(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterRPIForSensorForRpiAction(self, filter=None, valuesDict=None, typeId=None, devId=None):
+		if valuesDict is None: valuesDict = {}
 		xList = []
 		try: 	sensDev = indigo.devices[int(valuesDict["sensor"])]
 		except: return xList
@@ -6393,7 +6407,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterSensorForRpiAction(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterSensorForRpiAction(self, filter=None, valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isSensorDevice"):
 			if dev.pluginProps.get("SupportsOnState",False):
@@ -6405,7 +6419,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterResetDevices(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterResetDevices(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isSensorDevice"):
 			if dev.pluginProps.get("SupportsOnState",False):
@@ -6416,7 +6430,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterBeaconTags_and_all(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterBeaconTags_and_all(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dd in self.knownBeaconTags["input"]:
 			if "text" not in self.knownBeaconTags["input"][dd] or "pos" not in self.knownBeaconTags["input"][dd]:
@@ -6430,7 +6444,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterBeaconKnownMfgNames(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterBeaconKnownMfgNames(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dd in self.knownBeaconTags["mfgNames"]:
 			xList.append((dd,"{} - {} ".format(dd, self.knownBeaconTags["mfgNames"][dd])))
@@ -6439,7 +6453,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterBeaconTypes(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterBeaconTypes(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 
 		for dd in self.knownBeaconTags["input"]:
@@ -6452,9 +6466,9 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterBeaconsThatCanBeepOrSetTime(self, filter="beep", valuesDict=None, typeId="", devId=""):
+	def filterBeaconsThatCanBeepOrSetTime(self, filter="beep", valuesDict=None, typeId=None, devId=None):
 		xList = []
-		deb = False 
+		deb = False
 		if filter == "setTime":
 			for dev in indigo.devices.iter("props.isBeaconDevice"):
 				if not dev.enabled: continue
@@ -6472,9 +6486,9 @@ class Plugin(indigo.PluginBase):
 				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass3, {}".format(props["typeOfBeacon"]))
 				if props["typeOfBeacon"] not in self.knownBeaconTags["input"]: continue
 				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass4,{} ".format(self.knownBeaconTags[props["typeOfBeacon"]]))
-				if "commands" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]: continue 
+				if "commands" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]: continue
 				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass5, {}".format(self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]))
-				if "beep" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]: continue 
+				if "beep" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]: continue
 				if deb: self.indiLOG.log(10, "filterBeacon-beep :  pass6, {}".format(self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]["beep"]["type"] ))
 				if self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]["beep"]["type"] == "BLEconnect":
 					xList.append( ("{}".format(dev.id), dev.name ) )
@@ -6483,7 +6497,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterDevicesThatHaveLastBatteryReplaced(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterDevicesThatHaveLastBatteryReplaced(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dev in indigo.devices.iter(self.pluginId):
 			if "lastBatteryReplaced" in dev.states:	
@@ -6493,7 +6507,8 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterOnewireSensors(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterOnewireSensors(self, filter="", valuesDict=None, typeId=None, devId=None):
+		if valuesDict is None: valuesDict = {}
 		piServerNumber = valuesDict.get("piServerNumber","")
 		if "filterOnewireSensors" in self.last_filterValues and self.last_filterValues["filterOnewireSensors"] != []:
 				if "piServerNumber" in self.last_filterValues and self.last_filterValues["piServerNumber"] == piServerNumber:
@@ -6514,7 +6529,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterHomematicWTH(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterHomematicWTH(self, filter="", valuesDict=None, typeId=None, devId=None):
 		if "filterHomematicWTH" in self.last_filterValues and self.last_filterValues["filterHomematicWTH"] != []:
 			return self.last_filterValues["filterHomematicWTH"]
 		deb = False
@@ -6528,7 +6543,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterHomematicFALMOT(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterHomematicFALMOT(self, filter=None, valuesDict=None, typeId=None, devId=None):
 		if "filterHomematicFALMOT" in self.last_filterValues and self.last_filterValues["filterHomematicFALMOT"] != []:
 			return self.last_filterValues["filterHomematicFALMOT"]
 		xList = []
@@ -6554,7 +6569,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterOnOffSensors(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterOnOffSensors(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isSensorDevice,props.SupportsOnState"):
 				props = dev.pluginProps
@@ -6564,7 +6579,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterStateOfSensor(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterStateOfSensor(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		try:	dev = indigo.devices[int(valuesDict.get(filter,"-"))]
 		except: return xList
@@ -6575,7 +6590,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterAllpiSimple(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterAllpiSimple(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for piU in _rpiList:
 			name = ""
@@ -6588,12 +6603,12 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterNeopixelDevice(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterNeopixelDevice(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("0", "not active")]
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterNeopixelType(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterNeopixelType(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("0", 	"not active")
 			 ,("sLine",		"1D-LINE  enter left and right end")
 			 ,("line",		"2D-LINE  enter left and right end")
@@ -6610,7 +6625,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterNeopixeldevices(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterNeopixeldevices(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dev in indigo.devices:
 			if dev.deviceTypeId in ["neopixel"]:
@@ -6619,7 +6634,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterSensorswPause(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterSensorswPause(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isPauseSensor"):
 			piServerNumber = dev.pluginProps.get("piServerNumber","-1")
@@ -6632,7 +6647,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterNeopixeldevices(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterNeopixeldevices(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for dev in indigo.devices:
 			if dev.deviceTypeId in ["neopixel"]:
@@ -6641,7 +6656,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterDisplayType(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterDisplayType(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("0", "not active")
 			 ,("text"			, "text: eg %%d:sensorX:input%%[mV]  .. you can also use %%eval:%3.1f%(float(%%d:123:state:%%))%%[mV]")
 			 ,("textWformat"	, "text: with format string eg %%v:123%%%%FORMAT:%3.1f[mV]; only for numbers")
@@ -6667,7 +6682,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterNeoPixelRings(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterNeoPixelRings(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("1", "1")
 			 ,("6", "6")
 			 ,("8", "8")
@@ -6689,7 +6704,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filter10To100(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filter10To100(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("10", "10")
 			 ,("20", "20")
 			 ,("30", "30")
@@ -6703,7 +6718,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterDisplayPages(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterDisplayPages(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("1", "1")
 			 ,("2", "2")
 			 ,("3", "3")
@@ -6715,7 +6730,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterDisplayScrollDelay(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterDisplayScrollDelay(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("0.015", "0.015 secs")
 			 ,("0.025", "0.025 secs")
 			 ,("0.05" , "0.05 secs")
@@ -6727,7 +6742,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterDisplayNumberOfRepeats(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterDisplayNumberOfRepeats(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("1" , "1")
 			 ,("2" , "2 ")
 			 ,("3" , "3")
@@ -6751,7 +6766,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterscrollDelayBetweenPages(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterscrollDelayBetweenPages(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("0", "no delay")
 			 ,("0.5", "0.5 sec delay")
 			 ,("1"	 , "1 sec delay")
@@ -6766,7 +6781,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterDisplayScroll(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterDisplayScroll(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList=[("0"			   , "no scrolling")
 			 ,("left"		   , "scroll to left ")
 			 ,("right"		   , "scroll to right")
@@ -6775,7 +6790,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterDisplayFonts(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterDisplayFonts(self, filter="", valuesDict=None, typeId=None, devId=None):
 
 		fonts=	   [["4x6.pil", "4x6 for LED display"],
 					["5x7.pil", "5x7 for LED display"],
@@ -6809,7 +6824,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterPiI(self, valuesDict=None, filter="self", typeId="", devId="x",action =""):
+	def filterPiI(self, valuesDict=None, filter="self", typeId=None, devId="x",action =""):
 
 		xList = []
 		for piU in _rpiBeaconList:
@@ -6821,7 +6836,7 @@ class Plugin(indigo.PluginBase):
 
 		return xList
 ####-------------------------------------------------------------------------####
-	def confirmPiNumberBUTTONI(self, valuesDict=None, typeId="", devId="x"):
+	def confirmPiNumberBUTTONI(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			piN 	= valuesDict["piServerNumber"]
 			nChan 	= self.getTypeIDLength(typeId)
@@ -6867,7 +6882,7 @@ class Plugin(indigo.PluginBase):
 		return nn
 
 ####-------------------------------------------------------------------------####
-	def filterINPUTchannels(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterINPUTchannels(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		for i in range(self.getTypeIDLength(typeId)):
 			xList.append(("{}".format(i), "{}".format(i)))
@@ -6875,7 +6890,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def confirmStateBUTTONI(self, valuesDict=None, typeId="", devId="x"):
+	def confirmStateBUTTONI(self, valuesDict=None, typeId=None, devId=None):
 		piN	 	= valuesDict["piServerNumber"]
 		inS	 	= valuesDict["INPUTstate"]
 		inSi 	= int(inS)
@@ -6897,7 +6912,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def confirmSelectionBUTTONI(self, valuesDict=None, typeId="", devId="x"):
+	def confirmSelectionBUTTONI(self, valuesDict=None, typeId=None, devId=None):
 			nChannels = self.getTypeIDLength(typeId)
 
 			try:
@@ -6909,7 +6924,7 @@ class Plugin(indigo.PluginBase):
 				dev = ""
 				props = ""
 				piNumberExisting = ""
-				return
+				return valuesDict
 			piN	 = valuesDict["piServerNumber"]
 			try:	 inSi = int(valuesDict["INPUTstate"])
 			except:	 inSi = -1
@@ -6965,7 +6980,7 @@ class Plugin(indigo.PluginBase):
 			return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def filterPiO(self, valuesDict=None, filter="self", typeId="", devId="x",action= ""):
+	def filterPiO(self, valuesDict=None, filter="self", typeId=None, devId="x",action= ""):
 
 			xList = []
 			for piU in _rpiBeaconList:
@@ -6980,7 +6995,7 @@ class Plugin(indigo.PluginBase):
 			return xList
 
 ####-------------------------------------------------------------------------####
-	def confirmPiNumberBUTTONO(self, valuesDict=None, typeId="", devId="x"):
+	def confirmPiNumberBUTTONO(self, valuesDict=None, typeId=None, devId=None):
 			piN 	= valuesDict["piServerNumber"]
 			nChan 	= self.getTypeIDLength(typeId)
 			try:
@@ -7028,7 +7043,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterSwitchbot(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterSwitchbot(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = [("-1","off")]
 			for dev in indigo.devices.iter("props.isSwitchbotDevice"):
 				if dev.deviceTypeId == "OUTPUTswitchbotRelay":
@@ -7037,14 +7052,14 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterOUTPUTchannels(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterOUTPUTchannels(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for i in range(self.getTypeIDLength(typeId)):
 				xList.append(("{}".format(i), "{}".format(i)))
 			return xList
 
 ####-------------------------------------------------------------------------####
-	def filterTempSensorsOnThisRPI(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterTempSensorsOnThisRPI(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = [("0", "internal temp sensor of RPI")]
 		try:
 			piN = indigo.devices[devId].pluginProps.get("RPINumber","")
@@ -7063,46 +7078,46 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filtergpioList(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filtergpioList(self, filter="", valuesDict=None, typeId=None, devId=None):
 			return _GlobalConst_allGPIOlist
 
 ####-------------------------------------------------------------------------####
-	def filterList16(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterList16(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for ii in range(16):
 				xList.append((ii,ii))
 			return xList
 
 ####-------------------------------------------------------------------------####
-	def filterList12(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterList12(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for ii in range(12):
 				xList.append((ii,ii))
 			return xList
 
 ####-------------------------------------------------------------------------####
-	def filterList10(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterList10(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for ii in range(10):
 				xList.append((ii,ii))
 			return xList
 
 ####-------------------------------------------------------------------------####
-	def filterList8(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterList8(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for ii in range(8):
 				xList.append((ii,ii))
 			return xList
 
 ####-------------------------------------------------------------------------####
-	def filterList4(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterList4(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for ii in range(4):
 				xList.append((ii,ii))
 			return xList
 
 ####-------------------------------------------------------------------------####
-	def filterList1(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filterList1(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for ii in range(1):
 				xList.append((ii,ii))
@@ -7111,14 +7126,14 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filteri2cChannelS(self, filter="", valuesDict=None, typeId="", devId="x"):
+	def filteri2cChannelS(self, filter="", valuesDict=None, typeId=None, devId=None):
 			piN = valuesDict["piServerNumber"]
 			valuesDict["i2cActive"] = "test"
 			return valuesDict
 
 
 ####-------------------------------------------------------------------------####
-	def confirmSelectionBUTTONO(self, valuesDict=None, typeId="", devId="x"):
+	def confirmSelectionBUTTONO(self, valuesDict=None, typeId=None, devId=None):
 			nChannels = self.getTypeIDLength(typeId)
 
 			try:
@@ -7130,7 +7145,7 @@ class Plugin(indigo.PluginBase):
 				dev = ""
 				props = ""
 				piNumberExisting = ""
-				return
+				return valuesDict
 
 			try:
 				xxx = json.loads(valuesDict["deviceDefs"])
@@ -7185,88 +7200,91 @@ class Plugin(indigo.PluginBase):
 			return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def sendConfigCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def sendConfigCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		try:
 			valuesDict = action1.props
-			if valuesDict["configurePi"] =="": return
+			if valuesDict["configurePi"] =="": return ""
 			return self.execButtonConfig(valuesDict, level="0,", action=["updateParamsFTP"], Text="send Config Files to pi# ")
 		except:
 			self.indiLOG.log(10,"sendConfigCALLBACKaction  bad rPi number:{}".format(valuesDict))
-
+		return ""
 ####-------------------------------------------------------------------------####
-	def buttonConfirmSendOnlyParamssshCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmSendOnlyParamssshCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="0,", action=["updateParamsFTP"], Text="send Config Files to pi# ")
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmSendRestartPysshCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmSendRestartPysshCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="master,", action=["updateParamsFTP"], Text="send Config Files and restart master.py  ")
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmRestartMastersshCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmRestartMastersshCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="", action=["restartmasterSSH"], Text="restart master.py  ")
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmConfigureCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmConfigureCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="reboot,", action=["updateParamsFTP"], Text="send Config Files and restart rPI")
 ####-------------------------------------------------------------------------####
-	def buttonResetOutputCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonResetOutputCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="0,", action=["resetOutputSSH"], Text="reset output file  and reboot pi# ")
 
 
 ####-------------------------------------------------------------------------####
-	def buttonShutdownsshCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def buttonShutdownsshCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		return self.buttonShutdownsshCALLBACK(valuesDict=action1.props)
 
 ####-------------------------------------------------------------------------####
-	def buttonShutdownsshCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonShutdownsshCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonShutdownsshCALLBACK")
 		return self.execButtonConfig(valuesDict, level="0,", action=["shutdownSSH"], Text="shut down rPi# ")
 
 ####-------------------------------------------------------------------------####
-	def buttonSendAllandsshCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSendAllandsshCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonSendAllandsshCALLBACK")
 		return self.execButtonConfig(valuesDict, level="0,", action=["initSSH", "updateAllFilesFTP","restartmasterSSH"], Text="rPi send pgm and config to pi# ")
 
 ####-------------------------------------------------------------------------####
-	def buttonSendAllAllandRebootsshCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSendAllAllandRebootsshCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonSendAllAllandRebootsshCALLBACK")
 		return self.execButtonConfig(valuesDict, level="0,", action=["initSSH", "updateAllAllFilesFTP", "restartmasterSSH"], Text="rPi configure and reboot pi# ")
 
 
 ####-------------------------------------------------------------------------####
-	def buttonRebootsshCALLBACKaction(self,	action1=None, typeId="", devId=0):
+	def buttonRebootsshCALLBACKaction(self,	action1=None, typeId=None, devId=None):
 		self.buttonRebootSocketCALLBACK(valuesDict=action1.props)
 
 ####-------------------------------------------------------------------------####
-	def buttonRebootsshCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonRebootsshCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.setCurrentlyBooting(self.bootWaitTime, setBy="buttonRebootsshCALLBACK")
 		return self.execButtonConfig(valuesDict, level="0,", action=["rebootSSH"], Text="rPi reboot")
 
 ####-------------------------------------------------------------------------####
-	def buttonStopConfigCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonStopConfigCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="0,", action=[""], Text="rPi stop Configure ")
 
 
 ####-------------------------------------------------------------------------####
-	def buttonGetSystemParametersCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonGetSystemParametersCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="0,", action=["getStatsSSH"], Text="get stats from rpi")
 
 ####-------------------------------------------------------------------------####
-	def buttonCheckIfInstallOkCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonCheckIfInstallOkCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="0,", action=["checkIfInstallOkSSH"], Text="get stats from rpi")
 
 
 ###-------------------------------------------------------------------------####
-	def buttonUpgradeCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonUpgradeCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="0,", action=["upgradeSSH"], Text="apt-get update and apt-get upgrade")
 
 ####-------------------------------------------------------------------------####
-	def buttonbuttonGetpiBeaconLogCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonbuttonGetpiBeaconLogCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		return self.execButtonConfig(valuesDict, level="0,", action=["getLogFileSSH"], Text="get pibeacon logfile from rpi")
 
 ####-------------------------------------------------------------------------####
-	def execButtonConfig(self, valuesDict, level="0,", action=[], Text=""):
+	def execButtonConfig(self, valuesDict, level=None, action=None, Text=None):
 		valuesDict["MSG"] = "Error"
+		if action is None: action = []
+		if level is None: level = "0,"
+		if Text is None: Text = ""
 		error = ""
 		try:
 			try:
@@ -7294,7 +7312,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def sendRaspiConfigCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def sendRaspiConfigCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["MSG"] = "Error, see log"
 		cmd1 = {"command": "file","fileName":"temp/sendRaspiConfig","fileContents":"send raspi config to indigo"}
 		try:
@@ -7326,7 +7344,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmWiFiCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmWiFiCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["MSG"] = "Error"
 		try:
 			pi = int(valuesDict["configurePi"])
@@ -7354,11 +7372,11 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonShutdownHardSocketCALLBACKaction(self,  action1=None, typeId="", devId=0):
+	def buttonShutdownHardSocketCALLBACKaction(self,  action1=None, typeId=None, devId=None):
 		self.buttonShutdownHardSocketCALLBACK(valuesDict=action1.props)
 
 ####-------------------------------------------------------------------------####
-	def buttonShutdownHardSocketCALLBACK(self, valuesDict=None ,typeId="", devId=0):
+	def buttonShutdownHardSocketCALLBACK(self, valuesDict=None ,typeId=None, devId=None):
 		valuesDict["MSG"] = "Error"
 		try:
 			pi = int(valuesDict["configurePi"])
@@ -7374,15 +7392,15 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,"hard shutdown of rpi {};   {}".format(self.RPI[piU]["ipNumberPi"], out) )
 				self.presendtoRPI(piU,out)
 		valuesDict["MSG"] = "command halt submitted"
-		return
+		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
-	def buttonRebootHardSocketCALLBACKaction(self,	action1=None, typeId="", devId=0):
+	def buttonRebootHardSocketCALLBACKaction(self,	action1=None, typeId=None, devId=None):
 		self.buttonRebootHardSocketCALLBACK(valuesDict=action1.props)
 
 ####-------------------------------------------------------------------------####
-	def buttonRebootHardSocketCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonRebootHardSocketCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["MSG"] = "Error"
 		pi = valuesDict["configurePi"]
 		try:
@@ -7399,17 +7417,17 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,"hard reboot of rpi{};   {}".format(self.RPI[piU]["ipNumberPi"], out) )
 				self.presendtoRPI(piU,out)
 		valuesDict["MSG"] = "command reboot -f submitted"
-		return
+		return valuesDict
 
 
 
 
 ####-------------------------------------------------------------------------####
-	def buttonRebootSocketCALLBACKaction(self,	action1=None, typeId="", devId=0):
+	def buttonRebootSocketCALLBACKaction(self,	action1=None, typeId=None, devId=None):
 		self.buttonRebootSocketCALLBACK(valuesDict=action1.props)
 
 ####-------------------------------------------------------------------------####
-	def buttonRebootSocketCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonRebootSocketCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["MSG"] = "Error"
 		try:
 			pi = int(valuesDict["configurePi"])
@@ -7431,36 +7449,36 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setTimeCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def setTimeCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		self.doActionSetTime(action1.props["configurePi"])# do it now
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
-	def buttonsetTimeCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonsetTimeCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.actionList["setTime"].append({"action":"setTime", "value":valuesDict["configurePi"]}) # put it into queue and return to menu
 		valuesDict["MSG"] = "command setTime started"
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def refreshNTPCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def refreshNTPCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		valuesDict = action1.props
 		self.buttonrefreshNTPCALLBACK(valuesDict)
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
-	def buttonrefreshNTPCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonrefreshNTPCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.buttonAnycommandCALLBACK(valuesDict)
 		valuesDict["MSG"] = "command refreshNTP started"
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def stopNTPCALLBACKaction(self,	 action1=None, typeId="", devId=0):
+	def stopNTPCALLBACKaction(self,	 action1=None, typeId=None, devId=None):
 		valuesDict = action1.props
 		self.buttonstopNTPCALLBACK(valuesDict)
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
-	def buttonstopNTPCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonstopNTPCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.buttonAnycommandCALLBACK(valuesDict)
 		valuesDict["MSG"] = "command "+valuesDict["anyCmdText"] +" started"
 		return valuesDict
@@ -7527,12 +7545,12 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def sendAnycommandCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def sendAnycommandCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		self.buttonAnycommandCALLBACK(valuesDict=action1.props)
 		return
 
 ####-------------------------------------------------------------------------####
-	def buttonAnycommandCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonAnycommandCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		piU = valuesDict["configurePi"]
 		if piU =="":
 			self.indiLOG.log(10,"send YOUR command to rpi ...  no RPI selected")
@@ -7552,7 +7570,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterBeacons(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterBeacons(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isBeaconDevice"):
 			xList.append((dev.id,"{}".format(dev.name)))
@@ -7560,7 +7578,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterBeaconsWithBattery(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterBeaconsWithBattery(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isBeaconDevice"):
 			if not dev.enabled:													continue
@@ -7572,14 +7590,14 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterSoundFiles(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterSoundFiles(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		for fileName in os.listdir(self.indigoPreferencesPluginDir+"soundFiles/"):
 			xList.append((fileName,fileName))
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterSensorONoffIcons(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterSensorONoffIcons(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		for ll in _GlobalConst_ICONLIST:
 			xList.append((ll[0]+"-"+ll[1],ll[0]+", "+ll[1]))
@@ -7588,7 +7606,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterPiD(self, filter="blue,sensor", valuesDict=None, typeId="", devId=0, action=""):
+	def filterPiD(self, filter="blue,sensor", valuesDict=None, typeId=None, devId=None, action=None):
 		#self.indiLOG.log(20,"filterPiD   filter {}".format(filter))
 		xList = []
 		if filter.find("blue") > -1:
@@ -7606,7 +7624,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterPiDONoff(self, filter="blue,sensor", valuesDict=None, typeId="", devId=0, action=""):
+	def filterPiDONoff(self, filter="blue,sensor", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		if filter.find("blue") > -1:
 			for piU in _rpiBeaconList:
@@ -7623,7 +7641,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterPiDInclAll(self, filter="blue,sensor", valuesDict=None, typeId="", devId=0, action=""):
+	def filterPiDInclAll(self, filter="blue,sensor", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		if filter.find("blue") > -1:
 			for piU in _rpiBeaconList:
@@ -7642,7 +7660,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterPiOUT(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterPiOUT(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		default = ""
 		for piU in self.RPI:
@@ -7672,7 +7690,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterActiveBEACONs(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterActiveBEACONs(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 
 		try:
 			listActive = []
@@ -7691,7 +7709,7 @@ class Plugin(indigo.PluginBase):
 		return listActive
 
 ####-------------------------------------------------------------------------####
-	def filterMACs(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterMACs(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 
 		try:
 			listActive		 = []
@@ -7733,7 +7751,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterRPIs(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterRPIs(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 
 		try:
 			xList = []
@@ -7754,7 +7772,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterActiveSensors(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterActiveSensors(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 
 		try:
 			xList = []
@@ -7775,7 +7793,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterLightSensorOnRpi(self, filter="", valuesDict=None, typeId="", devId=0, action=""):
+	def filterLightSensorOnRpi(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 
 		try:
 			#self.indiLOG.log(20," filter {}; valuesDict {}".format(filter, valuesDict))
@@ -7935,10 +7953,10 @@ class Plugin(indigo.PluginBase):
 			pass
 		else:
 			pass
-		return (valuesDict, errorMsgDict)
+		return valuesDict, errorMsgDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmnewBeaconsLogTimerCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmnewBeaconsLogTimerCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			xx = float(valuesDict["newBeaconsLogTimer"])
 			if xx > 0:
@@ -7958,12 +7976,12 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmStopSelectBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmStopSelectBeaconCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.selectBeaconsLogTimer = {}
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmSelectBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmSelectBeaconCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			if self.isValidMAC(valuesDict["selectBEACONmanual"]):
 				mac = valuesDict["selectBEACONmanual"]
@@ -7992,7 +8010,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmSelectSensorCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmSelectSensorCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			self.trackSensorId.append(valuesDict["selectSensor"])
 			devName = indigo.devices[int(valuesDict["selectSensor"])].name
@@ -8006,7 +8024,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmStopSelectSensorCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmStopSelectSensorCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			for devIds in self.trackSensorId:
 				self.indiLOG.log(20,"logging messages stopped for sensor >>{}<< ".format(indigo.devices[int(devIds)].name))
@@ -8018,7 +8036,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmselectLargeChangeInSignalCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmselectLargeChangeInSignalCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		xx =  valuesDict["trackSignalStrengthIfGeaterThan"].split(",")
 		self.trackSignalStrengthIfGeaterThan = [float(xx[0]),xx[1]]
 
@@ -8044,7 +8062,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmselectChangeOfRPICALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmselectChangeOfRPICALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		self.trackSignalChangeOfRPI = valuesDict["trackSignalChangeOfRPI"] =="1"
 		self.indiLOG.log(10,"log messages for beacons that change closest RPI: {}".format(self.trackSignalChangeOfRPI))
 		valuesDict["MSG"] = "log changing closest RPI: {}".format(self.trackSignalChangeOfRPI)
@@ -8052,7 +8070,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonExecuteReloadKnownBeaconsTagsCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonExecuteReloadKnownBeaconsTagsCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 
 		retCode = self.readknownBeacontags()
 		if retCode:
@@ -8071,7 +8089,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmselectRPImessagesCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmselectRPImessagesCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 
 		try:	self.trackRPImessages = int(valuesDict["piServerNumber"])
 		except: self.trackRPImessages = -1
@@ -8084,7 +8102,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonExecuteReplaceBeaconCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonExecuteReplaceBeaconCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 
 		try:
 
@@ -8116,9 +8134,9 @@ class Plugin(indigo.PluginBase):
 			self.beacons[newMAC] = copy.deepcopy(self.beacons[oldMAC])
 			self.beacons[newMAC]["indigoId"] = oldINDIGOid
 			del self.beacons[oldMAC]
+			self.indiLOG.log(30,"=== deleting  === replaced MAC number {}  of device {} with {} --	and deleted device {}    ===".format(oldMAC, oldName, newMAC, newName) )
 			indigo.device.delete(newDEV)
 
-			self.indiLOG.log(30,"=== deleting  === replaced MAC number {}  of device {} with {} --	and deleted device {}    ===".format(oldMAC, oldName, newMAC, newName) )
 			valuesDict["MSG"] = "replaced, moved MAC number"
 
 		except Exception as e:
@@ -8126,7 +8144,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonExecuteReplaceRPICALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonExecuteReplaceRPICALLBACK(self, valuesDict=None, typeId=None, devId=None):
 
 		try:
 
@@ -8134,7 +8152,7 @@ class Plugin(indigo.PluginBase):
 			newID = valuesDict["newID"]
 			if oldID == newID:
 				valuesDict["MSG"] = "must use 2 different RPI"
-				return
+				return valuesDict
 
 			oldDEV	 = indigo.devices[int(oldID)]
 			newDEV	 = indigo.devices[int(newID)]
@@ -8176,11 +8194,11 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def inpDummy(self, valuesDict=None, typeId="", devId=0):
+	def inpDummy(self, valuesDict=None, typeId=None, devId=None):
 		return
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmMACIgnoreCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmMACIgnoreCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		mac = valuesDict["ignoreMAC"]
 		if mac in self.beacons:
 			if self.beacons[mac]["ignore"] == 0:
@@ -8211,7 +8229,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmMACunIgnoreCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmMACunIgnoreCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		mac = valuesDict["ignoreMAC"]
 		if mac in self.beacons:
 			if self.beacons[mac]["ignore"] != 0:
@@ -8247,10 +8265,11 @@ class Plugin(indigo.PluginBase):
 				pluginId		= self.pluginId,
 				deviceTypeId	= "beacon",
 				folder			= self.piFolderId,
-				props		    = copy.deepcopy(_GlobalConst_emptyBeaconProps_)
+				props		    = copy.deepcopy(_GlobalConst_emptyBeaconProps)
 				)
 			self.beacons[mac]["indigoId"] = dev.id
 			dev = indigo.devices[dev.id]
+			self.indiLOG.log(20,"createNewiBeaconDeviceFromBeacons create for beacon:{} dev:{} / {}".format(mac, dev.name, dev.id) )
 
 		except Exception as e:
 				if "{}".format(e).find("timeout waiting") > -1:
@@ -8259,7 +8278,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmMACDeleteCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmMACDeleteCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		mac = valuesDict["ignoreMAC"]
 		if mac in self.beacons:
 			for piU in _rpiBeaconList:
@@ -8269,7 +8288,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmMACDeleteALLCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmMACDeleteALLCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 
 		### this is very bad !!!
 		#self.beacons = {}
@@ -8287,7 +8306,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 
 ### not used
-	def buttonConfirmMACnonactiveCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmMACnonactiveCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			ll0 = len(self.beacons)
 			for beacon in copy.deepcopy(self.beacons):
@@ -8302,7 +8321,7 @@ class Plugin(indigo.PluginBase):
 		return
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmMACDeleteOLDHISTORYCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmMACDeleteOLDHISTORYCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			delB = []
 			ll0 = len(self.beacons)
@@ -8342,7 +8361,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonSetAllExistingDevicesToActiveCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSetAllExistingDevicesToActiveCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			for beacon in copy.deepcopy(self.beacons):
 				if self.beacons[beacon]["indigoId"] != 0:
@@ -8362,7 +8381,7 @@ class Plugin(indigo.PluginBase):
 
 		return valuesDict
 ####-------------------------------------------------------------------------####
-	def buttonSetAllExistingDevicesToOFFCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSetAllExistingDevicesToOFFCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			for beacon in copy.deepcopy(self.beacons):
 				if self.beacons[beacon]["indigoId"] != 0:
@@ -8382,7 +8401,7 @@ class Plugin(indigo.PluginBase):
 
 		return valuesDict
 ####-------------------------------------------------------------------------####
-	def buttonSetAllbeaconsTonoFastDownCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSetAllbeaconsTonoFastDownCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			for dev in indigo.devices.iter("props.isBeaconDevice"):
 				try:
@@ -8400,7 +8419,7 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 ###-------------------------------------------------------------------------####
-	def buttonSetAllbeaconsTonoSignalDeltaCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSetAllbeaconsTonoSignalDeltaCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			for dev in indigo.devices.iter("props.isBeaconDevice"):
 				try:
@@ -8418,7 +8437,7 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 ###-------------------------------------------------------------------------####
-	def buttonSetAllbeaconsTonominSignalOffCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSetAllbeaconsTonominSignalOffCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			for dev in indigo.devices.iter("props.isBeaconDevice"):
 				try:
@@ -8435,7 +8454,7 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 ###-------------------------------------------------------------------------####
-	def buttonSetAllbeaconsTonominSignalOnCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonSetAllbeaconsTonominSignalOnCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			for dev in indigo.devices.iter("props.isBeaconDevice"):
 				try:
@@ -8477,7 +8496,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def resetGPIOCountCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def resetGPIOCountCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			try:
 				dev = indigo.devices[int(valuesDict["inputDev"])]
@@ -8486,7 +8505,7 @@ class Plugin(indigo.PluginBase):
 					dev = indigo.devices[valuesDict["inputDev"]]
 				except:
 					self.indiLOG.log(30,"ERROR:  Reset counter of GPIO pin on rPi; dev:{}  not defined".format(valuesDict["inputDev"]))
-					return
+					return valuesDict
 
 
 			devId=dev.id
@@ -8545,7 +8564,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def resetGPIOCountCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def resetGPIOCountCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		self.resetGPIOCountCALLBACKmenu(action1.props)
 		return
 
@@ -8553,7 +8572,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterChannels(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterChannels(self, filter="", valuesDict=None, typeId=None, devId=None):
 		#indigo.server.log("filterChannels {}".format(valuesDict))
 		xList = []
 		for ii in range(41):
@@ -8563,7 +8582,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def confirmdeviceRPIanyPropBUTTON(self, valuesDict, typeId="", devId=""):
+	def confirmdeviceRPIanyPropBUTTON(self, valuesDict, typeId=None, devId=None):
 		try:
 			self.anyProperTydeviceNameOrId = valuesDict["deviceNameOrId"]
 		except:
@@ -8571,7 +8590,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def filterAnyPropertyNameACTION(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterAnyPropertyNameACTION(self, filter="", valuesDict=None, typeId=None, devId=None):
 		xList = []
 		if self.anyProperTydeviceNameOrId == 0:
 			return xList
@@ -8587,7 +8606,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def setAnyPropertyCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def setAnyPropertyCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		try:
 			valuesDict = action1.props
 
@@ -8620,7 +8639,7 @@ class Plugin(indigo.PluginBase):
 		return
 
 ####-------------------------------------------------------------------------####
-	def getAnyPropertyCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def getAnyPropertyCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		try:
 			retJ = ""
 			valuesDict = action1.props
@@ -8660,45 +8679,45 @@ class Plugin(indigo.PluginBase):
 
 
 ###-------------------------------------------------------------------------####
-	def setupRPItoRPIactionCALLBACKaction(self,valuesDict=None, typeId="", devId=0):
+	def setupRPItoRPIactionCALLBACKaction(self,valuesDict=None, typeId=None, devId=None):
 		self.setupRPItoRPIactionCALLBACKmenu(valuesDict)
 
 
 ####-------------------------------------------------------------------------####
-	def setupRPItoRPIactionCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setupRPItoRPIactionCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 
 			#self.indiLOG.log(20,"valuesDict:{}".format(valuesDict))
 
-			if valuesDict.get("selectActionType","") ==  "regular": return 
+			if valuesDict.get("selectActionType","") ==  "regular": return valuesDict
 
 			try: sensDev = indigo.devices[int(valuesDict.get("sensor","x"))]
-			except: return 
+			except: return valuesDict
 
 			if self.isValidMAC( sensDev.states.get("mac","-1")): 			macSens = sensDev.states["mac"]
 			elif self.isValidMAC( sensDev.pluginProps.get("address","-1")):	macSens = sensDev.pluginProps["address"]
-			else: return 
+			else: return valuesDict
 
 			sensorPi			= valuesDict.get("sensorPi","")
 
 			valuesDict["configurePi"] = sensorPi
 
-			if valuesDict.get("selectActionType","") ==  "deleteRPIaction": 
+			if valuesDict.get("selectActionType","") ==  "deleteRPIaction":
 				if macSens in self.fastBLEReaction:
 					self.indiLOG.log(20,"deleting rpi-rpi action  macSens:{}, to pi:{}  fastBLEReaction:{}".format(macSens, sensorPi, self.fastBLEReaction[macSens]))
-					del self.fastBLEReaction[macSens] 
+					del self.fastBLEReaction[macSens]
 					self.savefastBLEReaction()
 					self.makeBeacons_parameterFile()
 					self.execButtonConfig(valuesDict, level="0,", action=["updateParamsFTP"], Text="send Config Files to pi s ")
 				return valuesDict
- 
+
 
 			try: outputDev = indigo.devices[int(valuesDict.get("outputDev","x"))]
-			except: return 
+			except: return valuesDict
 
 
 			macOfSwitchbot = outputDev.pluginProps.get("mac","")
-			if not self.isValidMAC(macOfSwitchbot): return 
+			if not self.isValidMAC(macOfSwitchbot): return valuesDict
 
 
 			piU = outputDev.pluginProps.get("piServerNumber")
@@ -8718,10 +8737,10 @@ class Plugin(indigo.PluginBase):
 			pulseLengthOff	 	= valuesDict.get("pulseLengthOff","2.0")
 			pulseDelay 			= valuesDict.get("pulseDelay","0.0")
 			switchBotMode 		= valuesDict.get("switchBotMode","batch")
-			cmdMode 			= "onOff" 
-			if pulses not in ["off","on"]: 
+			cmdMode 			= "onOff"
+			if pulses not in ["off","on"]:
 				switchBotMode 			= "interactive"
-				cmdMode 				= "onOff" 
+				cmdMode 				= "onOff"
 				onOff 					= "1"
 			elif pulses == "on":  onOff = "1"
 			elif pulses == "off": onOff = "0"
@@ -8746,13 +8765,13 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setTEA5767CALLBACKaction(self, action1=None, typeId="", devId=0):
+	def setTEA5767CALLBACKaction(self, action1=None, typeId=None, devId=None):
 		valuesDict = action1.props
 		self.setTEA5767CALLBACKmenu(valuesDict)
 
 
 ####-------------------------------------------------------------------------####
-	def setTEA5767CALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setTEA5767CALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			vd=valuesDict
 			try:
@@ -8840,7 +8859,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def confirmduplicateBUTTONmenu(self, valuesDict=None, typeId="", devId="x"):
+	def confirmduplicateBUTTONmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			vd = valuesDict
 
@@ -8863,7 +8882,7 @@ class Plugin(indigo.PluginBase):
 		return vd
 
 ####-------------------------------------------------------------------------####
-	def setdisplayPropsWindowCALLBACKbutton(self, valuesDict=None, typeId="", devId=0):
+	def setdisplayPropsWindowCALLBACKbutton(self, valuesDict=None, typeId=None, devId=None):
 		vd = valuesDict
 		try:	fromWindow = int(vd["fromWindow"])
 		except: return vd
@@ -8878,7 +8897,7 @@ class Plugin(indigo.PluginBase):
 		return vd
 
 ####-------------------------------------------------------------------------####
-	def savedisplayPropsWindowCALLBACKbutton(self, valuesDict=None, typeId="", devId=0):
+	def savedisplayPropsWindowCALLBACKbutton(self, valuesDict=None, typeId=None, devId=None):
 		vd = valuesDict
 		try:	fromWindow = int(vd["fromWindow"])
 		except: return vd
@@ -8889,12 +8908,12 @@ class Plugin(indigo.PluginBase):
 		return vd
 
 ####-------------------------------------------------------------------------####
-	def setdisplayCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def setdisplayCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		valuesDict = action1.props
 		return self.setdisplayCALLBACKmenu(valuesDict)
 
 ####-------------------------------------------------------------------------####
-	def setdisplayCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setdisplayCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		cmds =[]
 		try:
 			vd=valuesDict
@@ -8907,7 +8926,7 @@ class Plugin(indigo.PluginBase):
 				except:
 					self.indiLOG.log(10,"setdisplayCALLBACKmenu error outputDev not set")
 					vd["MSG"] = "error outputDev not set"
-					return
+					return vd
 ###			   #self.indiLOG.log(10, "{}".format(vd))
 
 			props = dev.pluginProps
@@ -8929,7 +8948,7 @@ class Plugin(indigo.PluginBase):
 						if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,"setdisplayCALLBACKmenuv error in json conversion for {}".format(cmds))
 					vd["MSG"] = "error in json conversion"
-					return
+					return vd
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5," after json conversion:{}".format(cmds)+"\n")
 
 				delCMDS =[]
@@ -9115,7 +9134,7 @@ class Plugin(indigo.PluginBase):
 				scrollDelayBetweenPages = self.convertVariableOrDeviceStateToText(vd["scrollDelayBetweenPages"])
 
 			restoreAfterBoot = vd.get("restoreAfterBoot","0")
-			if "{}".format(restoreAfterBoot) not in ["0","1"]: 
+			if "{}".format(restoreAfterBoot) not in ["0","1"]:
 				if restoreAfterBoot in [True,"True","true"]: restoreAfterBoot = "1"
 				if restoreAfterBoot in [False,"False","false"]: restoreAfterBoot = "0"
 
@@ -9130,7 +9149,7 @@ class Plugin(indigo.PluginBase):
 				line +="\n    ,\"device\":\"{}".format(typeId)+"\""
 				line +="\n    ,\"restoreAfterBoot\":\"{}".format(restoreAfterBoot)+"\""
 				line +="\n    ,\"intensity\":\"{}".format(intensity)+"\""
-				line +="\n    ,\"xwindows\":\""+(xwindows)+"\""
+				line +="\n    ,\"xwindows\":\""+xwindows+"\""
 				line +="\n    ,\"xwindowSize\":\"{}".format(xwindowSize)+"\""
 				line +="\n    ,\"zoom\":\"{}".format(zoom)+"\""
 				line +="\n    ,\"repeat\":\"{}".format(repeat)+"\""
@@ -9194,7 +9213,7 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,"error display check {}".format(vd))
-			valuesDict["MSG"] = "error in parameters"
+			vd["MSG"] = "error in parameters"
 		return vd
 
 
@@ -9212,8 +9231,10 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return ret
 ####-------------------------------------------------------------------------####
-	def addBrackets(self,pos,cType="",default=[]):
+	def addBrackets(self, pos, cType=None, default=None):
 		try:
+			if cType is None: cType = ""
+			if default is None: default = []
 			test = "{}".format(pos).strip(",")
 
 			if len(test) ==0: return default
@@ -9262,12 +9283,16 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setneopixelCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def setneopixelCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		valuesDict = action1.props
 		return self.setneopixelCALLBACKmenu(valuesDict)["MSG"]
 
 ####-------------------------------------------------------------------------####
-	def setneopixelCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def cmp(self, a, b):
+		return (a > b) - (a < b)
+
+####-------------------------------------------------------------------------####
+	def setneopixelCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			vd=valuesDict
 			vd["MSG"] = ""
@@ -9308,7 +9333,7 @@ class Plugin(indigo.PluginBase):
 						if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,"error in json conversion for {}".format(cmds))
 					vd["MSG"] = "error in json conversion"
-					return
+					return vd
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5," after json conversion:\n{}".format(cmds)+"\n")
 
 				for ii in range(len(cmds)):
@@ -9371,18 +9396,19 @@ class Plugin(indigo.PluginBase):
 							if "reset"+iiC in vd:
 								cmds, vd, ok = self.makeACompleteList("reset", vd,cmds,nn,ii)
 
+							startPixelRGB   = []
 							startPixelx		= int(self.convertVariableOrDeviceStateToText(vd["startPixelx"+iiC]))
 							endPixelx		= int(self.convertVariableOrDeviceStateToText(vd["endPixelx"+iiC]))
-							startPixelRGB	= map(int, self.convertVariableOrDeviceStateToText(vd["startPixelRGB"+iiC]).split(",")  )
-							endPixelRGB		= map(int, self.convertVariableOrDeviceStateToText(vd["endPixelRGB"+iiC]).split(",")	  )
-							deltaColorSteps = map(int, self.convertVariableOrDeviceStateToText(vd["deltaColorSteps"+iiC]).split(","))
+							startPixelRGB	= list(map(int, self.convertVariableOrDeviceStateToText(vd["startPixelRGB"+iiC]).split(",")  ))
+							endPixelRGB		= list(map(int, self.convertVariableOrDeviceStateToText(vd["endPixelRGB"+iiC]).split(",")	  ))
+							deltaColorSteps = list(map(int, self.convertVariableOrDeviceStateToText(vd["deltaColorSteps"+iiC]).split(",")))
 							if self.decideMyLog("OutputDevice"): self.indiLOG.log(10,";  startPixelx:{}".format(startPixelx) +";  endPixelx:{}".format(endPixelx) +";  startPixelRGB:{}".format(startPixelRGB)+";   endPixelRGB:{}".format(endPixelRGB) +";   deltaColorSteps:{}".format(deltaColorSteps)	 )
 							nsteps	   =  max(0,abs(endPixelx - startPixelx))
 							deltaC	   =  [endPixelRGB[ll] - startPixelRGB[ll] for ll in range(3)]
-							deltaCabs  =  map(abs, deltaC)
+							deltaCabs  =  list(map(abs, deltaC))
 							deltaCN	   =  sum(deltaCabs)
 							stepSize   =  float(deltaCN)/ max(1,nsteps)
-							stepSizeSign   =  [cmp(deltaC[0],0),cmp(deltaC[1],0),cmp(deltaC[2],0)]
+							stepSizeSign   =  [self.cmp(deltaC[0],0), self.cmp(deltaC[1],0), self.cmp(deltaC[2],0)]
 							if self.decideMyLog("OutputDevice"):self.indiLOG.log(10,";  nsteps:{}".format(nsteps) +";  deltaC:{}".format(deltaC) +";  deltaCabs:{}".format(deltaCabs) +";  deltaCN:{}".format(deltaCN) +";  stepSize:{}".format(stepSize)+";  stepSizeSign:{}".format(stepSizeSign) )
 							pos=[]
 							if sum(deltaColorSteps) ==0:  # same delta steps for RGB
@@ -9402,19 +9428,19 @@ class Plugin(indigo.PluginBase):
 								while  nnn < nsteps and iii < endPixelRGB:
 									if	 stepSizeSign[jjj] >0:
 										color[jjj] += stepSize +max(0,rest)+0.5
-										colorF =  map(int,color)
+										colorF =  list(map(int,color))
 										rest = color[jjj]  -  endPixelRGB[jjj]
 										if rest > 0:
 											color[jjj] = endPixelRGB[jjj]
-											colorF	   = map(int,color)
-											jjj+=1
+											colorF	   = list(map(int, color))
+											jjj += 1
 									else:
 										color[jjj] -= stepSize	- min(0,rest)+0.5
-										colorF = map(int,color)
+										colorF = list(map(int, color))
 										rest = color[jjj]  -  endPixelRGB[jjj]
 										if rest < 0:
 											color[jjj] = endPixelRGB[jjj]
-											colorF	   = map(int,color)
+											colorF	   = list(map(int,color))
 											jjj+=1
 									pos.append([0,iii, min(255,colorF[0]),min(255,colorF[1]),min(255,colorF[2])] )
 									jjj = min(jjj,2)
@@ -9459,7 +9485,7 @@ class Plugin(indigo.PluginBase):
 				if not ok: return vd
 
 			restoreAfterBoot = vd.get("restoreAfterBoot","0")
-			if "{}".format(restoreAfterBoot) not in ["0","1"]: 
+			if "{}".format(restoreAfterBoot) not in ["0","1"]:
 				if restoreAfterBoot in [True,"True","true"]: restoreAfterBoot = "1"
 				if restoreAfterBoot in [False,"False","false"]: restoreAfterBoot = "0"
 
@@ -9485,8 +9511,8 @@ class Plugin(indigo.PluginBase):
 
 					#self.indiLOG.log(20,"type:{}, position: {}".format(ctype, position))
 					pos = cc["position"]
-					if ctype == "points": 
-						for xx in pos: 
+					if ctype == "points":
+						for xx in pos:
 							maxRGB = max( maxRGB, self.findMaxRGB(xx))
 					else:
 							maxRGB = max( maxRGB, self.findMaxRGB(pos))
@@ -9542,7 +9568,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setStepperMotorCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def setStepperMotorCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		valuesDict = action1.props
 		return self.setStepperMotorCALLBACKmenu(valuesDict)
 
@@ -9550,7 +9576,7 @@ class Plugin(indigo.PluginBase):
 
 
 # noinspection SpellCheckingInspection
-	def setStepperMotorCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setStepperMotorCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		cmds =[]
 		try:
 			vd=valuesDict
@@ -9563,7 +9589,7 @@ class Plugin(indigo.PluginBase):
 				except:
 					self.indiLOG.log(40,"error outputDev not set")
 					vd["MSG"] = "error outputDev not set"
-					return
+					return vd
 ###			   #self.indiLOG.log(10, "{}".format(vd))
 
 			props = dev.pluginProps
@@ -9582,7 +9608,7 @@ class Plugin(indigo.PluginBase):
 					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,"error in json conversion for {}".format(cmds))
 					vd["MSG"] = "error in json conversion"
-					return
+					return vd
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5," after json conversion:{}".format(cmds)+"\n")
 
 
@@ -9742,8 +9768,11 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def makeACompleteList(self,item, vd,cmds=[],nn="",ii=""):
+	def makeACompleteList(self, item, vd, cmds=None, nn=None, ii=None):
 		try:
+			if cmds is None: cmds = []
+			if nn is None: nn = ""
+			if ii is None: ii = []
 			if item+ "{}".format(ii) in vd:
 				xxx				 = "{}".format(self.convertVariableOrDeviceStateToText("{}".format(vd[item+ "{}".format(ii)])))
 				if xxx =="": return cmds, vd, True
@@ -9770,7 +9799,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def sendFileToRPIviaSocket(self,ip, piU, fileName, fileContents, fileMode="w", touchFile=True):
-		try:  
+		try:
 			toSend= [{"command":"file", "fileName":fileName, "fileContents":fileContents, "fileMode":fileMode, "touchFile":touchFile}]
 			if self.decideMyLog("OutputDevice"): self.indiLOG.log(5, "sending file to  {};  {}".format(ip, toSend) )
 			self.sendtoRPI(ip, piU, toSend, calledFrom="sendFileToRPIviaSocket")
@@ -9803,7 +9832,7 @@ class Plugin(indigo.PluginBase):
 
 		try:
 			piU = "{}".format(pi)
-			if self.RPI[piU]["piOnOff"] == "0": return
+			if self.RPI[piU]["piOnOff"] == "0": return -1
 
 			for kk in range(len(theList)):
 				theList[kk]["indigoServerIP"] = "{}".format(self.myIpNumber)
@@ -9833,7 +9862,7 @@ class Plugin(indigo.PluginBase):
 			except Exception as e:
 					if "{}".format(e) != "None":
 						if	time.time() > self.currentlyBooting:  # NO MSG IF RPIS ARE BOOTING
-							if piU in self.rpiQueues["busy"]: 
+							if piU in self.rpiQueues["busy"]:
 								if time.time() - self.rpiQueues["busy"][piU] > 20: # supress warning if we just updated the RPI
 									self.indiLOG.log(10,"socket-send not working,  rPi:{} {} is currently updating, delaying send".format(pi, ip) )
 								else:
@@ -9868,13 +9897,13 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setBatteryReplacedDateButton(self, valuesDict=None, typeId="", devId=0):
+	def setBatteryReplacedDateButton(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["devId"] = devId
 		self.setBatteryReplaceDateCALLBACKmenu(valuesDict)
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
-	def setBatteryReplaceDateCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setBatteryReplaceDateCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			devId = int(valuesDict["devId"])
 			if devId in[0, -1]:
@@ -9884,7 +9913,7 @@ class Plugin(indigo.PluginBase):
 
 			dev = indigo.devices[int(valuesDict["devId"])]
 			oldV = dev.states["lastBatteryReplaced"]
-			newV = datetime.datetime.now().strftime(_defaultDateStampFormat) 
+			newV = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			dev.updateStateOnServer("lastBatteryReplaced", newV)
 			valuesDict["MSG"] = "datestamp updated for :{}".format(dev.name)
 			self.indiLOG.log(20,"{} has new date stamp for battery replaced, from:{} to:{}".format(dev.name, oldV, newV ) )
@@ -9896,7 +9925,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def playSoundFileCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def playSoundFileCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			valuesDict["typeId"]		 = "playSound"
 			valuesDict["cmd"]			 = "playSound"
@@ -9907,20 +9936,20 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def restartPluginCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def restartPluginCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		self.quitNow		= "Internal restart requested, ignore indigo warning message >>piBeacon Error ..."
 		return
 
 
 ####-------------------------------------------------------------------------####
-	def restartPluginCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def restartPluginCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		self.quitNow		 = "Internal restart requested, ignore indigo warning message >>piBeacon Error ..."
 		valuesDict["MSG"]	 = "internal restart underway, exit menu"
 		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
-	def reloadDevStatesCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def reloadDevStatesCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["MSG"]	 = "updating dev states initiated"
 		self.indiLOG.log(30,"updating dev states initiated")
 		self.checkIfNewStates(force=True)
@@ -9929,7 +9958,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def resetHostsFileCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def resetHostsFileCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		if valuesDict is None: valuesDict = {}
 		fn = "{}/.ssh/known_hosts".format(self.MAChome)
 
@@ -9948,7 +9977,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def resetHostsFileOnlyRpiCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def resetHostsFileOnlyRpiCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		if valuesDict is None: valuesDict = {}
 		fn = "{}/.ssh/known_hosts".format(self.MAChome)
 		removed = ""
@@ -9981,16 +10010,16 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def getBeaconParametersCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def getBeaconParametersCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		return self.getBeaconParametersCALLBACKmenu(action1.props)
 
 ####-------------------------------------------------------------------------####
-	def getONEBeaconParametersCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def getONEBeaconParametersCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		return self.getONEBeaconParametersCALLBACKmenu(action1.props)
 
 
 ####-------------------------------------------------------------------------####
-	def getONEBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def getONEBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 
 		try:
 				devId = int(valuesDict["devIdOfBeacon"])
@@ -10000,11 +10029,12 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def getBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
+	def getBeaconParametersCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None, force=True):
 
 		try:
+			if devId is None: devId = 0
 			# must be enabled in config
-			if not force and self.checkBeaconParametersDisabled: return
+			if not force and self.checkBeaconParametersDisabled: return valuesDict
 
 			if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,"getBeaconParameters requesting update for beacon devId:{}, parameters:{}".format(devId, valuesDict))
 
@@ -10043,7 +10073,7 @@ class Plugin(indigo.PluginBase):
 				try: 	int(valuesDict["piServerNumber"])
 				except: valuesDict["piServerNumber"]  = "all"
 
-			startAtDateTime = 0 
+			startAtDateTime = 0
 			if "startAtDateTime" in valuesDict:
 				try: startAtDateTime = float(valuesDict.get("startAtDateTime", 0))
 				except: pass
@@ -10066,7 +10096,7 @@ class Plugin(indigo.PluginBase):
 				props = dev.pluginProps
 				if "status" not in dev.states: continue
 				if dev.states["status"] !="up": continue
-				if not dev.enabled: continue 
+				if not dev.enabled: continue
 				if beacon != "" and (dev.address != beacon or devId != dev.id): continue
 				if valuesDict["piServerNumber"] == "all":
 					piU = str(dev.states["closestRPI"])
@@ -10085,8 +10115,8 @@ class Plugin(indigo.PluginBase):
 					if typeOfBeacon not in self.knownBeaconTags["input"]: 						 						continue
 					if "commands" not in self.knownBeaconTags["input"][typeOfBeacon]:			 						continue
 					if "batteryLevel" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]: 					continue
-					if "type" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]: 			continue 
-					if self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]["type"] != "BLEconnect":	continue 
+					if "type" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]: 			continue
+					if self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]["type"] != "BLEconnect":	continue
 					if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,"getBeaconParameters checking  passed check 1;" )
 
 					# check if we should do battery time check at this hour, some beacons beep (nutale) if battery level is checked
@@ -10184,7 +10214,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def makeBatteryLevelReportCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
+	def makeBatteryLevelReportCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None, force=True):
 		try:
 			out  = "battery level report:\nDev---------------------------------------     MAC#               Beacon-Type             Status     ClosestRPI   BeepCommand BatteryLevel LastSuccfulBatUpd   daysAgo GetBatMethod lastNewBattery "
 			out1 = ""
@@ -10209,7 +10239,7 @@ class Plugin(indigo.PluginBase):
 				if typeOfBeacon not in self.knownBeaconTags["input"]:										continue
 				if "commands" not in self.knownBeaconTags["input"][typeOfBeacon]:			 				continue
 				if "batteryLevel" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]: 			continue
-				if "type" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]:	continue 
+				if "type" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]:	continue
 				if "batteryLevel" in dev.states:
 					batlevel = "{:12d}".format(dev.states["batteryLevel"])
 
@@ -10271,28 +10301,29 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def sendBeepCommandCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def sendBeepCommandCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		return self.sendBeepCommandCALLBACKmenu(action1.props)
 
 ####-------------------------------------------------------------------------####
-	def sendBeepCommandCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
+	def sendBeepCommandCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None, force=True):
 
 		try:
-			if  valuesDict is None: 
+			if  valuesDict is None:
+				valuesDict = {}
 				valuesDict["MSG"] = "rejected, no data entered"
 				return  valuesDict
 
-			if self.decideMyLog("Beep"): 
+			if self.decideMyLog("Beep"):
 				self.indiLOG.log(10,"beep beacon {}".format(valuesDict) )
 
-			if "selectbeacon" not in  valuesDict: 
+			if "selectbeacon" not in  valuesDict:
 				valuesDict["MSG"] = "rejected, beacon not selected"
 				return  valuesDict
 
 			dev = indigo.devices[int(valuesDict["selectbeacon"])]
 			props = dev.pluginProps
 			if dev.states["status"] != "up":
-				if self.decideMyLog("Beep"): 
+				if self.decideMyLog("Beep"):
 					self.indiLOG.log(10,"beep beacon... beacon dev not up {}, no beep".format(dev.name) )
 				valuesDict["MSG"] = "rejected, beacon not up"
 				return valuesDict
@@ -10311,7 +10342,7 @@ class Plugin(indigo.PluginBase):
 			else:
 				piU = valuesDict["piServerNumber"]
 
-			if piU not in _rpiBeaconList: 
+			if piU not in _rpiBeaconList:
 				valuesDict["MSG"] = "rejected, rpi not defined"
 				return valuesDict
 
@@ -10364,12 +10395,13 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def sendSetTimeAndZoneOnDeviceCALLBACKmenu(self, valuesDict=None, typeId="", devId=0, force=True):
+	def sendSetTimeAndZoneOnDeviceCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None, force=True):
 
 		if  valuesDict is None: return  valuesDict
 		if self.decideMyLog("UpdateTimeAndZone"): self.indiLOG.log(10,"UpdateTimeAndZone {}".format(valuesDict) )
 
-		try: 
+		if devId is None: devId = 0
+		try:
 			devId = int(devId)
 		except:
 			valuesDict["MSG"] = "dev not selected"
@@ -10387,7 +10419,7 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(30,"UpdateTimeAndZone...pi  not selected")
 			return valuesDict
 
-		if piU not in _rpiBeaconList: 
+		if piU not in _rpiBeaconList:
 			valuesDict["MSG"] = "pi  not selected"
 			self.indiLOG.log(30,"UpdateTimeAndZone...pi  not selected")
 			return valuesDict
@@ -10402,14 +10434,14 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def startCalibrationCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def startCalibrationCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["cmd"]		 = "startCalibration"
 		#self.indiLOG.log(20,"set calibration (1) ")
 		if len(valuesDict["value"]) > 0:
 			#self.indiLOG.log(20,"set calibration (2) ")
-			try: 
+			try:
 				int(valuesDict["value"])
-				theType = valuesDict["typeId"] 
+				theType = valuesDict["typeId"]
 				#self.indiLOG.log(20,"set calibration for sensirion co2 sensor : valuesDict:{}".format(valuesDict) )
 				valuesDict["typeId"] = valuesDict["typeId"] + "." + valuesDict["value"]
 				if theType in ["sensirionscd30","sensirionscd40"]:
@@ -10436,7 +10468,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def execAcceptNewBeaconsCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def execAcceptNewBeaconsCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 
 		xx = valuesDict["acceptNewBeaconMAC"].upper()
 		if self.acceptNewBeaconMAC != xx:
@@ -10481,14 +10513,14 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def printBLEAnalysisCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def printBLEAnalysisCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["cmd"]	 			= "BLEAnalysis"
 		valuesDict["typeId"]	 		= valuesDict["minRSSI"]
 		self.setPin(valuesDict)
 		valuesDict["MSG"]	 			= "send to rpi#:{}, minRSSI:{}".format(valuesDict["piServerNumber"],valuesDict["minRSSI"])
 		return valuesDict
 ####-------------------------------------------------------------------------####
-	def printtrackMacCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def printtrackMacCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 
 
 		mac = valuesDict["mac"].upper()
@@ -10509,19 +10541,19 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def setnewMessageCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setnewMessageCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["cmd"]		 = "newMessage"
 		self.setPin(valuesDict)
 
 
 ####-------------------------------------------------------------------------####
-	def setrestartDeviceCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setrestartDeviceCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["cmd"]		 = "restartDevice"
 		self.setPin(valuesDict)
 
 
 ####-------------------------------------------------------------------------####
-	def setresetDeviceCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setresetDeviceCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["cmd"]		 = "resetDevice"
 		self.setPin(valuesDict)
 		if valuesDict["typeId"] != "rainSensorRG11": return
@@ -10548,13 +10580,13 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setMyoutputCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setMyoutputCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		valuesDict["typeId"]			 = "myoutput"
 		valuesDict["cmd"]				 = "myoutput"
 		self.setPin(valuesDict)
 
 ####-------------------------------------------------------------------------####
-	def setMCP4725CALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setMCP4725CALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		devId = int(valuesDict["outputDev"])
 		dev = indigo.devices[devId]
 		props = dev.pluginProps
@@ -10566,7 +10598,7 @@ class Plugin(indigo.PluginBase):
 		self.setPin(valuesDict)
 
 ####-------------------------------------------------------------------------####
-	def setPCF8591dacCALLBACKmenu(self, valuesDict=None, typeId="", devId=0):
+	def setPCF8591dacCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		devId = int(valuesDict["outputDev"])
 		dev = indigo.devices[devId]
 		props = dev.pluginProps
@@ -10589,7 +10621,7 @@ class Plugin(indigo.PluginBase):
 
 			props0 = dev0.pluginProps
 			if dev0.deviceTypeId == "neopixel-dimmer":
-				valuesDict={}
+				valuesDict = {}
 
 				try:
 						devNEO		= indigo.devices[int(props0["neopixelDevice"])]
@@ -10659,7 +10691,7 @@ class Plugin(indigo.PluginBase):
 
 
 				if RGB[3] !=-1:
-					white = int((RGB[3])/(2.55))
+					white = int((RGB[3])/2.55)
 					for col in	channelKeys:
 						ii = channelKeys[col]
 						RGB[ii]=RGB[3]
@@ -10703,7 +10735,7 @@ class Plugin(indigo.PluginBase):
 
 				self.setneopixelCALLBACKmenu(valuesDict)
 
-				return 
+				return
 
 			elif dev0.deviceTypeId == "OUTPUTswitchbotRelay":
 				piU = props0["piServerNumber"]
@@ -10716,7 +10748,7 @@ class Plugin(indigo.PluginBase):
 											onOff = 0
 				else:
 					self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{};  command not supported:'{}; defined st req:'{}'".format(dev0.name, piU, action.deviceAction, indigo.kUniversalAction.RequestStatus))
-					return 
+					return
 
 
 				dev0.updateStateOnServer("status", "send: {}".format("on" if onOff == 1 else "off"))
@@ -10726,8 +10758,8 @@ class Plugin(indigo.PluginBase):
 				toSend = [{"device": "OUTPUTswitchbotRelay", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
 				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotRelaySet")
 
-				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, textToSend))
-				return 
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, toSend))
+				return
 
 			elif dev0.deviceTypeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
 				piU = props0["piServerNumber"]
@@ -10748,15 +10780,15 @@ class Plugin(indigo.PluginBase):
 
 				else:
 					self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{};  command not supported:'{}; defined st req:'{}'".format(dev0.name, piU, action.deviceAction, indigo.kUniversalAction.RequestStatus))
-					return 
+					return
 
 				fileContents = {"mac":props0["mac"], "cmd":"moveTo", "moveTo":moveTo, "position":position, "mode":"interactive"}
 
 				toSend = [{"device": dev0.deviceTypeId, "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
 				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotCurtainSet")
 
-				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, textToSend))
-				return 
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, toSend))
+				return
 
 			#####  GPIO
 			else:
@@ -10764,7 +10796,7 @@ class Plugin(indigo.PluginBase):
 			props = dev.pluginProps
 
 			if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"deviceAction \n{}\n props {}".format(action, props))
-			valuesDict={}
+			valuesDict = {}
 			valuesDict["outputDev"] = dev.id
 			valuesDict["piServerNumber"] = props["piServerNumber"]
 			valuesDict["deviceDefs"]	  = props["deviceDefs"]
@@ -10847,7 +10879,7 @@ class Plugin(indigo.PluginBase):
 		return
 
 ####-------------------------------------------------------------------------####
-	def confirmdeviceIDOUTPUTBUTTONmenu(self, valuesDict=None, typeId="", devId=""):
+	def confirmdeviceIDOUTPUTBUTTONmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			devId = int(valuesDict["outputDev"])
 			dev = indigo.devices[devId]
@@ -10857,7 +10889,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def filterINPUTpulseDevices(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterINPUTpulseDevices(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = [(-1,"do not use")]
 			for dev in indigo.devices.iter("props.isSensorDevice"):
 				if dev.deviceTypeId==  "INPUTpulse":
@@ -10866,7 +10898,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterINPUTdevices(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterINPUTdevices(self, filter="", valuesDict=None, typeId=None, devId=None):
 			xList = []
 			for dev in indigo.devices.iter("props.isSensorDevice"):
 				if dev.deviceTypeId.find("INPUTgpio") == -1 and dev.deviceTypeId.find("INPUTtouch") == -1 and dev.deviceTypeId.find("INPUTpulse") == -1 and dev.deviceTypeId.find("INPUTcoincidence") == -1: continue
@@ -10877,14 +10909,14 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterOUTPUTdevicesACTION(self, filter="", valuesDict=None, typeId="",devId=""):
+	def filterOUTPUTdevicesACTION(self, filter="", valuesDict=None, typeId=None,devId=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isOutputDevice"):
 			if dev.deviceTypeId.find("OUTPUTgpio") ==-1: continue
 			xList.append((dev.id,"{}".format(dev.name)))
 		return xList
 ####-------------------------------------------------------------------------####
-	def filterOUTPUTrelaydevicesACTION(self, filter="", valuesDict=None, typeId="",devId=""):
+	def filterOUTPUTrelaydevicesACTION(self, filter="", valuesDict=None, typeId=None,devId=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isOutputDevice"):
 			if dev.deviceTypeId.find("OUTPUTi2cRelay") ==-1: continue
@@ -10892,7 +10924,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterOUTPUTchannelsACTION(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterOUTPUTchannelsACTION(self, filter="", valuesDict=None, typeId=None, devId=None):
 		okList = []
 		#self.indiLOG.log(10,	"self.outdeviceForOUTPUTgpio {}".format(self.outdeviceForOUTPUTgpio))
 		if self.outdeviceForOUTPUTgpio =="": return []
@@ -10918,7 +10950,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def filterTimezones(self, filter="", valuesDict=None, typeId="", devId=""):
+	def filterTimezones(self, filter="", valuesDict=None, typeId=None, devId=None):
 
 		timeZones =[]
 		xxx=[]
@@ -10960,7 +10992,7 @@ class Plugin(indigo.PluginBase):
 		return xxx
 
 ####-------------------------------------------------------------------------####
-	def setSWITCHBOTBOTCALLBACKmenu(self, valuesDict=None, typeId=""):
+	def setSWITCHBOTBOTCALLBACKmenu(self, valuesDict=None, typeId=None):
 		try:
 			devId = int(valuesDict["outputDev"])
 			dev = indigo.devices[devId]
@@ -10974,17 +11006,17 @@ class Plugin(indigo.PluginBase):
 		textToSend = [{"device": "OUTPUTswitchbotRelay", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
 		self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, textToSend, calledFrom="switchBotRelaySet")
 		if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action set switchbot params requested: for {} on pi:{}; text to send:{}".format(dev.name, piU, textToSend))
-		return 
+		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
-	def sendPulsesToSwitchBotCALLBACKaction(self, action1=None, typeId=""):
+	def sendPulsesToSwitchBotCALLBACKaction(self, action1=None, typeId=None):
 		self.sendPulsesToSwitchBotCALLBACKmenu(valuesDict=action1.props)
-		return 
+		return
 
 
 ####-------------------------------------------------------------------------####
-	def sendPulsesToSwitchBotCALLBACKmenu(self, valuesDict=None, typeId=""):
+	def sendPulsesToSwitchBotCALLBACKmenu(self, valuesDict=None, typeId=None):
 		try:
 			devId = int(valuesDict["outputDev"])
 			dev = indigo.devices[devId]
@@ -11009,12 +11041,12 @@ class Plugin(indigo.PluginBase):
 		#self.indiLOG.log(10,"action set switchbot params requested: for {} on pi:{}; text to send:{}, valuesDict:{}".format(dev.name, piU, textToSend, valuesDict))
 
 		#if self.decideMyLog("Special"): self.indiLOG.log(10,"action set switchbot params requested: for {} on pi:{}; text to send:{}".format(dev.name, piU, textToSend))
-		return 
+		return valuesDict
 
 
 #
 ####-------------------------------------------------------------------------####
-	def setPinCALLBACKmenu(self, valuesDict=None, typeId=""):
+	def setPinCALLBACKmenu(self, valuesDict=None, typeId=None):
 		#self.indiLOG.log(10,	"{}".format(valuesDict))
 
 		try:
@@ -11039,6 +11071,7 @@ class Plugin(indigo.PluginBase):
 			valuesDict["i2cAddress"]	  = props["i2cAddress"]
 		if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"setPinCALLBACKmenu  valuesDict\n{}".format(valuesDict))
 		self.setPin(valuesDict)
+		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
@@ -11109,7 +11142,7 @@ class Plugin(indigo.PluginBase):
 				startAtDateTime = self.setDelay(startAtDateTimeIN=valuesDict["startAtDateTime"])
 
 			restoreAfterBoot = valuesDict.get("restoreAfterBoot","0")
-			if "{}".format(restoreAfterBoot) not in ["0","1"]: 
+			if "{}".format(restoreAfterBoot) not in ["0","1"]:
 				if restoreAfterBoot in [True,"True","true"]: restoreAfterBoot = "1"
 				if restoreAfterBoot in [False,"False","false"]: restoreAfterBoot = "0"
 
@@ -11404,18 +11437,18 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmoldIPCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmoldIPCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		piU = valuesDict["PINumberForIPChange"]
 		if piU == "":
 			valuesDict["MSG"] = "enter pi #"
-			return 
+			return valuesDict
 		valuesDict["oldipNumberPi"] = self.RPI[piU]["ipNumberPi"]
 		valuesDict["newipNumberPi"] = self.RPI[piU]["ipNumberPi"]
 		return valuesDict
 
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmIPnumberCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmIPnumberCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		piU = valuesDict["PINumberForIPChange"]
 		pi = int(piU)
 		if valuesDict["oldipNumberPi"] != valuesDict["newipNumberPi"]:
@@ -11433,7 +11466,7 @@ class Plugin(indigo.PluginBase):
 	###########################		ACTION	#################################
 
 ####-------------------------------------------------------------------------####
-	def sendConfigviaSocketCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def sendConfigviaSocketCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		try:
 			v = action1.props
 			if v["configurePi"] =="": return
@@ -11443,11 +11476,11 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,"sendingFile to rPI,  bad parameters:"+piU+"  "+ip+"  {}".format(v))
 				return
 			try:
-				if not	indigo.devices[int(self.RPI[piS]["piDevId"])].enabled: return
+				if not	indigo.devices[int(self.RPI[piU]["piDevId"])].enabled: return
 			except:
 				return
 
-			fileContents = self.makeParametersFile(piS,retFile=True)
+			fileContents = self.makeParametersFile(piU,retFile=True)
 			if len(fileContents) >0:
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"sending parameters file via socket: {}".format(v)+" \n"+fileContents)
 				self.sendFileToRPIviaSocket(ip,piU, "/home/pi/pibeacon/parameters", fileContents, fileMode="w")
@@ -11458,7 +11491,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def sendExtraPagesToRpiViaSocketCALLBACKaction(self, action1=None, typeId="", devId=0):
+	def sendExtraPagesToRpiViaSocketCALLBACKaction(self, action1=None, typeId=None, devId=None):
 		try:
 			v = action1.props
 			if v["configurePi"] =="": return
@@ -11501,12 +11534,12 @@ class Plugin(indigo.PluginBase):
 					devId = dev.id
 				except:
 					self.indiLOG.log(10,"device not in valuesDict, need to define parameters properly ")
-					return
+					return valuesDict
 
 			props = dev.pluginProps
 			if "deviceDefs" not in props:
 				self.indiLOG.log(10,"deviceDefs not in valuesDict, need to define OUTPUT device properly ")
-				return
+				return valuesDict
 			valuesDict["deviceDefs"] = props["deviceDefs"]
 			valuesDict["piServerNumber"] = props["piServerNumber"]
 			if "i2cAddress" in props:
@@ -11522,7 +11555,7 @@ class Plugin(indigo.PluginBase):
 		#self.indiLOG.log(20,"setPinCALLBACKaction outputdev:{}, valuesDict:{} ".format(dev.name, valuesDict))
 		self.setPin(valuesDict)
 
-		return
+		return valuesDict
 
 ####-------------------------------------------------------------------------####
 	def setMCP4725CALLBACKaction(self, action1):
@@ -11614,9 +11647,9 @@ class Plugin(indigo.PluginBase):
 	def pauseSensorCALLBACKaction(self, action1):
 		valuesDict = action1.props
 		devId = valuesDict.get("selectSensor","")
-		if devId == "": return 
+		if devId == "": return
 		dev = indigo.devices[int(devId)]
-		devType = dev.deviceTypeId 
+		devType = dev.deviceTypeId
 		piU	 = dev.pluginProps.get("piServerNumber","")
 		sleepFor = valuesDict.get("sleepFor","5")
 
@@ -11637,7 +11670,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmPiServerCALLBACK(self, valuesDict=None, typeId=""):
+	def buttonConfirmPiServerCALLBACK(self, valuesDict=None, typeId=None):
 
 		try:
 			piU = valuesDict["piServerNumber"]
@@ -11677,7 +11710,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def buttonConfirmPiServerConfigCALLBACK(self, valuesDict=None, typeId="", devId=0):
+	def buttonConfirmPiServerConfigCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		try:
 			piU = valuesDict["piServerNumber"]
 			pi = int(piU)
@@ -11841,6 +11874,7 @@ class Plugin(indigo.PluginBase):
 						if dev == "":
 							self.indiLOG.log(30,"buttonConfirmPiServerConfigCALLBACK: error in checking for dev name  found:{}".format(found))
 							return valuesDict
+							
 						props = dev.pluginProps
 						self.addToStatesUpdateDict(dev.id, "note", "Pi-{}".format(pi))
 						self.addToStatesUpdateDict(dev.id, "groupMember","PI")
@@ -11975,10 +12009,13 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 ####-------------------------------------------------------------------------####
-	def delRPI(self, pi="", dev="none", calledFrom=""):
+	def delRPI(self, pi=None, dev=None, calledFrom=None):
 		try:
 			devID = "none"
 
+			if calledFrom is None: calledFrom = ""
+			if dev is None: dev = "none"
+			if pi is None: pi = ""
 			if dev == "none" and pi == "": return
 			if pi != "":
 				try: pi = int(pi)
@@ -12000,7 +12037,7 @@ class Plugin(indigo.PluginBase):
 				if len(pp) >1:
 					try: pi = int(pp[1])
 					except: return
-					self.resetRPI(piU)
+					self.resetRPI(pi)
 				return
 
 		except Exception as e:
@@ -12281,10 +12318,11 @@ class Plugin(indigo.PluginBase):
 		return True, valuesDict
 
 ####-------------------------------------------------------------------------####
-	def confirmDevicex(self, valuesDict=None, typeId="", devId=0):
+	def confirmDevicex(self, valuesDict=None, typeId=None, devId=None):
 
 		piU = valuesDict["piServerNumber"]
 		pi  = int(piU)
+		if devId == None: devId = 0
 		if devId == 0:
 			self.selectedPiServer = pi
 			valuesDict["enablePiEntries"]	 = True
@@ -12376,7 +12414,7 @@ class Plugin(indigo.PluginBase):
 
 		try:
 			if self.timeTrVarName in indigo.variables:
-				xx = (indigo.variables[self.timeTrVarName].value).strip().lower().split("-")
+				xx = indigo.variables[self.timeTrVarName].value.strip().lower().split("-")
 				if len(xx) ==1:
 					cmd = xx[0]
 					pri = ""
@@ -12651,12 +12689,12 @@ class Plugin(indigo.PluginBase):
 			if time.time() - self.lastcheckIfNewSSD < 30: return #  dont check too often every 30 secs is plenty
 			if not self.pluginPrefs.get("enableAutoconfigEmptySSD", True) : return # is check enabled ?
 			self.lastcheckIfNewSSD = time.time()
-			dontcheckBase = 90 
+			dontcheckBase = 90
 			for piU in self.RPI:
 				if  self.RPI[piU]["piOnOff"] == "0": continue								# rpi is not enabled?
 
 				if self.RPI[piU]["rpiType"] == "rPiSensor": dontcheckFor = 2.*dontcheckBase	# they do not send message too often only when sensor is active
-				else:										dontcheckFor = 1.*dontcheckBase	# as ble rpi 
+				else:										dontcheckFor = 1.*dontcheckBase	# as ble rpi
 
 				if time.time() - self.RPI[piU]["lastSSDCheck"] < 2*dontcheckFor: continue 	# last rpi message was in time window ?
 
@@ -12665,7 +12703,7 @@ class Plugin(indigo.PluginBase):
 				if self.testPing(self.RPI[piU]["ipNumberPi"]) == 0: 						# no ping response, only do the following if rpi is online
 					self.indiLOG.log(20,"= checkifNewSSD  checking config of  rpi:{} #:{}   last message received was too long ago ({:.0f} secs) rpi config:\n{}".format(piU,self.RPI[piU]["ipNumberPi"],  time.time() - self.RPI[piU]["lastSSDCheck"] , self.RPI[piU]))
 																							# this resets self.RPI[piU]["lastSSDCheck"] >>IF<< install ok
-					self.execButtonConfig({"configurePi": piU}, level="0,", action=["checkIfInstallOkSSH"], Text="rPi check if configured") 
+					self.execButtonConfig({"configurePi": piU}, level="0,", action=["checkIfInstallOkSSH"], Text="rPi check if configured")
 					self.sleep(10)															# if the action enough time to finish
 					self.indiLOG.log(20,"= checkifNewSSD checking after config of  rpi:{}   ..  last contact was :{:.0f} secs ago".format(piU, time.time() - self.RPI[piU]["lastSSDCheck"]))
 					if time.time() - self.RPI[piU]["lastSSDCheck"] > 2*dontcheckFor: 		# could have been reset by previous execButtonConfig if it is online
@@ -12681,14 +12719,14 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		self.lastcheckIfNewSSD = time.time()
-		return 
+		return
 
 
 
 ####-------------------------------------------------------------------------####
 	def checkIfNewStates(self, force=False):
 		try:
-			if force: 
+			if force:
 				oldDebug = self.pluginPrefs.get("debugSpecial")
 				self.pluginPrefs["debugSpecial"] = True
 				self.getDebugLevels()
@@ -12700,11 +12738,11 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		self.rePopulateStates = ""
-		if force: 
+		if force:
 				self.pluginPrefs["debugSpecial"]  = oldDebug
 				self.getDebugLevels()
 		self.debugNewDevStates = False
-		return 
+		return
 
 
 ####-------------------------------------------------------------------------####
@@ -12986,11 +13024,11 @@ class Plugin(indigo.PluginBase):
 						self.BLEconnectSendStopToRpi[dev.id] = {"mac":dev.address, "send":True, "test1":False, "test2":False, "lastUp":0, "previous":0, "lastSeen":0}
 
 					self.BLEconnectSendStopToRpi[dev.id]["test1"] = self.lastBLEconnectSeen[dev.id] 	- self.BLEconnectSendStopToRpi[dev.id]["lastUp"] 	> 20.
-					self.BLEconnectSendStopToRpi[dev.id]["test2"] = time.time() 						- self.lastBLEconnectSeen[dev.id] 					< max(float(props.get("iPhoneRefreshUpSecs",60.)),60.) 
-					self.BLEconnectSendStopToRpi[dev.id]["send"]  = self.BLEconnectSendStopToRpi[dev.id]["test1"] and self.BLEconnectSendStopToRpi[dev.id]["test2"] 
+					self.BLEconnectSendStopToRpi[dev.id]["test2"] = time.time() 						- self.lastBLEconnectSeen[dev.id] 					< max(float(props.get("iPhoneRefreshUpSecs",60.)),60.)
+					self.BLEconnectSendStopToRpi[dev.id]["send"]  = self.BLEconnectSendStopToRpi[dev.id]["test1"] and self.BLEconnectSendStopToRpi[dev.id]["test2"]
 
 					if self.BLEconnectSendStopToRpi[dev.id]["send"] :
-						self.BLEconnectSendStopToRpi[dev.id]["previous"]	= self.BLEconnectSendStopToRpi[dev.id]["lastUp"] 
+						self.BLEconnectSendStopToRpi[dev.id]["previous"]	= self.BLEconnectSendStopToRpi[dev.id]["lastUp"]
 						self.BLEconnectSendStopToRpi[dev.id]["lastUp"] 		= self.lastBLEconnectSeen[dev.id]
 						updBLE = True
 						for ii in _rpiBeaconList:
@@ -13012,7 +13050,7 @@ class Plugin(indigo.PluginBase):
 	def updateBLEconenctStatusOnRpi(self, updBLE, sendToRPI):
 		try:
 			#self.indiLOG.log(20,"updateBLEconenctStatusOnRpi: updBLE:{}, sendToRPI:{},  self.BLEconnectSendStopToRpi :{} ".format(updBLE, sendToRPI, self.BLEconnectSendStopToRpi) )
-			if self.BLEconnectSendStopToRpi == {}: return 
+			if self.BLEconnectSendStopToRpi == {}: return
 			self.BLEconnectLastUp = {}
 			if updBLE:
 				for devId in self.BLEconnectSendStopToRpi:
@@ -13033,8 +13071,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def checkSensorStatus(self):
 
-		return 
-		# thsi is left over should be deleted 
+		return
+		# thsi is left over should be deleted
 		try:
 			for dev in indigo.devices.iter("props.isSensorDevice"):
 				if dev.deviceTypeId not in _GlobalConst_allowedSensors and dev.deviceTypeId not in _BLEsensorTypes: continue
@@ -13139,12 +13177,12 @@ class Plugin(indigo.PluginBase):
 # noinspection SpellCheckingInspection
 	def BeaconsCheckPeriod(self, now, force = False):
 		try:
+			anyChange = False
 			if	time.time()< self.currentlyBooting:
 				if time.time()> self.lastUPtoDown:
 					self.indiLOG.log(10,"BeaconsCheckPeriod waiting for reboot, no changes in up--> down status for another {:.0f}[secs]".format(self.currentlyBooting - time.time()))
 					self.lastUPtoDown  = time.time()+90
-				return False # noting for the next x minutes due to reboot
-			anyChange = False
+				return anyChange # noting for the next x minutes due to reboot
 			for beacon in copy.deepcopy(self.beacons):
 				if not self.beacons[beacon]["enabled"]: continue
 				if self.beacons[beacon]["ignore"] > 0 : continue
@@ -13233,13 +13271,14 @@ class Plugin(indigo.PluginBase):
 										self.addToStatesUpdateDict(dev.id, "closestRPILast", dev.states["closestRPI"])
 										self.addToStatesUpdateDict(dev.id, "closestRPITextLast", dev.states["closestRPIText"])
 									self.addToStatesUpdateDict(dev.id, "closestRPI", closest)
-									self.addToStatesUpdateDict(dev.id, "closestRPIText",self.getRPIdevName((closest)))
+									self.addToStatesUpdateDict(dev.id, "closestRPIText",self.getRPIdevName(closest))
 							if self.beacons[beacon]["note"].find("beacon")>-1:
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn) # not for RPI's
 
 						elif self.beacons[beacon]["status"] == "down":
 							if self.beacons[beacon]["note"].find("beacon") > -1:
 								if "closestRPI" in dev.states:
+									closestRPI =  self.findClosestRPI(beacon,dev)
 									if closestRPI != dev.states["closestRPI"]:
 										if "{}".format(dev.states["closestRPI"]) != "-1":
 											self.addToStatesUpdateDict(dev.id, "closestRPILast", dev.states["closestRPI"])
@@ -13254,6 +13293,7 @@ class Plugin(indigo.PluginBase):
 							if self.beacons[beacon]["note"].find("beacon") > -1:
 								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 								if "closestRPI" in dev.states:
+									closestRPI =  self.findClosestRPI(beacon,dev)
 									if closestRPI != dev.states["closestRPI"]:
 										if "{}".format(dev.states["closestRPI"]) != "-1":
 											self.addToStatesUpdateDict(dev.id, "closestRPILast", dev.states["closestRPI"])
@@ -13269,7 +13309,7 @@ class Plugin(indigo.PluginBase):
 						if "{}".format(e).find("timeout waiting") > -1:
 							if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"BeaconsCheckPeriod communication to indigo is interrupted")
-							return
+							return anyChange
 
 				if now.minute != self.lastMinuteChecked:
 					try :
@@ -13284,10 +13324,10 @@ class Plugin(indigo.PluginBase):
 								if "{}".format(e).find("timeout waiting") > -1:
 									if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 									self.indiLOG.log(40,"BeaconsCheckPeriod communication to indigo is interrupted")
-									return
+									return anyChange
 								if "{}".format(e).find("not found in database") ==-1:
 									if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-									return
+									return anyChange
 
 								self.indiLOG.log(10,"=== deleting device beaconDict: {}".format(self.beacons[beacon]))
 								self.beacons[beacon]["indigoId"] = 0
@@ -13344,7 +13384,7 @@ class Plugin(indigo.PluginBase):
 						try :
 							dev = indigo.devices[self.beacons[beacon]["indigoId"]]
 							if self.beacons[beacon]["ignore"] == 1:
-								self.indiLOG.log(10,"=== deleting device: {} beacon to be ignored, clean up ".format(dev.name))
+								self.indiLOG.log(30,"=== deleting device: {} beacon to be ignored, clean up ".format(dev.name))
 								indigo.device.delete(dev)
 								continue
 							self.beacons[beacon]["status"] = dev.states["status"]
@@ -13358,16 +13398,19 @@ class Plugin(indigo.PluginBase):
 									self.newIgnoreMAC += 1
 									indigo.device.delete(dev)
 						except Exception as e:
+							self.sleep(10)
 							if "{}".format(e) != "None":
 								if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 							if "{}".format(e).find("timeout waiting") >-1:
 								self.indiLOG.log(40,"communication to indigo is interrupted")
 								return
-							if "{}".format(e).find("not found in database") >-1:
-								self.indiLOG.log(40,"=== deleting mark .. indigoId lookup error, setting to ignore beaconDict: {}".format(self.beacons[beacon]) )
-								self.beacons[beacon]["indigoId"] = 0
-								self.beacons[beacon]["ignore"]   = 1
-								self.beacons[beacon]["status"]   = "ignored"
+							if "{}".format(e).find("not found in database") > -1:
+								self.indiLOG.log(40,"=== deleting: mark .. indigoId lookup error, setting to ignore beaconDict: beacon:{}, {}".format(beacon, self.beacons[beacon]) )
+								if False:
+									self.beacons[beacon]["indigoId"] = 0
+									self.beacons[beacon]["ignore"]   = 1
+									self.beacons[beacon]["status"]   = "ignored"
+								return
 							else:
 								return
 
@@ -13689,7 +13732,7 @@ class Plugin(indigo.PluginBase):
 												self.addToStatesUpdateDict(dev.id,ttx+"MinYesterdayAt",	dateString)
 												self.addToStatesUpdateDict(dev.id,ttx+"MaxTodayAt",		dateString)
 												self.addToStatesUpdateDict(dev.id,ttx+"MinTodayAt",		dateString)
-											if ttx+"MeasurementsToday" in dev.states: 
+											if ttx+"MeasurementsToday" in dev.states:
 												self.addToStatesUpdateDict(dev.id,ttx+"MeasurementsYesterday",		dev.states[ttx+"MeasurementsToday"],	decimalPlaces=0)
 												self.addToStatesUpdateDict(dev.id,ttx+"MeasurementsToday", 			1, 										decimalPlaces=0)
 
@@ -13708,10 +13751,10 @@ class Plugin(indigo.PluginBase):
 											self.addToStatesUpdateDict(dev.id,ttx+"MinYesterdayAt",	dev.states[ttx+"MinTodayAt"])
 											self.addToStatesUpdateDict(dev.id,ttx+"MinTodayAt",		dateString)
 
-										if ttx+"AveToday" in dev.states: 
+										if ttx+"AveToday" in dev.states:
 											self.addToStatesUpdateDict(dev.id,ttx+"AveYesterday",	dev.states[ttx+"AveToday"], decimalPlaces=decimalPlaces)
 											self.addToStatesUpdateDict(dev.id,ttx+"AveToday",		dev.states[ttx], 			decimalPlaces=decimalPlaces)
-											if ttx+"MeasurementsToday" in dev.states: 
+											if ttx+"MeasurementsToday" in dev.states:
 												self.addToStatesUpdateDict(dev.id,ttx+"MeasurementsYesterday",		dev.states[ttx+"MeasurementsToday"],	decimalPlaces=0)
 												self.addToStatesUpdateDict(dev.id,ttx+"MeasurementsToday", 			1, 										decimalPlaces=0)
 						except Exception as e:
@@ -13728,26 +13771,26 @@ class Plugin(indigo.PluginBase):
 			
 			if type(value) == type(""): return
 			if stateName not in _GlobalConst_fillMinMaxStates: 				return
-			if stateName not in dev.states:									return 
-			if not dev.pluginProps.get(stateName+"_EnableMinMax", True):	return 
-			if stateName+"MaxToday" not in dev.states:						return 
+			if stateName not in dev.states:									return
+			if not dev.pluginProps.get(stateName+"_EnableMinMax", True):	return
+			if stateName+"MaxToday" not in dev.states:						return
 			try:	val = float(value)
-			except:															return 
+			except:															return
 			dateString = datetime.datetime.now().strftime(_defaultDateStampFormatDay)
 			try: 	oldV = float(dev.states[stateName+"MaxToday"])
 			except:	oldV  = -999999
 
 			if val > oldV:
 				self.addToStatesUpdateDict(dev.id,stateName+"MaxToday",	 val, decimalPlaces=decimalPlaces)
-				if stateName+"MaxTodayAt"  in dev.states:  
+				if stateName+"MaxTodayAt"  in dev.states:
 					self.addToStatesUpdateDict(dev.id,stateName+"MaxTodayAt",	dateString)
 
-			if stateName+"MinToday" in dev.states:  
+			if stateName+"MinToday" in dev.states:
 				try: 	oldV = float(dev.states[stateName+"MinToday"])
 				except:	oldV  = -999999
 				if val < oldV :
 					self.addToStatesUpdateDict(dev.id,stateName+"MinToday",	 val, decimalPlaces=decimalPlaces)
-					if stateName+"MinTodayAt" in dev.states:  
+					if stateName+"MinTodayAt" in dev.states:
 						self.addToStatesUpdateDict(dev.id,stateName+"MinTodayAt",	dateString)
 
 			if stateName+"AveToday" in dev.states and stateName+"MeasurementsToday" in dev.states:
@@ -13798,7 +13841,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, "last"+ttx, val,decimalPlaces=self.rainDigits)
 					self.addToStatesUpdateDict(dev.id,ttx, 0,decimalPlaces=self.rainDigits)
 
-				if oneUpdate: 
+				if oneUpdate:
 					props["lastDateCheck"] = dd.strftime("%Y-%m-%d-%H")
 					dev.replacePluginPropsOnServer(props)
 				self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom="rollOverRainSensors")
@@ -13841,9 +13884,9 @@ class Plugin(indigo.PluginBase):
 					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 					if "{}".format(e).find("timeout waiting") > -1:
 						self.indiLOG.log(40,"communication to indigo is interrupted")
-						return
+						return anyChange
 					if "{}".format(e).find("not found in database") == -1:
-						return
+						return anyChange
 					self.RPI[piU]["input"][sensor] = {}
 			if sensorList != self.RPI[piU]["sensorList"]:
 				self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
@@ -13866,7 +13909,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def variableUpdated(self, origVar, newVar):
-		return 
+		return
 		try:
 			if newVar.name.find("pi_IN_") != 0:   return
 			if len(newVar.value) < 3:			   return
@@ -14000,7 +14043,7 @@ class Plugin(indigo.PluginBase):
 	def stopbeaconMessageQueue(self):
 		self.beaconMessages["state"] = "stop"
 		self.indiLOG.log(10,"Stopping   thread for beaconMessages, state is: {}".format(self.beaconMessages["state"]) )
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
 	def workOnBeaconMessages(self):
@@ -14034,7 +14077,7 @@ class Plugin(indigo.PluginBase):
 						beaconUpdatedIds += self.execBeaconUpdate(item[0],item[1],item[2],item[3])
 						#### indigo.server.log("{}".format(item[1])+"  {}".format(beaconUpdatedIds)+" "+ item[3])
 						self.beaconMessages["data"].task_done()
-						consumedTime = time.time() - startTime 
+						consumedTime = time.time() - startTime
 						self.dataStats["beaconUpdates"]["count"] += 1
 						self.dataStats["beaconUpdates"]["consumedTime"] += consumedTime
 						if consumedTime > self.dataStats["beaconUpdates"]["max"]: self.dataStats["beaconUpdates"]["max"] = consumedTime
@@ -14058,8 +14101,7 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(10," .. stopped   thread for beaconMessages, state is: {}".format(self.beaconMessages["state"]) )
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-			self.indiLOG.log(40,varNameIN+"  " + varUnicode[0:30])
-		return 
+		return
 ####-------------------------------------------------------------------------####
 	def execBeaconUpdate(self, timeStampOfReceive, pi, data, varUnicode):
 
@@ -14126,8 +14168,10 @@ class Plugin(indigo.PluginBase):
 		return beaconUpdatedIds
 
 ####-------------------------------------------------------------------------####
-	def findClosestiBeaconToRPI(self, piU, beaconUpdatedIds=[], BeaconOrBLE=""):
+	def findClosestiBeaconToRPI(self, piU, beaconUpdatedIds=None, BeaconOrBLE=None):
 		try:
+			if beaconUpdatedIds is None: beaconUpdatedIds = []
+			if BeaconOrBLE is None: BeaconOrBLE = ""
 			if BeaconOrBLE !="beacon": 		return
 			if len(beaconUpdatedIds) ==0: 	return
 			if piU not in _rpiBeaconList: 	return
@@ -14135,14 +14179,14 @@ class Plugin(indigo.PluginBase):
 			try: rpiDev = indigo.devices[self.RPI[piU]["piDevId"]]
 			except Exception as e:
 				self.indiLOG.log(30,"findClosestiBeaconToRPI pi:{}, piDevId not in indigodevices rpi:".format(piU, self.RPI[piU]))
-				return 
+				return
 
 			if "closestiBeacon" not in rpiDev.states:		return
 
 			rpiProps = rpiDev.pluginProps
 			cutOffForClosestBeacon = 300
 			if "cutOffForClosestBeacon" in rpiProps:
-				try:	cutOffForClosestBeacon = float(rpiprops["cutOffForClosestBeacon"])
+				try:	cutOffForClosestBeacon = float(rpiProps["cutOffForClosestBeacon"])
 				except:	pass
 			cutOffForClosestBeacon /= self.distanceUnits
 			closestName = ""
@@ -14244,7 +14288,7 @@ class Plugin(indigo.PluginBase):
 
 									self.beacons[piMAC]["indigoId"] = indigoId
 									self.RPI[piU]["piMAC"] = piMAC
-									if self.decideMyLog("Logic"): self.indiLOG.log(10,"MAC# from RPI  was updated")
+									self.indiLOG.log(20,"MAC# from RPI  was updated from:{}, to {}".format(oldMAC, piMAC))
 								except Exception as e:
 									if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 									if self.decideMyLog("Logic"): self.indiLOG.log(10,"MAC# from RPI...	 indigoId: {} does not exist, ignoring".format(indigoId) )
@@ -14252,7 +14296,7 @@ class Plugin(indigo.PluginBase):
 						# added to cover situation when RPI was set to expire by mistake ==>  reset it to ok
 						if piMAC in self.beacons:
 							if self.beacons[piMAC]["ignore"] > 0: self.beacons[piMAC]["ignore"] = 0
-							self.beacons[piMAC]["lastUp"] = time.time() # for rpi only, do not use last message send info 
+							self.beacons[piMAC]["lastUp"] = time.time() # for rpi only, do not use last message send info
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -14414,7 +14458,7 @@ class Plugin(indigo.PluginBase):
 								out +=   "tag ----------        msg-Type : raw data: preamble->   [-- mac # ------] dat ll   1  2  3  4  5  6  7  8  9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 .. RSSI\n"
 								for ii in range(len(rr[mac]["raw_data"])):
 									rawData  = rr[mac]["raw_data"][ii][:20] + "  " + rr[mac]["raw_data"][ii][20:38] +  "    " + rr[mac]["raw_data"][ii][38:42] + " " +rr[mac]["raw_data"][ii][42:-2]
-									rawData += (" ").ljust( max(3, 35*3 -1 - len(rawData[38:-3])) )
+									rawData += " ".ljust( max(3, 35*3 -1 - len(rawData[38:-3])) )
 									rssi = rr[mac]["raw_data"][ii][-2:]
 									rssiInt = int(rssi,16)
 									if rssiInt > 127: rssiInt -= 256
@@ -14484,11 +14528,11 @@ class Plugin(indigo.PluginBase):
 					if dev.states["hciInfo"] != "error":
 						self.addToStatesUpdateDict(dev.id, "hciInfo", "error")
 						self.indiLOG.log(40," pi#{} bluetooth did not startup, wrong parameters? error msg:\n{}".format(piU, varJson["ERROR"]))
-				return 
+				return
 
-			if "hciInfo" not in varUnicode: return 
-			if "program" not in varUnicode: return 
-			if "pi" 	 not in varUnicode: return 
+			if "hciInfo" not in varUnicode: return
+			if "program" not in varUnicode: return
+			if "pi" 	 not in varUnicode: return
 
 			#self.indiLOG.log(20,"pi:{}; hciinfo: {}".format(piU, varJson))
 			program =varJson["program"]
@@ -14514,25 +14558,25 @@ class Plugin(indigo.PluginBase):
 				if dev.states["hciInfo_beacons"] != varJson["data"]["hciInfo_beep"]:
 					self.addToStatesUpdateDict(dev.id,  "hciInfo_beep", varJson["data"]["hciInfo_beep"])
 
-			if "hciInfo" in dev.states and "hciInfo" in varJson["data"]: 
+			if "hciInfo" in dev.states and "hciInfo" in varJson["data"]:
 					self.addToStatesUpdateDict(dev.id, "hciInfo",  varJson["data"]["hciInfo"])
 
 
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
-	def updateRPIAlive(self, varJson,varUnicode,  timeStampOfReceive):
+	def updateRPIAlive(self, varJson, varUnicode,  timeStampOfReceive):
 		if "pi" not in varJson : return
 		try:
 			if self.decideMyLog("DevMgmt"):	 self.indiLOG.log(10,"rPi alive message :  {}".format(varUnicode))
-			if (varUnicode).find("_dump_") >-1:
+			if varUnicode.find("_dump_") >-1:
 				self.indiLOG.log(40,"rPi error message: Please check that RPI  you might need to replace SD")
 				self.indiLOG.log(40,varUnicode)
 				return
-			if (varUnicode).find("data may be corrupt") >-1:
+			if varUnicode.find("data may be corrupt") >-1:
 				self.indiLOG.log(30,"rPi error message: >>dosfsck has error: data may be corrupt<<<   Please check that RPI  you might need to replace SD")
 				self.indiLOG.log(30,varUnicode)
 				return
@@ -14573,7 +14617,7 @@ class Plugin(indigo.PluginBase):
 				out = "=======  RPI# {}; raspi-config settings: ======\n".format(piU)
 				headers = {}
 				maxItem = 0
-				try: 
+				try:
 					jj = json.loads(varJson["text"])
 
 					# find length of items
@@ -14657,9 +14701,11 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def updateStateIf(self, piU, dev, varJson, stateName, deviceStateName="", makeString=False, decimalPlaces=1 ):
+	def updateStateIf(self, piU, dev, varJson, stateName, deviceStateName=None, makeString=False, decimalPlaces=None ):
 
 		try:
+			if decimalPlaces is None: decimalPlaces = 1
+			if deviceStateName is None: deviceStateName = ""
 			if deviceStateName == "": deviceStateName = stateName
 			if deviceStateName not in dev.states: return ""
 			if stateName in varJson:
@@ -14684,7 +14730,7 @@ class Plugin(indigo.PluginBase):
 
 					if dev.pluginProps.get("suppressUnderVoltMessages", False) :
 						x = "ignored"
-						if old == x : return 
+						if old == x : return ""
 						self.indiLOG.log(30,"RPi# {} \"{}\"   has power state info ignored".format(piU, dev.name) )
 
 					
@@ -14703,7 +14749,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def fixRPIfromBeaconDev(self, piU, devWrong):
-		try:  # this is called when mac number is wrong 
+		try:  # this is called when mac number is wrong
 			self.indiLOG.log(30,"fixRPIfromBeaconDev pi:{}, type:{}, {} is not rPi dev. trying to find pi# in rpi devices".format(piU, devWrong.deviceTypeId, devWrong.name ))
 			for dev in indigo.devices.iter("props.isRPIDevice"):
 				if dev.pluginProps["RPINumber"] == piU:
@@ -14741,16 +14787,16 @@ class Plugin(indigo.PluginBase):
 					return
 			if  dev.deviceTypeId.find("rPI") == -1:
 				self.fixRPIfromBeaconDev(piU, dev)
-				return 
+				return
 
 			if setLastMessage:
 				try:
 					if "lastMessageFromRpi" not in dev.states:
 						self.indiLOG.log(30,"setRPIonline pi:{}, {} lastMessageFromRpi not in states ".format(piU, dev.name ))
-						return 
+						return
 					if dev.states["lastMessageFromRpi"][:-2] != now[:-2]: # only update if > 60 sec difference , approx by ignoring last 2 digits
 						self.addToStatesUpdateDict(dev.id, "lastMessageFromRpi", now)
-				except:
+				except Exception as e:
 					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"setRPIonline pi:{}  RPI:{}".format(piU, self.RPI[piU]), exc_info=True)
 
 
@@ -14904,7 +14950,7 @@ class Plugin(indigo.PluginBase):
 			for pi1 in activePis:
 				pi1U = "{}".format(pi1)
 				piXX = "Pi_{:02d}".format(pi1)
-				if piXX+"_Signal" not in dev.states: 
+				if piXX+"_Signal" not in dev.states:
 					continue
 
 				signal = self.getCurrentState(dev,devIds,piXX+"_Signal", fromMETHOD="calcPostion2")
@@ -14932,7 +14978,7 @@ class Plugin(indigo.PluginBase):
 					piTimeUse = float(lastUp)
 
 				if signal == -999:
-					if	 (time.time()- piTimeUse < expirationTime):
+					if	 time.time()- piTimeUse < expirationTime:
 						status =  "up"
 						#if dev.name.find("BLE-") >-1:	self.indiLOG.log(5,"setting status up  calcPostion sig  = -999  "  )
 					elif (time.time()- piTimeUse < expirationTime)	and status != "up":
@@ -15049,7 +15095,7 @@ class Plugin(indigo.PluginBase):
 					if "{}".format(e).find("timeout waiting") > -1:
 						if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"BLEconnectupdate communication to indigo is interrupted")
-						return
+						return updateBLE
 					self.indiLOG.log(10,"BLEconnectupdate devId not defined in devices pi:{}; devId={}; info:{}".format( piU, devId, info))
 					continue
 				if not dev.enabled: continue
@@ -15124,9 +15170,9 @@ class Plugin(indigo.PluginBase):
 								self.addToStatesUpdateDict(dev.id, "closestRPILast", dev.states["closestRPI"])
 								self.addToStatesUpdateDict(dev.id, "closestRPITextLast", dev.states["closestRPIText"])
 							self.addToStatesUpdateDict(dev.id, "closestRPI", newClosestRPI)
-							self.addToStatesUpdateDict(dev.id, "closestRPIText", self.getRPIdevName((newClosestRPI)))
+							self.addToStatesUpdateDict(dev.id, "closestRPIText", self.getRPIdevName(newClosestRPI))
 
-				if dev.states["lastUpdateFromRPI"] != piU: 
+				if dev.states["lastUpdateFromRPI"] != piU:
 					self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", piU)
 
 				self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom="BLEconnectupdate end")
@@ -15137,7 +15183,7 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("timeout waiting") > -1:
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 
-		return 
+		return updateBLE
 
 
 ####-------------------------------------------------------------------------####
@@ -15210,7 +15256,7 @@ class Plugin(indigo.PluginBase):
 
 			# switchbot: {"outputs":{"OUTPUTswitchbotRelay":{"77309094":{"actualStatus":"on"}}},"program":"BLEconnect","ipAddress":"192.168.1.35","pi":"12","ts":{"tz":"CEST","time":1659629713.54}}
 			dtNow = datetime.datetime.now().strftime(_defaultDateStampFormat)
-			if "actualGpioValue" in data and  "outType" in props: 
+			if "actualGpioValue" in data and  "outType" in props:
 
 				upState = data["actualGpioValue"]
 				actualStatus = upState.lower()
@@ -15275,21 +15321,21 @@ class Plugin(indigo.PluginBase):
 									if secs > 0:
 										#self.indiLOG.log(20,"{} update delayed action".format(dev.name) )
 										if "actualStatus" in dev.states:
-											self.delayedActions["data"].put( 
-												{	"actionTime":time.time()+secs, "devId":dev.id, 
+											self.delayedActions["data"].put(
+												{	"actionTime":time.time()+secs, "devId":dev.id,
 													"updateItems":[
-														{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT}, 
+														{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT},
 														{"stateName":"actualStatus", "value": onT, "image":onT}
 													]
-												} 
+												}
 											)
 										else:
-											self.delayedActions["data"].put( 
-												{	"actionTime":time.time()+secs, "devId":dev.id, 
+											self.delayedActions["data"].put(
+												{	"actionTime":time.time()+secs, "devId":dev.id,
 													"updateItems":[
-														{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT} 
+														{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT}
 													]
-												} 
+												}
 											)
 
 								except Exception as e:
@@ -15303,6 +15349,7 @@ class Plugin(indigo.PluginBase):
 
 					elif xx == "batteryLevel":
 						if  "batteryLevel" in dev.states:
+							batL = xx["batteryLevel"]
 							if	"{}".format(batL) != "{}".format(dev.states["batteryLevel"]):
 								blChanged = True
 								self.addToStatesUpdateDict(dev.id, "batteryLevel",		 	batL)
@@ -15311,7 +15358,7 @@ class Plugin(indigo.PluginBase):
 								blChanged = False
 							self.updatelastUpdateBatteryLevel(dev, dtNow, blChanged)
 
-					elif xx == "position" and "brightnessLevel" in dev.states: 
+					elif xx == "position" and "brightnessLevel" in dev.states:
 						#self.indiLOG.log(20,"sensor pi: {}-{}; dev.deviceTypeId:{};  data {}" .format(piU, dev.name, dev.deviceTypeId , data))
 						if dev.deviceTypeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
 							self.addToStatesUpdateDict(dev.id, "status", "posCmd=ok" )
@@ -15408,7 +15455,7 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id, "status", "bad Sensor data, disconnected?")
 						if dev.states["status"].find("bad Sensor data") == -1:
 							self.indiLOG.log(5,"ERROR, bad Sensor: {}, msg:{}".format(dev.name, uData) )
-						try: 
+						try:
 							dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
 						except: pass
 						continue
@@ -15767,7 +15814,7 @@ class Plugin(indigo.PluginBase):
 								# exapnd to 8x8 matrix, data is in 4 byte packages *100
 								pixPerRow = 8
 								dataRaw = json.loads(data["rawData"])
-								dataRaw = json.dumps([[dataRaw[kkkx] for kkkx in range(pixPerRow*(iiix), pixPerRow*(iiix+1))] for iiix in range(pixPerRow)])
+								dataRaw = json.dumps([[dataRaw[kkkx] for kkkx in range(pixPerRow*iiix, pixPerRow*(iiix+1))] for iiix in range(pixPerRow)])
 
 								if "imageFilesaveRawData" in props and props["imageFilesaveRawData"] == "1":
 										newStatus = self.setStatusCol( dev, "rawData", dataRaw,"", whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,newStatus, decimalPlaces = "")
@@ -16037,7 +16084,7 @@ class Plugin(indigo.PluginBase):
 		try:
 			if self.getDeviceStateListCalls < 400 and self.debugNewDevStates: self.indiLOG.log(10,"populating device state lists, #:{} calls, dev:{}".format(self.getDeviceStateListCalls, dev.name))
 			self.getDeviceStateListCalls  += 1
-			#if called for one make it call for device 
+			#if called for one make it call for device
 
 			statesCategoriesForDevtype = self.setstatesCategoriesForDevtype(dev)
 			#if dev.name.find("s-x-BLEXiaomiMiformaldehyde-48:57:43:00:10:FC") >-1:self.indiLOG.log(20,"dev:{};  statesCategoriesForDevtype:{}".format(dev.name, statesCategoriesForDevtype ))
@@ -16060,7 +16107,7 @@ class Plugin(indigo.PluginBase):
 				if  stateBaseName in _addingstates: # (Temperature, Humidity, CO2, ...)
 					#if dev.name.find("s-x-BLEXiaomiMiformaldehyde-48:57:43:00:10:FC") >-1: self.indiLOG.log(20,"addState:{}; _addingstates:{}".format(stateBaseName, _addingstates[stateBaseName]["States"]  ))
 					for addToState in _addingstates[stateBaseName]["States"]:
-						stateType = _addingstates[stateBaseName]["States"][addToState] 
+						stateType = _addingstates[stateBaseName]["States"][addToState]
 						acceptState = True
 						if addToState != "":
 							#if dev.id == 1497746545: self.indiLOG.log(20,"getDeviceStateList {} stateBaseName:{}, addToState:{} , stateType:{}".format(dev.name, stateBaseName, addToState, stateType))
@@ -16068,7 +16115,7 @@ class Plugin(indigo.PluginBase):
 								#if dev.id == 1497746545: self.indiLOG.log(20,"getDeviceStateList testState:{} ".format(testState))
 								if testState == stateBaseName:
 									#if dev.id == 1497746545: self.indiLOG.log(20,"getDeviceStateList prop:{} ".format(props.get(stateBaseName+"_EnableMinMax", True)))
-									if not props.get(stateBaseName+"_EnableMinMax", True): 
+									if not props.get(stateBaseName+"_EnableMinMax", True):
 										acceptState = False
 										break
 							#if dev.id == 1497746545: self.indiLOG.log(20,"getDeviceStateList acceptState:{} ".format(acceptState))
@@ -16077,7 +16124,7 @@ class Plugin(indigo.PluginBase):
 						if stateBaseName.find("Pi_") == 0:
 							if stateBaseName.find("_Signal") == 5 or stateBaseName.find("_Distance") == 5 or stateBaseName.find("_Time") == 5:
 								piIDs = str(int(stateBaseName[3:5]))
-								if self.RPI[piIDs]["piOnOff"] == "0": 
+								if self.RPI[piIDs]["piOnOff"] == "0":
 									#if self.decideMyLog("Special"): self.indiLOG.log(20,"rej  pi dist..:{}; st:{}; id:{}; active:{} ".format(dev.name, addToState, piIDs, self.RPI[piIDs]["piOnOff"]))
 									continue
 						if _addingstates[stateBaseName]["addTag"]:
@@ -16137,13 +16184,13 @@ class Plugin(indigo.PluginBase):
 		try:
 				xList = ""
 				for ll in stateList:
-					for xx in ll: 
+					for xx in ll:
 						if xx == "Key":
 							xList += "{};".format(ll[xx])
 				self.indiLOG.log(10,"updating states:{}, len:{}, ret={}.. ".format(dev.name, len(stateList), xList[0:200]))
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 ####-------------------------------------------------------------------------####
 	def setstatesCategoriesForDevtype(self, dev):
 		try:
@@ -16156,7 +16203,7 @@ class Plugin(indigo.PluginBase):
 			if dev.pluginProps.get("SupportsBatteryLevel",False):
 				test += "lastBatteryReplaced"
 			return test.strip(",").split(",")
-			 
+			
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -16167,8 +16214,8 @@ class Plugin(indigo.PluginBase):
 	def setlastBatteryReplaced(self, dev, newBatL):
 		try:	
 
-			if "lastBatteryReplaced"  not in dev.states: return 
-			if "batteryLevel"  not in dev.states: return 
+			if "lastBatteryReplaced"  not in dev.states: return
+			if "batteryLevel"  not in dev.states: return
 
 			upd = False
 			# remember the last datetime when batlevel was 100%
@@ -16179,7 +16226,7 @@ class Plugin(indigo.PluginBase):
 				if len(str(dev.states["batteryLevel"])) < 1:# not set yet
 					upd = True
 
-				elif  dev.states["batteryLevel"] < 95: # update if new 100, and old < 95% dot do 99-100-99-100, switch back and forth 
+				elif  dev.states["batteryLevel"] < 95: # update if new 100, and old < 95% dot do 99-100-99-100, switch back and forth
 					upd = True
 
 			elif newBatL - dev.states["batteryLevel"] > 30: # update if new > 30% of old
@@ -16263,7 +16310,7 @@ class Plugin(indigo.PluginBase):
 								devBL = dev.states["batteryLevel"]
 								batteryLR = int(data["batteryLevel"])
 
-								batL = min(batteryLR, 100) 
+								batL = min(batteryLR, 100)
 								if "is_charged" in dev.states:
 									self.addToStatesUpdateDict(dev.id, "is_charged", "{}-{}".format(max(0,batteryLR-100), batteryLR-100>0))
 								if	"{}".format(batL) != "{}".format(devBL):
@@ -16378,7 +16425,7 @@ class Plugin(indigo.PluginBase):
 									self.setStatusCol(dev, "connected",			data["connected"],		"{}".format(data["connected"]),				whichKeysToDisplay, "", "")
 
 				for statename in ["lastMotion"]:
-					if  statename in data: 
+					if  statename in data:
 						xx = time.strftime(_defaultDateStampFormat, time.localtime(data[statename]))
 						xxF = "LastM:{}".format(xx)
 						self.setStatusCol(dev, statename, xx,xxF, whichKeysToDisplay, "","", decimalPlaces=0)
@@ -16419,7 +16466,7 @@ class Plugin(indigo.PluginBase):
 						else:				image = "SensorOff"
 						delayOff = float(props.get("delayOff", "0"))
 						# check if we want to keep the state = "ON" for some time instead of immediately going "off" if off received
-						# added delayed action of adding setting to off IF currently on and delay is set 
+						# added delayed action of adding setting to off IF currently on and delay is set
 						if not data[statename] and delayOff > 0 and dev.states[statename]:
 							self.delayedActions["data"].put( {"actionTime":time.time()+delayOff, "devId":dev.id, "updateItems":[{"stateName":statename, "value":data[statename], "uiValue":uiValue, "image":image}]})
 							#if  dev.id == 1544693341: self.indiLOG.log(20, "setting delay action.. {}: new:{}, current:{}, uiValue:{}, delayOff:{}".format(dev.name, data[statename] , dev.states[statename], uiValue, delayOff))
@@ -16459,8 +16506,8 @@ class Plugin(indigo.PluginBase):
 
 ###-------------------------------------------------------------------------####
 	def updatelastUpdateBatteryLevel(self, dev, dtNow, blChanged):
-		if "lastUpdateBatteryLevel" not in dev.states: return 
-		if blChanged or (dtNow[0:-9] != dev.states["lastUpdateBatteryLevel"][0:-9]): # require >= 1 day delta ignore time stamp in 2025-02-08 09:20:04, only use date 
+		if "lastUpdateBatteryLevel" not in dev.states: return
+		if blChanged or (dtNow[0:-9] != dev.states["lastUpdateBatteryLevel"][0:-9]): # require >= 1 day delta ignore time stamp in 2025-02-08 09:20:04, only use date
 			self.addToStatesUpdateDict(dev.id, "lastUpdateBatteryLevel", dtNow)
 
 
@@ -16487,7 +16534,7 @@ class Plugin(indigo.PluginBase):
 					dev.replacePluginPropsOnServer(props)
 					props = dev.pluginProps
 
-			if "button" not in dev.states: return 
+			if "button" not in dev.states: return
 
 			if props["SupportsOnState"]: # for button only device, remove temp ..
 				removeStates = ""
@@ -16513,7 +16560,7 @@ class Plugin(indigo.PluginBase):
 			if   data.get("onOff",False):  state = "press"
 			elif data.get("onOff1",False): state = "double_press"
 			elif data.get("onOff2",False): state = "long_press"
-			else: return 
+			else: return
 
 			#self.indiLOG.log(20, "dev:{},  state:{}; button:{}".format(dev.name, state, dev.states["button"]))
 			if state != dev.states["button"]:
@@ -16587,7 +16634,7 @@ class Plugin(indigo.PluginBase):
 		if "onOff" in data and "onOffState" in dev.states:
 			if data["onOff"] != dev.states["onOffState"]:
 				self.addToStatesUpdateDict(dev.id, "onOffState", data["onOff"])
-		return 
+		return
 
 
 
@@ -16661,7 +16708,7 @@ class Plugin(indigo.PluginBase):
 			inverse = self.getpropForonOffTrueFalse(props)
 			uiValue = self.getpropForonOffText(dev, props, data)
 
-			if dev.states.get("packetId",-991) == data.get("packetId",-9999): return 
+			if dev.states.get("packetId",-991) == data.get("packetId",-9999): return
 			#self.indiLOG.log(20, "updateBLEShelly; dev:{}, data:{}".format(dev.name, data))
 
 			self.addToStatesUpdateDict(dev.id, "packetId",  								data["packetId"] )
@@ -16766,7 +16813,7 @@ class Plugin(indigo.PluginBase):
 					if inverse:	image = "SensorOn"
 					else:		image = "SensorTripped"
 					if doPrint: self.indiLOG.log(10,"updateBLEiTrack   delayed action:    inverse:{}, uiValue:{} ".format( inverse, uiValue ))
-					self.delayedActions["data"].put( 
+					self.delayedActions["data"].put(
 						{"actionTime":time.time()+50., "devId":dev.id, "updateItems":[
 							{"stateName":"status", "value":uiValue},
 							{"stateName":"onOffState", "value":False, "uiValue":uiValue, "image":image},
@@ -16827,7 +16874,7 @@ class Plugin(indigo.PluginBase):
 				if dev.states["onOffState"]:
 					delayOff = float(props.get("delayOff", "0"))
 					# check if we want to keep the state = "ON" for some time instead of immediately going "off" if off received
-					# added delayed action of adding setting to off IF currently on and delay is set 
+					# added delayed action of adding setting to off IF currently on and delay is set
 					if not data["onOff"] and delayOff > 0 and dev.states["onOffState"]:
 						image = "Sensoroff"
 						if inverse: image = "SensorOn"
@@ -16896,7 +16943,7 @@ class Plugin(indigo.PluginBase):
 							if limitNames[ln] in props:
 								try: 	limitValues[ln] = float(props[limitNames[ln]])
 								except: pass
-							if x < limitValues[ln]: 
+							if x < limitValues[ln]:
 								AirQualityText = limitNames[ln]
 								break
 
@@ -17089,14 +17136,14 @@ class Plugin(indigo.PluginBase):
 
 		# updateOneWire: NNN:{'28-800000035de5': 24.3}
 		# updateOneWire: serialNumber:28-800000035de5
-		# updateOneWire:  else (2) 
+		# updateOneWire:  else (2)
 		# updateOneWire:  else (2) : foundSelf
 
 		# updateOneWire: NNN:{'28-031500c05bff': 23.9}
 		# updateOneWire: serialNumber:28-031500c05bff
-		# updateOneWire:  else (2) 
+		# updateOneWire:  else (2)
 		# updateOneWire:  else (2) : foundSelf
- 
+
 		doPrint = False
 		try:
 			if doPrint: self.indiLOG.log(20,"updateOneWire: dev:{}, data:{}".format(dev.name, data))
@@ -17400,11 +17447,11 @@ class Plugin(indigo.PluginBase):
 		try:
 			if stateToUpdate not in dev.states:
 				self.indiLOG.log(10,"updateChangedValuesInLastXXMinutes: {}, state {}   not defined".format(dev.name, stateToUpdate))
-				return 
+				return
 
 			#self.indiLOG.log(20,"updateChangedValuesInLastXXMinutes: {}, state {}, updateListStates:{}".format(dev.name, stateToUpdate, dev.pluginProps.get("isMememberOfChangedValues","")))
-			if stateToUpdate not in dev.pluginProps.get("isMememberOfChangedValues","").split(","): 
-				return 
+			if stateToUpdate not in dev.pluginProps.get("isMememberOfChangedValues","").split(","):
+				return
 
 			doPrint = False# dev.id == 94071339
 
@@ -17432,7 +17479,7 @@ class Plugin(indigo.PluginBase):
 					amount = int(upU.split(updateN)[1])
 					updateList.append( {"state":state, "unit":updateN, "deltaSecs":updateMinutes * amount, "pointer":0, "changed":0} )
 
-			if len(updateList) < 1: 
+			if len(updateList) < 1:
 				#self.indiLOG.log(10,"updateChangedValuesInLastXXMinutes:{},  state:{}Changexx value:{} \nnot in states: {}".format(dev.name, stateToUpdate, value, dev.states))
 				return
 
@@ -17454,15 +17501,15 @@ class Plugin(indigo.PluginBase):
 
 
 			try: decimalPlaces = int(decimalPlaces)
-			except: 
+			except:
 				self.indiLOG.log(20,"updateChangedValuesInLastXXMinutes dev{}: bad decimalPlaces {}: type:{}  must be >=0 and integer ".format(dev.name, decimalPlaces, type(decimalPlaces)))
 				return
 
-			if decimalPlaces == 0: 
+			if decimalPlaces == 0:
 				valueList.append([int(time.time()),int(value)])
-			elif decimalPlaces > 0: 
+			elif decimalPlaces > 0:
 				valueList.append([int(time.time()), round(value,decimalPlaces)])
-			else:  
+			else:
 				self.indiLOG.log(20,"updateChangedValuesInLastXXMinutes dev{}: bad decimalPlaces {}: type:{}  must be >=0 and integer ".format(dev.name, decimalPlaces, type(decimalPlaces)))
 				return
 
@@ -17490,7 +17537,7 @@ class Plugin(indigo.PluginBase):
 								break
 
 					if decimalPlaces == "":
-						changed			 =         valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] 
+						changed			 =         valueList[-1][1] - valueList[updateList[kk]["pointer"]][1]
 					elif decimalPlaces == 0:
 						changed			 =  int(   valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] )
 					else:
@@ -17499,7 +17546,7 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, updateList[kk]["state"], changed, decimalPlaces=decimalPlaces, force=False)
 					dCut = (cut - trendTimeDeltaMin)
 					if abs(dCut) < 60: # with in 60 secs of defined time window
-						changedPerc	 =      200 * ( valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] ) / max (0.01,valueList[-1][1] + valueList[updateList[kk]["pointer"]][1] ) 
+						changedPerc	 =      200 * ( valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] ) / max (0.01,valueList[-1][1] + valueList[updateList[kk]["pointer"]][1] )
 						if   changedPerc > trendDelta*8:	Trend = "^^^^"
 						elif changedPerc > trendDelta*4:	Trend = "^^^"
 						elif changedPerc > trendDelta*2:	Trend = "^^"
@@ -17516,11 +17563,11 @@ class Plugin(indigo.PluginBase):
 
 			self.changedValues[devIdS][stateToUpdate+"list"] = valueList
 
-			return 
+			return
 
 		except	Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 
 ####-------------------------------------------------------------------------####
@@ -17653,7 +17700,7 @@ class Plugin(indigo.PluginBase):
 							if "onOffState" in dev.states:
 								delayOff = float(props.get("delayOff", "0"))
 								# check if we want to keep the state = "ON" for some time instead of immediately going "off" if off received
-								# added delayed action of adding setting to off IF currently on and delay is set 
+								# added delayed action of adding setting to off IF currently on and delay is set
 								if not on and delayOff > 0 and dev.states["onOffState"]:
 									self.delayedActions["data"].put( {"actionTime":time.time()+delayOff, "devId":dev.id, "updateItems":[{"stateName":"onOffState", "value":False, "uiValue":ssUI, "image":image}]})
 
@@ -17786,7 +17833,7 @@ class Plugin(indigo.PluginBase):
 			self.updateRGB(dev, props, data, props["displayS"])
 
 		except Exception as e:
-			if self.decideMyLog("SensorData"): 
+			if self.decideMyLog("SensorData"):
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
 
@@ -17815,7 +17862,7 @@ class Plugin(indigo.PluginBase):
 							self.setStatusCol( dev, input, ss, ssUI+unit, whichKeysToDisplay, "","" )
 				self.setIcon(dev,props, "SensorOff-SensorOn",1)
 		except Exception as e:
-			if self.decideMyLog("SensorData"): 
+			if self.decideMyLog("SensorData"):
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
 ####-------------------------------------------------------------------------####
@@ -17960,7 +18007,7 @@ class Plugin(indigo.PluginBase):
 						self.setStatusCol( dev, "value", ss, ssUI+unit, whichKeysToDisplay, "","" )
 						self.setStatusCol( dev, "adc", ADC, "{}".format(ADC), whichKeysToDisplay,"","" )
 		except Exception as e:
-			if self.decideMyLog("SensorData"): 
+			if self.decideMyLog("SensorData"):
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
 
@@ -18030,7 +18077,7 @@ class Plugin(indigo.PluginBase):
 			if input in data:
 				if "{}".format(data[input]).find("bad") >-1:
 					self.addToStatesUpdateDict(dev.id, "status", "no sensor data - disconnected?")
-					self.setIcon(dev,props, "SensorOff-SensorOn",0)
+					self.setIcon(dev, dev.pluginProps, "SensorOff-SensorOn",0)
 					return
 
 				props = dev.pluginProps
@@ -18175,7 +18222,7 @@ class Plugin(indigo.PluginBase):
 					valList =  list(val)															# make it a list
 					count =	 0																		# count number of numbers
 					for i in range(len(val)-1):														# reject -0 1 2.3 4  not consecutive numbers:..
-						if (len(''.join([c for c in valList[i ] if c in	 '-1234567890.'])) ==1 ):  # check if this character is a number, if yes:
+						if len(''.join([c for c in valList[i ] if c in	 '-1234567890.'])) == 1:  # check if this character is a number, if yes:
 							count +=1																#
 							if count >= lenXX									: break		 # end of # of numbers, end of test: break, its a number
 							if (len(''.join([c for c in valList[i+1] if c in '-1234567890.'])) )== 0:  return "x"  # next is not a number and not all numbers accounted for, so it is numberXnumber
@@ -18363,37 +18410,42 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 			if "{}".format(e) != "None":
-				#if self.decideMyLog("SensorData"): 
+				#if self.decideMyLog("SensorData"):
 					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 
 ####-------------------------------------------------------------------------####
 	def updateFaceGesture(self, dev, props, data, pi):
 		try:
-			if "cmd" in data: 
+			if "cmd" in data:
 				cmdId = data["cmd"]
 				if isinstance(cmdId, str):
-					self.indiLOG.log(30,"updateDF2301Q, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, cmdId) )
+					self.indiLOG.log(30,"updateFaceGesture, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, cmdId) )
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-					if dev.states["status"] != cmdId: 
+					if dev.states["status"] != cmdId:
 						self.addToStatesUpdateDict(dev.id, "status", cmdId)
 						self.addToStatesUpdateDict(dev.id, "sensorValue", -1, uiValue="error, see logfile, status"  )
-					return 
+					return
 
 				if cmdId == 700:
-					#self.indiLOG.log(30,"updateFaceGesture, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, cmdId) )
-					# this is only alive message
-					return 
-					
-				if cmdId == 900:
-					self.indiLOG.log(30,"updateFaceGesture, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, data) )
-					return 
+					return  # alive message
+
+
+				if cmdId > 1000:
+					errorText = data.get("errText","")
+					if dev.states["status"] != errorText:
+						self.addToStatesUpdateDict(dev.id, "status", errorText )
+						self.indiLOG.log(20,"updateFaceGesture, {} msg from RPI:{}; {}".format(dev.name, pi,errorText) )
+						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+					return
+
+
 
 				faces 				=  data.get("faces",0)
 				if cmdId == 0 and faces == 0:
 					self.indiLOG.log(20,"updateFaceGesture, {}:nothing new .. msg from RPI-{}: gesture:{}, faces:{}".format(dev.name, pi, cmdId, faces) )
-					return 
+					return
 
 				cmdText 			= "{}:{}".format(cmdId, data.get("cmdText","no text"))
 				cmdScore 			=  data.get("cmdScore",0)
@@ -18424,46 +18476,55 @@ class Plugin(indigo.PluginBase):
 				except: counter = 0
 				self.addToStatesUpdateDict(dev.id, "counter", counter+1)
 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-				return 
+				return
 		
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"dev:{}; pi:{}; data:{}".format(dev.name, pi, data), exc_info=True)
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
 	def updateDF2301Q(self, dev, props, data, pi):
 		try:
-			if "cmd" in data: 
+			if "cmd" in data:
 				cmdId = data["cmd"]
 				if isinstance(cmdId, str):
 					self.indiLOG.log(30,"updateDF2301Q, {}: bad response.. msg from RPI-{}: {}".format(dev.name, pi, cmdId) )
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-					if dev.states["status"] != cmdId: 
+					if dev.states["status"] != cmdId:
 						self.addToStatesUpdateDict(dev.id, "status", cmdId)
 						self.addToStatesUpdateDict(dev.id, "sensorValue", -1, uiValue="error, see logfile, status"  )
-					return 
+					return
 
 				cmdtextDict = json.loads(props.get("commandList","{}"))
 				cmdtext = cmdtextDict.get(str(cmdId), "text not set, set in device edit")
 				stText = "{}:{}".format(cmdId, cmdtext)
 
-				if cmdId > 899:
-					if dev.states["status"] != stText: 
-						self.addToStatesUpdateDict(dev.id, "status", stText )
-						self.indiLOG.log(30,"updateDF2301Q, {} msg from RPI:{}; {}".format(dev.name, pi,stText) )
+				if cmdId > 1000:
+					errortext = data.get("errText","")
+					if dev.states["status"] != errortext:
+						self.addToStatesUpdateDict(dev.id, "status", errortext )
+						self.indiLOG.log(20,"updateDF2301Q, {} msg from RPI:{}; {}".format(dev.name, pi,errortext) )
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-					return 
+					return
+
+				elif cmdId > 860:
+					errortext = data.get("text","")
+					if dev.states["status"] != stText:
+						self.addToStatesUpdateDict(dev.id, "status", errortext )
+						self.indiLOG.log(20,"updateDF2301Q, {} msg from RPI:{}; {}".format(dev.name, pi,errortext) )
+						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+					return
 
 				elif cmdId > 699:
-					if dev.states["status"] != stText: 
+					if dev.states["status"] != stText:
 						self.addToStatesUpdateDict(dev.id, "status", stText )
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					return 
+					return
 
 				elif cmdId > 255 or cmdId < 5:
 					if dev.states["status"] != stText: self.addToStatesUpdateDict(dev.id, "status", stText)
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-					return 
+					return
 
 				elif cmdId > 4:
 					self.addToStatesUpdateDict(dev.id, "lastCmd2", dev.states["lastCmd"] )
@@ -18484,19 +18545,19 @@ class Plugin(indigo.PluginBase):
 					except: counter = 0
 					self.addToStatesUpdateDict(dev.id, "counter", counter+1)
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					return 
+					return
 		
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"dev:{}; pi:{}; data:{}".format(dev.name, pi, data), exc_info=True)
-		return 
+		return
 
 
 ####-------------------------------------------------------------------------####
-	def updateRGB(self, dev, props, data, whichKeysToDisplay, theType="",dispType =""):
+	def updateRGB(self, dev, props, data, whichKeysToDisplay, theType=None, dispType=None):
 		try:
 			if "unit" in props: unit = props["unit"]
 			else:				unit = ""
-
+			if dispType is None: dispType = ""
 			changed = 0
 			if "AmbientLight"	in data: changed += self.updateRGB2(dev, "AmbientLight",	data, whichKeysToDisplay,unit, dispType=dispType)
 			if "Clear"			in data: changed += self.updateRGB2(dev, "Clear",			data, whichKeysToDisplay,unit, dispType=dispType)
@@ -18524,7 +18585,7 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
 	def updateRGB2(self, dev, colorState,  data, whichKeysToDisplay, unit, dispType=""):
@@ -18539,11 +18600,11 @@ class Plugin(indigo.PluginBase):
 					delta = 10000
 				if delta < 10 ** (-int(dispType)): return 0
 
-				if color == "lux"  or color == "Illuminance":	 dispType=2
-				self.setStatusCol(dev, colorState, float(data[color]), color+" {}".format(data[colorState])+unit, whichKeysToDisplay, "","",decimalPlaces=dispType )
+				if colorState == "lux"  or colorState == "Illuminance":	 dispType=2
+				self.setStatusCol(dev, colorState, float(data[colorState]), colorState+" {}".format(data[colorState])+unit, whichKeysToDisplay, "","",decimalPlaces=dispType )
 				return 1
 
-			if dev.states[color] != "{}".format(data[colorState]):
+			if dev.states[colorState] != "{}".format(data[colorState]):
 				self.setStatusCol(dev, colorState, float(data[colorState]), "color {}".format(data[colorState])+unit, whichKeysToDisplay, "","",decimalPlaces=dispType )
 				return 1
 			return 0
@@ -18566,8 +18627,8 @@ class Plugin(indigo.PluginBase):
 			return 0
 
 		# 2. Calculate the chromaticity co-ordinates
-		xc = (X) / (X + Y + Z)
-		yc = (Y) / (X + Y + Z)
+		xc = X / (X + Y + Z)
+		yc = Y / (X + Y + Z)
 
 		# Check for divide by 0 again and return None.
 		if (0.1858 - yc) == 0:
@@ -18730,27 +18791,27 @@ class Plugin(indigo.PluginBase):
 ###-------------------------------------------------------------------------####
 	def checkForFastDown(self, mac, piMACSend, dev, props, rssi, fromPiU, newStates):
 		try:
-			if mac == piMACSend: return 
-			if rssi > -999: return 
+			if mac == piMACSend: return
+			if rssi > -999: return
 
 			if newStates["status"] != "up" or rssi > -999. or time.time() < self.currentlyBooting:	 return ## check for fast down signal ==-999
 
 			piI = int(fromPiU)
 
-			if self.decideMyLog("CAR") and self.decideMyLog("BeaconData"): self.indiLOG.log(5,"testing fastdown from pi:{:2s}  for:{};  piStillUp? {}, new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac, piStillUp, self.beacons[mac]["receivedSignals"][piI]["rssi"] , dev.states["status"]))
+			if self.decideMyLog("CAR") and self.decideMyLog("BeaconData"): self.indiLOG.log(5,"testing fastdown from pi:{:2s}  for:{};  new sig=-999; oldsig={:4d}  status={} ".format(fromPiU, mac,  self.beacons[mac]["receivedSignals"][piI]["rssi"] , dev.states["status"]))
 
 			try:	fastDownTime = float(props.get("fastDown","-1"))
 			except: fastDownTime = -1.
-			if fastDownTime <=0: return 
+			if fastDownTime <=0: return
 
-			self.beacons[mac]["receivedSignals"][piI]["lastSignal"] = time.time() 
+			self.beacons[mac]["receivedSignals"][piI]["lastSignal"] = time.time()
 			self.beacons[mac]["receivedSignals"][piI]["rssi"] = rssi
 
 			atLEastOneUp = []
 			for piyy in range(_GlobalConst_numberOfiBeaconRPI):
 				if piyy  == piI: continue
-				if ( time.time() - self.beacons[mac]["receivedSignals"][piyy]["lastSignal"] < fastDownTime and self.beacons[mac]["receivedSignals"][piyy]["rssi"]  != -999):
-					atLEastOneUp.append(piyy) 
+				if time.time() - self.beacons[mac]["receivedSignals"][piyy]["lastSignal"] < fastDownTime and self.beacons[mac]["receivedSignals"][piyy]["rssi"]  != -999:
+					atLEastOneUp.append(piyy)
 
 			if self.selectBeaconsLogTimer !={}:
 				for sMAC in self.selectBeaconsLogTimer:
@@ -18760,8 +18821,8 @@ class Plugin(indigo.PluginBase):
 			if atLEastOneUp == []:
 				delayF = self.delayFastDownBy
 				piXX = "Pi_{:02d}".format(int(fromPiU))
-				self.delayedActions["data"].put( {"actionTime":time.time() + delayF,  "devId":dev.id, "updateItems":[ {"fastDown":{"mac":mac, "piSignal":piXX+"_Signal", "fastDownTime": fastDownTime, "delayF":delayF, "lastRpiWithSignal":dev.states["lastUpdateFromRPI"]}} ] })  
-			return 
+				self.delayedActions["data"].put( {"actionTime":time.time() + delayF,  "devId":dev.id, "updateItems":[ {"fastDown":{"mac":mac, "piSignal":piXX+"_Signal", "fastDownTime": fastDownTime, "delayF":delayF, "lastRpiWithSignal":dev.states["lastUpdateFromRPI"]}} ] })
+			return
 
 		except Exception as e:
 
@@ -18771,7 +18832,7 @@ class Plugin(indigo.PluginBase):
 				return
 			if e is not None	and "{}".format(e).find("not found in database") ==-1:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 ###-------------------------------------------------------------------------####
 	def execDelaytedActionForFastDown(self, dev, actionItems):
@@ -18783,7 +18844,7 @@ class Plugin(indigo.PluginBase):
 			delayF = actionItems["delayF"]
 			lastRpiWithSignal = actionItems["lastRpiWithSignal"]
 			if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread  check if execute fastDown, for dev:{}, mac:{}, fastDownTime:{:.1f}, dt-lastUp:{:.1f} > {:.1f}: {:1}, lastRpiWithSignal:{}".format(dev.name, mac, fastDownTime, time.time() - self.beacons[mac]["lastUp"],  delayF, time.time() - self.beacons[mac]["lastUp"] <= delayF, lastRpiWithSignal))
-			if self.beacons[mac]["status"]  == "up" and time.time() - self.beacons[mac]["lastUp"] < delayF: return 
+			if self.beacons[mac]["status"]  == "up" and time.time() - self.beacons[mac]["lastUp"] < delayF: return
 
 			self.addToStatesUpdateDict(dev.id,piSignal, -999)
 
@@ -18795,7 +18856,7 @@ class Plugin(indigo.PluginBase):
 
 			self.addToStatesUpdateDict(dev.id, "closestRPILast", dev.states["closestRPI"])
 			self.addToStatesUpdateDict(dev.id, "closestRPI", -1)
-			if self.setClostestRPItextToBlank: 
+			if self.setClostestRPItextToBlank:
 				self.addToStatesUpdateDict(dev.id, "closestRPITextLast", dev.states["closestRPI"])
 				self.addToStatesUpdateDict(dev.id, "closestRPIText", "")
 			props = dev.pluginProps
@@ -18813,7 +18874,7 @@ class Plugin(indigo.PluginBase):
 				return
 			if e is not None	and "{}".format(e).find("not found in database") ==-1:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 ###-------------------------------------------------------------------------####
 	def handleBeaconRealSignal(self, mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, dateString, lastMessageReceived):
@@ -18825,8 +18886,8 @@ class Plugin(indigo.PluginBase):
 			closestRPI = -1
 			oldRPI = -1
 			piXX = "Pi_{:02d}".format(fromPiI)
-			if piXX+"_Signal" not in dev.states: 
-				return updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, [[fromPiI,dev.id, 99999]]
+			if piXX+"_Signal" not in dev.states:
+				return updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, [[fromPiI, dev.id, 99999]]
 
 			if dev.deviceTypeId == "beacon":
 				try:	oldRPI = int(dev.states["closestRPI"])
@@ -18841,7 +18902,7 @@ class Plugin(indigo.PluginBase):
 						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
 							self.indiLOG.log(10,"sel.beacon logging: newMSG    up  - :{}; set status up, rssi:{}".format(mac, rssi))
 
-				if ( self.beacons[mac]["lastUp"] > -1) :
+				if self.beacons[mac]["lastUp"] > -1:
 					self.beacons[mac]["receivedSignals"][fromPiI]["rssi"]  = rssi
 					self.beacons[mac]["receivedSignals"][fromPiI]["lastSignal"]  = time.time()
 					self.beacons[mac]["lastUp"] = lastMessageReceived
@@ -18898,11 +18959,13 @@ class Plugin(indigo.PluginBase):
 								self.addToStatesUpdateDict(dev.id, "closestRPILast", dev.states["closestRPI"])
 								self.addToStatesUpdateDict(dev.id, "closestRPITextLast", dev.states["closestRPIText"])
 						newStates = self.addToStatesUpdateDict(dev.id, "closestRPI",     closestRPI,newStates=newStates)
-						newStates = self.addToStatesUpdateDict(dev.id, "closestRPIText", self.getRPIdevName((closestRPI)),newStates=newStates)
+						newStates = self.addToStatesUpdateDict(dev.id, "closestRPIText", self.getRPIdevName(closestRPI),newStates=newStates)
 
 					newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", fromPiI, newStates=newStates)
 
-				self.beacons[mac]["indigoId"] = dev.id
+				if mac not in self.beacons:
+					self.indiLOG.log(20,"handleBeaconRealSignal creating new entry in beacons for:{}, devId:{}".format(mac, dev.id))
+					self.beacons[mac]["indigoId"] = dev.id
 				self.beacons[mac]["receivedSignals"][fromPiI]["rssi"]  = rssi
 				self.beacons[mac]["receivedSignals"][fromPiI]["lastSignal"]  = time.time()
 				self.beacons[mac]["lastUp"] = lastMessageReceived
@@ -18919,7 +18982,6 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("timeout waiting") > -1:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
-				return
 			if e is not None	and "{}".format(e).find("not found in database") ==-1:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
@@ -18932,7 +18994,7 @@ class Plugin(indigo.PluginBase):
 			found = False
 			existingIndigoId = ""
 			existingPiDev	 = ""
-			oldMAC = self.RPI[fromPiU]["piMAC"] 
+			oldMAC = self.RPI[fromPiU]["piMAC"]
 			self.RPI[fromPiU]["piMAC"] = piMACSend
 			self.RPI[fromPiU]["ipNumberPi"] = ipAddress
 			if oldMAC != piMACSend:	self.indiLOG.log(30,"handleRPIMessagePart RPI pi#= {};  piMACSend: {} new, old:{}:".format(fromPiU, piMACSend, oldMAC) )
@@ -18941,7 +19003,7 @@ class Plugin(indigo.PluginBase):
 				existingPiDev	 = indigo.devices[existingIndigoId]
 				props = existingPiDev.pluginProps
 				found = True
-			except: 
+			except:
 				# check if it exist anyway
 				for dev in indigo.devices.iter("props.isRPIDevice"):
 					props = dev.pluginProps
@@ -18982,7 +19044,7 @@ class Plugin(indigo.PluginBase):
 					self.beacons[piMACSend]["typeOfBeacon"]		= "rpi"
 
 
-				if oldMAC != piMACSend and oldMAC in self.beacons: 
+				if oldMAC != piMACSend and oldMAC in self.beacons:
 					self.beacons[oldMAC]["indigoId"]	= 0
 					self.beacons[oldMAC]["note"]		= "beacon"
 					self.beacons[oldMAC]["typeOfBeacon"]= "other"
@@ -18999,7 +19061,7 @@ class Plugin(indigo.PluginBase):
 
 			if not found: # make new one
 				#self.indiLOG.log(20,"handleRPIMessagePart pi#: {};  MAC:{},  not found".format(fromPiU, piMACSend ) )
-				if piMACSend in self.beacons: 
+				if piMACSend in self.beacons:
 					self.beacons[piMACSend]["indigoId"]		= 0
 					self.beacons[piMACSend]["note"]			= "beacon"
 					self.beacons[piMACSend]["typeOfBeacon"]	= "other"
@@ -19013,7 +19075,7 @@ class Plugin(indigo.PluginBase):
 				newProps = copy.copy(_GlobalConst_emptyrPiProps)
 				newProps["rpiDataAcquistionMethod"] = self.rpiDataAcquistionMethod
 				newProps["RPINumber"] = fromPiU
-				# reset dev states 
+				# reset dev states
 				self.rePopulateStates = "add new rpi"
 				indigo.device.create(
 					protocol		= indigo.kProtocol.Plugin,
@@ -19089,7 +19151,7 @@ class Plugin(indigo.PluginBase):
 			for pi in self.RPI:
 				if self.RPI[pi]["passwordPi"] != _GlobalConst_emptyRPI["passwordPi"] and self.RPI[pi]["passwordPi"]  != "":
 					self.RPI[piU]["passwordPi"] = copy.copy(self.RPI[pi]["passwordPi"])
-					return 
+					return
 				
 		except Exception as e:
 			self.indiLOG.log(40,"", exc_info=True)
@@ -19271,8 +19333,8 @@ class Plugin(indigo.PluginBase):
 	def autoCreateCorrespondingSensorDev(self, mac, devBeacon, props, fromPiU, typeOfBeacon, msg):
 		try:
 			# check if type is supported
-			if typeOfBeacon not in self.knownBeaconTags["input"]:  return 
-			if props.get("enableBELSensorChild","1") != "1": return 
+			if typeOfBeacon not in self.knownBeaconTags["input"]:  return
+			if props.get("enableBELSensorChild","1") != "1": return
 
 			dtNow = datetime.datetime.now().strftime(_defaultDateStampFormat )
 
@@ -19280,13 +19342,13 @@ class Plugin(indigo.PluginBase):
 			if verbose: self.indiLOG.log(20,"autoCreateCorrespondingSensorDev received mac:{}  typeOfBeacon:{}, isSwitchbotDevice:{},..{}?..{}?;  msg:{}".format(mac, typeOfBeacon, mac in self.isSwitchbotDevice,  mac in self.isBLESensorDevice,  mac in self.isBLElongConnectDevice, msg))
 			# check if dev already exists
 			if mac in self.isSwitchbotDevice: # only after it is already created
-				try: 
+				try:
 					try:
 						devBot = indigo.devices[self.isSwitchbotDevice[mac]]
 					except:
 						self.indiLOG.log(20,"autoCreateCorrespondingSensorDev removing mac:{} from switchbot dict".format(mac))
 						del self.isSwitchbotDevice[mac]
-						return 
+						return
 
 						
 					if typeOfBeacon in ["Switchbot", "SwitchbotCurtain", "SwitchbotCurtain3"]:
@@ -19302,7 +19364,7 @@ class Plugin(indigo.PluginBase):
 								if verbose: self.indiLOG.log(20,"mac:{}, fromPiU:{}, msg:{}".format(mac, fromPiU, msg))
 								for xx in ["light", "calibrated", "position", "onOffState", "mode", "batteryLevel", "inMotion", "allowsConnection"]:
 									if xx == "position": statename = "brightnessLevel"
-									else:				 statename = xx 
+									else:				 statename = xx
 
 									if xx == "onOffState" and xx in msg and xx in devBot.states:
 										if "mode" in msg and msg["mode"] == "pressMode": msg[xx] = "off"
@@ -19352,8 +19414,8 @@ class Plugin(indigo.PluginBase):
 					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 				return		
 
-			if mac in self.isBLESensorDevice: 		return 
-			if mac in self.isBLElongConnectDevice: 	return 
+			if mac in self.isBLESensorDevice: 		return
+			if mac in self.isBLElongConnectDevice: 	return
 			#indigo.server.log("mac:{}, msg:{}".format(mac, msg))
 
 			newprops 							= {}
@@ -19375,13 +19437,13 @@ class Plugin(indigo.PluginBase):
 							correspondingSensorType = tag
 							break
 
-			if correspondingSensorType == "" and correspondingBLEConnectSensorType == "" and correspondingSwitchbotDevice == "" and correspondingiTrackButtonDevice == "" and correspondingShellyButtonDevice == "": return   
+			if correspondingSensorType == "" and correspondingBLEConnectSensorType == "" and correspondingSwitchbotDevice == "" and correspondingiTrackButtonDevice == "" and correspondingShellyButtonDevice == "": return
 
 			textHint = sensorInfo.get("text","")
 			if subtypeOfBeacon != "":
 				for devTest in indigo.devices.iter("props.isBLESensorDevice"):
 					if mac == devTest.pluginProps.get("mac","xx"):
-						return 
+						return
 				devType 									= subtypeOfBeacon
 				if devType.find("-on") == -1:
 					isSens 									= True
@@ -19391,7 +19453,7 @@ class Plugin(indigo.PluginBase):
 			elif correspondingSensorType != "":
 				for devTest in indigo.devices.iter("props.isBLESensorDevice"):
 					if mac == devTest.pluginProps.get("mac","xx"):
-						return 
+						return
 				devType 									= correspondingSensorType
 				isSens 										= True
 				newprops["isBLESensorDevice"]				= True
@@ -19400,7 +19462,7 @@ class Plugin(indigo.PluginBase):
 			elif correspondingBLEConnectSensorType != "":
 				for devTest in indigo.devices.iter("props.isBLElongConnectDevice"):
 					if mac == devTest.pluginProps.get("mac","xx"):
-						return 
+						return
 				devType										= correspondingBLEConnectSensorType
 				isSens 										= True
 				newprops["isBLElongConnectDevice"]			= True
@@ -19409,7 +19471,7 @@ class Plugin(indigo.PluginBase):
 			elif correspondingSwitchbotDevice != "":
 				for devTest in indigo.devices.iter("props.isSwitchbotDevice"):
 					if mac == devTest.pluginProps.get("mac","xx"):
-						return 
+						return
 				devType 									= correspondingSwitchbotDevice
 				newprops["isSwitchbotDevice"]				= True
 				name 										= "o-{}-{}-{}".format(devType, mac, fromPiU)
@@ -19417,7 +19479,7 @@ class Plugin(indigo.PluginBase):
 			elif correspondingiTrackButtonDevice != "":
 				for devTest in indigo.devices.iter("props.isBLESensorDevice"):
 					if mac == devTest.pluginProps.get("mac","xx"):
-						return 
+						return
 				devType 									= correspondingiTrackButtonDevice
 				newprops["isBLESensorDevice"]				= True
 				name 										= "b-{}-{}-{}".format(devType, mac, fromPiU)
@@ -19425,15 +19487,15 @@ class Plugin(indigo.PluginBase):
 			elif correspondingShellyButtonDevice != "":
 				for devTest in indigo.devices.iter("props.isBLESensorDevice"):
 					if mac == devTest.pluginProps.get("mac","xx"):
-						return 
+						return
 				isSens 										= True
 				devType 									= correspondingShellyButtonDevice
 				newprops["isBLESensorDevice"]				= True
 				name 										= "b-{}-{}-{}".format(devType, mac, fromPiU)
 
 			else:
-				return 
-			# does not exist and type is supported: create corresponding BLE sensor device 
+				return
+			# does not exist and type is supported: create corresponding BLE sensor device
 
 
 			self.indiLOG.log(20,"checking if new sensor dev is needed mac:{}, msg:{}, BLEConnect:{}, SensorType:{}, SwitchbotDevice:{}, subtypeOfBeacon:{} devType:{}".format(mac, msg, correspondingBLEConnectSensorType, correspondingSensorType, correspondingSwitchbotDevice, subtypeOfBeacon, devType))
@@ -19559,7 +19621,7 @@ class Plugin(indigo.PluginBase):
 			except Exception as e:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"name: {}".format(name))
-				return 
+				return
 
 			if "input" not in self.RPI[fromPiU]:
 				self.RPI[fromPiU] = {}
@@ -19602,12 +19664,12 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		return 
+		return
 
 ####-------------------------------------------------------------------------####
 	def checkBeaconDictIfok(self, mac, dateString, rssi, fromPiU, msg, keepNew, acceptMAC, lastMessageReceived):
 		try:
-			if (mac in self.beacons and self.beacons[mac]["ignore"] >0 ):
+			if mac in self.beacons and self.beacons[mac]["ignore"] > 0:
 				if self.decideMyLog("BeaconData"): self.indiLOG.log(5," rejected beacon because its in reject family: pi: {}; beacon: {}".format(fromPiU, msg) )
 				return False  # ignore certain type of beacons, but only for new ones, old ones must be excluded individually
 
@@ -19649,8 +19711,8 @@ class Plugin(indigo.PluginBase):
 			setALLrPiVUpdate = ""
 			beaconUpdatedIds = []
 			ln = len(msgs)
-			if ln < 1: 
-				self.indiLOG.log(30,"updateBeaconStates: message rejected RPI piMACSend: {}; pi#: {:2s}; MSGS :{}".format(piMACSend, fromPiU, str(msgs)[0:50]) )
+			if ln < 1:
+				self.indiLOG.log(30,"updateBeaconStates: message rejected RPI piMACSend: {}; pi#: {:2s}; MSGS :{}".format(piMACSend, fromPi, str(msgs)[0:50]) )
 				return beaconUpdatedIds
 			dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 
@@ -19706,7 +19768,7 @@ class Plugin(indigo.PluginBase):
 					try:	
 						batteryLR = int(msg["batteryLevel"])
 						batteryLevel = min(100, batteryLR)
-					except: 
+					except:
 						batteryLevel = ""
 						batteryLR = ""
 					#try:	iBeacon	 = msg["iBeacon"]
@@ -19874,7 +19936,6 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("timeout waiting") > -1:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
-				return
 			if e is not None	and "{}".format(e).find("not found in database") ==-1:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
@@ -20056,7 +20117,7 @@ class Plugin(indigo.PluginBase):
 		return activePis
 
 ####-------------------------------------------------------------------------####
-	def sendGPIOCommand(self, ip, pi, typeId, cmd, GPIOpin=0, pulseUp=0, pulseDown=0, nPulses=0, analogValue=0,rampTime=0, i2cAddress=0,text="",soundFile="",restoreAfterBoot="0",startAtDateTime=0, inverseGPIO=False, devId=0):
+	def sendGPIOCommand(self, ip, pi, typeId, cmd, GPIOpin=0, pulseUp=0, pulseDown=0, nPulses=0, analogValue=0,rampTime=0, i2cAddress=0,text="",soundFile="",restoreAfterBoot="0",startAtDateTime=0, inverseGPIO=False, devId=None):
 		cmd1 =""
 		try:
 			if cmd in["updateTimeAndZone", "beepBeacon", "getBeaconParameters", "resetDevice", "restartDevice", "startCalibration", "newMessage"]:
@@ -20217,7 +20278,7 @@ class Plugin(indigo.PluginBase):
 
 			#self.indiLOG.log(20,"fastBLEReaction: {}".format(self.fastBLEReaction))
 			for mac in copy.copy(self.fastBLEReaction):
-				if not self.isValidMAC(mac): 
+				if not self.isValidMAC(mac):
 					del self.fastBLEReaction[mac]
 				if type(self.fastBLEReaction[mac]) != type({}):
 					del self.fastBLEReaction[mac]
@@ -20247,7 +20308,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def makeInterfacesFile(self,piU):
-		return 
+		return
 		try:
 			if self.RPI[piU]["piOnOff"] == "0": return
 			f = open(self.indigoPreferencesPluginDir + "interfaceFiles/interfaces." + piU, "w")
@@ -20268,7 +20329,7 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def makeSupplicantFile(self,piU):
-		return 
+		return
 		try:
 			if self.RPI[piU]["piOnOff"] == "0": return
 			f = open(self.indigoPreferencesPluginDir + "interfaceFiles/wpa_supplicant.conf." + piU, "w")
@@ -20289,7 +20350,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def makeParametersFile(self, piU, retFile=False):
 		try:
-				if self.RPI[piU]["piOnOff"] == "0": return
+				if self.RPI[piU]["piOnOff"] == "0": return ""
 				out = {}
 				pi = int(piU)
 
@@ -20338,7 +20399,7 @@ class Plugin(indigo.PluginBase):
 						if "{}".format(e).find("timeout waiting") > -1:
 							if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"communication to indigo is interrupted")
-							return
+							return ""
 						if "{}".format(e).find("not found in database") >-1:
 							if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"RPI:{} devid:{} not in indigo, if RPI justd eleted, it will resolve itself ".format(piU ,piID))
@@ -20404,7 +20465,7 @@ class Plugin(indigo.PluginBase):
 						out["oneWireGpios"]					= props.get("oneWireGpios", "4")
 						if len(out["oneWireGpios"]) < 1:	 out["oneWireGpios"] = "4"
 						if out["oneWireGpios"].find(",") == -1:
-							if out["oneWireGpios"]  not in _GlobalConst_allGPIOlist: 
+							if out["oneWireGpios"]  not in _GlobalConst_allGPIOlist:
 								props["oneWireGpios"] = "4"
 								out["oneWireGpios"]  = "4"
 								piDev.replacePluginPropsOnServer(props)
@@ -20547,7 +20608,7 @@ class Plugin(indigo.PluginBase):
 								if "{}".format(e).find("timeout waiting") > -1:
 									if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 									self.indiLOG.log(40,"communication to indigo is interrupted")
-									return
+									return ""
 								if "{}".format(e).find("not found in database") > -1:
 									self.indiLOG.log(30,"devid:{} not in indigo devices, ok if just deleted".format(devId))
 									continue
@@ -20557,7 +20618,7 @@ class Plugin(indigo.PluginBase):
 
 							if not dev.enabled: continue
 							props = dev.pluginProps
-							if props.get("enableBELSensorChild","1") != "1": continue 
+							if props.get("enableBELSensorChild","1") != "1": continue
 
 							sens[devIdS] = {}
 							#if dev.id in [49344355]: self.indiLOG.log(20,"pass 1 props:{}".format(props))
@@ -20623,16 +20684,15 @@ class Plugin(indigo.PluginBase):
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","count","bounceTime","timeWindowForContinuousEvents",
 										"mac","type","INPUTdevId0","INPUTdevId1","INPUTdevId2","INPUTdevId3","coincidenceTimeInterval","updateIndigoTiming","updateIndigoDeltaTemp","updateIndigoDeltaAccelVector","updateIndigoDeltaMaxXYZ",
 										"usbPort","motorFrequency","nContiguousAngles","contiguousDeltaValue","triggerLast","triggerCalibrated","sendToIndigoEvery",
-										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetGPIOClass","logLevel","reactOnlyToCommands",
-										"gpioCmdForAction1","gpioNumberForCmdAction1","gpioOnTimeAction1","gpioInverseAction1",
-										"gpioCmdForAction2","gpioNumberForCmdAction2","gpioOnTimeAction2","gpioInverseAction2",
-										"gpioCmdForAction3","gpioNumberForCmdAction3","gpioOnTimeAction3","gpioInverseAction3",
-										"gpioCmdForAction4","gpioNumberForCmdAction4","gpioOnTimeAction4","gpioInverseAction4",
-										"gpioCmdForAction5","gpioNumberForCmdAction5","gpioOnTimeAction5","gpioInverseAction5",
-										"unixCmdVoiceNo1","unixCmdVoiceNo2","unixCmdVoiceNo3","unixCmdVoiceNo4","unixCmdVoiceNo5",
-										"unixCmdAction1","unixCmdAction2","unixCmdAction3","unixCmdAction4","unixCmdAction5",
+										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetGPIOClass","logLevel","reactOnlyToCommands","ignoreSameCommands","faceDetectionThreshold", "gestureDetectionThreshold", "detectionRange",
 										"anglesInOneBin","measurementsNeededForCalib","sendPixelData","doNotUseDataRanges","minSignalStrength","relayType","python3","bleHandle"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate)
+
+
+							for propToUpdate in ["gpioCmdForAction", "gpioNumberForCmdAction", "gpioOnTimeAction", "gpioInverseAction", "unixCmdVoiceNo", "unixCmdAction"]:
+								for ll in range(1,10):
+									sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate+str(ll) )
+								
 							#if dev.id == 49344355: self.indiLOG.log(20,"pass 9 sens:{}".format(sens))
 							#if dev.id == 1974364636: self.indiLOG.log(20,"dev:{}, props:{} ".format(dev.name, props))
 
@@ -20654,7 +20714,7 @@ class Plugin(indigo.PluginBase):
 					if not devOut.enabled: 														continue
 					propsOut= devOut.pluginProps
 					if "piServerNumber" in propsOut and propsOut["piServerNumber"] != piU:	continue
-					if typeId.find("OUTPUTgpio") > -1 or typeId.find("OUTPUTi2cRelay") > -1 or typeId.find("OUTPUTswitchbot") > -1: 
+					if typeId.find("OUTPUTgpio") > -1 or typeId.find("OUTPUTi2cRelay") > -1 or typeId.find("OUTPUTswitchbot") > -1:
 						if typeId in self.RPI[piU]["output"]:
 							if typeId.find("OUTPUTswitchbot") > -1:
 								out["output"][typeId] = {}
@@ -20770,7 +20830,7 @@ class Plugin(indigo.PluginBase):
 										dev1Id = int(dev1Id)
 										dev1Name =  indigo.devices[dev1Id].name
 										LEVEL = indigo.devices[dev1Id].states["LEVEL"]
-									except: 
+									except:
 										LEVEL = 0
 										dev1Name = ""
 									try:
@@ -20778,7 +20838,7 @@ class Plugin(indigo.PluginBase):
 										dev2Name =  indigo.devices[dev2Id].name
 										setpointHeat = indigo.devices[dev2Id].states["setpointHeat"]
 										roomTemperature = indigo.devices[dev2Id].states["temperatureInput1"]
-									except: 
+									except:
 										setpointHeat = 0
 										roomTemperature = -1
 										dev2Name =  ""
@@ -20847,7 +20907,7 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		if retFile: return out
-		return
+		return ""
 
 ####-------------------------------------------------------------------------####
 	def updateSensProps(self, sens, props, param, elseSet=None):
@@ -20922,9 +20982,9 @@ class Plugin(indigo.PluginBase):
 					self.sleep(0.5)
 					self.delayedActions["lastCheck"] = time.time()
 
-					# cleanup pendingDisableItems from expired remove actions 
+					# cleanup pendingDisableItems from expired remove actions
 					for devId in copy.deepcopy(pendingDisableItems):
-						if time.time() - pendingDisableItems[devId]["activeUntil"] > 0: 
+						if time.time() - pendingDisableItems[devId]["activeUntil"] > 0:
 							del pendingDisableItems[devId]
 
 
@@ -20934,7 +20994,7 @@ class Plugin(indigo.PluginBase):
 						action = self.delayedActions["data"].get()
 						self.delayedActions["lastActive"]  = time.time()
 
-						if time.time() - action.get("activeUntil", 99999999999999) >0: continue # remove by skipping and not adding back 
+						if time.time() - action.get("activeUntil", 99999999999999) >0: continue # remove by skipping and not adding back
 						devId = action.get("devId",0)
 
 						if devId > 0:
@@ -20993,13 +21053,13 @@ class Plugin(indigo.PluginBase):
 											elif updateItem["image"].lower().find("tripped") > -1:	image = "SensorTripped"
 
 										if devId in pendingDisableItems and pendingDisableItems[devId]["stateName"] == updateItem["stateName"]:
-											if time.time() - pendingDisableItems[devId]["activeUntil"] > 0: 
+											if time.time() - pendingDisableItems[devId]["activeUntil"] > 0:
 												del pendingDisableItems[devId]
 											else:
 												if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread skipping updateItem:{} ".format(updateItem))
 												continue
 
-										theValue = updateItem["value"] 
+										theValue = updateItem["value"]
 										if theValue == "currentDateTimeStamp": theValue = datetime.datetime.now().strftime(_defaultDateStampFormat)
 
 										if theValue != dev.states[updateItem["stateName"]]:
@@ -21063,10 +21123,10 @@ class Plugin(indigo.PluginBase):
 					for piU in self.RPI:
 						if self.RPI[piU]["piOnOff"] != "1": continue
 						if piSelect == "all" or piU == piSelect:
-							if piU not in self.rpiQueues["state"]: 
+							if piU not in self.rpiQueues["state"]:
 								self.startOneUpdateRPIqueue(piU, reason="not running", force=True)
 								self.sleep(0.2)
-							if piU not in self.rpiQueues["lastCheck"]: 
+							if piU not in self.rpiQueues["lastCheck"]:
 								self.startOneUpdateRPIqueue(piU, reason="not running", force=True)
 
 							if time.time() - self.rpiQueues["lastCheck"][piU] > 100:
@@ -21091,11 +21151,11 @@ class Plugin(indigo.PluginBase):
 		self.rpiQueues["thread"] 		= {}
 		self.rpiQueues["lastData"] 		= {}
 		self.rpiQueues["busy"] 			= {}
-		return 
+		return
 ####-------------------------------------------------------------------------####
 	def startOneUpdateRPIqueue(self, piU, reason="", force=False):
 		try:		
-			if "state"  not in self.rpiQueues: 
+			if "state"  not in self.rpiQueues:
 				self.initrpiQueues()
 
 			if force: self.RPI[piU]["piOnOff"] = "1"
@@ -21145,7 +21205,8 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def sendFilesToPiFTP(self, piU, expFile="",endAction="repeatUntilFinished"):
-		if piU not in self.rpiQueues["state"]: return 
+		if piU not in self.rpiQueues["state"]: return
+		if piU not in self.rpiQueues["lastCheck"]: return
 		if time.time() - self.rpiQueues["lastCheck"][piU] > 100 or self.rpiQueues["state"][piU] != "running":
 			self.startUpdateRPIqueues("restart", piSelect=piU)
 
@@ -21157,7 +21218,7 @@ class Plugin(indigo.PluginBase):
 		return
 ####-------------------------------------------------------------------------####
 	def sshToRPI(self, piU, expFile="", endAction="repeatUntilFinished"):
-		if piU not in self.rpiQueues["lastCheck"]: 
+		if piU not in self.rpiQueues["lastCheck"]:
 			self.startOneUpdateRPIqueue(piU, reason="not running", force=True)
 
 		if time.time() - self.rpiQueues["lastCheck"][piU] > 100:
@@ -21178,7 +21239,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def testIfAlreadyInQ(self, next, piU):
 		if piU not in self.rpiQueues["data"]:
-			self.startOneUpdateRPIqueue(piU) 
+			self.startOneUpdateRPIqueue(piU)
 		currentQueue = list(self.rpiQueues["data"][piU].queue)
 		for q in currentQueue:
 			if q["pi"] == next["pi"] and q["expFile"] == next["expFile"]:
@@ -21189,8 +21250,8 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def rpiUpdateThread(self,piU):
 		try:
-			if piU not in self.rpiQueues["state"]: return 
-			if piU not in self.rpiQueues["data"]: return 
+			if piU not in self.rpiQueues["state"]: return
+			if piU not in self.rpiQueues["data"]: return
 			self.rpiQueues["state"][piU] = "running"
 			self.rpiQueues["busy"][piU]	= 0
 			if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"rpiUpdateThread starting  for pi# {}".format(piU) )
@@ -21202,7 +21263,7 @@ class Plugin(indigo.PluginBase):
 				while not self.rpiQueues["data"][piU].empty():
 					self.rpiQueues["lastActive"][piU]  = time.time()
 					next = self.rpiQueues["data"][piU].get()
-					if self.RPI[piU]["clearQueue"]: # empty queue 
+					if self.RPI[piU]["clearQueue"]: # empty queue
 						continue
 
 					self.rpiQueues["lastData"][piU] = "{}".format(next)
@@ -21236,7 +21297,7 @@ class Plugin(indigo.PluginBase):
 
 					# time for sending?
 					if next["exeTime"] > time.time():
-						addBack.append((next)) # no , wait
+						addBack.append(next) # no , wait
 						continue
 					self.rpiQueues["busy"][piU]	= time.time()
 
@@ -21392,7 +21453,7 @@ class Plugin(indigo.PluginBase):
 					ret1= ret1.split("===END===")[0]
 					if ret1.find("pibeacon") > 0 and ret1.find("callbeacon.py") > 0 and ret1.find("beaconloop.py") > 0:
 						self.RPI[piU]["lastSSDCheck"] = time.time()-1.
-						self.RPI[piU]["clearQueue"] = True # stop  any further updates for now 
+						self.RPI[piU]["clearQueue"] = True # stop  any further updates for now
 						
 					if not noLog:
 						self.indiLOG.log(20,"check if plugin installed ok on Pi#{};  last ok rpiInstall check:{:.1f} secs ago".format(piU,  time.time() - self.RPI[piU]["lastSSDCheck"] ) )
@@ -21546,9 +21607,10 @@ class Plugin(indigo.PluginBase):
 	def executeOverwriteButtonStateAction(self, action1):
 		return self.executeOverwriteButtonState(action1.props)
 
-	def executeOverwriteButtonState(self, valuesDict={}, typeId="", xxx=""):
+	def executeOverwriteButtonState(self, valuesDict=None, typeId=None, xxx=""):
 
 		try:
+			if valuesDict is None: valuesDict = {}
 			devId =  valuesDict.get("confirmedDevice","")
 			if devId == "": return valuesDict
 			dev = indigo.devices[int(devId)]
@@ -21570,7 +21632,7 @@ class Plugin(indigo.PluginBase):
 		return valuesDict
 
 	####-------------ignore / unignore devices  -----------
-	def filterallDevicesReturnDevID(self, filter="", valuesDict={}, typeId="",xxx=""):
+	def filterallDevicesReturnDevID(self, filter="", valuesDict=None, typeId=None,xxx=""):
 		xList = []
 		for dev in indigo.devices.iter(self.pluginId):
 			xList.append((dev.id,dev.name))
@@ -21579,10 +21641,11 @@ class Plugin(indigo.PluginBase):
 
 
 	####-------------action filters  -----------
-	def selectStateForChange(self, filter="", valuesDict={}, typeId="", xxx=""):
+	def selectStateForChange(self, filter="", valuesDict=None, typeId=None, xxx=""):
 
 		ret = []
 		try:
+			if valuesDict is None: valuesDict = {}
 			devId =  valuesDict.get("confirmedDevice","")
 			#self.indiLOG.log(20,"selectState: valuesDict:{}".format(valuesDict))
 			if devId == "": return [["0","select device first"]]
@@ -21595,10 +21658,11 @@ class Plugin(indigo.PluginBase):
 		return ret
 
 	####-------------action filters  -----------
-	def selectPropertyforChange(self, filter="", valuesDict={}, typeId="", xxx=""):
+	def selectPropertyforChange(self, filter="", valuesDict=None, typeId=None, xxx=""):
 
 		ret = []
 		try:
+			if valuesDict is None: valuesDict = {}
 			devId =  valuesDict.get("confirmedDevice","")
 			#self.indiLOG.log(20,"selectState: valuesDict:{}".format(valuesDict))
 			if devId == "": return [["0","select device first"]]
@@ -21612,9 +21676,10 @@ class Plugin(indigo.PluginBase):
 
 
 	####-------------action filters  -----------
-	def executeOverwriteButtonProperty(self, valuesDict={}, typeId="", xxx=""):
+	def executeOverwriteButtonProperty(self, valuesDict=None, typeId=None, xxx=""):
 
 		try:
+			if valuesDict is None: valuesDict = {}
 			devId =  valuesDict.get("confirmedDevice","")
 			if devId == "": return valuesDict
 			dev = indigo.devices[int(devId)]
@@ -21639,10 +21704,11 @@ class Plugin(indigo.PluginBase):
 
 	
 	####-------------action filters  -----------
-	def dynamicCallbackSetdeviceID(self, valuesDict={}):
+	def dynamicCallbackSetdeviceID(self, valuesDict=None):
 
 		try:
 			#self.indiLOG.log(20,"dynamicCallbackSetdeviceID:  in:{}".format(valuesDict))
+			if valuesDict is None: valuesDict = {}
 			valuesDict["confirmedDevice"] = valuesDict.get("devId","")
 			if   valuesDict.get("MSG","").find("select next device/state        3") > -1: 			valuesDict["MSG"] = valuesDict["MSG"].replace("3","2")
 			elif valuesDict.get("MSG","").find("select next device/state        2") > -1:			valuesDict["MSG"] = valuesDict["MSG"].replace("2","1")
@@ -21676,7 +21742,7 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def printBeaconsIgnoredButton(self, valuesDict=None, typeId=""):
+	def printBeaconsIgnoredButton(self, valuesDict=None, typeId=None):
 
 		############## list of beacons in history
 		#				  1234567890123456	1234567890123456789012 1234567890 123456 123456789
@@ -21867,7 +21933,7 @@ class Plugin(indigo.PluginBase):
 					line = ""
 					#line += self.RPI[piU]["ipNumberPi"].ljust(15) + " "
 					line += self.RPI[piU]["piMAC"].rjust(17) + " "
-					line += (dev.name).ljust(25) + " "
+					line += dev.name.ljust(25) + " "
 					if piU  in _rpiBeaconList:
 						line += ("{}".format(dev.states["PosX"]).split(".")[0] + ",{}".format(dev.states["PosY"]).split(".")[0] + ",{}".format(dev.states["PosZ"]).split(".")[0]).rjust(10)
 					else:
@@ -21898,7 +21964,7 @@ class Plugin(indigo.PluginBase):
 					carDevId = int(dd)
 					carDev	= indigo.devices[carDevId]
 					props	= carDev.pluginProps
-					carName =(carDev.name).strip().ljust(30)
+					carName = carDev.name.strip().ljust(30)
 					for nn in range(len(bNames)):
 						beaconType= bNames[nn]
 						try:
@@ -21910,7 +21976,7 @@ class Plugin(indigo.PluginBase):
 							continue
 						beaconDev= indigo.devices[beaconId]
 						propsB = beaconDev.pluginProps
-						bN[nn] = (beaconDev.name)
+						bN[nn] = beaconDev.name
 						bF[nn] = propsB["fastDown"]
 					homeSince = int(time.time() - self.CARS["carId"][dd]["homeSince"])
 					if homeSince > 9999999: homeSince = " "
@@ -21928,7 +21994,7 @@ class Plugin(indigo.PluginBase):
 						if bF[n] !=" ":
 							out += " " + (bF[n]+"[sec]").strip().ljust(30)
 						else:
-							out += " " + (" ").ljust(30)
+							out += " " + " ".ljust(30)
 
 					self.myLog( theText = out, mType= "CARS")
 				self.myLog( theText = "", mType= "pi configuration")
@@ -21980,12 +22046,12 @@ configuration         - ==========  defined beacons ==============
 				if eofl != 1:
 					line+= "\n                                                                                                                                                                                   "
 				eofl = 1
-				if sName != lastName: 
+				if sName != lastName:
 					if sLine !="": sLine+= " "
 					sLine += sName+":"
 					lastName = sName
 				sLine +=  sId+","
-				if len(sLine) > 70: 
+				if len(sLine) > 70:
 					line += sLine.strip(",")
 					eofl = 0
 					sLine = ""
@@ -22026,7 +22092,7 @@ configuration         - ==========  defined beacons ==============
 						for group in self.groupListUsedNames:
 							if groupName == self.groupListUsedNames[group]:
 								groupMemberNames[group] += "{},".format(dev.name)
-				 
+				
 			out+= "\ngroup       groupNameUsedForVar groupMemberNames, IDs,... ------------------  "
 			for group in _GlobalConst_groupList+_GlobalConst_groupListDef:
 				groupNameUsedForVar = self.groupListUsedNames[group]
@@ -22055,7 +22121,7 @@ configuration         - ==========  defined beacons ==============
 		return
 
 ####-------------------------------------------------------------------------####
-	def resetTcpipSocketStatsCALLBACK(self, valuesDict=None, typeId=""):
+	def resetTcpipSocketStatsCALLBACK(self, valuesDict=None, typeId=None):
 		self.dataStats={"startTime":time.time(),"data":{}}
 
 
@@ -22166,7 +22232,7 @@ configuration         - ==========  defined beacons ==============
 			out  = "\n"
 			out += "\n Number of updates for each state for last {:.1f} secs".format(time.time() - self.dataStats["startTime"])
 			out += "\nstate Name ------------------------ #OfUpdts  /Minute"
- 
+
 			mklist = []
 			for state in self.dataStats["states"]:
 				mklist.append([self.dataStats["states"][state], state])
@@ -22183,14 +22249,14 @@ configuration         - ==========  defined beacons ==============
 			if "beaconUpdates" in self.dataStats:
 				totalTime= max (1,time.time() - self.dataStats["beaconUpdates"]["startTime"] )
 				counts= max (1, self.dataStats["beaconUpdates"]["count"] )
-				self.myLog(  
-						theText = "\nstart of measurements: {:}\nsecs measured:         {:.1f}\ncount:                 {:}#\ntotal cpu:             {:.0f} Sec\nmin:                   {:.7f} Sec\nave:                   {:.3f} Sec\nmax:                   {:.2} Sec\n=========  Beacon update times END ===============================".format(  
-							self.dataStats["beaconUpdates"]["startDate"], 
+				self.myLog(
+						theText = "\nstart of measurements: {:}\nsecs measured:         {:.1f}\ncount:                 {:}#\ntotal cpu:             {:.0f} Sec\nmin:                   {:.7f} Sec\nave:                   {:.3f} Sec\nmax:                   {:.2} Sec\n=========  Beacon update times END ===============================".format(
+							self.dataStats["beaconUpdates"]["startDate"],
 							totalTime,
-							self.dataStats["beaconUpdates"]["count"], 
-							self.dataStats["beaconUpdates"]["consumedTime"], 
-							self.dataStats["beaconUpdates"]["min"], 
-							self.dataStats["beaconUpdates"]["consumedTime"]/counts, 
+							self.dataStats["beaconUpdates"]["count"],
+							self.dataStats["beaconUpdates"]["consumedTime"],
+							self.dataStats["beaconUpdates"]["min"],
+							self.dataStats["beaconUpdates"]["consumedTime"]/counts,
 							self.dataStats["beaconUpdates"]["max"]), mType=	 "\n=========  Beacon update times      ===============================")
 				self.indiLOG.log(20," no beaconUpdates data recorded")
 
@@ -22299,7 +22365,7 @@ configuration         - ==========  defined beacons ==============
 
 
 		except Exception as e:
-			if	"{}".format(e).find("UnexpectedNullErrorxxxx") >-1: return newStates
+			if	"{}".format(e).find("UnexpectedNullErrorxxxx") >-1: return
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
 
@@ -22324,7 +22390,7 @@ configuration         - ==========  defined beacons ==============
 				toSend = [{"device": "OUTPUTswitchbotRelay", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
 				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotRelaySet")
 				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev.name, piU, toSend))
-				return 
+				return
 
 			indigo.server.log("sent \"{}\" status request not implemented".format(dev.name))
 
@@ -22365,8 +22431,9 @@ configuration         - ==========  defined beacons ==============
 ####-------------------------------------------------------------------------####
 
 
-	def addToStatesUpdateDict(self, devId, key, value, newStates="",decimalPlaces="",uiValue="", image="", force=False, IgnoreIfOnly=False):
+	def addToStatesUpdateDict(self, devId, key, value, newStates=None,decimalPlaces="",uiValue="", image="", force=False, IgnoreIfOnly=False):
 		devId = "{}".format(devId)
+		if newStates is None: newStates = ""
 		try:
 			try:
 				#if "145547136" == devId: self.indiLOG.log(20,"addToStatesUpdateDict(1) {}, key:{}, value:{}".format(devId, key, value))
@@ -22494,14 +22561,14 @@ configuration         - ==========  defined beacons ==============
 											upd = True
 								else:
 									if self.decideMyLog("UpdateIndigo"): 	self.indiLOG.log(10, "executeUpdateStatesDict-checkis==, devid:{}----,  len{:},  local:{} value:{}, old:{}, ==?:{}".format(devId,  len(local[devId]),  local[devId], "{}".format(value),  "{}".format(dev.states[key]),  "{}".format(value) != "{}".format(dev.states[key])))
-									if "{}".format(value) != "{}".format(dev.states[key]): 
+									if "{}".format(value) != "{}".format(dev.states[key]):
 											upd = True
 							if upd:
 								nKeys += 1
 								if devId not in changedOnly: changedOnly[devId] = {}
 								changedOnly[devId][key] = {"value":local[devId][key]["value"], "decimalPlaces":local[devId][key]["decimalPlaces"], "uiValue":local[devId][key]["uiValue"]}
 								if self.decideMyLog("UpdateIndigo"): 	self.indiLOG.log(10, "executeUpdateStatesDict-adding to changedOnly devid:{}     key:{}, value:{}".format(devId,  key, value ))
-								if key not in ["lastUpdateBatteryLevel","lastUpdateFromRPI", "lastMessageFromRpi"]: keeplastSensorChange = True 
+								if key not in ["lastUpdateBatteryLevel","lastUpdateFromRPI", "lastMessageFromRpi"]: keeplastSensorChange = True
 								if not lastSensorChangePresent:
 									if "lastSensorChange" in dev.states and key not in ["lastUpdateBatteryLevel","lastUpdateFromRPI", "lastMessageFromRpi"] and  "lastSensorChange" not in changedOnly[devId]:
 										if self.decideMyLog("UpdateIndigo"): 	self.indiLOG.log(10, "executeUpdateStatesDict-lastSensorChange added")
@@ -22509,21 +22576,21 @@ configuration         - ==========  defined beacons ==============
 										changedOnly[devId]["lastSensorChange"] = {"value":dateString, "decimalPlaces":"", "uiValue":""}
 										lastSensorChangePresent = True
 
-								if key == "lastUpdateFromRPI": 
+								if key == "lastUpdateFromRPI":
 									lastUpdateFromRPIFlag = True
 
 					if devId in  changedOnly and not keeplastSensorChange and "lastSensorChange" in changedOnly[devId]:
 						del changedOnly[devId]["lastSensorChange"]
 
-					if devId in  changedOnly and lastUpdateFromRPIFlag and devId in changedOnly and len(changedOnly[devId]) == 1: changedOnly[devId] = {} 
+					if devId in  changedOnly and lastUpdateFromRPIFlag and devId in changedOnly and len(changedOnly[devId]) == 1: changedOnly[devId] = {}
 
 					#if dev.id ==739817084: self.indiLOG.log(20,	"image:{}, local:{} \nchangedOnly:{}".format(image, local[devId], changedOnly ))
 					
-					if "created" in dev.states and dev.states["created"] == "": 
+					if "created" in dev.states and dev.states["created"] == "":
 						createdSet = False
 					else:
 						createdSet = True
-					#if "created" not in dev.states: 
+					#if "created" not in dev.states:
 					#	self.indiLOG.log(20,	"dev {} does not have created state".format(dev.name))
 
 
@@ -22540,7 +22607,7 @@ configuration         - ==========  defined beacons ==============
 								value = changedOnly[devId][key]["value"]
 								if "lastStatusChange" in dev.states and "lastStatusChange" not in changedOnly[devId]:
 									try:
-										st	= "{}".format(value).lower().split(" ")[0] # remove strings after up down ie dates 
+										st	= "{}".format(value).lower().split(" ")[0] # remove strings after up down ie dates
 										if st in ["up", "down", "expired", "on", "off", "1", "0"]:
 											if dateString != dev.states["lastStatusChange"]:
 												chList.append({"key": "lastStatusChange", "value":dateString})
@@ -22575,7 +22642,7 @@ configuration         - ==========  defined beacons ==============
 										if dev.address in self.CARS["beacon"] and changedOnly[devId][key]["value"] in ["up","down"]:
 											self.delayedActions["data"].put({"actionTime":time.time()+0.2 , "devId":dev.id, "updateItems":["updateCars"]})
 
-								else: # not beacon ... 
+								else: # not beacon ...
 										#if dev.id in [984245549,94071339]: indigo.server.log("executeUpdateStatesDict4 st   {}  key:{}, value:{}, valueUI:{}".format(dev.name, key, value, changedOnly[devId]))
 										if changedOnly[devId][key]["uiValue"] != "":
 											if changedOnly[devId][key]["decimalPlaces"] != "" and key in dev.states:
@@ -22593,7 +22660,7 @@ configuration         - ==========  defined beacons ==============
 											if  (key != "lastSensorChange" and key not in ["lastUpdateFromRPI","lastMessageFromRpi"] ) or ( key == "lastSensorChange" and nKeys >0):
 												chList.append({"key":"lastSensorChange", "value":dateString})
 
-							else: # not status 
+							else: # not status
 	
 									#if dev.id in [984245549,94071339]: indigo.server.log("executeUpdateStatesDict5 not st {}  key:{}, value:{}, valueUI:{}".format(dev.name, key, value, changedOnly[devId]))
 									if changedOnly[devId][key]["uiValue"] != "":
@@ -22624,7 +22691,7 @@ configuration         - ==========  defined beacons ==============
 						if not createdSet:
 							chList.append({"key":"created","value":dateString})
 
-																		 
+																		
 						self.execUpdateStatesList(dev,chList)
 
 
@@ -22663,7 +22730,6 @@ configuration         - ==========  defined beacons ==============
 					try:
 						indigo.variable.updateValue(self.ibeaconNameDefault+"With_ClosestRPI_Change",trigRPIchanged)
 					except Exception as e:
-							self.indiLOG.log(40,"RPI   changed: {}".format(devnamechangedRPI))
 							self.indiLOG.log(40,"Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e)   + " trying again")
 							time.sleep(0.5)
 							indigo.variable.updateValue(self.ibeaconNameDefault+"With_ClosestRPI_Change",trigRPIchanged)
@@ -22726,11 +22792,11 @@ configuration         - ==========  defined beacons ==============
 	def updateStateOnServerlog(self,dev, key, value, calledFrom=""):
 		try:
 
-			if key not in dev.states:  
-				return 
-			if dev.states[key] == value: 
+			if key not in dev.states:
+				return
+			if dev.states[key] == value:
 				#self.indiLOG.log(20,"updateStateOnServerlog called from:{},  {}, key:{} value:{}, rejected no change".format(calledFrom, dev.name, key, value))
-				return 
+				return
 
 			if self.decideMyLog("UpdateIndigo"): self.indiLOG.log(10,"updateStateOnServerlog called from:{},  {:10}{:50}, key:{:20} value:{:20}, old:{:20}".format(calledFrom, dev.id, dev.name, key, value, dev.states[key]))
 			dev.updateStateOnServer(key, value)
@@ -23036,9 +23102,9 @@ configuration         - ==========  defined beacons ==============
 ####-----------------  exception logging ---------
 	def exceptionHandler(self, level, exception_error_message, extraText=""):
 
-		try: 
-			if "{}".format(exception_error_message).find("None") >-1: return 
-		except: 
+		try:
+			if "{}".format(exception_error_message).find("None") >-1: return
+		except:
 			pass
 
 		filename, line_number, method, statement = traceback.extract_tb(sys.exc_info()[2])[-1]
@@ -23102,8 +23168,6 @@ configuration         - ==========  defined beacons ==============
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 			indigo.server.log(theText)
 			indigo.server.log("type: {}".format(type(theText)))
-			try: f.close()
-			except: pass
 
 
 ##################################################################################################################
@@ -23113,13 +23177,13 @@ configuration         - ==========  defined beacons ==============
 
 ####-------------------------------------------------------------------------####
 	def ipNumberOK(self, ipcheck):
-		if not self.isValidIP(ipcheck): 					return False	# bad ip number 
-		if not self.checkRPIipForReject: 					return True		# skip this test 
+		if not self.isValidIP(ipcheck): 					return False	# bad ip number
+		if not self.checkRPIipForReject: 					return True		# skip this test
 		for piU in self.RPI:   #OKconvert
 			if self.RPI[piU]["piOnOff"] == "0": continue 					# not on, ignore for test
 			if ipcheck == self.RPI[piU]["ipNumberPi"]:		return True		# test passed  return True
 
-		if True:											return False	# test Failed
+		return False	# test Failed
 
 ####-------------------------------------------------------------------------####
 	def ipNumbernotInRange(self, ipcheck):
@@ -23128,7 +23192,7 @@ configuration         - ==========  defined beacons ==============
 		ipcheck2	= ipcheck.split(".")
 		if ipcheck2[0] != self.myIpNumberRange[0]: 			return True  # first  octet wrong
 		if ipcheck2[1] != self.myIpNumberRange[1]: 			return True  # second octet wrong
-		if True:											return False # test passed
+		return False # test passed
 
 ####-------------------------------------------------------------------------####
 	def isValidIP(self, ip0):
@@ -23139,7 +23203,7 @@ configuration         - ==========  defined beacons ==============
 				try:
 					if int(ip) < 0 or  int(ip) > 255: 		return False	# out of range
 				except:										return False	# not integer
-		if True:											return True		# test passed 
+		return True		# test passed
 
 ####-------------------------------------------------------------------------####
 	def isValidMAC(self, mac0):
@@ -23151,8 +23215,7 @@ configuration         - ==========  defined beacons ==============
 			try: 	int(xx,16)
 			except: 										return False	# is not a hex number
 
-		if True:											return True		# test passed
-
+		return True
 ####-------------------------------------------------------------------------####
 	def handlesockReporting(self, IPN, nBytes, msgName, xType, msg=""):
 
@@ -23288,7 +23351,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				indigo.activePlugin.indiLOG.log(30, "TCPIP socket data receiving from {} outside ip number range<<   allowed:{}.{}.x.x".format(self.client_address, indigo.activePlugin.myIpNumberRange[0], indigo.activePlugin.myIpNumberRange[1])  )
 				indigo.activePlugin.handlesockReporting(self.client_address[0],0, "badIP", "extIP" )
 				self.request.close()
-				return 
+				return
 			else:
 				wrongIP = 2
 				indigo.activePlugin.indiLOG.log(30, "TCPIP socket data receiving from {} not in accepted ip number list, please fix in >>initial setup RPI<<".format(self.client_address)  )
@@ -23377,7 +23440,7 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 				if lenData != nBytes: # expected # of bytes not received
 					if lenData < nBytes:
 						if indigo.activePlugin.decideMyLog("Socket"): indigo.indigoLOG.log(30,"TCPIP socket length of {} data too short, len:{};   piName:; {}".format(header, nBytes, piName) )
-						self.sendResponse("error-lenDatawrong-{}".format(lenData0))	
+						self.sendResponse("error-lenDatawrong-{}".format(lenData))	
 						self.sendResponse("error,len-short")	
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName, "tooShort" )
 						return
@@ -23411,11 +23474,11 @@ class ThreadedTCPRequestHandler(SocketServer.BaseRequestHandler):
 					dataJIn = actualData.decode('utf-8')
 				if dataJIn.find("NaN") > -1:
 					dataJIn.replace("NaN","-9999")
-				dataJ = json.loads(dataJIn)  
+				dataJ = json.loads(dataJIn)
 			except Exception as e:
 				indigo.activePlugin.indiLOG.log(30, "ThreadedTCPRequestHandler Line {} has error={}".format(sys.exc_info()[2].tb_lineno, e))
 				if indigo.activePlugin.decideMyLog("Socket"): indigo.activePlugin.indiLOG.log(30,"TCPIP socket json error; len of data: {:d}  time used: {:5.1f}".format(nBytes, time.time()-tStart )  )
-				if indigo.activePlugin.decideMyLog("Socket"): indigo.activePlugin.indiLOG.log(30,+"{}  ..  {}".format(dataJIn[0:50], dataJIn[-10:]) )
+				if indigo.activePlugin.decideMyLog("Socket"): indigo.activePlugin.indiLOG.log(30,"{}  ..  {}".format(dataJIn[0:50], dataJIn[-10:]) )
 				self.sendResponse("error-Json-{}".format(lenData))	
 				indigo.activePlugin.handlesockReporting(self.client_address[0],nBytes,piName, "errJson" )
 				return
@@ -23472,7 +23535,9 @@ class ThreadedTCPServer(SocketServer.ThreadingMixIn, SocketServer.TCPServer):
 # handler.setFormatter(formatter)
 class LevelFormatter(logging.Formatter):
 ####-------------------------------------------------------------------------####
-	def __init__(self, fmt=None, datefmt=None, level_fmts={}, level_date={}):
+	def __init__(self, fmt=None, datefmt=None, level_fmts=None, level_date=None):
+		if level_date is None: level_date = {}
+		if level_fmts is None: level_fmts = {}
 		self._level_formatters = {}
 		self._level_date_format = {}
 		for level, formt in level_fmts.items():

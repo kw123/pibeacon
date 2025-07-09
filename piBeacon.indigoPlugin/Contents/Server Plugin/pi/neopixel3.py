@@ -634,7 +634,7 @@ def getLightSensorValue(force=False):
 		if "sensors" not in rr: 									return False
 		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
 		if useLightSensorType not in rr["sensors"]: 				return False
-		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return 
+		if useLightSensorDevId  not in rr["sensors"][useLightSensorType]: return False
 		tt = float(rr["time"])
 		if tt == lastTimeLightSensorFile:							return False	
 

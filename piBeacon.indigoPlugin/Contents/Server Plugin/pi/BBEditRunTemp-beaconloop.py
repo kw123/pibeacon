@@ -5527,7 +5527,7 @@ def BLEAnalysis():
 #################################
 def updateTimeAndZone(hciUse):
 	global beaconsOnline
-	'''
+	"""
 	============
 	for XiaomiTimeLYWSD02 
 	cmd = "gatttool -i {} -I -b {}".format(hciUse, MAC)
@@ -5549,7 +5549,7 @@ def updateTimeAndZone(hciUse):
 	writeback = tt + tsh
 	char-write-req 3e writeback
 	==============
-	'''
+	"""
 	try:	
 		restart = False
 

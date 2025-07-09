@@ -912,7 +912,7 @@ def checkIfAliveFileOK(sensor,force=""):
 
 
 ####################      #########################
-def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000,dir=""): # check if enough disk space  left (min 10% or 500Mbyte)
+def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk space  left (min 10% or 500Mbyte)
 	try:
 		ret,err = U.readPopen("df")
 		lines = ret.split("\n")
@@ -1068,7 +1068,7 @@ def getreading(adc_address,adc_channel):
 		# Read the data register.
 		reading  = SMBUS.read_word_data(adc_address, 0) # Read data register
 		# Do the proper bit movements. Refer to data sheet for how the bits are read in.
-		valor = ((((reading) & 0xFF) <<8) | ((int(reading) & 0xFFF0)>>8))
+		valor = ( ( reading & 0xFF) <<8) | ( (int(reading) & 0xFFF0)>>8 )   
 		valor = valor >> 4 # 4 LSB bits are ignored.
 		volts = valor/max_reading*vref
 	except Exception as e:
@@ -1153,8 +1153,7 @@ def getupsv2UPSdata():
 					#print "uart_string not complete after 2. read - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
 					break
 				#print "uart_string  after continue to read not complete - len:",len(uart_string)," ::",uart_string.replace("\n","--"),"::end"
-			
-			
+
 			else:
 				time.sleep(0.2)
 		lines = uart_string.strip().split("\n")
@@ -1589,26 +1588,26 @@ def doGPIOAfterBoot():
 				if GPIONumberAfterBoot1 != "-1" and GPIONumberAfterBoot1 != "":
 					if GPIOTypeAfterBoot1 =="Ohigh":
 						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.HIGH)\n".format(GPIONumberAfterBoot1))
-					if GPIOTypeAfterBoot1 =="Olow":
+					elif GPIOTypeAfterBoot1 =="Olow":
 						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.LOW)\n".format(GPIONumberAfterBoot1))
-					if GPIOTypeAfterBoot1.find("Iup") ==0:
+					elif GPIOTypeAfterBoot1.find("Iup") ==0:
 						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_UP)\n".format(GPIONumberAfterBoot1))
-					if GPIOTypeAfterBoot1.find("Idown") == 0:
+					elif GPIOTypeAfterBoot1.find("Idown") == 0:
 						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n".format(GPIONumberAfterBoot1))
-					if GPIOTypeAfterBoot1.find("Ifloat") == 0:
+					elif GPIOTypeAfterBoot1.find("Ifloat") == 0:
 						f.write("GPIO.setup({}, GPIO.IN)\n".format(GPIONumberAfterBoot1))
 	
 			if GPIOTypeAfterBoot2 != "off": 
 				if GPIONumberAfterBoot2 != "-1" and GPIONumberAfterBoot2 != "":
 					if GPIOTypeAfterBoot2 =="Ohigh":
 						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.HIGH)\n".format(GPIONumberAfterBoot2))
-					if GPIOTypeAfterBoot2 =="Olow":
+					elif GPIOTypeAfterBoot2 =="Olow":
 						f.write("GPIO.setup({}, GPIO.OUT, initial=GPIO.LOW)\n".format(GPIONumberAfterBoot2))
-					if GPIOTypeAfterBoot2.find("Iup") == 0:
+					elif GPIOTypeAfterBoot2.find("Iup") == 0:
 						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_UP)\n".format(GPIONumberAfterBoot2))
-					if GPIOTypeAfterBoot2.find("Idown") == 0:
+					elif GPIOTypeAfterBoot2.find("Idown") == 0:
 						f.write("GPIO.setup({}, GPIO.IN, pull_up_down = GPIO.PUD_DOWN)\n".format(GPIONumberAfterBoot2))
-					if GPIOTypeAfterBoot2.find("Ifloat") == 0:
+					elif GPIOTypeAfterBoot2.find("Ifloat") == 0:
 						f.write("GPIO.setup({}, GPIO.IN)\n".format(GPIONumberAfterBoot2))
 		else:
 			f.write("import gpiozero\n")
@@ -2086,7 +2085,7 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 			 (G.useRTC !="" and G.useRTC != "0")  ):			# RTC installed ...	  ==>  set HW clock to NTP time stamp:
 			subprocess.call("sudo /sbin/hwclock -w", shell=True)
 
-		if (G.networkStatus).find("indigo") > -1 and (G.networkType).find("clock") ==-1:
+		if G.networkStatus.find("indigo") > -1 and G.networkType.find("clock") ==-1:
 			if U.testPing(G.ipOfServer)==2:				# if no ping gets return we assume we are not connected, this happens after powerfailure. the router comes aback after rpi and wifi has given up, need to restart
 				if time.time() - G.ipConnection > 600.: # after 10 minutes 
 					if G.enableRebootCheck.find("rebootPing") >-1:
@@ -2112,8 +2111,8 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 					G.networkType = xx
 					#print " networkStatus, ipOK : ",  G.networkStatus, ipOK
 
-					if	ipOK >0 and G.networkStatus.find("Inet") ==-1 :
-						U.logger.log(20, "setting to clockmanual, wifi off networkStatus:{}, ipOK:{}".format( G.networkStatus, ipOK) )
+					if G.networkStatus.find("Inet") ==-1 :
+						U.logger.log(20, "setting to clockmanual, wifi off networkStatus:{}".format( G.networkStatus) )
 						U.setNetwork("off")
 						G.networkType="clockMANUAL"
 						cycleWifi()
@@ -2123,7 +2122,7 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 						elif  ifNetworkChanges == "reboot":
 							U.doReboot(tt=5, text="network off")
 
-				if ( startingnetworkStatus.find("Inet") == -1 and  G.networkStatus.find("Inet") >-1 ) :
+				if startingnetworkStatus.find("Inet") == -1 and  G.networkStatus.find("Inet") > -1:
 					U.clearNetwork()
 					xx = G.networkType
 					G.networkType="x"
@@ -2215,7 +2214,7 @@ def checkIfipNumberchanged(indigoServerOn, changed, connected):
 		if oldIP != G.ipAddress:
 			eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 			if eth0IP == "" or wifi0IP == "": # avoid restart none is active
-				U.restartMyself(reason="changed ip number,.. eth0IP: {};  wifi0IP: {};  oldIP: {};  G.ipAddress:{};  G.eth0Active:{};  G.wifiActive:{}".format(eth0IP, wifi0IP, oldIP, G.ipAddress,G.eth0Active,G.wlanActive), python3=usePython3 )
+				U.restartMyself(reason="changed ip number,.. eth0IP: {};  wifi0IP: {};  oldIP: {};  G.ipAddress:{};  G.eth0Active:{}".format(eth0IP, wifi0IP, oldIP, G.ipAddress,G.eth0Active), python3=usePython3 )
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return indigoServerOn, changed, connected
@@ -2849,7 +2848,7 @@ def execMaster():
 
 		##########   check if pgms are running
 
-				if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType.find("clock") == -1 and (G.networkStatus).find("indigo") >-1: 
+				if str(rPiCommandPORT) !="0"  and G.wifiType =="normal" and G.networkType.find("clock") == -1 and G.networkStatus.find("indigo") >-1: 
 					checkIfPGMisRunning("receiveCommands.py", checkAliveFile="", parameters=str(rPiCommandPORT))
 
 
