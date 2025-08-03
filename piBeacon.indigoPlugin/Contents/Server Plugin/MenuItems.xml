@@ -316,7 +316,7 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="d10">
-		<Name>-------------manage iBeacons--------------------</Name>
+		<Name>-------------manage Beacon devices--------------------</Name>
 	</MenuItem>
 
 	<MenuItem id="AcceptNewBeacons">
@@ -629,6 +629,48 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 				<Label> ....after selection click</Label>
 				<Title>EXECUTE</Title>
 				<CallbackMethod>sendBeepCommandCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" defaultValue="">
+				<Label>message from Plugin:</Label>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
+	
+	<MenuItem id="manageFastActions">
+		<Name>Manage fast actions beacon -> switchbot devices..</Name>
+		<ConfigUI>
+			<Field id="infoLabelINPUT0" type="label">
+				<Label>Manage FAST rpi local actions  (w/o indigo) defined in "Set switchbot relay to on/off or pulses.."
+				1. select trigger beacon
+				2. select delete, duplicate, print
+				   duplicate requires the BLE device to be on the same RPI
+				   it also likely requires an action edit for parameters settings
+				   you can also simply duplicate an action and edit that.
+				   This will not create an indigo action, but only an entry on the rpi
+				3. click execute" </Label>
+			</Field>
+			<Field id="selectbeacon" type="menu" defaultValue="-1">
+				<Label>select the beacon</Label>
+				<List class="self" filter="" method="filterBeaconswithactions" dynamicReload="false" />
+			</Field>
+			<Field id="action" type="menu" defaultValue="delete" tooltip="">
+				<List>
+					<Option value="delete">delete this action</Option>
+					<Option value="duplicate">duplicate</Option>
+					<Option value="print">print to log</Option>
+					<Label>select action:</Label>
+				</List>
+			</Field>
+			
+			<Field id="selectbeacon2" type="menu" defaultValue="" visibleBindingId="action" visibleBindingValue="duplicate">
+				<Label>select the beacon</Label>
+				<List class="self" filter="copy" method="filterBeaconswithactions" dynamicReload="false" />
+			</Field>
+
+			<Field id="execAll" type="button">
+				<Label> ....after selection click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>fastActionManageCALLBACKmenu</CallbackMethod>
 			</Field>
 			<Field id="MSG" type="textfield" defaultValue="">
 				<Label>message from Plugin:</Label>

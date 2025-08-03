@@ -329,15 +329,28 @@ def setGPIO(command):
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, up)
 				else:
-					GPIOZERO[pin] = gpiozero.LED(pin)
-					getattr(GPIOZERO[pin], ON)()
+					try:
+						if pin not in GPIOZERO:
+							GPIOZERO[pin] = gpiozero.LED(pin)
+							getattr(GPIOZERO[pin], ON)()
+					except:
+						time.sleep(0.1)
+						GPIOZERO[pin] = gpiozero.LED(pin)
+						getattr(GPIOZERO[pin], ON)()
+						
 
 				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
 				if sleepForxSecs(pulseUp): break
+	
 				if useGPIO:
 					GPIO.output(pin, down)
 				else:
-					getattr(GPIOZERO[pin], OFF)()
+					try:
+						GPIOZERO[pin] = gpiozero.LED(pin)
+					except:
+						time.sleep(0.1)
+						getattr(GPIOZERO[pin], OFF)()
+
 					if disableGPIOafterPulse: GPIOZERO[pin].close()
 					
 				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
@@ -348,9 +361,17 @@ def setGPIO(command):
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, down)
 				else:
-					if pin not in GPIOZERO:
-						GPIOZERO[pin] = gpiozero.LED(pin)
-					getattr(GPIOZERO[pin], OFF)()
+					try:
+						if pin not in GPIOZERO:
+							GPIOZERO[pin] = gpiozero.LED(pin)
+						getattr(GPIOZERO[pin], OFF)()
+					except:
+						time.sleep(0.1)
+						if pin not in GPIOZERO:
+							GPIOZERO[pin] = gpiozero.LED(pin)
+						getattr(GPIOZERO[pin], OFF)()
+		
+
 				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 				if sleepForxSecs(pulseDown): break
 				U.logger.log(DEBUG-10, "pulseDown action pin = {} back up".format(pin) )
@@ -871,7 +892,11 @@ def execSimple(nextItem):
 	global DEBUG
 	global inp
 	if "command" not in nextItem:		 return False
-	if nextItem["command"] != "general": return False
+	try: 
+		if nextItem["command"] != "general": return False
+	except:
+		U.logger.log(30,"nextItem >>{}<<".format(nextItem))
+		return False
 	if "cmdLine" not in nextItem:		 return False
 	
 	try:
@@ -937,7 +962,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 				U.logger.log(20,"bad command: json failed {}".format(data))
 				return
 
-		#U.logger.log(DEBUG, "{:.2f} MyTCPHandler len:{}  data:{}".format(time.time(),len(data), data) )
+		#U.logger.log(20, "commands:{}".format(commands) )
 			
 		for nextItem in commands:
 			if execSimple(nextItem): continue
@@ -962,8 +987,12 @@ def setupexecThreads(nextItem, source):
 		if "pin" in nextItem and nextItem["pin"] != "": 					threadName += "pin-"+str(nextItem["pin"])
 		elif "device" in nextItem and nextItem["device"] != "":				threadName = nextItem["device"]
 		elif "i2cAddress" in nextItem and nextItem["i2cAddress"] != "": 	threadName += "-"+str(nextItem["i2cAddress"])
-		if threadName == "":												threadName = nextItem["command"]
-
+		if threadName == "":												
+			try:
+				threadName = nextItem["command"]
+			except:
+				threadName = "xxx"
+				
 		if threadName in threadsActive:
 			if threadsActive[threadName]["state"] != "stop":
 				stopExecCmd(threadName)
@@ -987,7 +1016,7 @@ def setupexecThreads(nextItem, source):
 				
 		#U.logger.log(20,"thread started: {}, command:{} ".format(threadName, out))
 		if changed != "":
-			U.logger.log(DEBUG,"thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:} changed:{:}".format(source, counter, threadName, out[:ll], out[-ll:],  changed))
+			U.logger.log(DEBUG,"{:.2f} thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:} changed:{:}".format(time.time(), source, counter, threadName, out[:ll], out[-ll:],  changed))
 		else:
 			U.logger.log(DEBUG,"thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:}".format(source,counter, threadName, out[:ll], out[-ll:]))
 		
@@ -1107,14 +1136,18 @@ def readTempDirThread():
 							commandList.append(json.loads(line))
 				except:
 					U.logger.log(DEBUG, "readTempDirThread bad read:{}".format(rawRead))
-				U.logger.log(20, "from file:{}".format(commandList))
+				U.logger.log(DEBUG, "from file:>>{}<<, type:{}".format(commandList, type(commandList)))
 	
 				subprocess.call("sudo rm  "+fName+" > /dev/null 2>&1 ", shell=True)
 
 				if commandList != []:
 					for commands in commandList:
-						for nextItem in commands:
-							U.logger.log(DEBUG, "readTempDirThread nextItem:{}".format(nextItem))
+						if type(commands) == type({}):
+							useList = [commands]
+						else:
+							useList = commands
+						for nextItem in useList:
+							U.logger.log(DEBUG, "readTempDirThread nextItem:{}, type:{}".format(nextItem,  type(nextItem)))
 							if execSimple(nextItem): continue
 							tag = str(time.time())
 							tempcmdCount += 1

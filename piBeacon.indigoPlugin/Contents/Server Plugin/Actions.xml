@@ -122,7 +122,7 @@
     </Action>
 
    <Action id="setOUTPUTswitchBotParams">
-		<Name>Set switchbot relay to on/off or pulses.. </Name>
+		<Name>Set relay (switchbot)to on/off or pulses.. </Name>
 			<CallbackMethod>sendPulsesToSwitchBotCALLBACKaction</CallbackMethod>
 		<ConfigUI>
 
@@ -154,7 +154,8 @@ Make sure the switch bot is properly configured,  ie as press or normal
 			<Field  id="pulseLengthOffVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
 			<Field  id="pulseDelayVisible"				type="checkbox" hidden="true" defaultValue="false" ></Field>
 			<Field  id="execRPItoRPIVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
-			<Field  id="outputDevVisible"				type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="outputSwitchbotDevVisible"		type="checkbox" hidden="true" defaultValue="false" ></Field>
+			<Field  id="outputGPIODevVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
 			<Field  id="infoLabelSAVEVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
 			<Field  id="infoLabelActionVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
 			<Field  id="infoLabelDIRECTVisible"			type="checkbox" hidden="true" defaultValue="false" ></Field>
@@ -171,9 +172,23 @@ Make sure the switch bot is properly configured,  ie as press or normal
 			</Field>
 
 
-			<Field id="outputDev" type="menu" defaultValue="0" visibleBindingId="outputDevVisible" visibleBindingValue="true"  tooltip="select dev  ">
+			<Field id="outputType" type="menu" defaultValue="switchbot"  tooltip="select dev  ">
+				<List>
+					<Option value="switchbot">ble switchbot </Option>
+					<Option value="gpio">gpio</Option>
+				</List>
+				<Label>select output type:</Label>
+			</Field>
+
+
+			<Field id="outputDev1" type="menu" defaultValue="0" visibleBindingId="outputSwitchbotDevVisible" visibleBindingValue="true"  tooltip="select dev  ">
 				<List class="indigo.devices" filter="self.OUTPUTswitchbotRelay"  />
 				<Label>select switchbot bot target device:</Label>
+			</Field>
+
+			<Field id="outputDev2" type="menu" defaultValue="0" visibleBindingId="outputGPIODevVisible" visibleBindingValue="true"  tooltip="select dev  ">
+				<List class="indigo.devices" filter="self.OUTPUTi2cRelay,self.OUTPUTgpio-1-ONoff" />
+				<Label>select GPIO target device:</Label>
 			</Field>
 
 			<Field id ="sepldub"  type="separator" visibleBindingId="infoLabelDIRECTVisible" visibleBindingValue="false" />
@@ -196,6 +211,7 @@ Make sure the switch bot is properly configured,  ie as press or normal
 				<List>
 					<Option value="on">on</Option>
 					<Option value="off">off</Option>
+					<Option value="counter">counter change</Option>
 				</List>
 			</Field>
 
@@ -254,6 +270,15 @@ Make sure the switch bot is properly configured,  ie as press or normal
 					<Option value="8">8</Option>
 				</List>
 			</Field>
+
+			<Field id="pulseUpDown" type="menu" defaultValue="up" visibleBindingId="infoLabelActionVisible" visibleBindingValue="true" tooltip="">
+				<Label>action Up / down pulese</Label>
+				<List>
+					<Option value="up">up</Option>
+					<Option value="down">down</Option>
+				</List>
+			</Field>
+
 
 			<Field id="pulses" type="menu" defaultValue="2" visibleBindingId="pulsesVisible" visibleBindingValue="true"  tooltip="">
 				<Label>Number of pulses / simple on or Off</Label>

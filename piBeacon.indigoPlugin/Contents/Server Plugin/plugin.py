@@ -7573,9 +7573,35 @@ class Plugin(indigo.PluginBase):
 	def filterBeacons(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		for dev in indigo.devices.iter("props.isBeaconDevice"):
-			xList.append((dev.id,"{}".format(dev.name)))
-		xList.append((0, "delete"))
+			xList.append((dev.id,"{}-{}".format(dev.name, dev.address)))
+		if filter.find("nodelete") == -1: xList.append((0, "delete"))
+
+####-------------------------------------------------------------------------####
+	def filterBeaconswithactions(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
+		xList = []
+		if filter == "":
+			for mac in self.fastBLEReaction:
+				for dev in indigo.devices:
+					if "mac" not in dev.pluginProps: continue
+					if dev.deviceTypeId == "beacon": continue
+					if dev.pluginProps["mac"] == mac:
+						swdevID = self.fastBLEReaction[mac].get("indigoIdOfSwitchbot",0)
+						if swdevID > 0:
+							switchbotdev = indigo.devices[swdevID].name
+						else:
+							switchbotdev = ""
+						xList.append((mac,"{:15s}-{}".format(dev.name, switchbotdev)))
+			return xList
+				
+
+		for dev in indigo.devices.iter(self.pluginId):
+			if dev.deviceTypeId == "beacon": continue
+			if dev.deviceTypeId.lower().find("rpi") > -1: continue
+			if not self.isValidMAC(dev.address): continue
+			xList.append((dev.address,"{:15s}".format(dev.name)))
+				
 		return xList
+
 
 ####-------------------------------------------------------------------------####
 	def filterBeaconsWithBattery(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
@@ -7830,7 +7856,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict['pulseLengthOffVisible']			= False
 			valuesDict['pulseDelayVisible']				= False
 			valuesDict['execRPItoRPIVisible']			= False
-			valuesDict['outputDevVisible']				= False
+			valuesDict['outputSwitchbotDevVisible']		= False
+			valuesDict['outputGPIODevVisible']			= False
 			valuesDict['MSGVisible']					= False
 			valuesDict['infoLabelDIRECTVisible']		= False
 			valuesDict['infoLabelActionVisible']		= False
@@ -7847,16 +7874,19 @@ class Plugin(indigo.PluginBase):
 				valuesDict['piVisible']					= True
 				valuesDict['sensorVisible']				= True
 				valuesDict['sensorTriggerValueVisible']	= True
-				valuesDict['outputDevVisible']			= True
+				if valuesDict['outputType'] == "switchbot":
+					valuesDict['outputSwitchbotDevVisible']	= True
+					valuesDict['switchBotModeVisible']		= True
+				if valuesDict['outputType'] == "gpio":
+					valuesDict['outputGPIODevVisible']	= True
 				valuesDict['stopVisible']				= True
 				valuesDict['execRPItoRPIVisible']		= True
 				valuesDict['infoLabelSAVEVisible']		= True
 				valuesDict['infoLabelActionVisible']	= True
-				valuesDict['switchBotModeVisible']		= True
 				valuesDict['repeatVisible']				= True
 				valuesDict['repeatDelayVisible']		= True
 				valuesDict['pulsesVisible']				= True
-				if valuesDict['switchBotMode'] == "interactive":
+				if valuesDict['switchBotMode'] == "interactive" or valuesDict['outputType'] == "gpio":
 					valuesDict['pulseLengthOnVisible']	= True
 					valuesDict['pulseLengthOffVisible']	= True
 					valuesDict['pulseDelayVisible']		= True
@@ -7864,15 +7894,19 @@ class Plugin(indigo.PluginBase):
 			else:
 				valuesDict['piVisible']					= True
 				valuesDict['infoLabelActionVisible']	= True
-				valuesDict['outputDevVisible']			= True
+				if valuesDict['outputType'] =="switchbot":
+					valuesDict['outputSwitchbotDevVisible']	= True
+				if valuesDict['outputType'] =="gpio":
+					valuesDict['outputGPIODevVisible']	= True
 				valuesDict['stopVisible']				= True
 				if  valuesDict['stop'] == "0": # = do not stop previous action
-					valuesDict['switchBotModeVisible']	= True
+					if valuesDict['outputType'] =="switchbot":
+						valuesDict['switchBotModeVisible']	= True
 					valuesDict['repeatVisible']			= True
 					valuesDict['repeatDelayVisible']	= True
 					valuesDict['pulsesVisible']			= True
 
-					if valuesDict['switchBotMode'] == "interactive":
+					if valuesDict['switchBotMode'] == "interactive" or valuesDict['outputType'] == "gpio":
 						valuesDict['pulseLengthOnVisible']	= True
 						valuesDict['pulseLengthOffVisible']	= True
 						valuesDict['pulseDelayVisible']		= True
@@ -8495,6 +8529,52 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
+
+####-------------------------------------------------------------------------####
+	def fastActionManageCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
+
+		try:
+			if "selectbeacon" not in valuesDict: 
+				valuesDict["MSG"] = "select mac"
+				return valuesDict
+			mac = valuesDict["selectbeacon"]
+			if not self.isValidMAC(mac):
+				valuesDict["MSG"] = "select mac "+mac
+				return valuesDict
+			if mac not in self.fastBLEReaction: 
+				valuesDict["MSG"] = "select mac "+mac
+				return valuesDict
+				
+			if valuesDict["action"] == "delete":
+				del self.fastBLEReaction[mac]
+				valuesDict["MSG"] = "deleted"
+
+			elif valuesDict["action"] == "print":
+				piU = self.fastBLEReaction[mac].get("piU","same")
+				self.indiLOG.log(20,"BLE device:{} on rpi{} trigger on rpi:{} action:\n{}".format(mac, self.fastBLEReaction[mac]["IPOfSwitchbotRPI"], piU, self.fastBLEReaction[mac]["cmd"]))
+				valuesDict["MSG"] = "printed to log"
+	
+			elif valuesDict["action"] == "duplicate":
+				valuesDict["MSG"] = "deleted"
+	
+				if "selectbeacon2" not in valuesDict: 
+					valuesDict["MSG"] = "select mac target"
+					return valuesDict
+				mac2 = valuesDict["selectbeacon2"]
+				if not self.isValidMAC(mac2):
+					valuesDict["MSG"] = "select mac "+mac2
+					return valuesDict
+				self.fastBLEReaction[mac2] = copy.deepcopy(self.fastBLEReaction[mac])
+	
+	
+			self.savefastBLEReaction()
+			self.makeBeacons_parameterFile()
+		except Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		return valuesDict
+
+
+
 ####-------------------------------------------------------------------------####
 	def resetGPIOCountCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		try:
@@ -8712,12 +8792,21 @@ class Plugin(indigo.PluginBase):
 				return valuesDict
 
 
+			if "outputDev1" not in valuesDict: 
+				valuesDict["outputDev1"] = valuesDict["outputDev"]
+				valuesDict["outputType"] = "switchbot"
+
+			if valuesDict.get("outputType","switchbot") == "switchbot":
+				valuesDict["outputDev"] = valuesDict["outputDev1"]
+				macOfSwitchbot = outputDev.pluginProps.get("mac","")
+				if not self.isValidMAC(macOfSwitchbot): return valuesDict
+			else:
+				valuesDict["outputDev"] = valuesDict["outputDev2"]
+			
 			try: outputDev = indigo.devices[int(valuesDict.get("outputDev","x"))]
 			except: return valuesDict
 
 
-			macOfSwitchbot = outputDev.pluginProps.get("mac","")
-			if not self.isValidMAC(macOfSwitchbot): return valuesDict
 
 
 			piU = outputDev.pluginProps.get("piServerNumber")
@@ -8731,11 +8820,12 @@ class Plugin(indigo.PluginBase):
 
 			sensorTriggerValue	= valuesDict.get("sensorTriggerValue","on")
 			repeat 				= valuesDict.get("repeat","0")
-			repeatDelay 		= valuesDict.get("repeatDelay","0")
+			repeatDelay 		= float(valuesDict.get("repeatDelay","0"))
 			pulses 				= valuesDict.get("pulses","on")
-			pulseLengthOn 		= valuesDict.get("pulseLengthOn","0")
-			pulseLengthOff	 	= valuesDict.get("pulseLengthOff","2.0")
-			pulseDelay 			= valuesDict.get("pulseDelay","0.0")
+			pulseUpDown			= valuesDict.get("pulseUpDown","up")
+			pulseLengthOn 		= float(valuesDict.get("pulseLengthOn",0.5))
+			pulseLengthOff	 	= float(valuesDict.get("pulseLengthOff",0.5))
+			pulseDelay 			= float(valuesDict.get("pulseDelay","0.0"))
 			switchBotMode 		= valuesDict.get("switchBotMode","batch")
 			cmdMode 			= "onOff"
 			if pulses not in ["off","on"]:
@@ -8746,13 +8836,41 @@ class Plugin(indigo.PluginBase):
 			elif pulses == "off": onOff = "0"
 			else:				  onOff = "1"
 			
-			cmd = {"mac":macOfSwitchbot,"cmd":cmdMode,"onOff":onOff,"pulses":pulses, "pulseLengthOn":pulseLengthOn, "pulseLengthOff":pulseLengthOff, "pulseDelay":pulseDelay, "repeat":repeat, "repeatDelay":repeatDelay, "outputDev":  outputDev.id, "mode":switchBotMode,"sensorTriggerValue":sensorTriggerValue}
+			targetType = valuesDict.get("outputType","switchbot")
+			if  targetType == "switchbot":
+				cmd = {"mac":macOfSwitchbot,"cmd":cmdMode,"onOff":onOff,"pulses":pulses, "pulseLengthOn":pulseLengthOn, "pulseLengthOff":pulseLengthOff, "pulseDelay":pulseDelay, "repeat":repeat, "repeatDelay":repeatDelay, "outputDev":  outputDev.id, "mode":switchBotMode,"sensorTriggerValue":sensorTriggerValue, "outputType":targetType,"fileName":"switchbot.cmd"}
+				self.fastBLEReaction[macSens] = {"cmd":cmd,"piU":piU, "indigoIdOfSwitchbot":outputDev.id, "macOfSwitchbot":macOfSwitchbot, "IPOfSwitchbotRPI":IPOfSwitchbotRPI,"IdOfSwitchbotRPI":IdOfSwitchbotRPI,"pwdOfSwitchbotRPI":pwdOfSwitchbotRPI}
 
-			self.fastBLEReaction[macSens] = {"cmd":cmd,"piU":piU, "indigoIdOfSwitchbot":outputDev.id, "macOfSwitchbot":macOfSwitchbot,"IPOfSwitchbotRPI":IPOfSwitchbotRPI,"IdOfSwitchbotRPI":IdOfSwitchbotRPI,"pwdOfSwitchbotRPI":pwdOfSwitchbotRPI}
+			else:
+				#self.indiLOG.log(20,"setting rpi-rpi  into gpio")
+				devOs = str(outputDev.id)
+				typeId = outputDev.deviceTypeId
+				#self.indiLOG.log(20,"setting rpi-rpi  into gpio :{}, {}, props:{}".format(devOs, typeId, outputDev.pluginProps))
+				props = outputDev.pluginProps
+				if "deviceDefs" in props:
+					try: 
+						deviceDefs = json.loads(props["deviceDefs"])
+						# [{"gpio": "27", "outType": "0", "initialValue": "up"}]
+						for xx in deviceDefs:
+							if "gpio" in xx:
+								GPIOpin = xx["gpio"]
+								pulseLengthOn = max(0.5,pulseLengthOn)
+								if pulseUpDown == "up":
+									pulseUpDown = "pulseUp"
+									pulseLength = pulseLengthOn
+								if pulseUpDown == "down":
+									pulseUpDown = "pulseDown"
+									pulseLength = pulseLengthOff
+
+								cmd = {"device": typeId, "command": pulseUpDown, "values":{pulseUpDown:pulseLength}, "pin": GPIOpin, "devId": outputDev.id, "sensorTriggerValue":sensorTriggerValue, "outputType":targetType, "fileName":"receiveCommands.input"}
+								self.fastBLEReaction[macSens] = {"cmd":cmd, "IPOfSwitchbotRPI":IPOfSwitchbotRPI,"IdOfSwitchbotRPI":IdOfSwitchbotRPI,"pwdOfSwitchbotRPI":pwdOfSwitchbotRPI}
+					except Exception as e:
+						if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						return valuesDict
+				
+			self.indiLOG.log(20,"setting rpi-rpi action  macSens:{}, to pi:{} , target type:{},  fastBLEReaction:{}".format(macSens, sensorPi, targetType, self.fastBLEReaction[macSens]))
+
 			self.savefastBLEReaction()
-
-			self.indiLOG.log(20,"setting rpi-rpi action  macSens:{}, to pi:{}  fastBLEReaction:{}".format(macSens, sensorPi, self.fastBLEReaction[macSens]))
-
 			self.makeBeacons_parameterFile()
 			self.execButtonConfig(valuesDict, level="0,", action=["updateParamsFTP"], Text="send switchbot command to pi# ")
 
@@ -11031,13 +11149,22 @@ class Plugin(indigo.PluginBase):
 			repeat 			= int(valuesDict.get("repeat","0"))
 			repeatDelay		= float(valuesDict.get("repeatDelay","0"))
 			pulses 			= int(valuesDict.get("pulses","1"))
-			pulseLengthOn	= float(valuesDict.get("pulseLengthOn","0"))
-			pulseLengthOff	= float(valuesDict.get("pulseLengthOff","0"))
+			pulseUpDown		= valuesDict.get("pulseUpDown","up")
+			pulseLengthOn	= float(valuesDict.get("pulseLengthOn","0.5"))
+			pulseLengthOff	= float(valuesDict.get("pulseLengthOff","0.5"))
 			pulseDelay		= float(valuesDict.get("pulseDelay","0"))
-			fileContents = {"mac":props["mac"],"cmd":"pulses","pulses":pulses, "pulseLengthOn":pulseLengthOn, "pulseLengthOff":pulseLengthOff, "pulseDelay":pulseDelay, "repeat":repeat, "repeatDelay":repeatDelay, "outputDev":  dev.id, "mode":"interactive"}
-
-		textToSend = [{"device": "OUTPUTswitchbotRelay", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
-		self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, textToSend, calledFrom="switchBotRelaySet")
+			if valuesDict.get("outputType","switchbot") == "switchbot":
+				fileContents = {"mac":props["mac"],"cmd":"pulses","pulses":pulses, "pulseLengthOn":pulseLengthOn, "pulseLengthOff":pulseLengthOff, "pulseDelay":pulseDelay, "repeat":repeat, "repeatDelay":repeatDelay, "outputDev":  dev.id, "mode":"interactive","ouputType":"switchbot"}
+				textToSend = [{"device": "OUTPUTswitchbotRelay", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
+				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, textToSend, calledFrom="switchBotRelaySet")
+			else:
+				if pulseUpDown == "up":
+					valuesDict["cmd"] = "pulseUp"
+					valuesDict["pulseUp"] = pulseLengthOn
+				if pulseUpDown == "down":
+					valuesDict["cmd"] = "pulseDown"
+					valuesDict["pulseDown"] = pulseLengthOff
+				self.setPin(valuesDict)
 		#self.indiLOG.log(10,"action set switchbot params requested: for {} on pi:{}; text to send:{}, valuesDict:{}".format(dev.name, piU, textToSend, valuesDict))
 
 		#if self.decideMyLog("Special"): self.indiLOG.log(10,"action set switchbot params requested: for {} on pi:{}; text to send:{}".format(dev.name, piU, textToSend))
@@ -19009,7 +19136,7 @@ class Plugin(indigo.PluginBase):
 					props = dev.pluginProps
 					found = False
 					if props.get("RPINumber","") == fromPiU:
-						existingIndigoId = dev.Id
+						existingIndigoId = dev.id
 						self.RPI[fromPiU]["piDevId"] = dev.id
 						existingPiDev = dev
 						found = True

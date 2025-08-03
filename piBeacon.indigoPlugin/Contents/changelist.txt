@@ -1,4 +1,10 @@
-added features / changes in added features / changes in v2022.185.139 @ 2025-04-24
+added features / changes in added features / changes in v2022.185.141 @ 2025-08-03
+==================================================
+1. File "plugin.py", line 18838, in handleRPIMessagePart
+    existingPiDev	 = indigo.devices[existingIndigoId] 
+
+
+added features / changes in added features / changes in v2022.185.140 @ 2025-04-24
 ==================================================
 1. fully support face and gesture sensor together with DF2301Q
    Have a box with 3 DF2301Q connected through USB to serial converters and one face gesture sensor on i2c

@@ -38,7 +38,7 @@ import threading
 
 G.program = "FaceGesture"
 
-GLOB_USBownerFile					= G.homeDir+"temp/USB.owner"
+GLOB_PORTownerFile					= G.homeDir+"temp/PORT.owner"
 GLOB_resetFile						= G.homeDir+"temp/FaceGesture.reset"
 GLOB_restartFile					= G.homeDir+"temp/FaceGesture.restart"
 GLOB_commandFile					= G.homeDir+"temp/FaceGesture.cmd"
@@ -964,9 +964,7 @@ def	makeUsbItemList():
 	serialItems = []
 	cmd = "/bin/ls -l /dev | /usr/bin/grep ttyUSB"
 	ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-	cmd = "/bin/ls -l /dev | /usr/bin/grep serial0"
-	ret2 = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-	for line in (ret+ret2).split("\n"):
+	for line in (ret).split("\n"):
 		pp = line.find("ttyUSB")
 		if pp > 10:
 			serialItems.append(line[pp-1:].strip().split(" ")[0])
@@ -1022,14 +1020,14 @@ def readParams():
 			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
 			exit()
 
-		initUSBownerFile(firstRead)
+		initPORTownerFile(firstRead)
 
 		makeUsbItemList()
 		
 		for devId in sensors[sensor]:
 			restart = ""
 			U.logger.log(20, "checking: {} old?:{}, restart:{}".format(devId, devId in sensorOld, devId in restartSensor) )
-			clearUSBownerFile(devId, firstRead)
+			clearPORTownerFile(devId, firstRead)
 
 			# anything new?
 			newParams = False
@@ -1279,13 +1277,11 @@ def startSensor(devId):
 	if devId not in SENSOR:
 		connected = False
 		try:
-			if logLevel > 0: U.logger.log(20, "devId:{}; =========== starting sensor  ============= type:\"{}\", \nUSB options:{}, \nUSBownerFile:{}\n==============================\n".format(devId, i2cOrUart[devId], serialItems, readUSBownerFile()))
+			if logLevel > 0: U.logger.log(20, "devId:{}; =========== starting sensor  ============= type:\"{}\", \nUSB options:{}, \nPORTownerFile:{}\n==============================\n".format(devId, i2cOrUart[devId], serialItems, readPORTownerFile()))
 			if i2cOrUart[devId] == "uart":
-				testPort = serialItems
-				if sensors[sensor][devId].get("serialPortName","") .find("serial") > -1:
-					testPort = ["serial0"]
-				for kk in range(len(testPort)):
-					usePort = cmdCheckSerialPort(devId, doNotUse=usePort)
+
+				if sensors[sensor][devId].get("serialPortName","") in ["serial0","ttys0"]:
+					usePort = cmdCheckSerialPort(devId, sensors[sensor][devId]["serialPortName"],  doNotUse=usePort)
 					if logLevel > 0: U.logger.log(20, "devId:{}; starting sensor,  serial port:{}, usePort:{}".format(devId, serialPortName[devId], usePort))
 					if usePort != "":
 						SENSOR[devId] = DFRobot_GestureFaceDetection_UART(baud=GLOB_RT_BAUD_RATE, addr=GLOB_DEVICE_ID, portName=usePort)
@@ -1293,15 +1289,36 @@ def startSensor(devId):
 						for ntries in range(3): 
 							if SENSOR[devId].begin():
 								connected = True
-								updateUSBownerFile(devId, port=usePort, calledFrom="accepted port")
+								updatePORTownerFile(devId, port=usePort, calledFrom="accepted port")
 								break
 							if logLevel > 0: U.logger.log(20, "Communication with device failed, trying next port")
 							time.sleep(1)
-						if not connected: continue # try next port
-						break # all ok
 					else:
 						time.sleep(2)
-						
+
+				elif len(USBitems) > 0:
+					for kk in range(len(USBitems)):
+						usePort = cmdCheckSerialPort(devId, USBitems[kk], doNotUse=usePort)
+						if logLevel > 0: U.logger.log(20, "devId:{}; starting sensor,  serial port:{}, usePort:{}".format(devId, serialPortName[devId], usePort))
+						if usePort != "":
+							SENSOR[devId] = DFRobot_GestureFaceDetection_UART(baud=GLOB_RT_BAUD_RATE, addr=GLOB_DEVICE_ID, portName=usePort)
+							U.logger.log(20, "started with selected port")
+							for ntries in range(3): 
+								if SENSOR[devId].begin():
+									connected = True
+									updatePORTownerFile(devId, port=usePort, calledFrom="accepted port")
+									break
+								if logLevel > 0: U.logger.log(20, "Communication with device failed, trying next port")
+								time.sleep(1)
+							if not connected: continue # try next port
+							break # all ok
+						else:
+							time.sleep(2)
+				else:
+						U.logger.log(20, "devId:{} no serial port found, sleep for 20 secs".format(devId ))
+						updatePORTownerFile(devId, port=usePort, calledFrom="not connected port")
+						time.sleep(10)
+
 			else: # i2c
 				if logLevel > 0: U.logger.log(20, "devId:{}; starting sensor,  i2cAddr:{}".format(devId, GLOB_DEVICE_ID))
 				SENSOR[devId] =  DFRobot_GestureFaceDetection_I2C(bus=1, addr=GLOB_DEVICE_ID) 
@@ -1331,7 +1348,7 @@ def startSensor(devId):
 
 			if not connected: 
 				failedCount[devId] +=1
-				updateUSBownerFile(devId, port=usePort, calledFrom="not connected port")
+				updatePORTownerFile(devId, port=usePort, calledFrom="not connected port")
 				return False
 
 			U.logger.log(20, "Communication with device connected after {} tries".format(ntries+1))
@@ -1384,123 +1401,123 @@ def startSensor(devId):
 ###################################################################################################
 # manage USB and serial ports between sensors of this type and other device types ##
 ###################################################################################################
-def updateUSBownerFile(devId, port="x", failed="x", calledFrom=""):
+def updatePORTownerFile(devId, port="x", failed="x", calledFrom=""):
 	"""
 		@brief this method will update the USB owner file 
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
-		if devId in localUSBownerFile:
+		if devId in localPORTownerFile:
 			if port !="x":
-				localUSBownerFile[devId]["ok"] = port
-			if failed not in ["x",""] and failed not in localUSBownerFile[devId]["failed"]:
-				localUSBownerFile[devId]["failed"].append(failed)
+				localPORTownerFile[devId]["ok"] = port
+			if failed not in ["x",""] and failed not in localPORTownerFile[devId]["failed"]:
+				localPORTownerFile[devId]["failed"].append(failed)
 				
-		writeUSBownerFile(localUSBownerFile)
-		if logLevel > 1: U.logger.log(20, "devId:{}; calledf:{}, writing   USBownerFile:{} ".format(devId, calledFrom, localUSBownerFile))
-		localUSBownerFile = readUSBownerFile()
-		if logLevel > 1: U.logger.log(20, "devId:{}; calledf:{}, read back USBownerFile:{} ".format(devId, calledFrom, localUSBownerFile))
+		writePORTownerFile(localPORTownerFile)
+		if logLevel > 1: U.logger.log(20, "devId:{}; calledf:{}, writing   PORTownerFile:{} ".format(devId, calledFrom, localPORTownerFile))
+		localPORTownerFile = readPORTownerFile()
+		if logLevel > 1: U.logger.log(20, "devId:{}; calledf:{}, read back PORTownerFile:{} ".format(devId, calledFrom, localPORTownerFile))
 
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-	return localUSBownerFile
+	return localPORTownerFile
 	
 #################################
-def readUSBownerFile():
+def readPORTownerFile():
 	"""
 		@brief this method will read the USB owner file 
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
-		localUSBownerFile, xxx = U.readJson(GLOB_USBownerFile)
-		return localUSBownerFile
+		localPORTownerFile, xxx = U.readJson(GLOB_PORTownerFile)
+		return localPORTownerFile
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return {}
 
 #################################
-def initUSBownerFile(firstRead):
-	global logLevel, localUSBownerFile
+def initPORTownerFile(firstRead):
+	global logLevel, localPORTownerFile
 	"""
 		@brief this method will init the USB owner file 
 	"""
 	try:
-		localUSBownerFile = readUSBownerFile()
-		if type(localUSBownerFile) != type({}): localUSBownerFile = {}
+		localPORTownerFile = readPORTownerFile()
+		if type(localPORTownerFile) != type({}): localPORTownerFile = {}
 		if firstRead: 
-			for devId in localUSBownerFile:
+			for devId in localPORTownerFile:
 				if "devType" == G.program:
-					localUSBownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
-			writeUSBownerFile(localUSBownerFile)
+					localPORTownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
+			writePORTownerFile(localPORTownerFile)
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-	return localUSBownerFile
+	return localPORTownerFile
 	
 #################################
-def clearUSBownerFile(devId, firstRead):
+def clearPORTownerFile(devId, firstRead):
 	"""
 		@brief this method will clear the USB owner file 
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
-			if firstRead: localUSBownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
-			if devId not in localUSBownerFile: localUSBownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
-			localUSBownerFile[devId]["ok"] = ""
-			writeUSBownerFile(localUSBownerFile)
+			if firstRead: localPORTownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
+			if devId not in localPORTownerFile: localPORTownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
+			localPORTownerFile[devId]["ok"] = ""
+			writePORTownerFile(localPORTownerFile)
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-	return localUSBownerFile
+	return localPORTownerFile
 	
 #################################
-def checkifdevIdInUSBownerFile(devId):
+def checkifdevIdInPORTownerFile(devId):
 	"""
 		@brief this method will check if devId is already in USB owner file 
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
-			if devId not in localUSBownerFile: localUSBownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
-			writeUSBownerFile(localUSBownerFile)
+			if devId not in localPORTownerFile: localPORTownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
+			writePORTownerFile(localPORTownerFile)
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-	return localUSBownerFile
+	return localPORTownerFile
 
 #################################
-def checkifIdInOKUSBownerFile(devId, findThis):
+def checkifIdInOKPORTownerFile(devId, findThis):
 	"""
 		@brief this method will devid and findthis is ok
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
-			if devId not in localUSBownerFile: return False
-			if findThis == localUSBownerFile[devId]["ok"]: return True
+			if devId not in localPORTownerFile: return False
+			if findThis == localPORTownerFile[devId]["ok"]: return True
 			return False
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 #################################
-def checkifIdInFAILEDUSBownerFile(devId, findThis):
+def checkifIdInFAILEDPORTownerFile(devId, findThis):
 	"""
 		@brief this method will devid and findthis is failed
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
-			if devId not in localUSBownerFile: return False
-			if findThis in localUSBownerFile[devId]["failed"]: return True
+			if devId not in localPORTownerFile: return False
+			if findThis in localPORTownerFile[devId]["failed"]: return True
 			return False
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 #################################
-def getdevIdsUSBownerFile():
+def getdevIdsPORTownerFile():
 	"""
 		@brief this method will get info for devid 
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
 			retList = []
-			for devId in localUSBownerFile:
+			for devId in localPORTownerFile:
 				retList.append(devId )
 			return retList
 	except Exception as e:
@@ -1508,14 +1525,14 @@ def getdevIdsUSBownerFile():
 	return []
 
 #################################
-def writeUSBownerFile(USBownerFile):
+def writePORTownerFile(PORTownerFile):
 	"""
 		@brief this method will write to usb owner file
 	"""
-	global logLevel, localUSBownerFile
+	global logLevel, localPORTownerFile
 	try:
-		localUSBownerFile = copy.copy(USBownerFile)
-		U.writeJson(GLOB_USBownerFile, localUSBownerFile, sort_keys=False, indent=4)
+		localPORTownerFile = copy.copy(PORTownerFile)
+		U.writeJson(GLOB_PORTownerFile, localPORTownerFile, sort_keys=False, indent=4)
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return 
@@ -1817,86 +1834,87 @@ def cmdCheckIfGPIOon():
 
 
 ############################################
-def cmdCheckSerialPort( devId, doNotUse=""):
+def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 	"""
 		@brief this method will  the serial ports if present and properly defined, if not reboot might be issued
 	"""
 	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction, serialPortName
 	global sensor, sensors
 	try:
-		for ii in range(30):
-			raspi, ddd = U.readJson(G.homeDir+"raspiConfig.params")
-			reboot = False
-			if ddd == "":
-				time.sleep(2)
-				continue
-
-			U.logger.log(20, "raspiConfig.params file found:  \nSERIAL_HARDWARE:{}, \nSERIAL_CONSOLE:{} \nSERIAL_CONSOLE_OLD:{}".format(raspi.get("SERIAL_HARDWARE",""), raspi.get("SERIAL_CONSOLE",""), raspi.get("SERIAL_CONSOLE_OLD","") ))
-
-			if "SERIAL_CONSOLE" in raspi  and "SERIAL_HARDWARE" in raspi and "SERIAL_CONSOLE_OLD" in raspi:
-				if raspi["SERIAL_CONSOLE"].get("result","") in ["0","1"]: 			old = 0
-				else:
-					if raspi["SERIAL_CONSOLE_OLD"].get("result","") in ["0","1"]: 	old = 1
-					else: 															old = 2
-
-				hardWare = raspi["SERIAL_HARDWARE"]["result"]
-
-				if old == 2 or hardWare not in ["0","1"]:
-					U.logger.log(20, "raspiConfig.params file found, bad config  \nSERIAL_HARDWARE:{}, \nSERIAL_CONSOLE:{} \nSERIAL_CONSOLE_OLD:{}".format(hardWare, raspi.get("SERIAL_CONSOLE",""), raspi.get("SERIAL_CONSOLE_OLD","") ))
-					break
-
-				if old == 1:
-					cons	 = raspi["SERIAL_CONSOLE_OLD"]["result"]
-				else:
-					cons	 = raspi["SERIAL_CONSOLE"]["result"]
-
-				U.logger.log(20, "old version?:{}, hardWare:{} cons:{}".format(old==1, hardWare, cons ))
-				if old == 1:
-					if hardWare != "0" or cons == "0":
-						cmd = "/usr/bin/sudo /usr/bin/raspi-config nonint do_serial 2" # enable hardware, disable software
-						ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-						U.logger.log(20, "ret: {}".format(ret))
-						reboot = True
-						msg = "serial hard ware / conole  config wrong,  changed and rebooting to rectify #907"
-						U.logger.log(20, " {}".format(msg))
-						U.sendURL({"sensors":{sensor:{devId:{"cmd":907}}}}, wait=False)
-
-				else: # new version, separate cons and hw
-					if hardWare != "0":
-						cmd = "/usr/bin/sudo /usr/bin/raspi-config nonint do_serial_hw 0" # enable hardware
-						ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-						U.logger.log(20, "ret: {}".format(ret))
-						reboot = True
-						msg = "serial hard ware config wrong,  changed and rebooting to rectify #903"
-						U.logger.log(20, " {}".format(msg))
-						U.sendURL({"sensors":{sensor:{devId:{"cmd":903}}}}, wait=False)
+		if serialType.find("USB") == -1: # check if serial hardware is enabled, if requested and not present, enable and reboot
+			for ii in range(30):
+				raspi, ddd = U.readJson(G.homeDir+"raspiConfig.params")
+				reboot = False
+				if ddd == "":
+					time.sleep(2)
+					continue
 	
-					if cons != "1":
-						cmd = "/usr/bin/sudo /usr/bin/raspi-config nonint do_serial_cons 1"  # disable console
-						ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-						U.logger.log(20, "ret: {}".format(ret))
-						reboot = True
-						msg = "serial console config wrong, changed and rebooting to rectify #904"
-						U.logger.log(20, " {}".format(msg))
-						U.sendURL({"sensors":{sensor:{devId:{"cmd":904}}}}, wait=False)
+				U.logger.log(20, "raspiConfig.params file found:  \nSERIAL_HARDWARE:{}, \nSERIAL_CONSOLE:{} \nSERIAL_CONSOLE_OLD:{}".format(raspi.get("SERIAL_HARDWARE",""), raspi.get("SERIAL_CONSOLE",""), raspi.get("SERIAL_CONSOLE_OLD","") ))
+	
+				if "SERIAL_CONSOLE" in raspi  and "SERIAL_HARDWARE" in raspi and "SERIAL_CONSOLE_OLD" in raspi:
+					if raspi["SERIAL_CONSOLE"].get("result","") in ["0","1"]: 			old = 0
+					else:
+						if raspi["SERIAL_CONSOLE_OLD"].get("result","") in ["0","1"]: 	old = 1
+						else: 															old = 2
+	
+					hardWare = raspi["SERIAL_HARDWARE"]["result"]
+	
+					if old == 2 or hardWare not in ["0","1"]:
+						U.logger.log(20, "raspiConfig.params file found, bad config  \nSERIAL_HARDWARE:{}, \nSERIAL_CONSOLE:{} \nSERIAL_CONSOLE_OLD:{}".format(hardWare, raspi.get("SERIAL_CONSOLE",""), raspi.get("SERIAL_CONSOLE_OLD","") ))
+						break
+	
+					if old == 1:
+						cons	 = raspi["SERIAL_CONSOLE_OLD"]["result"]
+					else:
+						cons	 = raspi["SERIAL_CONSOLE"]["result"]
+	
+					U.logger.log(20, "old version?:{}, hardWare:{} cons:{}".format(old==1, hardWare, cons ))
+					if old == 1:
+						if hardWare != "0" or cons == "0":
+							cmd = "/usr/bin/sudo /usr/bin/raspi-config nonint do_serial 2" # enable hardware, disable software
+							ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
+							U.logger.log(20, "ret: {}".format(ret))
+							reboot = True
+							msg = "serial hard ware / conole  config wrong,  changed and rebooting to rectify #907"
+							U.logger.log(20, " {}".format(msg))
+							U.sendURL({"sensors":{sensor:{devId:{"cmd":907}}}}, wait=False)
+	
+					else: # new version, separate cons and hw
+						if hardWare != "0":
+							cmd = "/usr/bin/sudo /usr/bin/raspi-config nonint do_serial_hw 0" # enable hardware
+							ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
+							U.logger.log(20, "ret: {}".format(ret))
+							reboot = True
+							msg = "serial hard ware config wrong,  changed and rebooting to rectify #903"
+							U.logger.log(20, " {}".format(msg))
+							U.sendURL({"sensors":{sensor:{devId:{"cmd":903}}}}, wait=False)
+		
+						if cons != "1":
+							cmd = "/usr/bin/sudo /usr/bin/raspi-config nonint do_serial_cons 1"  # disable console
+							ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
+							U.logger.log(20, "ret: {}".format(ret))
+							reboot = True
+							msg = "serial console config wrong, changed and rebooting to rectify #904"
+							U.logger.log(20, " {}".format(msg))
+							U.sendURL({"sensors":{sensor:{devId:{"cmd":904}}}}, wait=False)
+	
+					if reboot:
+						U.setRebootRequest("configuring serial port")
+						time.sleep(10000)
+					else:
+						if logLevel > 1: U.logger.log(20, "serial port configured properly")
 
-				if reboot:
-					U.setRebootRequest("configuring serial port")
-					time.sleep(10000)
-				else:
-					if logLevel > 1: U.logger.log(20, "serial port configured properly")
-
-			break
+				break
 
 		if logLevel > 1: U.logger.log(20, "after check serial hw: reboot; {}, doNotUse>{}<".format(reboot, doNotUse))
 
 		if not reboot:
 			checkPort = serialPortName[devId].strip("*")
-			if logLevel > 1: U.logger.log(20, "devId:{}, checkPort:{}, \nUSBownerFile:{}".format(devId, checkPort, readUSBownerFile() ))
+			if logLevel > 1: U.logger.log(20, "devId:{}, checkPort:{}, \nPORTownerFile:{}".format(devId, checkPort, readPORTownerFile() ))
 			
-			checkifdevIdInUSBownerFile(devId)
+			checkifdevIdInPORTownerFile(devId)
 
-			updateUSBownerFile(devId, port="", failed=doNotUse, calledFrom="clear port")
+			updatePORTownerFile(devId, port="", failed=doNotUse, calledFrom="clear port")
 
 			cmd = "/bin/ls -l /dev | /usr/bin/grep "+checkPort
 			ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
@@ -1906,24 +1924,23 @@ def cmdCheckSerialPort( devId, doNotUse=""):
 				pp = line.find(checkPort)
 				if pp < 10: continue		
 				U.logger.log(20, " pp:{}, line {}".format(pp, line))
-				findThis = line[pp-1:].strip()
-				findThis = findThis.split(" ")[0]
-				alreadyInUse = 0
+				existingport = line[pp:].strip().split(" ")[0]
 				
-				if checkifIdInFAILEDUSBownerFile(devId, findThis):
-					if logLevel > 1:U.logger.log(20, "devId:{}, skipping:{} in failed list".format(devId, findThis))
+				if checkifIdInFAILEDPORTownerFile(devId, existingport):
+					if logLevel > 1:U.logger.log(20, "devId:{}, skipping:{} in failed list".format(devId, existingport))
 					continue
 
-				if not checkifIdInOKUSBownerFile(devId, findThis):
-					for dddd in getdevIdsUSBownerFile():
-						if checkifIdInOKUSBownerFile(dddd, findThis): 
+				alreadyInUse = 0
+				if not checkifIdInOKPORTownerFile(devId, existingport):
+					for dddd in getdevIdsPORTownerFile():
+						if checkifIdInOKPORTownerFile(dddd, existingport): 
 							if logLevel > 1:U.logger.log(20, "devId:{}, already in use by devId:{}  port:{}".format(devId, dddd, findThis))
 							alreadyInUse = dddd
 							break
 						
 				if alreadyInUse == 0:
 						if logLevel > 1:U.logger.log(20, "devId:{}  selected port:{}".format(devId, findThis))
-						return findThis
+						return existingport
 	
 			msg = "bad_port:_/dev/"+serialPortName[devId]
 			msg += ", rebooting now"
@@ -1957,7 +1974,7 @@ def execSensorLoop():
 	global unixCmdVoiceNo, unixCmdAction
 	global cmdToText
 	global counter
-	global USBowner,failedCount
+	global PORTowner,failedCount
 	global lastCommandReceived, lastValidCmdAt, ignoreSameCommands
 	global faceDetectionThreshold, gestureDetectionThreshold, detectionRange, restartSensor
 	global lastAliveSend
@@ -1973,7 +1990,7 @@ def execSensorLoop():
 	lastCommandReceived				= {}
 	lastValidCmdAt					= {}
 	ignoreSameCommands				= {}
-	USBowner						= {}
+	PORTowner						= {}
 	counter							= {}
 	gpioUsed 						= [0,0,0,0,0,0,0,0,0,0]
 	reactOnlyToCommands				= {}
