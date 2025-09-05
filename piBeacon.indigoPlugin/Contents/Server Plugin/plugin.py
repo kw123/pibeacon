@@ -309,6 +309,7 @@ _GlobalConst_emptyRPI =	  {
 	"PosX": 					0,
 	"PosY": 					0,
 	"PosZ": 					0,
+	"lastTimeIPChanged": 		time.time() - 300000000,
 	"userIdPi": 				"pi"}
 
 
@@ -340,6 +341,7 @@ _GlobalConst_emptyRPISENSOR =	{
 	"sensorRefreshSecs":		20,
 	"deltaChangedSensor":		5,
 	"emptyMessages":			0,
+	"lastTimeIPChanged": 		time.time() - 300000000,
 	"userIdPi": 				"pi"}
 
 _GlobalConst_allGPIOlist = [
@@ -1575,7 +1577,8 @@ class Plugin(indigo.PluginBase):
 
 			self.RPI						= {}
 			self.beacons					= {}
-
+			self.ignoreRPI					= {}
+			
 			self.PasswordsAreSet			= 0
 			self.indigoCommand				= ""
 			self.countLoop					= 0
@@ -3316,12 +3319,36 @@ class Plugin(indigo.PluginBase):
 			pass
 		self.savefastBLEReaction()
 
+####-------------------------------------------------------------------------####
+	def checkDF2301Q_commandlist(self):
+		try:
+			if not self.DF2301Q_commandlist_new: return 
+
+			#self.indiLOG.log(20,"checkDF2301Q_commandlist: DF2301Q_commandlist:{}".format(self.DF2301Q_commandlist))
+			self.DF2301Q_commandlist_new = False
+			for dev in indigo.devices.iter("props.isSensorDevice"):
+				if dev.deviceTypeId == "DF2301Q":
+					props = dev.pluginProps
+					#self.indiLOG.log(20,"checkDF2301Q_commandlist: checking for dev: {}, commandList:{}".format(dev.name, props["commandList"]))
+					cc = copy.copy(self.DF2301Q_commandlist)
+					for ii in range(4,22):
+						cc[str(ii)] = props.get("controllWord"+str(ii), "text not set")
+					cc = json.dumps(cc) 
+					if cc != props["commandList"]:
+						props["commandList"] = cc
+						dev.replacePluginPropsOnServer(props)
+						self.indiLOG.log(20,"checkDF2301Q_commandlist: updating for dev: {}".format(dev.name))
+
+		except Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(30,"checkDF2301Q_commandlist", exc_info=True)
 
 ####-------------------------------------------------------------------------####
 	def readOtherParams(self):
 		try:
 			self.DF2301Q_commandlistText  = "DF2301Q_commandlist.txt  file not found"
 			self.DF2301Q_commandlist = {}
+			self.DF2301Q_commandlist_new = True
+						
 			if os.path.isfile(self.pathToPlugin+"DF2301Q_commandlist.txt"):
 				f = open(self.pathToPlugin + "DF2301Q_commandlist.txt", "r")
 				self.DF2301Q_commandlistText = f.read()	
@@ -3339,6 +3366,8 @@ class Plugin(indigo.PluginBase):
 				#self.indiLOG.log(20,"DF2301Q_commandlist.txt:\n{}".format(json.dumps(self.DF2301Q_commandlist, sort_keys=True, indent=2)))
 			else:
 				self.indiLOG.log(20,"DF2301Q_commandlist.txt  file not found")
+				
+			
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(30,"readOtherParams", exc_info=True)
@@ -7796,6 +7825,27 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return []
 
+####-------------------------------------------------------------------------####
+	def filterRPIsReturnNumber(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
+
+		try:
+			xList = []
+			for dev in indigo.devices.iter("props.isRPIDevice"):
+				if dev.deviceTypeId != "rPI": continue
+				try:
+					name = dev.name
+					RPINumber = str(dev.pluginProps["RPINumber"])
+					ipN	 = self.RPI[RPINumber]["ipNumberPi"]
+					xList.append(["{}-{}-{}".format(RPINumber, dev.id, ipN), "{} - {} - {}".format(RPINumber, name, ipN) ])
+
+				except	Exception as e:
+					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			return sorted(xList, key=lambda tup: tup[1])
+
+		except	Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		return []
+
 
 ####-------------------------------------------------------------------------####
 	def filterActiveSensors(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
@@ -8222,6 +8272,43 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonExecuteReplaceRPICALLBACK")
 			self.indiLOG.log(30,"=== replaced MAC number {}  of device {} with {} --	and deleted device {}    ===".format(oldMAC, oldName, newMAC, newName) )
 			valuesDict["MSG"] = "replaced, moved MAC number"
+
+		except Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		return valuesDict
+
+####-------------------------------------------------------------------------####
+	def buttonExecutefixDoubleRPINumberCALLBACK(self, valuesDict=None, typeId=None, devId=None):
+
+		try:
+
+			RPINumber, devId, ipNumberOld = valuesDict["RPINumber"].split("-")
+			ipNumber = valuesDict["ipNumber"]
+			
+			self.indiLOG.log(20,"=== buttonExecutefixDoubleRPINumber:  RPI#{} - id:{} - existing IP:{} ==> new IP{}".format(RPINumber, devId, ipNumberOld, ipNumber) )
+
+			if not self.isValidIP(ipNumber):
+				valuesDict["MSG"] = "bad IP number"
+				return valuesDict
+
+			dev = indigo.devices[int(devId)]
+			props = dev.pluginProps
+			props["ipNumberPi"] = ipNumber
+			dev.replacePluginPropsOnServer(props)
+			self.RPI[RPINumber]["ipNumberPi"] = ipNumber
+
+			self.debugLevel.append("UpdateRPI")
+			self.sendFilesToPiFTP(RPINumber, expFile="updateParamsFTP.exp")
+			self.sleep(0.5)
+			self.sshToRPI(RPINumber, expFile="restartmasterSSH.exp")
+
+			self.ignoreRPI[RPINumber] = time.time() + 100
+			self.indiLOG.log(20,"=== buttonExecutefixDoubleRPINumber:  ignore messages from RPINumber-{} for 100 secs to enable change in setup to take effect".format(RPINumber, ipNumber) )
+
+			self.sleep(3)
+			self.getDebugLevels()
+			
+			valuesDict["MSG"] = "executed"
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -12763,6 +12850,7 @@ class Plugin(indigo.PluginBase):
 
 			self.sprinklerStats()
 
+			self.checkDF2301Q_commandlist()
 
 			if self.queueList !="":
 				for ii in range(40):
@@ -14069,7 +14157,13 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(10,"bad data  Pi not integer:  {}".format(varNameIN) )
 				return
 
-			if self.trackRPImessages == pi or pi == 14:
+
+			if  piU in self.ignoreRPI:
+				if time.time() - self.ignoreRPI[piU] > 0: return 
+				del self.ignoreRPI[piU]
+
+
+			if self.trackRPImessages == pi:
 				self.indiLOG.log(10,"pi# {} msg tracking: {} ".format(piU, varUnicode ) )
 
 			if piU not in _rpiList:
@@ -14268,8 +14362,12 @@ class Plugin(indigo.PluginBase):
 						return beaconUpdatedIds
 
 					if self.RPI[piU]["ipNumberPi"] != ipAddress:
-						self.indiLOG.log(30,"rPi#:{} {}: IP number has changed to {}, please fix in menu/pibeacon/setup RPI to reflect changed IP number or fix IP# on RPI\n this can happen when WiFi and ethernet are both active, try setting wlan/eth parameters in RPI device edit;  ==> ignoring data".format(piU, self.RPI[piU]["ipNumberPi"], ipAddress ))
+						self.indiLOG.log(30,"rPi#:{} {}: IP number has changed to {}, please fix in menu/pibeacon/setup RPI to reflect changed IP number or fix IP# on RPI\n this can happen when WiFi and ethernet are both active, try setting wlan/eth parameters in RPI device edit;  ==> ignoring data ".format(piU, self.RPI[piU]["ipNumberPi"], ipAddress))
+						if time.time() - self.RPI[piU]["lastTimeIPChanged"] < 200:
+							self.indiLOG.log(30,"  ......  last IP number changed was {:.0} secs ago it seems that there are 2 RPi with the same PI# active at {} and {}".format(time.time() - self.RPI[piU]["lastTimeIPChanged"], self.RPI[piU]["ipNumberPi"], ipAddress))
+							self.indiLOG.log(30,"  ......  use menu >>Fix situation where 2 RPi have same #<<")
 						self.RPI[piU]["ipNumberPi"] = ipAddress
+						self.RPI[piU]["lastTimeIPChanged"] = time.time()
 
 					beaconUpdatedIds = self.updateBeaconStates(piU, piN, ipAddress, piMAC, secondsCollected, msgs)
 					self.RPI[piU]["emptyMessages"] = 0
@@ -18623,8 +18721,12 @@ class Plugin(indigo.PluginBase):
 					return
 
 				cmdtextDict = json.loads(props.get("commandList","{}"))
-				cmdtext = cmdtextDict.get(str(cmdId), "text not set, set in device edit")
-				stText = "{}:{}".format(cmdId, cmdtext)
+				cmdIdS = str(cmdId)
+				if cmdIdS not in cmdtextDict:
+					if cmdIdS in self.DF2301Q_commandlist:
+						cmdtextDict[cmdIdS] = self.DF2301Q_commandlist[cmdIdS] +" pls edit/save device"
+				cmdtext = cmdtextDict.get(cmdIdS, "text not set, set in device edit")
+				stText = "{}:{}".format(cmdIdS, cmdtext)
 
 				if cmdId > 1000:
 					errortext = data.get("errText","")
@@ -20811,7 +20913,7 @@ class Plugin(indigo.PluginBase):
 										"risingOrFalling","deadTime","deadTimeBurst","timeWindowForBursts","minEventsinTimeWindowToTriggerBursts","inpType","count","bounceTime","timeWindowForContinuousEvents",
 										"mac","type","INPUTdevId0","INPUTdevId1","INPUTdevId2","INPUTdevId3","coincidenceTimeInterval","updateIndigoTiming","updateIndigoDeltaTemp","updateIndigoDeltaAccelVector","updateIndigoDeltaMaxXYZ",
 										"usbPort","motorFrequency","nContiguousAngles","contiguousDeltaValue","triggerLast","triggerCalibrated","sendToIndigoEvery",
-										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetGPIOClass","logLevel","reactOnlyToCommands","ignoreSameCommands","faceDetectionThreshold", "gestureDetectionThreshold", "detectionRange",
+										"mute", "volume", "setWakeTime", "keepAwake", "i2cOrUart","serialPortName","restartRepeat","refreshRepeat","uartSleepAfterWrite","i2cSleepAfterWrite","commandList","resetGPIOClass","logLevel","reactOnlyToCommands","ignoreSameCommands","faceDetectionThreshold", "gestureDetectionThreshold", "detectionRange","allowLearning",
 										"anglesInOneBin","measurementsNeededForCalib","sendPixelData","doNotUseDataRanges","minSignalStrength","relayType","python3","bleHandle"]:
 								sens[devIdS] = self.updateSensProps(sens[devIdS], props, propToUpdate)
 
@@ -21339,7 +21441,7 @@ class Plugin(indigo.PluginBase):
 
 		next = {"pi":piU, "expFile":expFile, "endAction":endAction, "type":"ftp", "tries":0, "exeTime":time.time()}
 		self.removeONErPiV(piU, "piUpToDate", [expFile])
-		if self.testIfAlreadyInQ(next,piU): 	return
+		if self.testIfAlreadyInQ(next, piU): 	return
 		if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"FTP adding to update list {}".format(next) )
 		self.rpiQueues["data"][piU].put(next)
 		return
@@ -21473,14 +21575,14 @@ class Plugin(indigo.PluginBase):
 
 		try:
 			if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"enter  sendFilesToPiFTP #{}  expFile:".format(piU, expFile) )
-			if expFile=="updateParamsFTP.exp": self.newIgnoreMAC = 0
+			if expFile == "updateParamsFTP.exp": self.newIgnoreMAC = 0
 			self.lastUpdateSend = time.time()
 
 
 			pingR = self.testPing(self.RPI[piU]["ipNumberPi"])
 			if pingR != 0:
 				if self.decideMyLog("OfflineRPI") or self.decideMyLog("UpdateRPI"): self.indiLOG.log(10," pi server # {}  PI# {}    not online - does not answer ping - , skipping update".format(piU, self.RPI[piU]["ipNumberPi"]) )
-				self.setRPIonline(piU,new="offline")
+				self.setRPIonline(piU, new="offline")
 				return 1, ["ping offline",""]
 
 			prompt = self.getPasswordSshPrompt(piU,expFile)

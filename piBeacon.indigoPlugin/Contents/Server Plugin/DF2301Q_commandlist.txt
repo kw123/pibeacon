@@ -9,6 +9,7 @@
 804: Play end
 820: Config successful
 821: Device reset
+822: Learning mode rejected
 
 === predefined  Command Words
 22:  Go forward
@@ -150,7 +151,7 @@
 203: Exit learning
 204: I want to delete
 205: Delete wake word
-207: Delete command word
-208: Exit deleting
+206: Delete command word
+207: Exit deleting
 208: Delete all
 

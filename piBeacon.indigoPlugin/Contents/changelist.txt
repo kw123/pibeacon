@@ -1,3 +1,10 @@
+added features / changes in added features / changes in v2022.186.141 @ 2025-09-05
+==================================================
+1. added option to fix a screwed up RPI situation where 2 rpi have the same RPI# (0-19)
+2. added option to have multiple FACE and GESTURE sensors connected to the RPi, 
+   using USB to serial converters. I have implemented 3 voice and one gesture sensor.
+   All sensors must be the same type connected to the USB to serial converters.
+
 added features / changes in added features / changes in v2022.185.141 @ 2025-08-03
 ==================================================
 1. File "plugin.py", line 18838, in handleRPIMessagePart
@@ -16,7 +23,6 @@ added features / changes in added features / changes in v2022.185.140 @ 2025-04-
 2. various little improvements 
 	exception handling 
 	fixed python compiler warnings (different return types etc)
-
 
 
 added features / changes in added features / changes in v2022.185.139 @ 2025-04-24

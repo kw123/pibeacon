@@ -45,6 +45,8 @@ GLOB_commandFile					= G.homeDir+"temp/FaceGesture.cmd"
 GLOB_fileToReceiveCommands 			= G.homeDir+"temp/receiveCommands.input"
 GLOB_recoverymessage 				= G.homeDir+"temp/FaceGesture.recovery"
 GLOB_recoveryPrevious 				= G.homeDir+"temp/FaceGesture.previousRecovery"
+GLOB_commonrelayActiveFile			= G.homeDir+"temp/lastRelayReset"
+GLOB_commonrelayActiveDeltaTime		= 20.
 GLOB_faceDetectionThreshold			= 80
 GLOB_gestureDetectionThreshold		= 80
 GLOB_detectionRange					= 100
@@ -993,6 +995,7 @@ def readParams():
 	global lastCommandReceived, lastValidCmdAt, ignoreSameCommands
 	global faceDetectionThreshold, gestureDetectionThreshold, detectionRange
 	global restartSensor
+	global commonRelayActive
 
 
 	try:
@@ -1055,6 +1058,7 @@ def readParams():
 			if devId not in gestureDetectionThreshold:	gestureDetectionThreshold[devId]	= GLOB_gestureDetectionThreshold
 			if devId not in detectionRange:				detectionRange[devId]				= GLOB_detectionRange
 			if devId not in failedCount:				failedCount[devId]					= 0
+			if devId not in commonRelayActive:			commonRelayActive[devId]			=  False
 			 
 			for ii in range(1,9):
 				unixCmdAction[ii] =  sensors[sensor][devId].get("unixCmdAction"+str(ii),"")
@@ -1097,6 +1101,7 @@ def readParams():
 			restart += getAndCheckParam(devId, "detectionRange", 			detectionRange, 			GLOB_detectionRange, 			"int")
 			
 			i2cOrUart[devId] =  sensors[sensor][devId].get("i2cOrUart","")	
+			commonRelayActive[devId] = sensors[sensor][devId].get("commonRelayActive","0")  == "1"
 			
 			if i2cOrUart[devId] == "i2c":
 				if devId not in oldi2cOrUart or (i2cOrUart[devId] != "" and oldi2cOrUart[devId] != i2cOrUart[devId]):	restart = "i2c new,"
@@ -1574,8 +1579,16 @@ def resetSensorRelay(devId):
 	"""
 	global logLevel, SENSOR, sensors
 	global i2cOrUart
+	global commonRelayActive
 
 	try:
+
+		if os.path.isfile(GLOB_commonrelayActiveFile): 
+			data, ddd = U.readJson(GLOB_commonrelayActiveFile)
+			if type(data) == type({}) and data != {}: 
+				if time.time() - data.get("lastrelay",0) < GLOB_commonrelayActiveDeltaTime:
+					return 
+
 		if i2cOrUart[devId] == "uart": return 
 		
 		if U.checki2cdetect == "bad":
@@ -1590,6 +1603,8 @@ def resetSensorRelay(devId):
 		tt = time.time()
 		for ii in range(8):
 			if sensors[sensor][devId].get("gpioCmdForAction"+str(ii),"") == str(GLOB_cmdCodeForrelay):
+				if commonRelayActive.get(devId,false):
+					U.writeJson(GLOB_commonrelayActiveFile, json.dumps({"lastrelay":time.time()}))
 				cmdQueue.put(GLOB_cmdCodeForrelay)
 				time.sleep(6)
 				break
@@ -1939,7 +1954,7 @@ def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 							break
 						
 				if alreadyInUse == 0:
-						if logLevel > 1:U.logger.log(20, "devId:{}  selected port:{}".format(devId, findThis))
+						if logLevel > 1:U.logger.log(20, "devId:{}  selected port:{}".format(devId, checkPort))
 						return existingport
 	
 			msg = "bad_port:_/dev/"+serialPortName[devId]
@@ -1979,7 +1994,10 @@ def execSensorLoop():
 	global faceDetectionThreshold, gestureDetectionThreshold, detectionRange, restartSensor
 	global lastAliveSend
 	global gpioInfoIndigoIDForMsgToReceivecommand
+	global commonRelayActive
 
+
+	commonRelayActive				= {}
 	gpioInfoIndigoIDForMsgToReceivecommand							= {}
 	restartSensor					= {}
 	failedCount						= {}

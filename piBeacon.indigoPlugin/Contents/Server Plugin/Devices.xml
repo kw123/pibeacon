@@ -23390,6 +23390,18 @@ The i2c number is fixed: 0x64 = 100, i2c is not stable on rpi2 or rpi0w, set swi
 				</List>
 			</Field>
 
+			<Field id="allowLearning" type="menu"     defaultValue="1"> <Label>allow learning mode:</Label>
+				<List>
+					<Option value="1"   >ON </Option>
+					<Option value="0"   >off</Option>
+				</List>
+			</Field>
+
+			<Field id="infoLabelDF2301allowLearning" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>When by accident the device goes into learning mode, this option will reset the sensor and hence disable learning mode</Label>
+			</Field>
+
+
 			<Field id="mute" type="menu"     defaultValue="0"> <Label>mute speaker:</Label>
 				<List>
 					<Option value="0"   >mute off </Option>

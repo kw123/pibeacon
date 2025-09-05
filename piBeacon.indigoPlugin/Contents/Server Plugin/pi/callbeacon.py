@@ -76,14 +76,8 @@ subprocess.call("mkdir {}temp > 				/dev/null 2>&1 ".format(homeDir), shell=True
 subprocess.call("chmod +666 -R {} > 			/dev/null 2>&1 ".format(homeDir), shell=True)
 subprocess.call("chmod +111 -R {}*.py > 		/dev/null 2>&1 ".format(homeDir), shell=True)
 
-subprocess.call("chmod +777 -R {}soundfiles >   /dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +777 -R {}fonts > 		/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +777 -R {}displayfiles > /dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +777 -R {}fonts > 		/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +777  {}tm > 		/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +777  {}tf > 		/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +777  {}py > 		/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +777  {}ct > 		/dev/null 2>&1 ".format(homeDir), shell=True)
+subprocess.call("chmod +777 -R {}soundfiles {}fonts {}displayfiles {}fonts  >   /dev/null 2>&1 ".format(homeDir, homeDir, homeDir, homeDir), shell=True)
+subprocess.call("chmod +777  {}tm {}tf {}py {}ct {}py3  > 		/dev/null 2>&1 ".format(homeDir, homeDir, homeDir, homeDir, homeDir), shell=True)
 subprocess.call("chown -R  pi  {} ".format(homeDir), shell=True)
 
 logger.log(30," -3-  callbeacon after chmod "  )

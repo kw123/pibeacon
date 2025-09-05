@@ -52,7 +52,8 @@ GLOB_errorFile						= G.homeDir+"temp/DF2301Q.error"
 GLOB_fileToReceiveCommands 			= G.homeDir+"temp/receiveCommands.input"
 GLOB_recoverymessage 				= G.homeDir+"temp/DF2301Q.recovery"
 GLOB_recoveryPrevious 				= G.homeDir+"temp/DF2301Q.previousRecovery"
-
+GLOB_commonrelayActiveFile			= G.homeDir+"temp/lastRelayReset"
+GLOB_commonrelayActiveDeltaTime		= 20.
 GLOB_expectResponseAfter			= 10 # seconds
 GLOB_maxRestartConnections			= 5  # count
 GLOB_cmdCodeForrelay				= 999
@@ -398,7 +399,7 @@ class DFRobot_DF2301Q_UART():
 		msg.msg_data[1] = set_value
 		msg.data_length = 2
 
-		if self.debug > 2: U.logger.log(20, "msg:{}".format(msg) )
+		if self.debug > 2: U.logger.log(20, "msg:{}".format(vars(msg)) )
 		return self._send_packet(msg)
 
 
@@ -413,7 +414,7 @@ class DFRobot_DF2301Q_UART():
 			msg.msg_data[1] = 0
 			msg.data_length = 2
 	
-			if self.debug > 2: U.logger.log(20, "msg:{}".format(msg) )
+			if self.debug > 2: U.logger.log(20, "msg:{}".format(vars(msg)) )
 			return self._send_packet(msg)
 		except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
@@ -439,7 +440,7 @@ class DFRobot_DF2301Q_UART():
 		msg.msg_data[1] = 0
 		msg.data_length = 2
 
-		if self.debug > 2: U.logger.log(20, "msg:{}".format(str(msg)) )
+		if self.debug > 2: U.logger.log(20, "msg:{}".format(vars(msg)) )
 		return self._send_packet(msg)
 
 
@@ -555,16 +556,17 @@ class DFRobot_DF2301Q_UART():
 
 		while self._ser.in_waiting:
 			xx = self._ser.read(1)
-			allChar += xx.hex().upper()
+			xxHex = xx.hex().upper()
+			allChar += xxHex
 			receive_char = ord(xx)
-			if self.debug > 3: U.logger.log(20, "receive_char:{}".format(receive_char))
+			if self.debug > 1: U.logger.log(20, "receive_char:{:3}={}, rev_state:{}".format(receive_char, xxHex, rev_state))
 
 			if self.REV_STATE_HEAD0 == rev_state: # begin of receive of data 			== 00
-				if DF2301Q_UART_MSG_HEAD_LOW == receive_char:#							== F4
+				if DF2301Q_UART_MSG_HEAD_LOW == receive_char:#					== F4
 					rev_state = self.REV_STATE_HEAD1
 
 			elif self.REV_STATE_HEAD1 == rev_state :#									== 01
-				if DF2301Q_UART_MSG_HEAD_HIGH == receive_char:#						== F5
+				if DF2301Q_UART_MSG_HEAD_HIGH == receive_char:#					== F5
 					rev_state = self.REV_STATE_LENGTH0
 				else:
 					rev_state = self.REV_STATE_HEAD0
@@ -577,7 +579,7 @@ class DFRobot_DF2301Q_UART():
 				msg.data_length += receive_char << 8
 				rev_state = self.REV_STATE_TYPE
 
-			elif self.REV_STATE_TYPE == rev_state:#									== 04
+			elif self.REV_STATE_TYPE == rev_state:#										== 04
 				msg.msg_type = receive_char
 				rev_state = self.REV_STATE_CMD
 
@@ -632,27 +634,32 @@ class DFRobot_DF2301Q_UART():
 			replySeq = [-1]* len(allChar)
 
 			ii = -1
+			if self.debug > 1: U.logger.log(20, "allChar >>{}<<".format(allChar))
 			for xx in allChar:
 				xx = xx[:-2] # -2, skip "FB" ==  DF2301Q_UART_MSG_TAIL
 				try: 
 					ll = int(xx[0:2],16)
-				except: continue
+				except: 
+					if self.debug > 1: U.logger.log(20, "no int  >>{}<<".format( xx[0:2]))
+					continue
 				if len(xx) < 12:
-					U.logger.log(20, "bad data len:{}; >>{}<<".format(len(xx), xx))
+					if self.debug > 1: U.logger.log(20, "bad data len:{}; >>{}<<".format(len(xx), xx))
 					continue
 				if len(xx) > 26:
-					U.logger.log(20, "bad data len:{}; >>{}<<".format(len(xx), xx))
+					if self.debug > 1: U.logger.log(20, "bad data len:{}; >>{}<<".format(len(xx), xx))
 					continue
 
 				ii += 1
+				#01 23 45 67 89 01 23 45 67 89 01
+				#03 00 A0 91 05 67 00 25 C2 01 FB for cmdid = 103
 				length.append(ll)
-				typ.append(xx[4:6])
-				tt = int(typ[-1],16)
-				cmd.append(xx[6:8])
+				typ.append(xx[4:6])					# == A0
+				tt = int(typ[-1],16)				# == 
+				cmd.append(xx[6:8])					# == 91
 				cc =int(cmd[-1],16)
-				seq.append(int(xx[8:10],16))
-				data.append(xx[10:10+ll*2])
-				chksum.append(xx[10+ll*2:]) #
+				seq.append(int(xx[8:10],16))		# == 05
+				data.append(xx[10:10+ll*2])			# == 670025    ll = 3  67 --> 103 as int 
+				chksum.append(xx[10+ll*2:]) 		# -- C201
 				for msgSend in self.messagesSend:
 					# msgSend format:  0,1=header; 2,3 = len; 4 = type; 5 = cmd; 6 = seq 8,9,.. = data; -3,-2 = chksum, -1 = tail  
 					#U.logger.log(20, "seq:{}, msgSend {}  ".format(seq[-1], msgSend))
@@ -665,25 +672,28 @@ class DFRobot_DF2301Q_UART():
 					pass
 
 
-				if tt == DF2301Q_UART_MSG_TYPE_NOTIFY:				 																	# A3 
-					if  cc == DF2301Q_UART_MSG_CMD_NOTIFY_STATUS:  																		# 9A
-						try:	iData = int(data[-1][2:],16)
-						except:	iData = 0
-						#U.logger.log(20, "iData >>{},{}<<".format(data[-1], iData))
-						if   iData == DF2301Q_UART_MSG_DATA_NOTIFY_POWERON:			responses[ii] = 800 # power on 									# B0
-						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_WAKEUPENTER:		responses[ii] = 801 # wake up   								# 91
-						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_WAKEUPEXIT:		responses[ii] = 802 # wake up exit								# B2
-						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_PLAYSTART:		responses[ii] = 803 # PLAYSTART									# B3
-						elif iData == DF2301Q_UART_MSG_DATA_NOTIFY_PLAYEND:			responses[ii] = 804 # PLAYEND									# B4
-
-				elif tt == DF2301Q_UART_MSG_TYPE_ACK:																					# A2
-					if cc == DF2301Q_UART_MSG_CMD_SET_CONFIG:						responses[ii] = 820 # config command received sucessully		# 96
+				try:	iData = int(data[-1][0:2],16)
+				except:	iData = 0
+				try:	iData2 = int(data[-1][2:4],16)
+				except:	iData2 = 0
+				if tt == DF2301Q_UART_MSG_TYPE_NOTIFY:				 																				# A3 
+					if  cc == DF2301Q_UART_MSG_CMD_NOTIFY_STATUS:  																					# 9A
+						if   iData2 == DF2301Q_UART_MSG_DATA_NOTIFY_POWERON:		responses[ii] = 800 # power on 									# B0
+						elif iData2 == DF2301Q_UART_MSG_DATA_NOTIFY_WAKEUPENTER:	responses[ii] = 801 # wake up   								# 91
+						elif iData2 == DF2301Q_UART_MSG_DATA_NOTIFY_WAKEUPEXIT:		responses[ii] = 802 # wake up exit								# B2
+						elif iData2 == DF2301Q_UART_MSG_DATA_NOTIFY_PLAYSTART:		responses[ii] = 803 # PLAYSTART									# B3
+						elif iData2 == DF2301Q_UART_MSG_DATA_NOTIFY_PLAYEND:		responses[ii] = 804 # PLAYEND									# B4
+						else:														responses[ii] = 830
+					else:															responses[ii] = 840
+					
+				elif tt == DF2301Q_UART_MSG_TYPE_ACK:																								# A2
+					if cc == DF2301Q_UART_MSG_CMD_SET_CONFIG:						responses[ii] = 820 # config command received successfully		# 96
 					if cc == DF2301Q_UART_MSG_CMD_RESET_MODULE:						responses[ii] = 821 # reset module								# 95
 
-				elif tt== DF2301Q_UART_MSG_TYPE_CMD_UP: 																				# A0
-					try:	iData = int(data[-1][0:2],16)
-					except:	iData = 0
+				elif tt == DF2301Q_UART_MSG_TYPE_CMD_UP: 																							# A0
 					if cc == DF2301Q_UART_MSG_CMD_ASR_RESULT:						responses[ii] = iData #  real command received					# 91
+
+				if self.debug > 1: U.logger.log(20, "  disected: length:{:1}, typ:{:2}, tt:{}, cc:{},  cmd:{:2}; chksum:{:4}, seq:{:3d}=={:<3d}, data:{:<6} {} cmdID={} _cmd_id:{}  , resp:{}".format(length[-1], typ[-1], tt, cc, cmd[-1] , chksum[-1] , seq[-1], replySeq[-1], data[-1], data[-1][0:2], iData, self.uart_cmd_ID, responses) )
 
 
 			if self.uart_cmd_ID == 0 and len(responses) > 0:
@@ -696,7 +706,7 @@ class DFRobot_DF2301Q_UART():
 
 		try:
 			if self.debug > 1 and data_rev_count > 0: 
-				U.logger.log(20, "data_rev_count:{}, cmd_ID:{},  msg:{}, leave at:{:.2f}".format(data_rev_count, self.uart_cmd_ID, str(allChar), time.time() - self.startTime) )
+				U.logger.log(20, "data_rev_count:{}, cmd_ID:{}, leave at:{:.2f}".format(data_rev_count, self.uart_cmd_ID, time.time() - self.startTime) )
 				for ii in range(len(length)):
 					U.logger.log(20, "   #:{},  length:{:1}, typ:{:2},  cmd:{:2}; chksum:{:4}, seq:{:3d}=={:<3d} replySeq?,  data:{:<6} {}, resp:{}=={} ".format(ii, length[ii], typ[ii], cmd[ii] , chksum[ii] , seq[ii], replySeq[ii], data[ii], data[ii][0:2], responses[ii],  self.commandList.get(str(responses[ii]),"") ) )
 	 
@@ -731,14 +741,18 @@ def readParams():
 	global i2cOrUart, serialPortName
 	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction, anyCmdDefined, unixCmdAction, unixCmdVoiceNo
 	global lastReset, restartConnectionCounter, badSensor
-	global logLevel, tmpMuteOff, learningOn, expectResponse, currentMute, setWakeTime
+	global tmpMuteOff, learningOn, expectResponse, currentMute, setWakeTime
 	global GPIOZERO
 	global reactOnlyToCommands, maxCommandId, minErrorCmdID, offCommand
 	global gpioUsed, failedCount
 	global resetGPIOClass
 	global lastCommandReceived, lastValidCmdAt, ignoreSameCommands
 	global restartSensor
-
+	global allowLearning
+	global commonRelayActive
+	global logLevel
+	
+	
 	try:
 
 		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
@@ -753,7 +767,7 @@ def readParams():
 			if inpRaw == oldRaw: return
 		oldRaw		 = inpRaw
 
-
+		if type(logLevel) != type({}): logLevel = {"-1":0}
 
 		U.getGlobalParams(inp)
 
@@ -784,7 +798,6 @@ def readParams():
 						break
 			if not newParams: continue
 
-			if logLevel > 0: U.logger.log(10,"{} reading new parameters for devId:{}".format(G.program, devId) )
 
 			if devId not in lastReset: 					lastReset[devId] 					= time.time()
 			if devId not in restartConnectionCounter: 	restartConnectionCounter[devId] 	= 0
@@ -807,7 +820,18 @@ def readParams():
 			if devId not in ignoreSameCommands:			ignoreSameCommands[devId]			= -1
 			if devId not in resetGPIOClass:				resetGPIOClass[devId]				= 999999999
 			if devId not in failedCount:				failedCount[devId]					= 0
+			if devId not in allowLearning:				allowLearning[devId]				=  True
+			if devId not in commonRelayActive:			commonRelayActive[devId]			=  False
+			if devId not in logLevel:					logLevel[devId]						=  0
 
+			if "logLevel" in sensors[sensor][devId]:
+				if str(logLevel[devId]) != sensors[sensor][devId].get("logLevel","0"): upd = True
+				logLevel[devId] = int(sensors[sensor][devId].get("logLevel","1"))
+			else:
+				logLevel[devId] = 0
+
+			if logLevel[devId]  > 0: U.logger.log(10,"{} reading new parameters for devId:{}".format(G.program, devId) )
+						
 			resetGPIOClass[devId] 				= float(sensors[sensor][devId].get("resetGPIOClass",999999999))
 			
 			for ii in range(1,9):
@@ -856,15 +880,13 @@ def readParams():
 							U.logger.log(20, "devId:{}; error reactOnlyToCommands:{}   rr:{}, e:{}".format(devId, xx, rr, e) )
 							pass
 
+			allowLearning[devId] = sensors[sensor][devId].get("allowLearning", "1") == "1"
+
 			if "ignoreSameCommands" in sensors[sensor][devId]: 
 				try: ignoreSameCommands[devId] = float(sensors[sensor][devId].get("ignoreSameCommands", -1))
 				except: ignoreSameCommands[devId] = -1
 
-			if "logLevel" in sensors[sensor][devId]:
-				if str(logLevel) != sensors[sensor][devId].get("logLevel","0"): upd = True
-				logLevel = int(sensors[sensor][devId].get("logLevel","1"))
-			else:
-				logLevel = 0
+
 
 			restart = ""
 			i2cOrUart[devId] =  sensors[sensor][devId].get("i2cOrUart","")	
@@ -883,6 +905,7 @@ def readParams():
 
 
 			setWakeTime[devId] = int(sensors[sensor][devId].get("setWakeTime","200") )
+			commonRelayActive[devId] = sensors[sensor][devId].get("commonRelayActive","0")  == "1"
 
 			keepAwake[devId] = sensors[sensor][devId].get("keepAwake") == "1"
 			if keepAwake[devId]: 
@@ -934,9 +957,9 @@ def readParams():
 			prepGPIOInfoForCommands(devId, inp.get("output",{}))
 
 
-			if upd !="" and logLevel > 0: U.logger.log(20,"devId:{}; upd reason:{}, serialPortName:{}, setting volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}, refreshRepeat:{:.1f}, restartRepeat:{:.1f}, logLevel:{}".format(devId, upd, serialPortName[devId],  sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), setWakeTime[devId], keepAwake[devId], refreshRepeat[devId], restartRepeat[devId],logLevel) )
+			if upd != "" and logLevel[devId] > 0: U.logger.log(20,"devId:{}; upd reason:{}, serialPortName:{}, setting volume:{}, mute:{}, setWakeTime:{}, keep_awake:{}, refreshRepeat:{:.1f}, restartRepeat:{:.1f}, logLevel:{}".format(devId, upd, serialPortName[devId],  sensors[sensor][devId].get("volume"), sensors[sensor][devId].get("mute"), setWakeTime[devId], keepAwake[devId], refreshRepeat[devId], restartRepeat[devId],logLevel[devId]) )
 
-			if upd !="":
+			if upd != "":
 				checkifRefreshSetup(devId, restart=restart, upd=upd)
 
 		sensorOld = copy.copy(sensors[sensor])
@@ -960,6 +983,19 @@ def readParams():
 
 
 #################################
+def maxLogLevel():
+	global logLevel
+	x = 0
+	try:
+		for devId in logLevel:
+			if x < logLevel[devId]: x = logLevel[devId]
+	except Exception as e:
+		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+
+	return x
+	
+	
+#################################
 def prepGPIOInfoForCommands(devIdSelect, output):
 	global sensors, sensor
 	global SENSOR
@@ -976,14 +1012,14 @@ def prepGPIOInfoForCommands(devIdSelect, output):
 				devIdList.append(xx)
 				
 		doGpioInfoIndigoIDForMsgToReceivecommand = False
-		if logLevel > 2: U.logger.log(20, "starting  devIdSelect:{}, force:{}, devIds:{}".format(devIdSelect, force, devIdList) )
+		if maxLogLevel() > 2: U.logger.log(20, "starting  devIdSelect:{}, devIds:{}".format(devIdSelect, devIdList) )
 		for devId in devIdList:
 			for ii in range(1,9):
 				if gpioUsed[ii] == 0: 
 					iis = str(ii)
 					try:
 						if "gpioNumberForCmdAction"+iis in sensors[sensor][devId]:
-							if logLevel > 1: U.logger.log(20, "setting #{}, devId:{}".format(iis, devId) )
+							if logLevel[devId] > 1: U.logger.log(20, "setting #{}, devId:{}".format(iis, devId) )
 							changed = False
 							if gpioNumberForCmdAction[ii] == "" or str(gpioNumberForCmdAction[ii])	!= sensors[sensor][devId].get("gpioNumberForCmdAction"+iis,""):
 								try:	
@@ -1018,11 +1054,11 @@ def prepGPIOInfoForCommands(devIdSelect, output):
 										gpioUsed[ii] = 1
 								except:	gpioInverseAction[ii] = ""
 
-							if logLevel > 2: U.logger.log(20, "devId:{}; checking parameters file for #{}  changed:{}; gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} conditions: gpioInverse==0/1:{}  gpioOnTime==float:{}  gpioCmd==int:{}  gpioNumber==int:{} ".format(devId, ii,changed, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii] , gpioInverseAction[ii] in ["0","1"] , isinstance(gpioOnTimeAction[ii],float) , isinstance(gpioCmdForAction[ii], int) , isinstance(gpioNumberForCmdAction[ii], int) ) )
+							if logLevel[devId] > 2: U.logger.log(20, "devId:{}; checking parameters file for #{}  changed:{}; gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} conditions: gpioInverse==0/1:{}  gpioOnTime==float:{}  gpioCmd==int:{}  gpioNumber==int:{} ".format(devId, ii,changed, gpioNumberForCmdAction[ii], gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii] , gpioInverseAction[ii] in ["0","1"] , isinstance(gpioOnTimeAction[ii],float) , isinstance(gpioCmdForAction[ii], int) , isinstance(gpioNumberForCmdAction[ii], int) ) )
 							if changed:
 								if gpioInverseAction[ii] in ["0","1"] and isinstance(gpioOnTimeAction[ii],float) and isinstance(gpioCmdForAction[ii], int) and isinstance(gpioNumberForCmdAction[ii], int):
 									gpio = gpioNumberForCmdAction[ii] 
-									if logLevel > 1: U.logger.log(20, "devId:{}; checking parameters file for #{}  gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} ".format(devId, ii, gpio, gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii]  ) )
+									if logLevel[devId]  > 1: U.logger.log(20, "devId:{}; checking parameters file for #{}  gpioNumberForCmdAction:>{}< enabled? for gpioCmdForAction:>{}<, ontime:>{}<, inverse:{} ".format(devId, ii, gpio, gpioCmdForAction[ii], gpioOnTimeAction[ii], gpioInverseAction[ii]  ) )
 									if gpio not in gpioInfoIndigoIDForMsgToReceivecommand: 
 										gpioInfoIndigoIDForMsgToReceivecommand[gpio] = {"indigoIdOfOutputDevice":"0", "devType":"OUTPUTgpio-1"}
 										doGpioInfoIndigoIDForMsgToReceivecommand = True
@@ -1042,7 +1078,7 @@ def prepGPIOInfoForCommands(devIdSelect, output):
 								gpio = int(dev["gpio"])
 								if gpio in gpioInfoIndigoIDForMsgToReceivecommand:
 									gpioInfoIndigoIDForMsgToReceivecommand[gpio] = {"indigoIdOfOutputDevice":indigoIdOfOutputDevice, "devType":devType}
-			if logLevel > 0: U.logger.log(20, "devIdSelect:{}, gpioInfoIndigoIDForMsgToReceivecommand:{} ".format(devIdSelect, gpioInfoIndigoIDForMsgToReceivecommand))
+			if maxLogLevel() > 0: U.logger.log(20, "devIdSelect:{}, gpioInfoIndigoIDForMsgToReceivecommand:{} ".format(devIdSelect, gpioInfoIndigoIDForMsgToReceivecommand))
 
 	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
@@ -1076,7 +1112,7 @@ def startSensor(devId):
 		learningOn[devId] = False
 		restartConnectionCounter[devId] += 1
 		connected = False
-		if logLevel > 0: U.logger.log(20, "devId:{}; =========== starting sensor  ============= type:\"{}\", \nUSB options:{}, \nPORTownerFile:{}\n==============================\n".format(devId, i2cOrUart[devId], USBitems, readPORTownerFile()))
+		if logLevel[devId] > 0: U.logger.log(20, "devId:{}; =========== starting sensor  ============= type:\"{}\", \nUSB options:{}, \nPORTownerFile:{}\n==============================\n".format(devId, i2cOrUart[devId], USBitems, readPORTownerFile()))
 		try:
 			if i2cOrUart[devId] == "uart":
 				if sensors[sensor][devId].get("serialPortName","") in ["serial0","ttys0"]:
@@ -1091,8 +1127,8 @@ def startSensor(devId):
 								U.logger.log(20, "devId:{}, port:{}, retry after  in Line {} has error={}".format(devId, usePort, sys.exc_info()[-1].tb_lineno, e))
 								continue
 								
-							if logLevel > 2: U.logger.log(20, "devId:{}; after set class, setting params sleep:{}, volume:{}".format(devId, sleepAfterWrite[devId], sensors[sensor][devId]["volume"]))
-							SENSOR[devId].set_Params( logLevel=logLevel, commandList=commandList[devId] )
+							if logLevel[devId]> 2: U.logger.log(20, "devId:{}; after set class, setting params sleep:{}, volume:{}".format(devId, sleepAfterWrite[devId], sensors[sensor][devId]["volume"]))
+							SENSOR[devId].set_Params( logLevel=logLevel[devId], commandList=commandList[devId] )
 							SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"]))
 	
 							time.sleep(0.1)
@@ -1100,14 +1136,14 @@ def startSensor(devId):
 								startTest = time.time()
 								CMDID = SENSOR[devId].get_CMDID()
 								if CMDID > 0:
-									if logLevel > 0: U.logger.log(20, "devId:{} / port:{}   CMDID:{} received  after {:.1} secs".format(devId, usePort, CMDID, time.time() -  startTest))
+									if logLevel[devId] > 0: U.logger.log(20, "devId:{} / port:{}   CMDID:{} received  after {:.1} secs".format(devId, usePort, CMDID, time.time() -  startTest))
 									connected = True
 									lastRestart	= time.time()
 									updatePORTownerFile(devId, port=usePort, calledFrom="accepted port")
 									time.sleep(0.1)
 									break
 	
-								if logLevel > 1: U.logger.log(20, "devId:{} still waiting for response after {:.1} secs".format(devId, time.time() -  startTest ))
+								if logLevel[devId] > 1: U.logger.log(20, "devId:{} still waiting for response at {} after {:.1} secs (2)".format(devId, usePort, time.time() -  startTest ))
 								time.sleep(0.5)
 							
 				
@@ -1115,9 +1151,9 @@ def startSensor(devId):
 				elif len(USBitems) > 0:
 					for kk in range(len(USBitems)):
 						if connected: break
-						if logLevel > 0: U.logger.log(20, "devId:{};  try serial port loop    doNotUse>{}<  bf cmdCheckSerialPort ==== ".format(devId, usePort))
+						if logLevel[devId]> 0: U.logger.log(20, "devId:{};  try serial port loop    doNotUse>{}<  bf cmdCheckSerialPort ==== ".format(devId, usePort))
 						usePort = cmdCheckSerialPort(devId, USBitems[kk],  doNotUse=usePort)
-						if logLevel > 0: U.logger.log(20, "devId:{}; cmdCheckSerialPort returned try serial port:{}, use:{}".format(devId, serialPortName[devId], usePort))
+						if logLevel[devId] > 0: U.logger.log(20, "devId:{}; cmdCheckSerialPort returned try serial port:{}, use:{}".format(devId, serialPortName[devId], usePort))
 						if usePort != "":
 							for kkk in range(3):
 								if connected: break
@@ -1130,8 +1166,8 @@ def startSensor(devId):
 										cycleUSBPort()
 									continue
 									
-								if logLevel > 2: U.logger.log(20, "devId:{}; after set class, setting params sleep:{}, volume:{}".format(devId, sleepAfterWrite[devId], sensors[sensor][devId]["volume"]))
-								SENSOR[devId].set_Params( logLevel=logLevel, commandList=commandList[devId] )
+								if logLevel[devId]> 2: U.logger.log(20, "devId:{}; after set class, setting params sleep:{}, volume:{}".format(devId, sleepAfterWrite[devId], sensors[sensor][devId]["volume"]))
+								SENSOR[devId].set_Params( logLevel=logLevel[devId], commandList=commandList[devId] )
 								SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"]))
 		
 								time.sleep(0.1)
@@ -1139,14 +1175,14 @@ def startSensor(devId):
 									startTest = time.time()
 									CMDID = SENSOR[devId].get_CMDID()
 									if CMDID > 0:
-										if logLevel > 0: U.logger.log(20, "devId:{} / port:{}   CMDID:{} received  after {:.1} secs".format(devId, usePort, CMDID, time.time() -  startTest))
+										if logLevel[devId]> 0: U.logger.log(20, "devId:{} / port:{}   CMDID:{} received  after {:.1} secs".format(devId, usePort, CMDID, time.time() -  startTest))
 										connected = True
 										lastRestart	= time.time()
 										updatePORTownerFile(devId, port=usePort, calledFrom="accepted port")
 										time.sleep(0.1)
 										break
 		
-									if logLevel > 1: U.logger.log(20, "devId:{} still waiting for response after {:.1} secs".format(devId, time.time() -  startTest ))
+									if logLevel[devId]> 1: U.logger.log(20, "devId:{} still waiting at {} for response after {:.1} secs (1)".format(devId, usePort, time.time() -  startTest ))
 									time.sleep(0.5)
 									
 				
@@ -1158,16 +1194,16 @@ def startSensor(devId):
 						
 			else: # i2c
 				SENSOR[devId] = DFRobot_DF2301Q_I2C(i2c_addr=DF2301Q_I2C_ADDR, sleepAfterWrite=sleepAfterWrite[devId])
-				if logLevel > 0: U.logger.log(20, "devId:{}; started sensor,  i2cAddr:{}, sleep:{}".format(devId, DF2301Q_I2C_ADDR, sleepAfterWrite[devId]))
+				if logLevel[devId]> 0: U.logger.log(20, "devId:{}; started sensor,  i2cAddr:{}, sleep:{}".format(devId, DF2301Q_I2C_ADDR, sleepAfterWrite[devId]))
 				connected = True
 
 			if connected:
 				if devId in SENSOR:
-					if logLevel > 0: U.logger.log(20, "devId:{}; commandList:{}".format(devId, str(commandList[devId])[0:100] ))
-					SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite[devId], logLevel=logLevel, commandList=commandList[devId] )
+					#if logLevel[devId]> 0: U.logger.log(20, "devId:{}; commandList:{}".format(devId, str(commandList[devId])[0:100] ))
+					SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite[devId], logLevel=logLevel[devId], commandList=commandList[devId] )
 					lastRestart	= time.time()
 			else:
-					if logLevel > 0: U.logger.log(20, "devId:{}; not connected".format(devId))
+					if logLevel[devId]> 0: U.logger.log(20, "devId:{}; not connected".format(devId))
 					failedCount[devId] +=1
 			
 				
@@ -1195,9 +1231,9 @@ def updatePORTownerFile(devId, port="x", failed="x", calledFrom=""):
 				localPORTownerFile[devId]["failed"].append(failed)
 				
 		writePORTownerFile(localPORTownerFile)
-		if logLevel > 1: U.logger.log(20, "devId:{}; calledf:{}, writing   PORTownerFile:{} ".format(devId, calledFrom, localPORTownerFile))
+		if logLevel[devId]> 1: U.logger.log(20, "devId:{}; calledf:{}, writing   PORTownerFile:{} ".format(devId, calledFrom, localPORTownerFile))
 		localPORTownerFile = readPORTownerFile()
-		if logLevel > 1: U.logger.log(20, "devId:{}; calledf:{}, read back PORTownerFile:{} ".format(devId, calledFrom, localPORTownerFile))
+		if logLevel[devId]> 1: U.logger.log(20, "devId:{}; calledf:{}, read back PORTownerFile:{} ".format(devId, calledFrom, localPORTownerFile))
 
 	except Exception as e:
 			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
@@ -1331,7 +1367,7 @@ def setMute(devId, ON, CMDID=0):
 			if  ignoreUntilEndOfLearning[devId] > 0 and not learningOn[devId]:
 				learningOn[devId] = True
 				tmpMuteOff[devId] = time.time() + 100
-				if logLevel > 0: U.logger.log(20, "devId:{}; set mute OFF  expires in {:.1f} secs".format(devId, tmpMuteOff[devId]-time.time()))
+				if logLevel[devId]> 0: U.logger.log(20, "devId:{}; set mute OFF  expires in {:.1f} secs".format(devId, tmpMuteOff[devId]-time.time()))
 				if int(sensors[sensor][devId]["volume"]) < 5:
 					SENSOR[devId].set_volume(10) 			# set  volume to 10 during learning
 					setExpectResponse(devId)
@@ -1343,19 +1379,26 @@ def setMute(devId, ON, CMDID=0):
 					lastkeepAwake[devId] = time.time()
 					if CMDID > 0: 
 						SENSOR[devId].play_CMDID(CMDID)
+			else:
+				if currentMute[devId] != "1":
+					if logLevel[devId]> 0: U.logger.log(20, "devID:{}; set mute back to 1 ".format(devId))
+					SENSOR[devId].set_mute_mode(1, calledFrom="setMute2")
+					currentMute[devId] = "1"
+				tmpMuteOff[devId] = 0
+				
 		else:
 			if learningOn[devId]:
-				if logLevel > 0: U.logger.log(20, "devID:{}; set mute back to config ".format(devId))
+				if logLevel[devId]> 0: U.logger.log(20, "devID:{}; set mute learning params back to config ".format(devId))
 				tmpMuteOff[devId] = 0
 				learningOn[devId] = False
 				lastkeepAwake[devId] = 0
 				checkifRefreshSetup(devId, upd=True)
 			else:
 				for devId in SENSOR:
-					if currentMute[devId]  != sensors[sensor][devId]["mute"] :
-						SENSOR[devId].set_mute_mode(sensors[sensor][devId]["mute"], calledFrom="setMute2")
+					if currentMute[devId] != sensors[sensor][devId]["mute"]:
+						SENSOR[devId].set_mute_mode(sensors[sensor][devId]["mute"], calledFrom="setMute3")
 						setExpectResponse(devId)
-						currentMute[devId] = "1"
+						currentMute[devId] = sensors[sensor][devId]["mute"]
 
 	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
@@ -1380,30 +1423,30 @@ def checkifRefreshSetup(devId,  restart=False, upd=False):
 		if  time.time() - lastkeepAwake[devId] > refreshRepeat[devId] or restart or upd:
 			startTime = time.time()
 			if True:
-				if SENSOR[devId].set_mute_mode(1, calledFrom="checkifRefreshSetup1") == 1: badResponse= True
+				if SENSOR[devId].set_mute_mode(1, calledFrom="checkifRefreshSetup1") == 1: badResponse = True
 				setExpectResponse(devId)
 				currentMute[devId] = "1"
 
 			if keepAwake[devId]:
-				if not badResponse and SENSOR[devId].set_wake_time(setWakeTime[devId]) == 1: badResponse= True
+				if not badResponse and SENSOR[devId].set_wake_time(setWakeTime[devId]) == 1: badResponse = True
 				setExpectResponse(devId)
 				if not badResponse and SENSOR[devId].set_wakeup() == 1: badResponse= True
 
 			if restart and not keepAwake[devId]:
 				expectResponse[devId] = time.time()
-				if not badResponse and SENSOR[devId].set_wake_time(setWakeTime[devId]) == 1: badResponse= True
+				if not badResponse and SENSOR[devId].set_wake_time(setWakeTime[devId]) == 1: badResponse = True
 
 			if True:
 				setExpectResponse(devId)
-				if not badResponse and SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"])) == 1: badResponse= True
-				if not badResponse and SENSOR[devId].set_mute_mode(sensors[sensor][devId]["mute"], calledFrom="checkifRefreshSetup2") == 1: badResponse= True
-				if not badResponse and SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite[devId], logLevel=logLevel ) == 1: badResponse= True
+				if not badResponse and SENSOR[devId].set_volume(int(sensors[sensor][devId]["volume"])) == 1: badResponse = True
+				if not badResponse and SENSOR[devId].set_mute_mode(sensors[sensor][devId]["mute"], calledFrom="checkifRefreshSetup2") == 1: badResponse = True
+				if not badResponse and SENSOR[devId].set_Params(sleepAfterWrite=sleepAfterWrite[devId], logLevel=logLevel[devId] ) == 1: badResponse = True
 				currentMute[devId] = sensors[sensor][devId]["mute"]
 
 			if badResponse: 
 				checkErrorSend(devId, "bad send data", 900, "new, restart")		
 
-			if logLevel > 0: U.logger.log(20, "devId:{}; (re)-init sensor, timeUsed:{:.1f}, upd:{}, restart:{}, keepAwake:{}, setWakeTime:{}, mute:{}, volume:{}, learning <0?:{:.1f}, learningOn:{} ".format(devId, time.time()-startTime,upd, restart, keepAwake[devId], setWakeTime[devId], sensors[sensor][devId]["mute"],  sensors[sensor][devId]["volume"], min(999., time.time() - tmpMuteOff[devId]) ,learningOn[devId]))
+			if logLevel[devId]> 0: U.logger.log(20, "devId:{}; (re)-init sensor, timeUsed:{:.1f}, upd:{}, restart:{}, keepAwake:{}, setWakeTime:{}, mute:{}, volume:{}, learning <0?:{:.1f}, learningOn:{} ".format(devId, time.time()-startTime,upd, restart, keepAwake[devId], setWakeTime[devId], sensors[sensor][devId]["mute"],  sensors[sensor][devId]["volume"], min(999., time.time() - tmpMuteOff[devId]) ,learningOn[devId]))
 			lastkeepAwake[devId] = time.time()
 
 	except Exception as e:
@@ -1418,14 +1461,14 @@ def setNoExpectResponse(devId, calledfrom=""):
 	expectResponse[devId] = time.time() + 9999999999
 	restartConnectionCounter[devId] = 0
 	lastkeepAwake[devId] = time.time()
-	if logLevel > 1: U.logger.log(20, "devId:{}; setting  expectResponse to {:.1f}, called from:{}".format(devId, 9999999999, calledfrom ))
+	if logLevel[devId]> 1: U.logger.log(20, "devId:{}; setting  expectResponse to {:.1f}, called from:{}".format(devId, 9999999999, calledfrom ))
 	return 
 
 #################################
 def setExpectResponse(devId):
 	global expectResponse, logLevel
 	expectResponse[devId] = time.time() + GLOB_expectResponseAfter
-	if logLevel > 1: U.logger.log(20, "devId:{}; setting  expectResponse to {:.1f}".format(devId, GLOB_expectResponseAfter))
+	if logLevel[devId]> 1: U.logger.log(20, "devId:{}; setting  expectResponse to {:.1f}".format(devId, GLOB_expectResponseAfter))
 
 	return 
 
@@ -1437,16 +1480,16 @@ def checkExpectResponse(devId):
 		if i2cOrUart[devId] == "uart":
 		
 			if expectResponse[devId] - time.time() > 0 and expectResponse[devId] - time.time() < 99: 
-				if logLevel > 1: U.logger.log(20, "devId:{}; testing if response by now, time left:{:.1f} ".format(devId, - (time.time()-expectResponse[devId]) ))
+				if logLevel[devId]> 1: U.logger.log(20, "devId:{}; testing if response by now, time left:{:.1f} ".format(devId, - (time.time()-expectResponse[devId]) ))
 		
 			if time.time() - expectResponse[devId] > 0: 
-				if logLevel > 0: U.logger.log(20, "devId:{}; expected a response by now, not received for:{:.1f} secs,  reconnect counter: {}".format(devId, time.time()-expectResponse[devId], restartConnectionCounter[devId] ))
+				if logLevel[devId]> 0: U.logger.log(20, "devId:{}; expected a response by now, not received for:{:.1f} secs,  reconnect counter: {}".format(devId, time.time()-expectResponse[devId], restartConnectionCounter[devId] ))
 				if restartConnectionCounter[devId] > GLOB_maxRestartConnections: 
-					if logLevel > 0: U.logger.log(20, "devId:{}; expected a response by now,  too many reconnects, do restart of program ".format(devId))
+					if logLevel[devId]> 0: U.logger.log(20, "devId:{}; expected a response by now,  too many reconnects, do restart of program ".format(devId))
 					checkIfRestart(force=True)
 					return 3
 		
-				if logLevel > 0: U.logger.log(20, "devId:{}; expected a response by now, not received for:{:.1f} secs, do restart connection  ".format(devId, time.time()-expectResponse[devId] ))
+				if logLevel[devId]> 0: U.logger.log(20, "devId:{}; expected a response by now, not received for:{:.1f} secs, do restart connection  ".format(devId, time.time()-expectResponse[devId] ))
 				checkIfRestartConnection(devId, force=True)
 				return 2
 	
@@ -1492,7 +1535,7 @@ def checkIfRestart(force=False):
 		else: 
 			if not force: return
 
-		if logLevel > 0:
+		if maxLogLevel() > 0:
 			if not	force:  U.logger.log(20, "==== doing restart ====, requested by plugin")
 			else:	        U.logger.log(20, "==== doing restart ====, requested by program")
 
@@ -1510,7 +1553,7 @@ def checkIfReset():
 		os.remove(GLOB_resetFile)
 
 		for devId in SENSOR:
-			if logLevel > 0: U.logger.log(20, "devID:{}; ==== doing reset ====, requested by plugin".format(devId ))
+			if logLevel[devId]> 0: U.logger.log(20, "devID:{}; ==== doing reset ====, requested by plugin".format(devId ))
 			doReset(devId)
 			checkIfRestartConnection(devId, force=True)
 
@@ -1540,7 +1583,7 @@ def checkIfCommand():
 		os.remove(GLOB_commandFile)
 		if len(ddd) < 3: return 
 		for devId in SENSOR:
-			if logLevel > 0: U.logger.log(20, "devID:{}; ==== exec commands: {}".format(devId, data))
+			if maxLogLevel() > 0: U.logger.log(20, "devID:{}; ==== exec commands: {}".format(devId, data))
 			if "volume"		in data: 
 				SENSOR[devId].set_volume(int(data["volume"]))
 				getValues(devId, wait=0.1)
@@ -1566,8 +1609,8 @@ def checkIfCommand():
 				SENSOR[devId].set_need_string()
 				getValues(devId, wait=0.1)
 			if "loglevel" 		in data: 
-				logLevel = data["loglevel"]
-				SENSOR[devId].set_Params(logLevel=logLevel)
+				logLevel[devId] = data["loglevel"]
+				SENSOR[devId].set_Params(logLevel=logLevel[devId])
 				getValues(devId, wait=0.1)
 			if "connection" 	in data: 
 				checkIfRestartConnection(devId, force=True)
@@ -1589,9 +1632,15 @@ def resetSensorRelay(devId):
 	"""
 	global logLevel, SENSOR, sensors
 	global i2cOrUart
+	global commonRelayActive
+
 
 	try:
-		if i2cOrUart[devId] == "uart": return 
+		if os.path.isfile(GLOB_commonrelayActiveFile): 
+			data, ddd = U.readJson(GLOB_commonrelayActiveFile)
+			if type(data) == type({}) and data != {}: 
+				if time.time() - data.get("lastrelay",0) < GLOB_commonrelayActiveDeltaTime:
+					return 
 		
 		if U.checki2cdetect == "bad":
 			U.logger.log(20, "i2c hangs, needs reset")
@@ -1602,9 +1651,12 @@ def resetSensorRelay(devId):
 		if os.path.isfile(GLOB_recoverymessage): 
 			os.rename(GLOB_recoverymessage,GLOB_recoveryPrevious)
 
+
 		startTime = time.time()
 		for ii in range(8):
 			if sensors[sensor][devId].get("gpioCmdForAction"+str(ii),"") == str(GLOB_cmdCodeForrelay):
+				if commonRelayActive.get(devId,false):
+					U.writeJson(GLOB_commonrelayActiveFile, json.dumps({"lastrelay":time.time()}))
 				cmdQueue.put(GLOB_cmdCodeForrelay)
 				time.sleep(6)
 				break
@@ -1671,9 +1723,10 @@ def getValues(devId, wait=0.):
 	global reactOnlyToCommands, ignoreUntilEndOfLearning
 	global lastCommandReceived, lastValidCmdAt, ignoreSameCommands
 	global startTime
+	global allowLearning
 
 	try:
-		#if logLevel > 0: U.logger.log(20, "devID:{}; enter getValues time:{:.2f}".format(devId, time.time() - startTime))
+		#if logLevel[devId]> 0: U.logger.log(20, "devID:{}; enter getValues time:{:.2f}".format(devId, time.time() - startTime))
 		CMDID = 0
 		if wait > 0: time.sleep(wait)
 
@@ -1688,7 +1741,7 @@ def getValues(devId, wait=0.):
 				CMDID = SENSOR[devId].get_CMDID()
 			except Exception as e:
 				if ii > 0:
-					if logLevel > 0: U.logger.log(20, "devID:{}; error in received CMDID: {:3d}, badSensorCount:{}, error:{}".format(devId, CMDID, badSensor[devId], e)  )
+					if logLevel[devId]> 0: U.logger.log(20, "devID:{}; error in received CMDID: {:3d}, badSensorCount:{}, error:{}".format(devId, CMDID, badSensor[devId], e)  )
 					badSensor[devId] += 1
 					if badSensor[devId] > 2:
 						checkifRefreshSetup(devId, restart=badSensor[devId] > 0, upd=True)
@@ -1696,7 +1749,7 @@ def getValues(devId, wait=0.):
 					return {"cmd":0}
 			if CMDID > 0: break
 
-		#if logLevel > 0: U.logger.log(20, "devId:{}; step2  getValues time:{:.2f}".format(devId, time.time() - startTime))
+		#if logLevel[devId]> 0: U.logger.log(20, "devId:{}; step2  getValues time:{:.2f}".format(devId, time.time() - startTime))
 
 		if CMDID == 0:
 			checkExpectResponse(devId)
@@ -1709,37 +1762,67 @@ def getValues(devId, wait=0.):
 
 		accept = False
 		if CMDID != 0:
-			if logLevel > 0: U.logger.log(20, "devID:{}; received CMDID: {:3d}= {:}. ".format(devId, CMDID, commandList[devId].get(str(CMDID),"")) )
+			if logLevel[devId]> 0: U.logger.log(20, "devID:{}; received CMDID: {:3d}= {:}. ".format(devId, CMDID, commandList[devId].get(str(CMDID),"")) )
 
 			if acceptCMDID(devId, CMDID) == 1:
-				if logLevel > 1: U.logger.log(20, "devID:{}; received CMDID: {:3d}= {:}, skip ========".format(devId, CMDID,  commandList[devId].get(str(CMDID),"")) )
+				if logLevel[devId]> 1: U.logger.log(20, "devID:{}; received CMDID: {:3d}= {:}, skip ========".format(devId, CMDID,  commandList[devId].get(str(CMDID),"")) )
 				accept = False
 			else:
 				accept = True
-				if logLevel > 0: U.logger.log(20, "devID:{};    ---------------- ACCEPTED  cmd:{}={} ============".format(devId, CMDID, commandList[devId].get(str(CMDID),"")) )
+				if logLevel[devId]> 0: U.logger.log(20, "devID:{};    ---------------- valid cmd:{}={}; learning mode active? >{}< ============".format(devId, CMDID, commandList[devId].get(str(CMDID),""), ignoreUntilEndOfLearning[devId] !=-1 ))
 				# check for learning 
 				if ignoreUntilEndOfLearning[devId] != -1: # already in learning mode
-					if  CMDID in [203,207,208]:#   or not(CMDID > 199 and CMDID < 209)):	 # exit learning?
+					if  CMDID in [203, 207, 208]:#   or not(CMDID > 199 and CMDID < 209)):	 # exit learning?
 						U.logger.log(20, "devID:{}; exit learning mode CMDID:{}, last cmdid was :{}, set mute back to device".format(devId, CMDID, ignoreUntilEndOfLearning[devId] )  )
 						U.sendURL({"sensors":{sensor:{devId:{"cmd":CMDID}}}}, wait=False)
 						ignoreUntilEndOfLearning[devId] = -1
 						setMute(devId, False, CMDID=CMDID)
 				else:
-					if CMDID > 199 and CMDID < 209: # in learning mode? if yes make shure mute is off
-						U.logger.log(20, "devID:{}; enter learning mode CMDID:{}".format(devId, CMDID )  )
-						ignoreUntilEndOfLearning[devId]  = CMDID
+					if CMDID in [200, 201, 202]:
+						if ignoreUntilEndOfLearning[devId] == -1: # learning not started
+							if not allowLearning[devId]: # start learning, not allow?
+								U.logger.log(20, "devID:{}; request to enter learning mode CMDID:{},  rejected!  ==> reset sensor (allowLearning was set to off in device edit)".format(devId, CMDID )  )
+								U.sendURL({"sensors":{sensor:{devId:{"cmd":822}}}}, wait=False)
+								time.sleep(0.2)
+								doReset(devId, force=True)
+								time.sleep(7)
+								checkifRefreshSetup(devId, restart=True)
+								return {"cmd":0}
+							
+							else: # enter learning mode 
+								setMute(devId, False, CMDID=CMDID)
+								ignoreUntilEndOfLearning[devId]  = CMDID
+								U.sendURL({"sensors":{sensor:{devId:{"cmd":CMDID}}}}, wait=False)
+								return {"cmd":0}
+
+					elif CMDID in [204, 205, 206, 208]: # just ignore
 						U.sendURL({"sensors":{sensor:{devId:{"cmd":CMDID}}}}, wait=False)
-						setMute(devId, True, CMDID=CMDID)
+						return {"cmd":0}
+
+					elif CMDID in [203, 207]: # exit learning / exit deleting 
+						U.logger.log(20, "devID:{}; learning mode exit CMDID:{}".format(devId, CMDID )  )
+						ignoreUntilEndOfLearning[devId]  = -1
+						U.sendURL({"sensors":{sensor:{devId:{"cmd":CMDID}}}}, wait=False)
+						if currentMute[devId]  != sensors[sensor][devId]["mute"]:
+							setMute(devId, sensors[sensor][devId]["mute"])
+						return {"cmd":0}
 					else:
-						setMute(devId, False)
+						pass # do nothing here 
 
 		
 
-		if CMDID == 255 :
+		if CMDID == 255:
 			time.sleep(2)
 			lastkeepAwake[devId] = 0
 			checkifRefreshSetup(devId, restart=badSensor[devId] > 0, upd=True)
 			accept = True
+
+		if CMDID in [200, 201, 202] and allowLearning[devId]: # start learning
+			time.sleep(2)
+			lastkeepAwake[devId] = 0
+			checkifRefreshSetup(devId, restart=badSensor[devId] > 0, upd=True)
+			accept = True
+
 
 		if CMDID == 800 :
 			time.sleep(3.)
@@ -1757,7 +1840,7 @@ def getValues(devId, wait=0.):
 
 		if CMDID in [1,2]:
 			if i2cOrUart[devId] == "uart":
-				if logLevel > 0: U.logger.log(20, "devID:{}; firstCmdReceived:{}, lastValCmd @: {:.1f}  dtlka= {:.1f}".format(devId, firstCmdReceived, time.time() - lastValidCmdAt[devId], time.time() - lastkeepAwake[devId]) )
+				if logLevel[devId]> 0: U.logger.log(20, "devID:{}; firstCmdReceived:{}, lastValCmd @: {:.1f}  dtlka= {:.1f}".format(devId, firstCmdReceived, time.time() - lastValidCmdAt[devId], time.time() - lastkeepAwake[devId]) )
 				if not firstCmdReceived or (time.time() - lastValidCmdAt[devId] > 5 and time.time() - lastkeepAwake[devId] > 5):
 					lastkeepAwake[devId] = 0
 					checkifRefreshSetup(devId, restart=True, upd=True)
@@ -1788,13 +1871,13 @@ def acceptCMDID(devId, CMDID):
 	global anyCmdDefined
 	
 	if CMDID == 0: return 0
-	if logLevel > 1: U.logger.log(20, "devId:{}, checking cmdID:{} ".format(devId, CMDID))
+	if logLevel[devId]> 1: U.logger.log(20, "devId:{}, checking cmdID:{} ".format(devId, CMDID))
 	retCode = 0
 	devId2 = 0
 	dt = 0
 	for devId2 in lastCommandReceived:
 		dt =  time.time() - lastValidCmdAt[devId2]
-		if logLevel > 1: U.logger.log(20, "devId:{}, last:{}   time:{:.1f} < {:.1f}?".format(devId2, lastCommandReceived[devId2], dt,  ignoreSameCommands[devId2]))
+		if logLevel[devId]> 1: U.logger.log(20, "devId:{}, last:{}   time:{:.1f} < {:.1f}?".format(devId2, lastCommandReceived[devId2], dt,  ignoreSameCommands[devId2]))
 		if lastCommandReceived[devId2] == CMDID:
 			if ignoreSameCommands[devId2] > 0 and dt  < ignoreSameCommands[devId2]:
 				retCode = 1
@@ -1804,7 +1887,7 @@ def acceptCMDID(devId, CMDID):
 
 	lastValidCmdAt[devId] = time.time()
 	lastCommandReceived[devId] = CMDID 
-	if logLevel > 1: U.logger.log(20, "devId:{}, oldDevId:{}, CMDID:{}, retCode:{}, dt:{:.1f} secs".format(devId, devId2, CMDID, retCode, dt))
+	if logLevel[devId]> 1: U.logger.log(20, "devId:{}, oldDevId:{}, CMDID:{}, retCode:{}, dt:{:.1f} secs".format(devId, devId2, CMDID, retCode, dt))
 	if retCode != 1:
 		if anyCmdDefined: cmdQueue.put(CMDID)
 	return retCode	
@@ -1819,7 +1902,8 @@ def startThreads():
 	global threadCMD
 	global logLevel
 
-	if logLevel > 0: U.logger.log(20, "start cmd thread ")
+	U.logger.log(20, "start cmd thread logLevel:{}".format(logLevel))
+	if maxLogLevel() > 0: U.logger.log(20, "start cmd thread ")
 	try:
 		threadCMD = {}
 		threadCMD["state"]   = "start"
@@ -1842,7 +1926,7 @@ def cmdCheckIfGPIOon():
 
 	try:
 		time.sleep(1)
-		if logLevel > 0: U.logger.log(20, "start  GPIO action  thread")
+		if maxLogLevel() > 0: U.logger.log(20, "start  GPIO action  thread")
 		anyOn = False
 		while threadCMD["state"] == "running":
 			time.sleep(0.1)
@@ -1852,11 +1936,11 @@ def cmdCheckIfGPIOon():
 				last = []
 				while not cmdQueue.empty():
 					cmd = cmdQueue.get()
-					if logLevel > 1: U.logger.log(20, "checking gpio requests command:{} ===== anyCmdDefined:{}".format(cmd, anyCmdDefined) )
+					if maxLogLevel() > 1: U.logger.log(20, "checking gpio requests command:{} ===== anyCmdDefined:{}".format(cmd, anyCmdDefined) )
 					if cmd > 300: continue  # ignore status messages
 					if anyCmdDefined:
 						for ii in range(1,9):
-							if logLevel > 2: U.logger.log(20, "checking  #:{}, command:{},  gpioCmdForAction:{}, gpioNumberForCmdAction:{}, ontime:{}".format(ii, cmd,  gpioCmdForAction[ii]  , gpioNumberForCmdAction[ii], gpioOnTimeAction[ii]) )
+							if maxLogLevel() > 2: U.logger.log(20, "checking  #:{}, command:{},  gpioCmdForAction:{}, gpioNumberForCmdAction:{}, ontime:{}".format(ii, cmd,  gpioCmdForAction[ii]  , gpioNumberForCmdAction[ii], gpioOnTimeAction[ii]) )
 							if gpioNumberForCmdAction[ii] == "": 			continue
 							if gpioCmdForAction[ii] == "": 		 			continue
 							if gpioNumberForCmdAction[ii] in pinsUsed:		continue
@@ -1873,25 +1957,24 @@ def cmdCheckIfGPIOon():
 
 							if cmd == GLOB_cmdCodeForrelay:
 								if gpioCmdForAction[ii] == cmd:
-									outFile.append({"device": devType, "devId":indigoIdOfOutputDevice, 'pin': gpio, 'command': 'pulseUp', 'values': {'pulseUp': gpioOnTimeAction[ii]}, 'inverseGPIO': gpioInverseAction[ii] != "0", "debug":max(10,min(30,logLevel*10))})
-									pinsUsed.append(gpioNumberForCmdAction[ii])
+									outFile.append({"device": devType, "devId":indigoIdOfOutputDevice, 'pin': gpio, 'command': 'pulseUp', 'values': {'pulseUp': gpioOnTimeAction[ii]}, 'inverseGPIO': gpioInverseAction[ii] != "0", "debug":max(10,min(30, maxLogLevel()*10))})
 							else:
 								if 	gpioCmdForAction[ii] == cmd:
-									outFile.append({"device": devType, "devId":indigoIdOfOutputDevice, 'pin': gpio, 'command': 'pulseUp', 'values': {'pulseUp': gpioOnTimeAction[ii]}, 'inverseGPIO': gpioInverseAction[ii] != "0", "debug":max(10,min(30,logLevel*10))})
+									outFile.append({"device": devType, "devId":indigoIdOfOutputDevice, 'pin': gpio, 'command': 'pulseUp', 'values': {'pulseUp': gpioOnTimeAction[ii]}, 'inverseGPIO': gpioInverseAction[ii] != "0", "debug":max(10,min(30, maxLogLevel()*10))})
 									pinsUsed.append(gpio)
 								else:
 									if ( (gpioCmdForAction[ii] == 1 and cmd > 0) or
 										 (gpioCmdForAction[ii] == 2 and cmd > 1) or 
 										 (gpioCmdForAction[ii] == 3 and cmd > 4)
 									   ):
-										last.append({"device": devType, "devId":indigoIdOfOutputDevice, 'pin': gpio, 'command': 'pulseUp', 'values': {'pulseUp': gpioOnTimeAction[ii]}, 'inverseGPIO': gpioInverseAction[ii] != "0", "debug":max(10,min(30,logLevel*10))})
+										last.append({"device": devType, "devId":indigoIdOfOutputDevice, 'pin': gpio, 'command': 'pulseUp', 'values': {'pulseUp': gpioOnTimeAction[ii]}, 'inverseGPIO': gpioInverseAction[ii] != "0", "debug":max(10,min(30, maxLogLevel()*10))})
 										pinsUsed.append(gpio)
 				if outFile != [] or last != []:
 					if last != []: outFile += last
 					f = open(GLOB_fileToReceiveCommands,"a")
 					f.write(json.dumps(outFile))
 					f.close()
-					if logLevel > 0: U.logger.log(20, "sending cmd:{} to receiveCommands file:{}".format(outFile, GLOB_fileToReceiveCommands) )
+					if maxLogLevel() > 0: U.logger.log(20, "sending cmd:{} to receiveCommands file:{}".format(outFile, GLOB_fileToReceiveCommands) )
 									
 								
 			except Exception as e:
@@ -1901,7 +1984,7 @@ def cmdCheckIfGPIOon():
 
 	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-	if logLevel > 0: U.logger.log(20, "ended  loop, state:{}".format(threadCMD["state"] ))
+	if maxLogLevel() > 0: U.logger.log(20, "ended  loop, state:{}".format(threadCMD["state"] ))
 
 
 
@@ -1975,14 +2058,14 @@ def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 						U.setRebootRequest("configuring serial port")
 						time.sleep(10000)
 					else:
-						if logLevel > 1: U.logger.log(20, "serial port configured properly")
+						if logLevel[devId]> 1: U.logger.log(20, "serial port configured properly")
 	
 				break
-			if logLevel > 1: U.logger.log(20, "after check serial hw: reboot; {}, doNotUse>{}<".format(reboot, doNotUse))
+			if logLevel[devId]> 1: U.logger.log(20, "after check serial hw: reboot; {}, doNotUse>{}<".format(reboot, doNotUse))
 
 		if not reboot:
 			checkPort = serialPortName[devId].strip("*")
-			if logLevel > 1: U.logger.log(20, "devId:{}, checkPort:{}, \nPORTownerFile:{}".format(devId, checkPort, readPORTownerFile() ))
+			if logLevel[devId]> 1: U.logger.log(20, "devId:{}, checkPort:{}, \nPORTownerFile:{}".format(devId, checkPort, readPORTownerFile() ))
 			
 			checkifdevIdInPORTownerFile(devId)
 
@@ -1990,7 +2073,7 @@ def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 
 			cmd = "/bin/ls -l /dev | /usr/bin/grep "+checkPort
 			ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-			if logLevel > 1: U.logger.log(20, " ls -l /dev  ret:\n{}".format(ret))
+			if logLevel[devId]> 1: U.logger.log(20, " ls -l /dev  ret:\n{}".format(ret))
 			
 			found = ""
 			for line in ret.split("\n"):
@@ -2001,18 +2084,18 @@ def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 				alreadyInUse = 0
 				
 				if checkifIdInFAILEDPORTownerFile(devId, existingport):
-					if logLevel > 1:U.logger.log(20, "devId:{}, skipping:{} in failed list".format(devId, existingport))
+					if logLevel[devId]> 1:U.logger.log(20, "devId:{}, skipping:{} in failed list".format(devId, existingport))
 					continue
 
 				if not checkifIdInOKPORTownerFile(devId, existingport):
 					for dddd in getdevIdsPORTownerFile():
 						if checkifIdInOKPORTownerFile(dddd, existingport): 
-							if logLevel > 1:U.logger.log(20, "devId:{}, already in use by devId:{}  port:{}".format(devId, dddd, existingport))
+							if logLevel[devId]> 1:U.logger.log(20, "devId:{}, already in use by devId:{}  port:{}".format(devId, dddd, existingport))
 							alreadyInUse = dddd
 							break
 						
 				if alreadyInUse == 0:
-						if logLevel > 1:U.logger.log(20, "devId:{}  selected port:{}".format(devId, existingport))
+						if logLevel[devId]> 1:U.logger.log(20, "devId:{}  selected port:{}".format(devId, existingport))
 						return existingport
 	
 			msg = "bad_port:_/dev/"+serialType
@@ -2089,8 +2172,12 @@ def execSensorLoop():
 	global lastErrExists
 	global lastAliveSend
 	global gpioInfoIndigoIDForMsgToReceivecommand
+	global allowLearning
+	global commonRelayActive
 
-
+	logLevel						= {"-1":1}
+	commonRelayActive				= {}
+	allowLearning					= {}
 	gpioInfoIndigoIDForMsgToReceivecommand							= {}
 	lastErrExists					= True
 	failedCount						= {}

@@ -1016,7 +1016,7 @@ def checkIfRebootRequest():
 			count = 0
 			if	os.path.isfile(G.homeDir+"temp/restartCount"):
 				try:
-					f=open(G.homeDir+"temp/restartCount","r") 
+					f = open(G.homeDir+"temp/restartCount","r") 
 					count = int(f.read())
 					f.close()
 					if count > 5: 
@@ -1024,7 +1024,7 @@ def checkIfRebootRequest():
 						U.doReboot(tt=20, text=" rebooting due to repeated request:{}".format(reason))
 				except: pass
 				
-			f=open(G.homeDir+"temp/restartCount","w") 
+			f = open(G.homeDir+"temp/restartCount","w") 
 			f.write(str(count+1))
 			f.close()
 			U.restartMyself(reason="starting master due to request:" + reason , python3=usePython3)
@@ -1575,7 +1575,7 @@ def doGPIOAfterBoot():
 	global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
 
 	try:
-		f=open(G.homeDir+"doGPIOatStartup.py","w")
+		f = open(G.homeDir+"doGPIOatStartup.py","w")
 
 		f.write("#!/usr/bin/env python\n")
 		f.write("# -*- coding: utf-8 -*-\n")
@@ -1622,11 +1622,11 @@ def doGPIOAfterBoot():
 					if GPIOTypeAfterBoot1 =="Olow":
 						f.write("gpio1 = gpiozero.LED({}, initial_value=False) \n".format(GPIONumberAfterBoot1))
 					if GPIOTypeAfterBoot1.find("Iup") ==0:
-						f.write("gpio1= gpiozero.Button({}, pull_up=True) \n".format(GPIONumberAfterBoot1))
+						f.write("gpio1 = gpiozero.Button({}, pull_up=True) \n".format(GPIONumberAfterBoot1))
 					if GPIOTypeAfterBoot1.find("Idown") == 0:
-						f.write("gpio1= gpiozero.Button({}, pull_up=False) \n".format(GPIONumberAfterBoot1))
+						f.write("gpio1 = gpiozero.Button({}, pull_up=False) \n".format(GPIONumberAfterBoot1))
 					if GPIOTypeAfterBoot1.find("Ifloat") == 0:
-						f.write("gpio1= gpiozero.Button({}, pull_up=None, active_state=True) \n".format(GPIONumberAfterBoot1))
+						f.write("gpio1 = gpiozero.Button({}, pull_up=None, active_state=True) \n".format(GPIONumberAfterBoot1))
 	
 			if GPIOTypeAfterBoot2 != "off": 
 				if GPIONumberAfterBoot2 != "-1" and GPIONumberAfterBoot2 != "":
@@ -1635,11 +1635,11 @@ def doGPIOAfterBoot():
 					if GPIOTypeAfterBoot2 =="Olow":
 						f.write("gpio2 = gpiozero.LED({}, initial_value=False) \n".format(GPIONumberAfterBoot2))
 					if GPIOTypeAfterBoot1.find("Iup") ==0:
-						f.write("gpio2= gpiozero.Button({}, pull_up=True) \n".format(GPIONumberAfterBoot2))
+						f.write("gpio2 = gpiozero.Button({}, pull_up=True) \n".format(GPIONumberAfterBoot2))
 					if GPIOTypeAfterBoot1.find("Idown") == 0:
-						f.write("gpio2= gpiozero.Button({}, pull_up=False) \n".format(GPIONumberAfterBoot2))
+						f.write("gpio2 = gpiozero.Button({}, pull_up=False) \n".format(GPIONumberAfterBoot2))
 					if GPIOTypeAfterBoot1.find("Ifloat") == 0:
-						f.write("gpio2= gpiozero.Button({}, pull_up=None, active_state=True) \n".format(GPIONumberAfterBoot2))
+						f.write("gpio2 = gpiozero.Button({}, pull_up=None, active_state=True) \n".format(GPIONumberAfterBoot2))
 
 		f.write("\n")
 
@@ -1659,7 +1659,7 @@ def checkTempForFanOnOff(force = False):
 	try:
 		#print "into checkTempForFanOnOff",fanTempName, fanTempDevId, fanEnable, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTimeTempValueChecked, lastTempValue
 		#U.logger.log(30, "checkTempForFanOnOff fanEnable:{}  fanTempName:{}   fanGPIOPin:{}".format(fanEnable, fanTempName, fanGPIOPin))
-		if not(fanEnable =="0" or fanEnable =="1"):						return
+		if not(fanEnable == "0" or fanEnable == "1"):					return
 		if fanTempName   == "": 										return
 		if int(fanGPIOPin) < -1: 										return
 
@@ -1694,7 +1694,7 @@ def checkTempForFanOnOff(force = False):
 			fanOntimeData.append([time.time(),1])
 
 			#print " fan on"
-			if  fanWasOn <=0: 
+			if  fanWasOn <= 0: 
 				if useGPIO:
 					if fanEnable =="1": GPIO.output(fanGPIOPin, fanEnable =="1")
 				else:
@@ -1754,7 +1754,7 @@ def fixRcLocal():
 
 
 		if not os.path.isfile("/etc/rc.local"): 
-			f=open(G.homeDir+"temp/rc.local","w")
+			f = open(G.homeDir+"temp/rc.local","w")
 			f.write("#!/bin/sh -e\n")
 			f.write(callPibeaconLine+"\n")
 			f.write("exit 0 \n")
@@ -1765,7 +1765,7 @@ def fixRcLocal():
 			return 
 
 
-		f=open("/etc/rc.local","r")
+		f = open("/etc/rc.local","r")
 		rclocal = f.read().split("\n")
 		f.close()
 		out      = ""
@@ -1809,7 +1809,7 @@ def fixRcLocal():
 
 		if writeOut:
 			U.logger.log(20, ".. found 'exit':{}, 'callbeacon':{}; writing new rc.local file:\n {}".format(foundExit, foundCallbeacon, out))
-			f=open(G.homeDir+"temp/rc.local","w")
+			f = open(G.homeDir+"temp/rc.local","w")
 			f.write(out)
 			f.close()
 			subprocess.call("sudo cp "+G.homeDir+"temp/rc.local /etc/rc.local ", shell=True)
@@ -1826,7 +1826,7 @@ def fixRcLocal():
 def fixCallbeacon(sleepTime):
 	global usePython3, mustUsePy3
 	try:
-		f=open("/home/pi/pibeacon/callbeacon.py","r")
+		f = open("/home/pi/pibeacon/callbeacon.py","r")
 		callbeacon = f.read().split("\n")
 		f.close()
 
@@ -1891,7 +1891,7 @@ def checkFSCHECKfile():
 		if data.find("data may be corrupt") >-1: # try again, see if fixed..
 			dataSend = "dosfsck has error (was fixed after boot): "+"/--/".join((data.split("\n"))[0:10])
 			subprocess.call("dosfsck -w -r -l -a -v -t /dev/mmcblk0p1 > "+G.homeDir+"temp/dosfsck", shell=True)
-			f=open(G.homeDir+"temp/dosfsck","r")
+			f = open(G.homeDir+"temp/dosfsck","r")
 			data = f.read()
 			f.close()
 			if data.find("data may be corrupt") >-1: # not fixed, send msg to plugin 
@@ -2360,7 +2360,7 @@ def getadhocIpNumber():
 	adhocIP = "192.168.5.10"
 	try:
 		if	os.path.isfile(G.homeDir+"interfaces-adhoc"):
-			f=open(G.homeDir+"interfaces-adhoc") 
+			f = open(G.homeDir+"interfaces-adhoc") 
 			lines = f.read()
 			f.close()
 			ip = lines.split("address ")[1]

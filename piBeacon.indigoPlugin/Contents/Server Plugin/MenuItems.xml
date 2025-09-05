@@ -267,7 +267,7 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 				<Label>Select the beacon with the old MAC#- will be kept: </Label>
 				<List class="self" filter="" method="filterRPIs" dynamicReload="true" />
 			</Field>
-			<Field id="newID" type="menu" defaultValue="0" tooltip="Select the  PRI[MAC#] that will replace the old one   ">
+			<Field id="newID" type="menu" defaultValue="0" tooltip="Select the  RPI[MAC#] that will replace the old one   ">
 				<Label>Select the beacon with the new MAC#- will be deleted:</Label>
 				<List class="self" filter="" method="filterRPIs" dynamicReload="true" />
 			</Field>
@@ -281,6 +281,34 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
+
+	<MenuItem id="fixDoubleRPInummber">
+		<Name>Fix situation where 2 RPi have same #..</Name>
+		<ConfigUI>
+			<Field id="label0" type="label">
+				<Label>Fix situation where 2 RPi seem to have the same RPI# (0-19) 
+  but have different IP numbers
+  This method will push the proper config with a NEW rpi# to the raspberry pi. 
+  The target indigo rpi device must already exist</Label>
+			</Field>
+			<Field id="RPINumber" type="menu" defaultValue="0" tooltip="Select the RPI to be moved ">
+				<Label>Select the RPI to be assigned a new IP number:</Label>
+				<List class="self" filter="" method="filterRPIsReturnNumber" dynamicReload="true" />
+			</Field>
+			<Field id="ipNumber" type="textfield" defaultValue="192.168.1.x" >
+				<Label>set the new IP number for that RPI:</Label>
+			</Field>
+			<Field id="buttonExecuteReplace" type="button" tooltip="">
+				<Label>click to </Label>
+				<Title>Push config</Title>
+				<CallbackMethod>buttonExecutefixDoubleRPINumberCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" default="">
+				<Label>msg from Plugin:</Label>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
+
 	<MenuItem id="reloadDeviceStates">
 		<Name>Re-load all dev states, add missing keys..</Name>
 		<ConfigUI>
