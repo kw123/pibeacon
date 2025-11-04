@@ -272,11 +272,12 @@ def fixoutofdiskspace():
 	except: pass
 
 #################################
-def pgmStillRunning(pgmToTest, notPresent ="", verbose=False) :
+def pgmStillRunning(pgmToTest, notPresent ="", verbose=False, param="") :
 	try :
 		pgmToTest = pgmToTest.strip()
-		if verbose: logger.log(20, "testing  for '{}'".format(pgmToTest))
+		if verbose: logger.log(20, "testing  for '{}',  {}".format(pgmToTest, param))
 		cmd = "ps -ef | grep '{}' | grep -v grep".format(pgmToTest)
+		if param != "": cmd += "  grep '{}' "
 		if notPresent != "": cmd += " | grep -v " + notPresent
 		if verbose: logger.log(20, "command:{}".format( cmd))
 		ret = (subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
@@ -1448,7 +1449,7 @@ def startwebserverINPUT(port, useIP="", force=False):
 		if useIP !="":
 			ip = useIP
 		if len(ip) > 8:
-			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverINPUT.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile ) #, G.sundialActive)
+			cmd = "/usr/bin/sudo /usr/bin/python3 -E {}webserverINPUT.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile ) #, G.sundialActive)
 			logger.log(20, "cBY:{:<20} starting web server:{}".format( G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)
@@ -1480,7 +1481,7 @@ def startwebserverSTATUS(port, useIP="", force=False):
 		if useIP !="":
 			ip = useIP
 		if len(ip) > 8:
-			cmd = "/usr/bin/sudo /usr/bin/python3 {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
+			cmd = "/usr/bin/sudo /usr/bin/python3 -E {}webserverSTATUS.py  {} {} {}  > /dev/null 2>&1  &".format(G.homeDir, ip, port, outFile)
 			logger.log(20, "cBY:{:<20} starting web server:{}".format(G.program, cmd) )
 			if os.path.isfile(outFile):
 				subprocess.call('rm {}'.format(outFile), shell=True)

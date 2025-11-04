@@ -387,14 +387,13 @@ _GlobalConst_allGPIOlist = [
 	, ("21", "R40 GPIO21")]
 
 _GlobalConst_ICONLIST	= [
-	["None", 				"None"],
-	["None", 				"Error"],
+	["NoImage", 			"NoImage"],
 	["PowerOff", 			"PowerOn"],
 	["PowerOn", 			"PowerOff"],
 	["DimmerOn", 			"DimmerOff"],
 	["DimmerOff", 			"DimmerOn"],
-	["FanOff", 				"FanOn"],
-	["FanOn", 				"FanOff"],
+	["FanOff", 				"FanHigh"],
+	["FanHigh", 			"FanOff"],
 	["SprinklerOff", 		"SprinklerOn"],
 	["SprinklerOn", 		"SprinklerOff"],
 	["SensorOff", 			"SensorOn"],
@@ -2160,6 +2159,9 @@ class Plugin(indigo.PluginBase):
 ####------================----------- garage door  ------================--------
 ####-------------------------------------------------------------------------####
 	def initGarageDoors(self):
+		#
+		# called from init 
+		#
 		self.garageData = {}
 		self.garageData["garageIds"] = {}
 		self.garageData["sensorIds"] = {}
@@ -2171,11 +2173,14 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def setupGarageDoor(self, dev, props):
+		#
+		#  at setup device and at start of plugin:  set parameters to be used for ope/close .. for garage door devices
+		#
 		try:
 			if dev.id not in self.garageData["garageIds"]:
 				self.garageData["garageIds"][dev.id] = {}
 			garage = self.garageData["garageIds"][dev.id]
-			garage["newData"]				= False
+			garage["newData"]				= 0
 			garage["closeSensorID"]			= int(props.get("closeSensor",0))
 			garage["openSensorID"]			= int(props.get("openSensor",0))
 			garage["movingSensorID"]		= int(props.get("movingSensor",0))
@@ -2198,10 +2203,13 @@ class Plugin(indigo.PluginBase):
 			self.garageData["sensorIds"][int(props["openSensor"])] 		= True
 			self.garageData["sensorIds"][int(props["movingSensor"])] 	= True
 
+
+
 			try:
 				devOpen   = indigo.devices[garage["openSensorID"]]
 				devClose  = indigo.devices[garage["closeSensorID"]]
 				devMotion = indigo.devices[garage["movingSensorID"]]
+				if devClose.states["onOffState"]: 	garage["direction"] = 1
 				if devClose.states["onOffState"]: 	garage["direction"] = 1
 				elif devOpen.states["onOffState"]:  garage["direction"] = -1
 				else:								garage["direction"] = 0
@@ -2209,14 +2217,15 @@ class Plugin(indigo.PluginBase):
 
 				garage["openSensorStateValue"]		= devOpen.states["onOffState"]
 				garage["closeSensorStateValue"]		= devClose.states["onOffState"]
-				garage["movingSensorStateValue"]	= devMotion.states[garage["movingSensorStateName"]]
+				garage["movingSensorStateValue"]	= devMotion.states["onOffState"]
+				#garage["movingSensorStateValue"]	= devMotion.states[garage["movingSensorStateName"]]
 			except Exception as e:
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 				garage["openSensorStateValue"]		= ""
 				garage["closeSensorStateValue"]		= ""
 				garage["movingSensorStateValue"]	= ""
 				garage["direction"] = 0
-			if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"setupGarageDoor {}; \nparams:{}, \ngarage:{}".format(dev.name, props, garage))
+			if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"setupGarageDoor {}; \nparams:{}, \ngarage:{}".format(dev.name, props, garage))
 
 			props["address"] = ""
 			if garage["numberOfMagnets"] >0:
@@ -2226,20 +2235,46 @@ class Plugin(indigo.PluginBase):
 		return props
 
 ####-------------------------------------------------------------------------####
-	def alertGarageDoor(self, sensId):
+	def alertGarageDoor(self, sensId, updateDict, calledFrom=""):
+	#
+	# any change in garage door sensors?
+	#
 		try:
 			if sensId not in self.garageData["sensorIds"]: return
 
+			newOnOff =  updateDict.get("onOffState", "")
+			if newOnOff == "": 
+				if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"alertGarageDoor no onOffState in data trying statenName ".format( sensId) )
+				if calledFrom == "delayedAction" and updateDict.get("stateName","") == "onOffState":
+					updateDict["onOffState"] = updateDict["value"]
+				else:
+					if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"alertGarageDoor sensId:{:20}, no onOffState in data: updateDict:{}<, calledfrom:{}".format( sensId, updateDict, calledFrom) )
+					return 
+
 			for devId in self.garageData["garageIds"]:
 				garage = self.garageData["garageIds"][devId]
+
+				if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"alertGarageDoor sensId:{:20}, newOnOff:{}, close:{}, open:{}, move:{}<, calledfrom:{}".format( sensId, newOnOff, garage["closeSensorStateValue"], garage["openSensorStateValue"], garage["movingSensorStateValue"], calledFrom) )
+
 				if sensId == garage["closeSensorID"]:
-					garage["newData"] = True
+					if garage["closeSensorStateValue"]	!= newOnOff:
+						garage["closeSensorStateValue"]	 = newOnOff
+						garage["newData"] = 1
 
 				elif sensId == garage["openSensorID"]:
-					garage["newData"] = True
+					if garage["openSensorStateValue"]	!= newOnOff:
+						garage["openSensorStateValue"]	 = newOnOff
+						garage["newData"] = 2
 
 				elif sensId == garage["movingSensorID"]:
-					garage["newData"] = True
+					if garage["movingSensorStateValue"]	!= newOnOff:
+						garage["movingSensorStateValue"]   = newOnOff
+						garage["newData"] = 3
+
+				if self.decideMyLog("GarageDoor"): 
+					dev = indigo.devices[sensId]
+					if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"alertGarageDoor {}: current state:{}, newdata:{}".format( dev.name, dev.states.get("onOffState","--"), garage["newData"] ) )
+
 
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -2248,22 +2283,25 @@ class Plugin(indigo.PluginBase):
 
 ####-------------------------------------------------------------------------####
 	def checkGarageDoor(self):
+		#
+		# this will set garage device status to "Open / Closed / Opening / Closing / Stopped "
+		#   and some other states
+		#
+		#
+		
 		try:
 			for devId in self.garageData["garageIds"]:
 				garage = self.garageData["garageIds"][devId]
-				if not garage["newData"]: continue
+				if garage["newData"] == 0: continue
 
 				dev = indigo.devices[devId]
-				garage["newData"] = False
+				garage["newData"] = 0
 
 				devOpen			= indigo.devices[garage["openSensorID"]]
 				devClose		= indigo.devices[garage["closeSensorID"]]
 				devMove			= indigo.devices[garage["movingSensorID"]]
 
-				moveState		= garage["movingSensorStateName"]
-				moveOnOffState	= "onOffState"
-				closeOnOffState	= "onOffState"
-				openOnOffState	= "onOffState"
+				moveState		= "onOffState" # garage["movingSensorStateName"]
 
 				lastMotion = dev.states["lastMotion"]
 				closedSt = dev.states["closed"]
@@ -2272,39 +2310,42 @@ class Plugin(indigo.PluginBase):
 				if   garage["direction"] == 1:	directionText	= garage["textForOpening"]
 				elif garage["direction"] == -1:	directionText	= garage["textForClosing"]
 				else: 							directionText	= garage["textForMoving"]
-				if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 0. status:{}, dev[closed]:{}, devclosed:{}, moveState:{}, devMove:{}, devOpen:{}, movingSensorStateValue:{}".format(dev.name, dev.states["status"], dev.states["closed"], devClose.states[closeOnOffState], moveState, devMove.states[moveState], devOpen.states[openOnOffState], garage["movingSensorStateValue"] ))
+				if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"checkGarageDoor {} 0. status:{}, dev[closed]:{}, devclosed:{}, moveState:{}, devMove:{}, devOpen:{}, movingSensorStateValue:{}".format(dev.name, dev.states["status"], closedSt, devClose.states["onOffState"], moveState, devMove.states[moveState], devOpen.states["onOffState"], garage["movingSensorStateValue"] ))
 
-				if devClose.states[closeOnOffState]  and (dev.states["status"] != garage["textForClosed"] or not dev.states["closed"]):
+				# is status not == "Closed"?
+				if devClose.states["onOffState"]  and (dev.states["status"] != garage["textForClosed"] or not dev.states["closed"]):
 					self.addToStatesUpdateDict(devId, "closed", True)
 					self.addToStatesUpdateDict(devId, "stopped", True)
 					self.addToStatesUpdateDict(devId, "lastClose", datetime.datetime.now().strftime(_defaultDateStampFormat))
 					self.addToStatesUpdateDict(devId, "status", garage["textForClosed"])
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-					if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 1. setting closed:{}".format(dev.name, garage["textForClosed"]))
+					if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"checkGarageDoor {} 1. setting closed:{}".format(dev.name, garage["textForClosed"]))
 					closedSt = True
 					stoppedSt = True
 					garage["direction"] = 1
 					garage["directionSwitched"] = True
 					garage["counter"] = 0
-					garage["closeSensorStateValue"] = devClose.states[closeOnOffState]
+					garage["closeSensorStateValue"] = devClose.states["onOffState"]
 
-				if devOpen.states[closeOnOffState]  and (dev.states["status"] != garage["textForOpen"] or not dev.states["open"]):
+				# is status not == "Open"?
+				elif devOpen.states["onOffState"]  and (dev.states["status"] != garage["textForOpen"] or not dev.states["open"]):
 					self.addToStatesUpdateDict(devId, "open", True)
 					self.addToStatesUpdateDict(devId, "stopped", True)
 					self.addToStatesUpdateDict(devId, "lastOpen", datetime.datetime.now().strftime(_defaultDateStampFormat))
 					self.addToStatesUpdateDict(devId, "status", garage["textForOpen"])
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-					if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 2. setting open:{}".format(dev.name, garage["textForOpen"]))
+					if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"checkGarageDoor {} 2. setting open:{}".format(dev.name, garage["textForOpen"]))
 					closedSt = False
 					openSt = True
 					stoppedSt = True
 					garage["direction"] = -1
 					garage["directionSwitched"] = True
 					garage["counter"] = garage["numberOfMagnets"]
-					garage["openSensorStateValue"] = devOpen.states[closeOnOffState]
+					garage["openSensorStateValue"] = devOpen.states["onOffState"]
 
-				if devMove.states[moveState] != garage["movingSensorStateValue"]:
-					if devMove.states[moveOnOffState]:
+				# is status not == "Moving"?
+				elif devMove.states["onOffState"] != garage["movingSensorStateValue"]:
+					if devMove.states["onOffState"]:
 						garage["counter"] += garage["direction"]	
 						garage["counter"] = max( min(garage["numberOfMagnets"], garage["counter"]), 0.)
 						self.addToStatesUpdateDict(devId, "status", directionText )
@@ -2315,18 +2356,19 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(devId, "open", False)
 						self.addToStatesUpdateDict(devId, "closed", False)
 						self.addToStatesUpdateDict(devId, "lastMagnetTriggered", garage["counter"])
-						if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 3. setting Nclosed, Nopen, Nstopped, {}, lastMotion:{}".format(dev.name, directionText, lastMotion))
+						if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"checkGarageDoor {} 3. setting Nclosed, Nopen, Nstopped, {}, lastMotion:{}".format(dev.name, directionText, lastMotion))
 						garage["directionSwitched"] = False
 						openedSt = False
 					else:
-						self.addToStatesUpdateDict(devId, "status", garage["textForStopped"])
-						self.addToStatesUpdateDict(devId, "lastStop", datetime.datetime.now().strftime(_defaultDateStampFormat))
-						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-						self.addToStatesUpdateDict(devId, "stopped", True)
-						garage["directionSwitched"] = False
-						stoppedSt = True
-						if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 4. setting stopped  {}".format(dev.name, garage["textForStopped"]))
-					garage["movingSensorStateValue"] = devMove.states[moveState]
+						if not closedSt and not openedSt:
+							self.addToStatesUpdateDict(devId, "status", garage["textForStopped"])
+							self.addToStatesUpdateDict(devId, "lastStop", datetime.datetime.now().strftime(_defaultDateStampFormat))
+							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+							self.addToStatesUpdateDict(devId, "stopped", True)
+							garage["directionSwitched"] = False
+							stoppedSt = True
+						if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"checkGarageDoor {} 4. setting stopped  {}".format(dev.name, garage["textForStopped"]))
+					garage["movingSensorStateValue"] = stoppedSt
 
 				if garage["numberOfMagnets"] > 0:
 					posi = max(0, min(100, int( 100.*garage["counter"] / max(garage["numberOfMagnets"],1.) ) ))
@@ -2335,11 +2377,11 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(devId, "position", posi, uiValue="{}%".format(posi) )
 
 
-				if not devMove.states[moveOnOffState] and not stoppedSt and not closedSt:
+				if not devMove.states["onOffState"] and not stoppedSt and not closedSt:
 					self.addToStatesUpdateDict(devId, "lastStop", datetime.datetime.now().strftime(_defaultDateStampFormat))
 					self.addToStatesUpdateDict(devId, "status", garage["textForStopped"])
 					self.addToStatesUpdateDict(devId, "stopped", True)
-					if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"garage door {} 5. setting stopped {}, lastMovement:{}".format(dev.name, garage["textForStopped"], lastMotion))
+					if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"garage door {} 5. setting stopped {}, lastMovement:{}".format(dev.name, garage["textForStopped"], lastMotion))
 					stoppedSt = True
 
 				### this is for stuck in between
@@ -2351,7 +2393,7 @@ class Plugin(indigo.PluginBase):
 						if secsWoMovement > garage["acceptableTimeBetweenMagnets"]:
 							garage["direction"] *= -1
 							garage["directionSwitched"] = True
-							if self.decideMyLog("GarageDoor"): self.indiLOG.log(10,"checkGarageDoor {} 6.  reversing direction due to long stop inbetween signals ({} > {} ), new direction = {}".format(dev.name, secsWoMovement, garage["acceptableTimeBetweenMagnets"], garage["dirInt"][garage["direction"]]))
+							if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,"checkGarageDoor {} 6.  reversing direction due to long stop inbetween signals ({} > {} ), new direction = {}".format(dev.name, secsWoMovement, garage["acceptableTimeBetweenMagnets"], garage["dirInt"][garage["direction"]]))
 
 
 				self.executeUpdateStatesDict(onlyDevID=devId)
@@ -3836,7 +3878,7 @@ class Plugin(indigo.PluginBase):
 									saveRPI = True
 
 								elif self.RPI[piU]["piOnOff"] == "1" and self.RPI[piU]["piDevId"] != 0:
-									self.indiLOG.log(30,"fixConfig same ip number:{}  resetiing RPI:{} to empty".format(self.RPI[piU2]["ipNumberPi"], piU2) )
+									self.indiLOG.log(30,"fixConfig same ip number:{}  resetting RPI:{} to empty".format(self.RPI[piU2]["ipNumberPi"], piU2) )
 									self.RPI[piU2]["ipNumberPi"] = ""
 									self.RPI[piU2]["piDevId"] = 0
 									self.RPI[piU2]["piMAC"] = ""
@@ -7656,7 +7698,7 @@ class Plugin(indigo.PluginBase):
 		xList = []
 		for ll in _GlobalConst_ICONLIST:
 			xList.append((ll[0]+"-"+ll[1],ll[0]+", "+ll[1]))
-		xList.append(("-", "     "))
+		xList.append(("=", "     "))
 		return xList
 
 
@@ -10815,9 +10857,67 @@ class Plugin(indigo.PluginBase):
 		self.setPin(valuesDict)
 
 
+	
 ####-------------------------------------------------------------------------####
+	def actionSwitchbotCurtainaction(self, action1=None, typeId=None):
+		self.actionSwitchbotCurtainmenu(valuesDict=action1.props)
+		return
 
 
+####-------------------------------------------------------------------------####
+	def actionSwitchbotCurtainmenu(self, valuesDict=None, typeId=None):
+
+		if self.decideMyLog("Special"): self.indiLOG.log(20,"action actionSwitchbotCurtain requested: valuesDict:{}".format(valuesDict))
+		devId = valuesDict["devId"] 
+		try: 
+			dev = indigo.devices[int(devId)]
+			props = dev.pluginProps
+		except:
+			return valuesDict
+		
+		if dev.deviceTypeId not in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
+			return valuesDict
+		
+		
+		piU = props["piServerNumber"]
+		moveTo = "position"
+		position = 50
+		action = valuesDict["action"] 
+		speed = valuesDict["speed"]
+		
+		if action == "stop":
+			moveTo = "stop"
+			position = ""
+			self.addToStatesUpdateDict(dev.id, "status","send stop" )
+		
+		elif action == "close":
+			moveTo = "close"
+			position = 100
+			self.addToStatesUpdateDict(dev.id, "status","send pos=closed" )
+
+		elif action == "open":
+			moveTo = "open"
+			position = 0
+			self.addToStatesUpdateDict(dev.id, "status","send pos=open" )
+
+		else: 
+			moveTo = "position"
+			position = int(action)
+			self.addToStatesUpdateDict(dev.id, "status","send pos={}".format(action) )
+
+
+		fileContents = {"mac":props["mac"], "cmd":"moveTo", "moveTo":moveTo, "position":position, "mode":"interactive", "speed":speed}
+
+		toSend = [{"device": dev.deviceTypeId, "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
+		self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotCurtainSet")
+
+		if self.decideMyLog("Special"): self.indiLOG.log(10,"action actionSwitchbotCurtain requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, toSend))
+		return
+
+
+
+
+		
 # noinspection SpellCheckingInspection
 	def actionControlDimmerRelay(self, action, dev0):
 		try:
@@ -14490,7 +14590,7 @@ class Plugin(indigo.PluginBase):
 			if piMAC != "":
 				oldMAC = self.RPI[piU]["piMAC"]
 				if piMAC != oldMAC:
-					self.indiLOG.log(30,"MAC# from RPI message, has new MAC# {} changing to new BLE-MAC number, old MAC#>>{}<<  pi# {}".format(piMAC, oldMAC, piU) )
+					self.indiLOG.log(30,"MAC# from RPI message, has new MAC# {} changing to new BLE-MAC number, old MAC#>>{}<<  pi# {}, received from ip number:{} , data received:{}".format(piMAC, oldMAC, piU, self.RPI[piU]["ipNumberPi"], data) )
 					#beaconRPI = piMAC
 				if self.isValidMAC(piMAC): ## len("11:22:33:44:55:66")
 						indigoId = int(self.RPI[piU]["piDevId"])
@@ -15658,13 +15758,16 @@ class Plugin(indigo.PluginBase):
 						if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,"dev not enabled send from pi:{} dev: {}".format(dev.id, data) )
 						continue
 
-					self.alertGarageDoor(devId)
+
+					data = sensors[sensor][devIds]
+
+
+					self.alertGarageDoor(devId, data, calledFrom="updateSensors")
 					self.saveSensorMessages(devId=devIds, item="lastMessage", value=time.time())
 
 
 					#if devIds == "1013878981":self.indiLOG.log(20,"dev.id:{},  data:{}".format(dev.id, sensors[sensor][devIds]) )
 
-					data = sensors[sensor][devIds]
 
 
 					uData = "{}".format(data)
@@ -17987,7 +18090,7 @@ class Plugin(indigo.PluginBase):
 ####-------------------------------------------------------------------------####
 	def setIcon(self, dev, iconProps, default, UPdown):
 		try:
-			if "iconPair" in iconProps and	iconProps ["iconPair"] !="":
+			if "iconPair" in iconProps and	iconProps["iconPair"].find("-") > 0:
 				icon = iconProps ["iconPair"].split("-")[UPdown]
 			else:
 				icon = default.split("-")[UPdown]
@@ -18032,7 +18135,7 @@ class Plugin(indigo.PluginBase):
 
 			input = "distance"
 			if input in data:
-				if "{}".format(data[input]).find("bad") >-1:
+				if "{}".format(data[input]).find("bad") > -1:
 					self.addToStatesUpdateDict(dev.id, "status", "no sensor data - disconnected?")
 					self.setIcon(dev,props, "SensorOff-SensorOn",0)
 				else:
@@ -18045,7 +18148,7 @@ class Plugin(indigo.PluginBase):
 
 			input = "proximity"
 			if input in data:
-				if "{}".format(data[input]).find("bad") >-1:
+				if "{}".format(data[input]).find("bad") > -1:
 					self.addToStatesUpdateDict(dev.id, "status", "no sensor data - disconnected?")
 					self.setIcon(dev,props, "SensorOff-SensorOn",0)
 				else:
@@ -19742,6 +19845,7 @@ class Plugin(indigo.PluginBase):
 			moist 	= False
 			swit	= False
 			button	= False
+			batLev	= False
 
 			if textHint.lower().find("temp") > -1:		temp 	= True
 			if textHint.lower().find("hum") > -1:		hum 	= True
@@ -19761,8 +19865,8 @@ class Plugin(indigo.PluginBase):
 			if devType.lower().find("Cond") > -1:		cond 	= True
 			if devType.lower().find("Illum") > -1:		illum 	= True
 			if devType.lower().find("Moist") > -1:		moist 	= True
-			if devType.lower().find("button") > -1:		button 	= True
-
+			if devType.lower().find("curt") > -1:		batLev 	= True
+			
 			newprops["mac"] 								= mac
 			if isSens:
 				newprops["isSensorDevice"] 					= True
@@ -19828,6 +19932,14 @@ class Plugin(indigo.PluginBase):
 			if accell:
 				newprops["updateIndigoDeltaAccelVector"] 	= "50"
 				newprops["updateIndigoDeltaMaxXYZ"]			= "50"
+
+			if moist:
+				newprops["displayS"]						= "Moisture"
+
+
+			if batlev:
+				newprops["SupportsBatteryLevel"] 			= True
+
 
 			self.indiLOG.log(30,"\ncorresponding BLE-sensor device not found, will try to create one:{}.. details in plugin.log".format(name))
 			self.indiLOG.log(30,"=====> please finish setup for new device {} in device edit, ie which RPI this device is linked to;  etc<=== ".format(name))
@@ -21295,10 +21407,10 @@ class Plugin(indigo.PluginBase):
 											execUpdate = True
 											if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread executing dev.states[stateName]:{}  updateItem:{} , image:{}".format(dev.states[updateItem["stateName"]], updateItem, image))
 											if "uiValue" in updateItem:
-												self.addToStatesUpdateDict(dev.id, updateItem["stateName"],theValue, uiValue=updateItem["uiValue"], image=image)
+												self.addToStatesUpdateDict(dev.id, updateItem["stateName"], theValue, uiValue=updateItem["uiValue"], image=image)
 											else:
-												self.addToStatesUpdateDict(dev.id, updateItem["stateName"],theValue, image=image)
-											self.alertGarageDoor(dev.id)
+												self.addToStatesUpdateDict(dev.id, updateItem["stateName"], theValue, image=image)
+											self.alertGarageDoor(dev.id, updateItem, calledFrom="delayedAction")
 										else:
 											if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread skipping state has not changed, no update")
 									else:
@@ -22755,7 +22867,7 @@ configuration         - ==========  defined beacons ==============
 			dateString = datetime.datetime.now().strftime(_defaultDateStampFormat)
 
 			for devId in local:
-				if onlyDevID !="0" and onlyDevID != devId: continue
+				if onlyDevID != "0" and onlyDevID != devId: continue
 				if len(local[devId]) > 0:
 
 					if self.decideMyLog("UpdateIndigo"): 	self.indiLOG.log(10, "executeUpdateStatesDict0, devid:{}----,  len{:},  local:{}".format(devId,  len(local[devId]),  local[devId]))
@@ -22766,7 +22878,11 @@ configuration         - ==========  defined beacons ==============
 							continue
 						
 					lastUpdateFromRPIFlag = False
-					dev = indigo.devices[int(devId)]
+					try:
+						dev = indigo.devices[int(devId)]
+					except:
+							self.indiLOG.log(30, "device (id={}) not found in indigo DB, ok if device was just deleted".format(devId))
+							continue
 					lastSensorChangePresent = False
 					nKeys = 0
 					#if dev.id == 488328871: self.indiLOG.log(20, "executeUpdateStatesDict1, image:{}, local:{} \nchangedOnly:{}".format(image, local[devId], changedOnly ))
@@ -22923,27 +23039,47 @@ configuration         - ==========  defined beacons ==============
 																		
 						self.execUpdateStatesList(dev,chList)
 
+					if image != "":
+						try:
+							dev.updateStateImageOnServer(getattr(indigo.kStateImageSel, image, "NoImage"))
+						except Exception as e:
+							pass
 
-						if image !="":
-							#self.indiLOG.log(20,"{} set image>{}<".format(dev.name, image))
-							if   image == "SensorOn":				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-							elif image == "SensorOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-							elif image == "SensorTripped": 			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
-							elif image == "TemperatureSensorOn": 	dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensorOn)
-							elif image == "TemperatureSensor": 		dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensor)
-							elif image == "HumiditySensor": 		dev.updateStateImageOnServer(indigo.kStateImageSel.HumiditySensor)
-							elif image == "HumiditySensorOn": 		dev.updateStateImageOnServer(indigo.kStateImageSel.HumiditySensorOn)
-							elif image == "MotionSensor": 			dev.updateStateImageOnServer(indigo.kStateImageSel.MotionSensor)
-							elif image == "LightSensor": 			dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensor)
-							elif image == "LightSensorOn": 			dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensorOn)
-							elif image == "PowerOn": 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOn)
-							elif image == "PowerOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
-							elif image == "DimmerOn": 				dev.updateStateImageOnServer(indigo.kStateImageSel.DimmerOn)
-							elif image == "DimmerOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.DimmerOff)
-							elif image == "EnergyMeterOn": 			dev.updateStateImageOnServer(indigo.kStateImageSel.EnergyMeterOn)
-							elif image == "EnergyMeterOff": 		dev.updateStateImageOnServer(indigo.kStateImageSel.EnergyMeterOff)
-							elif image == "PowerOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
-							elif image == "Error": 					dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
+					if False:
+						#self.indiLOG.log(20,"{} set image>{}<".format(dev.name, image))
+						if   image == "SensorOn":				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+						elif image == "SensorOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+						elif image == "SensorTripped": 			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+						elif image == "TemperatureSensorOn": 	dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensorOn)
+						elif image == "TemperatureSensor": 		dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensor)
+						elif image == "HumiditySensor": 		dev.updateStateImageOnServer(indigo.kStateImageSel.HumiditySensor)
+						elif image == "HumiditySensorOn": 		dev.updateStateImageOnServer(indigo.kStateImageSel.HumiditySensorOn)
+						elif image == "MotionSensor": 			dev.updateStateImageOnServer(indigo.kStateImageSel.MotionSensor)
+						elif image == "LightSensor": 			dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensor)
+						elif image == "LightSensorOn": 			dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensorOn)
+						elif image == "PowerOn": 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOn)
+						elif image == "PowerOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
+						elif image == "DimmerOn": 				dev.updateStateImageOnServer(indigo.kStateImageSel.DimmerOn)
+						elif image == "DimmerOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.DimmerOff)
+						elif image == "EnergyMeterOn": 			dev.updateStateImageOnServer(indigo.kStateImageSel.EnergyMeterOn)
+						elif image == "EnergyMeterOff": 		dev.updateStateImageOnServer(indigo.kStateImageSel.EnergyMeterOff)
+						elif image == "PowerOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.PowerOff)
+						elif image == "Error": 					dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
+						elif image == "FanOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.FanOff)
+						elif image == "FanHigh": 				dev.updateStateImageOnServer(indigo.kStateImageSel.FanHigh)
+						elif image == "SprinklerOn": 			dev.updateStateImageOnServer(indigo.kStateImageSel.SprinklerOn)
+						elif image == "SprinklerOff": 			dev.updateStateImageOnServer(indigo.kStateImageSel.SprinklerOff)
+						elif image == "MotionSensor": 			dev.updateStateImageOnServer(indigo.kStateImageSel.MotionSensor)
+						elif image == "MotionSensorTripped": 	dev.updateStateImageOnServer(indigo.kStateImageSel.MotionSensorTripped)
+						elif image == "DoorSensorOpened": 		dev.updateStateImageOnServer(indigo.kStateImageSel.DoorSensorOpened)
+						elif image == "DoorSensorClosed": 		dev.updateStateImageOnServer(indigo.kStateImageSel.DoorSensorClosed)
+						elif image == "WindowSensorClosed": 	dev.updateStateImageOnServer(indigo.kStateImageSel.MotionWindowSensorClosedSensor)
+						elif image == "WindowSensorOpened": 	dev.updateStateImageOnServer(indigo.kStateImageSel.WindowSensorOpened)
+						elif image == "DehumidifierOff": 		dev.updateStateImageOnServer(indigo.kStateImageSel.DehumidifierOff)
+						elif image == "DehumidifierOn": 		dev.updateStateImageOnServer(indigo.kStateImageSel.DehumidifierOn)
+						elif image == "TimerOn": 				dev.updateStateImageOnServer(indigo.kStateImageSel.TimerOn)
+						elif image == "TimerOff": 				dev.updateStateImageOnServer(indigo.kStateImageSel.TimerOff)
+						elif image == "NoImage": 				dev.updateStateImageOnServer(indigo.kStateImageSel.NoImage)
 
 				if trigStatus != "":
 					try:

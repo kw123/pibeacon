@@ -1,3 +1,25 @@
+dded features / changes in added features / changes in v2022.187.148 @ 2025-11-04
+==================================================
+1. added special action. menu to move switchbot curtain3 very slow / slow / fast 
+
+
+
+added features / changes in added features / changes in v2022.187.143 @ 2025-11-01
+==================================================
+1. added slow / fast speed for switchbot curtain3 open / close 
+   set in device edit of curtain
+
+
+added features / changes in added features / changes in v2022.187.142 @ 2025-10-16
+==================================================
+1. Fixed wifi management for os >=11 / bookworm:
+wpa_supplicant file for wifi management is ignored now uses nmcli
+
+
+==================================================
+1. fixed switchbot contact on/off states for specific case
+
+
 added features / changes in added features / changes in v2022.186.141 @ 2025-09-05
 ==================================================
 1. added option to fix a screwed up RPI situation where 2 rpi have the same RPI# (0-19)

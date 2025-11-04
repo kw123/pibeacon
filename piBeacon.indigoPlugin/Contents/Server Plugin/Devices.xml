@@ -11502,50 +11502,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</ConfigUI>
 
 		<States>
-			<State id="ServiceData">
-				<ValueType>string</ValueType>
-				<TriggerLabel>ServiceData</TriggerLabel>
-				<ControlPageLabel>ServiceData</ControlPageLabel>
-			</State>
-			<State id="lastOn">
-				<ValueType>string</ValueType>
-				<TriggerLabel>lastOn</TriggerLabel>
-				<ControlPageLabel>lastOn</ControlPageLabel>
-			</State>
-			<State id="shortOpen">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>shortOpen</TriggerLabel>
-				<ControlPageLabel>shortOpen</ControlPageLabel>
-			</State>
-			<State id="longOpen">
-				<ValueType>boolean</ValueType>
-				<TriggerLabel>longOpen</TriggerLabel>
-				<ControlPageLabel>longOpen</ControlPageLabel>
-			</State>
 			<State id="light">
 				<ValueType>string</ValueType>
 				<TriggerLabel>light</TriggerLabel>
 				<ControlPageLabel>light</ControlPageLabel>
-			</State>
-			<State id="lastLightChange">
-				<ValueType>string</ValueType>
-				<TriggerLabel>lastLightChange</TriggerLabel>
-				<ControlPageLabel>lastLightChange</ControlPageLabel>
-			</State>
-			<State id="lastShortOpen">
-				<ValueType>string</ValueType>
-				<TriggerLabel>lastShortOpen</TriggerLabel>
-				<ControlPageLabel>lastShortOpen</ControlPageLabel>
-			</State>
-			<State id="lastLongOpen">
-				<ValueType>string</ValueType>
-				<TriggerLabel>lastLongOpen</TriggerLabel>
-				<ControlPageLabel>lastLongOpen</ControlPageLabel>
-			</State>
-			<State id="lastButton">
-				<ValueType>string</ValueType>
-				<TriggerLabel>lastButton</TriggerLabel>
-				<ControlPageLabel>lastButton</ControlPageLabel>
 			</State>
 			<State id="buttonCounter">
 				<ValueType>Number</ValueType>
@@ -30594,17 +30554,19 @@ For the read settings from the device to work you need to set up the device on t
 	<Device type="dimmer" id="OUTPUTswitchbotCurtain">     	<Name>OUTPUT-switch bot Curtain</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
-			<Field id="supportsOnState"         type="checkbox"  defaultValue="false" > </Field>
+			<Field id="supportsOnState"         type="checkbox"  defaultValue="false" hidden="yes"> </Field>
 			<Field id="isSwitchbotDevice"       type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="SupportsStatusRequest"   type="checkbox"  defaultValue="False" hidden="yes"><Label>Supports StatusRequest:</Label></Field>
-			<Field id="SupportsBatteryLevel"    type="checkbox"  defaultValue="true"  hidden="yes"></Field>
 			<Field id="onstateDisabled"         type="textfield" defaultValue=""      hidden="yes"><Label>onstateDisabled:</Label></Field>
 			<Field id="MSG"                     type="textfield" defaultValue=""> <Label>message from plugin:</Label></Field>
 
 
 			<Field id="infoLabelOUTPUT" type="label">
-				<Label>Setup switchbot  "curtain"  on individual rPis through BLE-connect
+				<Label>     !!! DO not setup this device manually!!!
+     use Menu "Accept/reject new Beacons..", type switchbot curtain
+     
+   Setup switchbot  "curtain"  on individual rPis through BLE-connect
 These mechanical devices get their commands through bluetooth messages. 
 Indigo sends the messages to one RPI via tcpip, 
   that rpi sends the commands via BLE
@@ -30629,13 +30591,12 @@ This device will get its battery level from its brother device,
 			<Field id="modeOfDevice" type="menu"     defaultValue="donotset"  >
 				<Label>mode of device(speed):</Label>
 				<List>
-						<Option value="00" >slow </Option>
-						<Option value="ff" >fast</Option>
-						<Option value="donotset"  >do not set</Option>
+						<Option value="donotset"  >can not be changed</Option>
 				</List>
 			</Field>
 
 			<Field id="displayState" type="textfield"      defaultValue="brightnessLevel" hidden="YES"> </Field>
+			<Field id="SupportsBatteryLevel"    type="checkbox"  defaultValue="true" ><Label>Supports Batterylevel:</Label></Field>
 
 		</ConfigUI>
 
@@ -30683,13 +30644,15 @@ This device will get its battery level from its brother device,
 			<Field id="isSwitchbotDevice"       type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="SupportsStatusRequest"   type="checkbox"  defaultValue="False" hidden="yes"><Label>Supports StatusRequest:</Label></Field>
-			<Field id="SupportsBatteryLevel"    type="checkbox"  defaultValue="true"  hidden="yes"></Field>
 			<Field id="onstateDisabled"         type="textfield" defaultValue=""      hidden="yes"><Label>onstateDisabled:</Label></Field>
 			<Field id="MSG"                     type="textfield" defaultValue=""> <Label>message from plugin:</Label></Field>
 
 
 			<Field id="infoLabelOUTPUT" type="label">
-				<Label>Setup switchbot  "curtain"  on individual rPis through BLE-connect
+				<Label>    !!! DO not setup this device manually!!!
+     use Menu "Accept/reject new Beacons..",  type switchbot curtain3
+
+Setup switchbot  "curtain"  on individual rPis through BLE-connect
 These mechanical devices get their commands through bluetooth messages. 
 Indigo sends the messages to one RPI via tcpip, 
   that rpi sends the commands via BLE
@@ -30700,7 +30663,11 @@ you can also set the switchbot remotely through an ssh command (eg iPhone shortc
  or "pos":"x" for move to position x  or "pos":"p" for pause
 This device will get its battery level from its brother device, 
    the beacon device with the same mac number,
-   IF it is set to beacon type = switchbotCurtain </Label>
+   IF it is set to beacon type = switchbotCurtain 
+To enable 3 speeds you need to set in switchbot app:  open the curtain icon:
+more / settings icon / Advanced Settings / Motion Mode = Silent Mode
+if any other Motion Mode is selected only fast and VERY slow is working
+   </Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
@@ -30714,13 +30681,15 @@ This device will get its battery level from its brother device,
 			<Field id="modeOfDevice" type="menu"     defaultValue="donotset"  >
 				<Label>mode of device(speed):</Label>
 				<List>
-						<Option value="00" >slow </Option>
-						<Option value="ff" >fast</Option>
-						<Option value="donotset"  >do not set</Option>
+					<Option value="00">fast</Option>
+					<Option value="ff">slow</Option>
+					<Option value="01">VERY slow</Option>
+					<Option value="donotset"  >use default</Option>
 				</List>
 			</Field>
 
 			<Field id="displayState" type="textfield"      defaultValue="brightnessLevel" hidden="YES"> </Field>
+			<Field id="SupportsBatteryLevel"    type="checkbox"  defaultValue="true"><Label>Supports Batterylevel:</Label></Field>
 
 		</ConfigUI>
 

@@ -115,7 +115,7 @@ class GetHandler(BaseHTTPRequestHandler):
 			if   item[0] in defaultsExtra and item[1] != defaultsExtra[item[0]] and len(item[1]) > 0: 
 				extraData += item[1]+";"
 		extraData =  extraData.strip(";")
-		U.logger.log(20,"2. general:{} + extraData:{}".format(output, extraData))
+		#U.logger.log(20,"2. general:{} + extraData:{}".format(output, extraData))
 
 		for item in output:
 			if output[item] != "":
@@ -183,7 +183,7 @@ except:
 getwebServerInputHTML(init=True)
 
 
-U.logger.log(20,"Starting web server with IP#:{}:{}  regular-output file:{}, extra-Data:{}".format(ipNumber, port, regularOutputFile, extraOutputFile))
+U.logger.log(20,"Starting web server with IP#:{}:{}  regular-output file:{}, extra-Data:{}, input:{}".format(ipNumber, port, regularOutputFile, extraOutputFile, extraInputFile))
 
 
 

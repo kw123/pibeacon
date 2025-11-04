@@ -116,7 +116,7 @@ def checkWiFiSetupBootDir():
 	return 
 
 ####################      #########################
-def readNewParams(force=0, init=False):
+def readNewParams(force=0, init=False, readfromTempDir=True):
 	global restart,sensorList,rPiCommandPORT, firstRead
 	global enableiBeacons, beforeLoop, cAddress,rebootHour,sensors,enableShutDownSwitch, rebootWatchDogTime
 	global shutdownInputPin, shutdownPinVoltSensor,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, GPIOZEROshutdown
@@ -130,7 +130,7 @@ def readNewParams(force=0, init=False):
 	global batteryChargeTimeForMaxCapacity, batteryCapacitySeconds
 	global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
 	global configured
-	global startWebServerSTATUS, startWebServerINPUT
+	global startWebServerSTATUSPort, startWebServerINPUTPort
 	global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, fanTempName, fanTempDevId, fanEnable
 	global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 	global batteryUPSshutdownAtxPercent, shutdownSignalFromUPSPin, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_InitTime
@@ -148,9 +148,15 @@ def readNewParams(force=0, init=False):
 	global programsThatShouldBeRunning, programsThatShouldBeRunningOld
 	global GPIOZEROfan
 	global GPIOZEROveto
+	global skipTests
+	
 
 	try:	
-		inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
+		if not readfromTempDir: 
+			inp, inpRaw, lastRead2 = U.doRead(inFile="{}parameters".format(G.homeDir), lastTimeStamp=lastRead)
+		else:
+			inp, inpRaw, lastRead2 = U.doRead(lastTimeStamp=lastRead)
+			
 		if inp == "": 
 			subprocess.call("cp "+G.homeDir+"parameters  "+G.homeDir+"temp/parameters", shell=True)
 			time.sleep(1)
@@ -200,8 +206,8 @@ def readNewParams(force=0, init=False):
 		if "GPIOTypeAfterBoot1" 					in inp:	GPIOTypeAfterBoot1 = 				inp["GPIOTypeAfterBoot1"]
 		if "GPIOTypeAfterBoot2" 					in inp:	GPIOTypeAfterBoot2 = 				inp["GPIOTypeAfterBoot2"]
 		if True:											configured = 						inp.get("configured",False)
-		if "startWebServerSTATUS" 					in inp:	startWebServerSTATUS = 			int(inp["startWebServerSTATUS"])
-		if "startWebServerINPUT" 					in inp:	startWebServerINPUT = 				int(inp["startWebServerINPUT"])
+		if "startWebServerSTATUS" 					in inp:	startWebServerSTATUSPort = 			int(inp["startWebServerSTATUS"])
+		if "startWebServerINPUT" 					in inp:	startWebServerINPUTPort = 			int(inp["startWebServerINPUT"])
 		if "fanEnable" 								in inp:	fanEnable = 						inp["fanEnable"]
 		if "ifNetworkChanges" 						in inp:	ifNetworkChanges = 					inp["ifNetworkChanges"] 
 		if "maxSizeOfLogfileOnRPI" 					in inp:	maxSizeOfLogfileOnRPI = 		  	int(inp["maxSizeOfLogfileOnRPI"]) 
@@ -210,6 +216,7 @@ def readNewParams(force=0, init=False):
 		if "macIfWOLsendToIndigoServer" 			in inp:	macIfWOLsendToIndigoServer = 		inp["macIfWOLsendToIndigoServer"] 
 		if "IpnumberIfWOLsendToIndigoServer" 		in inp:	IpnumberIfWOLsendToIndigoServer = 	inp["IpnumberIfWOLsendToIndigoServer"] 
 		if "usePython3" 							in inp:	usePython3 = 						inp["usePython3"] == "1" 
+		if "skipTests" 								in inp:	skipTests = 						inp["skipTests"] == "skip" 
 
 
 		if sys.version[0] == "2" and usePython3: 
@@ -1380,6 +1387,7 @@ def checkLogfiles():
 	global maxSizeOfLogfileOnRPI
 	try:
 		retCode =  checkDiskSpace(maxUsedPercent=80, kbytesLeft=500000) 	 # (need 500Mbyte free or 80% max
+		restart = False
 
 		if retCode in [1,2]: 	 # (need 500Mbyte free or 80% max
 			subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
@@ -1389,7 +1397,7 @@ def checkLogfiles():
 				subprocess.call("sudo echo "" >  {}".format(f) , shell=True)
 			try: U.logger.log(30, "reset  logfiles  due to limited disk space ")
 			except: pass
-		elif retCode ==3:
+		elif retCode == 3:
 			U.restartMyself(reason="not enough space in temp directory, restart master should clean it up ", delay=20, doPrint =True, python3=usePython3)
 			time.sleep(20)
 
@@ -1411,13 +1419,14 @@ def checkLogfiles():
 			nBytes = int(os.path.getsize(fname))
 			#U.logger.log(20, "checking pibeacon logfile size: {}>{}, reset:{}?".format(nBytes, maxSizeOfLogfileOnRPI, nBytes > maxSizeOfLogfileOnRPI))
 			if nBytes > maxSizeOfLogfileOnRPI: # default 10 mBytes
+				restart = True
+
 				if  os.path.isfile(fname+"-1"):  
 					subprocess.call("sudo rm "+fname+"-1 >/dev/null 2>&1", shell=True)
 				subprocess.call("sudo mv "+fname+" "+fname+"-1 ", shell=True)
 				subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
 				U.logger.log(20, "checking pibeacon logfile ..  resetting pibeacon log")
 				subprocess.call("sudo echo '' > "+fname, shell=True)
-
 		fname = G.restartLogfileName
 		if  os.path.isfile(fname):  
 			nBytes = int(os.path.getsize(fname))
@@ -1426,7 +1435,11 @@ def checkLogfiles():
 					subprocess.call("sudo rm "+fname+"-1 >/dev/null 2>&1", shell=True)
 				subprocess.call("sudo mv "+fname+" "+fname+"-1 ", shell=True)
 				subprocess.call("sudo echo 'master reset' > "+fname, shell=True)
+				restart = True
+		if restart: 
+			U.restartMyself(reason="starting  due to new logfile", python3=usePython3)
 
+		
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -1958,7 +1971,7 @@ def checknetwork0():
 		if G.networkType in G.useNetwork and G.wifiType == "normal":
 			for ii in range(2):
 				if ii > 0 :
-					if G.networkType.find("clock") >-1: 
+					if G.networkType.find("clock") > -1: 
 						U.logger.log(30, "no ip number working, giving up, running w/o ip number or indigo server, setting mode to clockMANUAL = stand alone")
 						G.networkType = "clockMANUAL"
 						U.setNetwork("off")
@@ -2479,7 +2492,7 @@ def execMaster():
 		global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
 		global activePGM
 		global configured
-		global startWebServerSTATUS, startWebServerINPUT
+		global startWebServerSTATUSPort, startWebServerINPUTPort
 		global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTempValue, fanWasOn,  lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
 		global wifiEthCheck, BeaconUseHCINoOld,BLEconnectUseHCINoOld
 		global batteryUPSshutdownAtxPercent, shutdownSignalFromUPSPin, shutdownSignalFromUPS_SerialInput, shutdownSignalFromUPS_InitTime, batteryUPSshutdown_Vin
@@ -2506,8 +2519,9 @@ def execMaster():
 		global pyCommand
 		global pgmStart
 		global lastSensorRunningCheck
+		global skipTests		
 
-
+		skipTests						= False
 		lastSensorRunningCheck			= time.time()
 		programsThatShouldBeRunning 	= {}
 		programsThatShouldBeRunningOld	= {}
@@ -2561,8 +2575,8 @@ def execMaster():
 		alreadyBooted					= False
 
 
-		startWebServerSTATUS			= 80
-		startWebServerINPUT				= 8010
+		startWebServerSTATUSPort		= 0
+		startWebServerINPUTPort			= 0
 		batteryChargeTimeForMaxCapacity = 3600. # seconds
 		batteryCapacitySeconds			= 5*3600 # 
 
@@ -2604,6 +2618,7 @@ def execMaster():
 		activePGMOutput					= {}
 		configured						= ""
 		adhocWifiStarted				= -1
+		
 		U.setLogging()
 
 		mustUsePy3 = U.checkIfmustUsePy3()
@@ -2622,20 +2637,24 @@ def execMaster():
 		else:
 			pyCommand = "/usr/bin/python "
 
-		subprocess.call(pyCommand+"  -E "+G.homeDir+"doOnce.py", shell=True)
+		readNewParams(force=2, readfromTempDir=False)
 
-		U.setLogging()
+
+
+		if not skipTests: subprocess.call(pyCommand+"  -E "+G.homeDir+"doOnce.py &", shell=True)
+
 		U.logger.log(20, "" )
-		U.logger.log(20, "\n\n\n=========START-0.. MASTER  v:{} ==============\n\n\n".format(masterVersion) )
+		U.logger.log(20, "\n\n\n=========START-0.. MASTER  v:{} ============== (skip test: {})\n\n\n".format(masterVersion, skipTests) )
 
 
 		# set to autologin on commandline
-		subprocess.Popen("/usr/bin/sudo {} -E {}setStartupParams.py &".format(pyCommand, G.homeDir), shell=True)
+		if not skipTests: subprocess.Popen("/usr/bin/sudo {} -E {}setStartupParams.py &".format(pyCommand, G.homeDir), shell=True)
 
 		### ret = U.readPopen("/bin/cat /etc/os-release ")[0].strip("\n").strip().split("\n")
 
 		# make dir for short temp files
 		setupTempDir()
+
 
 		pgmStart = time.time()
 
@@ -2656,37 +2675,38 @@ def execMaster():
 		subprocess.call("nohup sudo /bin/bash {}master.sh {} > /dev/null 2>&1 ".format(G.homeDir, test), shell=True)
 		time.sleep(1)
 
-		makeRaspiConfigFile()
+		if not skipTests: makeRaspiConfigFile()
 
-		setupUtilities()
+		if not skipTests: setupUtilities()
 
 		checkIfclearHostsFile()
 
-		fixRcLocal()
+		if not skipTests: fixRcLocal()
 
-		readNewParams(force=2)
 
-		checkWiFiSetupBootDir()
+		if not skipTests: checkWiFiSetupBootDir()
 
 		checkLogfiles()
 
-		checkPythonLibs()
+		if not skipTests: checkPythonLibs()
 
 		U.logger.log(20, "=========START-2.. indigoServer @ IP:{}<< G.wifiType:>>{}<<".format(G.ipOfServer, G.wifiType) )
 
-		checkIfUARThciChannelIsOnRPI4()
+		if not skipTests: checkIfUARThciChannelIsOnRPI4()
 
 		time.sleep(1)
 		
 		U.readPopen("sudo hwclock -r")
 
 
-		ipNumberForAdhoc = getadhocIpNumber()
+		if not skipTests: ipNumberForAdhoc = getadhocIpNumber()
 		# sets: G.wifiType = normal/ adhoc
 		U.whichWifi() 
 
-		adhocWifiStarted = U.checkWhenAdhocWifistarted()
-		if adhocWifiStarted < 0: U.clearAdhocWifi()
+		adhocWifiStarted = 0
+		if not skipTests: 
+			adhocWifiStarted = U.checkWhenAdhocWifistarted()
+			if adhocWifiStarted < 0: U.clearAdhocWifi()
 
 
 		if adhocWifiStarted > 10: U.logger.log(20, "adhocWifi active, {} sec left bf restart".format(600 - (time.time() - adhocWifiStarted)) )
@@ -2709,8 +2729,8 @@ def execMaster():
 		checkIfFirstStart()
 		U.logger.log(20, "=========START-4.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
-		if startWebServerSTATUS > 0 and  adhocWifiStarted < 10:
-			U.startwebserverSTATUS(startWebServerSTATUS)
+		if startWebServerSTATUSPort > 0 and  adhocWifiStarted < 10:
+			U.startwebserverSTATUS(startWebServerSTATUSPort)
 
 		U.logger.log(20, "=========START-5.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
@@ -2727,7 +2747,8 @@ def execMaster():
 
 
 		# check if all libs for sensors etc are installed
-		checkInstallLibs()
+		if not skipTests: 
+			checkInstallLibs()
 
 		U.logger.log(20, "=========START-6.. indigoServer @ IP:{}<< G.wifiType:{}<<, adhocWifiStarted:{}<<, G.networkType:{}<<".format(G.ipOfServer, G.wifiType, adhocWifiStarted, G.networkType) )
 
@@ -2772,7 +2793,8 @@ def execMaster():
 
 		pgmStart = time.time()
 
-		U.sendSensorAndRPiInfoToPlugin(sensors)	
+		if G.networkType.find("clock") == -1:
+			U.sendSensorAndRPiInfoToPlugin(sensors)	
 		tAtLoopSTart =time.time()
 
 		U.testNetwork()
@@ -2803,7 +2825,9 @@ def execMaster():
 
 		U.logger.log(20,"=========START-10 setup done, normal loop")
 
-		U.checkIfAliveNeedsToBeSend()
+		if G.networkType.find("clock") == -1:
+			U.checkIfAliveNeedsToBeSend()
+			
 		checkTempForFanOnOff(force = True)
 		lastCheckAlive = time.time() -90
 
@@ -2880,19 +2904,19 @@ def execMaster():
 						U.stopAdhocWifi()
 						time.sleep(20) # symbolic, will reboot before
 
-				if (startWebServerSTATUS > 0 or U.checkIfStartwebserverSTATUS()) and adhocWifiStarted < 10:
+				if (startWebServerSTATUSPort > 0 or U.checkIfStartwebserverSTATUS()) and adhocWifiStarted < 10:
 					if not U.checkIfwebserverSTATUSrunning():
-							U.startwebserverSTATUS(startWebServerSTATUS)
+							U.startwebserverSTATUS(startWebServerSTATUSPort)
 
-				if (startWebServerINPUT > 0 or U.checkIfStartwebserverINPUT()) and adhocWifiStarted < 10:
+				if (startWebServerINPUTPort > 0 or U.checkIfStartwebserverINPUT()) and adhocWifiStarted < 10:
 					if not U.checkIfwebserverINPUTrunning():
-						U.startwebserverINPUT(startWebServerINPUT)
+						U.startwebserverINPUT(startWebServerINPUTPort)
 
-				if startWebServerSTATUS > 0 and  U.checkIfStopwebserverSTATUS():
+				if startWebServerSTATUSPort > 0 and  U.checkIfStopwebserverSTATUS():
 					if U.checkIfwebserverSTATUSrunning():
 						U.stopwebserverSTATUS()
 
-				if startWebServerINPUT > 0 and  U.checkIfStopwebserverINPUT():
+				if startWebServerINPUTPort > 0 and  U.checkIfStopwebserverINPUT():
 					if U.checkIfwebserverINPUTrunning():
 						U.stopwebserverINPUT()
 

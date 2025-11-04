@@ -22,6 +22,26 @@
     "textForMenu": "",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   },
+    "BLERuuviAir": {
+    "Maj": "",
+    "Min": "",
+    "commands": {    },
+    "comment": "",
+    "correspondingSensorType": "BLERuuviAir",
+    "correspondingSwitchbotDevice": "",
+    "dBm": "-65",
+    "advData":{"":{"len":0,"completeData":"","useTag":""}},
+    "hexCode":"FF990406",
+    "hexCode2": "",
+    "pos": 11,
+    "posDelta": 0,
+    "sensorFunctions": "",
+    "sequence": 0,
+    "subType": {},
+    "text": "Ruuvi-Air w temp, hum, press, co2 etc",
+    "textForMenu": "",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
   "BLERuuviTag": {
     "Maj": "",
     "Min": "",
@@ -2125,7 +2145,7 @@
 		 "closeCmd":				"570f450105",
 		 "pauseCmd": 				"570f450105",
 		 "positionCmd": 			"570f450105", 
-		 "modeOfDevice": 			"ff", 
+		 "modeOfDevice": 			"00",  
 		 "lastFailedTryTime":		0,
 		 "lastFailedTryCount":		0,
 		 "devId": 			0 
@@ -2138,7 +2158,7 @@
 		 "closeCmd":				"570f450105",
 		 "pauseCmd": 				"570f450105",
 		 "positionCmd": 			"570f450105", 
-		 "modeOfDevice": 			"ff", 
+		 "modeOfDevice": 			"00", 
 		 "lastFailedTryTime":		0,
 		 "lastFailedTryCount":		0,
 		 "devId": 			0 

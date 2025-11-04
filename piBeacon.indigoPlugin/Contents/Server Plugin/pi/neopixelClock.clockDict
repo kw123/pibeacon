@@ -1,9 +1,9 @@
 {
   "DMAchannel": "5",
   "GPIOdown": "19",
-  "GPIOsetA": "13",
-  "GPIOsetB": "21",
-  "GPIOsetC": "12",
+  "GPIOsetA": "6",
+  "GPIOsetB": "13",
+  "GPIOsetC": "5",
   "GPIOup": "26",
   "LEDstart": [
     0,
@@ -29,7 +29,7 @@
   ],
   "OrderOfMatrix": "lrrl",
   "PWMchannel": "0",
-  "clockLightSet": "auto",
+  "clockLightSet": "offoff",
   "devType": "1x241",
   "devTypeLEDs": "241",
   "devTypeROWs": "1",
@@ -40,8 +40,6 @@
   "lightSensorSlope": 1.0,
   "marks": {
     "DD": {
-      "LEDstart": 0,
-      "LEDsum": 0,
       "RGB": [
         0,
         0,
@@ -84,7 +82,7 @@
       "ringNo": []
     }
   },
-  "minLightNotOff": "1",
+  "minLightNotOff": "15",
   "rings": [
     60,
     48,
@@ -118,8 +116,8 @@
       ]
     },
     "HH": {
-      "LEDstart": 220,
-      "LEDsum": 36,
+      "LEDstart": 240,
+      "LEDsum": 37,
       "RGB": [
         255,
         0,
@@ -131,6 +129,7 @@
       ],
       "npix": 1,
       "ringNo": [
+        8,
         6,
         4
       ]

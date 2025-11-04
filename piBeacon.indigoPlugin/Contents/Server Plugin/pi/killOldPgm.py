@@ -44,24 +44,26 @@ if verbose:
 try:
 
 		#print "killOldPgm ",pgmToKill,str(myPID)
-		cmd = "ps -ef | grep '{}' | grep -v grep | grep -v ' {} ' | grep -v ' {} ' | grep -v sudo".format(pgmToKill, myOwnPID, myPID  )
-		if param1 !="":
+		cmd = "ps -ef | grep '{}' | grep -v grep | grep -v {}  | grep -v sudo".format(pgmToKill, myOwnPID  )
+		if param1 != "":
 			cmd = "{} | grep {}".format(cmd,param1)
-		if param2 !="":
+		if param2 != "":
 			cmd = "{} | grep ".format(cmd,param2)
 		if verbose: U.logger.log(20, u"== ext-kill== 2 kill command {}, {}".format(cmd, delList) )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-		lines=ret.split("\n")
+		lines = ret.split("\n")
 		del ret
 		xlist = ""
 		for line in lines:
 			if len(line) < 10: continue
-			items=line.split()
-			pid=int(items[1])
-			if pid == int(myPID): continue
+			items = line.split()
+			pid = int(items[1])
+			if pid == int(myPID): 
+				if verbose: U.logger.log(20, u"== ext-kill== 3 not killing pid={}, line:{}".format( pid, line) )
+				continue
 			if pid == int(myOwnPID): continue
-			if verbose: U.logger.log(20, u"== ext-kill== 3 killing {}  {}  {}, pid={}, line:{}".format( pgmToKill, param1, param2, pid, " ".join(items[8:])) )
+			if verbose: U.logger.log(20, u"== ext-kill== 3 killing {}  {}  {}, pid={}, line:{}".format( pgmToKill, param1, param2, pid,  line ) )
 			xlist += str(pid)+ " "
 			count += 1
 		if len(xlist) > 3:

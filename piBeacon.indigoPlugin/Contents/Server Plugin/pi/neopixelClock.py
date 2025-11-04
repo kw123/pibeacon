@@ -9,6 +9,14 @@
 ##	do it in a timed manner not to load the system, is every 1 seconds then 30 senods break
 ##
 
+###
+### to be fixed:
+###
+###  replace GPIO
+###  faster start , show IP number for 1 minute then start python3 neopixel3.py neopixelClock
+###
+debugLevel = 0
+
 import	sys, os, time, json, datetime,subprocess,copy
 import math
 
@@ -17,10 +25,17 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
 G.program = "neopixelClock"
-import	RPi.GPIO as GPIO
 
 
-version = 2.3
+try:
+	import	RPi.GPIO as GPIO
+	useGPIO = True
+except:
+	import gpiozero
+	useGPIO = False
+	
+
+version = 2.5
 status = "ok"
 
 #  for knight rider
@@ -66,6 +81,7 @@ def updatewebserverStatus():
 		xxx.append( "LightSensorRaw. = {:.3f}".format(lightSensorValue)  )
 		xxx.append( "LightSensorSlp. = {:.3f}".format(clockDict["lightSensorSlope"])  )
 		xxx.append( "lightOnOff..... = {:.0f}".format(clockDict["lightOnOff"])  )
+		xxx.append( "Marks-ON....... = "+ str(clockDict["marksOn"])      )
 		xxx.append( "Marks-HH....... = "+ str(clockDict["marks"]["HH"])  )
 		xxx.append( "Marks-MM....... = "+ str(clockDict["marks"]["MM"])  )
 		xxx.append( "Marks-SS....... = "+ str(clockDict["marks"]["SS"])  )
@@ -104,19 +120,25 @@ def webServerInputExtraText():
 		xxx.append(y)
 		y  =	'light sensor slope. : <select name="lightSensor">'
 		y +=			'<option value="-1">do+not+change</option>'
-		y +=			'<option value="lightSensor:0.016;">*64 highest</option>'
-		y +=			'<option value="lightSensor:0.031;">*32 </option>'
-		y +=			'<option value="lightSensor:0.063;">*16 </option>'
-		y +=			'<option value="lightSensor:0.125;">*8 </option>'
-		y +=			'<option value="lightSensor:0.25;">*4 </option>'
-		y +=			'<option value="lightSensor:0.50;">*2 </option>'
+		y +=			'<option value="lightSensor:64.00;">*64 highest</option>'
+		y +=			'<option value="lightSensor:32.00;">*32 </option>'
+		y +=			'<option value="lightSensor:16.00;">*16 </option>'
+		y +=			'<option value="lightSensor:8.00;">*8 </option>'
+		y +=			'<option value="lightSensor:4.00;">*4 </option>'
+		y +=			'<option value="lightSensor:2.00;">*2 </option>'
 		y +=			'<option value="lightSensor:1.00;">normal default </option>'
-		y +=			'<option value="lightSensor:2.00;">/2</option>'
-		y +=			'<option value="lightSensor:4.00;">/4</option>'
-		y +=			'<option value="lightSensor:8.00;">/8</option>'
-		y +=			'<option value="lightSensor:16.00;">/16</option>'
-		y +=			'<option value="lightSensor:32.00;">/32</option>'
-		y +=			'<option value="lightSensor:64.00;">/64 lowest</option>'
+		y +=			'<option value="lightSensor:0.50;">/2</option>'
+		y +=			'<option value="lightSensor:0.25;">/4</option>'
+		y +=			'<option value="lightSensor:0.125;">/8</option>'
+		y +=			'<option value="lightSensor:0.063;">/16</option>'
+		y +=			'<option value="lightSensor:0.031;">/32</option>'
+		y +=			'<option value="lightSensor:0.016;">/64 lowest</option>'
+		y +=		'</select>'
+		xxx.append(y)
+		y  =	'marks On........... : <select name="marksOn">'
+		y +=			'<option value="-1">do+not+change</option>'
+		y +=			'<option value="marksOn:0;">off</option>'
+		y +=			'<option value="marksOn:1;">on</option>'
 		y +=		'</select>'
 		xxx.append(y)
 #		y  =	'marks mode......... : <select name="marksMode">'
@@ -168,7 +190,6 @@ def webServerInputExtraText():
 		y +=			'<option value="reboot"   >powercycle clock </option>'
 		y +=			'<option value="reset"    >reset parameters and reboot </option>'
 		y +=			'<option value="shutdown" >shutdown clock, wait 30 secs before power off switch</option>'
-		y +=			'<option value="halt"     >halt clock, wait 30 secs before power off switch</option>'
 		y +=		'</select>'
 		xxx.append(y)
 		xxx.append('<br>')
@@ -199,15 +220,15 @@ def webServerInputExtraText():
 		xxx.append(y)
 		y  =	'Line Time.......... : <select name="lineT">'
 		y +=			'<option value="-1">do+not+change</option>'
-		y +=			'<option value="lineT:15"  >15 sec </option>'
-		y +=			'<option value="lineT:30"  >30 sec </option>'
-		y +=			'<option value="lineT:60"  >60 sec </option>'
-		y +=			'<option value="lineT:90"  >90 sec </option>'
-		y +=			'<option value="lineT:120"  >2 minutes </option>'
-		y +=			'<option value="lineT:180"  >3 minutes </option>'
-		y +=			'<option value="lineT:240"  >4 minutes </option>'
-		y +=			'<option value="lineT:300"  >5 minutes </option>'
-		y +=			'<option value="lineT:600"  >10 minutes </option>'
+		y +=			'<option value="lineT:15"    >15 sec </option>'
+		y +=			'<option value="lineT:30"    >30 sec </option>'
+		y +=			'<option value="lineT:60"    >60 sec </option>'
+		y +=			'<option value="lineT:90"    >90 sec </option>'
+		y +=			'<option value="lineT:120"   >2 minutes </option>'
+		y +=			'<option value="lineT:180"   >3 minutes </option>'
+		y +=			'<option value="lineT:240"   >4 minutes </option>'
+		y +=			'<option value="lineT:300"   >5 minutes </option>'
+		y +=			'<option value="lineT:600"   >10 minutes </option>'
 		y +=			'<option value="lineT:1200"  >20 minutes </option>'
 		y +=			'<option value="lineT:3600"  >1 hour</option>'
 		y +=			'<option value="lineT:7200"  >2 hours</option>'
@@ -215,10 +236,32 @@ def webServerInputExtraText():
 		y +=			'<option value="lineT:21400" >6 hours</option>'
 		y +=		'</select>'
 		xxx.append(y)
+		y  =	'Circle............. : <select name="circle">'
+		y +=			'<option value="-1">do+not+change</option>'
+		y +=			'<option value="circle:c,0.01,40" >color fast</option>'
+		y +=			'<option value="circle:r,0.01,40" >red fast</option>'
+		y +=			'<option value="circle:b,0.01,40" >blue fast</option>'
+		y +=			'<option value="circle:g,0.01,40" >green fast</option>'
+		y +=			'<option value="circle:y,0.01,40" >yellow fast</option>'
+		y +=			'<option value="circle:w,0.01,40" >white fast</option>'
+		y +=			'<option value="circle:c,0.2,40" >color</option>'
+		y +=			'<option value="circle:r,0.2,40" >red</option>'
+		y +=			'<option value="circle:b,0.2,40" >blue</option>'
+		y +=			'<option value="circle:g,0.2,40" >green</option>'
+		y +=			'<option value="circle:y,0.2,40" >yellow</option>'
+		y +=			'<option value="circle:w,0.2,40" >white</option>'
+		y +=			'<option value="circle:c,0.7,40" >color slow</option>'
+		y +=			'<option value="circle:r,0.7,40" >red slow</option>'
+		y +=			'<option value="circle:b,0.7,40" >blue slow</option>'
+		y +=			'<option value="circle:g,0.7,40" >green slow</option>'
+		y +=			'<option value="circle:y,0.7,40" >yellow slow</option>'
+		y +=			'<option value="circle:w,0.7,40" >white slow</option>'
+		y +=		'</select>'
+		xxx.append(y)
 		xxx.append('<br>')
-		defaults	= {"re":"-1","LED":"-1","calibrate":"-1","marksMode":"-1","lightSensor":"-1","lightoff":"-1",
+		defaults	= {"re":"-1","LED":"-1","calibrate":"-1","marksOn":"-1","marksMode":"-1","lightSensor":"-1","lightoff":"-1",
 						"hoursMarks":"-1","minutesMode":"-1","hoursMode":"-1","autoupdate":"-1",
-						"lineC":"-1","lineN":"-1","lineT":"-1","showipnumber":"-1"}
+						"lineC":"-1","lineN":"-1","lineT":"-1","circle":"-1","showipnumber":"-1"}
 
 		webServerInputHTML = ""
 		for x in xxx:
@@ -231,63 +274,164 @@ def webServerInputExtraText():
 
 #################################		 
 def readCommand():
-	global DEVID, clockDict, timeWait
+	global DEVID, clockDict, lastCommandSendToNeopixel
 	restart = 0
 
 	try:
 		if not os.path.isfile(G.homeDir+"temp/neopixelClock.cmd"): return  restart
 
-		f=open(G.homeDir+"temp/neopixelClock.cmd","r")
+		f = open(G.homeDir+"temp/neopixelClock.cmd","r")
 		cmds = f.read().strip()
 		f.close()
 		os.system("rm  "+ G.homeDir+"temp/neopixelClock.cmd > /dev/null 2>&1 ")
 
 		if len(cmds) < 2: return restart
 		cmds = cmds.lower().replace(" ","").strip(";")
-	### cmds: =["go0","getBoundaries","doLR","RGB:"]
-		U.logger.log(20, "cmds: >>{}<<".format(cmds))
-	## Lv:20 cmds: >>led:high;lightoff:0,0;lightsensor:0.016;;hoursmarks:on;;minutesmode:dot;;hoursmode:2dots;;reboot<<
-	## cmds: >>hoursmarks:3;;minutesmode:3;;hoursmode:2<<
+		execCommands(cmds)
+	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
+	
+	
+def execCommands(cmds):
+	global DEVID, clockDict, lastCommandSendToNeopixel
+	restart = 0
+	try:
 
 		pos = [0.01, 240, 1]
 		cnrCmd = {"resetInitial": "[0,0,0]", "repeat": -1,"command":[{"type":"", "position": pos}]}
 		numberOfLed = 0
-		wait = 0
+		runFor = 0
 		color = ""
 
 		restCount = 0
 		cmds = cmds.split(";")
-		for cmd in cmds:
-			cmd = cmd.strip().lower()
+		U.logger.log(20, "readCommand:{}".format(cmds) )
+
+		for ccc in cmds:
+			cmd = ccc.strip().lower()
 			if len(cmd) < 2: continue
 
-			U.logger.log(20, "readCommand :{} ".format(cmd) )
+			if cmd.find("help:") > -1:
+				U.logger.log(20, "help for commands: " )
+				U.logger.log(20, "snake:             snake:c/g/b/r/y/w,nled,secsOn eg linea:c,33,66 for a line with 33 led for 66 secs" )
+				U.logger.log(20, "circle:            circle:c/g/b/r/yw frequency, secs on eg linea:c,0.1,66 for circles, switching every 0.1 secs for 66 secs" )
+				U.logger.log(20, "lightSensorSlope:  lightsensor:number  0.016,..,0.5,1,2,.. 64.0" )
+				U.logger.log(20, "hoursmarks:        hoursmarks:0/1/2/3/4    " )
+				U.logger.log(20, "minutesmode:       minutesmode:0/1/2/3/4   " )
+				U.logger.log(20, "markson:         	 switch marks on /off :0/1/  " )
+				U.logger.log(20, "hoursmode:         hoursmode:0/1/2/3/4     " )
+				U.logger.log(20, "restart:          " )
+				U.logger.log(20, "reboot:           " )
+				U.logger.log(20, "reset:           " )
+				U.logger.log(20, "shutdown:          " )
+				U.logger.log(20, "showipnumber:       " )
+				continue
+
+
+			#U.logger.log(20, "readCommand :{} ".format(cmd) )
+
 
 			if cmd.find("lightsensor:") > -1:
-				clockDict["lightSensorSlope"] = 1./max(0.016,float(cmd.split(":")[1]))
+				clockDict["lightSensorSlope"] = max(0.016,float(cmd.split(":")[1]))
 				restart = 2
 				continue
 
 			if cmd.find("led:") > -1:
 				value = cmd.split(":")[1]
 				if value == "off":		clockDict["lightOnOff"] = 0
-				else:					clockDict["lightOnOff"] = 1.
+				else:					clockDict["lightOnOff"] = 1
 				restart = 2
 				continue
+
+
+			if cmd.find("snake") == 0 and cmd.find(":") > 0:
+				cmd = "linea:"+cmd.split(":")[1]
+				#U.logger.log(20, f"cmd:{cmd:}")
 
 			if cmd.find("line") == 0 and cmd.find(":") > 0:
 				knType , value = cmd.split(":")
 				knType = knType[-1]
-				U.logger.log(20, f"knType:{knType:}, value:{value:}")
+				
+				#U.logger.log(20, f"knType:{knType:}, value:{value:}")
 				if knType == "c": 
 					color = value[0]
 					if color in ["c"]:				cnrCmd["command"][0]["type"]	= "ckrr" 
 					if color in ["r","g","b","y"]: 	cnrCmd["command"][0]["type"] 	= "kr" 
-
+					
+				if knType[0] == "a": 
+					params = value.split(",")
+					if len(params) != 3:
+						U.logger.log(20, f"bad params:{params:} should be 3, whole cmd:   linea:c/g/b/r/ynled,secsOn")
+						continue
+						
+					if params[0] not in ["r","g","b","y","c"]:
+						U.logger.log(20, f"bad params:{params:} color should be c/g/b/r/y, whole cmd:  linea:c/g/b/r/ynled,secsOn")
+						continue
+						
+					color = params[0]
+					if color in ["c"]:				cnrCmd["command"][0]["type"]	= "ckrr" 
+					if color in ["r","g","b","y"]: 	cnrCmd["command"][0]["type"] 	= "kr" 
+					
+					try: 
+						numberOfLed 	= int(params[1])
+					except:
+						U.logger.log(20, f"bad params:{params:} number of led should be a number, whole cmd:  linea/g/b/r/y,nled,secsOn")
+						continue
+						
+					try: 
+						runFor 			= int(params[2])
+					except:
+						U.logger.log(20, f"bad params:{params:} time to display should be a numberr, whole cmd:  linea:/g/b/r/y,,nled,secsOn")
+						continue
+					
 				if knType == "n": 					numberOfLed 					= int(value)
-				if knType == "t": 					wait 							= int(value)
+				if knType == "t": 					runFor							= int(value)
 
 
+			if cmd.find("circle:") == 0:
+
+				pos = []
+				color, delay, runFor = cmd.split(":")[1].split(",")
+				U.logger.log(20," color:{}, delay:{}, runFor:{}, ledSens:{} " .format( color, delay, runFor , lightSensorValueREAD))
+				col = {}
+				col["r"] = calcRGBdimm([30,0,0],   lightSensorValueREAD, minLight=True)
+				col["g"] = calcRGBdimm([0,30,0],   lightSensorValueREAD, minLight=True)
+				col["b"] = calcRGBdimm([0,0,30],   lightSensorValueREAD, minLight=True)
+				col["y"] = calcRGBdimm([20,20,0],  lightSensorValueREAD, minLight=True)
+				col["w"] = calcRGBdimm([20,20,20], lightSensorValueREAD, minLight=True)
+				if	 color == "r":  cind = ["r","r","r"]
+				elif color == "g":  cind = ["g","g","g"]
+				elif color == "b":  cind = ["b","b","b"]
+				elif color == "y":  cind = ["y","y","y"]
+				elif color == "w":  cind = ["w","w","w"]
+				elif color == "c":  cind = ["r","g","b"]
+				nRings = len(clockDict["LEDstart"])
+				rings = []
+				ind = 0
+				direction = 1
+				nLeds = clockDict["LEDstart"][-1]
+				ncol = 0
+				for nn in range(nRings):
+					ncol += 1
+					if ncol > 2: ncol = 0
+					rings.append(col[cind[ncol]])
+
+				cnrCmd["command"][0]["type"]	 = "circle" 
+				cnrCmd["command"][0]["position"] = [float(delay), nLeds, clockDict["LEDstart"], clockDict["LEDsum"], rings]
+ 
+				#U.logger.log(20,"cnrCmd:{} " .format(cnrCmd ))
+				setNEOinput(cnrCmd)
+				lastCommandSendToNeopixel = time.time() + float(runFor) - 10
+				continue
+
+
+			if cmd.find("markson:") > -1:
+				try: 
+					xx = int(cmd.split(":")[1])
+					if xx >= 0:
+						clockDict["marksOn"] = xx
+				except: pass
+				continue
 
 			if cmd.find("hoursmarks:") > -1:
 				if setHHMarksTo(cmd.split(":")[1]): restart = 2
@@ -310,7 +454,7 @@ def readCommand():
 				continue
 
 			if cmd.find("restart") > -1:
-				U.restartMyself(reason="shutdown send")
+				U.restartMyself(reason="restart send")
 				continue
 
 			if cmd.find("reboot") > -1:
@@ -321,24 +465,19 @@ def readCommand():
 			if cmd.find("reset") > -1:
 				U.logger.log(20,  "reboot/restore send")
 				resetEverything()
-				signalShutDown()
 				reboot()
 				continue
 
-			if cmd.find("shutdown") > -1:
+			if cmd.find("shutdown") > -1 or cmd.find("halt") > -1:
+				shutdown()
 				U.logger.log(20,  "shutdown send")
-				subprocess.call("sudo killall -9 python3; sudo sync;sleep 2; sudo shutdown now", shell=True)
-				continue
-
-			if cmd.find("halt") > -1:
-				subprocess.call("sudo killall -9 python3; sudo sync;sleep 2; sudo shutdown -H now", shell=True)
 				continue
 
 			if cmd.find("showipnumber") == 0:
 				showIPnumber()
 				continue
 
-		if cnrCmd["command"][0]["type"] != "" and numberOfLed != 0 and wait != 0:
+		if cnrCmd["command"][0]["type"] != "" and numberOfLed != 0 and runFor != 0:
 			if color == "c":
 				cnrCmd["command"][0]["position"] += [numberOfLed]
 				cnrCmd["command"][0]["position"] += calcRGBdimm([30,0,0], lightSensorValueREAD, minLight=True)+calcRGBdimm([0,30,0], lightSensorValueREAD, minLight=True)+calcRGBdimm([0,0,30], lightSensorValueREAD, minLight=True)
@@ -348,9 +487,10 @@ def readCommand():
 				if color == "g":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([0,30,0], lightSensorValueREAD, minLight=True)
 				if color == "b":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([0,0,30], lightSensorValueREAD, minLight=True)
 				if color == "y":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([15,15,0], lightSensorValueREAD, minLight=True)
+				if color == "w":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([10,10,10], lightSensorValueREAD, minLight=True)
 	
 			setNEOinput(cnrCmd)
-			timeWait = time.time() + wait - 10
+			lastCommandSendToNeopixel = time.time() + runFor - 10
 
 
 		if restart in [1,2,3]:		
@@ -362,33 +502,22 @@ def readCommand():
 		U.logger.log(30,"", exc_info=True)
 	return restart
 	
+	
+	
 #################################		 
-def toggleSnake(color, wait ):
-	global lastSnakeLen, snakeLenToggle, lightSensorValueREAD, timeWait
+def toggleCircle(color, runFor ):
 
 	try:
-		pos = [0.01, 240, 1]
-		cnrCmd = {"resetInitial": "[0,0,0]", "repeat": -1,"command":[{"type":"", "position": pos}]}
-		lastSnakeLen +=1
-		if lastSnakeLen >= len(snakeLenToggle): lastSnakeLen = 0
-		numberOfLed = snakeLenToggle[lastSnakeLen]
+		execCommands("circle:"+color+",0.3,"+str(runFor))
 
-		if color == "c":
-			cnrCmd["command"][0]["type"]	= "ckrr" 
-			cnrCmd["command"][0]["position"] += [numberOfLed]
-			cnrCmd["command"][0]["position"] += calcRGBdimm([30,0,0], lightSensorValueREAD, minLight=True)+calcRGBdimm([0,30,0], lightSensorValueREAD, minLight=True)+calcRGBdimm([0,0,30], lightSensorValueREAD, minLight=True)
-		else:
-			cnrCmd["command"][0]["type"]	= "kr" 
-			cnrCmd["command"][0]["position"]  +=  [numberOfLed]
-			if color == "r":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([30,0,0], lightSensorValueREAD, minLight=True)
-			if color == "g":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([0,30,0], lightSensorValueREAD, minLight=True)
-			if color == "b":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([0,0,30], lightSensorValueREAD, minLight=True)
-			if color == "y":  cnrCmd["command"][0]["position"]  +=  calcRGBdimm([15,15,0], lightSensorValueREAD, minLight=True)
+	except Exception as e:
+		U.logger.log(30,"", exc_info=True)
+	
+#################################		 
+def toggleSnake(color, runFor ):
 
-		U.logger.log(20, f' c:{color:}, w:{wait:},  nL:{numberOfLed:} ')
-
-		setNEOinput(cnrCmd)
-		timeWait = time.time() + wait - 10
+	try:
+		execCommands("linea:"+color+",30,"+str(runFor))
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -398,7 +527,7 @@ def toggleModes(tMode):
 	try:
 
 
-		U.logger.log(20, f' mode:{tMode:} mm:{lastMMmode:}, HH:{lastHHmode:}, MK:{lastMarksMode:}')
+		U.logger.log(20, f' mode:{tMode:} mm:{lastMMmode:}, HH:{lastHHmode:}, lastMarksMode:{lastMarksMode:}')
 		if tMode == "MM":
 			lastMMmode += 3
 			if lastMMmode > maxMMMode: lastMMmode = 0
@@ -440,6 +569,7 @@ def readParams():
 	global doReadParameters
 	try:
 
+
 		changed = 0
 		if not doReadParameters: return changed
 		inpLast= inp
@@ -465,17 +595,17 @@ def readParams():
 			U.logger.log(30, "neopixel-clock	 is not in parameters = not enabled, stopping "+ G.program+".py" )
 			exit()
 
-		#U.logger.log(20, "clockDict:{}".format(clockDict))
+		U.logger.log(20, "clockDict:{}".format(clockDict))
 		#only overwrite stored valeus if empty , use parameters
 		if clockDict == {}:
 			clock = output["neopixelClock"]
 			for devId in  clock:
 				DEVID = devId
-				clockDict= copy.deepcopy(clock[devId][0])
+				clockDict = copy.deepcopy(clock[devId][0])
 				clockDict["lightSensorSlope"] = 1.0
-				clockDict["lightOnOff"] = 1.0
+				clockDict["lightOnOff"] = 1 
 				minLightNotOff =  int(clockDict.get("minLightNotOff")) #,minLightNotOff))
-				clu= "{}".format(clockDict)
+				clu = "{}".format(clockDict)
 				if lastCl == clu: 
 					return changed
 
@@ -528,13 +658,13 @@ def readParams():
 #################################		 
 def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 	global devTypeLEDs, speed, speedOfChange, clockMode, clockLightSetOverWrite, LEDintensityFactor, lightSensorValue, lightSensorValueREAD, minLightNotOff
-	global DEVID, clockDict, inp 
+	global DEVID, clockDict, inp , lastCommandSendToNeopixel
 	try:
 		#U.logger.log(20, "startNEOPIXEL.. ")
 
 		# define short cuts
-		clockDict["LEDsum"]		=[]
-		clockDict["LEDstart"]	=[]
+		clockDict["LEDsum"]		= []
+		clockDict["LEDstart"]	= []
 	
 		HHMMSSDDnofTicks={"HH":12,"MM":60,"SS":60}
 
@@ -543,20 +673,20 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 			lightset = clockLightSetOverWrite  ## put here input from light sensor 
 
 
-		if clockDict["clockLightSet"].lower() == "auto":
+		if True or clockDict["clockLightSet"].lower() == "auto":
 			multHMS = lightSensorValueREAD
 			multMark = lightSensorValueREAD
 		else:
 			if	 True										: multHMS = 1.	; multMark=1.
+			else:
+				if	 LEDintensityFactor.lower() =="offoff"		: multHMS = 0.005; multMark = 0.005
+				elif LEDintensityFactor.lower() =="nightoff"	: multHMS = 0.01;  multMark = 0.01
+				elif LEDintensityFactor.lower() =="nightdim"	: multHMS = 0.05;  multMark = 0.05
+				elif LEDintensityFactor.lower() =="daylow"		: multHMS = 0.1;   multMark = 0.1
+				elif LEDintensityFactor.lower() =="daymedium"	: multHMS = 0.50;  multMark =0.5
+				elif LEDintensityFactor.lower() =="dayhigh"		: multHMS = 1.0 ;  multMark =1.0
 
-			if	 LEDintensityFactor.lower() =="offoff"		: multHMS = 0.005; multMark = 0.005
-			elif LEDintensityFactor.lower() =="nightoff"	: multHMS = 0.01;  multMark = 0.01
-			elif LEDintensityFactor.lower() =="nightdim"	: multHMS = 0.05;  multMark = 0.05
-			elif LEDintensityFactor.lower() =="daylow"		: multHMS = 0.1;   multMark = 0.1
-			elif LEDintensityFactor.lower() =="daymedium"	: multHMS = 0.50;  multMark =0.5
-			elif LEDintensityFactor.lower() =="dayhigh"		: multHMS = 1.0 ;  multMark =1.0
-
-		U.logger.log(20,f"called from:{calledFrom:},  lightSensorValueREAD:{lightSensorValueREAD:.4f},  auto?:{clockDict['clockLightSet']:},  minLightNotOff:{minLightNotOff:}")
+		#U.logger.log(20,f"called from:{calledFrom:},  lightSensorValueREAD:{lightSensorValueREAD:.4f},  auto?:{clockDict['clockLightSet']:},  minLightNotOff:{minLightNotOff:}, multHMS:{multHMS:.4f}  marksOn:{clockDict['marksOn']:}")
 
 
 		lll = 0
@@ -589,7 +719,7 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 		U.logger.log(10, "startNEOPIXEL..lightset: {}".format(lightset)+string)
 ##20181122-02:21:04 startNEOPIXEL..lightset: offoff;  clockDict[marks] {u'MM': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'SS': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'DD': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}, u'HH': {'LEDstart': 0, u'RGB': [0, 0, 0], u'ringNo': [], 'LEDsum': 0, u'marks': []}}
 
-		pos={}
+		pos = {}
 		for tt in ["HH","MM","SS"]:
 			ticks = HHMMSSDDnofTicks[tt]
 			ind =[]
@@ -651,28 +781,29 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 			elif clockDict["ticks"][tt]["npix"] ==0: # do not show
 				pass
 
-		marks={}
-		if clockDict["lightOnOff"] != 0:
-			if True or (lightset.lower()).find("off") == -1: 
-				#U.logger.log(20, "marks {} ".format(clockDict["marks"]))
-				for tt in ["HH","MM","SS"]:
-					#U.logger.log(20, "marks tt:{} ".format(tt))
-					index=[[]]
-					if tt not in clockDict["marks"]			 : continue
-					if clockDict["marks"][tt] == {}			 : continue
-					if clockDict["marks"][tt]["marks"] == [] : continue
-					#U.logger.log(20, "marks pix: {} ".format(clockDict["marks"][tt]))
-					ticks = HHMMSSDDnofTicks[tt]
-					for nR in range(len(clockDict["marks"][tt]["ringNo"])):
-						ringNo		= clockDict["marks"][tt]["ringNo"][nR]
-						LEDstart	= clockDict["LEDstart"][ringNo]
-						LEDsinRING	= clockDict["rings"][ringNo]
-						mult = float(LEDsinRING) / ticks
-						for ll in clockDict["marks"][tt]["marks"]:
-							ii = int(ll*mult + LEDstart)
-							if ii < maxLED:
-								index[0].append(ii)
-					marks[tt] = {"RGB":[min(int(multMark*x),255) for x in clockDict["marks"][tt]["RGB"]],"index":index}
+		marks = {}
+		if int(clockDict.get('marksOn')):
+			if clockDict["lightOnOff"] != 0:
+				if True or (lightset.lower()).find("off") == -1: 
+					#U.logger.log(20, "marks {} ".format(clockDict["marks"]))
+					for tt in ["HH","MM","SS"]:
+						#U.logger.log(20, "marks tt:{} ".format(tt))
+						index=[[]]
+						if tt not in clockDict["marks"]			 : continue
+						if clockDict["marks"][tt] == {}			 : continue
+						if clockDict["marks"][tt]["marks"] == [] : continue
+						#U.logger.log(20, "marks pix: {} ".format(clockDict["marks"][tt]))
+						ticks = HHMMSSDDnofTicks[tt]
+						for nR in range(len(clockDict["marks"][tt]["ringNo"])):
+							ringNo		= clockDict["marks"][tt]["ringNo"][nR]
+							LEDstart	= clockDict["LEDstart"][ringNo]
+							LEDsinRING	= clockDict["rings"][ringNo]
+							mult = float(LEDsinRING) / ticks
+							for ll in clockDict["marks"][tt]["marks"]:
+								ii = int(ll*mult + LEDstart)
+								if ii < maxLED:
+									index[0].append(ii)
+						marks[tt] = {"RGB":[min(int(multMark*x),255) for x in clockDict["marks"][tt]["RGB"]],"index":index}
 
 		if marks == {}: 
 			marks = ""
@@ -692,7 +823,7 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 					pos["extraLED"]["blink"] = clockDict["extraLED"]["blink"]
 				else:
 					pos["extraLED"]["blink"] = [1,1]
-				ind =[]
+				ind = []
 				for tick in clockDict["extraLED"]["ticks"]:
 					ind.append(tick)
 				pos["extraLED"]["index"] = [ind]
@@ -701,27 +832,29 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 
 		U.logger.log(10, " starting neopixel with:{}".format(pos) )	 
 
-		out={"resetInitial": "", "repeat": -1,"command":[{"type": "clock","position":pos, "display": "immediate","speedOfChange":speedOfChange,"marks":marks,"speed":speed}]}
+		out = {"resetInitial": "", "repeat": -1,"command":[{"type": "clock","position":pos, "display": "immediate","speedOfChange":speedOfChange,"marks":marks,"speed":speed}]}
 		if setClock !="":
 			out["setClock"] = setClock
 			clockMode ="setClockStarted"
 		else:
-			clockMode ="run"
+			clockMode = "run"
 
 		if off: out["setClock"] = "off"
+		out["debugLevel"] = debugLevel  # 0/1/2/3
+		out["useLightSensor"] = False # use this program, ignore neopixel.py lightsensor functions
 		
-		if not U.pgmStillRunning("neopixel3.py neopixelClock"):
-			U.killOldPgm(myPID,"neopixel3.py",verbose=True, wait=True)
-			time.sleep(3)
+			
+		if not U.pgmStillRunning("neopixel3.py"):
 			subprocess.call("/usr/bin/python3 "+G.homeDir+"neopixel3.py neopixelClock &", shell=True)
 			U.logger.log(20, "starting /usr/bin/python3 "+G.homeDir+"neopixel3.py neopixelClock &")
 
 		if os.path.isfile(G.homeDir+"temp/neopixel.busy") and not force:
 			os.remove(G.homeDir+"temp/neopixel.busy")
 		else:
-			U.logger.log(20, "waitime:{}, checking if waiting for new cmd {} ".format(time.time() > timeWait , os.path.isfile(G.homeDir+"temp/neopixel.waiting")))
-			if time.time() > timeWait or os.path.isfile(G.homeDir+"temp/neopixel.waiting"):
+			if debugLevel >0: U.logger.log(20, "waitime:{}, force:{}, checking if waiting for new cmd {} ".format(time.time() > lastCommandSendToNeopixel, force,  os.path.isfile(G.homeDir+"temp/neopixel.waiting")))
+			if force or time.time() > lastCommandSendToNeopixel or os.path.isfile(G.homeDir+"temp/neopixel.waiting"):
 				setNEOinput(out)
+				lastCommandSendToNeopixel = time.time() + 100
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -729,27 +862,27 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 
 
 #################################
-def calcRGBdimm(input ,multHMS, minLight=False):
+def calcRGBdimm(inData, multHMS, minLight=False):
 	global clockDict, minLightNotOff
-	RGB= []
-	for x in input:
+	RGB = []
+	for x in inData:
 		x *= clockDict["lightOnOff"]
-		if x==0 :
+		if x == 0 :
 			rgb = 0
-		elif x <minLightNotOff and not minLight: 
+		elif x < minLightNotOff and not minLight: 
 			rgb = 0
 		else:	  
 			if minLight:
-				rgb = max(  min( int(multHMS*(x-minLightNotOff-1) + minLightNotOff),255 ), minLightNotOff  )
+				rgb = int( max( min( multHMS*x, 255 ), minLightNotOff ) ) 
 			else:
-				rgb = min(int(multHMS*(x-minLightNotOff-1) + minLightNotOff),255)
+				rgb = int ( min(multHMS*(x-minLightNotOff-1) + minLightNotOff, 255) )
 		RGB.append(rgb)
 	return RGB
 
 #################################
 def setNEOinput(out):
 		global lastNeoParamsSet
-		f=open(G.homeDir+"temp/neopixel.inp","a")
+		f = open(G.homeDir+"temp/neopixel.inp","a")
 		f.write(json.dumps(out)+"\n") 
 		f.close()
 		lastNeoParamsSet = time.time()
@@ -758,18 +891,33 @@ def setNEOinput(out):
 
 #################################
 def setupGPIOs():
-	global gpiopinSET 
+	global gpiopinSET, GPIOZERO
 	try: 
-		GPIO.setwarnings(False)
-		GPIO.cleanup() 
-		GPIO.setmode(GPIO.BCM)
+		U.logger.log(20, "pins =  {}".format(gpiopinSET))
+		if useGPIO:
+			GPIO.setwarnings(False)
+			GPIO.cleanup() 
+			GPIO.setmode(GPIO.BCM)
+			for xx in gpiopinSET:
+				pin = int(gpiopinSET[xx])
+				#U.logger.log(20,"{:4}, value:{}".format(xx, pin))
+				pin = gpiopinSET[xx]
+				GPIO.setup(pin, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-		U.logger.log(20, "setupGPIOs  {}".format(gpiopinSET))
-		GPIO.setup(gpiopinSET["setA"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-		GPIO.setup(gpiopinSET["setB"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-		GPIO.setup(gpiopinSET["setC"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-		GPIO.setup(gpiopinSET["up"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
-		GPIO.setup(gpiopinSET["down"], GPIO.IN, pull_up_down=GPIO.PUD_UP)
+		else:
+			GPIOZERO = {}
+			for xx in gpiopinSET:
+				pin = int(gpiopinSET[xx])
+				#U.logger.log(20,"{:4}, value:{}".format(xx, pin))
+				try:
+					GPIOZERO[pin] = gpiozero.Button(pin, pull_up=True) 
+				except:
+					time.sleep(2)
+					U.logger.log(20,"try again  {:4}, {}".format(xx, pin)) 
+					GPIOZERO[pin] = gpiozero.Button(pin, pull_up=True) 
+					
+
+							
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -820,7 +968,7 @@ def startNEOPIXELNewTime(h,m,d,tz=""):
 		newDate = dd.strftime("%Y-%m-%d ")+"%02d"%h+":"+"%02d"%m+":00"
 	U.logger.log(10, 'bf startNEOPIXEL:	;;; date -s "'+newDate+'"')
 	#subprocess.call("date -s '"+newDate+"'", shell=True)
-	startNEOPIXEL(setClock="%02d"%d+":%02d"%h+":%02d"%m+":00")
+	startNEOPIXEL(calledFrom="startNEOPIXELNewTime", setClock="%02d"%d+":%02d"%h+":%02d"%m+":00")
 	return
  
 
@@ -829,7 +977,7 @@ def startNEOPIXELNewTime(h,m,d,tz=""):
 #################################
 def setPatternUPdown(upDown):
 	global inp,	 DEVID
-	global marksONoff, hoursPix, minutesPix,ticksMMHH
+	global marksLevel, hoursPix, minutesPix,ticksMMHH
 	global marksOptions, ticksOptions
 	U.logger.log(10,"setPattern {}".format(upDown) )
 	U.logger.log(10, "{}".format( clockDict["clockLightSet"] )) 
@@ -837,18 +985,18 @@ def setPatternUPdown(upDown):
 	getCurrentPatterns()
 
 	if upDown =="DOWN":
-		if marksONoff < 4:	setPatternTo(ticks=ticksMMHH,marks=marksONoff+1, save=True,restart=True, ExtraLED=True)
+		if marksLevel < 4:	setPatternTo(ticks=ticksMMHH,marks=marksLevel+1, save=True,restart=True, ExtraLED=True)
 		else:				setPatternTo(ticks=ticksMMHH,marks=0,			 save=True,restart=True, ExtraLED=True)
 	else:
-		if ticksMMHH < 3:	setPatternTo(ticks=ticksMMHH+1,marks=marksONoff, save=True,restart=True, ExtraLED=True)
-		else:				setPatternTo(ticks=0,		   marks=marksONoff, save=True,restart=True, ExtraLED=True)
+		if ticksMMHH < 3:	setPatternTo(ticks=ticksMMHH+1,marks=marksLevel, save=True,restart=True, ExtraLED=True)
+		else:				setPatternTo(ticks=0,		   marks=marksLevel, save=True,restart=True, ExtraLED=True)
 	return
 
 #################################
 def getCurrentPatterns():
-	global marksONoff, hoursPix, minutesPix, ticksMMHH
+	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global clockDict, inp 
-	marksONoff = 0 
+	marksLevel = 0 
 	ticksMMHH = 0
 	minutesPix = 1
 	hoursPix = 1
@@ -868,12 +1016,12 @@ def getCurrentPatterns():
 		elif minutesPix == -1 and hoursPix ==5: ticksMMHH = 4
 		else:									ticksMMHH = 4
 
-		if		 clockDict["marks"]["MM"]["marks"] == []:				marksONoff = 0 # = no marks
-		elif	 clockDict["marks"]["MM"]["marks"] == [0, 15, 30, 45]:	marksONoff = 1
+		if		 clockDict["marks"]["MM"]["marks"] == []:				marksLevel = 0 # = no marks
+		elif	 clockDict["marks"]["MM"]["marks"] == [0, 15, 30, 45]:	marksLevel = 1
 		else: #must be:[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]
-			if	 clockDict["marks"]["SS"]["marks"] == []:				marksONoff = 2
-			elif clockDict["marks"]["HH"]["marks"] == [0]:				marksONoff = 4
-			else:														marksONoff = 3
+			if	 clockDict["marks"]["SS"]["marks"] == []:				marksLevel = 2
+			elif clockDict["marks"]["HH"]["marks"] == [0]:				marksLevel = 4
+			else:														marksLevel = 3
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 
@@ -895,7 +1043,7 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 		if save:
 			saveParameters()
 		if restart:
-			startNEOPIXEL(force=True)
+			startNEOPIXEL(calledFrom="setPatternTo", force=True)
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 		
@@ -905,7 +1053,7 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 #################################
 def setHHMarksTo(yy):
 	global inp, clockDict, DEVID
-	global marksONoff, hoursPix, minutesPix, ticksMMHH
+	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global ticksOptions, marksOptions
 	global maxHHMode, maxMMMode, maxMarksMode
 	try:
@@ -922,7 +1070,7 @@ def setHHMarksTo(yy):
 #################################
 def setMMModeTo(yy):
 	global inp, clockDict, DEVID
-	global marksONoff, hoursPix, minutesPix, ticksMMHH
+	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global ticksOptions, marksOptions
 	global maxHHMode, maxMMMode, maxMarksMode
 
@@ -943,7 +1091,7 @@ def setMMModeTo(yy):
 #################################
 def setHHModeTo(yy):
 	global inp, clockDict, DEVID
-	global marksONoff, hoursPix, minutesPix, ticksMMHH
+	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global ticksOptions, marksOptions
 	global maxHHMode, maxMMMode, maxMarksMode
 	try:
@@ -954,7 +1102,7 @@ def setHHModeTo(yy):
 			clockDict["ticks"][zz] = copy.deepcopy(ticksOptions[xx][zz])
 		else:
 			return  False
-		U.logger.log(20, "setHHModeTo #{}".format(xx ))
+		U.logger.log(20, "setHHModeTo #{}, =={}".format(xx, clockDict["ticks"][zz] ))
 		getCurrentPatterns()
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -964,36 +1112,36 @@ def setHHModeTo(yy):
 
 #################################
 def setNightPatterns():
-	global marksONoff, hoursPix, minutesPix, ticksMMHH
-	global marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
+	global marksLevel, hoursPix, minutesPix, ticksMMHH
+	global marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
 
 	if nightMode !=1:	 
-		marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST = marksONoff, hoursPix, minutesPix, ticksMMHH
+		marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST = marksLevel, hoursPix, minutesPix, ticksMMHH
 		nightMode = 1
 		setPatternTo(ticks=1 ,marks=0, save=False, restart=False, ExtraLED=False)
 	return
 
 #################################
 def setNightOffPatterns():
-	global marksONoff, hoursPix, minutesPix, ticksMMHH
-	global marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
+	global marksLevel, hoursPix, minutesPix, ticksMMHH
+	global marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
 
 	if nightMode !=2: 
-		marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST = marksONoff, hoursPix, minutesPix, ticksMMHH
+		marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST = marksLevel, hoursPix, minutesPix, ticksMMHH
 		nightMode = 2
 		setPatternTo(ticks=0, marks=0, save=False, restart=False, ExtraLED=False)
 	return 
 
 #################################
 def	 restorefromNightPatterns():
-	global marksONoff, hoursPix, minutesPix, ticksMMHH
-	global marksONoffLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
+	global marksLevel, hoursPix, minutesPix, ticksMMHH
+	global marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
 
 	if nightMode >0:
-		setPatternTo(ticks=ticksMMHHLAST ,marks=marksONoffLAST, save=False, restart=False, ExtraLED=False)
+		setPatternTo(ticks=ticksMMHHLAST ,marks=marksLevelLAST, save=False, restart=False, ExtraLED=False)
 		nightMode = 0
 	return
 
@@ -1004,7 +1152,6 @@ def	 restorefromNightPatterns():
 def saveParameters():
 	global clockDict
 	global lastNeoParamsSet
-	global clockDict
 
 	try:
 		f = open(G.homeDir+"neopixelClock.clockDict","w")
@@ -1024,8 +1171,11 @@ def readLocalParams():
 		xx = f.read()
 		f.close()
 		clockDict = json.loads(xx)
-		U.logger.log(20, f" minLightNotOff:{clockDict['minLightNotOff']:}")
+		U.logger.log(20, f"minLightNotOff:{clockDict['minLightNotOff']:}")
 		minLightNotOff = int(clockDict.get('minLightNotOff', minLightNotOff))
+		try: int(clockDict.get('marksOn', 0))
+		except: clockDict['marksOn'] = 0
+		clockDict["lightOnOff"] = 1
 	except: pass
 	if len(clockDict) < 2 :
 		initlocalParams()
@@ -1043,7 +1193,7 @@ def initlocalParams():
 def setLightfromSensor():
 	global clockLightSetOverWrite, lightSensorValueLast, lightSensorValue, lightSensorValueREAD
 	global lastTimeStampSensorFile, clockLightSetOverWriteOld,  LEDintensityFactor, LEDintensityFactorOld
-	global clockDict
+	global clockDict, sensorLoopCount
 	try:
 
 		try:	ii = lastTimeStampSensorFile
@@ -1057,7 +1207,7 @@ def setLightfromSensor():
 		if not os.path.isfile(G.homeDir+"temp/lightSensor.dat"): return
 		t = os.path.getmtime(G.homeDir+"temp/lightSensor.dat")
 		U.logger.log(10, "setLightfromSensor  == reading sensor ==")
-	
+		sensorLoopCount += 1	
 		maxRange = 10000.
 		sensor = ""
 		xx, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
@@ -1079,7 +1229,7 @@ def setLightfromSensor():
 					U.logger.log(10, "setLightfromSensor  == reading sensor ==:{}".format(rr))
 					lightSensorValueREAD = rr["light"]
 					if sensor == "i2cTSL2561":
-						maxRange = 12000.
+						maxRange = 8000.
 					elif sensor == "i2cOPT3001":
 						maxRange =	20000.
 					elif sensor == "i2cVEML6030":
@@ -1094,36 +1244,50 @@ def setLightfromSensor():
 
 		lightSensorValue = lightSensorValueREAD *(1./maxRange)* clockDict["lightSensorSlope"]
 		lightSensorValueREAD = lightSensorValue
+		if debugLevel >0: U.logger.log(20, "setLightfromSensor  lightSensorValueREAD:{:.4f}".format(lightSensorValueREAD))
 
-		if lightSensorValueREAD == 0 and lightSensorValueLast !=0: 
+		if False and lightSensorValueREAD == 0 and lightSensorValueLast !=0: 
 				lightSensorValueLast = lightSensorValueREAD
 				return
-		lightSensorValueLast = lightSensorValueREAD
 
-		if	 lightSensorValue < 0.005:	   CLS ="offoff"  
-		elif lightSensorValue < 0.01:	   CLS ="nightoff"  
-		elif lightSensorValue < 0.05:	   CLS ="nightdim"  
-		elif lightSensorValue < 0.1:	   CLS ="daylow"	   
-		elif lightSensorValue < 0.5:	   CLS ="daymedium" 
-		else:							   CLS ="dayhigh"   
+		restartstartNEOPIXEL = "no" 
+			
+
+		if lightSensorValueREAD == 0 and  lightSensorValueLast > 0:  #  got to 0 
+			restartstartNEOPIXEL = "down to 0" 
+
+		else:
+			dLight = abs(lightSensorValueLast - lightSensorValueREAD) / max(0.01, lightSensorValueLast + lightSensorValueREAD )
+	
+			if dLight > 0.10:  # 20 %
+				restartstartNEOPIXEL = "{:.2f}".format( dLight )
 		
-		restartstartNEOPIXEL = False 
+
+		if	 lightSensorValue < 0.005:	   CLS = "offoff"  
+		elif lightSensorValue < 0.01:	   CLS = "nightoff"  
+		elif lightSensorValue < 0.05:	   CLS = "nightdim"  
+		elif lightSensorValue < 0.1:	   CLS = "daylow"	   
+		elif lightSensorValue < 0.5:	   CLS = "daymedium" 
+		else:							   CLS = "dayhigh"   
+		
 		if LEDintensityFactorOld  != CLS:
 			LEDintensityFactorOld 	= LEDintensityFactor
 			LEDintensityFactor 		= CLS
-			restartstartNEOPIXEL = True 
+			restartstartNEOPIXEL 	= "CLS" 
+			
 		if clockDict["clockLightSet"].lower() == "auto": 
-			if clockLightSetOverWriteOld !=	  CLS:
-				clockLightSetOverWriteOld 	= clockLightSetOverWrite
+			if clockLightSetOverWriteOld !=	 CLS:
 				clockLightSetOverWrite 		= CLS
-				restartstartNEOPIXEL 		= True 
+				clockLightSetOverWriteOld 	= clockLightSetOverWrite
+				restartstartNEOPIXEL 		= "auto CLS" 
 				
-		if restartstartNEOPIXEL:
-			#U.logger.log(20, "setLightfromSensor  bf restartstartNEOPIXEL")
+		if restartstartNEOPIXEL != "no":
+			if debugLevel >0: U.logger.log(20, "setLightfromSensor  bf startNEOPIXEL  restartstartNEOPIXEL:{}; lightSensorValueREAD:{:.5f}, lightSensorValueLast:{:.5f},  CLS:{}".format(restartstartNEOPIXEL, lightSensorValueREAD, lightSensorValueLast, CLS))
 			try:
-				startNEOPIXEL(calledFrom=f"set light form sensor", force=True)
+				startNEOPIXEL(calledFrom="set light form sensor, CLS:{} restartstartNEOPIXEL:{}".format(CLS, restartstartNEOPIXEL), force=True)
 			except Exception as e:
 				U.logger.log(30,"", exc_info=True)
+		lightSensorValueLast = lightSensorValueREAD
 			
 		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockDict["clockLightSet"], LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor) 
 		U.logger.log(10, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor))
@@ -1145,27 +1309,25 @@ def afterAdhocWifistartedSetLED(maxTime):
 
 #################################
 def resetEverything():
-	U.killOldPgm(myPID,"neopixel.py")
+	U.killOldPgm(myPID,"neopixel3.py")
 	subprocess.call('sudo cp '+G.homeDir+'neopixelClock.clockDict-backup '+G.homeDir+'neopixelClock.clockDict', shell=True)
-	subprocess.call('sudo cp '+G.homeDir+'neopixelClock.interfaces /etc/network/interfaces', shell=True)
+	#subprocess.call('sudo cp '+G.homeDir+'neopixelClock.interfaces /etc/network/interfaces', shell=True)
 	subprocess.call('sudo cp '+G.homeDir+'neopixelClock.parameters '+G.homeDir+'parameters', shell=True)
-	subprocess.call('sudo cp '+G.homeDir+'neopixelClock.wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf', shell=True)
+	#subprocess.call('sudo cp '+G.homeDir+'neopixelClock.wpa_supplicant.conf /etc/wpa_supplicant/wpa_supplicant.conf', shell=True)
 	restorePattern()
 	time.sleep(2)
-	subprocess.call("sudo killall -9 python; sudo sync;sleep 2; sudo reboot -f", shell=True)
-	return ## dummy
+	reboot()
 
 #################################
 def shutdown():
-	print (" we are shutting down now")
-	time.sleep(2)
-	subprocess.call("sudo killall -9 python;sleep 2; shutdown now", shell=True)
+	signalShutDown()
+	U.doShutdown()	
 	return ## dummy
+	
 #################################
 def reboot():
-	print (" we are rebooting now")
-	time.sleep(2)
-	subprocess.call("sudo killall -9 python;sleep 2; reboot now", shell=True)
+	signalShutDown()
+	U.doReboot()
 	return ## dummy
 
 
@@ -1193,7 +1355,7 @@ def restorePattern():
 	
 def signalShutDown(fast=False):
 	if fast: delta = 0.49
-	else:	 delta = 0.96
+	else:	 delta = 0.9
 	for ii in range(8):
 		ticks = []
 		for ind in range(ii, 8):
@@ -1232,7 +1394,7 @@ def showIPnumber():
 			ticks += [ii+60 for ii in range(n10)]
 		if n > 0:
 			ticks += [ii+60+48 for ii in range(n)]
-		U.logger.log(20,f"npDots:{npDots:}, ring1:n100={n100:} ring2:n10={n10:}, ring3:n={n:} ")
+		U.logger.log(20,f" show ip number npDots:{npDots:}, ring1:n100={n100:} ring2:n10={n10:}, ring3:n={n:} ")
 
 		clockDict["extraLED"]  = { "ticks":ticks, "RGB":[20,20,20],"blink":[1,0]} 
 
@@ -1240,7 +1402,29 @@ def showIPnumber():
 		networkIndicatorON	= time.time()+30
 
 
+#################################
 
+
+
+
+
+
+def getGPIOValue(pin):
+	global GPIOZERO
+
+	if useGPIO:
+		return  GPIO.input(pin)
+
+	else:
+		if GPIOZERO == {}:
+			setupGPIOs()
+		try:
+			return  GPIOZERO[int(pin)].value
+		except:
+			time.sleep(2)
+			setupGPIOs()
+			return  GPIOZERO[int(pin)].value
+				
 
 
 #################################
@@ -1261,14 +1445,19 @@ global networkIndicatorON
 global lastNeoParamsSet
 global clockLightSetOverWrite, clockLightSetOverWriteOld, LEDintensityFactorOld, LEDintensityFactor
 global eth0IP, wifi0IP
-global timeWait
+global lastCommandSendToNeopixel
 global networkIndicatorON
 global adhocWifiStarted
 global lightSensorValueREAD
 global lastSnakeLen, snakeLenToggle
 global lastMMmode, lastHHmode, lastMarksMode
 global maxHHMode, maxMMMode, maxMarksMode
+global GPIOZERO
+global sensorLoopCount
 
+
+sensorLoopCount		= 0
+GPIOZERO			= {}
 maxHHMode			= 5
 maxMMMode			= 4
 maxMarksMode		= 4
@@ -1282,7 +1471,7 @@ snakeLenToggle		= [3,12,24,60]
 lightSensorValueREAD = 1
 adhocWifiStarted	= False
 networkIndicatorON	= -1
-timeWait			= 0
+lastCommandSendToNeopixel = 0
 lastNeoParamsSet	= time.time()
 nightMode			= 0
 
@@ -1299,10 +1488,10 @@ currTZ = JanDelta
 #print "current tz:", currTZ,JulDelta,JanDelta,NowDelta, G.timeZones[currTZ+12], G.timeZones
 
 
-minLightNotOff				= 45
+minLightNotOff				= 1
 switchON					= [False,False,False,False]
 DEVID						= "0"
-gpiopinSET					= {"setA": 13,"setB":21,"setC":12,"up":19,"down":26} # default 
+gpiopinSET					= {"setA": 6,"setB":13,"setC":5,"up":19,"down":26} # default 
 dd							= datetime.datetime.now()
 currHH						= dd.hour
 currMM						= dd.minute
@@ -1310,7 +1499,7 @@ currDD						= dd.day
 useRTC						= ""
 lightSensorValueLast		= -1
 lightSensorValue			= -1
-clockLightSetOverWrite		= "offoff"
+clockLightSetOverWrite		= "auto"
 clockLightSetOverWriteOld	= ""
 LEDintensityFactorOld		= ""
 LEDintensityFactor			= "offoff"
@@ -1345,16 +1534,31 @@ if readParams() ==3:
 	
 
 myPID		= str(os.getpid())
+
+# make sure the old program is  stopped
+
+U.killOldPgm(myPID,"neopixel3.py",verbose=True)
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
-U.killOldPgm(myPID,"neopixel.py",verbose=True)
+# wait for kill to start
+for ii in range(10):
+	if not U.pgmStillRunning("killOldPgm", param=G.program):
+		time.sleep(0.5)
+	else:
+		break
+
+# wait for kill to finish
+for ii in range(30):
+	if U.pgmStillRunning("killOldPgm", param=G.program):
+		time.sleep(1)
+	else:
+		break
 
 readMarksFile()
 getCurrentPatterns()
 
 U.echoLastAlive(G.program)
 
-setupGPIOs()
 
 #save old wifi setting
 subprocess.call('cp /etc/network/interfaces '+G.homeDir+'interfaces-old', shell=True)
@@ -1373,7 +1577,7 @@ else:
 	afterAdhocWifistartedSetLED(maxWifiAdHocTime)
 
 		
-slTime 			= 1.5
+slTime 			= 1.
 sleepTime		= slTime
 
 G.lastAliveSend	= time.time() -1000
@@ -1382,10 +1586,11 @@ loopCounter			= 0
 lastWIFITest	= -1
 lastShutDownTest = -1
 lastRebootDownTest = -1
-
 lastRESETTest	= -1
 lastSnakeTest	= -1
-lastConfigtest	= -1
+lastConfigTest	= -1
+lastCircleTest	= -1
+lastIPNtest		= -1
 
 U.testNetwork()
 
@@ -1404,9 +1609,13 @@ webServerInputExtraText()
 
 showIPnumber()
 
+setupGPIOs()
 
+U.startwebserverSTATUS(80)
+U.startwebserverINPUT(8010)
 
-sendClockevery = 300
+sendClockEvery = 300.
+
 while True:
 	loopCounter += 1
 	sleepTime = slTime
@@ -1424,31 +1633,46 @@ while True:
 		if readCommand(): 
 			pass
 				
-		if loopCounter % 10 ==0: # every 30 secs read parameters file 
+		if loopCounter % 10 == 0: # every 30 secs read parameters file 
 			timeZoneOpsys = U.getTZ()
 			if "timeZone" not in clockDict:
 				U.logger.log(10,  "tz:{}<< timeZone not in clockDict".format(timeZoneOpsys))
 			else:
 				U.logger.log(10,  "tz:{}<< clockDict>>{}<<".format(timeZoneOpsys, clockDict["timeZone"]))
+				
+			if not U.pgmStillRunning("webserverSTATUS.py"):
+				U.startwebserverSTATUS(80)
+			if not U.pgmStillRunning("webserverINPUT.py"):
+				U.startwebserverINPUT(8010)
+
 			updatewebserverStatus()
 			webServerInputExtraText()
 			# set neopixel params file if not set for 1 minutes 
 
-			if timeWait > 0 or os.path.isfile(G.homeDir+"temp/neopixel.waiting"):
+			if lastCommandSendToNeopixel > 0 or os.path.isfile(G.homeDir+"temp/neopixel.waiting"):
 				if os.path.isfile(G.homeDir+"temp/neopixel.waiting"):
-					timeWait = 0
+					lastCommandSendToNeopixel = 0
 
-				elif time.time() - timeWait  < 0:
+				elif time.time() - lastCommandSendToNeopixel  < 0:
 					time.sleep(3)
-					lastNeoParamsSet = time.time() - (sendClockevery-5) # skip next checks
+					lastNeoParamsSet = time.time() - (sendClockEvery-5) # skip next checks
 				else:
-					lastNeoParamsSet = time.time() - (sendClockevery-1) # skip this check for new startNEOPIXEL
-					timeWait = 0
+					lastNeoParamsSet = time.time() - (sendClockEvery-1) # skip this check for new startNEOPIXEL
+					lastCommandSendToNeopixel = 0
 
-			if time.time() - lastNeoParamsSet > sendClockevery or os.path.isfile(G.homeDir+"temp/neopixel.waiting"): 
-				timeWait = 0
+			if time.time() - lastNeoParamsSet > sendClockEvery: 
+				lastCommandSendToNeopixel = 0
 				setExtraLEDoff() 
-				startNEOPIXEL(calledFrom=" > 300 secs", force=True)
+				startNEOPIXEL(calledFrom=" {:.1f} > {:.1f}".format(time.time() - lastNeoParamsSet, sendClockEvery), force=True)
+
+
+			elif time.time() - lastCommandSendToNeopixel > sendClockEvery: 
+				startNEOPIXEL(calledFrom=" {:.1f} > {:.1f}".format(time.time() - lastNeoParamsSet, sendClockEvery), force=True)
+				
+			elif  os.path.isfile(G.homeDir+"temp/neopixel.waiting"): 
+				lastCommandSendToNeopixel = 0
+				setExtraLEDoff() 
+				startNEOPIXEL(calledFrom="neopixel.waiting", force=True)
 
 
 			ret = readParams() 
@@ -1466,47 +1690,64 @@ while True:
 			exit()
 			
 	
-		if loopCounter % 5 == 0: # every 5 secs read parameters file 
+		if loopCounter % 3 == 0: # every 3 secs read parameters file 
 			setLightfromSensor()
 			U.echoLastAlive(G.program)
 			updatewebserverStatus()
 		time.sleep(sleepTime)
 
+		"""   button actions:
+						  A B C     up dn
+		shutdown:         v v v   + x  x
+		RESET:            v v v   +    x     
+		RESTART:          v v v   + x         
+		
+		LED on			  v v ^   + x  
+		LED off			  v v ^   +    x  
+												
+		Show IP#          v ^ ^   +    x            
+		START AdHoc WiFi  v ^ ^   + x  x 
+		
+		toggle Min#       ^ v v   + x
+		toggle hour#      ^ v v   +    x
+		toggle marks#     ^ v v   + x  x
+		
+		toggle circle#    v ^ v   + x    	red   for 80 s
+		toggle circle#    v ^ v   +    x  	blue  for 80 s
+		toggle circle#    v ^ v   + x  x  	color for 80 s
+		
+		toggle snake#     ^ ^ v   +    x   	red   3/12/24/60 for 80 s
+		toggle snake#     ^ ^ v   + x	  	blue  3/12/24/60 for 80 s 
+		toggle snake#     ^ ^ v   + x  x  	color 3/12/24/60 for 80 s
+		
+		
+		Access
+			http: rpi-clock.local
+			ssh pi@rpi-clock
+				passwd = clock123
+		v: gpio = 0; x = button pressed = gpio= 0
+		"""
 
-		#						A B C   up or dn
-		#	shutdown:			0 0 0 + ^ ^
-		#	RESET:				0 0 1 + ^ ^
-		#	RESTART:			0 1 0 + ^ ^
+		glist = {}
+		for  xx in gpiopinSET:
+			glist[xx] = getGPIOValue(gpiopinSET[xx])
+		#U.logger.log(20,  "glist:{}".format(glist))
 
-		#	Show IP#			0 1 1 + ^
-
-		#	toggle Min#			1 0 0 + ^
-		#	toggle hour#		1 0 0 +   ^
-		#	toggle marks#		1 0 0 + ^ ^
-
-		#	toggle snake#		1 1 0 + ^    	red  3/12/24/60  for 80 secs
-		#	toggle snake#		1 1 0 +   ^  	blue 3/12/24/60  for 80 secs 
-		#	toggle snake#		1 1 0 + ^ ^  	color 3/12/24/60 for 80 secs
-
-		#	START AdHoc WiFi	1 1 1 + ^ ^
-		#
-
-		### test for shutdown
-		if GPIO.input(gpiopinSET["setA"]) == 0 and GPIO.input(gpiopinSET["setB"]) == 0 and GPIO.input(gpiopinSET["setC"]) == 0: 
-			if GPIO.input(gpiopinSET["up"]) == 0 and GPIO.input(gpiopinSET["down"]) == 0 :
+		if glist["setA"] == 0 and glist["setB"] == 0 and glist["setC"] == 0: 
+			### test for shutdown
+			if glist["up"] == 0 and glist["down"] == 0 :
 				lastRebootDownTest += 1
-				if lastRebootDownTest > 2:
-					U.logger.log(20,  "shutdown pressed")
-					signalShutDown()
+				if lastRebootDownTest == 4:
+					U.logger.log(20,  "shutdown pressed #:{}".format(lastRebootDownTest))
 					shutdown()
 			else:
 				lastRebootDownTest = 0
 
-		### test for reset requested
-		if GPIO.input(gpiopinSET["setA"]) == 0 and GPIO.input(gpiopinSET["setB"]) == 0 and GPIO.input(gpiopinSET["setC"]) == 1: 
-			if GPIO.input(gpiopinSET["down"]) == 0 and	GPIO.input(gpiopinSET["up"]) == 0:
+			### test for reset requested
+			if glist["down"] == 1 and	glist["up"] == 0:
 				lastRESETTest += 1
-				if lastRESETTest > 4:
+				if lastRESETTest == 4:
+					U.logger.log(20,  "reset parameters #:{}".format(lastRESETTest))
 					signalShutDown(fast=True)
 					resetEverything() # restores config files to default 
 					time.sleep(10) # should not come back
@@ -1514,42 +1755,37 @@ while True:
 			else:
 				lastRESETTest = 0
 
-
-		### test for reboot
-		if GPIO.input(gpiopinSET["setA"]) == 0 and GPIO.input(gpiopinSET["setB"]) == 1 and GPIO.input(gpiopinSET["setC"]) == 0: 
-			if GPIO.input(gpiopinSET["up"]) == 0 and GPIO.input(gpiopinSET["down"]) == 0 :
+			### test for reboot
+			if glist["up"] == 0 and glist["down"] == 1 :
 				lastShutDownTest += 1
-				if lastShutDownTest > 2:
-					U.logger.log(20,  "reboot pressed")
-					signalShutDown()
+				if lastShutDownTest == 4:
+					U.logger.log(20,  "reboot pressed #:{}".format(lastShutDownTest))
 					reboot()
 			else:
 				lastShutDownTest = 0
 
 
-		### show network
-		if GPIO.input(gpiopinSET["setA"]) == 0 and GPIO.input(gpiopinSET["setB"]) == 1 and GPIO.input(gpiopinSET["setC"]) == 1: 
-			if GPIO.input(gpiopinSET["down"]) == 0 or	GPIO.input(gpiopinSET["up"]) == 0:
-				showIPnumber()
-				time.sleep(10) # should not come back
 
 
 		###  show snakes
-		if GPIO.input(gpiopinSET["setA"]) == 1 and GPIO.input(gpiopinSET["setB"]) == 1 and GPIO.input(gpiopinSET["setC"]) == 0: 
-			if GPIO.input(gpiopinSET["down"]) == 0 and	GPIO.input(gpiopinSET["up"]) == 1:
+		if glist["setA"] == 1 and glist["setB"] == 1 and glist["setC"] == 0: 
+			if glist["down"] == 1 and	glist["up"] == 0:
+				U.logger.log(20,  "show snake r pressed #:{}".format(lastSnakeTest))
 				lastSnakeTest += 1
 				if lastSnakeTest == 2:
 					toggleSnake("r", 80 )
 					time.sleep(1)
 
-			elif GPIO.input(gpiopinSET["down"]) == 1 and	GPIO.input(gpiopinSET["up"]) == 0:
+			elif glist["down"] == 0 and	glist["up"] == 1:
+				U.logger.log(20,  "show snake b pressed #:{}".format(lastSnakeTest))
 				lastSnakeTest += 1
 				if lastSnakeTest == 2:	
 					toggleSnake("b", 80 )
 					time.sleep(1)
 
-			elif GPIO.input(gpiopinSET["down"]) == 0 and	GPIO.input(gpiopinSET["up"]) == 0:
+			elif glist["down"] == 0 and	glist["up"] == 0:
 				lastSnakeTest += 1
+				U.logger.log(20,  "show snake c pressed #:{}".format(lastSnakeTest))
 				if lastSnakeTest == 2:
 					toggleSnake("c", 80 )
 					time.sleep(1)
@@ -1557,54 +1793,88 @@ while True:
 			else: lastSnakeTest = 0
 
 
+		###  show cicles
+		if glist["setA"] == 0 and glist["setB"] == 1 and glist["setC"] == 0: 
+			if glist["down"] == 1 and	glist["up"] == 0:
+				U.logger.log(20,  "show circle r pressed #:{}".format(lastCircleTest))
+				lastCircleTest += 1
+				if lastCircleTest == 3:
+					toggleCircle("r", 80 )
+					time.sleep(1)
+
+			elif glist["down"] == 0 and	glist["up"] == 1:
+				U.logger.log(20,  "show circle b pressed #:{}".format(lastCircleTest))
+				lastCircleTest += 1
+				if lastCircleTest == 3:	
+					toggleCircle("b", 80 )
+					time.sleep(1)
+
+			elif glist["down"] == 0 and	glist["up"] == 0:
+				lastCircleTest += 1
+				U.logger.log(20,  "show circle c pressed #:{}".format(lastCircleTest))
+				if lastCircleTest == 3:
+					toggleCircle("c", 80 )
+					time.sleep(1)
+
+			else: lastCircleTest = 0
+
+
+
 		###  toggle config
-		if GPIO.input(gpiopinSET["setA"]) == 1 and GPIO.input(gpiopinSET["setB"]) == 0 and GPIO.input(gpiopinSET["setC"]) == 0: 
-			if GPIO.input(gpiopinSET["down"]) == 0 and	GPIO.input(gpiopinSET["up"]) == 1:
-				lastConfigtest += 1
-				if lastConfigtest == 2:	
+		if glist["setA"] == 1 and glist["setB"] == 0 and glist["setC"] == 0: 
+			if glist["down"] == 0 and	glist["up"] == 1:
+				lastConfigTest += 1
+				U.logger.log(20,  "toggle MM pressed #:{}".format(lastConfigTest))
+				if lastConfigTest == 3:	
 					toggleModes("MM")
 					time.sleep(1)
 				
 
-			elif GPIO.input(gpiopinSET["down"]) == 1 and	GPIO.input(gpiopinSET["up"]) == 0:
-				lastConfigtest += 1
-				if lastConfigtest == 2:	
+			elif glist["down"] == 1 and	glist["up"] == 0:
+				lastConfigTest += 1
+				U.logger.log(20,  "toggle HH pressed #:{}".format(lastConfigTest))
+				if lastConfigTest == 3:	
 					toggleModes("HH")
 					time.sleep(1)
 
-			elif GPIO.input(gpiopinSET["down"]) == 0 and	GPIO.input(gpiopinSET["up"]) == 0:
-				lastConfigtest += 1
-				if lastConfigtest == 2:
+			elif glist["down"] == 0 and	glist["up"] == 0:
+				lastConfigTest += 1
+				U.logger.log(20,  "toggle Marks pressed #:{}".format(lastConfigTest))
+				if lastConfigTest == 3:
 					toggleModes("Marks")
 					time.sleep(1)
 
-			else:	lastConfigtest = 0
+			else:	lastConfigTest = 0
 
 		###  LED on/off
-		if GPIO.input(gpiopinSET["setA"]) == 1 and GPIO.input(gpiopinSET["setB"]) == 0 and GPIO.input(gpiopinSET["setC"]) == 1: 
-			#U.logger.log(20,  "gpio values: A:{} b:{} C:{} U:{} D:{}".format(GPIO.input(gpiopinSET["setA"]), GPIO.input(gpiopinSET["setB"]),GPIO.input(gpiopinSET["setC"]),GPIO.input(gpiopinSET["up"]),GPIO.input(gpiopinSET["down"])))
-			if GPIO.input(gpiopinSET["down"]) == 0 and	GPIO.input(gpiopinSET["up"]) == 1:
-				lastConfigtest += 1
-				if lastConfigtest == 2:	
-					clockDict["lightOnOff"] = 1
-					saveParameters()
-					startNEOPIXEL(calledFrom="set LED on", force=True)
+		if glist["setA"] == 0 and glist["setB"] == 0 and glist["setC"] == 1: 
+			if debugLevel >0: U.logger.log(20,  "gpio values: A:{} b:{} C:{} U:{} D:{}".format(glist["setA"], glist["setB"], glist["setC"], glist["up"], glist["down"]))
+			if glist["down"] == 1 and	glist["up"] == 0:
+				lastLEDtest += 1
+				U.logger.log(20,  "light on pressed #:{}".format(lastLEDtest))
+				if lastLEDtest == 3:	
+					execCommands("led:on")
 
-			elif GPIO.input(gpiopinSET["down"]) == 1 and	GPIO.input(gpiopinSET["up"]) == 0:
-				lastConfigtest += 1
-				if lastConfigtest == 2:	
-					clockDict["lightOnOff"] = 0
-					saveParameters()
-					startNEOPIXEL(calledFrom="set LED off", force=True)
+			elif glist["down"] == 0 and	glist["up"] == 1:
+				lastLEDtest += 1
+				U.logger.log(20,  "light off pressed #:{}".format(lastLEDtest))
+				if lastLEDtest == 3:	
+					execCommands("led:off")
+			else:	lastLEDtest = 0
 
-			else:	lastConfigtest = 0
+		if glist["setA"] == 0 and glist["setB"] == 1 and glist["setC"] == 1: 
+			### show ip number
+			if glist["down"] == 1 or	glist["up"] == 0:
+				lastIPNtest +=  1
+				if lastIPNtest == 3: 
+					U.logger.log(20,  "show ip number pressed")
+					showIPnumber()
+					time.sleep(10) # should not come back
 
-
-		### test for wifi adhoc setup requested ... and reset to regular wifi after reboot 
-		if GPIO.input(gpiopinSET["setA"]) == 1 and GPIO.input(gpiopinSET["setB"]) == 1 and GPIO.input(gpiopinSET["setC"]) == 1: 
-			if GPIO.input(gpiopinSET["up"]) == 0  and GPIO.input(gpiopinSET["up"]) == 0 :
+			### test for wifi adhoc setup requested ... and reset to regular wifi after reboot 
+			elif glist["down"] == 0  and glist["up"] == 0 :
 				lastWIFITest +=  1
-				if lastWIFITest > 4: 
+				if lastWIFITest == 4: 
 					U.logger.log(20,  "wifi adhoc start pressed")
 					if adhocWifiStarted ==-1: 
 						afterAdhocWifistartedSetLED(maxWifiAdHocTime)
@@ -1614,11 +1884,13 @@ while True:
 						adhocWifiStarted = time.time()
 			else:
 				lastWIFITest = 0
+				lastIPNtest = 0
 
 		if adhocWifiStarted > 10:
-			if (time.time() - adhocWifiStarted >maxWifiAdHocTime*60 ): # reset wifi after maxWifiAdHocTime minutes
+			if (time.time() - adhocWifiStarted > maxWifiAdHocTime*60 ): # reset wifi after maxWifiAdHocTime minutes
 				U.setStopAdhocWiFi() 
 			iTT= int(time.time())
+			U.logger.log(20,  "adhoc wifi pressed")
 			if	iTT	 - adhocWifiStartedLastTest > 60: # count down LEDs
 				l1 = maxWifiAdHocTime - (iTT - int(adhocWifiStarted))/60
 				afterAdhocWifistartedSetLED(l1)
@@ -1626,7 +1898,7 @@ while True:
 				adhocWifiStartedLastTest = iTT
 
 
-		#U.logger.log(20,  "gpio values: A:{} b:{} C:{} U:{} D:{}".format(GPIO.input(gpiopinSET["setA"]), GPIO.input(gpiopinSET["setB"]),GPIO.input(gpiopinSET["setC"]),GPIO.input(gpiopinSET["up"]),GPIO.input(gpiopinSET["down"])))
+		#U.logger.log(20,  "gpio values: A:{} b:{} C:{} U:{} D:{}".format(getGPIOValue(gpiopinSET["setA"]), getGPIOValue(gpiopinSET["setB"]),getGPIOValue(gpiopinSET["setC"]),getGPIOValue(gpiopinSET["up"]),getGPIOValue(gpiopinSET["down"])))
 
 			
 	except Exception as e:

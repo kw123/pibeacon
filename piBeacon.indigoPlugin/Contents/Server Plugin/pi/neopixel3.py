@@ -91,7 +91,7 @@ def applyIntensity(c):
 		return ret
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, u"c: {}; int: {}; intmult: {}".format(c, intensity, multIntensity ))
+		U.logger.log(30, "c: {}; int: {}; intmult: {}".format(c, intensity, multIntensity ))
 		return ret
 
 
@@ -177,8 +177,8 @@ class draw():
 		
 		self.maxX  = nx
 		self.maxY  = ny
-		self.maxX1 = nx-1
-		self.maxY1 = ny-1
+		self.maxX1 = nx - 1
+		self.maxY1 = ny - 1
 		self.numberOfLed = nx*ny
 		self.resetImage()
 
@@ -207,7 +207,7 @@ class draw():
 			yStart = pos[0]
 			yEnd   = pos[2]
 
-			if pos[3]-pos[1]< 0: 
+			if pos[3] - pos[1]< 0: 
 				sx = -1
 				xStart = pos[3]
 				xEnd   = pos[1]
@@ -250,7 +250,7 @@ class draw():
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] = applyIntensity(pos[2:5])
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"pos {}".format(pos))
+			U.logger.log(30, "pos {}".format(pos))
 		return 
 
 	def pixelImage(self, pos, pixs):
@@ -259,13 +259,13 @@ class draw():
 		ystart = pos[2]
 		xN = len(pixs[0])
 		yN = len(pixs)
-		xi= 0
-		for x in range( max(0,min(self.maxX1,xstart)) ,max(0,min(self.maxX1,xN)) ):
+		xi = 0
+		for x in range( max(0, min(self.maxX1,xstart)) ,max(0,min(self.maxX1,xN)) ):
 			yi=0
 			for y in range( max(0,min(self.maxY1,ystart)),max(0,min(self.maxY1,yN)) ):
-				self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))]=applyIntensity(pixs[yi,xi])
-				yi+=1
-			xi+=1
+				self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))] = applyIntensity(pixs[yi,xi])
+				yi += 1
+			xi += 1
 		return
 
 
@@ -281,7 +281,7 @@ class draw():
 	def points(self, pos):
 		try:
 			ppp = "{}".format(pos)
-			if ppp.find("*") >-1:  # get rgb values = last three numbers in eg [["*","*",3,4,5]] or ["*","*",3,4,5]
+			if ppp.find("*") > -1:  # get rgb values = last three numbers in eg [["*","*",3,4,5]] or ["*","*",3,4,5]
 				ppp = ppp.replace("[","").replace("]","").replace(" ","").split(",")
 				if len(ppp)>3:
 					ppp = [int(ppp[-3]),int(ppp[-2]),int(ppp[-1])]
@@ -437,6 +437,7 @@ def readParams():
 	global inpRaw
 	global oldRaw, lastRead
 	global pgmType, myDevId
+	global indigoUP
 	try:
 		retCode = 0
 
@@ -461,7 +462,8 @@ def readParams():
 		lastPWMchannel			= PWMchannel
 		lastDMAchannel			= DMAchannel
 		lastfrequency			= frequency
-		
+		indigoUP = inp.get("networkType","") != "clock"
+
 		if "output"				in inp:	 
 			output =				inp["output"]
 			if pgmType in output:
@@ -553,15 +555,19 @@ def readParams():
 					   
 # ------------------    ------------------ 
 def readNewInput():
+	global debugLevel
 	if os.path.isfile(G.homeDir+"temp/neopixel.inp"):
 		try:
 			f = open(G.homeDir+"temp/neopixel.inp","r")
 			xxx = f.read().strip("\n") 
-			items = xxx.split("\n")
+			data = xxx.split("\n")
 			f.close()
 			os.remove(G.homeDir+"temp/neopixel.inp")
-			U.logger.log(20," new input: {}".format(xxx))
-			return items
+			if debugLevel >= 1:
+				out = str(data)
+				if debugLevel == 1: out = out[:150]
+				U.logger.log(20,"new input: {}".format(out))
+			return data
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 			try: 	os.remove(G.homeDir+"temp/neopixel.inp")
@@ -579,10 +585,10 @@ def checkIfnewReboot():
 
 
 # ------------------    ------------------ 
-def saveLastCommands(items):
+def saveLastCommands(data):
 	try:
 		f = open(G.homeDir+"neopixel.last","w")
-		f.write(json.dumps(items))	
+		f.write(json.dumps(data))	
 		f.close()
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -613,11 +619,21 @@ def restartNEOpixel():
 	U.restartMyself(reason="restarting due to new device type, old={} new={}".format(devTypeLast, devType), param=pgmType, doPrint=True)
 
 
+
+def setLightSnsor():
+	global useLightSensor, multIntensity
+	 
+	if not useLightSensor:
+		multIntensity = 1
+		
 # ------------------    ------------------ 
 def getLightSensorValue(force=False):
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
 	global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay, intensity, useLightSensorType, useLightSensorDevId
-	global multIntensity, intensityDevice, lightSensorValue
+	global multIntensity, intensityDevice, lightSensorValue, useLightSensor
+	if not useLightSensor:
+		return 
+		
 	try:
 		tt0 = time.time()
 		#U.logger.log(20, "lightSensorValue 1")
@@ -677,10 +693,12 @@ def getLightSensorValue(force=False):
 def checkLightSensor():
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw
 	global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay
-	global multIntensity, intensityDevice, lightSensorValue
+	global multIntensity, intensityDevice, lightSensorValue, useLightSensor
 	try:
 		
-			
+		if not useLightSensor:
+			return 
+		
 		if not lightSensorOnForDisplay : return False
 		if not getLightSensorValue(force=True):
 			if (  abs(lightSensorValueRaw - lightSensorValue) / (max(0.005, lightSensorValueRaw + lightSensorValue))  ) > 0.05:
@@ -699,14 +717,17 @@ def checkLightSensor():
 		U.logger.log(30,"", exc_info=True)
 	
 
+
 # ------------------    ------------------ 
-def sendToIndigo(items, devId):
-	if items == []: return 
-	try: 	status = json.loads(items[0]).get("status","none")
+def sendToIndigo(data, devId):
+	global indigoUP
+	if not indigoUP: return 
+	if data == []: return 
+	try: 	status = json.loads(data[0]).get("status","none")
 	except: 
-		#U.logger.log(30, "send items[0]:{}".format(items[0]))
+		#U.logger.log(30, "send data[0]:{}".format(data[0]))
 		status = "none"
-	#U.logger.log(20, "send items[0]:{}".format(items[0]))
+	#U.logger.log(20, "send data[0]:{}".format(data[0]))
 	data = {"outputs":{"neopixel":{devId:{"status":status}}}}
 	U.sendURL(data)
 
@@ -725,6 +746,14 @@ global height,width
 global linearDATA
 global oldRaw,	lastRead
 global pgmType, myDevId
+global indigoUP
+global debugLevel
+global useLightSensor
+
+
+useLightSensor				= True
+debugLevel					= 1
+indigoUP					= True
 oldRaw						= ""
 lastRead					= 0
 myDevId						= "notSet"
@@ -791,34 +820,36 @@ doPix = pix(LED_COUNT, signalPin)
 image = draw(nx=width,ny=height)
 ##image.clear([0,0,0])## not enabled, keep last alive 
 
-#items.append({})
-#items[0]["resetInitial"]	 = [0,0,0]
-#items[0]["repeat"]			 = 1
-#items[0]["startAtDateTime"] = 0
-#items[0]["command"]		 = []
-#items[0]["command"].append(   {"type":"sPoint","position":[0,0,100,100,100],"display":"immediate"}	 )
-#items[0]["command"].append(   {"type":"sPoint","position":[1,0,100,0,100],"display":"immediate"}  )
-#items[0]["command"].append(   {"type":"sPoint","position":[0,0,200,0,0],"display":"immediate"}	 )
-#items[0]["command"].append(   {"type":"line","position":[7,10,0,7,0,255,0],"display":"wait"}  )
-#items[0]["command"].append(   {"type":"line","position":[0,3,7,3,0,0,255],"display":"wait"}  )
-#items[0]["command"].append(   {"type":"line","position":[3,7,3,0,255,0,0],"display":"immediate"}  )
-#items[0]["command"].append(   {"type":"rectangle","position":[2,2,4,4,255,0,0],"display":"immediate"}	)
-#items[0]["command"].append(   {"type":"sPoint","position":[6,6,255,255,0],"display":"immediate"}  )
+#lines.append({})
+#lines[0]["resetInitial"]	 = [0,0,0]
+#lines[0]["repeat"]			 = 1
+#lines[0]["startAtDateTime"] = 0
+#lines[0]["command"]		 = []
+#lines[0]["command"].append(   {"type":"sPoint","position":[0,0,100,100,100],"display":"immediate"}	 )
+#lines[0]["command"].append(   {"type":"sPoint","position":[1,0,100,0,100],"display":"immediate"}  )
+#lines[0]["command"].append(   {"type":"sPoint","position":[0,0,200,0,0],"display":"immediate"}	 )
+#lines[0]["command"].append(   {"type":"line","position":[7,10,0,7,0,255,0],"display":"wait"}  )
+#lines[0]["command"].append(   {"type":"line","position":[0,3,7,3,0,0,255],"display":"wait"}  )
+#lines[0]["command"].append(   {"type":"line","position":[3,7,3,0,255,0,0],"display":"immediate"}  )
+#lines[0]["command"].append(   {"type":"rectangle","position":[2,2,4,4,255,0,0],"display":"immediate"}	)
+#lines[0]["command"].append(   {"type":"sPoint","position":[6,6,255,255,0],"display":"immediate"}  )
 
-#print items
-items			= []
+#print lines
+lines			= []
 loopCount		= 0
 loop			= 0
 lastAlive		= 0
 devTypeLast		= devType
-lastItems		= []
-redoItems 		= False
+lastlines		= []
+redolines 		= False
 lastClock 		= 0
 tclockLast 		= time.time() -1
+debugLevel		= 1
 myPID			= str(os.getpid())
-U.killOldPgm(myPID,G.program+".py")
+U.killOldPgm(myPID, G.program+".py")
 
-
+icircleInd		=  0
+icircleDir		=  1
 iknightriderInd = 0
 iknightriderDir = 1
 time.sleep(0.1)
@@ -826,14 +857,16 @@ while True:
 	#U.logger.log(20,"after while")
 	ttx = time.time()
 	try:
-		if loop == 1 and  (items == [] or items ==""):
-			items = readLastCommands()
-			sendToIndigo(items, myDevId)
+		# have we received any data the first time after read input?
+		if loop == 1 and  (lines == [] or lines == ""):
+			# nothing red check last data 
+			lines = readLastCommands()
+			sendToIndigo(lines, myDevId)
 
-		if redoItems and lastItems != []: 
-			items = copy.copy(lastItems)
+		if redolines and lastlines != []: 
+			lines = copy.copy(lastlines)
 
-		if len(items) == 0:
+		if len(lines) == 0:
 			if not os.path.isfile(G.homeDir+"temp/neopixel.waiting"): 
 				f = open(G.homeDir+"temp/neopixel.waiting","w")
 				f.write(json.dumps({"time":time.time()}))	
@@ -844,34 +877,43 @@ while True:
 
 		else:
 
-			for item in items:
+			#U.logger.log(20,"lines {}".format(str(lines)[:100] ))
+			for nextLine in lines:
 		
-				#print item
+				#print nextLine
 				try:
-					if len(item) < 1: continue
+					if len(nextLine) < 1: continue
 					try:	
-						data = json.loads(item)
+						data = json.loads(nextLine)
 					except Exception as e:
 						if loop > -1:
 							U.logger.log(30,"", exc_info=True)
-							U.logger.log(30,"{}".format(item)[0:100])
-						data = item
+							U.logger.log(30,"{}".format(nextLine)[0:100])
+						data = nextLine
 					#print json.dumps(data,sort_keys=True, indent=2)
 				except Exception as e:
-					U.logger.log(30,"bad input {}".format(item) )
+					U.logger.log(30,"bad input {}".format(nextLine) )
 					U.logger.log(30,"", exc_info=True)
 					continue
 
 				restoreAfterBoot = False
-				if items !=[] and "restoreAfterBoot" in data:
+				if lines != [] and "restoreAfterBoot" in data:
 					try: 
 						restoreAfterBoot = "{}".format(data["restoreAfterBoot"]).lower() 
 						if restoreAfterBoot == "true" or  restoreAfterBoot == "1" :
 							U.logger.log(10, " do a restore after reboot:{}".format(restoreAfterBoot))
-							saveLastCommands(items)
+							saveLastCommands(lines)
 						else:
 							deleteLastCommands()
 					except: pass
+
+				if "debugLevel" in data:
+					debugLevel = data.get("debugLevel",1)
+
+				if "useLightSensor" in data:
+					useLightSensor = data.get("useLightSensor",True)
+					setLightSnsor()
+
 
 				if "resetInitial" in data or "res" in data:
 					try: 
@@ -903,7 +945,7 @@ while True:
 				setClock = ""
 				try:
 					if "setClock" in data: 
-						setClock	  = data["setClock"]
+						setClock = data["setClock"]
 					if setClock == "off":
 						image.resetImage([0,0,0])
 						image.show()
@@ -935,7 +977,7 @@ while True:
 						#print "comand", data["command"]
 						try: ncmds = len(data["command"])
 						except:
-							U.logger.log(20, " read error type:{} and data:{}".format(type(item), type(data), data))
+							U.logger.log(20, " read error type:{} and data:{}".format(type(nextLine), type(data), data))
 							continue
 						npage=-1
 						waited =False
@@ -1025,6 +1067,34 @@ while True:
 										image.points(pos)
 
 
+									elif cType == "circle":
+											# pos:= [sleeptime, nled, starts, ends, rgb]
+											if len(pos) != 5:
+												U.logger.log(20,u"not enough parameters for postion:{}, should be 4".format(pos))
+												time.sleep(3)
+												continue
+
+											sleepTime = max(0.05, pos[0]) # sleep
+											nLeds 	= pos[1]
+											starts = pos[2]
+											ends = pos[3]
+											rings = pos[4]
+												
+											resetLEDS = [0, 0, 0, nLeds , 0, 0, 0]
+											
+											if icircleInd <= 0: 				icircleDir = 1
+											if icircleInd >= len(starts)-1: 	icircleDir = -1
+											icircleInd += icircleDir
+											if icircleInd < 0: icircleInd = 0
+											if icircleInd >= len(starts): icircleInd = len(starts) - 1
+											xx = [ 0, starts[icircleInd], 0, ends[icircleInd]-1, rings[icircleInd][0], rings[icircleInd][1], rings[icircleInd][2] ]
+											
+											#U.logger.log(20," icircleInd:{}, icircleDir:{}, xx:{} ".format( icircleInd, icircleDir, xx))
+											image.line(resetLEDS)
+											image.line(xx)
+											time.sleep(sleepTime) 
+
+
 									elif cType == "knightrider" or cType == "kr":
 											if len(pos) != 7:
 												U.logger.log(20,u"not enough parameters for postion:{}, should be 7".format(pos))
@@ -1048,6 +1118,8 @@ while True:
 											time.sleep(sleepTime) 
 
 									elif cType == "colorknightrider" or cType == "ckr" or cType == "ckrr":
+											#  delay 	#0f steps	start	nLEDs   led   r  g  b   r   g   b    r  g    b colors 
+											#[0.01,		240,		1,		64,		     30, 0, 0,  0,  30, 0,   0, 0,  30]}
 											if len(pos) < 6:
 												U.logger.log(20,u"not enough parameters for postion:{}, should be > +3/6/9/...".format(pos))
 												time.sleep(3)
@@ -1060,8 +1132,8 @@ while True:
 											if cType == "ckrr": 	
 												nLEDs = pos[3]
 												LEDs = []
-												for i23 in range(nLEDs//3):
-													LEDs += [ pos[4], pos[5], pos[6], pos[7], pos[8], pos[9], pos[10], pos[11], pos[12] ]
+												for i23 in range(nLEDs//3):  # == 64//3 = 21
+													LEDs += [ pos[4], pos[5], pos[6], pos[7], pos[8], pos[9], pos[10], pos[11], pos[12] ] # == 30, 0, 0,  0,  30, 0,   0, 0,  30]
 
 											else: 					
 												nLEDs  = int((len(pos) - 3 )/3)
@@ -1070,12 +1142,13 @@ while True:
 											resetLEDS = [0, xstart-nLEDs, 0, xend+nsteps, 0, 0, 0]
 											image.line(resetLEDS)
 
-											#U.logger.log(20,u" pos:{},, xstart:{},, xend:{},, nLEDs:{},, resetLEDS:{}, LEDs:{}".format(pos, xstart, xend, nLEDs, resetLEDS, LEDs ))
+											#U.logger.log(20,u" pos:{},, xstart:{},, xend:{},,nLEDs:{},, resetLEDS:{}, LEDs:{}".format(pos, xstart, xend, nLEDs, resetLEDS, LEDs ))
 											for nn in range(nLEDs):
 												x = xstart + iknightriderInd+nn
-												nl = nn*3
-												#U.logger.log(20,u"  iRaiderInd{}, iRaiderDir:{},x:{}, nl:{} ".format(iknightriderInd, iknightriderDir, x, nl))
+												nl = nn * 3
+												if nl >= len(LEDs) -2: continue
 												xx = [0, x] + LEDs[nl:nl+3]
+												#U.logger.log(20,u"  iRaiderInd{}, iRaiderDir:{},x:{}, nl:{} , xx:{}".format(iknightriderInd, iknightriderDir, x, nl, xx))
 												image.point(xx)
 											time.sleep(sleepTime) 
 											if xx[1] <= xstart: 			iknightriderDir = 1
@@ -1219,23 +1292,32 @@ while True:
 								
 							except Exception as e:
 								U.logger.log(30,"", exc_info=True)
-						if checkIfnewReboot(): break
+						if checkIfnewReboot(): 
+							image.resetImage([0,0,0])
+							image.show()
+							exit()
+							break
 						if checkIfnewInput(): break
 						if cType == "clock": 
 							time.sleep(min(0.1, max(0,time.time()- lastClock)))
 					#print "neopixel sleep end repeat ", time.time() -tt0
 		time.sleep(0.05) 
-		if items != []:
-			lastItems = copy.copy(items)
-		items = []
-		if checkIfnewReboot(): break
+		if lines != []:
+			lastlines = copy.copy(lines)
+		lines = []
+
+		if checkIfnewReboot(): 
+			image.resetImage([0,0,0])
+			image.show()
+			exit()
+
 		try:
 			if checkIfnewInput():
-				items = readNewInput()
-				sendToIndigo(items, myDevId)
+				lines = readNewInput()
+				sendToIndigo(lines, myDevId)
 
 
-			redoItems = checkLightSensor()
+			redolines = checkLightSensor()
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 				
@@ -1243,13 +1325,13 @@ while True:
 			if readParams() == 1:
 				restartNEOpixel()
 			U.echoLastAlive(G.program)
-		loop +=1 
-		#print "neopixel sleep end item ", time.time() -ttx
+		loop += 1 
+		#print "neopixel sleep end nextLine ", time.time() -ttx
 
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
-		items=[]
+		lines=[]
 
 U.logger.log(30, u"exiting at end")
 

@@ -616,6 +616,7 @@ Other beacons that send the battery level every second
 			</Field>
 		</ConfigUI>
 	</MenuItem>
+	
 	<MenuItem id="sendBeepToBeacon">
 		<Name>Send a BEEP command to RPI to ibeacons..</Name>
 		<ConfigUI>
@@ -663,6 +664,60 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 			</Field>
 		</ConfigUI>
 	</MenuItem>
+
+
+
+
+   <MenuItem id="setOUTPUTswitchBotCURTAIN">
+		<Name>Set switchbot curtain position to .. </Name>
+		<ConfigUI>
+
+			<Field id="infoLabel00" type="label" >
+				<Label>This action allows to send position to swicthbot curtain3
+To enable 3 speeds you need to set in switchbot app:  open the curtain icon:
+more / settings icon / Advanced Settings / Motion Mode = Silent Mode
+if any other Motion Mode is selected only fast and VERY slow is working </Label>
+			</Field>
+
+			<Field id="devId" type="menu" defaultValue="0">
+				<List class="indigo.devices" filter="self.OUTPUTswitchbotCurtain3"  />
+				<Label>select switchbot curtain target device:</Label>
+			</Field>
+
+			<Field id="action" type="menu" defaultValue="open" >
+				<List>
+					<Option value="open">open</Option>
+					<Option value="10">10%</Option>
+					<Option value="20">20%</Option>
+					<Option value="30">30%</Option>
+					<Option value="40">40%</Option>
+					<Option value="50">50%</Option>
+					<Option value="60">60%</Option>
+					<Option value="70">70%</Option>
+					<Option value="80">80%</Option>
+					<Option value="90">90%</Option>
+					<Option value="close">close</Option>
+					<Option value="stop">stop</Option>
+				</List>
+			</Field>
+	
+			<Field id="speed" type="menu" defaultValue="00" >
+				<List>
+					<Option value="00">fast</Option>
+					<Option value="ff">slow</Option>
+					<Option value="01">VERY slow</Option>
+				</List>
+			</Field>
+
+			<Field id="execAll" type="button">
+				<Label> ....after selection click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>actionSwitchbotCurtainmenu</CallbackMethod>
+			</Field>
+
+		</ConfigUI>
+    </MenuItem>
+
 	
 	<MenuItem id="manageFastActions">
 		<Name>Manage fast actions beacon -> switchbot devices..</Name>
