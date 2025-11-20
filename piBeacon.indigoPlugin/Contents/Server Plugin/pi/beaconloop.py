@@ -19,7 +19,6 @@
 # runs on all kinds of RPI and BLE UART and external dongles
 #
 ## ok for py3
-
 from __future__ import division
 import sys, os, subprocess, copy
 import time,datetime
@@ -1627,6 +1626,9 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData):
 
 			if sensor == "BLERuuviTag":
 				return   doRuuviTag( mac, rx, tx, hexData, sensor)
+
+			if sensor == "BLERuuviAir":
+				return   doRuuviAir( mac, rx, tx, hexData, sensor)
 
 			if sensor == "BLEKKMsensor":
 				return  doBLEKKMsensor( mac, rx, tx, hexData, sensor)
@@ -4774,8 +4776,18 @@ def doRuuviAir( mac, rx, tx, hexData,sensor):
 	global BLEsensorMACs, sensors
 	global bleServiceSections, bleServiceSectionsReverse, parsedData
 
-
 	""" ruuvi data format: https://github.com/ruuvi/ruuvi-sensor-protocols/blob/master/dataformat_06.md
+
+BLERuuviAir             Nmsg: 3: 04 3E 2B 02 01 00 01   BE BA 8F B7 25 CB     1F  02 01 06 03 03 98 FC 17 FF 99 04 06 0C CC 50 9C C0 42 00 25 02 77 15 00 FF FF 93 D0 8F BA BE    BC=-68
+                      Flags-01 : 06
+other                   Nmsg:83: 04 3E 1B 02 01 04 01   BE BA 8F B7 25 CB     0F  0E 09 52 75 75 76 69 41 69 72 20 42 41 42 45                                                    C5=-59
+                       Name-09 : RuuviAir BABE
+BLERuuviAir             Nmsg: 3: 04 3E 2B 02 01 00 01   BE BA 8F B7 25 CB     1F  02 01 06 03 03 98 FC 17 FF 99 04 06 0C CD 50 8C C0 42 00 25 02 77 16 00 FF FF 94 90 8F BA BE    C5=-59
+                      Flags-01 : 06
+BLERuuviAir             Nmsg: 4: 04 3E 2B 02 01 00 01   BE BA 8F B7 25 CB     1F  02 01 06 03 03 98 FC 17 FF 99 04 06 0C CD 50 74 C0 42 00 25 02 77 16 00 FF FF 95 90 8F BA BE    BC=-68
+
+																												   01 23 45 67 89 11 23 45 67 89 21 23 45 56 78 93 12
+																						                           06 10 2E 3C F4 C0 77 00 22 02 25 05 00 FF FF 23 D0      8F BA BE
 offset	Allowed Values		description
 0		6					Data format (8bit)
 1-2		-32767 ... 32767	Temperature in 0.005 degrees
@@ -4783,9 +4795,9 @@ offset	Allowed Values		description
 5-6		0 ... 65534			Pressure (16bit unsigned) in 1 Pa units, with offset of -50 000 Pa
 7-8		0 ... 1000			PM 2.5, ug/m^3.  16 bit unsigned, Resolution 0.1/bit,
 9-10	0 ... 40000			CO2 ppm res 1/ bit 16 bit unsigned
-11		0  .. 500 flag		VOC 0-500, res 1/bit , 9 bit unsigned		
-12		0  .. 500 flag		NOX 0-500, res 1/bit , 9 bit unsigned	
-13		0  .. 254			Lumi log 0...65535
+11		0  .. 500 flag		VOC 0-500, res 1/bit , 1 bit 8 unsigned		
+12		0  .. 500 flag		NOX 0-500, res 1/bit , 1 bit 7 unsigned	
+13		0  .. 254			Lumi log 0...65535  not present always FF
 14		255					reserved
 15		0 ... 255			measurement  counter (8 bit unsigned),
 16		0bVVXX XXXV 		flags
@@ -4794,8 +4806,8 @@ offset	Allowed Values		description
 	"""
 
 	try:
-		
-		#if mac == "C5:5F:FA:70:F9:69": U.logger.log(20, "mac:{}  doRuuviTag :{}".format(mac, hexData ))
+		doPrint = mac == "CxxB:25:B7:8F:BA:BE"
+		#if doPrint: U.logger.log(20, "mac:{}  doRuuviTag :{}".format(mac, hexData ))
 		if len(hexData) < 40: 	
 			#if mac =="C1:68:AC:83:13:FD": U.logger.log(20,"mac:{};  < 44..{} ".format(mac, len(hexData))) 
 			return sensor, tx,  ""
@@ -4805,9 +4817,28 @@ offset	Allowed Values		description
 		ignore packets like:
 		                                                                                        R  u  u  v  i     1  7  E  B
 				69F970FA5FC5  1E 11 07 9E CA DC 24 0E E5 A9 E0 93 F3 A3 B5 01 00 40 6E   0B 09 52 75 75 76 69 20 46 39 36 39 C0		use:
+
+
+
+			                            char#  01  23 45      67    89012345678901234567890123456789012345 == 46 /2 = 23
 		use:								   MFG Ruuv ID    vers  data ----------------------------------------------
-		        69F970FA5FC5  1F 02 01 06   1B FF  99 06      06    170C5668C79E007000C90501D9XXCD004C884F
-			                                   01  23 45      67    89012345678901234567890123456789012345 == 46 /2 = 23
+		        69F970FA5FC5  1F 02 01 06   1B FF  99 06      06    170C5668C79E007000C90501D9XXCD00 4C884F
+		                                                      dataF |   |   |   |   |   | | | | | |  |
+																	temp|   |   |   |   | | | | | |  |
+																	    hum-|   |   |   | | | | | |
+																	        pres|   |   | | | | | |
+																	            PM25|   | | | | | |
+																	                CO2-| | | | | |
+																	                    vx| | | | |
+																	                      NO| | | |
+																	                        FFFF| |
+																	                            CT|  |
+																	                              FL |
+																	                                 MAC---
+																	                              
+																	        
+																	    
+																	
 		"""
 
 
@@ -4815,22 +4846,28 @@ offset	Allowed Values		description
 		if mac not in parsedData: return sensor, tx,  ""
 		if "analyzed" not in parsedData[mac]: return sensor, tx,  ""
 
-		#if mac == "C5:5F:FA:70:F9:69": U.logger.log(20, "mac:{}   parsedData:{}".format(mac,  parsedData[mac]["analyzed"]["text"]))
+		#if doPrint: U.logger.log(20, "mac:{}   parsedData:{}".format(mac,  parsedData[mac]["analyzed"]["text"]))
 		data =  parsedData[mac]["analyzed"]["code"].get("FF","") 
-
+		dataUse = data[len(tag):]
 		if data == "": 
 			#if mac == "C5:5F:FA:70:F9:69": U.logger.log(20, "mac:{}  data = empty".format(mac ))
 			return sensor, tx,  ""
-		if data.find(tag) !=0: 
+		if data.find(tag) != 0: 
 			#if mac == "C5:5F:FA:70:F9:69": U.logger.log(20, "mac:{}  tag not found, data:{} ".format(mac, data ))
 			return sensor, tx,  ""
 
 		# make data into right format (bytes)
-		byte_data = bytearray.fromhex(data[len(tag):])
+		sensorData =  dataUse
+		byte_data = bytearray.fromhex(sensorData)
 
 		sensor 		= "BLERuuviAir"
-		dataFormat	= byte_data[0]
-
+		dataFormat	= dataUse[0:2]
+		flag =  '06'
+		if dataFormat != flag:
+			if doPrint: U.logger.log(20, " .... wrong dataFormat {}!= {},  sensorData:{} .. raw:{}".format( flag, dataFormat , dataUse, data) )
+			return sensor, tx,  ""
+	
+		txPower = 0
 		# sensor is active, get all data and send if conditions ok
 		# unpack  rest of sensor data 
 		temp 					= (doRuuviTag_temperature(byte_data[1:])+ BLEsensorMACs[mac]["offsetTemp"]) * BLEsensorMACs[mac]["multTemp"]
@@ -4841,28 +4878,35 @@ offset	Allowed Values		description
 		# check if we should send data to indigo
 		trig = ""
 		trigMinTime	= deltaTime 	> BLEsensorMACs[mac]["minSendDelta"] 				# dont send too often
-		if deltatemp 	> BLEsensorMACs[mac]["updateIndigoDeltaTemp"]:  		trig += "temp/" 			# temp change triggers
-		if trig == "" and deltaTime 	> BLEsensorMACs[mac]["updateIndigoTiming"]:  			trig += "Time"		# send min every xx secs
+		if deltatemp 	> BLEsensorMACs[mac]["updateIndigoDeltaTemp"]:  				trig += "temp/" 			# temp change triggers
+		if trig == "" and deltaTime 	> BLEsensorMACs[mac]["updateIndigoTiming"]:  	trig += "Time"		# send min every xx secs
 		calib, voc, nox = doRuuviTag_Flags(byte_data[16:])
 		
 		if trigMinTime and trig !="":
+			if doPrint: U.logger.log(20, " .... dataFormat {}!= {},  sensorData:{} .. raw:{}".format( flag, dataFormat , dataUse, data) )
 			dd = {   # the data dict to be send 
 				"data_format": 			dataFormat,
 				"hum": 					int(doRuuviTag_humidity(byte_data[3:])	 + BLEsensorMACs[mac]["offsetHum"] + 0.5),
-				"temp": 				round(temp							 + BLEsensorMACs[mac]["offsetTemp"],1),
+				"temp": 				round(temp							 	+ BLEsensorMACs[mac]["offsetTemp"],1),
 				"press": 				int(doRuuviTag_pressure(byte_data[5:]) + BLEsensorMACs[mac]["offsetPress"]),
 				"PM25": 				doRuuviTag_PM25(byte_data[7:]) ,
 				"CO2": 					doRuuviTag_CO2(byte_data[9:]) ,
-				"NOX": 					doRuuviTag_NOX(byte_data[11:], nox),
-				"VOC": 					doRuuviTag_VOC(byte_data[12:], voc),
-				"Lumi": 				doRuuviTag_Lumi(byte_data[13:]),
+				"VOC": 					doRuuviTag_VOC(byte_data[11:], voc),
+				"NOx": 					doRuuviTag_NOX(byte_data[12:], nox),
 				"measurementCount": 	int(doRuuviTag_movementcounter(byte_data[15:])),
 				"trigger": 				trig.strip("/"),
-				"txPower": 				int(txPower),
+				#"txPower": 				int(txPower),
 				"mac": 					mac,
 				"rssi":					int(rx)
 			}
-			#if mac in ["D1:FC:38:C4:57:75"] :U.logger.log(20, " .... sending  data:{}".format( dd ) )
+		
+			"""	
+																											       01 23 45 67 89 11 23 45 67 89 21 23 45 56 78 93 12
+																						                           06 10 2E 3C F4 C0 77 00 22 02 25 05 00 FF FF 23 D0      8F BA BE
+																									 			   06 17 0C 56 68 C7 9E 00 70 00 C9 05 01 D9 XX CD 00 4C884F	
+			"""
+			if doPrint: U.logger.log(20, " .... sending {},  data:{}".format( dd , dataUse) )
+			# {'data_format': 6, 'hum': 38, 'temp': 21.3, 'press': 99223, 'PM25': 4.1, 'CO2': 541, 'NOX': 0, 'VOC': 0, 'Lumi': 254.99999999999994, 'measurementCount': 49, 'trigger': 'Time', 'txPower': 0, 'mac': 'CB:25:B7:8F:BA:BE', 'rssi': -68}
 
 			## compose complete message
 			checkIfDelaySend({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}})
@@ -4871,7 +4915,7 @@ offset	Allowed Values		description
 			BLEsensorMACs[mac]["lastUpdate"] 			= time.time()
 			BLEsensorMACs[mac]["temp"] 					= temp
 
-		return sensor, str(txPower), batteryLevel
+		return sensor, txPower, ""
 
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -5016,7 +5060,7 @@ offset	Allowed Values		description
 #################################
 def doRuuviTag_temperature( data):
 	"""Return temperature in celsius"""
-	if data[0:1] == 0x7FFF:
+	if data[0:2] == bytearray.fromhex('7FFF'):
 		return 0
 
 	temperature = twos_complement((data[0] << 8) + data[1], 16) / 200
@@ -5025,7 +5069,7 @@ def doRuuviTag_temperature( data):
 #################################
 def doRuuviTag_humidity( data):
 	"""Return humidity %"""
-	if data[0:1] == 0xFFFF:
+	if data[0:2] == bytearray.fromhex('FFFF'):
 		return 0
 
 	xx = ((data[0] & 0xFF) << 8 | data[1] & 0xFF) / 400
@@ -5034,7 +5078,7 @@ def doRuuviTag_humidity( data):
 #################################
 def doRuuviTag_pressure( data):
 	"""Return air pressure hPa"""
-	if data[0:1] == 0xFFFF:
+	if data[0:2] == bytearray.fromhex('FFFF'):
 		return 0
 
 	xx = ((data[0] & 0xFF) << 8 | data[1] & 0xFF) + 50000
@@ -5043,7 +5087,7 @@ def doRuuviTag_pressure( data):
 #################################
 def doRuuviTag_PM25( data):
 	"""PM25"""
-	if data[0:1] == 0xFFFF:
+	if data[0:2] == bytearray.fromhex('FFFF'):
 		return 0
 
 	xx = ((data[0] & 0xFF) << 8 | data[1] & 0xFF)/ 10.
@@ -5052,7 +5096,7 @@ def doRuuviTag_PM25( data):
 #################################
 def doRuuviTag_CO2( data):
 	"""CO2"""
-	if data[0:1] == 0xFFFF:
+	if data[0:2] == bytearray.fromhex('FFFF'):
 		return 0
 
 	xx = (data[0] & 0xFF) << 8 | (data[1] & 0xFF)
@@ -5060,33 +5104,33 @@ def doRuuviTag_CO2( data):
 
 
 #################################
-def doRuuviTag_VOC( data, bit9):
+def doRuuviTag_VOC( data, bit1):
 	"""VOC"""
-	if data[0:1] == 0xFFFF:
+	if data[0] == bytearray.fromhex('FF'):
 		return 0
-
-	xx = bit9 << 8 + data[0] & 0xFF
+	xx = (data[0] << 1) + bit1
+	#U.logger.log(20, " doRuuviTag_VOC:{},    data:{},  0:{}, 9:{}, ".format( xx,  data, data[0:2], bit1) )
 	return xx
 
 
 #################################
-def doRuuviTag_NOX( data, bit9):
+def doRuuviTag_NOX( data, bit1):
 	"""NOX"""
-	if data[0:1] == 0xFFFF:
+	if data[0] == bytearray.fromhex('FF'):
 		return 0
-
-	xx = bit9 << 8 + data[0] & 0xFF
+	xx = (data[0] << 1) + bit1
+	#U.logger.log(20, " doRuuviTag_NOX:{} ,  data:{},  0:{}, 9:{}, ".format( xx,  data, data[0:2], bit1) )
 	return xx
 
 #################################
 def doRuuviTag_Lumi(data):
 	"""Lumi"""
-	if data[0:1] == 0xFFFF:
+	if data == bytearray.fromhex('FF'):
 		return 0
-
+	xx = data[0]
 	DELTA     = math.log(65535+1., math.e)  / 254.
-	CODE      = math.log(data[0:1] +1., math.e)  / DELTA
-	VALUE     = math.exp(CODE * delta) - 1.
+	CODE      = math.log(xx +1., math.e)  / DELTA
+	VALUE     = math.exp(CODE * DELTA) - 1.
 	
 	return VALUE
 
@@ -5096,9 +5140,11 @@ def doRuuviTag_Lumi(data):
 #################################
 def doRuuviTag_magValues( data):
 	"""Return mageration mG"""
-	if (	data[0:1] == 0x7FFF or
-			data[2:3] == 0x7FFF or
-			data[4:5] == 0x7FFF):
+	if (	
+			data[0:1] == bytearray.fromhex('7FFF') or
+			data[2:3] == bytearray.fromhex('7FFF') or
+			data[4:5] == bytearray.fromhex('7FFF')
+		):
 		return 0, 0, 0
 
 	acc_x = twos_complement((data[0] << 8) + data[1], 16)
@@ -5125,10 +5171,10 @@ def doRuuviTag_powerinfo( data, doLog=False):
 
 #################################
 def doRuuviTag_Flags( data):
-	calib 	= data[0] &0b00000001 
-	voc 	= data[0] &0b10000000
-	nox 	= data[0] &0b01000000
-	return [calib,voc,nox]
+	calib 	=  data[0]      &0b00000001 
+	nox 	= (data[0] >> 7)&0b00000001 
+	voc 	= (data[0] >> 6)&0b00000001 
+	return [calib, voc, nox]
 
 
 #################################
@@ -5492,7 +5538,7 @@ def checkIFtrackMacIsRequested():
 	try:
 		if not os.path.isfile(G.homeDir+"temp/beaconloop.trackmac"): return False
 
-		f = open(G.homeDir+"temp/beaconloop.trackmac","r")
+		f = open(G.homeDir+"  > temp/beaconloop.trackmac","r")
 		xx = f.read().strip("\n")
 		f.close()
 		xx 					= xx.split("-")
@@ -7485,7 +7531,7 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 
 			doPrint =  mac in findMAC
 
-			if False and doPrint : #or mac in findMAC: 
+			if False: #doPrint : #or mac in findMAC: 
 				U.logger.log(20,  "mac:{:}, hexstr:{:}".format(mac,  hexstr[12:]))
 
 			if mac not in parsedData:
@@ -7500,7 +7546,7 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 
 			setBeaconLastMsgTS(mac, "received")
 
-			if mac == trackMacNumber:# or mac in findMAC:
+			if False:# mac in findMAC: #== trackMacNumber:# or mac in findMAC:
 				U.logger.log(20,  "mac:{:}, DT:{:4.1f}, new data: rssi:{}>{}?, hexstr:{:}\n".format(mac, tryDeltaTime(lastTimeMAC), rssi, ignoreBeaconsIfRssiLessThan, hexstr[12:]))
 				lastTimeMAC = time.time()
 
@@ -8053,7 +8099,7 @@ def execbeaconloop(test):
 
 debugRestarts = True
 
-findMAC = [] #["E4:88:7D:0D:4D:7A"] # ["E9:DD:2E:0E:3B:54"] # ["DD:53:FB:BF:03:40"] #["00:81:F9:86:3E:A0"] # ["CC:48:72:06:40:52","F0:66:AF:D4:9F:C1"] #["EC:44:51:19:C9:44"] # [,"E9:DD:2E:0E:3B:54","F0:D3:EF:76:A1:74"]
+findMAC = ""# ["CB:25:B7:8F:BA:BE"] #["E4:88:7D:0D:4D:7A"] # ["E9:DD:2E:0E:3B:54"] # ["DD:53:FB:BF:03:40"] #["00:81:F9:86:3E:A0"] # ["CC:48:72:06:40:52","F0:66:AF:D4:9F:C1"] #["EC:44:51:19:C9:44"] # [,"E9:DD:2E:0E:3B:54","F0:D3:EF:76:A1:74"]
 trackmacFilter = ""
 U.echoLastAlive(G.program)
 try: test = sys.argv[1]

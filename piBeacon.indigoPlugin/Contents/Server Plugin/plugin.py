@@ -428,7 +428,7 @@ _GlobalConst_allowedCommands = [
 	"up", "down", "pulseUp", "pulseDown", "continuousUpDown", "analogWrite", "disable", "newMessage", "resetDevice", "restartDevice",
 	"getBeaconParameters", "startCalibration", "BLEAnalysis", "trackMac", "rampUp", "rampDown", "rampUpDown", "beepBeacon", "updateTimeAndZone"]	 # commands support for GPIO pins
 
-_BLEsensorTypes =["BLERuuviTag",
+_BLEsensorTypes =["BLERuuviTag", "BLERuuviAir",
 				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03G", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG", "BLEiTrackButton", "BLEShellyButton","BLEShellyMotion","BLEShellyDoor",
 				"BLEaprilAccel", "BLEaprilTHL", "BLEThermopro", "BLETempspike",
 				"BLEminewE8", "BLEminewS1TH", "BLEminewS1TT", "BLEminewS1Plus", "BLEminewAcc",
@@ -711,6 +711,8 @@ _addingstates["facesX"]							= {"addTag":False, "States":{"facesX":"Integer"}}
 _addingstates["facesY"]							= {"addTag":False, "States":{"facesY":"Integer"}}
 _addingstates["facesScore"]						= {"addTag":False, "States":{"facesScore":"Integer"}}
 _addingstates["cmdScore"]						= {"addTag":False, "States":{"cmdScore":"Integer"}}
+_addingstates["PM25"]							= {"addTag":False, "States":{"PM25":"Integer"}}
+_addingstates["NOx"]							= {"addTag":False, "States":{"NOx":"Integer"}}
 
 
 #which devtype has which state
@@ -745,11 +747,11 @@ _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
 _stateListToDevTypes["speed"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["distanceEvent"]			= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
-_stateListToDevTypes["trigger"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1, "BLERuuviTag":1, "BLEthermoBeacon":1, "BLEinkBirdPool01B":1, "BLEShellyDoor":1, "BLEShellyMotion":1, "BLEShellyButton":1}
+_stateListToDevTypes["trigger"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEthermoBeacon":1, "BLEinkBirdPool01B":1, "BLEShellyDoor":1, "BLEShellyMotion":1, "BLEShellyButton":1}
 _stateListToDevTypes["distance"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["distanceRaw"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["rotation"]				= {"BLEShellyDoor":1}
-_stateListToDevTypes["batteryVoltage"]			= {"BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEthermoBeacon":1, "BLEinkBirdPool01B":1, "BLEKKMsensor":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEmeeblue-on":1}
+_stateListToDevTypes["batteryVoltage"]			= {"BLERuuviTag":1,  "BLERuuviAir":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEthermoBeacon":1, "BLEinkBirdPool01B":1, "BLEKKMsensor":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEmeeblue-on":1}
 _stateListToDevTypes["IR"]						= {"i2cTSL2561":1}
 _stateListToDevTypes["Kelvin"]					= {"i2cTCS34725":1, "apds9960":1}
 _stateListToDevTypes["Clear"]					= {"i2cTCS34725":1, "apds9960":1}
@@ -763,12 +765,12 @@ _stateListToDevTypes["Blue"]					= {"i2cTCS34725":1, "apds9960":1,"i2cVEML6040":
 _stateListToDevTypes["White"]					= {"i2cVEML7700":1, "i2cVEML6030":1,"i2cVEML6040":1,"apds9960":1}
 _stateListToDevTypes["AmbientLight"]			= {"i2cTSL2561":1,"i2cVEML7700":1,"i2cVEML6030":1}
 _stateListToDevTypes["Illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1,"BLEShellyDoor":1,"BLEShellyMotion":1}
-_stateListToDevTypes["Temperature"]				= {"BLEKKMsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "tmp117":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["Temperature"]				= {"BLEKKMsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "tmp117":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
-_stateListToDevTypes["Humidity"]				= {"BLEKKMsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
-_stateListToDevTypes["CO2"]						= {"sensirionscd30":1, "sensirionscd40":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
-_stateListToDevTypes["Pressure"]				= {"BLERuuviTag":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
-_stateListToDevTypes["VOC"]						= {"sgp30":1, "sgp40":1, "ccs811":1, "bmp388":1}
+_stateListToDevTypes["Humidity"]				= {"BLEKKMsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1,  "BLERuuviAir":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
+_stateListToDevTypes["CO2"]						= {"BLERuuviAir":1, "sensirionscd30":1, "sensirionscd40":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
+_stateListToDevTypes["Pressure"]				= {"BLERuuviTag":1,  "BLERuuviAir":1,  "BLEiBS01T":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
+_stateListToDevTypes["VOC"]						= {"BLERuuviAir":1, "sgp30":1, "sgp40":1, "ccs811":1, "bmp388":1}
 _stateListToDevTypes["AirQuality"]				= {"bme680":1}
 _stateListToDevTypes["Formaldehyde"]			= {"BLEXiaomiMiformaldehyde":1 }
 _stateListToDevTypes["rpiAndBeacon"]			= {"beacon":1, "rPI":1}
@@ -778,7 +780,7 @@ _stateListToDevTypes["rPI"]						= {"rPI":1}
 _stateListToDevTypes["beacon"]					= {"beacon":1}
 _stateListToDevTypes["BLEconnect"]				= {"BLEconnect":1}
 _stateListToDevTypes["beaconOn"]				= {"BLEiSensor-onOff":1, "BLEmeeblue-on":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
-_stateListToDevTypes["beaconSensorStates"]		= {"BLERuuviTag":1, "BLEmeeblue-on":1, "BLEthermoBeacon":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
+_stateListToDevTypes["beaconSensorStates"]		= {"BLERuuviTag":1,  "BLERuuviAir":1, "BLEmeeblue-on":1, "BLEthermoBeacon":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
 _stateListToDevTypes["rpiAndBeaconAndBLEconnect"] = {"beacon":1, "rPI":1, "BLEconnect":1}
 _stateListToDevTypes["accelerationVectorDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationX"]	 		= {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
@@ -787,6 +789,8 @@ _stateListToDevTypes["accelerationZ"]	 		= {"BLERuuviTag":1,"BLEminewAcc":1,"BLE
 _stateListToDevTypes["accelerationTotal"]	 	= {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationXYZMaxDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationXYZMaxDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
+_stateListToDevTypes["PM25"]	 				= {"BLERuuviAir":1}
+_stateListToDevTypes["NOx"]	 					= {"BLERuuviAir":1}
 
 
 
@@ -1335,7 +1339,7 @@ class Plugin(indigo.PluginBase):
 							props["SupportsStatusRequest"] = True
 							upd = True
 
-					if "piServerNumber" in props and "rPiEnable0" in props:
+					if False and "piServerNumber" in props and "rPiEnable0" in props:
 						del props["piServerNumber"]
 						upd = True
 
@@ -3171,7 +3175,7 @@ class Plugin(indigo.PluginBase):
 						del self.RPI[piU][piProp]
 				for sensor in copy.deepcopy(self.RPI[piU]["input"]):
 					if sensor not in _GlobalConst_allowedSensors and sensor not in _BLEsensorTypes:
-						self.indiLOG.log(30,"removing sensor:{}, from PI:{}, not in allowed sensors\n if this is a BLE type sensor, please change beacon type in beacon devcie edit".format(sensor, piU))
+						self.indiLOG.log(30,"removing sensor:{}, from PI:{}, not in allowed INPUT sensors\n if this is a BLE type sensor, please change beacon type in beacon device edit rpi input settungs:>{}<".format(sensor, piU, self.RPI[piU]["input"]))
 						del self.RPI[piU]["input"][sensor]
 
 
@@ -4072,7 +4076,7 @@ class Plugin(indigo.PluginBase):
 									if macRPI in self.beacons:
 										self.beacons[macRPI]["RPINumber"] = piU
 
-						if dev.deviceTypeId.find("beacon") >-1:
+						if dev.deviceTypeId.find("beacon") > -1:
 							props		= dev.pluginProps
 							updateProps = False
 							for propEmpty in _GlobalConst_emptyBeaconProps:
@@ -5958,7 +5962,9 @@ class Plugin(indigo.PluginBase):
 	def validateDeviceConfigUi_output(self, valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev):
 		try:
 			error = ""
-			if typeId== "neopixel-dimmer":
+			doPrint = True
+			if doPrint: self.indiLOG.log(20,"entering validateDeviceConfigUi_output piu:{}, typeId:{}".format(piU, typeId))
+			if typeId == "neopixel-dimmer":
 				neopixelDevice = indigo.devices[int(valuesDict["neopixelDevice"])]
 				propsX = neopixelDevice.pluginProps
 				piU = propsX["piServerNumber"]
@@ -5995,7 +6001,7 @@ class Plugin(indigo.PluginBase):
 					pixels =pixels.strip(" ")
 				valuesDict["description"]	= "rampSp="+ valuesDict["speedOfChange"]+"[sec]"+ pixels
 
-			elif typeId=="neopixel2":
+			elif typeId == "neopixel2":
 				try:
 					piU = valuesDict["piServerNumber"]
 					pi = int(piU)
@@ -6006,7 +6012,7 @@ class Plugin(indigo.PluginBase):
 					self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
 				except:
 					pass
-			elif typeId=="neopixel3":
+			elif typeId == "neopixel3":
 				try:
 					piU = valuesDict["piServerNumber"]
 					pi = int(piU)
@@ -6017,7 +6023,7 @@ class Plugin(indigo.PluginBase):
 					self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
 				except:
 					pass
-			elif typeId=="sundial":
+			elif typeId == "sundial":
 				try:
 					piU = valuesDict["piServerNumber"]
 					pi = int(piU)
@@ -6027,7 +6033,7 @@ class Plugin(indigo.PluginBase):
 					self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
 				except:
 					pass
-			elif typeId=="setStepperMotor":
+			elif typeId ==" setStepperMotor":
 				try:
 					piU = valuesDict["piServerNumber"]
 					pi = int(piU)
@@ -6047,6 +6053,8 @@ class Plugin(indigo.PluginBase):
 						if pi != int(props["piServerNumber"]):
 							self.updateNeeded += " fixConfig "
 							oldPiU = "{}".format(int(props["piServerNumber"]))
+							if doPrint: self.indiLOG.log(20,"mving to new pi from oldPiU:{}, output:{}".format(oldPiU, self.RPI[oldPiU]["output"]))
+							valuesDict["piServerNumber"] = piU
 							if oldPiU in self.RPI:
 								if "output" in self.RPI[oldPiU]:
 									if typeId in self.RPI[oldPiU]["output"]:
@@ -6054,7 +6062,7 @@ class Plugin(indigo.PluginBase):
 											del self.RPI[oldPiU]["output"][typeId]["{}".format(dev.id)]
 										if self.RPI[oldPiU]["output"][typeId] == {}:
 											del self.RPI[oldPiU]["output"][typeId]
-		
+	
 					cAddress = ""
 					devType = ""
 
@@ -6091,6 +6099,7 @@ class Plugin(indigo.PluginBase):
 
 					sendupdateSwitchBot = False
 					if typeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3", "OUTPUTswitchbotRelay"]:
+						if doPrint: self.indiLOG.log(20,"in curtain piu:{}, output:{}".format(piU, self.RPI[piU]["output"]))
 						if "modeOfDevice" in valuesDict:
 							if "modeOfDevice" not in self.RPI[piU]["output"][typeId]["{}".format(dev.id)]:
 								self.RPI[piU]["output"][typeId]["{}".format(dev.id)]["modeOfDevice"] = "donotset"
@@ -6472,7 +6481,7 @@ class Plugin(indigo.PluginBase):
 				if props.get("rPiEnable{}".format(nn), False):
 					xList.append((str(nn), "rpi-{}".format(nn) ))
 		elif "piServerNumber" in props:
-				if props.get("piServerNumber","") !="":
+				if props.get("piServerNumber","") != "":
 					xList.append( (props.get("piServerNumber"), "rpi-{}".format(props.get("piServerNumber")) ))
 		return xList
 
@@ -13844,7 +13853,7 @@ class Plugin(indigo.PluginBase):
 				sensor = dev.deviceTypeId
 				devId  = dev.id
 				props  = dev.pluginProps
-				testpiU  =[]
+				testpiU  = []
 				if "rPiEnable0" in props:
 					for piU in _rpiBeaconList:
 						testpiU.append(piU)
@@ -13887,8 +13896,8 @@ class Plugin(indigo.PluginBase):
 
 			if sensor not in self.RPI[piU][io]:
 				try:
-					dev=indigo.devices[int(devId)]
-					name=dev.name
+					dev = indigo.devices[int(devId)]
+					name = dev.name
 				except Exception as e:
 
 					if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
@@ -13897,7 +13906,7 @@ class Plugin(indigo.PluginBase):
 						return False
 					if "{}".format(e).find("not found in database") ==-1:
 						return False
-					name=""
+					name = ""
 				self.indiLOG.log(10,"fixing 1  {}   {} pi {}; sensor: {} devName: {}".format(name, devId, piU, sensor, name) )
 				self.indiLOG.log(10,"fixing 1  rpi {}".format(self.RPI[piU][io]))
 				self.RPI[piU][io][sensor] = {"{}".format(devId): ""}
@@ -14590,7 +14599,8 @@ class Plugin(indigo.PluginBase):
 			if piMAC != "":
 				oldMAC = self.RPI[piU]["piMAC"]
 				if piMAC != oldMAC:
-					self.indiLOG.log(30,"MAC# from RPI message, has new MAC# {} changing to new BLE-MAC number, old MAC#>>{}<<  pi# {}, received from ip number:{} , data received:{}".format(piMAC, oldMAC, piU, self.RPI[piU]["ipNumberPi"], data) )
+					sendIP = data.get("address","")
+					self.indiLOG.log(30,"MAC# from RPI message, has new MAC# {} changing to new BLE-MAC number, old MAC#>>{}<<  pi# {}, received from ip number:{} / RPI-Ip:{}, data received:{}".format(piMAC, oldMAC, piU, sendIP, self.RPI[piU]["ipNumberPi"], data) )
 					#beaconRPI = piMAC
 				if self.isValidMAC(piMAC): ## len("11:22:33:44:55:66")
 						indigoId = int(self.RPI[piU]["piDevId"])
@@ -15918,6 +15928,7 @@ class Plugin(indigo.PluginBase):
 					if sensor == "pmairquality":
 						self.updatePMAIRQUALITY(dev, props, data, whichKeysToDisplay)
 						continue
+					
 
 					if sensor == "launchpgm":
 						st = data["status"]
@@ -16009,6 +16020,15 @@ class Plugin(indigo.PluginBase):
 					if "CO2" in data:
 						x, UI  = int(float(data["CO2"])),   "CO2 {:.0f}[ppm] ".format(float(data["CO2"]))
 						newStatus = self.setStatusCol( dev, "CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 1)
+
+
+					if "PM25" in data:
+						x, UI  = int(float(data["PM25"])),   "pm2.5 {:.0f}[ug/m3] ".format(float(data["PM25"]))
+						newStatus = self.setStatusCol( dev, "PM25", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 0)
+
+					if "NOx" in data:
+						x, UI  = int(float(data["NOx"])),   "NOx {:.0f}".format(float(data["NOx"]))
+						newStatus = self.setStatusCol( dev, "NOx", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 0)
 
 					if "hum" in data:
 						if data["hum"] > -1:
@@ -19669,7 +19689,7 @@ class Plugin(indigo.PluginBase):
 			if props.get("enableBELSensorChild","1") != "1": return
 
 			dtNow = datetime.datetime.now().strftime(_defaultDateStampFormat )
-
+			isAnInputDevice = True
 			verbose = mac == "xxxD1:AD:6B:3D:AB:2D"
 			if verbose: self.indiLOG.log(20,"autoCreateCorrespondingSensorDev received mac:{}  typeOfBeacon:{}, isSwitchbotDevice:{},..{}?..{}?;  msg:{}".format(mac, typeOfBeacon, mac in self.isSwitchbotDevice,  mac in self.isBLESensorDevice,  mac in self.isBLElongConnectDevice, msg))
 			# check if dev already exists
@@ -19684,6 +19704,7 @@ class Plugin(indigo.PluginBase):
 
 						
 					if typeOfBeacon in ["Switchbot", "SwitchbotCurtain", "SwitchbotCurtain3"]:
+						isAnInputDevice = False
 						botProps = devBot.pluginProps
 						if verbose: self.indiLOG.log(20,"autoCreateCorrespondingSensorDev passed 2, from right piu:{}?".format(botProps.get("piServerNumber","") == fromPiU))
 						if botProps.get("piServerNumber","") == fromPiU:
@@ -19807,6 +19828,7 @@ class Plugin(indigo.PluginBase):
 				devType 									= correspondingSwitchbotDevice
 				newprops["isSwitchbotDevice"]				= True
 				name 										= "o-{}-{}-{}".format(devType, mac, fromPiU)
+				isSens 										= False
 
 			elif correspondingiTrackButtonDevice != "":
 				for devTest in indigo.devices.iter("props.isBLESensorDevice"):
@@ -19919,6 +19941,7 @@ class Plugin(indigo.PluginBase):
 				newprops["isBLESensorDevice"]				= True
 			else:
 				descr = mac
+				
 			newprops["minSendDelta"]						= "4"
 			newprops["updateIndigoTiming"]					= "60"
 			newprops["updateIndigoDeltaTemp"]				= "1.0"
@@ -19937,7 +19960,7 @@ class Plugin(indigo.PluginBase):
 				newprops["displayS"]						= "Moisture"
 
 
-			if batlev:
+			if batLev:
 				newprops["SupportsBatteryLevel"] 			= True
 
 
@@ -19963,13 +19986,13 @@ class Plugin(indigo.PluginBase):
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"name: {}".format(name))
 				return
-
-			if "input" not in self.RPI[fromPiU]:
-				self.RPI[fromPiU] = {}
-			if devType not in self.RPI[fromPiU]["input"]:
-				self.RPI[fromPiU]["input"][devType] = {}
-			if "{}".format(dev.id) not in self.RPI[fromPiU]["input"][devType]:
-				self.RPI[fromPiU]["input"][devType]["{}".format(dev.id)] = ""
+			if isAnInputDevice:
+				if "input" not in self.RPI[fromPiU]:
+					self.RPI[fromPiU] = {}
+				if devType not in self.RPI[fromPiU]["input"]:
+					self.RPI[fromPiU]["input"][devType] = {}
+				if "{}".format(dev.id) not in self.RPI[fromPiU]["input"][devType]:
+					self.RPI[fromPiU]["input"][devType]["{}".format(dev.id)] = ""
 
 			self.updateStateOnServerlog(dev, "created", datetime.datetime.now().strftime(_defaultDateStampFormat) )
 			if "lastSensorChange" in dev.states:
@@ -19985,7 +20008,7 @@ class Plugin(indigo.PluginBase):
 				self.isSwitchbotDevice[mac]			= dev.id
 				if correspondingSwitchbotDevice in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3","OUTPUTswitchbotRelay"]:
 					props = dev.pluginProps
-					props["address"] ="Pi-"+fromPiU
+					props["address"] = "Pi-"+fromPiU
 					props["piServerNumber"] = fromPiU
 					props["suppressQuickSecond"] = "-10"
 					dev.replacePluginPropsOnServer(props)
@@ -21053,8 +21076,8 @@ class Plugin(indigo.PluginBase):
 					typeId = devOut.deviceTypeId
 					if typeId not in _GlobalConst_allowedOUTPUT: 								continue
 					if not devOut.enabled: 														continue
-					propsOut= devOut.pluginProps
-					if "piServerNumber" in propsOut and propsOut["piServerNumber"] != piU:	continue
+					propsOut = devOut.pluginProps
+					if "piServerNumber" in propsOut and propsOut["piServerNumber"] != piU:		continue
 					if typeId.find("OUTPUTgpio") > -1 or typeId.find("OUTPUTi2cRelay") > -1 or typeId.find("OUTPUTswitchbot") > -1:
 						if typeId in self.RPI[piU]["output"]:
 							if typeId.find("OUTPUTswitchbot") > -1:
@@ -21270,8 +21293,8 @@ class Plugin(indigo.PluginBase):
 		self.cancelDelayedActions = {}
 		if self.delayedActions == {}:
 			self.delayedActions["thread"]		= ""
-			self.delayedActions["data"]		= Queue.Queue()
-			self.delayedActions["lastData"]	= 0
+			self.delayedActions["data"]			= Queue.Queue()
+			self.delayedActions["lastData"]		= 0
 			self.delayedActions["state"]		= ""
 			self.delayedActions["lastActive"]	= 0
 

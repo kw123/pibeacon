@@ -1,4 +1,24 @@
-dded features / changes in added features / changes in v2022.187.148 @ 2025-11-04
+Added features / changes in added features / changes in v2022.189.151 @ 2025-11-12
+==================================================
+1. added support for ruuvi air sensor (T,H,P,CO2,NOx,VOC, PM2.5)
+   ruuvi data type  06  BLE message 
+
+
+
+added features / changes in added features / changes in v2022.187.151 @ 2025-11-04
+==================================================
+1. fixed bug with curtain, being reset after boot
+
+
+added features / changes in added features / changes in v2022.187.150 @ 2025-11-04
+==================================================
+1. fixed bug introduced in 2022.187.148 @ 2025-11-04
+
+ "plugin.py", line 19940, in autoCreateCorrespondingSensorDev
+    if batlev:
+2. fix bug  scitchbot curtain loosing rpi def    
+    
+added features / changes in added features / changes in v2022.187.148 @ 2025-11-04
 ==================================================
 1. added special action. menu to move switchbot curtain3 very slow / slow / fast 
 

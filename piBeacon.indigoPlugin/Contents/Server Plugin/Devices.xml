@@ -3223,6 +3223,368 @@ xx_Count_groupname_ .. Home, Away</Label>
 	</Device>
 
 
+	<Device type="sensor" id="BLERuuviAir">     	<Name>BLE-RuuviAir-Sensor T-H-P-CoO..</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"> <Label>setBattery indicator off:</Label></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"   type="label" alignText="left" fontColor="orange"> >
+				<Label>=== setup BLE BLERuuviAir. You need to supply the MAC number.
+ Easiest is to run the Ruuvi Station app on your phone and lookup the MAC address
+ The sensors do not need any config, besides power on,
+  They broadcast iBeacon format packages (1/sec) with additional data
+ They send T, H, P, CO2, VOC NOx PM2.5 air Q , ... 
+ In addition measurement count and movement count is supplied.
+ The battery level is calculated as (BatteryVolt-2900)/(3200-2900) in %
+ As the sensor sends iBeacon Signals ~1/second it
+   can be used as a regular iBeacon device
+ check only RPIs that are installed, checked RPi that do not exist will be ignored ===</Label>
+			</Field>
+
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+				<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+
+			<Field id="labelRPI"   type="label" >
+				<Label>Select RPIs that should monitor this sensor,
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+
+			<Field id="isRPION00" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION01" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION02" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION03" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION04" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION05" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION06" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION07" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION08" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION09" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION10" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION11" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION12" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION13" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION14" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION15" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION16" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION17" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION18" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION19" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false" visibleBindingId="isRPION00" visibleBindingValue="true">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false" visibleBindingId="isRPION01" visibleBindingValue="true">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false" visibleBindingId="isRPION02" visibleBindingValue="true">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false" visibleBindingId="isRPION03" visibleBindingValue="true">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false" visibleBindingId="isRPION04" visibleBindingValue="true">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false" visibleBindingId="isRPION05" visibleBindingValue="true">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false" visibleBindingId="isRPION06" visibleBindingValue="true">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false" visibleBindingId="isRPION07" visibleBindingValue="true">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false" visibleBindingId="isRPION08" visibleBindingValue="true">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false" visibleBindingId="isRPION09" visibleBindingValue="true">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false" visibleBindingId="isRPION10" visibleBindingValue="true">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false" visibleBindingId="isRPION11" visibleBindingValue="true">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false" visibleBindingId="isRPION12" visibleBindingValue="true">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false" visibleBindingId="isRPION13" visibleBindingValue="true">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false" visibleBindingId="isRPION14" visibleBindingValue="true">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false" visibleBindingId="isRPION15" visibleBindingValue="true">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false" visibleBindingId="isRPION16" visibleBindingValue="true">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="type" type="menu"     defaultValue="RuuviTag" hidden="true">>
+				<List>
+					<Option value="RuuviTag"          >RuuviTag:  T H P Acceleration field</Option>
+				</List>
+				<Label>type of sensor:</Label>
+			</Field>
+	
+			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
+			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true">  <Label>... trend time window for change:</Label>
+				<List>
+					<Option value="300"   > 5 minutes</Option>
+					<Option value="600"   > 10 minutes</Option>
+					<Option value="1200"  > 20 minutes</Option>
+					<Option value="3600"  > 1 hour</Option>
+					<Option value="7200"  > 2 hour</Option>
+					<Option value="21600" > 6 hour</Option>
+					<Option value="43200" > 12 hour</Option>
+					<Option value="86400" > 24 hour</Option>
+				</List>
+			</Field>
+			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+				<List>
+					<Option value="10"    > 0.1 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
+					<Option value="50"    > 0.5 %</Option>
+					<Option value="100"   > 1 %</Option>
+					<Option value="150"   > 1.5 %</Option>
+					<Option value="200"   > 2 %</Option>
+					<Option value="300"   > 3 %</Option>
+					<Option value="500"   > 5 %</Option>
+					<Option value="1000"  > 10 %</Option>
+					<Option value="2000"  > 20 %</Option>
+					<Option value="3000"  > 30 %</Option>
+					<Option value="5000"  > 50 %</Option>
+				</List>
+			</Field>
+
+
+
+			<Field id="Humidity_EnableMinMax"		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label> </Field>
+			<Field id="Humidity_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true">  <Label>... trend time window for change:</Label>
+				<List>
+					<Option value="300"   > 5 minutes</Option>
+					<Option value="600"   > 10 minutes</Option>
+					<Option value="1200"  > 20 minutes</Option>
+					<Option value="3600"  > 1 hour</Option>
+					<Option value="7200"  > 2 hour</Option>
+					<Option value="21600" > 6 hour</Option>
+					<Option value="43200" > 12 hour</Option>
+					<Option value="86400" > 24 hour</Option>
+				</List>
+			</Field>
+			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+				<List>
+					<Option value="10"    > 0.1 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
+					<Option value="50"    > 0.5 %</Option>
+					<Option value="100"   > 1 %</Option>
+					<Option value="150"   > 1.5 %</Option>
+					<Option value="200"   > 2 %</Option>
+					<Option value="300"   > 3 %</Option>
+					<Option value="500"   > 5 %</Option>
+					<Option value="1000"  > 10 %</Option>
+					<Option value="2000"  > 20 %</Option>
+					<Option value="3000"  > 30 %</Option>
+					<Option value="5000"  > 50 %</Option>
+				</List>
+			</Field>
+
+
+
+			<Field id="Pressure_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Pressure:</Label> </Field>
+			<Field id="Pressure_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true">  <Label>... trend time window for change:</Label>
+				<List>
+					<Option value="300"   > 5 minutes</Option>
+					<Option value="600"   > 10 minutes</Option>
+					<Option value="1200"  > 20 minutes</Option>
+					<Option value="3600"  > 1 hour</Option>
+					<Option value="7200"  > 2 hour</Option>
+					<Option value="21600" > 6 hour</Option>
+					<Option value="43200" > 12 hour</Option>
+					<Option value="86400" > 24 hour</Option>
+				</List>
+			</Field>
+			<Field id="Pressure_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Pressure_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+				<List>
+					<Option value="10"    > 0.1 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
+					<Option value="50"    > 0.5 %</Option>
+					<Option value="100"   > 1 %</Option>
+					<Option value="150"   > 1.5 %</Option>
+					<Option value="200"   > 2 %</Option>
+					<Option value="300"   > 3 %</Option>
+					<Option value="500"   > 5 %</Option>
+					<Option value="1000"  > 10 %</Option>
+					<Option value="2000"  > 20 %</Option>
+					<Option value="3000"  > 30 %</Option>
+					<Option value="5000"  > 50 %</Option>
+				</List>
+			</Field>
+
+
+
+		
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+
+				<List>
+					<Option value="Temperature"  >Temperature[C/F]</Option>
+					<Option value="Humidity"      >Humidity[%]</Option>
+					<Option value="Pressure"      >Pressure</Option>
+					<Option value="Proximity"      >Proximity</Option>
+					<Option value="Temperature/Pressure"     >Temperature/Pressure</Option>
+					<Option value="Temperature/Humidity"     >Temperature/Humidity</Option>
+					<Option value="Temperature/Humidity/Pressure"   >Temperature/Humidity/Pressure</Option>
+					<Option value="Humidity/Pressure"     >Humidity/Pressure</Option>
+				</List>
+			</Field>
+
+
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
+			<Field id="offsetPress" type="textfield"  defaultValue="0"> <Label>offset added to measured pressure(Pascal, 100Pa=1mBar):</Label> </Field>
+
+
+			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" tooltip="supersedes next parameter">
+				<Label>Min secs between indigo updates - not more often than:</Label>
+				<List>
+					<Option value="1"   > 1   secs </Option>
+					<Option value="2"   > 2   secs</Option>
+					<Option value="3"   > 3   secs</Option>
+					<Option value="4"   > 4   secs</Option>
+					<Option value="6"   > 6   secs</Option>
+					<Option value="8"   > 8   secs</Option>
+					<Option value="10"  > 10  secs</Option>
+					<Option value="15"  > 15  secs</Option>
+				</List>
+			</Field>
+
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden="no" tooltip="if > Min Secs ..">
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="2"   >  2 secs</Option>
+					<Option value="3"   >  3 secs</Option>
+					<Option value="5"   >  5 secs</Option>
+					<Option value="7"   >  7 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+
+			<Field id="updateIndigoDeltaTemp"    type="menu"     defaultValue="1.0" hidden="no">
+				<Label>Send sensor values if Temp changes by:</Label>
+				<List>
+					<Option value="0.5" > 0.5 C = 1 F</Option>
+					<Option value="1.0" > 1.0 C = 2 F</Option>
+					<Option value="1.5" > 1.5 C = 3 F</Option>
+					<Option value="2.0" > 2.0 C = 4 F</Option>
+					<Option value="2.5" > 2.5 C = 5 F</Option>
+				</List>
+			</Field>
+
+			<Field id="updateIndigoDeltaAccelVector"    type="menu"     defaultValue="50" hidden="no">
+				<Label>Send sensor values if total Acceleration values changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50 (default)</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+
+			<Field id="updateIndigoDeltaMaxXYZ"    type="menu"     defaultValue="50" hidden="no">
+				<Label>Send sensor values if Acceleration max(dx,dy,dz) changes by(1000*N/s**2):</Label>
+				<List>
+					<Option value="5"  > 5 .. very frequent updates !!</Option>
+					<Option value="10" > 10</Option>
+					<Option value="15" > 15</Option>
+					<Option value="20" > 20</Option>
+					<Option value="25" > 25</Option>
+					<Option value="30" > 30</Option>
+					<Option value="40" > 40</Option>
+					<Option value="50" > 50</Option>
+					<Option value="70" > 70</Option>
+					<Option value="100" > 100</Option>
+					<Option value="150" > 150</Option>
+					<Option value="200" > 200</Option>
+					<Option value="300" > 300</Option>
+					<Option value="400" > 400</Option>
+					<Option value="500" > 500</Option>
+					<Option value="700" > 700</Option>
+					<Option value="1000" > 1000</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" fontColor="green">
+				<Label>== set color of status column dot to </Label></Field>
+			<Field id="stateGreen" type="textfield"       defaultValue="">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot;
+  &quot;x &lt; 33&quot;
+  &quot;33 &lt;= x and x &lt;= 66&quot;
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+
+		</States>
+	</Device>
+
+
 	<Device type="sensor" id="BLEblueradio">     	<Name>BLE-blueradio -Sensorbug T-Light-orientation=on/off</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 
@@ -30640,7 +31002,7 @@ This device will get its battery level from its brother device,
 	<Device type="dimmer" id="OUTPUTswitchbotCurtain3">     	<Name>OUTPUT-switch bot Curtain v3s</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
-			<Field id="supportsOnState"         type="checkbox"  defaultValue="false" > </Field>
+			<Field id="supportsOnState"         type="checkbox"  defaultValue="false" hidden="yes"> </Field>
 			<Field id="isSwitchbotDevice"       type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="isOutputDevice"          type="checkbox"  defaultValue="true"  hidden="yes"> </Field>
 			<Field id="SupportsStatusRequest"   type="checkbox"  defaultValue="False" hidden="yes"><Label>Supports StatusRequest:</Label></Field>
