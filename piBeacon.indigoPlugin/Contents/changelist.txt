@@ -1,3 +1,39 @@
+Added features / changes in added features / changes in v2022.191.159 @ 2026-01-18
+==================================================
+1. added sensor switchbot mm wave occupancy BLE sensor
+has option to update state "occupancy duration" continuously every xxscs until occupancy is off, set option in devce edit 
+you can do a trigger on dev State "occupancyDuration" any change and  condition dev state" "onOffState" = true
+ then you get a trigger every xx secs.
+   
+2. added delay ON state change in addition to delay OFF state
+     
+
+
+Added features / changes in added features / changes in v2022.189.155 @ 2025-12-07
+==================================================
+1. added besides positon / open/close: toggle for switchbot curtain
+   it will close if current position is < 50% and close otherwise  
+     
+use a regular device on/off/toggle of use a script like this:
+device_id =  <<your dev id>>   # 
+device = indigo.devices[device_id]
+position = device.states["brightnessLevel"]
+indigo.server.log("position:{}".format(position))
+if position > 50:
+	indigo.server.log("send off")
+	indigo.device.turnOff(device_id)  
+else:
+	indigo.server.log("send on")
+	indigo.device.turnOn(device_id)   
+
+
+2. added back battery level for switchbot bot devcies
+
+3. added support for switchbot humidity evaporator
+  supports status value (waterlevel, alarms,...)
+  no support for actions yet, as they require encrypted communications.
+
+
 Added features / changes in added features / changes in v2022.189.151 @ 2025-11-12
 ==================================================
 1. added support for ruuvi air sensor (T,H,P,CO2,NOx,VOC, PM2.5)

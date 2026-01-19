@@ -1195,8 +1195,9 @@ def doSwitchBot():
 		U.logger.log(20,"{} not switchBotConfig".format(thisMAC))
 		retryCount = 99
 		return 
-	verbose2 = thisMAC == "D1:AD:6B:3D:AB:2D"
-
+	verbose2 = False# thisMAC == "D1:AD:6B:3D:AB:2D"
+	verbose3 = False
+	
 	expCommands[thisMAC] = ""
 
 	if checkIfSwitchbotStop(thisMAC):
@@ -1253,7 +1254,7 @@ def doSwitchBot():
 			try:	repeatDelay		= float(newData.get("repeatdelay",0.)) + 3.
 			except:	repeatDelay		= 3.
 
-			if verbose: U.logger.log(20, "{} received onOff:{}, pulses:{}, pulseLengthOn:{}, pulseLengthOff:{}, pulseDelay{}, repeat:{}, repeatDelay:{}, mode:{}".format(thisMAC, onOff, pulses, pulseLengthOn, pulseLengthOff, pulseDelay, repeat, repeatDelay, mode))
+			if verbose or verbose3: U.logger.log(20, "{} received cmd:{}, onOff:{}, pulses:{}, pulseLengthOn:{}, pulseLengthOff:{}, pulseDelay{}, repeat:{}, repeatDelay:{}, mode:{}".format(thisMAC, cmd, onOff, pulses, pulseLengthOn, pulseLengthOff, pulseDelay, repeat, repeatDelay, mode))
 
 			if  cmd not in ["onoff","pulses","statusrequest","setparameters"]:
 				if verbose2: U.logger.log(20, "{}  command not recognized :{}".format(thisMAC, newData))
@@ -1320,7 +1321,7 @@ def doSwitchBot():
 
 			# interactive ####################################################  start
 			else:
-						if verbose2: U.logger.log(20, "{} trying to connect".format(thisMAC))
+						if verbose2 or verbose3: U.logger.log(20, "{} trying to connect interactive cmd:{}".format(thisMAC, cmd))
 						if launchGATT(useHCI2, thisMAC, 4,15, retryConnect=10, random=True, verbose=verbose, nTries = 2) != "ok": 
 							U.logger.log(20, "{} failed to connect ".format(thisMAC))
 							switchbotQueue.put([retryCount, jData])
@@ -1458,7 +1459,7 @@ def doSwitchBot():
 
 
 			if "statusrequest" in newData or checkParams:
-				if verbose2: U.logger.log(20, "{}  entering statusRequest".format(thisMAC))
+				if verbose2 or verbose3: U.logger.log(20, "{}  entering statusRequest".format(thisMAC))
 
 				# in switch mode 
 				#down    570101: 01 48 90   
@@ -1475,11 +1476,11 @@ def doSwitchBot():
 				#press:  5701: 01 48 d0 / 01 48 90
 				#status  5702: 01 60 31 64 00 00 00 be 00 10 02 00 00 
 
-				for ii in range(2):
+				for ii in range(3):
 					# just read status, later check what status received
 					result =  readGattcmd(thisMAC, "char-read-hnd {}".format(readHandle),  "Characteristic value/descriptor:", -1, 5, verbose=verbose)
 					if len(result) == 3:
-						if verbose2: U.logger.log(20, "{} statusRequest: return ok;  result: {}, retData:{}, actualStatus:{}".format(thisMAC, result, retData, actualStatus))
+						if verbose2 or verbose3: U.logger.log(20, "{} statusRequest: return ok;  result: {}, retData:{}, actualStatus:{}".format(thisMAC, result, retData, actualStatus))
 
 						# handle 0x13  should give  status  w/o previous 5702, after press or switch:
 						# switch mode
@@ -1495,7 +1496,7 @@ def doSwitchBot():
 						elif result == ["01","ff","00"]: 	actualStatus = "on"
 						elif result == ["01","ff","d0"]: 	actualStatus = "on"
 
-						else: 						  		actualStatus = ""
+						else: 						  		actualStatus = "status_request"
 						retData["actualStatus"] = actualStatus
 
 					elif len(result) == 13:
@@ -1518,10 +1519,11 @@ def doSwitchBot():
 						retData["inverseDirection"]	= "inverse" if int(result[9],16) & 1 != 0 else "normal"          #(=x1)
 						retData["mode"]				= "pressMode" if int(result[9],16) & 16 == 0 else "onOffMode" #(=1x)
 						retData["holdSeconds"]		= int(result[10],16)
-						if verbose2: U.logger.log(20, "{} return ok;  result: {}, retData:{}".format(thisMAC, result, retData))
+						retData["actualStatus"]     = "status_request"
+						if verbose2 or verbose3: U.logger.log(20, "{} return ok;  result: {}, retData:{}".format(thisMAC, result, retData))
 						break
 					elif len(result) == 1:
-						if verbose2: U.logger.log(20, "{} return not ok, should be 3 or 13 long, got only one byte ;  result: {}, retData:{}".format(thisMAC, result, retData))
+						if verbose2 or verbose3: U.logger.log(20, "{} return not ok, should be 3 or 13 long, got only one byte ;  result: {}, retData:{}".format(thisMAC, result, retData))
 						if result[0] in ["08","0b","0a"]:
 							retData["warning"] = "device is set to use encrypted communication, use phone app to initialize"
 							retData["actualStatus"] = "ConfigureDevOnPhone"
@@ -1540,14 +1542,14 @@ def doSwitchBot():
 
 						if verbose2: U.logger.log(20, "{} statusRequest: setup device on phone".format(thisMAC, result))
 					else :
-						if verbose2: U.logger.log(20, "{} statusRequest:  unexpected result {}".format(thisMAC, result))
+						if verbose2 or verbose3: U.logger.log(20, "{} statusRequest:  unexpected result {}".format(thisMAC, result))
 
 					# if not status: issue status command, then read again
 					result = writeGattcmd(thisMAC, "char-write-req {} {}".format(writeHandle, switchBotConfig[thisMAC]["statusCmd"] ), "Characteristic value was written successfully", 5, verbose=verbose)
 
 
 				if retData !={}:
-					if verbose2: U.logger.log(20, "{} sending retData0:{}".format(thisMAC, retData0))
+					if verbose2 or verbose3: U.logger.log(20, "{} sending retData0:{}".format(thisMAC, retData0))
 					U.sendURL(retData0, squeeze=False)
 					switchBotConfig[thisMAC]["lastFailedTryTime"] = 0 
 					switchBotConfig[thisMAC]["lastFailedTryCount"] = 0 

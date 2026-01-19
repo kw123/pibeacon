@@ -2124,7 +2124,7 @@ def checkErrorSend(devId, errorText, CMDID, action):
 		sendMsg = ""
 		if lastError == {}: 													sendMsg += "new"
 		elif errorText != "" and lastError.get("errorText","") != errorText:	sendMsg += "text"
-		elif time.time() -  float(lastError.get("lastErrTime",0)) < 100:		sendMsg += "time"
+		elif time.time() -  float(lastError.get("lastErrTime",0)) < 200:		sendMsg += "time"
 		
 		if sendMsg != "":
 		

@@ -438,7 +438,7 @@ _BLEsensorTypes =["BLERuuviTag", "BLERuuviAir",
 				"BLESatech",
 				"BLEHunterNodeBT",
 				"BLEmeeblue-on",
-				"BLEswitchbotTempHum","BLEthermoBeacon", "BLEswitchbotMotion", "BLEswitchbotContact",
+				"BLEswitchbotTempHum","BLEswitchbotTempHumCO2","BLEthermoBeacon", "BLEswitchbotMotion", "BLEswitchbotMMWaveMotion", "BLEswitchbotContact","BLEswitchbotHumidifierEvap",
 				"BLEXiaomiMiTempHumRound", "BLEXiaomiMiTempHumClock", "BLEXiaomiMiformaldehyde", "BLEgoveeTempHum"]
 
 _BLEconnectSensorTypes = ["BLEinkBirdPool01B","BLEXiaomiMiVegTrug","BLEXiaomiMiTempHumSquare"]
@@ -713,6 +713,18 @@ _addingstates["facesScore"]						= {"addTag":False, "States":{"facesScore":"Inte
 _addingstates["cmdScore"]						= {"addTag":False, "States":{"cmdScore":"Integer"}}
 _addingstates["PM25"]							= {"addTag":False, "States":{"PM25":"Integer"}}
 _addingstates["NOx"]							= {"addTag":False, "States":{"NOx":"Integer"}}
+_addingstates["humidityMode"]					= {"addTag":False, "States":{"humidityMode":"String"}}
+_addingstates["overHumidifyProtection"]			= {"addTag":False, "States":{"overHumidifyProtection":"Boolean"}}
+_addingstates["childLock"]						= {"addTag":False, "States":{"childLock":"Boolean"}}
+_addingstates["tankRemoved"]					= {"addTag":False, "States":{"tankRemoved":"Boolean"}}
+_addingstates["tiltedAlert"]					= {"addTag":False, "States":{"tiltedAlert":"Boolean"}}
+_addingstates["filterMissing"]					= {"addTag":False, "States":{"filterMissing":"Boolean"}}
+_addingstates["MeterBound"]						= {"addTag":False, "States":{"MeterBound":"Boolean"}}
+_addingstates["waterLevel"]						= {"addTag":False, "States":{"waterLevel":"String"}}
+_addingstates["filterRunTime"]					= {"addTag":False, "States":{"filterRunTime":"Integer"}}
+_addingstates["targetHumidity"]					= {"addTag":False, "States":{"targetHumidity":"Integer"}}
+_addingstates["alarmBits"]						= {"addTag":False, "States":{"alarmBits":"String"}}
+
 
 
 #which devtype has which state
@@ -742,7 +754,7 @@ _stateListToDevTypes["actualStatus"]			= {"OUTPUTswitchbotRelay":1, "OUTPUTi2cRe
 _stateListToDevTypes["inverse"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1}
 _stateListToDevTypes["initial"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1}
 _stateListToDevTypes["OUTPUT"]					= {"OUTPUTi2cRelay":1, "OUTPUTgpio-1-ONoff":1, "OUTPUTgpio-1":1, "setMCP4725":1, "setPCF8591dac":1, "display":1, "neopixel":1}
-_stateListToDevTypes["counter"]					= {"BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEgoveeTempHum":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEswitchbotContact":1 ,"DF2301Q":1,"FaceGesture":1}
+_stateListToDevTypes["counter"]					= {"BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEgoveeTempHum":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEswitchbotContact":1 ,"DF2301Q":1,"FaceGesture":1, "BLEswitchbotTempHumCO2":1}
 _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
 _stateListToDevTypes["speed"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
@@ -759,16 +771,17 @@ _stateListToDevTypes["Orange"]					= {"as726x":1}
 _stateListToDevTypes["Yellow"]					= {"as726x":1}
 _stateListToDevTypes["Violet"]					= {"as726x":1}
 _stateListToDevTypes["LEDcurrent"]				= {"as726x":1}
+_stateListToDevTypes["alarmBits"]				= {"BLEswitchbotTempHumCO2":1}
 _stateListToDevTypes["Red"]						= {"i2cTCS34725":1, "apds9960":1,"i2cVEML6040":1, "as726x":1}
 _stateListToDevTypes["Green"]					= {"i2cTCS34725":1, "apds9960":1,"i2cVEML6040":1, "as726x":1}
 _stateListToDevTypes["Blue"]					= {"i2cTCS34725":1, "apds9960":1,"i2cVEML6040":1, "as726x":1}
 _stateListToDevTypes["White"]					= {"i2cVEML7700":1, "i2cVEML6030":1,"i2cVEML6040":1,"apds9960":1}
 _stateListToDevTypes["AmbientLight"]			= {"i2cTSL2561":1,"i2cVEML7700":1,"i2cVEML6030":1}
 _stateListToDevTypes["Illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1,"BLEShellyDoor":1,"BLEShellyMotion":1}
-_stateListToDevTypes["Temperature"]				= {"BLEKKMsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "tmp117":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["Temperature"]				= {"BLEKKMsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotHumidifierEvap":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "tmp117":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
-_stateListToDevTypes["Humidity"]				= {"BLEKKMsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1,  "BLERuuviAir":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
-_stateListToDevTypes["CO2"]						= {"BLERuuviAir":1, "sensirionscd30":1, "sensirionscd40":1, "sgp30":1, "mhzCO2":1, "ccs811":1 }
+_stateListToDevTypes["Humidity"]				= {"BLEKKMsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1,  "BLERuuviAir":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotHumidifierEvap":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
+_stateListToDevTypes["CO2"]						= {"BLERuuviAir":1, "sensirionscd30":1, "sensirionscd40":1, "sgp30":1, "mhzCO2":1, "ccs811":1, "BLEswitchbotTempHumCO2":1}
 _stateListToDevTypes["Pressure"]				= {"BLERuuviTag":1,  "BLERuuviAir":1,  "BLEiBS01T":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
 _stateListToDevTypes["VOC"]						= {"BLERuuviAir":1, "sgp30":1, "sgp40":1, "ccs811":1, "bmp388":1}
 _stateListToDevTypes["AirQuality"]				= {"bme680":1}
@@ -779,8 +792,8 @@ _stateListToDevTypes["rpiAndSensor"]			= {"rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["rPI"]						= {"rPI":1}
 _stateListToDevTypes["beacon"]					= {"beacon":1}
 _stateListToDevTypes["BLEconnect"]				= {"BLEconnect":1}
-_stateListToDevTypes["beaconOn"]				= {"BLEiSensor-onOff":1, "BLEmeeblue-on":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
-_stateListToDevTypes["beaconSensorStates"]		= {"BLERuuviTag":1,  "BLERuuviAir":1, "BLEmeeblue-on":1, "BLEthermoBeacon":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotMotion":1, "BLEswitchbotContact":1}
+_stateListToDevTypes["beaconOn"]				= {"BLEiSensor-onOff":1, "BLEmeeblue-on":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEswitchbotMotion":1, "BLEswitchbotMMWaveMotion":1, "BLEswitchbotContact":1}
+_stateListToDevTypes["beaconSensorStates"]		= {"BLERuuviTag":1,  "BLERuuviAir":1, "BLEmeeblue-on":1, "BLEthermoBeacon":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotMotion":1, "BLEswitchbotMMWaveMotion":1, "BLEswitchbotContact":1}
 _stateListToDevTypes["rpiAndBeaconAndBLEconnect"] = {"beacon":1, "rPI":1, "BLEconnect":1}
 _stateListToDevTypes["accelerationVectorDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationX"]	 		= {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
@@ -791,6 +804,16 @@ _stateListToDevTypes["accelerationXYZMaxDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc
 _stateListToDevTypes["accelerationXYZMaxDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["PM25"]	 				= {"BLERuuviAir":1}
 _stateListToDevTypes["NOx"]	 					= {"BLERuuviAir":1}
+_stateListToDevTypes["humidityMode"]			= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["overHumidifyProtection"]	= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["childLock"]	 			= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["tankRemoved"]	 			= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["tiltedAlert"]	 			= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["filterMissing"]	 		= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["MeterBound"]	 			= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["waterLevel"]	 			= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["filterRunTime"]	 		= {"BLEswitchbotHumidifierEvap":1}
+_stateListToDevTypes["targetHumidity"]	 		= {"BLEswitchbotHumidifierEvap":1}
 
 
 
@@ -7691,6 +7714,11 @@ class Plugin(indigo.PluginBase):
 			if not dev.pluginProps.get("SupportsBatteryLevel", False): 			continue
 			if not dev.pluginProps.get("batteryLevelUUID","") == "gatttool":	continue
 			xList.append((dev.id, "{} - {}".format(dev.name, dev.address) ))
+			
+		for dev in indigo.devices.iter("props.isSwitchbotDevice"):
+			if dev.deviceTypeId != "OUTPUTswitchbotRelay": continue
+			if not dev.enabled: continue
+			xList.append((dev.id, "{}".format(dev.name) ))
 		xList.append(["0", "all"])
 		return xList
 
@@ -7703,7 +7731,7 @@ class Plugin(indigo.PluginBase):
 		return xList
 
 ####-------------------------------------------------------------------------####
-	def filterSensorONoffIcons(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
+	def filterSensorOffOnIcons(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
 		xList = []
 		for ll in _GlobalConst_ICONLIST:
 			xList.append((ll[0]+"-"+ll[1],ll[0]+", "+ll[1]))
@@ -10302,6 +10330,7 @@ class Plugin(indigo.PluginBase):
 
 			# check if it is all beacons
 			beacon = ""
+			beaconDev = ""
 			if devId != 0:
 				try:
 					beaconDev = indigo.devices[devId]
@@ -10367,7 +10396,7 @@ class Plugin(indigo.PluginBase):
 				mac  = dev.address
 				cmdToSend = {}
 				typeOfBeacon = self.beacons[mac]["typeOfBeacon"]
-				if typeOfBeacon !="":
+				if typeOfBeacon != "":
 					if typeOfBeacon not in self.knownBeaconTags["input"]: 						 						continue
 					if "commands" not in self.knownBeaconTags["input"][typeOfBeacon]:			 						continue
 					if "batteryLevel" not in self.knownBeaconTags["input"][typeOfBeacon]["commands"]: 					continue
@@ -10432,9 +10461,18 @@ class Plugin(indigo.PluginBase):
 							if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,"getBeaconParameters no update needed              for beacon: {:30s}; lastV: {:3d}; last successful check @: {}, closestRPI:{}".format(dev.name, dev.states["batteryLevel"], dev.states["lastUpdateBatteryLevel"] , dev.states["closestRPIText"] ) )
 
 
+
 				# this is the list of beacons for THIS RPI
-				if cmdToSend !={}:
+				if cmdToSend != {}:
 					devices[piU][dev.address] = cmdToSend
+
+			for dev in indigo.devices.iter("props.isSwitchbotDevice"):
+				if not dev.enabled: continue
+				if beaconDev != "" and dev.id !=  beaconDev.id: continue
+				if dev.deviceTypeId != "OUTPUTswitchbotRelay": continue
+				self.actionStatusRequest(dev)
+
+				
 
 			minTime    = max(list(minTime.values()))
 			nDownAddWait = True
@@ -10909,6 +10947,17 @@ class Plugin(indigo.PluginBase):
 			position = 0
 			self.addToStatesUpdateDict(dev.id, "status","send pos=open" )
 
+
+		elif action == "toggle":
+			if dev.states.get("brightnessLevel",0) < 50:
+				moveTo = "close"
+				position = 100
+			else:
+				moveTo = "open"
+				position = 0
+			self.addToStatesUpdateDict(dev.id, "status","send pos="+moveTo )
+
+
 		else: 
 			moveTo = "position"
 			position = int(action)
@@ -10930,7 +10979,7 @@ class Plugin(indigo.PluginBase):
 # noinspection SpellCheckingInspection
 	def actionControlDimmerRelay(self, action, dev0):
 		try:
-			#self.indiLOG.log(10,"sent \"{}\"  deviceAction:{}".format(dev0.name, action.deviceAction) )
+			#self.indiLOG.log(20,"actionControlDimmerRelay \"{}\"  deviceAction:{}".format(dev0.name, action.deviceAction) )
 
 
 			props0 = dev0.pluginProps
@@ -10976,7 +11025,7 @@ class Plugin(indigo.PluginBase):
 						position = json.loads(position)
 					except Exception as e:
 						if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-						self.indiLOG.log(40,"position data: ".format(position))
+						self.indiLOG.log(40,"actionControlDimmerRelay position data: ".format(position))
 						position=[]
 				chList =[]
 
@@ -11051,7 +11100,7 @@ class Plugin(indigo.PluginBase):
 
 				return
 
-			elif dev0.deviceTypeId == "OUTPUTswitchbotRelay":
+			elif dev0.deviceTypeId.find("OUTPUTswitchbotRelay") > -1:
 				piU = props0["piServerNumber"]
 				if action.deviceAction == indigo.kDimmerRelayAction.TurnOn:
 											onOff = 1
@@ -11061,7 +11110,7 @@ class Plugin(indigo.PluginBase):
 				elif action.deviceAction == indigo.kDimmerRelayAction.TurnOff:
 											onOff = 0
 				else:
-					self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{};  command not supported:'{}; defined st req:'{}'".format(dev0.name, piU, action.deviceAction, indigo.kUniversalAction.RequestStatus))
+					self.indiLOG.log(10,"actionControlDimmerRelay requested: for {} on pi:{};  command not supported:'{}; defined st req:'{}'".format(dev0.name, piU, action.deviceAction, indigo.kUniversalAction.RequestStatus))
 					return
 
 
@@ -11072,13 +11121,14 @@ class Plugin(indigo.PluginBase):
 				toSend = [{"device": "OUTPUTswitchbotRelay", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
 				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotRelaySet")
 
-				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, toSend))
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"actionControlDimmerRelay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, toSend))
 				return
 
-			elif dev0.deviceTypeId in ["OUTPUTswitchbotCurtain","OUTPUTswitchbotCurtain3"]:
+			elif dev0.deviceTypeId.find("OUTPUTswitchbotCurtain") > -1:
 				piU = props0["piServerNumber"]
 				moveTo = "position"
 				position = 50
+				speed = "ff"
 				if action.deviceAction == indigo.kDimmerRelayAction.TurnOn:
 											moveTo = "close"
 											position = 100
@@ -11091,18 +11141,29 @@ class Plugin(indigo.PluginBase):
 											moveTo = "position"
 											position = action.actionValue
 											self.addToStatesUpdateDict(dev0.id, "status","send pos={}".format(position) )
+				elif action.deviceAction == indigo.kDimmerRelayAction.Toggle:
+										if dev0.states.get("brightnessLevel",0) < 50:
+											moveTo = "close"
+											position = 100
+										else:
+											moveTo = "open"
+											position = 0
+										self.addToStatesUpdateDict(dev0.id, "status","toggle send pos="+moveTo )
+										#self.indiLOG.log(20,"actionControlDimmerRelay requested: for {} on pi:{};  brightness level:'{}', position:{}, moveTo:{},".format(dev0.name, piU, dev0.states.get("brightnessLevel",0), position, moveTo ))
 
 				else:
 					self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{};  command not supported:'{}; defined st req:'{}'".format(dev0.name, piU, action.deviceAction, indigo.kUniversalAction.RequestStatus))
 					return
 
-				fileContents = {"mac":props0["mac"], "cmd":"moveTo", "moveTo":moveTo, "position":position, "mode":"interactive"}
+				fileContents = {"mac":props0["mac"], "cmd":"moveTo", "moveTo":moveTo, "position":position, "mode":"interactive", "speed":speed}
 
 				toSend = [{"device": dev0.deviceTypeId, "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
 				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotCurtainSet")
 
-				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, toSend))
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,"actionControlDimmerRelay requested: for {} on pi:{}; text to send:{}".format(dev0.name, piU, toSend))
 				return
+
+
 
 			#####  GPIO
 			else:
@@ -13516,40 +13577,29 @@ class Plugin(indigo.PluginBase):
 
 				if beacon.find("00:00:00:00") ==0: continue
 				dev = ""
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if beacon.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: CheckPeriod -0- :{};".format(beacon)  )
+				
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(beacon, "CheckPeriod -0-")
 				changed = False
 				if "status" not in self.beacons[beacon] : continue
 				## pause is set at device stop, check if still paused skip
 
 
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if beacon.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: CheckPeriod -1- :{}; passed pause".format(beacon) )
-
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(beacon, "CheckPeriod -1-; passed pause")
+	
 				if self.beacons[beacon]["lastUp"] > 0:
 					if self.beacons[beacon]["ignore"] == 1 :
 						if time.time()- self.beacons[beacon]["lastUp"] > 3 * 86000 :  ## 3 days
 							self.beacons[beacon]["ignore"] = 2
 					# if self.beacons[beacon]["status"] =="expired": continue
 					if self.beacons[beacon]["ignore"] > 0 : continue
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if beacon.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: CheckPeriod -2- :{}; passed ignore".format(beacon) )
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(beacon, "CheckPeriod -1-; passed ignore")
 
 				expT = float(self.beacons[beacon]["expirationTime"])
 				if self.beacons[beacon]["lastUp"] < 0:	 # fast down was last                  event, block for 5 secs after that
 					if time.time() + self.beacons[beacon]["lastUp"] > 5:
 						self.beacons[beacon]["lastUp"] = time.time() - expT-0.1
 					else:
-						if self.selectBeaconsLogTimer !={}:
-							for sMAC in self.selectBeaconsLogTimer:
-								if beacon.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-									self.indiLOG.log(10,"sel.beacon logging: CheckPeriod -3- :{};  no change in up status, dt:{:.0f}".format(beacon, time.time() + self.beacons[beacon]["lastUp"]) )
+						if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(beacon, "checkPeriod -3-  no change in up status, dt:{:.0f}".format(beacon, time.time() + self.beacons[beacon]["lastUp"]))
 						continue
 
 				delta = time.time()- self.beacons[beacon]["lastUp"]  ##  no !! - self.beacons[beacon]["updateSignalValuesSeconds"]
@@ -13570,14 +13620,11 @@ class Plugin(indigo.PluginBase):
 					self.beacons[beacon]["status"] = "expired"
 					changed = True
 				if	self.initStatesOnServer: changed = True
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if beacon.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: CheckPeriod -4- :{}; status: {};  deltaT: {}".format(beacon, self.beacons[beacon]["status"], delta))
-
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(beacon, "checkPeriod -4- status: {};  deltaT: {}".format(self.beacons[beacon]["status"], delta))
+	
 
 				if changed or force:
-					if self.decideMyLog("BeaconData"): self.indiLOG.log(5," CheckPeriod -5- :{}; changed=true or force {}" .format(beacon, self.beacons[beacon]["status"]) )
+					if self.decideMyLog("BeaconData"): self.indiLOG.log(5," CheckPeriod -5-  changed=true or force {}" .format( self.beacons[beacon]["status"]) )
 
 					self.statusChanged = 7
 
@@ -14447,10 +14494,7 @@ class Plugin(indigo.PluginBase):
 
 			### here goes the beacon data updates  -->
 
-			if self.selectBeaconsLogTimer !={}:
-				for sMAC in self.selectBeaconsLogTimer:
-					if piMAC.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-						self.indiLOG.log(10,"sel.beacon logging: RPI MAC#:{} ; pi#={} ".format(piMAC, piU) )
+			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(piMAC, "execBeaconUpdatefrom rpi :{}".format(piU))
 
 			if "piMAC" in data:
 				if self.decideMyLog("BeaconData"): self.indiLOG.log(5,"new iBeacon message----------------------------------- \n {}".format(varUnicode) )
@@ -15612,8 +15656,8 @@ class Plugin(indigo.PluginBase):
 			for xx in [ "error", "warning", "batteryLevel", "version", "holdSeconds", "mode", "inverseDirection", "actualStatus", "position" ]:
 				if xx in data:
 
+					if self.decideMyLog("BatteryLevel"):self.indiLOG.log(10,"received status update from RPi:{}, for {}:  {}".format(piU, dev.name, data[xx]) )
 					if xx == "error" and xx in data:
-						self.indiLOG.log(30,"received status update from RPi:{}, for {}:  {}".format(piU, dev.name, data[xx]) )
 						if "actualStatus" in dev.states:
 							if "actualStatus" in data:
 								self.updateStateOnServerlog(dev, "actualStatus", data["actualStatus"])
@@ -15628,7 +15672,6 @@ class Plugin(indigo.PluginBase):
 
 					elif xx == "warning" and xx in data:
 						if "actualStatus" in dev.states:
-							self.indiLOG.log(30,"received status update from RPi:{} for {}:  {}".format(piU, dev.name, data[xx]) )
 							if "actualStatus" in data:
 								self.updateStateOnServerlog(dev, "actualStatus", data["actualStatus"])
 							else:
@@ -15636,55 +15679,63 @@ class Plugin(indigo.PluginBase):
 							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 							connectionStatusUpdated = True
 						continue
-
-					elif xx == "actualStatus" and not connectionStatusUpdated  and data[xx] !="":
-						connectionStatusUpdated = True
-						if "mode" in data and  data["mode"] == "pressMode":
-							onB = data[xx] == "on"
-							onT = "on"  if onB else "off"
-							self.addToStatesUpdateDict(dev.id, "onOffState", onB , uiValue=onT)
+						
+					elif xx  == "actualStatus"  and data[xx] !="":
+						if  data["actualStatus"] == "status_request":
 							if "actualStatus" in dev.states:
-								self.addToStatesUpdateDict(dev.id, "actualStatus", onT)
-							if onB: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-							else:	dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-							if "holdSeconds" in data and data["holdSeconds"] != "":
-								try:
-									#self.indiLOG.log(20,"received status update from RPi for {} update  {}".format(dev.name, data) )
-									secs = max(1.5,float(data["holdSeconds"]))
-									onB = data[xx] != "on"
-									onT = "SensorOn"  if onB else "SensorOff"
-									if secs > 0:
-										#self.indiLOG.log(20,"{} update delayed action".format(dev.name) )
-										if "actualStatus" in dev.states:
-											self.delayedActions["data"].put(
-												{	"actionTime":time.time()+secs, "devId":dev.id,
-													"updateItems":[
-														{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT},
-														{"stateName":"actualStatus", "value": onT, "image":onT}
-													]
-												}
-											)
-										else:
-											self.delayedActions["data"].put(
-												{	"actionTime":time.time()+secs, "devId":dev.id,
-													"updateItems":[
-														{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT}
-													]
-												}
-											)
-
-								except Exception as e:
-									if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-						else:
-							onB = data[xx] == "on"
-							onT = "on"  if onB else "off"
-							self.addToStatesUpdateDict(dev.id, "onOffState", onB , uiValue=onT,image=onT)
-							if "actualStatus" in dev.states:
+								self.updateStateOnServerlog(dev, "actualStatus", "status updated {}".format(datetime.datetime.now().strftime(_defaultDateStampFormat)))
+								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+								connectionStatusUpdated = True
+							continue
+	
+	
+						if not connectionStatusUpdated:
+							connectionStatusUpdated = True
+							if "mode" in data and  data["mode"] == "pressMode":
+								onB = data[xx] == "on"
+								onT = "on"  if onB else "off"
+								self.addToStatesUpdateDict(dev.id, "onOffState", onB , uiValue=onT)
+								if "actualStatus" in dev.states:
+									self.addToStatesUpdateDict(dev.id, "actualStatus", onT)
+								if onB: dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+								else:	dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+								if "holdSeconds" in data and data["holdSeconds"] != "":
+									try:
+										#self.indiLOG.log(20,"received status update from RPi for {} update  {}".format(dev.name, data) )
+										secs = max(1.5,float(data["holdSeconds"]))
+										onB = data[xx] != "on"
+										onT = "SensorOn"  if onB else "SensorOff"
+										if secs > 0:
+											#self.indiLOG.log(20,"{} update delayed action".format(dev.name) )
+											if "actualStatus" in dev.states:
+												self.delayedActions["data"].put(
+													{	"actionTime":time.time()+secs, "devId":dev.id,
+														"updateItems":[
+															{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT},
+															{"stateName":"actualStatus", "value": onT, "image":onT}
+														]
+													}
+												)
+											else:
+												self.delayedActions["data"].put(
+													{	"actionTime":time.time()+secs, "devId":dev.id,
+														"updateItems":[
+															{"stateName":"onOffState", "value": onB, "uiValue":onT, "image":onT}
+														]
+													}
+												)
+	
+									except Exception as e:
+										if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							else:
+								onB = data[xx] == "on"
+								onT = "on"  if onB else "off"
+								self.addToStatesUpdateDict(dev.id, "onOffState", onB , uiValue=onT,image=onT)
 								self.addToStatesUpdateDict(dev.id, "actualStatus", onT)
 
 					elif xx == "batteryLevel":
 						if  "batteryLevel" in dev.states:
-							batL = xx["batteryLevel"]
+							batL = data["batteryLevel"]
 							if	"{}".format(batL) != "{}".format(dev.states["batteryLevel"]):
 								blChanged = True
 								self.addToStatesUpdateDict(dev.id, "batteryLevel",		 	batL)
@@ -15740,6 +15791,9 @@ class Plugin(indigo.PluginBase):
 
 				devUpdate = {}
 				for devIds in sensors[sensor]:
+					if False and int(devIds) == 1544693341:
+							self.indiLOG.log(30,"updateSensors  pi:{}, devIds:{}, sensor:{}, data:{} ".format(pi, devIds, sensor, sensors[sensor]))
+						
 					updateProps = False
 					devUpdate[devIds] = True
 					try:
@@ -16704,6 +16758,9 @@ class Plugin(indigo.PluginBase):
 					#if True or  dev.id == 1544693341: self.indiLOG.log(20, "{}, setting state.. tampered: to {}".format(dev.name, data["tampered"] ))
 					self.addToStatesUpdateDict(dev.id, "tampered", 					"{}".format(data["tampered"]))
 
+				if "alarmBits" in data:
+					self.setStatusCol(dev, "alarmBits",						data["alarmBits"],							"{}".format(data["alarmBits"]),								whichKeysToDisplay,"","",decimalPlaces=0)
+
 				if "distanceEvent" in data:
 					self.setStatusCol(dev, "distanceEvent",					data["distanceEvent"],						"{}".format(data["distanceEvent"]),							whichKeysToDisplay,"","",decimalPlaces=0)
 
@@ -16736,6 +16793,12 @@ class Plugin(indigo.PluginBase):
 
 				if "secsSinceStart" in data:
 					self.setStatusCol(dev, "secsSinceStart",				data["secsSinceStart"],						"{}".format(data["secsSinceStart"]),						whichKeysToDisplay,"","",decimalPlaces=0)
+
+				if "lastChange" in data:
+					self.setStatusCol(dev, "lastChange",					data["lastChange"],							"{}".format(data["lastChange"]),						whichKeysToDisplay,"","",decimalPlaces=0)
+
+				if "lastPresenceChange" in data:
+					self.setStatusCol(dev, "lastPresenceChange",			data["lastPresenceChange"],					"{}".format(data["lastPresenceChange"]),					whichKeysToDisplay,"","",decimalPlaces=0)
 
 				if "measurementCount" in data:
 					self.setStatusCol(dev, "measurementCount",		 		data["measurementCount"],					"{}".format(data["measurementCount"]),						whichKeysToDisplay,"","",decimalPlaces=0)
@@ -16779,24 +16842,24 @@ class Plugin(indigo.PluginBase):
 						self.setStatusCol(dev, statename, xx,xxF, whichKeysToDisplay, "","", decimalPlaces=0)
 
 
-				# numbers
-				for statename in ["lightCounter", "buttonCounter", "secsSinceLastMotion", "counter", "motionDuration"]:
+
+				for statename in ["sensitivity", "model", "mode", "sensorSetup", "Version", "version", "light","lightLevel", "lightCounter", "buttonCounter", "secsSinceLastMotion", "counter", "motionDuration", "shortOpen", "longOpen", "lightCounter", "buttonCounter", "secsSinceLastMotion", "counter", "motionDuration","humidityMode", "overHumidifyProtection", "childLock", "tankRemoved", "tiltedAlert", "filterMissing", "meterBound", "waterLevel", "filterRunTime", "targetHumidity"]:
 					if  statename in data and  data[statename] != "" and statename in dev.states:
 						if  data[statename] != dev.states[statename]:
-							self.addToStatesUpdateDict(dev.id,statename,data[statename])
-
-				# bool
-				for statename in [ "shortOpen", "longOpen"]:
-					if  statename in data and  data[statename] != "" and statename in dev.states:
-						if  data[statename] != dev.states[statename]:
-							self.addToStatesUpdateDict(dev.id,statename,data[statename])
-
-
-				#text
-				for statename in ["sensitivity", "model", "mode", "sensorSetup", "Version", "version", "light"]:
-					if  statename in data and  data[statename] != "" and statename in dev.states:
-						if  data[statename] != dev.states[statename]:
-							self.addToStatesUpdateDict(dev.id,statename,data[statename])
+							self.addToStatesUpdateDict(dev.id, statename, data[statename])
+							
+				if "humidityMode" in data and "waterLevel" in data:
+						if  "humidityMode" in dev.states  and "waterLevel" in dev.states:
+							if data["waterLevel"] == "empty":
+								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+							else:
+								dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+							if "status" in dev.states:
+								if "water level:" + data["waterLevel"] != dev.states["status"]:
+									self.addToStatesUpdateDict(dev.id, "status", "water level:"+data["waterLevel"])
+									
+				self.doFillOnOffState( dev, props, "onOffState", data)
+			
 
 				#time.time() --> datetime
 				for statename in ["lastLightChange", "lastClose", "lastShortOpen", "lastLongOpen", "lastButton", "lastOn"]:
@@ -16804,35 +16867,7 @@ class Plugin(indigo.PluginBase):
 						xx = time.strftime(_defaultDateStampFormat, time.localtime(data[statename]))
 						if  xx != dev.states[statename] or len(dev.states[statename]) < 10:
 								self.addToStatesUpdateDict(dev.id, statename, xx)
-
-				for statename in ["onOffState"]:
-					if  statename in data and  data[statename] != "" and statename in dev.states:
-						#if  dev.id == 1544693341: self.indiLOG.log(20, "received.. {}:  {}, old:{}".format(dev.name, data[statename], dev.states[statename]))
-						xx = str(data[statename])
-						uiValue = props.get("onOffui"+xx, "on" if data[statename] else "off")
-						if data[statename]:	image = "SensorOn"
-						else:				image = "SensorOff"
-						delayOff = float(props.get("delayOff", "0"))
-						# check if we want to keep the state = "ON" for some time instead of immediately going "off" if off received
-						# added delayed action of adding setting to off IF currently on and delay is set
-						if not data[statename] and delayOff > 0 and dev.states[statename]:
-							self.delayedActions["data"].put( {"actionTime":time.time()+delayOff, "devId":dev.id, "updateItems":[{"stateName":statename, "value":data[statename], "uiValue":uiValue, "image":image}]})
-							#if  dev.id == 1544693341: self.indiLOG.log(20, "setting delay action.. {}: new:{}, current:{}, uiValue:{}, delayOff:{}".format(dev.name, data[statename] , dev.states[statename], uiValue, delayOff))
-
-						else:
-							if data[statename]:
-								# remove any delayed action off items
-								#if  dev.id == 1544693341: self.indiLOG.log(20, "setting delay action.. {}: remove".format(dev.name))
-								if delayOff >0:
-									self.delayedActions["data"].put( {"actionTime":time.time(), "activeUntil":time.time()+delayOff, "devId":dev.id, "updateItems":[{"disable":"onOffState"}]})
-
-							if  data[statename] != dev.states[statename]:
-								#if  dev.id == 1544693341: self.indiLOG.log(20, "setting state.. {}: to {}".format(dev.name, uiValue))
-								self.addToStatesUpdateDict(dev.id,statename, data[statename], uiValue=uiValue)
-								if data[statename]:
-									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-								else:
-									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+									
 
 				if  "chipTemperature" in data and  data["chipTemperature"] != "" and "chipTemperature" in dev.states:
 					x, UI, decimalPlaces, useFormat  = self.convTemp(data["chipTemperature"])
@@ -16860,7 +16895,7 @@ class Plugin(indigo.PluginBase):
 
 
 ###-------------------------------------------------------------------------####
-	def updateBLEMKKon(self, dev, data, whichKeysToDisplay,pi):
+	def updateBLEMKKon(self, dev, propsdata, whichKeysToDisplay,pi):
 		try:
 			props = dev.pluginProps
 
@@ -16938,6 +16973,123 @@ class Plugin(indigo.PluginBase):
 
 
 
+	def doFillOnOffState(self, dev, props, statename, data):
+
+		try:
+			doPrint = dev.id == 16565055670000
+			if  statename not in data: return
+			if  data[statename] == "": return
+			if  statename not in dev.states: return
+			if  doPrint: self.indiLOG.log(20, "received..stname:{}  data{}: ".format(statename, data))
+			
+			xx = str(data[statename])
+			uiValue = props.get("onOffui"+xx, "on" if data[statename] else "off")
+
+			delayOff = float(props.get("delayOff", "0"))
+			delayOn  = float(props.get("delayOn", "0"))
+			
+			image =  self.getIcon( dev, props, "SensorOff-SensorOn", 1 if data[statename] else 0)
+
+
+			# check if we want to keep the state = "ON" for some time instead of immediately going "off" if off received
+			# added delayed action of adding setting to off IF currently on and delay is set
+			#if  doPrint: self.indiLOG.log(20, "received.. {}:  {}, old:{}, delay off:{}, on:{}".format(dev.name, data[statename], dev.states[statename], delayOff, delayOn))
+			if dev.states[statename] != data[statename]:
+				if data[statename] :
+					if dev.id in self.cancelDelayedActions: 
+						del	self.cancelDelayedActions[dev.id] 	
+					if  doPrint: self.indiLOG.log(20, "received..  deleted cancel")
+					#self.delayedActions["data"].put( {"actionTime":time.time(), "devId":dev.id, "exec":'indigo.server.log("entered")'})
+	
+					if delayOn > 0:
+						self.delayedActions["data"].put( {"actionTime":time.time()+delayOn, "devId":dev.id, "updateItems":[{"stateName":statename, "value":data[statename], "uiValue":uiValue, "image":image}]})
+						if "lastOccupationStart" in dev.states:
+							self.delayedActions["data"].put( {"actionTime":time.time()+delayOn, "devId":dev.id, "updateItems":[{"stateName":"lastOccupationStart", "value":datetime.datetime.now().strftime(_defaultDateStampFormat)}]})
+							self.delayedActions["data"].put( {"actionTime":time.time()+delayOn, "devId":dev.id, "updateItems":[{"stateName":"occupationDuration", "value":""},{"stateName":"lastOccupationEnd", "value":""}]})
+							if "lastOccupationEnd" in dev.states and "occupationDuration" in dev.states:
+								self.addToStatesUpdateDict(dev.id,"occupationDuration", 0)
+								try:
+									increment = int(props["increment"])
+									if increment > 0:
+										nnn = int(120/ increment + 2)
+										startvalue = 0
+										for ii in range(1,nnn):
+											self.delayedActions["data"].put( {"actionTime":time.time()+ii*increment, "devId":dev.id, "updateItems":[{"stateName":"occupationDuration", "value":startvalue+ii*increment}]})
+								except: pass
+	
+					else:
+						self.addToStatesUpdateDict(dev.id,statename, data[statename], uiValue=uiValue)
+						if "lastOccupationStart" in dev.states:
+							self.addToStatesUpdateDict(dev.id,"lastOccupationStart", datetime.datetime.now().strftime(_defaultDateStampFormat))
+							self.addToStatesUpdateDict(dev.id,"occupationDuration", 0)
+							self.addToStatesUpdateDict(dev.id,"lastOccupationEnd", "")
+						if "lastOccupationEnd" in dev.states and "occupationDuration" in dev.states:
+							self.addToStatesUpdateDict(dev.id,"occupationDuration", 0)
+							if "increment" in props:
+								try: 
+									increment = int(props["increment"])
+									if increment > 0:
+										nnn = int(120/ increment + 2)
+										startvalue = 0
+										for ii in range(1,nnn):
+											self.delayedActions["data"].put( {"actionTime":time.time()+ii*increment, "devId":dev.id, "updateItems":[{"stateName":"occupationDuration", "value":startvalue+ii*increment}]})
+								except: pass
+	
+	
+					self.addToStatesUpdateDict(dev.id,statename, data[statename], uiValue=uiValue)
+					self.setIcon(dev, props, "SensorOff-SensorOn", 1)	
+	
+						
+				elif not data[statename]:
+					self.cancelDelayedActions[dev.id] = 500		
+					if  doPrint: self.indiLOG.log(20, "received.. {}:  {}, old:{}, delay off:{}, on:{}, setting cancel to 50".format(dev.name, data[statename], dev.states[statename], delayOff, delayOn))
+					
+					if delayOff > 0:
+						self.delayedActions["data"].put( {"actionTime":time.time()+delayOff, "devId":dev.id, "updateItems":[{"stateName":statename, "value":data[statename], "uiValue":uiValue, "image":image}]})
+						if "lastOccupationEnd" in dev.states:
+								self.delayedActions["data"].put( {"actionTime":time.time()+delayOff, "devId":dev.id, "updateItems":[{"stateName":"lastOccupationEnd", "value":datetime.datetime.now().strftime(_defaultDateStampFormat)}]})
+								if "occupationDuration" in dev.states:
+									try: onTime = int(time.time() - time.mktime(time.strptime(dev.states["lastOccupationStart"] , _defaultDateStampFormat )))
+									except: onTime = 0
+									self.delayedActions["data"].put( {"actionTime":time.time()+delayOff, "devId":dev.id, "updateItems":[{"stateName":"occupationDuration", "value": onTime}]})
+	
+					else:
+						if data[statename] != dev.states[statename]:
+							self.addToStatesUpdateDict(dev.id,statename, data[statename], uiValue=uiValue)
+						self.setIcon(dev, dev.pluginProps, "SensorOff-SensorOn", 0)	
+						if "lastOccupationEnd" in dev.states:
+							self.addToStatesUpdateDict(dev.id,"lastOccupationEnd", datetime.datetime.now().strftime(_defaultDateStampFormat))
+							try: onTime = int(time.time() - time.mktime(time.strptime(dev.states["lastOccupationStart"] , _defaultDateStampFormat )))
+							except: onTime = 0
+							self.addToStatesUpdateDict(dev.id,"occupationDuration", onTime)
+
+
+			else:
+				if data[statename]:
+					if "lastOccupationEnd" in dev.states and "occupationDuration" in dev.states:
+						try: onTime = int(time.time() - time.mktime(time.strptime(dev.states["lastOccupationStart"] , _defaultDateStampFormat )))
+						except: onTime = 0
+						self.addToStatesUpdateDict(dev.id,"occupationDuration", onTime)
+						if  doPrint: self.indiLOG.log(20, "received.. {}:  time  on messsag; onTime:{}".format(dev.name, onTime))
+						if "increment" in props:
+							try: 
+								increment = int(props["increment"])
+								if increment > 0:
+									nnn = int(120/ increment + 2)
+									try:startvalue = int(dev.states["occupationDuration"])
+									except: startvalue = 0
+									for ii in range(1,nnn):
+										self.delayedActions["data"].put( {"actionTime":time.time()+ii*increment, "devId":dev.id, "updateItems":[{"stateName":"occupationDuration", "value":startvalue+ii*increment}]})
+							except: pass
+							
+
+			if "rawOnOff" in dev.states and dev.states["rawOnOff"] != data[statename]: 
+						self.addToStatesUpdateDict(dev.id,"rawOnOff" , data[statename], uiValue=uiValue)
+
+		except Exception as e:
+			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40, "{}".format(data))
+		return 
 
 ###-------------------------------------------------------------------------####
 	def updateBLEiBS0xRG(self, dev, data, whichKeysToDisplay,pi):
@@ -17894,16 +18046,18 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, updateList[kk]["state"], changed, decimalPlaces=decimalPlaces, force=False)
 					dCut = (cut - trendTimeDeltaMin)
 					if abs(dCut) < 60: # with in 60 secs of defined time window
-						changedPerc	 =      200 * ( valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] ) / max (0.01,valueList[-1][1] + valueList[updateList[kk]["pointer"]][1] )
-						if   changedPerc > trendDelta*8:	Trend = "^^^^"
-						elif changedPerc > trendDelta*4:	Trend = "^^^"
-						elif changedPerc > trendDelta*2:	Trend = "^^"
-						elif changedPerc > trendDelta: 		Trend = "^"
-						elif changedPerc < -trendDelta*8:	Trend = "vvvv"
-						elif changedPerc < -trendDelta*4:	Trend = "vvv"
-						elif changedPerc < -trendDelta*2:	Trend = "vv"
-						elif changedPerc < -trendDelta:		Trend = "v"
-						else:								Trend = "="
+						delta = valueList[-1][1] - valueList[updateList[kk]["pointer"]][1] 
+						adelta = abs(delta)
+						changedPerc	 =      200 * ( delta ) / max (0.01,valueList[-1][1] + valueList[updateList[kk]["pointer"]][1] )
+						if   changedPerc > trendDelta*8  and adelta > 0.8:	Trend = "^^^^"
+						elif changedPerc > trendDelta*4  and adelta > 0.4:	Trend = "^^^"
+						elif changedPerc > trendDelta*2  and adelta > 0.2:	Trend = "^^"
+						elif changedPerc > trendDelta    and adelta > 0.1: 	Trend = "^"
+						elif changedPerc < -trendDelta*8 and adelta > 0.8:	Trend = "vvvv"
+						elif changedPerc < -trendDelta*4 and adelta > 0.4:	Trend = "vvv"
+						elif changedPerc < -trendDelta*2 and adelta > 0.2:	Trend = "vv"
+						elif changedPerc < -trendDelta   and adelta > 0.1:	Trend = "v"
+						else:												Trend = "="
 						if doPrint: self.indiLOG.log(20,"                Trend:{:7}, changedPerc:{:6.3f}, cut:{:5}, dCut:{:5}, trendTimeDeltaMin:{:5}, trendDelta:{:.3f}, tnow:{:8.2f}, tPast:{:8.2f}".format( Trend, changedPerc, cut, dCut, trendTimeDeltaMin, trendDelta, float(valueList[-1][1]), float(valueList[updateList[kk]["pointer"]][1]) ))
 						if Trend != dev.states[stateToUpdate+"Trend"]:
 							self.addToStatesUpdateDict(dev.id, stateToUpdate+"Trend", Trend)
@@ -18108,22 +18262,33 @@ class Plugin(indigo.PluginBase):
 
 
 ####-------------------------------------------------------------------------####
-	def setIcon(self, dev, iconProps, default, UPdown):
+	def setIcon(self, dev, iconProps, default, firstOrSecond):
+		if firstOrSecond not in [0,1]:  zeroOrOne = 0
+		else: 							zeroOrOne = firstOrSecond
 		try:
 			if "iconPair" in iconProps and	iconProps["iconPair"].find("-") > 0:
-				icon = iconProps ["iconPair"].split("-")[UPdown]
+				icon = iconProps ["iconPair"].split("-")[zeroOrOne]
 			else:
-				icon = default.split("-")[UPdown]
+				icon = default.split("-")[zeroOrOne]
 			try:
 				dev.updateStateImageOnServer(getattr(indigo.kStateImageSel, icon, None))
 			except Exception as e:
-				if UPdown == 0:					 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
-				else:							 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+				if zeroOrOne == 0:					 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+				else:								 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 		except Exception as e:
 			if self.decideMyLog("SensorData"):
 				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 			return
 
+###-------------------------------------------------------------------------####
+	def getIcon(self, dev, iconProps, default, firstOrSecond):
+			if firstOrSecond not in [0,1]: 	zeroOrOne = 0
+			else: 							zeroOrOne = firstOrSecond
+			if "iconPair" in iconProps and	iconProps["iconPair"].find("-") > 0:
+				icon = iconProps ["iconPair"].split("-")[zeroOrOne]
+			else:
+				icon = default.split("-")[zeroOrOne]
+			return icon
 
 
 ####-------------------------------------------------------------------------####
@@ -18781,10 +18946,10 @@ class Plugin(indigo.PluginBase):
 
 
 				if cmdId > 1000:
-					errorText = data.get("errText","")
+					errorText = data.get("errorText","")
 					if dev.states["status"] != errorText:
 						self.addToStatesUpdateDict(dev.id, "status", errorText )
-						self.indiLOG.log(20,"updateFaceGesture, {} msg from RPI:{}; {}".format(dev.name, pi,errorText) )
+						self.indiLOG.log(20,"updateFaceGesture, {} msg from RPI:{}; cmdid:{}, >{}<".format(dev.name, pi, cmdId, errorText) )
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 					return
 
@@ -18852,10 +19017,10 @@ class Plugin(indigo.PluginBase):
 				stText = "{}:{}".format(cmdIdS, cmdtext)
 
 				if cmdId > 1000:
-					errortext = data.get("errText","")
+					errortext = data.get("errorText","")
 					if dev.states["status"] != errortext:
 						self.addToStatesUpdateDict(dev.id, "status", errortext )
-						self.indiLOG.log(20,"updateDF2301Q, {} msg from RPI:{}; {}".format(dev.name, pi,errortext) )
+						self.indiLOG.log(20,"updateDF2301Q, {} msg from RPI:{}; cmdId:{}, >{}<".format(dev.name, pi, cmdId, errortext) )
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 					return
 
@@ -18863,7 +19028,7 @@ class Plugin(indigo.PluginBase):
 					errortext = data.get("text","")
 					if dev.states["status"] != stText:
 						self.addToStatesUpdateDict(dev.id, "status", errortext )
-						self.indiLOG.log(20,"updateDF2301Q, {} msg from RPI:{}; {}".format(dev.name, pi,errortext) )
+						self.indiLOG.log(20,"updateDF2301Q, {} msg from RPI:{}; cmdId:{}, >{}<".format(dev.name, pi, cmdId, errortext) )
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 					return
 
@@ -19165,10 +19330,7 @@ class Plugin(indigo.PluginBase):
 				if time.time() - self.beacons[mac]["receivedSignals"][piyy]["lastSignal"] < fastDownTime and self.beacons[mac]["receivedSignals"][piyy]["rssi"]  != -999:
 					atLEastOneUp.append(piyy)
 
-			if self.selectBeaconsLogTimer !={}:
-				for sMAC in self.selectBeaconsLogTimer:
-					if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
-						self.indiLOG.log(10,"sel.beacon logging: Fstdwn-999-1  - :{} -999 receivedfrom:{}, rpi(s) till w signal:{}".format(mac, fromPiU, atLEastOneUp))
+			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "checkForFastDown receivedfrom:{}, rpi(s) till w signal:{}".format(fromPiU, atLEastOneUp))
 
 			if atLEastOneUp == []:
 				delayF = self.delayFastDownBy
@@ -19213,10 +19375,7 @@ class Plugin(indigo.PluginBase):
 				self.addToStatesUpdateDict(dev.id, "closestRPIText", "")
 			props = dev.pluginProps
 			if "showBeaconOnMap" in props and props["showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols: self.beaconPositionsUpdated =4
-			if self.selectBeaconsLogTimer !={}:
-				for sMAC in self.selectBeaconsLogTimer:
-					if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
-						self.indiLOG.log(10,"sel.beacon logging: Fstdwn-999-2  - :{} / {};  set status to down".format(dev.name, mac) )
+			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "  {};  set status to down}".format( dev.name))
 
 		except Exception as e:
 
@@ -19249,10 +19408,7 @@ class Plugin(indigo.PluginBase):
 			except:  distCalc = 99999.
 
 			if rssi != -999.:
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG    up  - :{}; set status up, rssi:{}".format(mac, rssi))
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG    up  - set status up, rssi:{}".format(rssi))
 
 				if self.beacons[mac]["lastUp"] > -1:
 					self.beacons[mac]["receivedSignals"][fromPiI]["rssi"]  = rssi
@@ -19552,22 +19708,14 @@ class Plugin(indigo.PluginBase):
 								newStates = copy.copy(dev.states)
 								break
 
-			if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: pass 1          :{}; getBeaconDeviceAndCheck".format(mac)  )
+			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "pass 1          ; getBeaconDeviceAndCheck")
 
+	
 			if rssi < self.acceptNewiBeacons and name == "" and self.beacons[mac]["ignore"] > 0:
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG rej rssi :{}; name= empty and ignore > 0".format(mac)  )
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG rej rssi ; name= empty and ignore > 0")
 				return setALLrPiVUpdate, dev, props, newStates, False
 
-			if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: pass 2          :{}; getBeaconDeviceAndCheck".format(mac)  )
+			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "pass 2          ; getBeaconDeviceAndCheck")
 
 			if name == "":
 				self.indiLOG.log(10,"creating new beacon,  received from pi #  {}/{}:   beacon-{}  typeOfBeacon: >{}<".format(fromPiU, piMACSend, mac, typeOfBeacon) )
@@ -19590,6 +19738,9 @@ class Plugin(indigo.PluginBase):
 							if  self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"]["type"].find("msgGET") >-1:
 								SupportsBatteryLevel = True
 								batteryLevelUUID	 = "msgGET"
+							if  self.knownBeaconTags["input"][typeOfBeacon]["commands"]["batteryLevel"] == "statusRequest":
+								SupportsBatteryLevel = True
+								batteryLevelUUID	 = "statusRequest"
 						if "beep" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]:
 							if  "cmdON" in self.knownBeaconTags["input"][typeOfBeacon]["commands"]["beep"]:
 								beaconBeepUUID	 = "gatttool"
@@ -19679,19 +19830,34 @@ class Plugin(indigo.PluginBase):
 
 		return setALLrPiVUpdate, dev, props, newStates, ignoreMessage
 
+####-------------------------------------------------------------------------####
 
+	def checkIfselectBeaconsLogTimer(self, mac, text):
+
+		try:
+			if self.selectBeaconsLogTimer != {}:
+				for sMAC in self.selectBeaconsLogTimer:
+					if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
+						self.indiLOG.log(10,"sel.beacon logging: {}:: {}".format(mac, text))
+
+		except Exception as e:
+				if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
 ####-------------------------------------------------------------------------####
 	def autoCreateCorrespondingSensorDev(self, mac, devBeacon, props, fromPiU, typeOfBeacon, msg):
 		try:
+		
+			
+			verbose = mac == "xB0:E9:FE:A4:58:82"
+			if verbose: self.indiLOG.log(20,"autoCreateCorrespondingSensorDev received mac:{}  typeOfBeacon:{}, isSwitchbotDevice:{},..{}?..{}?;  msg:{}".format(mac, typeOfBeacon, mac in self.isSwitchbotDevice,  mac in self.isBLESensorDevice,  mac in self.isBLElongConnectDevice, msg))
+
 			# check if type is supported
 			if typeOfBeacon not in self.knownBeaconTags["input"]:  return
 			if props.get("enableBELSensorChild","1") != "1": return
-
+			newprops = {}
+			
 			dtNow = datetime.datetime.now().strftime(_defaultDateStampFormat )
 			isAnInputDevice = True
-			verbose = mac == "xxxD1:AD:6B:3D:AB:2D"
-			if verbose: self.indiLOG.log(20,"autoCreateCorrespondingSensorDev received mac:{}  typeOfBeacon:{}, isSwitchbotDevice:{},..{}?..{}?;  msg:{}".format(mac, typeOfBeacon, mac in self.isSwitchbotDevice,  mac in self.isBLESensorDevice,  mac in self.isBLElongConnectDevice, msg))
 			# check if dev already exists
 			if mac in self.isSwitchbotDevice: # only after it is already created
 				try:
@@ -19771,7 +19937,6 @@ class Plugin(indigo.PluginBase):
 			if mac in self.isBLElongConnectDevice: 	return
 			#indigo.server.log("mac:{}, msg:{}".format(mac, msg))
 
-			newprops 							= {}
 			sensorInfo 							= self.knownBeaconTags["input"][typeOfBeacon]
 			isSens 								= False
 			correspondingiTrackButtonDevice 	= sensorInfo.get("correspondingiTrackButtonDevice", "")
@@ -19780,6 +19945,11 @@ class Plugin(indigo.PluginBase):
 			correspondingSensorType 			= sensorInfo.get("correspondingSensorType", "")
 			correspondingSwitchbotDevice 		= sensorInfo.get("correspondingSwitchbotDevice", "")
 			subtypeOfBeacon 					= msg.get("subtypeOfBeacon", "")
+			SupportsSensorValueisSet = False
+			if "SupportsSensorValue" in sensorInfo:
+				SupportsSensorValueisSet		= True
+				newprops["SupportsSensorValue"]	= sensorInfo.get("SupportsSensorValue", False)
+			
 			
 			if subtypeOfBeacon != "":
 				for tag in self.knownBeaconTags["input"]:
@@ -19867,7 +20037,6 @@ class Plugin(indigo.PluginBase):
 			moist 	= False
 			swit	= False
 			button	= False
-			batLev	= False
 
 			if textHint.lower().find("temp") > -1:		temp 	= True
 			if textHint.lower().find("hum") > -1:		hum 	= True
@@ -19887,33 +20056,33 @@ class Plugin(indigo.PluginBase):
 			if devType.lower().find("Cond") > -1:		cond 	= True
 			if devType.lower().find("Illum") > -1:		illum 	= True
 			if devType.lower().find("Moist") > -1:		moist 	= True
-			if devType.lower().find("curt") > -1:		batLev 	= True
+
+			if "commands" in sensorInfo and "batteryLevel" in sensorInfo["commands"] and sensorInfo["commands"]["batteryLevel"] != {}:
+				batLev = True
+			else:
+				batLev = False
 			
 			newprops["mac"] 								= mac
+			if not SupportsSensorValueisSet:
+				newprops["SupportsSensorValue"] 			= False
 			if isSens:
 				newprops["isSensorDevice"] 					= True
 				if devType != "SwitchbotContact" and correspondingShellyButtonDevice == "" and devType.find("-on") == -1:
-					newprops["SupportsSensorValue"] 		= True
-				else:
-					newprops["SupportsSensorValue"] 		= False
+					if not SupportsSensorValueisSet:
+						newprops["SupportsSensorValue"] 	= True
 
 				newprops["SupportsStatusRequest"] 			= False
 				newprops["AllowOnStateChange"] 				= False
 				newprops["AllowSensorValueChange"] 			= False
-				newprops["SupportsBatteryLevel"] 			= True
 				newprops["SupportsOnState"] 				= motion or contact or swit or button or devType.find("-on") > -1
 				rPiEnable 									= "rPiEnable{}".format(fromPiU)
 				newprops[rPiEnable]							= True
 			if swit:
 				newprops["isOutputDevice"] 					= True
 				newprops["SupportsStatusRequest"] 			= True
-				newprops["SupportsBatteryLevel"] 			= True
 				newprops["piServerNumber"]					= "{}".format(fromPiU)
 				rPiEnable 									= "rPiEnable{}".format(fromPiU)
 				newprops[rPiEnable]							= True
-
-			if button and  correspondingShellyButtonDevice == "":
-				newprops["SupportsBatteryLevel"] 			= False
 
 
 			newprops["noI2cCheck"] 							= True
@@ -19930,8 +20099,6 @@ class Plugin(indigo.PluginBase):
 			elif illum:
 				newprops["displayS"]						= "Illuminance"
 
-			else:
-				newprops["displayS"]						= ""
 
 			if isSens:
 				newprops["rPiEnable"+fromPiU]				= True
@@ -19956,13 +20123,10 @@ class Plugin(indigo.PluginBase):
 				newprops["updateIndigoDeltaAccelVector"] 	= "50"
 				newprops["updateIndigoDeltaMaxXYZ"]			= "50"
 
-			if moist:
-				newprops["displayS"]						= "Moisture"
-
-
 			if batLev:
 				newprops["SupportsBatteryLevel"] 			= True
-
+			else:
+				newprops["SupportsBatteryLevel"] 			= False
 
 			self.indiLOG.log(30,"\ncorresponding BLE-sensor device not found, will try to create one:{}.. details in plugin.log".format(name))
 			self.indiLOG.log(30,"=====> please finish setup for new device {} in device edit, ie which RPI this device is linked to;  etc<=== ".format(name))
@@ -20017,10 +20181,11 @@ class Plugin(indigo.PluginBase):
 					if devType not in self.RPI[fromPiU]["output"]: 			self.RPI[fromPiU]["output"][devType] 	= {}
 					self.RPI[fromPiU]["output"][devType]["{}".format(dev.id)] 										= {"modeOfDevice":"donotset", "holdSeconds": "-1", "mac":mac,"suppressQuickSecond":-10}
 
-			if   newprops["displayS"] in ["Temperature"]: 					dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensorOn)
-			elif newprops["displayS"] in ["Moisture","Formaldehyde"]:		dev.updateStateImageOnServer(indigo.kStateImageSel.HumiditySensorOn)
-			elif newprops["displayS"] in ["Illuminance"]:					dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensorOn)
-			else:															dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensor)
+			if  "displayS" in newprops:
+				if   newprops["displayS"] in ["Temperature"]: 					dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensorOn)
+				elif newprops["displayS"] in ["Moisture","Formaldehyde"]:		dev.updateStateImageOnServer(indigo.kStateImageSel.HumiditySensorOn)
+				elif newprops["displayS"] in ["Illuminance"]:					dev.updateStateImageOnServer(indigo.kStateImageSel.LightSensorOn)
+				else:															dev.updateStateImageOnServer(indigo.kStateImageSel.TemperatureSensor)
 
 			self.setONErPiV(fromPiU,"piUpToDate", ["updateParamsFTP"])
 				#indigo.server.log("devtype:{}, RPI dict:{}<".format(devType, self.RPI[fromPiU]))
@@ -20083,10 +20248,7 @@ class Plugin(indigo.PluginBase):
 			fromPiU 		= "{}".format(fromPi)
 			fromPiI			= int(fromPi)
 			piNReceived		= "{}".format(piNReceived)
-			if self.selectBeaconsLogTimer !={}:
-				for sMAC in self.selectBeaconsLogTimer:
-					if piMACSend.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
-						self.indiLOG.log(10,"sel.beacon logging: RPI msg: {}; pi#: {:2s};  {:}".format(piMACSend, fromPiU, msgs) )
+			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(piMACSend, "RPI msg: pi#: {:2s};  {:}".format( fromPiU, msgs))
 
 			keepThisMessage, beaconUpdatedIds = self.handleRPIMessagePart(piMACSend, fromPiU, piNReceived, ipAddress, dateString, beaconUpdatedIds)
 			if  keepThisMessage != "":
@@ -20142,27 +20304,17 @@ class Plugin(indigo.PluginBase):
 					if "TLMenabled" in msg: TLMenabled = msg["TLMenabled"]
 					else:					TLMenabled = False
 
-
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG    -1  - :{}; pi#={:2s}; msg{}".format(mac, fromPiU, msg) )
+	
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG    -1  - ; pi#={:2s}; msg{}".format( fromPiU, msg))
 
 				if not self.checkBeaconDictIfok( mac, dateString, rssi, fromPiU, msg, keepNew, acceptMAC, lastMessageReceived): continue
 
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG    -1a - :{}; after checkBeaconDictIfok".format(mac))
-
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG    -1a - after checkBeaconDictIfok")
 
 				setALLrPiVUpdate, dev, props, newStates, ignoreMessage = self.getBeaconDeviceAndCheck( mac, typeOfBeacon, rssi, txPower, fromPiU, piMACSend, dateString, rssiOffset, lastMessageReceived)
 				if ignoreMessage:  continue
 
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG    -1b - :{}; after getBeaconDeviceAndCheck".format(mac))
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG    -1b -after getBeaconDeviceAndCheck")
 
 
 				self.addToStatesUpdateDict(dev.id, "trigger", trigger, IgnoreIfOnly=True)
@@ -20242,15 +20394,7 @@ class Plugin(indigo.PluginBase):
 				updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds = self.handleBeaconRealSignal(mac, piMACSend, dev, props, beaconUpdatedIds, rssi, txPower, rssiOffset, fromPiU, newStates, dateString, lastMessageReceived )
 
 
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG    -3  - :{}; bf cars".format(mac))
-
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG    -4  - :{}; bf calc dist".format(mac))
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG    -3") 
 
 				if updateSignal and "note" in dev.states and dev.states["note"].find("beacon") >-1:
 					try:
@@ -20276,10 +20420,7 @@ class Plugin(indigo.PluginBase):
 						except Exception as e:
 							if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
-				if self.selectBeaconsLogTimer !={}:
-					for sMAC in self.selectBeaconsLogTimer:
-						if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-							self.indiLOG.log(10,"sel.beacon logging: newMSG    -5  - :{}; passed".format(mac))
+				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG    -5  - passed")
 
 				if logTRUEfromChangeOFRPI:
 					self.indiLOG.log(10,"ChangeOfRPI.beacon logging     :"+mac+"  "+dev.name       + " pi#={}".format(closestRPI)+" oldpi={}".format(oldRPI)+";   #Msgs={}".format(lCount).ljust(2)    + "  rssi={}".format(rssi).rjust(6)    + "                        txPow={}".format(txPower).rjust(6))
@@ -20356,9 +20497,7 @@ class Plugin(indigo.PluginBase):
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 			currClosestRPI =-1; currMinDist = -9999.
 
-		for sMAC in self.selectBeaconsLogTimer:
-			if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-				self.indiLOG.log(10,"sel.beacon logging: ClostR 1        :{}; currClosestRPIL:{}, newClosestRPI:{},  newMinDist:{}   currMinDist:{}".format(mac, currClosestRPI, newClosestRPI, newMinDist,  currMinDist))
+		if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "findClosestRPI  ClostR 1    currClosestRPIL:{}, newClosestRPI:{},  newMinDist:{}   currMinDist:{}".format( currClosestRPI, newClosestRPI, newMinDist,  currMinDist))
 
 
 		try:
@@ -20372,9 +20511,7 @@ class Plugin(indigo.PluginBase):
 								if bbb["distance"] < newMinDist:
 									newMinDist   = bbb["distance"]
 									newClosestRPI  = pi
-						for sMAC in self.selectBeaconsLogTimer:
-							if False and mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-								self.indiLOG.log(10,"sel.beacon logging: ClostR 2 :{}; piU:{}, t-lastSignal:{}, distance:{}; newClosestRPI:{}".format(mac,piU,  time.time() - bbb["lastSignal"],  bbb["distance"], newClosestRPI) )
+						if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "findClosestRPI  ClostR 2 piU:{}, t-lastSignal:{}, distance:{}; newClosestRPI:{}".format(piU,  time.time() - bbb["lastSignal"],  bbb["distance"], newClosestRPI) )
 					except:
 						pass
 			# dont switch if: <	 4 dBm diff and	 not defined then keep current
@@ -20383,10 +20520,8 @@ class Plugin(indigo.PluginBase):
 
 			if abs(newMinDist - currMinDist)  < 0.5 and  currClosestRPI !=-1: #
 				newClosestRPI = currClosestRPI
-			for sMAC in self.selectBeaconsLogTimer:
-				if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) ==0:
-					self.indiLOG.log(10,"sel.beacon logging: ClostR 3        :{}; currClosestRPI:{}, newClosestRPI:{},  newMinDist:{}   currMinDist:{}".format(mac, currClosestRPI, newClosestRPI, newMinDist,  currMinDist) )
-
+			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "findClosestRPI  currClosestRPI:{}, newClosestRPI:{},  newMinDist:{}   currMinDist:{}".format( currClosestRPI, newClosestRPI, newMinDist,  currMinDist) )
+	
 		except Exception as e:
 			if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return newClosestRPI
@@ -21341,6 +21476,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.delayedActions["state"] = "running"
 			pendingDisableItems ={}
+			msgLevel = 20
+			devIdPresent = {}
 			while self.delayedActions["state"] == "running":
 				try:
 					self.sleep(0.5)
@@ -21351,15 +21488,30 @@ class Plugin(indigo.PluginBase):
 						if time.time() - pendingDisableItems[devId]["activeUntil"] > 0:
 							del pendingDisableItems[devId]
 
-
+						
 					addback = []
+					devIdPresent = {}
 					while not self.delayedActions["data"].empty():
 						if self.delayedActions["state"] != "running": break
 						action = self.delayedActions["data"].get()
 						self.delayedActions["lastActive"]  = time.time()
 
-						if time.time() - action.get("activeUntil", 99999999999999) >0: continue # remove by skipping and not adding back
+						if time.time() - action.get("activeUntil", 99999999999999) > 0: continue # remove by skipping and not adding back
 						devId = action.get("devId",0)
+
+						if  "eval" in action:
+							try:
+								eval(action["eval"])
+							except Exception as e:
+								if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"eval:{}".format(action["eval"]), exc_info=True)
+							continue
+
+						if  "exec" in action:
+							try:
+								exec(action["exec"])
+							except Exception as e:
+								if "{}".format(e).find("None") == -1: self.indiLOG.log(40,"exec:{}".format(action["exec"]), exc_info=True)
+							continue
 
 						if devId > 0:
 							thisIsRemoveAction = False
@@ -21369,9 +21521,17 @@ class Plugin(indigo.PluginBase):
 									pendingDisableItems[devId] = {"stateName":updateItem["disable"],"activeUntil": action.get("activeUntil", action["actionTime"]+0.05)}
 									thisIsRemoveAction = True
 									break
-
-							if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread time?{:.1f}; action:{} , rmitem:{}, thisIsRemoveAction:{}".format(time.time() - action["actionTime"], action, pendingDisableItems, thisIsRemoveAction))
+					
+							if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread time?{:.1f}; action:{} , rmitem:{}, thisIsRemoveAction:{}".format(time.time() - action["actionTime"], action, pendingDisableItems, thisIsRemoveAction))
 							if thisIsRemoveAction: continue
+
+
+						if devId in self.cancelDelayedActions:
+								if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread devid:{} in cancelDelayedActions  count:{}".format(devId , self.cancelDelayedActions[devId]))
+								self.cancelDelayedActions[devId] -= 1
+								if self.cancelDelayedActions[devId]  == 0:
+									del self.cancelDelayedActions[devId]
+								continue
 
 						if time.time() - action["actionTime"] < 0:
 							addback.append(action)
@@ -21383,24 +21543,20 @@ class Plugin(indigo.PluginBase):
 								if "{}".format(e).find("None") == -1: self.indiLOG.log(30,"devId not in indgo devices", exc_info=True)
 								continue
 							execUpdate = False
-							if dev.id in self.cancelDelayedActions:
-								if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread devid:{} in cancelDelayedActions ".format(dev.id ))
-								del self.cancelDelayedActions[dev.id]
-								continue
 
 							for updateItem in action["updateItems"]:
-								if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread updateItem:{} ".format(updateItem))
+								if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread updateItem:{} ".format(updateItem))
 
 								if updateItem == "setupCARS":
-									if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread  setupCARS {}".format(dev.name))
+									if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread  setupCARS {}".format(dev.name))
 									self.setupCARS(dev.id, dev.pluginProps, mode="init")
 
 								if updateItem == "updateCars":
-									if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread updateCars:{}; {}; {}".format(dev.address, dev.name, dev.states["status"]))
+									if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread updateCars:{}; {}; {}".format(dev.address, dev.name, dev.states["status"]))
 									self.updateCARS(dev.address, dev, dev.states["status"])
 
 								elif updateItem == "OUTPUTswitchbotRelay-setParameters":
-									if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread  OUTPUTswitchbotRelay-setParameters".format())
+									if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread  OUTPUTswitchbotRelay-setParameters".format())
 									if dev.deviceTypeId in ["OUTPUTswitchbotRelay"]: ##,"OUTPUTswitchbotCurtain"]:
 										self.setSWITCHBOTBOTCALLBACKmenu({"outputDev":dev.id})
 
@@ -21420,7 +21576,7 @@ class Plugin(indigo.PluginBase):
 											if time.time() - pendingDisableItems[devId]["activeUntil"] > 0:
 												del pendingDisableItems[devId]
 											else:
-												if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread skipping updateItem:{} ".format(updateItem))
+												if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread skipping updateItem:{} ".format(updateItem))
 												continue
 
 										theValue = updateItem["value"]
@@ -21428,18 +21584,18 @@ class Plugin(indigo.PluginBase):
 
 										if theValue != dev.states[updateItem["stateName"]]:
 											execUpdate = True
-											if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread executing dev.states[stateName]:{}  updateItem:{} , image:{}".format(dev.states[updateItem["stateName"]], updateItem, image))
+											if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread executing dev.states[stateName]:{}  updateItem:{} , image:{}".format(dev.states[updateItem["stateName"]], updateItem, image))
 											if "uiValue" in updateItem:
 												self.addToStatesUpdateDict(dev.id, updateItem["stateName"], theValue, uiValue=updateItem["uiValue"], image=image)
 											else:
 												self.addToStatesUpdateDict(dev.id, updateItem["stateName"], theValue, image=image)
 											self.alertGarageDoor(dev.id, updateItem, calledFrom="delayedAction")
 										else:
-											if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread skipping state has not changed, no update")
+											if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread skipping state has not changed, no update")
 									else:
-										if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread skipping due to cond not met; statename:{} not in dev.states".format(updateItem["stateName"]))
+										if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread skipping due to cond not met; statename:{} not in dev.states".format(updateItem["stateName"]))
 								else:
-									if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread skipping due to cond not met")
+									if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread skipping due to cond not met")
 
 							if execUpdate: self.executeUpdateStatesDict(onlyDevID=dev.id)
 
@@ -22758,6 +22914,19 @@ configuration         - ==========  defined beacons ==============
 
 			indigo.server.log("sent \"{}\" status request not implemented".format(dev.name))
 
+		###### STATUS REQUEST for switchbot bots ######
+	def actionStatusRequest(self, dev):
+			if dev.deviceTypeId == "OUTPUTswitchbotRelay":
+				props = dev.pluginProps
+				piU = props["piServerNumber"]
+				fileContents = {"mac":props["mac"], "cmd":"statusRequest", "statusRequest":True, "outputDev":  dev.id,"mode":"interactive"}
+				toSend = [{"device": "OUTPUTswitchbotRelay", "command":"file", "fileName":"/home/pi/pibeacon/temp/switchbot.cmd", "fileContents":fileContents}]
+				self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="switchBotRelaySet")
+				if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,"action dimmer relay requested: for {} on pi:{}; text to send:{}".format(dev.name, piU, toSend))
+				return
+
+			indigo.server.log("sent \"{}\" status request not implemented".format(dev.name))
+
 	########################################
 	# Sensor Action callback
 	######################
@@ -22800,7 +22969,7 @@ configuration         - ==========  defined beacons ==============
 		if newStates is None: newStates = ""
 		try:
 			try:
-				#if "145547136" == devId: self.indiLOG.log(20,"addToStatesUpdateDict(1) {}, key:{}, value:{}".format(devId, key, value))
+				if key == "onOffState" and type(value) != type(True): return 
 
 				for ii in range(10):
 					if self.executeUpdateStatesDictActive == "":
@@ -23044,7 +23213,7 @@ configuration         - ==========  defined beacons ==============
 											chList.append({"key":key,"value":changedOnly[devId][key]["value"]})
 	
 									if not lastSensorChangePresent and "lastSensorChange"  in dev.states :
-										if  (key != "lastSensorChange" and key not in ["lastUpdateFromRPI","lastMessageFromRpi","lastUpdateBatteryLevel"] ) or ( key == "lastSensorChange" and nKeys >0):
+										if  (key != "lastSensorChange" and key not in ["lastUpdateFromRPI","lastMessageFromRpi","lastUpdateBatteryLevel"] and key.find("last") < 0) or ( key == "lastSensorChange" and nKeys > 0):
 											chList.append({"key":"lastSensorChange", "value":dateString})
 											lastSensorChangePresent = True
 	

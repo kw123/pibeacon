@@ -45,11 +45,7 @@
   "BLERuuviTag": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {},
     "comment": "",
     "correspondingSensorType": "BLERuuviTag",
     "correspondingSwitchbotDevice": "",
@@ -69,11 +65,7 @@
  "BLEmeeblue": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {    },
     "comment": "",
     "correspondingSensorType": "BLEmeeblue-on",
     "correspondingSwitchbotDevice": "",
@@ -94,11 +86,7 @@
 	"rawPackages":"13  02 01 06   0F 09 4E 4F 44 45 2D 42 54 2D 32 32 33 33 35 38  and  12  11 07 9E CA DC 24 0E E5 A9 E0 93 F3 A3 B5 01 00 40 6E  ",
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {    },
     "comment": "",
     "correspondingSensorType": "BLEHunterNodeBT",
     "correspondingSwitchbotDevice": "",
@@ -120,11 +108,7 @@
   "BLEgoveeTempHum": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {    },
     "comment": "  G V H  .. sensor # ",
     "correspondingSensorType": "BLEgoveeTempHum",
     "correspondingSwitchbotDevice": "",
@@ -184,11 +168,7 @@
   "BLEsensorbug": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {    },
     "comment": "  S e n s o r B u g + # ",
     "correspondingSwitchbotDevice": "",
     "dBm": "-59",
@@ -318,6 +298,7 @@
     "Maj": "",
     "Min": "",
     "commands": {
+      "tag" : "1A0E16F0FF",
       "batteryLevel": {
         "params": {
           "norm": 1,
@@ -347,6 +328,7 @@
     "beep": "off",
     "commands": {
       "batteryLevel": {
+     	 "tag" : "1A0E16F0FF",
         "params": {
           "norm": 1,
           "pos": 15
@@ -374,6 +356,7 @@
     "Min": "",
     "commands": {
       "batteryLevel": {
+        "tag" : "6F0FF19",
         "params": {
           "nType": "float",
           "norm": 1.009,
@@ -507,11 +490,7 @@
   "InkBirdTempPool01B": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {    },
     "comment": "name Tag: tps= 74 70 73",
     "correspondingSensorType": "BLEinkBirdPool01B",
     "correspondingSwitchbotDevice": "",
@@ -584,15 +563,7 @@
   "Jaalee": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "params": {
-          "norm": 2.55,
-          "pos": -3
-        },
-        "type": "msgGet"
-      }
-    },
+    "commands": {    },
     "comment": "",
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
@@ -632,9 +603,7 @@
     "Maj": "",
     "Min": "",
     "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
+      "batteryLevel": {      }
     },
     "comment": "",
     "correspondingSwitchbotDevice": "",
@@ -673,11 +642,7 @@
   "Minew_Light": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {    },
     "comment": "",
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
@@ -696,11 +661,7 @@
   "Minew_LightOnOff": {
     "Maj": "",
     "Min": "",
-    "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
-    },
+    "commands": {    },
     "comment": " simple light on/off sensor, no config possible",
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
@@ -720,9 +681,7 @@
     "Maj": "",
     "Min": "",
     "commands": {
-      "batteryLevel": {
-        "type": "msg"
-      }
+      "batteryLevel": {      }
     },
     "comment": "",
     "correspondingSwitchbotDevice": "",
@@ -744,7 +703,8 @@
     "Min": "UUID:29-31:int",
     "commands": {
       "batteryLevel": {
-        "params": {
+        "tag" : "1E020A0",
+      	"params": {
           "norm": 1,
           "pos": 8
         },
@@ -1106,6 +1066,7 @@
     "Min": "",
     "commands": {
       "batteryLevel": {
+        "tag" : "1D17FF1801015",
         "params": {
           "norm": 1,
           "pos": 20
@@ -1326,8 +1287,10 @@
   "Switchbot": {
     "Maj": "",
     "Min": "",
-    "commands": {
+    "commands": {},
+    "commandsold": {
       "batteryLevel": {
+        "tag" : "0807163DFD48",
         "params": {
           "and": 127,
           "norm": 1,
@@ -1336,6 +1299,7 @@
         "type": "msgGet"
       },
       "mode": {
+        "tag" : "0807163DFD48",
         "params": {
           "and": 128,
           "nType": "string",
@@ -1347,6 +1311,8 @@
         "type": "msgGet"
       },
       "onOffState": {
+        "tag" : "0807163DFD48",
+        "sendImmediatelyIfChanged" : true,
         "params": {
           "and": 64,
           "nType": "string",
@@ -1362,10 +1328,13 @@
     "correspondingSwitchbotDevice": "OUTPUTswitchbotRelay",
     "dBm": "-61",
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
-    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB0616000D48-",
+    "hexCodeOld":"11071BC5D5A50200B89FE6114D22000DA2CB0616000D48",
+    "hexCode":"0807163DFD48", 
+    "hexCodet2":"08 07 16     3DFD   48           00 E1 00",
+    "hexCodee":"LL ll pktype swbot   mode: 48=bot",
     "hexCode2": "",
-    "pos": 2,
-    "posDelta": 0,
+    "pos": 0,
+    "posDelta": 2,
     "sensorFunctions": "",
     "sequence": 0,
     "subType": {},
@@ -1382,7 +1351,9 @@
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
-    "hexCode":"0D0C163DFD64-",
+    "hexCode":"0D0C163DFD64",
+    "hexCodet":"0A 09 16     3DFD   64",
+    "hexCodee":"LL ll pktype swbot  mode: 64=curtain",
     "hexCode2": "",
     "pos": 0,
     "posDelta": 0,
@@ -1399,6 +1370,7 @@
     "commands": {
       "allowsConnection": {
         "params": {
+        "tag" : "0A09163DFD63",
           "and": 128,
           "nType": "bool",
           "norm": 128,
@@ -1407,6 +1379,7 @@
         "type": "msgGet"
       },
       "batteryLevel": {
+        "tag" : "0A09163DFD63",
         "params": {
           "and": 127,
           "nType": "int",
@@ -1416,6 +1389,7 @@
         "type": "msgGet"
       },
       "calibrated": {
+        "tag" : "0A09163DFD63",
         "params": {
           "and": 64,
           "nType": "bool",
@@ -1425,6 +1399,8 @@
         "type": "msgGet"
       },
       "inMotion": {
+        "tag" : "0A09163DFD63",
+        "sendImmediatelyIfChanged" : true,
         "params": {
           "and": 128,
           "nType": "bool",
@@ -1434,7 +1410,9 @@
         "type": "msgGet"
       },
       "light": {
-        "params": {
+        "tag" : "0A09163DFD63",
+         "sendImmediatelyIfChanged" : true,
+       "params": {
           "and": 240,
           "nType": "int",
           "norm": 16,
@@ -1443,6 +1421,8 @@
         "type": "msgGet"
       },
       "position": {
+        "tag" : "0A09163DFD63",
+        "sendImmediatelyIfChanged" : true,
         "params": {
           "and": 127,
           "nType": "int",
@@ -1453,13 +1433,17 @@
       }
     },
     "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
-    "correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain3",
+    "correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain",
     "dBm": "-61",
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
-    "hexCode":"0A09163DFD63-",
+    "hexCode-otherLONG":"14 02 01 06 10 FF 69 09 D1AD6B3DAB2D B6 0B 00 11 04 01 63 A2",
+    "hexCode-otherEXPL":"LL ll fl cn ll switchbt mac######### ???? ",
+    "hexCode": "0A09163DFD63",
     "hexCode2": "",
+    "hexCodext":"0A 09 16     3DFD   73 C0   E2  E1  11 04   B1",
+    "hexCodexe":"LL ll pktype swbot  model: 7B=curtain3 .. see commands",
     "pos": 0,
-    "posDelta": 0,
+    "posDelta": 2,
     "sensorFunctions": "",
     "sequence": 0,
     "subType": {},
@@ -1472,6 +1456,7 @@
     "Min": "",
     "commands": {
       "allowsConnection": {
+        "tag" : "0A09163DFD7B",
         "params": {
           "and": 128,
           "nType": "bool",
@@ -1481,6 +1466,8 @@
         "type": "msgGet"
       },
       "batteryLevel": {
+        "tag" : "0A09163DFD7B",
+        "sendImmediatelyIfChanged" : true,
         "params": {
           "and": 127,
           "nType": "int",
@@ -1490,6 +1477,7 @@
         "type": "msgGet"
       },
       "calibrated": {
+        "tag" : "0A09163DFD7B",
         "params": {
           "and": 64,
           "nType": "bool",
@@ -1499,6 +1487,8 @@
         "type": "msgGet"
       },
       "inMotion": {
+        "tag" : "0A09163DFD7B",
+        "sendImmediatelyIfChanged" : true,
         "params": {
           "and": 128,
           "nType": "bool",
@@ -1508,6 +1498,8 @@
         "type": "msgGet"
       },
       "light": {
+        "tag" : "0A09163DFD7B",
+        "sendImmediatelyIfChanged" : true,
         "params": {
           "and": 240,
           "nType": "int",
@@ -1517,6 +1509,8 @@
         "type": "msgGet"
       },
       "position": {
+        "tag" : "0A09163DFD7B",
+        "sendImmediatelyIfChanged" : true,
         "params": {
           "and": 127,
           "nType": "int",
@@ -1530,10 +1524,15 @@
     "correspondingSwitchbotDevice": "OUTPUTswitchbotCurtain3",
     "dBm": "-61",
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
-    "hexCode":"0A09163DFD7B-",
+    "hexCode-otherLONG":"1402010610FF6909MAC#########B60B0011040163A2",
+    "hexCode-otherEXPL":"LL ll fl cn ll switchbt mac######### ???? ",
+    "hexCode-fullpaket":"14 02 01 06 10 FF 69 09 D1AD6B3DAB2D B6 0B 00 11 04 01 63 A2",
+    "hexCodext":"0A 09 16     3DFD   7B",
+    "hexCodexe":"LL ll pktype swbot  model: 7B=curtain3 .. see commands",
+    "hexCode": "0A09163DFD7B",
     "hexCode2": "",
     "pos": 0,
-    "posDelta": 0,
+    "posDelta": 2,
     "sensorFunctions": "",
     "sequence": 0,
     "subType": {},
@@ -1545,13 +1544,19 @@
   "SwitchbotMotion": {
     "Maj": "",
     "Min": "",
-    "commands": {},
+    "commands": {
+      "batteryLevel": {
+        "type": "msg"
+      }
+    },
     "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
     "correspondingSensorType": "BLEswitchbotMotion",
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
-    "hexCode":"0A09163DFD73",
+    "hexCode": "0A09163DFD73",
+    "hexCodet":"0A 09 16     3DFD   73",
+    "hexCodee":"LL ll pktype swbot  mode: 73=motion",
     "hexCode2": "",
     "pos": 0,
     "posDelta": 0,
@@ -1562,15 +1567,45 @@
     "textForMenu": "",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   },
+  "SwitchbotMMWaveMotion": {
+    "Maj": "",
+    "Min": "",
+    "commands": {
+      "batteryLevel": {
+        "type": "msg"
+      }
+    },
+    "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
+    "correspondingSensorType": "BLEswitchbotMMWaveMotion",
+    "correspondingSwitchbotDevice": "",
+    "dBm": "-61",
+    "advData":{"":{"len":0,"completeData":"","useTag":""}},
+    "hexCode": "130201060FFF6909MAC#########",
+    "hexCodet":"",
+    "hexCodee":"",
+    "hexCode2": "",
+    "pos": 0,
+    "posDelta": 3,
+    "sensorFunctions": "",
+    "SupportsSensorValue": false,
+    "sequence": 0,
+    "subType": {},
+    "text": "SwitchBot mm Wave occupancy sensor",
+    "textForMenu": "",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
+
+
   "SwitchbotRemote": {
     "Maj": "",
     "Min": "",
     "commands": {
       "batteryLevel": {
+        "tag" : "0807163DFD62",
         "params": {
           "and": 127,
           "norm": 1,
-          "pos": 25
+          "pos": 7
         },
         "type": "msgGet"
       }
@@ -1579,9 +1614,12 @@
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
-    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB07-",
+    "hexCodeold":"11071BC5D5A50200B89FE6114D22000DA2CB07-",
+    "hexCodcompletePackage1":"08  07 16     3D FD   62              20   64 00   ",
+    "hexCodcompletePackaget":"LL  ll pktype swbot   model:62=remote ??   bb ??   ",
+	"hexCode":"0807163DFD62",
     "hexCode2": "",
-    "pos": 2,
+    "pos": 0,
     "posDelta": 0,
     "sensorFunctions": "",
     "sequence": 0,
@@ -1593,8 +1631,10 @@
   "SwitchbotTempHum": {
     "Maj": "",
     "Min": "",
-    "commands": {
+    "commands": {},
+    "commandsold": {
       "batteryLevel": {
+        "tag" : "0A09163DFD54",
         "params": {
           "and": 127,
           "norm": 1,
@@ -1608,9 +1648,15 @@
     "correspondingSwitchbotDevice": "",
     "dBm": "-61",
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
-    "hexCode":"11071BC5D5A50200B89FE6114D22000DA2CB0916000D54-",
+    "hexCodedatar":"1C 11 07 1B C5 D5 A5 02 00 B8 9F E6 11 4D 22 00 0D A2 CB 09 16 00 0D 54-",
+    "hexCodedatai":"see beaconloop ",
+    "hexCodecompletepackage1": "12  02 01 06 0E FF 69 09 C081FECDCF9F 56 03 02 95 2C",
+    "hexCodecompletepackaget": "12  02 01 06 0E FF 69 09 MAC######### bt hum   temp",
+    "hexCodet":"0A 09 16     3DFD   54",
+    "hexCodee":"LL ll pktype swbot  mode: 54=temphum",
+    "hexCode": "0A09163DFD54",
     "hexCode2": "",
-    "pos": 2,
+    "pos": 0,
     "posDelta": 0,
     "sensorFunctions": "",
     "sequence": 0,
@@ -1619,6 +1665,67 @@
     "textForMenu": "",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   },
+  "SwitchbotTempHum": {
+    "Maj": "",
+    "Min": "",
+    "commands": {},
+    "commandsold": {
+      "batteryLevel": {
+        "tag" : "0A09163DFD54",
+        "params": {
+          "and": 127,
+          "norm": 1,
+          "pos": 25
+        },
+        "type": "msgGet"
+      }
+    },
+    "comment": "https://github.com/OpenWonderLabs/SwitchBotAPI-BLE/tree/latest/devicetypes",
+    "correspondingSensorType": "BLEswitchbotTempHumCO2",
+    "correspondingSwitchbotDevice": "",
+    "dBm": "-61",
+    "advData":{"":{"len":0,"completeData":"","useTag":""}},
+    "hexCodedatar":"17  02 01 06 13 FF 69 09   B0E9FED20D73   0B 64 05 93 33 00 04 02 6D 00  -",
+    "hexCodedatai":"see beaconloop ",
+    "hexCodecompletepackage2": "07  06 16 3D FD 35 00 64",
+    "hexCode": "1702010613FF6909MAC#########",
+    "hexCode2": "",
+    "pos": 0,
+    "posDelta": 0,
+    "sensorFunctions": "",
+    "sequence": 0,
+    "subType": {},
+    "text": "SwitchBot Temp Hum CO2",
+    "textForMenu": "",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
+
+  "SwitchbotHumidifierEvap": {
+    "Maj": "",
+    "Min": "",
+    "commands": { },
+    "comment": "https://github.com/sblibs/pySwitchbot/blob/master/switchbot/adv_parsers/humidifier.py#L34",
+    "correspondingSensorType": "BLEswitchbotHumidifierEvap",
+    "correspondingSwitchbotDevice": "",
+    "dBm": "-61",
+    "advData":{"":{"len":0,"completeData":"","useTag":""}},
+    "hexcodeOtherx":"18  02 01 06 14 FF 69 09 D0EF766EFC5E   FE 08 88 AE 95 33 10 46 00 46 3C",
+    "hexcodeOthere":"LL  ll 01 06 ll FF swbot MAC#########   FE 08 88 AE 95 33 10 46 00 46 3C",
+    "hexCode":"0A09163DFD23",
+	"hexCodecompletepackage1":"0A  09 16 3D FD 23 00 00 15 1C 00  ",
+    "hexCodet":"0A 09 16     3DFD   23",
+    "hexCodee":"LL ll pktype swbot  mode: 23=evap",
+    "hexCode2": "",
+    "pos":0,
+    "posDelta": 2,
+    "sensorFunctions": "",
+    "sequence": 0,
+    "subType": {},
+    "text": "SwitchBot Humidifier Evap",
+    "textForMenu": "RuuviAir xxxxx as tag",
+    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
+  
   "ThermoBeacon": {
     "Maj": "",
     "Min": "",

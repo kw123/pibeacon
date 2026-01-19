@@ -430,6 +430,7 @@ if any other Motion Mode is selected only fast and VERY slow is working </Label>
 					<Option value="90">90%</Option>
 					<Option value="close">close</Option>
 					<Option value="stop">stop</Option>
+					<Option value="toggle">toggle open / close</Option>
 				</List>
 			</Field>
 	

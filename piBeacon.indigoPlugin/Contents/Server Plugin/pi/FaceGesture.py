@@ -1655,8 +1655,8 @@ def sendxxRecoveryMessage(code):
 		if devId != "" and lastTime != "": 
 			if code == 1001: 	yesNo = "" 
 			else: 				yesNo = "Not_"
-			errText = "{}recovered_from_sensor_reset_after_{}{}".format(yesNo, lastTime, previousReset) 
-			U.sendURL({"sensors":{sensor:{devId:{"cmd":code,"errText":errText}}}}, wait=False)
+			errorText = "{}recovered_from_sensor_reset_after_{}{}".format(yesNo, lastTime, previousReset) 
+			U.sendURL({"sensors":{sensor:{devId:{"cmd":code,"errorText":errorText}}}}, wait=False)
 			lastAliveSend[devId] = time.time()
 	except Exception as e:
 		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))

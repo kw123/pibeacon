@@ -7608,6 +7608,40 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="60"  >60 secs</Option>
 				</List>
 			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
+			</Field>
+
+
 
 			<Field id="statusColorLabel" type="label" fontColor="green">
 				<Label>== set color of status column dot to </Label></Field>
@@ -9263,6 +9297,38 @@ These sensor types are an onOff sensor. They have either a button, a mag sensor,
 					<Option value="60"  >60 secs</Option>
 				</List>
 			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
+			</Field>
 
 
 
@@ -10422,6 +10488,38 @@ test
 					<Option value="60"  >60 secs</Option>
 				</List>
 			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
+			</Field>
 
 
 			<Field id="labelRPI"   type="label" >
@@ -10614,6 +10712,38 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="60"  >60 secs</Option>
 				</List>
 			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
+			</Field>
 
 
 			<Field id="labelRPI"   type="label" >
@@ -10778,6 +10908,38 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="50"  >50 secs</Option>
 					<Option value="60"  >60 secs</Option>
 				</List>
+			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
 			</Field>
 
 
@@ -11528,6 +11690,624 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</States>
 	</Device>
+	
+	
+	<Device type="sensor" id="BLEswitchbotTempHumCO2">     	<Name>BLE-switchbot - Temperature Humidity CO2</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="false"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
+				<Label>===  To setup this  Temp Hum BLE "switchbot"
+Find MAC number through finde new beacons or using the iphone app.
+This device will send a BLE w temp and hum CO2 values  every 5 secs
+You can use either red/grey/green or temperature icon in the status column: set below
+===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+				<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+			<Field id="labelRPI"   type="label" >
+				<Label>Select RPIs that should monitor this sensor,
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+
+			<Field id="isRPION00" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION01" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION02" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION03" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION04" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION05" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION06" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION07" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION08" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION09" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION10" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION11" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION12" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION13" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION14" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION15" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION16" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION17" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION18" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION19" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false" visibleBindingId="isRPION00" visibleBindingValue="true">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false" visibleBindingId="isRPION01" visibleBindingValue="true">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false" visibleBindingId="isRPION02" visibleBindingValue="true">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false" visibleBindingId="isRPION03" visibleBindingValue="true">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false" visibleBindingId="isRPION04" visibleBindingValue="true">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false" visibleBindingId="isRPION05" visibleBindingValue="true">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false" visibleBindingId="isRPION06" visibleBindingValue="true">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false" visibleBindingId="isRPION07" visibleBindingValue="true">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false" visibleBindingId="isRPION08" visibleBindingValue="true">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false" visibleBindingId="isRPION09" visibleBindingValue="true">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false" visibleBindingId="isRPION10" visibleBindingValue="true">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false" visibleBindingId="isRPION11" visibleBindingValue="true">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false" visibleBindingId="isRPION12" visibleBindingValue="true">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false" visibleBindingId="isRPION13" visibleBindingValue="true">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false" visibleBindingId="isRPION14" visibleBindingValue="true">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false" visibleBindingId="isRPION15" visibleBindingValue="true">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false" visibleBindingId="isRPION16" visibleBindingValue="true">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+	
+			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
+				<Label>== Enable min/max/changed values and trend (8x,4x,2x,x% up/down/const in last xx minutes) states</Label>
+			</Field>
+			<Field id="Temperature_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Temperature:</Label> </Field>
+			<Field id="Temperature_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend time window for change:</Label>
+				<List>
+					<Option value="300"   > 5 minutes</Option>
+					<Option value="600"   > 10 minutes</Option>
+					<Option value="1200"  > 20 minutes</Option>
+					<Option value="3600"  > 1 hour</Option>
+					<Option value="7200"  > 2 hour</Option>
+					<Option value="21600" > 6 hour</Option>
+					<Option value="43200" > 12 hour</Option>
+					<Option value="86400" > 24 hour</Option>
+				</List>
+			</Field>
+			<Field id="Temperature_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Temperature_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+				<List>
+					<Option value="10"    > 0.1 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
+					<Option value="50"    > 0.5 %</Option>
+					<Option value="100"   > 1 %</Option>
+					<Option value="150"   > 1.5 %</Option>
+					<Option value="200"   > 2 %</Option>
+					<Option value="300"   > 3 %</Option>
+					<Option value="500"   > 5 %</Option>
+					<Option value="1000"  > 10 %</Option>
+					<Option value="2000"  > 20 %</Option>
+					<Option value="3000"  > 30 %</Option>
+					<Option value="5000"  > 50 %</Option>
+				</List>
+			</Field>
+
+
+
+			<Field id="Humidity_EnableMinMax"		type="checkbox"		defaultValue="true" >		<Label>Humidity:</Label> </Field>
+			<Field id="Humidity_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
+				<List>
+					<Option value="300"   > 5 minutes</Option>
+					<Option value="600"   > 10 minutes</Option>
+					<Option value="1200"  > 20 minutes</Option>
+					<Option value="3600"  > 1 hour</Option>
+					<Option value="7200"  > 2 hour</Option>
+					<Option value="21600" > 6 hour</Option>
+					<Option value="43200" > 12 hour</Option>
+					<Option value="86400" > 24 hour</Option>
+				</List>
+			</Field>
+			<Field id="Humidity_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Humidity_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+				<List>
+					<Option value="10"    > 0.1 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
+					<Option value="50"    > 0.5 %</Option>
+					<Option value="100"   > 1 %</Option>
+					<Option value="150"   > 1.5 %</Option>
+					<Option value="200"   > 2 %</Option>
+					<Option value="300"   > 3 %</Option>
+					<Option value="500"   > 5 %</Option>
+					<Option value="1000"  > 10 %</Option>
+					<Option value="2000"  > 20 %</Option>
+					<Option value="3000"  > 30 %</Option>
+					<Option value="5000"  > 50 %</Option>
+				</List>
+			</Field>
+			
+			<Field id="CO2_EnableMinMax" 			type="checkbox"		defaultValue="true" >		<Label>CO2:</Label>					</Field>
+			<Field id="CO2_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
+				<List>
+					<Option value="300"   > 5 minutes</Option>
+					<Option value="600"   > 10 minutes</Option>
+					<Option value="1200"  > 20 minutes</Option>
+					<Option value="3600"  > 1 hour</Option>
+					<Option value="7200"  > 2 hour</Option>
+					<Option value="21600" > 6 hour</Option>
+					<Option value="43200" > 12 hour</Option>
+					<Option value="86400" > 24 hour</Option>
+				</List>
+			</Field>
+			<Field id="CO2_trendDelta" type="menu"  defaultValue="100" visibleBindingId="CO2_EnableMinMax" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+				<List>
+					<Option value="10"    > 0.1 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
+					<Option value="50"    > 0.5 %</Option>
+					<Option value="100"   > 1 %</Option>
+					<Option value="150"   > 1.5 %</Option>
+					<Option value="200"   > 2 %</Option>
+					<Option value="300"   > 3 %</Option>
+					<Option value="500"   > 5 %</Option>
+					<Option value="1000"  > 10 %</Option>
+					<Option value="2000"  > 20 %</Option>
+					<Option value="3000"  > 30 %</Option>
+					<Option value="5000"  > 50 %</Option>
+				</List>
+			</Field>
+
+
+			
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+			<Field id="displayS" type="menu"     defaultValue="Temperature" hidden="no"> <Label>Property to display in the State Column:</Label>
+				<List>
+					<Option value="Temperature"  >Temperature[C/F]</Option>
+					<Option value="Humidity"  >Humidity[%]</Option>
+					<Option value="CO2"  >CO2[ppm]</Option>
+				</List>
+			</Field>
+
+			<Field id="offsetTemp"  type="textfield"  defaultValue="0"> <Label>offset added to measured Temperature[C]:</Label> </Field>
+			<Field id="offsetHum"   type="textfield"  defaultValue="0"> <Label>offset added to measured Humidity[%]:</Label> </Field>
+			<Field id="offsetCO2"   type="textfield"  defaultValue="0"> <Label>offset added to measured CO2:</Label> </Field>
+			<Field id="updateIndigoTiming"    type="menu"     defaultValue="60" hidden="no" tooltip="if > Min Secs ..">
+				<Label>Send sensor values to Indigo at least every:</Label>
+				<List>
+					<Option value="1"   >  immediate, only for testing</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="60"  >60 secs</Option>
+					<Option value="90"  >90 secs</Option>
+					<Option value="120" >  2 minutes</Option>
+					<Option value="180" >  3 minutes</Option>
+				</List>
+			</Field>
+
+			<Field id="statusColorLabel" type="label" fontColor="green">
+				<Label>== set color of status column dot to </Label></Field> 
+			<Field id="stateGreen" type="textfield"       defaultValue="x&lt;23 and x&gt;21">	<Label>set State Indicator to GREEN if:</Label></Field>
+			<Field id="stateGrey"  type="textfield"       defaultValue="(x&lt;=21 and x&gt;19) or (x&gt;=23 and x&lt;25)">	<Label>set State Indicator to GREY if:</Label></Field>
+			<Field id="stateRed"   type="textfield"       defaultValue="x&gt;=25 or x&lt;=19">	<Label>set State Indicator to RED if:</Label></Field>
+			<Field id="statusColorLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey" >
+				<Label>The conditions will be passed through eval(). Examples:
+  &quot;x &gt; 55&quot;
+  &quot;x &lt; 33&quot;
+  &quot;33 &lt;= x and x &lt;= 66&quot;
+  &quot;x &lt;= 33 or 66 &lt;=x&quot;
+  &quot;1 &quot; to pick color
+- The sequence is green/grey/red.
+- If one is satisfied, the others will NOT be evaluated
+- This will be skipped if all fields are empty or the same
+- An invalid python &quot;eval()&quot; statement will cause an error
+- The status column must be a single state
+- If you leave it blank the defauult device state icon will be used
+</Label>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+
+		</States>
+	</Device>
+	
+	<Device type="custom" id="BLEswitchbotHumidifierEvap">     	<Name>BLE-switchbot - Humidifier Evap</Name>
+		<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
+				<Label>===  To setup this  Hum Evap BLE "switchbot"
+Find MAC number through finde new beacons or using the iphone app.
+This device will send a BLE values  every 5 secs
+===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+				<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+			<Field id="labelRPI"   type="label" >
+				<Label>Select RPIs that should monitor this sensor,
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+
+			<Field id="isRPION00" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION01" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION02" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION03" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION04" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION05" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION06" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION07" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION08" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION09" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION10" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION11" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION12" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION13" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION14" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION15" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION16" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION17" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION18" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION19" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false" visibleBindingId="isRPION00" visibleBindingValue="true">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false" visibleBindingId="isRPION01" visibleBindingValue="true">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false" visibleBindingId="isRPION02" visibleBindingValue="true">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false" visibleBindingId="isRPION03" visibleBindingValue="true">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false" visibleBindingId="isRPION04" visibleBindingValue="true">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false" visibleBindingId="isRPION05" visibleBindingValue="true">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false" visibleBindingId="isRPION06" visibleBindingValue="true">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false" visibleBindingId="isRPION07" visibleBindingValue="true">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false" visibleBindingId="isRPION08" visibleBindingValue="true">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false" visibleBindingId="isRPION09" visibleBindingValue="true">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false" visibleBindingId="isRPION10" visibleBindingValue="true">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false" visibleBindingId="isRPION11" visibleBindingValue="true">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false" visibleBindingId="isRPION12" visibleBindingValue="true">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false" visibleBindingId="isRPION13" visibleBindingValue="true">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false" visibleBindingId="isRPION14" visibleBindingValue="true">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false" visibleBindingId="isRPION15" visibleBindingValue="true">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false" visibleBindingId="isRPION16" visibleBindingValue="true">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+	
+
+
+			
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+
+		</ConfigUI>
+
+		<States>
+		</States>
+	</Device>
+
+
+
+
+	<Device type="sensor" id="BLEswitchbotMMWaveMotion">     	<Name>BLE-switchbot - MM wave Motion (occupation)</Name>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="false">
+				<Label>SupportsSensorValue: set to off</Label>
+			</Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="false">
+				<Label>SupportsBatteryLevel: set to on</Label>
+			</Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+
+			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
+				<Label>=== To setup this  occupation BLE "switchbot"
+Find MAC number through find new beacons or using the iphone app.
+On the iphone app set detection settings (range and unoccupied timer) 
+It looks as if the battery information is not reliable. Measures only after batteries are inserted.
+In Indigo trigger on onOffState = true / false
+
+===
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+				<Label>Enter MAC number for this device: </Label>
+			</Field>
+
+			<Field id="labelRPI"   type="label" >
+				<Label>Select RPIs that should monitor this sensor,
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+
+			<Field id="isRPION00" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION01" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION02" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION03" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION04" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION05" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION06" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION07" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION08" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION09" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION10" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION11" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION12" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION13" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION14" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION15" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION16" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION17" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION18" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			<Field id="isRPION19" type="checkbox"     defaultValue="true" hidden="true"> </Field>
+			
+			<Field id="rPiEnable0" type="checkbox" defaultValue="false" visibleBindingId="isRPION00" visibleBindingValue="true">   <Label>rPi #00:</Label> </Field>
+			<Field id="rPiEnable1" type="checkbox" defaultValue="false" visibleBindingId="isRPION01" visibleBindingValue="true">   <Label>rPi #01:</Label> </Field>
+			<Field id="rPiEnable2" type="checkbox" defaultValue="false" visibleBindingId="isRPION02" visibleBindingValue="true">   <Label>rPi #02:</Label> </Field>
+			<Field id="rPiEnable3" type="checkbox" defaultValue="false" visibleBindingId="isRPION03" visibleBindingValue="true">   <Label>rPi #03:</Label> </Field>
+			<Field id="rPiEnable4" type="checkbox" defaultValue="false" visibleBindingId="isRPION04" visibleBindingValue="true">   <Label>rPi #04:</Label> </Field>
+			<Field id="rPiEnable5" type="checkbox" defaultValue="false" visibleBindingId="isRPION05" visibleBindingValue="true">   <Label>rPi #05:</Label> </Field>
+			<Field id="rPiEnable6" type="checkbox" defaultValue="false" visibleBindingId="isRPION06" visibleBindingValue="true">   <Label>rPi #06:</Label> </Field>
+			<Field id="rPiEnable7" type="checkbox" defaultValue="false" visibleBindingId="isRPION07" visibleBindingValue="true">   <Label>rPi #07:</Label> </Field>
+			<Field id="rPiEnable8" type="checkbox" defaultValue="false" visibleBindingId="isRPION08" visibleBindingValue="true">   <Label>rPi #08:</Label> </Field>
+			<Field id="rPiEnable9" type="checkbox" defaultValue="false" visibleBindingId="isRPION09" visibleBindingValue="true">   <Label>rPi #09:</Label> </Field>
+			<Field id="rPiEnable10" type="checkbox" defaultValue="false" visibleBindingId="isRPION10" visibleBindingValue="true">  <Label>rPi #10:</Label> </Field>
+			<Field id="rPiEnable11" type="checkbox" defaultValue="false" visibleBindingId="isRPION11" visibleBindingValue="true">  <Label>rPi #11:</Label> </Field>
+			<Field id="rPiEnable12" type="checkbox" defaultValue="false" visibleBindingId="isRPION12" visibleBindingValue="true">  <Label>rPi #12:</Label> </Field>
+			<Field id="rPiEnable13" type="checkbox" defaultValue="false" visibleBindingId="isRPION13" visibleBindingValue="true">  <Label>rPi #13:</Label> </Field>
+			<Field id="rPiEnable14" type="checkbox" defaultValue="false" visibleBindingId="isRPION14" visibleBindingValue="true">  <Label>rPi #14:</Label> </Field>
+			<Field id="rPiEnable15" type="checkbox" defaultValue="false" visibleBindingId="isRPION15" visibleBindingValue="true">  <Label>rPi #15:</Label> </Field>
+			<Field id="rPiEnable16" type="checkbox" defaultValue="false" visibleBindingId="isRPION16" visibleBindingValue="true">  <Label>rPi #16:</Label> </Field>
+			<Field id="rPiEnable17" type="checkbox" defaultValue="false" visibleBindingId="isRPION17" visibleBindingValue="true">  <Label>rPi #17:</Label> </Field>
+			<Field id="rPiEnable18" type="checkbox" defaultValue="false" visibleBindingId="isRPION18" visibleBindingValue="true">  <Label>rPi #18:</Label> </Field>
+			<Field id="rPiEnable19" type="checkbox" defaultValue="false" visibleBindingId="isRPION19" visibleBindingValue="true">  <Label>rPi #19:</Label> </Field>
+
+			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
+
+			
+			<Field id="memberOfLabel" type="label" fontColor="green">       	<Label>== Make this device member of group:...</Label>				</Field>
+			<Field id="groupEnable0" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable1" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable2" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable3" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable4" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable5" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupEnable6" type="checkbox"		defaultValue="true" 	hidden="True">						</Field>
+			<Field id="groupName0" 		type="textfield"	defaultValue="Family" 	visibleBindingId="groupEnable0" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfFamily"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable0" visibleBindingValue="true">					<Label></Label>  		</Field>
+			<Field id="groupName1" 		type="textfield"	defaultValue="Guests"	visibleBindingId="groupEnable1" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfGuests"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable1" visibleBindingValue="true">					<Label></Label>		</Field>
+			<Field id="groupName2"		type="textfield"	defaultValue="Other1"	visibleBindingId="groupEnable2" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther1"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable2" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName3"		type="textfield"	defaultValue="Other2"	visibleBindingId="groupEnable3" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther2"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable3" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName4"		type="textfield"	defaultValue="Other3"	visibleBindingId="groupEnable4" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther3"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable4" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName5"		type="textfield"	defaultValue="Other4"	visibleBindingId="groupEnable5" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther4"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable5" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="groupName6"		type="textfield"	defaultValue="Other5"	visibleBindingId="groupEnable6" visibleBindingValue="true" readOnly="true">	<Label>variable GroupName:</Label>	</Field>
+			<Field id="memberOfOther5"	type="checkbox"		defaultValue="false"	visibleBindingId="groupEnable6" visibleBindingValue="true">					<Label></Label>  </Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+			<Field id="displayS" type="menu"     defaultValue="onOffState" hidden="no"> <Label>Property to display in the State Column:</Label>
+				<List>
+					<Option value="onOffState"  >onOffState, text see below</Option>
+				</List>
+			</Field>
+
+			<Field id="onOffuiTrue"		type="textfield"	defaultValue="occupied">	<Label>show what string in status if on:</Label>	</Field>
+			<Field id="onOffuiFalse"	type="textfield"	defaultValue="not occupied">	<Label>show what string in status if off:</Label>	</Field>
+
+			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
+				<Label>select the icon pair you like to use for not occupied / occupied:</Label>
+			</Field>
+
+			<Field id="delayOff" type="menu"     defaultValue="0" tooltip="if sensor send quick off after on with this you can keep display onState on for longer." >
+				<Label>delay OFF by xx secs, keep state ON for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
+			</Field>
+			<Field id="increment" type="menu" defaultValue="0" >
+				<Label>increment state "presenceDuration" while present to enable re-triggering </Label>
+				<List>
+					<Option value="0"  >do not increment</Option>
+					<Option value="5"  >every 5 secs</Option>
+					<Option value="10" >every 10 secs</Option>
+					<Option value="15" >every 15 secs</Option>
+					<Option value="20" >every 20 secs</Option>
+					<Option value="25" >every 25 secs</Option>
+					<Option value="30" >every 30 secs</Option>
+				</List>
+			</Field>
+
+		</ConfigUI>
+
+		<States>
+			<State id="lightLevel">
+				<ValueType>number</ValueType>
+				<TriggerLabel>lightLevel</TriggerLabel>
+				<ControlPageLabel>lightLevel</ControlPageLabel>
+			</State>
+			<State id="rawOnOff">
+				<ValueType>boolean</ValueType>
+				<TriggerLabel>rawOnOff</TriggerLabel>
+				<ControlPageLabel>rawOnOff</ControlPageLabel>
+			</State>
+			<State id="lastOccupationStart">
+				<ValueType>string</ValueType>
+				<TriggerLabel>lastOccupationStart</TriggerLabel>
+				<ControlPageLabel>lastOccupationStart</ControlPageLabel>
+			</State>
+			<State id="lastOccupationEnd">
+				<ValueType>string</ValueType>
+				<TriggerLabel>lastOccupationEnd</TriggerLabel>
+				<ControlPageLabel>lastOccupationEnd</ControlPageLabel>
+			</State>
+			<State id="occupationDuration">
+				<ValueType>string</ValueType>
+				<TriggerLabel>occupationDuration</TriggerLabel>
+				<ControlPageLabel>occupationDuration</ControlPageLabel>
+			</State>
+		</States>
+	</Device>
 
 
 	<Device type="sensor" id="BLEswitchbotMotion">     	<Name>BLE-switchbot - Motion</Name>
@@ -11677,6 +12457,38 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="50"  >50 secs</Option>
 					<Option value="60"  >60 secs</Option>
 				</List>
+			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
 			</Field>
 
 
@@ -11858,6 +12670,38 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="50"  >50 secs</Option>
 					<Option value="60"  >60 secs</Option>
 				</List>
+			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
 			</Field>
 
 
@@ -25368,7 +26212,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for down/up:</Label>
 			</Field>
 
@@ -25382,7 +26226,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="actionPulseBurst"         type="textfield"     defaultValue="" hidden="no" > <Label>action if BurstEvent:</Label></Field>
-			<Field id="actionPulseContinuous"         type="textfield"     defaultValue="" hidden="no" > <Label>action if contEvent:</Label></Field>
+			<Field id="actionPulseContinuous"    type="textfield"     defaultValue="" hidden="no" > <Label>action if contEvent:</Label></Field>
 
 
 		</ConfigUI>
@@ -25787,7 +26631,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for down/up:</Label>
 			</Field>
 
@@ -26056,7 +26900,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for down/up:</Label>
 			</Field>
 
@@ -26264,7 +27108,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">
            								<Label> display = </Label>  </Field>
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for down/up:</Label>
 			</Field>
 
@@ -26474,7 +27318,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">
            								<Label> display = </Label>  </Field>
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for down/up:</Label>
 			</Field>
 
@@ -26726,7 +27570,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">
            								<Label> display = </Label>  </Field>
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for down/up:</Label>
 			</Field>
 
@@ -26971,7 +27815,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for down/up:</Label>
 			</Field>
 
@@ -27032,6 +27876,38 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="50"  >50 secs</Option>
 					<Option value="60"  >60 secs</Option>
 				</List>
+			</Field>
+			<Field id="delayOn" type="menu"     defaultValue="0" tooltip="" >
+				<Label>delay ON by xx secs, keep state OFF for some time</Label>
+				<List>
+					<Option value="0"   >do not delay</Option>
+					<Option value="0.5" >0.5 sec</Option>
+					<Option value="1"   >1 sec</Option>
+					<Option value="1.5" >1.5 sec</Option>
+					<Option value="2"   >2 secs</Option>
+					<Option value="2.5" >2.5 secs</Option>
+					<Option value="3"   >3 secs</Option>
+					<Option value="3.5" >3.5 secs</Option>
+					<Option value="4"   >4 secs</Option>
+					<Option value="4.5" >4.5 secs</Option>
+					<Option value="5"   >5 secs</Option>
+					<Option value="6"   >6 secs</Option>
+					<Option value="7"   >7 secs</Option>
+					<Option value="8"   >8 secs</Option>
+					<Option value="9"   >9 secs</Option>
+					<Option value="10"  >10 secs</Option>
+					<Option value="12"  >12 secs</Option>
+					<Option value="15"  >15 secs</Option>
+					<Option value="20"  >20 secs</Option>
+					<Option value="25"  >25 secs</Option>
+					<Option value="30"  >30 secs</Option>
+					<Option value="40"  >40 secs</Option>
+					<Option value="50"  >50 secs</Option>
+					<Option value="60"  >60 secs</Option>
+				</List>
+			</Field>
+			<Field id="labeldelay"		type="label" 	fontColor="darkgrey">
+				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
 			</Field>
 
 
@@ -28334,7 +29210,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for away/close:</Label>
 			</Field>
 
@@ -28690,7 +29566,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for away/close:</Label>
 			</Field>
 
@@ -29091,7 +29967,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for away/close:</Label>
 			</Field>
 
@@ -29465,7 +30341,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for away/close:</Label>
 			</Field>
 
@@ -29766,7 +30642,7 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for away/close:</Label>
 			</Field>
 
@@ -33213,7 +34089,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="iconPair"   type="menu" defaultValue="0" tooltip="this for indigo state column" >
-					<List class="self" filter="" method="filterSensorONoffIcons" dynamicReload="false" />
+					<List class="self" filter="" method="filterSensorOffOnIcons" dynamicReload="false" />
 				<Label>select the icon pair you like to use for away/home:</Label>
 			</Field>
 
