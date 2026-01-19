@@ -1,4 +1,4 @@
-Added features / changes in added features / changes in v2022.191.159 @ 2026-01-18
+Added features / changes in added features / changes in v2022.191.161 @ 2026-01-18
 ==================================================
 1. added sensor switchbot mm wave occupancy BLE sensor
 has option to update state "occupancy duration" continuously every xxscs until occupancy is off, set option in devce edit 
@@ -7,7 +7,6 @@ you can do a trigger on dev State "occupancyDuration" any change and  condition 
    
 2. added delay ON state change in addition to delay OFF state
      
-
 
 Added features / changes in added features / changes in v2022.189.155 @ 2025-12-07
 ==================================================
