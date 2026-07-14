@@ -47,6 +47,13 @@ status = "ok"
 # ------------------    ------------------ 
 
 def getWifiInfo(longShort=0):
+	"""Returns a short or long human-readable WiFi status label (off/active/search/adhoc) based on the global wifi type, enabled flag, and whether a wifi IP is assigned.
+
+	Inputs:
+	    longShort (int): 0 for short single-letter label, 1 for full word
+	Outputs:
+	    str: WiFi status label such as 'o'/'off', 'A'/'active', 'P'/'search', or 'I'/'adhoc'
+	"""
 	global eth0IP, wifi0IP
 
 	labels = [["o","off"],["A","active"],["P","search"],["I","adhoc"]]
@@ -65,6 +72,13 @@ def getWifiInfo(longShort=0):
 
 # ------------------    ------------------ 
 def updatewebserverStatus():
+	"""Builds an HTML status report of the NeoPixel clock (time, time zone, IP, WiFi state, light sensor values, marks/ticks settings), writes it to the statusData file, and pushes it to the web status page.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Writes status JSON file and updates the web status display; logs on error
+	"""
 	global eth0IP, wifi0IP, LEDintensityFactor, clockLightSetOverWrite, clockLightSet, timeZone, lightSensorValue
 	global lightOnOff, lightSensorSlope
 	global clockDict
@@ -101,11 +115,25 @@ def updatewebserverStatus():
 		U.logger.log(30,"", exc_info=True)
 
 def removebracketsetc(data):
+	"""Formats the given data as a string and strips out brackets and spaces, building a cleaned local string. Note: the result is assigned locally but never returned.
+
+	Inputs:
+	    data (object): Any value to stringify and clean of brackets/spaces
+	Outputs:
+	    None: No return value; computed cleaned string is discarded
+	"""
 	out = "{}".format(data).replace("[","").replace("]","").replace(" ","")
 
 
 # ------------------    ------------------ 
 def webServerInputExtraText():
+	"""Constructs the HTML form (dropdown selects for LED on/off, light sensor slope, marks, hours/minutes modes, IP display, reboot/shutdown actions, and running-line/circle effects) for the clock's web configuration page, then pushes it along with default values and output file path to the web input endpoint.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Sends generated HTML form JSON to U.updateWebINPUT; logs on error
+	"""
 	try:
 		xxx = []
 		y  = ""
@@ -274,6 +302,13 @@ def webServerInputExtraText():
 
 #################################		 
 def readCommand():
+	"""Reads the temp/neopixelClock.cmd file if present, deletes it, normalizes the command text, and dispatches it to execCommands. Returns a restart flag (always 0 from this function's local).
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: Restart flag, 0 (no file or after dispatching commands)
+	"""
 	global DEVID, clockDict, lastCommandSendToNeopixel
 	restart = 0
 
@@ -293,6 +328,13 @@ def readCommand():
 	
 	
 def execCommands(cmds):
+	"""Parses and executes a semicolon-separated command string controlling the NeoPixel clock: sets light-sensor slope, LED on/off, marks/hours/minutes modes, runs line/snake/circle effects, shows the IP number, or triggers restart/reboot/reset/shutdown. Saves parameters and restarts the NeoPixel display when a setting changed.
+
+	Inputs:
+	    cmds (str): Semicolon-separated lowercase command string
+	Outputs:
+	    int: Restart flag (0=none, 2=settings changed requiring restart)
+	"""
 	global DEVID, clockDict, lastCommandSendToNeopixel
 	restart = 0
 	try:
@@ -507,6 +549,14 @@ def execCommands(cmds):
 #################################		 
 def toggleCircle(color, runFor ):
 
+	"""Convenience wrapper that triggers a circle animation effect for a given duration by building and running a 'circle:<color>,0.3,<runFor>' command through execCommands.
+
+	Inputs:
+	    color (str): Color code (c/r/g/b/y/w) for the circle effect
+	    runFor (int): Duration in seconds to run the effect
+	Outputs:
+	    None: Dispatches a circle command to execCommands; logs on error
+	"""
 	try:
 		execCommands("circle:"+color+",0.3,"+str(runFor))
 
@@ -516,6 +566,14 @@ def toggleCircle(color, runFor ):
 #################################		 
 def toggleSnake(color, runFor ):
 
+	"""Convenience wrapper that triggers a running-line (snake) effect of 30 LEDs for a given duration by building and running a 'linea:<color>,30,<runFor>' command through execCommands.
+
+	Inputs:
+	    color (str): Color code (c/r/g/b/y/w) for the snake effect
+	    runFor (int): Duration in seconds to run the effect
+	Outputs:
+	    None: Dispatches a line/snake command to execCommands; logs on error
+	"""
 	try:
 		execCommands("linea:"+color+",30,"+str(runFor))
 
@@ -523,6 +581,13 @@ def toggleSnake(color, runFor ):
 		U.logger.log(30,"", exc_info=True)
 #################################		 
 def toggleModes(tMode):
+	"""Cycles the clock's minutes, hours, or marks display mode to its next value (wrapping at the configured max), applies the new mode, saves parameters, and restarts the NeoPixel display. Returns early for unrecognized mode keys.
+
+	Inputs:
+	    tMode (str): Which mode to advance: 'MM', 'HH', or 'Marks'
+	Outputs:
+	    None: Advances and applies the selected display mode, saving and restarting the display
+	"""
 	global lastMMmode, lastHHmode, lastMarksMode, maxHHMode, maxMMMode, maxMarksMode
 	try:
 
@@ -562,6 +627,13 @@ def toggleModes(tMode):
 
 #################################		 
 def readParams():
+	"""Re-reads the plugin parameter file via U.doRead, and when the raw content has changed, updates global clock configuration (clockDict, device type LEDs, timezone, speed, GPIO pin assignments). Applies a timezone change by copying the zoneinfo file to /etc/localtime, saves parameters, and returns a change-level code.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: change level: 0 no change, 1/2/3 indicating extent of config change or error
+	"""
 	global sensor, output, inpRaw, inp, DEVID,useRTC
 	global clockDict, devTypeLEDs, speed, speedOfChange, setClock, clockMode, gpiopinSET, minLightNotOff
 	global lastCl, timeZone, currTZ
@@ -657,6 +729,16 @@ def readParams():
 
 #################################		 
 def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
+	"""Builds the full LED clock display command by computing per-ring LED start/sum offsets, tick and mark pixel index positions for hours/minutes/seconds, dimmed RGB colors, and extra LED settings, then writes the resulting command to the neopixel input (launching neopixel3.py if not running).
+
+	Inputs:
+	    setClock (str): time string to set the clock to, or empty for normal run mode
+	    off (bool): if True, sends an off command to the clock
+	    calledFrom (str): caller name used for logging
+	    force (bool): if True, forces sending the command even when busy/waiting
+	Outputs:
+	    None: writes command to neopixel input file and may spawn neopixel3.py subprocess
+	"""
 	global devTypeLEDs, speed, speedOfChange, clockMode, clockLightSetOverWrite, LEDintensityFactor, lightSensorValue, lightSensorValueREAD, minLightNotOff
 	global DEVID, clockDict, inp , lastCommandSendToNeopixel
 	try:
@@ -863,6 +945,15 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 
 #################################
 def calcRGBdimm(inData, multHMS, minLight=False):
+	"""Scales each RGB channel by the light-on/off factor and a brightness multiplier, clamping the result between a configured minimum brightness and 255; channels at zero stay off, and below-minimum values are zeroed unless minLight enforces a floor.
+
+	Inputs:
+	    inData (list): list of RGB channel integer values to dim
+	    multHMS (float): brightness multiplier applied to each channel
+	    minLight (bool): if True, enforce a minimum brightness floor instead of zeroing
+	Outputs:
+	    list: list of dimmed integer RGB channel values
+	"""
 	global clockDict, minLightNotOff
 	RGB = []
 	for x in inData:
@@ -881,6 +972,13 @@ def calcRGBdimm(inData, multHMS, minLight=False):
 
 #################################
 def setNEOinput(out):
+		"""Appends the given neopixel command dictionary as a JSON line to the temp/neopixel.inp file and records the time of the last write.
+
+		Inputs:
+		    out (dict): neopixel command dictionary to serialize and send
+		Outputs:
+		    None: appends JSON to neopixel.inp file and updates lastNeoParamsSet timestamp
+		"""
 		global lastNeoParamsSet
 		f = open(G.homeDir+"temp/neopixel.inp","a")
 		f.write(json.dumps(out)+"\n") 
@@ -891,6 +989,13 @@ def setNEOinput(out):
 
 #################################
 def setupGPIOs():
+	"""Configures the GPIO input pins used by the clock's set/up/down buttons, using either the RPi.GPIO library (cleanup, BCM mode, input with pull-up) or gpiozero Button objects depending on the useGPIO flag.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: initializes GPIO/gpiozero input pins for clock buttons
+	"""
 	global gpiopinSET, GPIOZERO
 	try: 
 		U.logger.log(20, "pins =  {}".format(gpiopinSET))
@@ -927,6 +1032,13 @@ def setupGPIOs():
 
 #################################
 def makeTZ(tz):
+	"""Stores the given timezone name into clockDict and triggers writing the timezone to the system by calling U.writeTZ.
+
+	Inputs:
+	    tz (str): timezone name to store in the clock configuration
+	Outputs:
+	    None: updates clockDict timeZone and invokes U.writeTZ
+	"""
 	global inp, clockDict, DEVID, currTZ
 	clockDict["timeZone"] = str(currTZ)+" "+tz
 	#print "sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime"
@@ -935,12 +1047,26 @@ def makeTZ(tz):
 
 #################################
 def writeTZ(tz ):
+	"""Sets the system timezone by copying the corresponding zoneinfo file to /etc/localtime via a sudo subprocess call.
+
+	Inputs:
+	    tz (str): zoneinfo path/name to copy to /etc/localtime
+	Outputs:
+	    None: runs sudo cp to set the system localtime
+	"""
 	subprocess.call("sudo cp /usr/share/zoneinfo/"+tz+" /etc/localtime", shell=True)
 	return
 
 
 #################################
 def setExtraLEDoff():
+	"""Clears any configured extra LED setting in clockDict and saves the updated parameters if an extra LED was previously set.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: clears clockDict extraLED and persists parameters
+	"""
 	global DEVID, clockDict, inp
 	try:
 		if clockDict["extraLED"] !="":
@@ -952,6 +1078,16 @@ def setExtraLEDoff():
 
 #################################
 def startNEOPIXELNewTime(h,m,d,tz=""):
+	"""Sets the clock to a new time by clamping the hour/minute, composing a date string for the given day, and invoking startNEOPIXEL with the corresponding setClock value.
+
+	Inputs:
+	    h (int): hour value (clamped to 0-23)
+	    m (int): minute value (clamped to 0-59)
+	    d (int): day-of-month value
+	    tz (str): optional timezone string (unused in body)
+	Outputs:
+	    None: calls startNEOPIXEL to set the displayed clock time
+	"""
 	U.logger.log(10,"startNEOPIXELNewTime "+	 str(d)+"  "+ str(h)+"	"+ str(m)) 
 	if h <	0:	h = 23
 	if h > 23:	h =	 0
@@ -976,6 +1112,13 @@ def startNEOPIXELNewTime(h,m,d,tz=""):
 
 #################################
 def setPatternUPdown(upDown):
+	"""Cycles the clock display pattern in response to an up/down button: DOWN steps the marks level forward (wrapping after 4), UP steps the tick density forward (wrapping after 3), then applies the new pattern with save and restart.
+
+	Inputs:
+	    upDown (str): direction string, 'DOWN' to cycle marks or otherwise to cycle ticks
+	Outputs:
+	    None: calls setPatternTo to change and apply the display pattern
+	"""
 	global inp,	 DEVID
 	global marksLevel, hoursPix, minutesPix,ticksMMHH
 	global marksOptions, ticksOptions
@@ -994,6 +1137,13 @@ def setPatternUPdown(upDown):
 
 #################################
 def getCurrentPatterns():
+	"""Inspects clockDict's current tick and mark configuration to derive the active pattern levels, setting the global marksLevel, ticksMMHH, minutesPix and hoursPix indices used by the up/down pattern cycling.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sets global pattern-level variables from current clockDict config
+	"""
 	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global clockDict, inp 
 	marksLevel = 0 
@@ -1028,6 +1178,17 @@ def getCurrentPatterns():
 
 #################################
 def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
+	"""Applies a selected tick and/or mark pattern by deep-copying the chosen option templates into clockDict, optionally configuring an extra LED ring, refreshing the derived pattern levels, then saving parameters and restarting the neopixel clock.
+
+	Inputs:
+	    ticks (int or str): tick option index to apply, or empty string to leave unchanged
+	    marks (int or str): mark option index to apply, or empty string to leave unchanged
+	    save (bool): if True, persist the updated parameters
+	    restart (bool): if True, restart the neopixel clock display
+	    ExtraLED (bool): if True, also configure an extra LED ring from ticks/marks
+	Outputs:
+	    None: updates clockDict patterns, saves parameters, and restarts the clock
+	"""
 	global inp, clockDict, DEVID
 	global ticksOptions, marksOptions
 	try:
@@ -1052,6 +1213,13 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 ##
 #################################
 def setHHMarksTo(yy):
+	"""Validates an hour-marks mode index and, if it falls within the allowed range, applies it via setPatternTo without saving or restarting; logs the action and errors.
+
+	Inputs:
+	    yy (int or str): Marks mode index (coerced to int) to apply
+	Outputs:
+	    bool: True on success, False if the index is out of range
+	"""
 	global inp, clockDict, DEVID
 	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global ticksOptions, marksOptions
@@ -1069,6 +1237,13 @@ def setHHMarksTo(yy):
 
 #################################
 def setMMModeTo(yy):
+	"""Validates a minutes-tick mode index and, if in range, deep-copies the corresponding 'MM' tick options into clockDict and refreshes the current patterns.
+
+	Inputs:
+	    yy (int or str): Minutes tick mode index (coerced to int)
+	Outputs:
+	    bool: True on success, False if the index is out of range
+	"""
 	global inp, clockDict, DEVID
 	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global ticksOptions, marksOptions
@@ -1090,6 +1265,13 @@ def setMMModeTo(yy):
 
 #################################
 def setHHModeTo(yy):
+	"""Validates an hours-tick mode index and, if in range, deep-copies the corresponding 'HH' tick options into clockDict, refreshing current patterns before and after.
+
+	Inputs:
+	    yy (int or str): Hours tick mode index (coerced to int)
+	Outputs:
+	    bool: True on success, False if the index is out of range
+	"""
 	global inp, clockDict, DEVID
 	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global ticksOptions, marksOptions
@@ -1112,6 +1294,13 @@ def setHHModeTo(yy):
 
 #################################
 def setNightPatterns():
+	"""Enters night mode (mode 1) by saving the current marks/pixel/tick levels into LAST globals and dimming the display via setPatternTo with ticks=1 and marks=0.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global night-mode state and applies a dimmed pattern
+	"""
 	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
@@ -1124,6 +1313,13 @@ def setNightPatterns():
 
 #################################
 def setNightOffPatterns():
+	"""Enters night-off mode (mode 2) by saving the current marks/pixel/tick levels into LAST globals and turning the display off via setPatternTo with ticks=0 and marks=0.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global night-mode state and applies an off pattern
+	"""
 	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
@@ -1136,6 +1332,13 @@ def setNightOffPatterns():
 
 #################################
 def	 restorefromNightPatterns():
+	"""Restores the display from night mode by reapplying the previously saved tick and marks levels via setPatternTo and clearing the night-mode flag.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Restores saved pattern and resets nightMode to 0
+	"""
 	global marksLevel, hoursPix, minutesPix, ticksMMHH
 	global marksLevelLAST, hoursPixLAST, minutesPixLAST, ticksMMHHLAST
 	global nightMode
@@ -1150,6 +1353,13 @@ def	 restorefromNightPatterns():
 
 #################################
 def saveParameters():
+	"""Serializes the global clockDict to JSON and writes it to the neopixelClock.clockDict file in the home directory; logs any errors.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Writes clockDict to a JSON file on disk
+	"""
 	global clockDict
 	global lastNeoParamsSet
 
@@ -1164,6 +1374,13 @@ def saveParameters():
 
 #################################
 def readLocalParams():
+	"""Initializes clockDict then loads it from the neopixelClock.clockDict JSON file, normalizing minLightNotOff, marksOn, and lightOnOff fields; reinitializes if the loaded dict is too small.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Populates global clockDict and minLightNotOff from disk
+	"""
 	global clockDict, minLightNotOff
 	initlocalParams()
 	try:
@@ -1184,6 +1401,13 @@ def readLocalParams():
 
 #################################
 def initlocalParams():
+	"""Resets the global clockDict to an empty dictionary.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Clears global clockDict
+	"""
 	global clockDict
 	clockDict = {}
 	return
@@ -1191,6 +1415,13 @@ def initlocalParams():
  
 #################################
 def setLightfromSensor():
+	"""Reads the latest light-sensor data file, scales the reading by sensor-specific max ranges and a configured slope, classifies the resulting brightness into categories (offoff/nightoff/nightdim/daylow/daymedium/dayhigh), and restarts the NeoPixel display when the brightness class or change is significant.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates light globals and may restart the NeoPixel display
+	"""
 	global clockLightSetOverWrite, lightSensorValueLast, lightSensorValue, lightSensorValueREAD
 	global lastTimeStampSensorFile, clockLightSetOverWriteOld,  LEDintensityFactor, LEDintensityFactorOld
 	global clockDict, sensorLoopCount
@@ -1300,6 +1531,13 @@ def setLightfromSensor():
 
 #################################
 def afterAdhocWifistartedSetLED(maxTime):
+	"""Configures clockDict's extraLED entry to blink a blue indicator LED for the given duration after ad-hoc WiFi has started, by computing tick positions on the ring.
+
+	Inputs:
+	    maxTime (int or float): Number of ticks/duration the indicator LED blinks for
+	Outputs:
+	    None: Sets the extraLED entry in clockDict
+	"""
 	global DEVID, clockDict, inp 
 	l0 = 60 + 48 + 40 
 	clockDict["extraLED"]	  = {"ticks":[ii+l0 for ii in range(int(maxTime))], "RGB":[0,0,200],"blink":[1,1]} # blink led 7 on 8 ring 
@@ -1309,6 +1547,13 @@ def afterAdhocWifistartedSetLED(maxTime):
 
 #################################
 def resetEverything():
+	"""Performs a full reset by killing the running neopixel3.py process, restoring backup clockDict and parameter files via sudo copies, restoring the pattern, and rebooting after a short delay.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Restores backup files and reboots the device
+	"""
 	U.killOldPgm(myPID,"neopixel3.py")
 	subprocess.call('sudo cp '+G.homeDir+'neopixelClock.clockDict-backup '+G.homeDir+'neopixelClock.clockDict', shell=True)
 	#subprocess.call('sudo cp '+G.homeDir+'neopixelClock.interfaces /etc/network/interfaces', shell=True)
@@ -1320,12 +1565,26 @@ def resetEverything():
 
 #################################
 def shutdown():
+	"""Plays the NeoPixel shutdown animation and then powers down the Raspberry Pi via the utility helper.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: triggers LED shutdown signal and OS shutdown
+	"""
 	signalShutDown()
 	U.doShutdown()	
 	return ## dummy
 	
 #################################
 def reboot():
+	"""Plays the NeoPixel shutdown animation and then reboots the Raspberry Pi via the utility helper.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: triggers LED shutdown signal and OS reboot
+	"""
 	signalShutDown()
 	U.doReboot()
 	return ## dummy
@@ -1333,6 +1592,13 @@ def reboot():
 
 #################################
 def readMarksFile():
+	"""Loads the clock's marks and ticks pattern definitions from the neopixelClock.patterns JSON file into module globals, restoring from backup and logging a fatal error if the file is corrupt or missing the 'marks' key.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: populates global marksOptions and ticksOptions from the pattern file
+	"""
 	global marksOptions,ticksOptions, clockDict
 	rr, raw = U.readJson(G.homeDir+"neopixelClock.patterns")
 	if rr == {} or "marks" not in rr:
@@ -1349,11 +1615,25 @@ def readMarksFile():
 	
 #################################
 def restorePattern():
+	"""Restores the NeoPixel clock pattern file by copying the backup file over the working neopixelClock.patterns file via a shell cp command.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: copies the backup pattern file over the active one and logs the action
+	"""
 	U.logger.log(30, "restoring pattern files ")
 	subprocess.call("cp "+G.homeDir+"neopixelClock.patterns-backup " +G.homeDir+"neopixelClock.patterns", shell=True) 
 	return 
 	
 def signalShutDown(fast=False):
+	"""Animates a fading/blinking white sequence across the NeoPixel ring LEDs to visually signal an impending shutdown or reboot, then turns the LEDs off.
+
+	Inputs:
+	    fast (bool): if True uses a shorter delay between animation steps
+	Outputs:
+	    None: drives the NeoPixel ring with a shutdown animation
+	"""
 	if fast: delta = 0.49
 	else:	 delta = 0.9
 	for ii in range(8):
@@ -1369,6 +1649,13 @@ def signalShutDown(fast=False):
 
 #################################
 def showIPnumber():
+	"""Displays the last octet of the wifi0 IP address on the NeoPixel rings as illuminated dot counts for hundreds, tens, and units, when in ad-hoc WiFi mode, and arms the network indicator timer.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: lights NeoPixel LEDs to represent the IP number and sets networkIndicatorON timer
+	"""
 	global wifi0IP
 	global networkIndicatorON
 	global adhocWifiStarted
@@ -1410,6 +1697,13 @@ def showIPnumber():
 
 
 def getGPIOValue(pin):
+	"""Reads the current digital value of a GPIO pin, using either the RPi.GPIO library or gpiozero device objects, re-initializing the gpiozero setup if the lookup fails.
+
+	Inputs:
+	    pin (int): GPIO pin number to read
+	Outputs:
+	    int: the pin's digital input value (0 or 1)
+	"""
 	global GPIOZERO
 
 	if useGPIO:
@@ -1615,7 +1909,7 @@ U.startwebserverSTATUS(80)
 U.startwebserverINPUT(8010)
 
 sendClockEvery = 300.
-
+lastLEDtest = 0
 while True:
 	loopCounter += 1
 	sleepTime = slTime

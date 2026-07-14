@@ -48,6 +48,13 @@ import smbus
 class APDS9960():
 
 		def __init__(self,i2cAdd=0x39):
+			"""Constructs the APDS9960 driver instance, storing the I2C address and initializing all register addresses, bit-field masks, gain/LED/gesture parameter constants, and default configuration values used by the sensor.
+
+			Inputs:
+			    i2cAdd (int): I2C address of the APDS9960 (default 0x39)
+			Outputs:
+			    None: sets instance attributes for registers, constants, and defaults
+			"""
 			self.DEBUG					= 0
 
 			##/* APDS-9960 I2C address */
@@ -230,6 +237,13 @@ class APDS9960():
 
 
 			#/* Initialize I2C */
+			"""Opens the I2C bus, verifies the chip ID matches a known APDS9960 ID, then writes all default ambient-light, proximity, and gesture configuration values to the device registers; returns False if any step fails.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True on successful initialization, False on any I2C/ID failure
+			"""
 			self.BUS = smbus.SMBus(1)
 
 			#/* Read ID register and check against known values for APDS-9960 */
@@ -288,6 +302,13 @@ class APDS9960():
 		""" 
 		def getMode(self): 
 			#/* Read current ENABLE register */
+			"""Reads the APDS9960 ENABLE register and returns its value, returning the ERROR code (0xFF) if the read fails.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: ENABLE register value, or self.ERROR (0xFF) on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_ENABLE) 
 			if not retCode :return self.ERROR
 			return val
@@ -300,6 +321,14 @@ class APDS9960():
 		* @return True if operation success. False otherwise.
 		""" 
 		def setMode(self, mode,	 enable):
+			"""Modifies the APDS9960 ENABLE register to turn a given feature mode on or off; for individual modes 0-6 it sets/clears the corresponding bit, while ALL sets the register to 0x7F or 0x00, then writes the result back.
+
+			Inputs:
+			    mode (int): feature mode index (0-6) or ALL constant
+			    enable (int): 1 to enable, 0 to disable the mode
+			Outputs:
+			    bool: True on success, False on read/write failure
+			"""
 			reg_val = self.getMode()
 			if( reg_val == self.ERROR ): return False
 	
@@ -331,6 +360,13 @@ class APDS9960():
 		""" 
 		def enableLightSensor(self, interrupts):
 			#/* Set default gain, interrupts, enable power, and enable sensor */
+			"""Starts the ambient light sensor on the APDS-9960 by setting the default ALS gain, optionally enabling the light interrupt, powering on the chip, and enabling the ambient light mode.
+
+			Inputs:
+			    interrupts (bool): True to enable the hardware ambient-light interrupt, False to disable it
+			Outputs:
+			    bool: True if the sensor was enabled correctly, False on any configuration failure
+			"""
 			if( not self.setAmbientLightGain(self.DEFAULT_AGAIN) ): 
 				return False
 			if( interrupts ):
@@ -351,6 +387,13 @@ class APDS9960():
 		* @return True if sensor disabled correctly. False on error.
 		""" 
 		def disableLightSensor(self):
+			"""Stops the ambient light sensor on the APDS-9960 by disabling its interrupt and turning off the ambient light mode.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if the sensor was disabled correctly, False on any failure
+			"""
 			if( not self.setAmbientLightIntEnable(0) ):		return False
 			if( not self.setMode(self.AMBIENT_LIGHT, 0) ):	return False
 	
@@ -365,6 +408,13 @@ class APDS9960():
 		""" 
 		def enableProximitySensor(self, interrupts):
 			#/* Set default gain, LED, interrupts, enable power, and enable sensor */
+			"""Starts the proximity sensor on the APDS-9960 by setting the default proximity gain and LED drive, optionally enabling the proximity interrupt, powering on the chip, and enabling proximity mode.
+
+			Inputs:
+			    interrupts (bool): True to enable the hardware proximity interrupt, False to disable it
+			Outputs:
+			    bool: True if the sensor was enabled correctly, False on any configuration failure
+			"""
 			if( not self.setProximityGain(self.DEFAULT_PGAIN) ): return False
 			if( not self.setLEDDrive(self.DEFAULT_LDRIVE) ):	 return False
 			if( interrupts ):
@@ -382,6 +432,13 @@ class APDS9960():
 			return True
 		
 		def disableProximitySensor(self):
+			"""Placeholder/stub for disabling the proximity sensor; currently performs no action and returns immediately.
+
+			Inputs:
+			    None.
+			Outputs:
+			    None: Returns None; no operation performed
+			"""
 			return
 
 		""" 
@@ -396,6 +453,13 @@ class APDS9960():
 			#Set WTIME to 0xFF
 			#Set AUX to LED_BOOST_300
 			#Enable PON, WEN, PEN, GEN in ENABLE 
+			"""Starts the gesture recognition engine on the APDS-9960 by resetting gesture parameters, configuring wait time, proximity pulses and LED boost, optionally enabling the gesture interrupt, then enabling gesture mode, power, wait, proximity and gesture modes.
+
+			Inputs:
+			    interrupts (bool): True to enable the hardware gesture interrupt, False to disable it
+			Outputs:
+			    bool: True if the gesture engine was enabled correctly, False on any configuration failure
+			"""
 			self.resetGestureParameters()
 			if( not self.WriteDataByte(self.APDS9960_WTIME, 0xFF) ):						 return False
 			if( not self.WriteDataByte(self.APDS9960_PPULSE, self.DEFAULT_GESTURE_PPULSE) ): return False
@@ -424,6 +488,13 @@ class APDS9960():
 		* @return True if engine disabled correctly. False on error.
 		""" 
 		def disableGestureSensor(self):
+			"""Stops the gesture recognition engine on the APDS-9960 by resetting gesture parameters, disabling the gesture interrupt, and turning off gesture mode.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if the gesture engine was disabled correctly, False on any failure
+			"""
 			self.resetGestureParameters()
 			if( not self.setGestureIntEnable(0) ): return False
 			if( not self.setGestureMode(0) ):	   return False
@@ -436,6 +507,13 @@ class APDS9960():
 		* @return True if ok
 		""" 
 		def clearGestureFIFO(self):
+			"""Clears the gesture FIFO data on the APDS-9960 by writing the FIFO-clear bits to the GCONF4 register.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if the FIFO was cleared successfully, False on read/write error or exception
+			"""
 			try:
 				retCode,val = self.ReadDataByte(self.APDS9960_GCONF4)
 				if( not retCode): return False
@@ -455,6 +533,13 @@ class APDS9960():
 		""" 
 		def isGestureAvailable(self):
 			#/* Read value from GSTATUS register */
+			"""Determines whether a gesture is available to read by reading the GSTATUS register and checking the GVALID bit.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool or int: True if a valid gesture is available, False otherwise, or self.ERROR if the register read fails
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GSTATUS)
 			if not retCode: return self.ERROR
 			
@@ -473,6 +558,13 @@ class APDS9960():
 		* @return Number corresponding to gesture. -1 on error.
 		""" 
 		def readGesture(self):
+			"""Reads and processes a gesture event from the APDS-9960 by checking validity, reading the gesture FIFO into up/down/left/right data arrays, and decoding them into a best-guess gesture via processGestureData.
+
+			Inputs:
+			    None.
+			Outputs:
+			    tuple: A 4-tuple (motion str, nearFar str, UPdown int, LEFTright int) describing the detected gesture; motion may be 'NONE'/'' or self.ERROR on failure
+			"""
 			motion	  = ""
 			nearFar	  = ""
 			UPdown	  = 0
@@ -546,6 +638,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def enablePower(self):
+			"""Turns the APDS-9960 on by setting the POWER mode bit.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if power was enabled successfully, False on failure
+			"""
 			if( not self.setMode(self.POWER, 1) ): return False
 	
 			return True
@@ -557,6 +656,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def disablePower(self):
+			"""Turns the APDS-9960 off by clearing the POWER mode bit.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if power was disabled successfully, False on failure
+			"""
 			if( not self.setMode(self.POWER, 0) ): return False
 	
 			return True
@@ -573,6 +679,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def readAmbientLight(self):
+			"""Reads the ambient (clear) light level from the APDS-9960 as a 16-bit value by reading the clear-channel low and high byte registers and combining them.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: The combined 16-bit ambient light value, or -1 if either register read fails
+			"""
 			val = 0
 	
 			#/* Read value from clear channel, low byte register */
@@ -594,6 +707,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def readRedLight(self):
+			"""Reads the red light/clear-channel level from the APDS9960 by reading the low and high byte data registers over I2C and combining them into a 16-bit value.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: 16-bit red light value, or -1 if an I2C read fails
+			"""
 			val = 0
 	
 			#/* Read value from clear channel, low byte register */
@@ -616,6 +736,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def readGreenLight(self):
+			"""Reads the green light level from the APDS9960 by reading the low and high green data byte registers over I2C and combining them into a 16-bit value.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: 16-bit green light value, or -1 if an I2C read fails
+			"""
 			val = 0
 	
 			#/* Read value from clear channel, low byte register */
@@ -637,6 +764,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def readBlueLight(self):
+			"""Reads the blue light level from the APDS9960 by reading the low and high blue data byte registers over I2C and combining them into a 16-bit value.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: 16-bit blue light value, or -1 if an I2C read fails
+			"""
 			val = 0
 	
 			#/* Read value from clear channel, low byte register */
@@ -662,6 +796,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def readProximity(self):
+			"""Reads the 8-bit proximity value from the APDS9960 proximity data register and returns it inverted (255 minus the raw reading) so larger values mean closer.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: Inverted proximity value (255-raw), or -1 if the read fails
+			"""
 			val = -1
 			#/* Read value from proximity data register */
 			retCode,val = self.ReadDataByte(self.APDS9960_PDATA)
@@ -677,6 +818,13 @@ class APDS9960():
 		* @brief Resets all the parameters in the gesture data member
 		""" 
 		def resetGestureParameters(self):
+			"""Placeholder/no-op intended to reset the gesture data members; the body simply returns without doing anything.
+
+			Inputs:
+			    None.
+			Outputs:
+			    None: No effect; returns immediately
+			"""
 			return		  
 
 		""" 
@@ -686,6 +834,17 @@ class APDS9960():
 		""" 
 		def processGestureData(self,upD,downD,leftD,rightD,nrec):
 			
+			"""Analyzes accumulated raw up/down/left/right gesture sample arrays to determine swipe direction and near/far state, computing left-right and up-down deltas and sums, logging diagnostics, and classifying the motion.
+
+			Inputs:
+			    upD (list): Sequence of up-detector samples
+			    downD (list): Sequence of down-detector samples
+			    leftD (list): Sequence of left-detector samples
+			    rightD (list): Sequence of right-detector samples
+			    nrec (int): Number of gesture records/samples collected
+			Outputs:
+			    tuple: (motion, nearFAR, udDel, lrDel): direction string, near/far string, and up-down and left-right delta totals
+			"""
 			motion	= "NONE"
 			nearFAR = "NONE"
 			try:
@@ -755,6 +914,15 @@ class APDS9960():
 			return motion ,nearFAR, udDel, lrDel	   
 
 		def doPRINT(self,label,theList,nrec):
+			"""Formats a labeled, right-justified row of the first nrec values from a list and writes it to the logger at debug level for gesture-data diagnostics.
+
+			Inputs:
+			    label (str): Prefix label for the logged line
+			    theList (list): List of numeric values to print
+			    nrec (int): Number of leading elements to include
+			Outputs:
+			    None: Writes a formatted line to the logger
+			"""
 			out = label
 			for ii in range(nrec):
 				out += str(theList[ii]).rjust(4)
@@ -773,6 +941,13 @@ class APDS9960():
 		def getProxIntLowThresh(self):
 	
 			#/* Read value from PILT register */
+			"""Reads the lower proximity-interrupt threshold from the APDS9960 PILT register over I2C.
+
+			Inputs:
+			    None.
+			Outputs:
+			    tuple: (True, value) on success or (False, 0) if the read fails
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_PILT)
 			if not retCode: return False,0
 	
@@ -786,6 +961,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def setProxIntLowThresh(self,threshold):
+			"""Writes the given value to the APDS9960 PILT register to set the lower proximity-interrupt threshold.
+
+			Inputs:
+			    threshold (int): Lower proximity threshold byte to write
+			Outputs:
+			    bool: True if the write succeeded, False otherwise
+			"""
 			if( not self.WriteDataByte(self.APDS9960_PILT, threshold) ): return False
 			return True
 		
@@ -797,6 +979,13 @@ class APDS9960():
 		""" 
 		def getProxIntHighThresh(self):
 			#/* Read value from PIHT register */
+			"""Reads the high proximity-interrupt threshold from the APDS9960 PIHT register over I2C.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int or tuple: Threshold value on success, or (False, 0) if the read fails
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_PIHT)
 			if not retCode: return False,0
 			return val
@@ -809,6 +998,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def setProxIntHighThresh(self, threshold):
+			"""Writes the given value to the APDS9960 PIHT register to set the high proximity-interrupt threshold.
+
+			Inputs:
+			    threshold (int): High proximity threshold byte to write
+			Outputs:
+			    bool: True if the write succeeded, False otherwise
+			"""
 			if( not self.WriteDataByte(self.APDS9960_PIHT, threshold) ): return False
 			return True
 		
@@ -826,6 +1022,13 @@ class APDS9960():
 		""" 
 		def getLEDDrive(self):
 			#/* Read value from CONTROL register */
+			"""Reads the APDS9960 CONTROL register and extracts the 2-bit LED drive strength setting (bits 6-7) for proximity and ALS.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: LED drive strength code 0-3, or self.ERROR if the read fails
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONTROL)
 			if not retCode: return self.ERROR
 	
@@ -849,6 +1052,13 @@ class APDS9960():
 		""" 
 		def setLEDDrive(self, drive):
 			#/* Read value from CONTROL register */
+			"""Sets the LED drive strength in the APDS9960 CONTROL register by reading the current value, masking the 2-bit drive field into bits 6-7, and writing it back.
+
+			Inputs:
+			    drive (int): 2-bit LED drive value (0-3)
+			Outputs:
+			    bool: True on successful I2C write, False on read/write failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONTROL)
 			if not retCode: return False
 
@@ -877,6 +1087,13 @@ class APDS9960():
 		""" 
 		def getProximityGain(self):
 			#/* Read value from CONTROL register */
+			"""Reads the CONTROL register and extracts the 2-bit proximity receiver gain field (bits 2-3) of the APDS9960.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: Proximity gain value (0-3), or self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONTROL)
 			if not retCode: return self.ERROR
 	
@@ -900,6 +1117,13 @@ class APDS9960():
 		""" 
 		def setProximityGain(self, drive):
 			#/* Read value from CONTROL register */
+			"""Sets the proximity receiver gain by reading the CONTROL register, masking the 2-bit gain value into bits 2-3, and writing it back.
+
+			Inputs:
+			    drive (int): 2-bit proximity gain value (0-3)
+			Outputs:
+			    bool: True on successful I2C write, False on read/write failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONTROL)
 			if not retCode: return False
 	
@@ -928,6 +1152,13 @@ class APDS9960():
 		""" 
 		def getAmbientLightGain(self):
 			#/* Read value from CONTROL register */
+			"""Reads the CONTROL register and extracts the 2-bit ambient light sensor (ALS) gain field (bits 0-1) of the APDS9960.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: ALS gain value (0-3), or self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONTROL)
 			if not retCode: return self.ERROR
 			#/* Shift and mask out ADRIVE bits */
@@ -950,6 +1181,13 @@ class APDS9960():
 		""" 
 		def setAmbientLightGain(self, drive):
 			#/* Read value from CONTROL register */
+			"""Sets the ambient light sensor (ALS) receiver gain by reading the CONTROL register, masking the 2-bit value into bits 0-1, and writing it back.
+
+			Inputs:
+			    drive (int): 2-bit ALS gain value (0-3)
+			Outputs:
+			    bool: True on successful I2C write, False on read/write failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONTROL)
 			if not retCode: return False
 	
@@ -977,6 +1215,13 @@ class APDS9960():
 		""" 
 		def getLEDBoost(self):
 			#/* Read value from CONFIG2 register */
+			"""Reads the CONFIG2 register and extracts the 2-bit LED boost current field (bits 4-5) of the APDS9960.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: LED boost value (0-3 mapping to 100-300%), or self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONFIG2)
 			if not retCode: return self.ERROR
 			#/* Shift and mask out LED_BOOST bits */
@@ -999,6 +1244,13 @@ class APDS9960():
 		""" 
 		def setLEDBoost(self, boost):
 			#/* Read value from CONFIG2 register */
+			"""Sets the LED current boost level by reading the CONFIG2 register, masking the 2-bit boost value into bits 4-5, and writing it back.
+
+			Inputs:
+			    boost (int): 2-bit LED boost value (0-3 for 100-300%)
+			Outputs:
+			    bool: True on successful I2C write, False on read/write failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONFIG2)
 			if not retCode: return False
 	
@@ -1021,6 +1273,13 @@ class APDS9960():
 		""" 
 		def getProxGainCompEnable(self):
 			#/* Read value from CONFIG3 register */
+			"""Reads the CONFIG3 register and extracts the proximity gain compensation enable bit (bit 5) of the APDS9960.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: 1 if compensation enabled, 0 if disabled, or self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONFIG3)
 			if not retCode: return self.ERROR
 	
@@ -1038,6 +1297,13 @@ class APDS9960():
 		""" 
 		def setProxGainCompEnable(self, enable):
 			#/* Read value from CONFIG3 register */
+			"""Sets the proximity gain compensation enable bit by reading the CONFIG3 register, masking the single-bit value into bit 5, and writing it back.
+
+			Inputs:
+			    enable (int): 1 to enable, 0 to disable compensation
+			Outputs:
+			    bool: True on successful I2C write, False on read/write failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONFIG3)
 			if not retCode: return False
 	
@@ -1067,6 +1333,13 @@ class APDS9960():
 		""" 
 		def getProxPhotoMask(self):
 			#/* Read value from CONFIG3 register */
+			"""Reads the CONFIG3 register and extracts the 4-bit proximity photodiode enable/disable mask (bits 0-3) of the APDS9960.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: 4-bit photodiode mask, or self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONFIG3)
 			if not retCode:
 				return	self.ERROR
@@ -1092,6 +1365,13 @@ class APDS9960():
 		""" 
 		def setProxPhotoMask(self, mask):
 			#/* Read value from CONFIG3 register */
+			"""Sets the proximity photodiode enable/disable mask by reading the CONFIG3 register, masking the 4-bit value into bits 0-3, and writing it back.
+
+			Inputs:
+			    mask (int): 4-bit photodiode mask (1=disabled, 0=enabled per diode)
+			Outputs:
+			    bool: True on successful I2C write, False on read/write failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_CONFIG3)
 			if not retCode: return False
 	
@@ -1113,6 +1393,13 @@ class APDS9960():
 		""" 
 		def getGestureEnterThresh(self):
 			#/* Read value from GPENTH register */
+			"""Reads the GPENTH register to return the entry proximity threshold used to start gesture sensing mode on the APDS9960.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: Entry proximity threshold value, or 0 on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GPENTH)
 			if not retCode: return 0
 			return val
@@ -1125,6 +1412,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def setGestureEnterThresh(self, threshold):
+			"""Writes the gesture-enter proximity threshold to the APDS-9960 GPENTH register, which is the proximity level needed to begin gesture mode.
+
+			Inputs:
+			    threshold (int): Proximity threshold byte to start gesture sensing
+			Outputs:
+			    bool: True if the register write succeeded, False otherwise
+			"""
 			if( not self.WriteDataByte(self.APDS9960_GPENTH, threshold) ): return False
 			return True
 		
@@ -1136,6 +1430,13 @@ class APDS9960():
 		""" 
 		def getGestureExitThresh(self):
 			#/* Read value from GEXTH register */
+			"""Reads the gesture-exit proximity threshold from the APDS-9960 GEXTH register, the proximity level at which gesture mode ends.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: Current exit threshold value, or 0 on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GEXTH)
 			if not retCode: return 0
 			return val
@@ -1148,6 +1449,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def setGestureExitThresh(self, threshold):
+			"""Writes the gesture-exit proximity threshold to the APDS-9960 GEXTH register, the proximity level needed to end gesture mode.
+
+			Inputs:
+			    threshold (int): Proximity threshold byte to end gesture sensing
+			Outputs:
+			    bool: True if the register write succeeded, False otherwise
+			"""
 			if( not self.WriteDataByte(self.APDS9960_GEXTH, threshold) ): return False
 			return True
 		
@@ -1165,6 +1473,13 @@ class APDS9960():
 		""" 
 		def getGestureGain(self):
 			#/* Read value from GCONF2 register */
+			"""Reads the GCONF2 register and extracts the gesture-mode photodiode gain by shifting and masking the GGAIN bits (values 0-3 for 1x-8x).
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: Current photodiode gain (0-3), or empty string on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GCONF2)
 			if not retCode: return ""
 	
@@ -1188,6 +1503,13 @@ class APDS9960():
 		""" 
 		def setGestureGain(self, gain):
 			#/* Read value from GCONF2 register */
+			"""Reads the GCONF2 register, replaces its GGAIN bits with the supplied gain value, and writes the modified byte back to set the gesture-mode photodiode gain.
+
+			Inputs:
+			    gain (int): Photodiode gain code (0-3) for gesture mode
+			Outputs:
+			    bool: True if read and write succeeded, False otherwise
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GCONF2)
 			if not retCode: return False
 	
@@ -1216,6 +1538,13 @@ class APDS9960():
 		""" 
 		def getGestureLEDDrive(self):
 			#/* Read value from GCONF2 register */
+			"""Reads the GCONF2 register and extracts the gesture-mode LED drive current by shifting and masking the GLDRIVE bits (values 0-3 for 100mA-12.5mA).
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: Current LED drive code (0-3), or self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GCONF2)
 			if not retCode: return self.ERROR
 	
@@ -1239,6 +1568,13 @@ class APDS9960():
 		""" 
 		def setGestureLEDDrive(self, drive):
 			#/* Read value from GCONF2 register */
+			"""Reads the GCONF2 register, replaces its GLDRIVE bits with the supplied drive value, and writes the byte back to set the gesture-mode LED drive current.
+
+			Inputs:
+			    drive (int): LED drive current code (0-3) for gesture mode
+			Outputs:
+			    bool: True if read and write succeeded, False otherwise
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GCONF2)
 			if not retCode: return False
 	
@@ -1271,6 +1607,13 @@ class APDS9960():
 		""" 
 		def getGestureWaitTime(self):
 			#/* Read value from GCONF2 register */
+			"""Reads the GCONF2 register and masks out the GWTIME bits to return the low-power wait time between gesture detections (values 0-7).
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: Current gesture wait-time code (0-7), or self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GCONF2)
 			if not retCode: return self.ERROR
    
@@ -1298,6 +1641,13 @@ class APDS9960():
 		""" 
 		def setGestureWaitTime(self, time):
 			#/* Read value from GCONF2 register */
+			"""Reads the GCONF2 register, replaces its GWTIME bits with the supplied time value, and writes the byte back to set the wait time between gesture detections.
+
+			Inputs:
+			    time (int): Gesture wait-time code (0-7)
+			Outputs:
+			    bool or int: True if write succeeded, False on write failure, self.ERROR on read failure
+			"""
 			retCode,val = self.ReadDataByte(self.APDS9960_GCONF2)
 			if not retCode: return self.ERROR
 
@@ -1320,6 +1670,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def getLightIntLowThreshold(self):
+			"""Reads the low and high byte registers (AILTL/AILTH) of the ambient-light interrupt low threshold and combines them into a single 16-bit value.
+
+			Inputs:
+			    None.
+			Outputs:
+			    tuple: (True, threshold) on success or (False, 0) on read failure
+			"""
 			threshold = 0
 	
 			#/* Read value from ambient light low threshold, low byte register */
@@ -1342,6 +1699,13 @@ class APDS9960():
 		""" 
 		def setLightIntLowThreshold(self, threshold):
 			#/* Break 16-bit threshold into 2 8-bit values */
+			"""Splits the 16-bit threshold into low and high bytes and writes them to the ambient-light interrupt low threshold registers via I2C.
+
+			Inputs:
+			    threshold (int): 16-bit low threshold value for the ambient-light interrupt
+			Outputs:
+			    bool: True if both byte writes succeeded, False otherwise
+			"""
 			val_low = threshold & 0x00FF
 			val_high = (threshold & 0xFF00) >> 8
 	
@@ -1363,6 +1727,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def getLightIntHighThreshold(self):
+			"""Reads the ambient-light interrupt high threshold registers and combines the two bytes into a single 16-bit value.
+
+			Inputs:
+			    None.
+			Outputs:
+			    tuple: (True, threshold) on success or (False, threshold) on read failure
+			"""
 			threshold = 0
 			#/* Read value from ambient light high threshold, low byte register */
 			retCode, threshold = self.ReadDataByte(self.APDS9960_AIHTL) 
@@ -1384,6 +1755,13 @@ class APDS9960():
 		""" 
 		def setLightIntHighThreshold(self, threshold):
 			#/* Break 16-bit threshold into 2 8-bit values */
+			"""Sets the 16-bit high threshold for ambient-light (clear-channel) interrupts on the APDS-9960 by splitting it into low and high bytes and writing them to the AIHTL and AIHTH registers.
+
+			Inputs:
+			    threshold (int): 16-bit high threshold value to write
+			Outputs:
+			    bool: True if both register writes succeed, False otherwise
+			"""
 			val_low = threshold & 0x00FF
 			val_high = (threshold & 0xFF00) >> 8
 	
@@ -1403,6 +1781,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def getProximityIntLowThreshold(self):
+			"""Reads the current proximity-interrupt low threshold from the APDS-9960 PIHT register.
+
+			Inputs:
+			    None.
+			Outputs:
+			    tuple: (success bool, threshold int) where success is True if the read succeeded
+			"""
 			val = 0
 			#/* Read value from proximity low threshold register */
 			retCode, val = self.ReadDataByte(self.APDS9960_PIHT )
@@ -1419,6 +1804,13 @@ class APDS9960():
 		""" 
 		def setProximityIntLowThreshold(self, threshold):
 			#/* Write threshold value to register */
+			"""Writes the proximity-interrupt low threshold value to the APDS-9960 PIHT register.
+
+			Inputs:
+			    threshold (int): low threshold value for the interrupt to trigger
+			Outputs:
+			    bool: True if the register write succeeds, False otherwise
+			"""
 			retCode = self.WriteDataByte(self.APDS9960_PIHT, threshold)
 			if( not retCode ): return False
 	
@@ -1432,6 +1824,13 @@ class APDS9960():
 		* @return True if operation successful. False otherwise.
 		""" 
 		def getProximityIntHighThreshold(self):
+			"""Reads the current proximity-interrupt high threshold from the APDS-9960 PIHT register.
+
+			Inputs:
+			    None.
+			Outputs:
+			    tuple: (success bool, threshold int) where success is True if the read succeeded
+			"""
 			val = 0
 	
 			#/* Read value from proximity low threshold register */
@@ -1449,6 +1848,13 @@ class APDS9960():
 		""" 
 		def setProximityIntHighThreshold(self, threshold):
 			#/* Write threshold value to register */
+			"""Writes the proximity-interrupt high threshold value to the APDS-9960 PIHT register.
+
+			Inputs:
+			    threshold (int): high threshold value for the interrupt to trigger
+			Outputs:
+			    bool: True if the register write succeeds, False otherwise
+			"""
 			retCode = self.WriteDataByte(self.APDS9960_PIHT, threshold)
 			if( not retCode ): return False
 	
@@ -1462,6 +1868,13 @@ class APDS9960():
 		""" 
 		def getAmbientLightIntEnable(self):
 			#/* Read value from ENABLE register */
+			"""Reads the ENABLE register and extracts the AIEN bit to report whether ambient-light interrupts are currently enabled.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: 1 if enabled, 0 if disabled, or self.ERROR on read failure
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_ENABLE) 
 			if( not retCode ): return self.ERROR
 	
@@ -1478,6 +1891,13 @@ class APDS9960():
 		""" 
 		def setAmbientLightIntEnable(self, enable):
 			#/* Read value from ENABLE register */
+			"""Enables or disables ambient-light interrupts by read-modify-writing the AIEN bit of the APDS-9960 ENABLE register.
+
+			Inputs:
+			    enable (int): 1 to enable interrupts, 0 to disable
+			Outputs:
+			    bool: True if the register read and write succeed, False otherwise
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_ENABLE)
 			if( not retCode ): return False
 
@@ -1502,6 +1922,13 @@ class APDS9960():
 		def getProximityIntEnable(self):
 	
 			#/* Read value from ENABLE register */
+			"""Reads the ENABLE register and extracts the PIEN bit to report whether proximity interrupts are currently enabled.
+
+			Inputs:
+			    None.
+			Outputs:
+			    tuple: (success bool, value int) where value is 1 if enabled, 0 if disabled
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_ENABLE) 
 			if( not retCode ): return False, 0
 	
@@ -1519,6 +1946,13 @@ class APDS9960():
 		""" 
 		def setProximityIntEnable(self, enable):
 			#/* Read value from ENABLE register */
+			"""Enables or disables proximity interrupts by read-modify-writing the PIEN bit of the APDS-9960 ENABLE register.
+
+			Inputs:
+			    enable (int): 1 to enable interrupts, 0 to disable
+			Outputs:
+			    bool: True if the register read and write succeed, False otherwise
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_ENABLE)
 			if( not retCode ): return False
 	
@@ -1542,6 +1976,13 @@ class APDS9960():
 		""" 
 		def getGestureIntEnable(self):
 			#/* Read value from GCONF4 register */
+			"""Reads the GCONF4 register and extracts the GIEN bit to report whether gesture interrupts are currently enabled.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: 1 if enabled, 0 if disabled; returns False on read failure
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_GCONF4)
 			if( not retCode ): return False
 	
@@ -1560,6 +2001,13 @@ class APDS9960():
 		def setGestureIntEnable(self, enable):
 			#print datetime.datetime.now().strftime("%Y%m%d-%H:%M:%S")+" enable /disable gesture interrupt :", enable
 			#/* Read value from GCONF4 register */
+			"""Enables or disables gesture interrupts by read-modify-writing the GIEN bit of the APDS-9960 GCONF4 register.
+
+			Inputs:
+			    enable (int): 1 to enable interrupts, 0 to disable
+			Outputs:
+			    bool: True if the register read and write succeed, False otherwise
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_GCONF4)
 			if( not retCode ): return False
 	
@@ -1582,6 +2030,13 @@ class APDS9960():
 		* @return True if operation completed successfully. False otherwise.
 		""" 
 		def clearAmbientLightInt(self):
+			"""Clears the ambient-light interrupt by reading the APDS-9960 ambient-light clear (PICLEAR) register.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if the clear read succeeds, False otherwise
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_PICLEAR)
 			if( not retCode ): return False
 	
@@ -1594,6 +2049,13 @@ class APDS9960():
 		* @return True if operation completed successfully. False otherwise.
 		""" 
 		def clearProximityInt(self):
+			"""Clears the APDS9960 proximity interrupt by reading the proximity-clear register, returning whether the I2C read succeeded.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if the clear-register read succeeded, False otherwise
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_PICLEAR)
 			if( not retCode ): return False
 	
@@ -1607,6 +2069,13 @@ class APDS9960():
 		""" 
 		def getGestureMode(self):
 			#/* Read value from GCONF4 register */
+			"""Reads the GCONF4 register and masks out the GMODE bit to report whether the gesture state machine is currently active.
+
+			Inputs:
+			    None.
+			Outputs:
+			    int: The GMODE bit (0 or 1), or self.ERROR if the register read failed
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_GCONF4)
 			if( not retCode ): return self.ERROR
 	
@@ -1624,6 +2093,13 @@ class APDS9960():
 		""" 
 		def setGestureMode(self, mode):
 			#/* Read value from GCONF4 register */
+			"""Enables or disables the gesture state machine by reading GCONF4, setting its GMODE bit to the requested value, and writing it back.
+
+			Inputs:
+			    mode (int): 1 to enter gesture mode, 0 to exit (only low bit used)
+			Outputs:
+			    bool or tuple: True on success; False (or False, val) if a read/write to GCONF4 failed
+			"""
 			retCode, val = self.ReadDataByte(self.APDS9960_GCONF4)
 			if( not retCode ): return False, val
 	
@@ -1650,6 +2126,13 @@ class APDS9960():
 		* @return True if successful write operation. False otherwise.
 		""" 
 		def WriteByte(self):	# not used
+			"""Issues an I2C write_quick (zero-data) command to the device address; unused helper that logs and returns False on error.
+
+			Inputs:
+			    None.
+			Outputs:
+			    bool: True if the quick write succeeded, False on exception
+			"""
 			try:
 				#print	u"WriteByte"
 				self.BUS.write_quick(self.address) 
@@ -1667,6 +2150,14 @@ class APDS9960():
 		* @return True if successful write operation. False otherwise.
 		""" 
 		def WriteDataByte(self, reg,  val):
+			"""Writes a single byte value to the given register of the I2C device via write_byte_data, logging and returning False on failure.
+
+			Inputs:
+			    reg (int): register address to write to
+			    val (int): one-byte value to write
+			Outputs:
+			    bool: True if the byte write succeeded, False on exception
+			"""
 			try:
 				#print	u"WriteDataByte",hex(val), hex(reg)
 				self.BUS.write_byte_data(self.address,reg, val)
@@ -1685,6 +2176,15 @@ class APDS9960():
 		* @return True if successful write operation. False otherwise.
 		""" 
 		def WriteDataBlock(self, reg, val,ll):	## not used
+			"""Writes a block of bytes to the I2C device by issuing a write_quick then looping write_block_data for ll entries; unused helper that returns False on error.
+
+			Inputs:
+			    reg (int): register address to write to
+			    val (list): sequence of byte values to write
+			    ll (int): number of bytes to write
+			Outputs:
+			    bool: True if all block writes succeeded, False on exception
+			"""
 			try:
 				#print	u"WriteDataBlock",val, reg, ll
 				self.BUS.write_quick(self.address,reg) 
@@ -1703,6 +2203,13 @@ class APDS9960():
 		* @return True if successful read operation. False otherwise.
 		"""
 		def ReadDataByte(self, reg):
+			"""Reads a single byte from the given register of the I2C device via read_byte_data, returning a success flag and the value.
+
+			Inputs:
+			    reg (int): register address to read from
+			Outputs:
+			    tuple: (True, value) on success; (False, 0) on exception
+			"""
 			try:
 				val = self.BUS.read_byte_data(self.address,reg)
 			except Exception as e:
@@ -1721,6 +2228,14 @@ class APDS9960():
 		* @return Number of bytes read. -1 on read error.
 		""" 
 		def ReadDataBlock1(self, reg, lenIN):
+			"""Reads lenIN bytes from the I2C device one byte at a time after a write_quick, accumulating them into a list and counting how many were read.
+
+			Inputs:
+			    reg (int): register address (issued via write_quick)
+			    lenIN (int): number of bytes to read
+			Outputs:
+			    tuple: (count, list of byte values) on success; (-1, []) on exception
+			"""
 			try:
 				val=[]
 				self.BUS.write_quick(self.address) 
@@ -1738,6 +2253,14 @@ class APDS9960():
 
 		########## special read direct #############
 		def ReadDataBlock(self, reg, lenIN):
+			"""Special direct block read that calls read_i2c_block_data from register 0xFC four times, concatenating the results into one byte list.
+
+			Inputs:
+			    reg (int): register parameter (ignored; fixed 0xFC is used)
+			    lenIN (int): requested length (ignored; four blocks are read)
+			Outputs:
+			    tuple: (byte count, list of byte values) on success; (-1, []) on exception
+			"""
 			try:
 				ret =[]
 				for nn in range(4):
@@ -1754,6 +2277,14 @@ class APDS9960():
 
 		########## special read direct #############
 		def ReadDataBlock3(self, reg, lenIN):
+			"""Special direct block read that opens /dev/i2c-1, sets the I2C slave address via ioctl, reads 128 raw bytes, and converts them to a list of integer values.
+
+			Inputs:
+			    reg (int): register parameter (unused in the read)
+			    lenIN (int): requested length (unused; fixed 128 bytes read)
+			Outputs:
+			    tuple: (count, list of int byte values) on success; (-1, []) on exception
+			"""
 			try:
 				val=[]
 				#print	u"ReadDataBlock",reg,len
@@ -1781,6 +2312,13 @@ class APDS9960():
 				
 ##################################	gesture handling ############
 def gestureInterrupt(gpio=0):
+	"""GPIO interrupt callback that resets the global lastGestureTime to 0 and flags newInterrupt True so the main loop knows a gesture interrupt fired.
+
+	Inputs:
+	    gpio (int): GPIO pin number that triggered the interrupt
+	Outputs:
+	    None: sets module-level lastGestureTime and newInterrupt globals
+	"""
 	global lastGestureTime,	 newInterrupt
 	lastGestureTime = 0
 	newInterrupt	= True
@@ -1788,6 +2326,13 @@ def gestureInterrupt(gpio=0):
 	return 
 	
 def getinput(devid):
+	"""Polls the APDS9960 sensor for a given device: reads gesture, proximity, and RGB/ambient color values when their refresh intervals elapse, runs configured shell actions for detected gestures/proximity changes, updates global tracking state, and returns the changed readings.
+
+	Inputs:
+	    devid (str): key identifying the sensor device within the sensors dict
+	Outputs:
+	    dict: data dict of newly changed readings (gesture, nearFar, proximity, speed, red/blue/green, AmbientLight)
+	"""
 	global sensors, sensor, sensorList, sensorDev
 	global lastRedValue, lastBlueValue, lastGreenValue, lastAmbValue, lastGesture
 	global lastColorTime,lastGestureTime, lastProximityTime,  lastProximityValue, newInterrupt	  
@@ -1809,10 +2354,10 @@ def getinput(devid):
 					data["gesture"]		 = gesture
 					newGesture	= True
 					if "action"+str(gesture) in sensors[sensor][devid] and sen["action"+(gesture)] !="": 
-						U.logger.log(10, u"action: "+str(gesture)+" " +sen["action"+str(gesture)])
+						U.logger.log(10, "action: "+str(gesture)+" " +sen["action"+str(gesture)])
 						subprocess.call(sensors[sensor][devid]["action"+str(gesture)], shell=True)
 					if "action"+str(nearFar) in sensors[sensor][devid] and sen["action"+(nearFar)] !="": 
-						U.logger.log(10, u"action: "+str(nearFar)+" " +sen["action"+str(nearFar)])
+						U.logger.log(10, "action: "+str(nearFar)+" " +sen["action"+str(nearFar)])
 						subprocess.call(sensors[sensor][devid]["action"+str(nearFar)], shell=True)
 					sensorDev.clearGestureFIFO()
 					time.sleep(0.02)
@@ -1832,11 +2377,11 @@ def getinput(devid):
 					lastColorTime		= 0
 					lastGestureTime		= 0
 					if prox > lastProximityValue and "actionPROXup"	  in sen and sen["actionPROXup"] !="": 
-						U.logger.log(10, u"action:  "+sensors[sensor][devid]["actionPROXup"])
+						U.logger.log(10, "action:  "+sensors[sensor][devid]["actionPROXup"])
 						subprocess.call(sensors[sensor][devid]["actionPROXup"], shell=True)
 					if prox < lastProximityValue and "actionPROXdown" in sen and sen["actionPROXdown"] !="" : 
 						subprocess.call(sensors[sensor][devid]["actionPROXdown"], shell=True)
-						U.logger.log(10, u"action: "+sensors[sensor][devid]["actionPROXdown"])
+						U.logger.log(10, "action: "+sensors[sensor][devid]["actionPROXdown"])
 					lastProximityValue	= prox
 					lastProximityTime	= tt
 
@@ -1883,6 +2428,13 @@ def getinput(devid):
 
 #################################		 
 def readParams():
+	"""Reads the latest plugin parameter file, parses APDS9960 sensor settings (color/proximity refresh and delta thresholds, gesture/near-far enables, interrupt GPIO, I2C address) into module globals, and if the sensor configuration changed it instantiates and initializes the APDS9960 device, enabling its light, proximity, and gesture sensors and wiring up the gesture interrupt GPIO.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals, initializes the APDS9960 hardware, configures GPIO interrupts, and logs
+	"""
 	global lastRedValue, lastBlueValue, lastGreenValue, lastAmbValue, lastGesture 
 	global lastColorTime,lastGestureTime, lastProximityTime,  lastProximityValue
 	global sensors, sensor, sensorList, sensorDev, interruptGPIOAlreadySetup, sensorsOld
@@ -2028,6 +2580,15 @@ def readParams():
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
+	"""Compares the current and previous sensor parameter dictionaries for the selected sensor to decide whether the sensor needs to be (re)started; returns -1 if the sensor is no longer configured, 1 if any device or property was added/removed/changed, and 0 if unchanged.
+
+	Inputs:
+	    sensors (dict): current sensor configuration mapping sensor->devId->props
+	    sensorsOld (dict): previous sensor configuration to compare against
+	    selectedSensor (str): key of the sensor type being checked
+	Outputs:
+	    int: -1 if sensor removed, 1 if (re)start needed, 0 if no change
+	"""
 	if selectedSensor not in sensors:	 return -1
 	if selectedSensor not in sensorsOld: 
 		return 1

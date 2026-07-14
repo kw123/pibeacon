@@ -44,6 +44,13 @@ version = 2.3
 
 #################################		
 def readParams():
+	"""Reads the latest sensor configuration via U.doRead, updates module globals (sensors, output, distanceUnits, deltaDist thresholds, display settings), starts/stops GPIO or PIGPIO trigger/echo pins when the sensor config changes, and exits if this ultrasound sensor is no longer enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals and GPIO/PIGPIO pin setup; no return value
+	"""
 	global sensors, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist, deltaDistAbs,displayEnable
 	global output
 	global distanceUnits
@@ -138,6 +145,13 @@ def readParams():
 
 
 def getzeroValue():
+	"""Sets the module global newValue flag to True to force a fresh measurement.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sets global newValue to True
+	"""
 	global newValue
 	newValue = True
 	return 
@@ -145,6 +159,13 @@ def getzeroValue():
 
 #################################
 def getDistancePIGPIO(devId):
+	"""Measures distance from an ultrasonic sensor using the pigpio library by pulsing the trigger pin and timing the echo pulse, taking up to 8 readings to collect good measurements, and returns a smoothed/median distance in cm.
+
+	Inputs:
+	    devId (str): device id key into sensors[sensor] for echo/trigger pins
+	Outputs:
+	    float or str: distance in cm, empty string on failure/timeout, or 'badSensor' if too many bad reads
+	"""
 	global sensor,sensors , first, maxRange, badSensor, PIGPIO
 	try:
 		echoPin	= int(sensors[sensor][devId]["gpioEcho"])  
@@ -250,6 +271,13 @@ def getDistancePIGPIO(devId):
 
 #################################
 def getDistance(devId):
+	"""Measures distance from an ultrasonic sensor using the RPi.GPIO library by pulsing the trigger pin and timing the echo pulse, taking up to 8 readings to collect good measurements, and returns a smoothed/median distance in cm.
+
+	Inputs:
+	    devId (str): device id key into sensors[sensor] for echo/trigger pins
+	Outputs:
+	    float or str: distance in cm, empty string on failure/timeout, or 'badSensor' if too many bad reads
+	"""
 	global sensor,sensors , first, maxRange, badSensor
 	try:
 		echoPin	= int(sensors[sensor][devId]["gpioEcho"])  
@@ -357,6 +385,13 @@ def getDistance(devId):
 #################################
 
 def execMain():			 
+	"""Main loop for the ultrasound distance sensor process: initializes globals and logging, kills old instances, then repeatedly reads each device's distance (via GPIO or PIGPIO), computes speed and deltas, fires region/distance/time triggers, sends results to Indigo via U.sendURL, updates the display, and refreshes parameters each cycle.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs an endless measurement loop; sends data to Indigo, writes DAT files, and logs
+	"""
 	global sensors,sensorRefreshSecs,sensor, NSleep, ipAddress, dynamic, mode, deltaDist, first, displayEnable
 	global output, authentication
 	global distanceUnits

@@ -57,6 +57,13 @@ G.program = "INPUTRotarySwitchAbsolute"
 
 #################################
 def readParams():
+		"""Reads the latest plugin parameters/config, and if the sensor configuration changed, updates per-device input/output GPIO pin mappings, code types and bit counts in the INPUTS structure, starting GPIO for new devices and restarting the process if existing pin assignments changed.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: updates global sensors/INPUTS state, may start GPIO or restart the process
+		"""
 		global sensors
 		global oldRaw, lastRead, nInputs, INPUTS, nBits
 
@@ -136,6 +143,13 @@ def readParams():
 	   
 #################################
 def getINPUTgpio(devId):
+	"""Reads the current input value for a device from its GPIO pins, decoding either a serial-encoded stream (with a parity/status retry) or a set of binary input pins, applying inverse, grey-code, or Bourns 8-bit table conversion based on the device's code type.
+
+	Inputs:
+	    devId (str): device identifier whose input pins are read
+	Outputs:
+	    dict: dict {'INPUT': value} with the decoded input value, or -1 on serial read failure
+	"""
 	global nInputs, INPUTS, GPIOZERO
 	value = 0
 	try:
@@ -174,6 +188,13 @@ def getINPUTgpio(devId):
 
 #################################
 def getSerialInfo(devId):
+	"""Reads an absolute rotary encoder over a serial GPIO interface by toggling a chip-select and clock line, sampling the data pin for nBits plus 6 status bits, then assembles the position value, computes a parity check, and extracts the status bits.
+
+	Inputs:
+	    devId (str): Device identifier keying into the INPUTS pin-configuration dict
+	Outputs:
+	    tuple: (data int, parity-valid bool, status bits list)
+	"""
 	global INPUTS
 	data = 0
 	status = [0,0,0,0,0,0]
@@ -216,6 +237,13 @@ def getSerialInfo(devId):
 
 #################################
 def getSerialInfoZero(devId):
+	"""GPIO Zero variant of getSerialInfo that reads an absolute rotary encoder using gpiozero objects (Button/LED) instead of RPi.GPIO, sampling nBits plus 6 status bits and computing the position value, parity check, and status bits.
+
+	Inputs:
+	    devId (str): Device identifier keying into the INPUTS and GPIOZERO dicts
+	Outputs:
+	    tuple: (data int, parity-valid bool, status bits list)
+	"""
 	global INPUTS, GPIOZERO
 	data = 0
 	status = [0,0,0,0,0,0]
@@ -258,6 +286,13 @@ def getSerialInfoZero(devId):
 
 #################################
 def geyToInt(val): 
+	"""Converts a Gray-code value to its plain binary integer by XOR-folding the value with successive right-shifted copies of itself.
+
+	Inputs:
+	    val (int): Gray-code encoded integer to decode
+	Outputs:
+	    int: Decoded binary integer
+	"""
 	grey =0
 	while(val):
 		grey = grey ^ val
@@ -267,6 +302,13 @@ def geyToInt(val):
 
 #################################
 def burnsTableToInt(val): 
+	"""Looks up a raw Burns-code byte value in the precomputed burns8BitLookUp table and returns the corresponding decoded position index, or 0 if the value is out of range.
+
+	Inputs:
+	    val (int): Raw Burns 8-bit code value to translate
+	Outputs:
+	    int: Decoded position index, or 0 if out of range
+	"""
 	global burns8BitLookUp
 	if val >= 0 and val < len(burns8BitLookUp):
 		return burns8BitLookUp[val]
@@ -275,15 +317,22 @@ def burnsTableToInt(val):
 
 #################################
 def startGPIOzero(devId):
+	"""Initializes gpiozero objects for a device, creating Button inputs (pull-up) for each input pin and LED outputs (initial high) for each output pin in the GPIOZERO dict; logs and swallows any exception.
+
+	Inputs:
+	    devId (str): Device identifier keying into INPUTS and GPIOZERO dicts
+	Outputs:
+	    None: Populates GPIOZERO with gpiozero pin objects; logs on error
+	"""
 	global nInputs, GPIOZERO
 	try:
 		if devId not in GPIOZERO: GPIOZERO[devId] = {"pinI":[0,0,0,0,0],"pinO":[0,0,0,0,0]}
 		if "pinI" in INPUTS[devId]:
 			for n in range(nInputs[devId]):
-				GPIOZERO[gpioPIN]["pinI"][n] = gpiozero.Button(INPUTS[devId]["pinI"][n], pull_up=True) 
+				GPIOZERO[devId]["pinI"][n] = gpiozero.Button(INPUTS[devId]["pinI"][n], pull_up=True) 
 		if "pinO" in INPUTS[devId]:
 			for n in range(len(INPUTS[devId]["pinO"])):
-				GPIOZERO[gpioPIN]["pinO"][n] = gpiozero.LED(INPUTS[devId]["pinO"][n], initial_value=True) 
+				GPIOZERO[devId]["pinO"][n] = gpiozero.LED(INPUTS[devId]["pinO"][n], initial_value=True) 
 		return
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -291,6 +340,13 @@ def startGPIOzero(devId):
 	return
 
 def startGPIO(devId):
+	"""Configures RPi.GPIO pins for a device, setting input pins as inputs with pull-up resistors and output pins as outputs driven high; logs and swallows any exception.
+
+	Inputs:
+	    devId (str): Device identifier keying into the INPUTS pin-configuration dict
+	Outputs:
+	    None: Configures GPIO pin modes/levels; logs on error
+	"""
 	global nInputs, INPUTS
 	try:
 		if "pinI" in INPUTS[devId]:
@@ -309,6 +365,13 @@ def startGPIO(devId):
 
 
 def execMain():
+	"""Main entry point for the absolute rotary-switch sensor program: builds the Burns 8-bit lookup table, sets up logging, kills stale instances, reads parameters, then loops reading each device's GPIO input, sending updates via URL when data changes or periodically, refreshing parameters every 10s and emitting alive heartbeats.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs the sensor polling loop, sends data, refreshes params, and updates state until stopped
+	"""
 	global sensors, sensor
 	global oldRaw, lastRead
 	global nInputs, INPUTS

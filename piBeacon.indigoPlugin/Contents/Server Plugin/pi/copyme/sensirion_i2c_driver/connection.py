@@ -49,6 +49,13 @@ class I2cConnection(object):
 
     @always_multi_channel_response.setter
     def always_multi_channel_response(self, value):
+        """Setter that stores the given flag controlling whether the connection always returns multi-channel responses in the _always_multi_channel_response attribute.
+
+        Inputs:
+            value (bool): Flag enabling always-multi-channel response behavior
+        Outputs:
+            None: Sets self._always_multi_channel_response
+        """
         self._always_multi_channel_response = value
 
     @property

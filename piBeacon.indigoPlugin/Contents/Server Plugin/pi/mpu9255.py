@@ -344,6 +344,14 @@ class MPU9255:
 
 	def __init__(self, busNumber=1, i2cAddress=""):
 
+		"""Initializes an MPU9255 9-axis sensor: opens the given SMBus, performs a hard reset and clock setup, configures gyro full scale (2000 dps) and accel full scale (16G), and enables bypass mode so the magnetometer can be read directly.
+
+		Inputs:
+		    busNumber (int): I2C bus number to open with smbus.SMBus
+		    i2cAddress (str): I2C address (unused; default address constant is used)
+		Outputs:
+		    None: opens the I2C bus and configures MPU9255 registers
+		"""
 		self.busNumber			 = busNumber
 		try:
 			self.bus			= smbus.SMBus(self.busNumber)
@@ -373,6 +381,14 @@ class MPU9255:
 
 
 	def readRegisters(self,addr, lsb_register): 
+		"""Reads a 16-bit word from the given I2C device address and register, converting it from unsigned to a signed two's-complement integer.
+
+		Inputs:
+		    addr (int): I2C device address to read from
+		    lsb_register (int): register holding the low byte of the word
+		Outputs:
+		    int: signed 16-bit value read from the register
+		"""
 		value = self.bus.read_word_data(addr,lsb_register)
 		if (value >= 0x8000):
 			return -((65535 - value) + 1)
@@ -382,6 +398,13 @@ class MPU9255:
 
 
 	def getSensordata(self): 
+		"""Reads the full MPU9255 sensor set: 3-axis accelerometer, 3-axis gyroscope, temperature (converted to degrees), and triggers a single-shot magnetometer read for 3-axis magnetic field, returning all four groups.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (accel list, gyro list, mag list, temp int)
+		"""
 		try:
 			#get acc
 			a=["","",""]
@@ -411,6 +434,14 @@ class MPU9255:
 
 		
 def startSENSOR(devId, i2cAddress):
+	"""Creates and registers a new MPU9255 sensor instance for the given device id at the given I2C address, storing it in the global theSENSORdict and logging the startup.
+
+	Inputs:
+	    devId (str): device id used as the key in theSENSORdict
+	    i2cAddress (str): I2C address passed to the MPU9255 constructor
+	Outputs:
+	    None: instantiates MPU9255 and stores it in theSENSORdict
+	"""
 	global theSENSORdict
 	try:
 		U.logger.log(30,"==== Start mpu9255 ===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
@@ -423,6 +454,13 @@ def startSENSOR(devId, i2cAddress):
 
 #################################		 
 def readParams():
+	"""Reads updated plugin parameters via U.doRead, skipping if unchanged, updates the global sensors config, exits if this sensor is not enabled, reads each device's reset pin, starts sensor instances for new device ids, and removes entries no longer in the config.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global sensor config, resetPin, and theSENSORdict, may exit the process
+	"""
 	global sensors, sensor
 	global rawOld
 	global theSENSORdict, resetPin
@@ -480,6 +518,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Reads accelerometer, gyroscope, magnetometer and temperature data from the MPU9255 sensor for the given device, computes Euler angles (heading/roll/pitch) from the magnetometer data, and returns them all in a structured dict; returns {"MAG":"bad"} on failure.
+
+	Inputs:
+	    devId (str): device id used to look up the sensor object in theSENSORdict
+	Outputs:
+	    dict: dict with ACC/GYR/MAG/EULER sub-dicts plus temp, or {"MAG":"bad"} on error
+	"""
 	global sensor, sensors,	 theSENSORdict
 	try:
 		data = {}
@@ -498,6 +543,15 @@ def getValues(devId):
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
+	"""Pairs each label in theItems with the corresponding numeric value in theList (by index), rounding each value to the given number of decimal digits, and returns the resulting label-to-value dict.
+
+	Inputs:
+	    theList (list): list of numeric values to round
+	    theItems (list): list of string keys/labels matching the values by index
+	    digits (int): number of decimal places to round each value to
+	Outputs:
+	    dict: mapping of each label to its rounded value
+	"""
 	out={}
 	for ii in range(len(theItems)):
 		out[theItems[ii]] = round(theList[ii],digits)

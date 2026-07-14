@@ -41,6 +41,15 @@ G.program = "as3935"
 class RPi_AS3935:
 
 	def __init__(self, address, bus=1, minNoiseFloor = 1):
+		"""Constructor for the RPi_AS3935 lightning-sensor driver; stores the I2C address, opens an smbus.SMBus on the given bus number, and records the minimum noise floor setting.
+
+		Inputs:
+		    address (int): I2C address of the AS3935 sensor
+		    bus (int): I2C bus number (default 1)
+		    minNoiseFloor (int): minimum allowed noise floor value (default 1)
+		Outputs:
+		    None: initializes instance attributes and opens the I2C bus
+		"""
 		self.address		= address
 		self.i2cbus			= smbus.SMBus(bus)
 		self.minNoiseFloor	= minNoiseFloor
@@ -255,9 +264,24 @@ class RPi_AS3935:
 		else:							   return False
 
 	def set_byte(self, register, value):
+		"""Writes a single byte value to the given register of the AS3935 sensor over the I2C bus.
+
+		Inputs:
+		    register (int): register address to write to
+		    value (int): byte value to write
+		Outputs:
+		    None: writes a byte to the I2C device register
+		"""
 		self.i2cbus.write_byte_data(self.address, register, value)
 
 	def read_data(self):
+		"""Reads a block of bytes starting at register 0x00 from the AS3935 sensor over I2C, returning an empty list on error, and logs the result.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: block of bytes read from the device, or empty list on failure
+		"""
 		try:	ret = self.i2cbus.read_i2c_block_data(self.address, 0x00)
 		except: ret=[]
 		U.logger.log(10, "{}".format(ret))
@@ -269,6 +293,13 @@ class RPi_AS3935:
 
 #################################		 
 def readParams():
+	"""Reads the latest plugin parameter file and parses AS3935 lightning-sensor settings (min strikes, dynamic calibration, capacitor tuning, noise floor, indoor/outdoor flag, I2C address, interrupt GPIO, min send delta) into module globals; if any relevant setting changed or the device is new it restarts the sensor, and it prunes devices no longer present in the configuration.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals, may (re)start sensors, and logs
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
 	global rawOld,i2cAddress
 	global as3935sensor, minSendDelta
@@ -418,6 +449,13 @@ def readParams():
 
 #################################
 def startSensor(devId):
+	"""Initializes one AS3935 lightning sensor for the given device id: selects the I2C mux channel, creates the RPi_AS3935 driver, sets indoor/outdoor mode, noise floor, and minimum strikes, calibrates the tuning capacitor, and on success wires up the rising-edge interrupt GPIO; on failure it marks the sensor bad and reports it via URL.
+
+	Inputs:
+	    devId (str): device id of the sensor to start
+	Outputs:
+	    None: instantiates sensor driver, configures GPIO interrupt, sets globals, and reports bad sensors
+	"""
 	global sensors, sensor, badSensor
 	global startTime
 	global as3935sensor 
@@ -465,6 +503,13 @@ def startSensor(devId):
 
 #################################
 def handle_interrupt(channel=0):
+	"""GPIO interrupt callback for the AS3935; reads the interrupt reason from each configured sensor and handles it (raises noise floor on too-high noise, masks disturbers, or reads lightning distance and energy), then builds a measurement message, sends it to the plugin via URL, and persists the last lightning event to a data file.
+
+	Inputs:
+	    channel (int): GPIO channel that triggered the interrupt (default 0)
+	Outputs:
+	    None: reads sensor registers, sends measurement data via URL, writes lightning.dat, and logs
+	"""
 	global as3935sensor,sensors, sensor, lastEvent, lastTime, lastSend, restartNeededCounter, interruptGPIO, calibrationDynamic
 	global noiseFlorSet
 	time.sleep(0.003)

@@ -118,6 +118,14 @@ class SCD4X:
 	"""
 
 	def __init__(self, i2c_bus: I2C, address: int = _SCD4X_DEFAULT_ADDR) -> None:
+		"""Constructor for the SCD4x driver; wraps the I2C bus in an I2CDevice at the given address, allocates command/CRC buffers, clears cached readings and stops any periodic measurement.
+
+		Inputs:
+		    i2c_bus (I2C): busio.I2C bus object used to talk to the sensor
+		    address (int): I2C address of the SCD4x, defaulting to _SCD4X_DEFAULT_ADDR
+		Outputs:
+		    None: sets up the I2CDevice, buffers and cached readings; stops periodic measurement
+		"""
 		self.i2c_device = i2c_device.I2CDevice(i2c_bus, address)
 		self._buffer = bytearray(18)
 		self._cmd = bytearray(2)
@@ -215,6 +223,13 @@ class SCD4X:
 		return self._buffer[1] == 1
 
 	def set_self_calibration_enabled(self, enabled: bool) -> None:
+		"""Enables or disables the SCD4x automatic self-calibration by writing the supplied boolean to the ASC-enabled command register.
+
+		Inputs:
+		    enabled (bool): True to enable automatic self-calibration, False to disable
+		Outputs:
+		    None: sends a write command to the sensor over I2C
+		"""
 		self._send_writecommand_value(_SCD4X_SETASCE, enabled)
 
 	def self_test(self) -> None:
@@ -316,6 +331,13 @@ class SCD4X:
 		return 175.0 * temp / 2**16
 
 	def set_temperature_offset(self, offset: Union[int, float]) -> None:
+		"""Sets the SCD4x temperature offset; validates the offset is at most 374 C, converts it to the sensor's 16-bit ticks, and writes it via the set-temperature-offset command.
+
+		Inputs:
+		    offset (int or float): temperature offset in degrees Celsius (must be <= 374)
+		Outputs:
+		    None: writes the encoded offset to the sensor; raises AttributeError if offset > 374
+		"""
 		if offset > 374:
 			raise AttributeError(
 				"Offset value must be less than or equal to 374 degrees Celsius"
@@ -337,11 +359,25 @@ class SCD4X:
 		return (self._buffer[0] << 8) | self._buffer[1]
 
 	def set_altitude(self, height: int) -> None:
+		"""Sets the sensor's altitude compensation in meters by writing the value to the SET_ALTITUDE register, raising AttributeError if the height exceeds 65535.
+
+		Inputs:
+		    height (int): altitude in meters, must be <= 65535
+		Outputs:
+		    None: writes the altitude value to the sensor over I2C
+		"""
 		if height > 65535:
 			raise AttributeError("Height must be less than or equal to 65535 meters")
 		self._send_writecommand_value(_SCD4X_SETALTITUDE, height)
 
 	def _check_buffer_crc(self, buf: bytearray) -> bool:
+		"""Validates the CRC8 checksum of each 3-byte word in the buffer (two data bytes plus one CRC byte), raising RuntimeError on mismatch.
+
+		Inputs:
+		    buf (bytearray): buffer of data bytes with interleaved CRC bytes
+		Outputs:
+		    bool: True if all CRC checks pass, otherwise raises RuntimeError
+		"""
 		for i in range(0, len(buf), 3):
 			self._crc_buffer[0] = buf[i]
 			self._crc_buffer[1] = buf[i + 1]
@@ -350,6 +386,14 @@ class SCD4X:
 		return True
 
 	def send_readCommand(self, cmd: int, cmd_delay: float = 0) -> None:
+		"""Sends a 16-bit command word to the sensor over I2C by splitting it into two bytes and writing them, then sleeps for the given delay; raises RuntimeError if the I2C write fails.
+
+		Inputs:
+		    cmd (int): 16-bit command code to send
+		    cmd_delay (float): seconds to sleep after sending the command
+		Outputs:
+		    None: writes the command to the sensor over I2C and sleeps
+		"""
 		self._cmd[0] = (cmd >> 8) & 0xFF
 		self._cmd[1] = cmd & 0xFF
 
@@ -364,6 +408,15 @@ class SCD4X:
 		time.sleep(cmd_delay)
 
 	def _send_writecommand_value(self, cmd, value, cmd_delay=0):
+		"""Writes a command with an accompanying 16-bit value to the sensor by building a 5-byte buffer (command bytes, value bytes, and a CRC8 of the value) and sending it over I2C, then sleeps for the given delay.
+
+		Inputs:
+		    cmd (int): 16-bit command code
+		    value (int): 16-bit value to write with the command
+		    cmd_delay (float): seconds to sleep after writing
+		Outputs:
+		    None: writes command and CRC-protected value to the sensor over I2C
+		"""
 		self._buffer[0] = (cmd >> 8) & 0xFF
 		self._buffer[1] = cmd & 0xFF
 		self._crc_buffer[0] = self._buffer[2] = (value >> 8) & 0xFF
@@ -374,12 +427,27 @@ class SCD4X:
 		time.sleep(cmd_delay)
 
 	def _read_reply(self, buff, num):
+		"""Reads num bytes from the sensor over I2C into the provided buffer and validates the CRC of the read data.
+
+		Inputs:
+		    buff (bytearray): buffer to read the reply bytes into
+		    num (int): number of bytes to read
+		Outputs:
+		    None: fills buff via I2C read and verifies CRC
+		"""
 		with self.i2c_device as i2c:
 			i2c.readinto(buff, end=num)
 		self._check_buffer_crc(self._buffer[0:num])
 
 	@staticmethod
 	def _crc8(buffer: bytearray) -> int:
+		"""Computes the Sensirion CRC8 checksum (polynomial 0x31, initial value 0xFF) over the bytes in the buffer.
+
+		Inputs:
+		    buffer (bytearray): bytes to compute the checksum over
+		Outputs:
+		    int: the 8-bit CRC value
+		"""
 		crc = 0xFF
 		for byte in buffer:
 			crc ^= byte
@@ -395,6 +463,13 @@ class SCD4X:
 ###############################
 class SENSORclass():
 	def __init__(self,  fastSlow="fast"):
+		"""Initializes the SENSORclass wrapper for an SCD4X CO2 sensor at I2C address 0x62, creating the underlying SCD4X instance and logging/cleaning up on failure.
+
+		Inputs:
+		    fastSlow (str): fast/slow read mode selector (default 'fast', unused in body)
+		Outputs:
+		    None: sets up sensor instance attributes and logs
+		"""
 		i2c_addr=0x62
 		self._i2c_addr = i2c_addr
 
@@ -411,6 +486,13 @@ class SENSORclass():
 		return 
 
 	def getData(self): 
+		"""Polls the sensor up to three times for data readiness, returning the measurement on success; returns a 'notready' tuple if never ready and an empty tuple on exception.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: sensor reading tuple, ('notready', 0, '') if not ready, or ('', '', '') on error
+		"""
 		try:
 			for ii in range(3):
 				if self.thisSensor.data_ready:
@@ -426,67 +508,179 @@ class SENSORclass():
 
 
 	def get_auto_self_calibration_active(self):
+		"""Returns whether automatic self-calibration is enabled on the underlying SCD4X sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if automatic self-calibration is enabled
+		"""
 		return self.thisSensor.get_self_calibration_enabled()
 
 	def get_AltitudeCompensation(self):
+		"""Returns the sensor's configured altitude compensation value in meters.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: configured altitude in meters
+		"""
 		return self.thisSensor.get_altitude()
 
 	def get_Force_self_calibration(self):
+		"""Returns the stored forced-calibration flag/value for the sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: the forceCalibration attribute value
+		"""
 		return self.forceCalibration
 
 	def get_TemperatureOffset(self):
+		"""Returns the sensor's configured temperature offset.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: temperature offset value from the sensor
+		"""
 		return self.thisSensor.get_temperature_offset()
 
 	def get_serialNumber(self):
+		"""Returns the SCD4x sensor's unique serial number by delegating to the underlying sensor driver.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: the sensor's serial number
+		"""
 		return self.thisSensor.get_serial_number()
 
 
 	def stop_measurements(self):
+		"""Stops periodic CO2/temperature/humidity measurements on the SCD4x sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: issues stop_periodic_measurement to the sensor hardware
+		"""
 		self.thisSensor.stop_periodic_measurement()
 		return 
 
 	def start_measurements(self):
+		"""Starts standard periodic CO2/temperature/humidity measurements on the SCD4x sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: issues start_periodic_measurement to the sensor hardware
+		"""
 		self.thisSensor.start_periodic_measurement()
 		return 
 
 	def start_30sec_measurements(self,meter):
+		"""Starts low-power periodic measurements by delegating to start_low_periodic_measurement; the meter argument is ignored.
+
+		Inputs:
+		    meter (int): unused altitude/meter value
+		Outputs:
+		    None: triggers low-power periodic measurement on the sensor
+		"""
 		self.start_low_periodic_measurement()
 		return 
 
 	def set_AltitudeCompensation(self, meter):
+		"""Sets the sensor's altitude compensation so CO2 readings are corrected for elevation.
+
+		Inputs:
+		    meter (int): altitude in meters used for compensation
+		Outputs:
+		    None: writes the altitude value to the sensor hardware
+		"""
 		self.thisSensor.set_altitude(meter)
 		return
 
 	def start_periodic_measurement(self):
+		"""Starts standard periodic measurements on the SCD4x sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: issues start_periodic_measurement to the sensor hardware
+		"""
 		self.thisSensor.start_periodic_measurement()
 		return
 
 
 	def start_low_periodic_measurement(self):
+		"""Starts low-power periodic measurements (longer interval, lower power) on the SCD4x sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: issues start_low_periodic_measurement to the sensor hardware
+		"""
 		self.thisSensor.start_low_periodic_measurement()
 		return
 
 
 
 	def set_auto_self_calibration_active(self, onOff):
+		"""Enables or disables automatic self-calibration; computes a 0/1 value from the flag and sets the sensor's self-calibration-enabled attribute (assigning the raw flag).
+
+		Inputs:
+		    onOff (bool): whether automatic self-calibration is enabled
+		Outputs:
+		    None: sets the sensor's self-calibration-enabled attribute
+		"""
 		if onOff : value = 1
 		else: value = 0
 		self.thisSensor.set_self_calibration_enabled = onOff
 		return 
 
 	def set_Force_self_calibration(self, pOffset):
+		"""Performs a forced recalibration of the sensor using the supplied reference CO2 offset, also storing it on the instance.
+
+		Inputs:
+		    pOffset (int): reference CO2 value for forced calibration
+		Outputs:
+		    None: stores forceCalibration and writes forced calibration to the sensor
+		"""
 		self.forceCalibration = pOffset
 		self.thisSensor.set_force_calibration(pOffset)
 		return 
 
 	def setTemperatureOffset(self, toffset):
+		"""Sets the sensor's temperature offset used to compensate self-heating in temperature/humidity readings.
+
+		Inputs:
+		    toffset (float): temperature offset value to apply
+		Outputs:
+		    None: writes the temperature offset to the sensor hardware
+		"""
 		self.thisSensor.set_temperature_offset(toffset)
 		return 
 
 	def soft_reset(self):
+		"""Performs a soft reset of the sensor by reinitializing the underlying driver.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: calls reinit on the sensor
+		"""
 		self.thisSensor.reinit()
 
 	def set_Reset(self):
+		"""Performs a factory reset of the SCD4x sensor, restoring default settings.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: issues factory_reset to the sensor hardware
+		"""
 		self.thisSensor.factory_reset()
 		return 
 
@@ -497,6 +691,13 @@ class SENSORclass():
 
 ###############################
 def readParams():
+	"""Reads the latest plugin parameter file and applies SCD40 CO2 sensor configuration changes: updates global sensor/sensorList dicts, per-device deltaX and minSendDelta thresholds, detects changes to altitude compensation, auto-calibration, temperature offset and fast/slow read mode, and (re)starts or removes per-device sensor instances accordingly.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module-level sensor configuration globals and starts/stops sensors; logs on error
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global deltaX, SENSOR, minSendDelta, sensorMode
 	global oldRaw, lastRead
@@ -601,6 +802,15 @@ def readParams():
 
 #################################
 def startSensor(devId, CO2Target="", reset=False):
+	"""Initializes or reconfigures an SCD40 CO2 sensor instance for a given device: creates the SENSORclass, reads its serial number, applies forced self-calibration target, altitude compensation, auto-calibration and temperature offset settings, starts periodic (fast or low/slow) measurement, and handles soft reset; resets the I2C multiplexer when done.
+
+	Inputs:
+	    devId (str): device identifier key into the SENSOR/sensors dicts
+	    CO2Target (int or str): forced self-calibration CO2 target ppm; empty string skips calibration
+	    reset (bool): if True performs a soft reset of an existing sensor
+	Outputs:
+	    None: creates/configures sensor hardware via I2C and stores instance in SENSOR; logs on error
+	"""
 	global sensors,sensor
 	global startTime
 	global SENSOR, i2c_bus
@@ -611,11 +821,11 @@ def startSensor(devId, CO2Target="", reset=False):
 	if devId  in SENSOR:
 		if reset:
 			U.logger.log(20," soft resetting sensor")
-			self.thisSensor.stop_periodic_measurement()
-			SENSOR[devId].thisSensor.soft_reset()
+			SENSOR[devId].stop_periodic_measurement()
+			SENSOR[devId].soft_reset()
 			del SENSOR[devId]
 		if not reset and CO2Target != "": 
-			self.thisSensor.stop_periodic_measurement()
+			SENSOR[devId].stop_periodic_measurement()
 			SENSOR[devId].set_Force_self_calibration(CO2Target)
 			sensorCO2Target[devId]			= SENSOR[devId].thisSensor.get_Force_self_calibration()
 
@@ -679,6 +889,13 @@ def startSensor(devId, CO2Target="", reset=False):
 
 #################################
 def getValues(devId):
+	"""Reads one CO2/temperature/humidity measurement from the SCD40 sensor for a device, starting the sensor first if needed, applies configured temperature/humidity/CO2 offsets, rounds values, and returns a data dict with the readings plus sensor metadata.
+
+	Inputs:
+	    devId (str): device identifier key into SENSOR/sensors dicts
+	Outputs:
+	    dict or str or tuple: data dict of readings/metadata on success, 'badSensor' on repeated failure, (0,0,0) when not ready, or '' otherwise
+	"""
 	global sensor, sensors,	 SENSOR, badsensorCountCO2
 	global startTime, sendToIndigoSecs, sensorMode
 	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCO2Target, altitudeCompensation
@@ -726,6 +943,13 @@ def getValues(devId):
 
 ############################################
 def execSensor():
+	"""Main run loop for the SCD40 CO2 sensor driver: initializes globals and logging, kills old instances, reads parameters, then repeatedly polls each device for CO2/temp/humidity, handles calibration/reset requests, tracks bad-sensor and not-ready counts (restarting itself on persistent failures), sends changed data to Indigo via URL, writes DAT files, and sleeps to the refresh interval.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs an infinite measurement loop, sends data to Indigo and writes files; never returns normally
+	"""
 	global sensor, sensors, sensorList, badsensorCountCO2
 	global deltaX, SENSOR, minSendDelta, sensorMode
 	global oldRaw, lastRead
@@ -839,7 +1063,7 @@ def execSensor():
 							data["sensors"][sensor][devId] = "badSensor"
 							U.logger.log(20,"notReadyCountCO2 bad sensor count  limit reached")
 							U.sendURL(data)
-						self.sleep(5)
+						time.sleep(5)
 						if notReadyCountCO2[devId] == 10:
 							U.restartMyself(param="", reason="notReadyCountCO2",doPrint=True,python3=True)
 						continue

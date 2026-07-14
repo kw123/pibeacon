@@ -23,6 +23,13 @@ G.program = "ccs811"
 
 
 def readParams():
+		"""Reads the JSON parameters file from the home directory and applies the parsed settings via U.getGlobalParams; silently returns if the file content is not valid JSON.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Loads global parameters from the parameters file; no return value
+		"""
 		global debug
 		f=open(homeDir+"parameters","r")
 		try:	inp =json.loads(f.read())

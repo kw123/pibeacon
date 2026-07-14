@@ -19,6 +19,19 @@ class THESENSORCLASS:
 	myaddress=0x1E
 	def __init__(self, busNumber=1, address=0x1E, magResolution =1,enableCalibration=False, magDivider = 1.,declination=0, magOffset=""):
 
+		"""Initializes an HMC5883L magnetometer driver: opens the I2C bus, stores address, calibration, divider, declination and offset settings, applies magnetometer parameters, initializes the sensor registers, and optionally loads/runs calibration.
+
+		Inputs:
+		    busNumber (int): I2C bus number to open
+		    address (int or str): I2C device address; defaults to 0x1E, empty string falls back to default address
+		    magResolution (int): magnetometer gain/resolution index (0-7)
+		    enableCalibration (bool): whether to load and run calibration
+		    magDivider (float): scaling divider applied to magnetometer readings
+		    declination (float): magnetic declination correction
+		    magOffset (str): magnetometer offset spec; non-empty disables calibration
+		Outputs:
+		    None: configures instance attributes and hardware; returns early if the I2C bus cannot be opened
+		"""
 		self.busNumber			 = busNumber
 		try:
 			self.bus			= smbus.SMBus(self.busNumber)
@@ -47,6 +60,13 @@ class THESENSORCLASS:
 			U.magCalibrate(self, force = False,calibTime=5)
 
 	def initSensor(self,magResolution):
+		"""Initializes the HMC5883L sensor registers by selecting the microtesla-per-LSB scale from the resolution index and writing the averaging/output-rate, gain, and continuous-measurement mode configuration over I2C.
+
+		Inputs:
+		    magResolution (int): gain/resolution index, clamped to 0-7
+		Outputs:
+		    None: writes configuration bytes to the I2C device; logs on error
+		"""
 		try:
 			uTPerLSBList		= [0.073, 0.092, 0.122, 0.152, 0.227 , 0.256, 0.303 , 0.435]
 			magResolution = min(max(magResolution,0),7)
@@ -58,22 +78,52 @@ class THESENSORCLASS:
 			U.logger.log(30,"", exc_info=True)
 	def twos_complement(self,val, len):
 		# Convert twos compliment to integer
+		"""Converts a two's-complement value of the given bit length into a signed integer.
+
+		Inputs:
+		    val (int): raw unsigned value to interpret
+		    len (int): number of bits in the value
+		Outputs:
+		    int: signed integer interpretation of the input
+		"""
 		if (val & (1 << len - 1)):
 			val = val - (1<<len)
 		return val
 
 	def convert(self, data, offset):
+		"""Combines two consecutive bytes of I2C data at the given offset into a 16-bit signed value via two's complement; returns a sentinel -99999 when the reading is the saturation value -4096.
+
+		Inputs:
+		    data (list): block of raw bytes read from the sensor
+		    offset (int): starting index of the high byte within data
+		Outputs:
+		    int: signed axis reading, or -99999 if saturated
+		"""
 		val = self.twos_complement(data[offset] << 8 | data[offset+1], 16)
 		if val == -4096: return -99999
 		return val
 
 	def getRawMagData(self):
+		"""Reads a raw I2C data block from the HMC5883L and converts it into the X, Y and Z magnetometer axis values.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: list of three signed integers [x, y, z]
+		"""
 		data = self.bus.read_i2c_block_data(self.address, 0x00)
 		x = self.convert(data, 3)
 		y = self.convert(data, 7)
 		z = self.convert(data, 5)
 		return [x,y,z]
 	def getMagData(self):
+		"""Returns the magnetometer X/Y/Z data by delegating to getRawMagData.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: list of three signed integers [x, y, z]
+		"""
 		return self.getRawMagData()
 
 
@@ -84,6 +134,13 @@ class THESENSORCLASS:
 
 #################################		 
 def readParams():
+	"""Reads fresh plugin parameters, skips processing if input is empty/unchanged, verifies this sensor is enabled (exiting if not), then for each configured device loads magnetometer read parameters, starts the sensor if new, applies mag params, and prunes the active sensor list.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals and per-device sensor objects; returns early on no/unchanged input, exits if sensor not enabled, logs on error
+	"""
 	global sensors, sensor 
 	global theSENSORdict 
 	global oldRaw, lastRead
@@ -116,6 +173,19 @@ def readParams():
 
 #################################
 def startTheSensor(devId, i2cAddress, magResolution, declination, magOffset, magDivider, enableCalibration=False):
+	"""Instantiates and registers an HMC5883L magnetometer sensor object in the global theSENSORdict keyed by device id, passing address, resolution, divider, declination and offset; runs a 5-second calibration when enabled and no offset is provided.
+
+	Inputs:
+	    devId (str): Indigo device id used as the key in the sensor dictionary
+	    i2cAddress (int): I2C bus address of the magnetometer
+	    magResolution (int): magnetometer resolution/gain setting
+	    declination (float): magnetic declination correction
+	    magOffset (list): hard-iron offset triple [x,y,z]; empty/zero triggers calibration
+	    magDivider (float): scaling divider applied to magnetometer readings
+	    enableCalibration (bool): whether to run sensor calibration
+	Outputs:
+	    None: creates the sensor object, may calibrate, and logs; no return value
+	"""
 	global theSENSORdict
 	try:
 		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
@@ -133,6 +203,13 @@ def startTheSensor(devId, i2cAddress, magResolution, declination, magOffset, mag
 
 #################################
 def getValues(devId):
+	"""Reads magnetometer data for the given device, applies offset/divider correction and computes Euler angles (heading, roll, pitch), returning a dict with MAG and EULER sub-dicts; returns {'MAG':'bad'} on error.
+
+	Inputs:
+	    devId (str): device id whose sensor object is read from theSENSORdict
+	Outputs:
+	    dict: {'MAG':{x,y,z}, 'EULER':{heading,roll,pitch}} or {'MAG':'bad'} on failure
+	"""
 	global theSENSORdict
 	data={}
 	try:
@@ -151,6 +228,16 @@ def getValues(devId):
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits,mult=1):
+	"""Builds a dict mapping each name in theItems to the corresponding value in theList, multiplied by mult and rounded to digits decimals.
+
+	Inputs:
+	    theList (list): numeric values to assign, aligned by index with theItems
+	    theItems (list): key names for the output dict
+	    digits (int): number of decimal places to round to
+	    mult (float): multiplier applied to each value before rounding
+	Outputs:
+	    dict: mapping of each item name to its rounded, scaled value
+	"""
 	out={}
 	for ii in range(len(theItems)):
 		out[theItems[ii]] = round(mult*theList[ii],digits)

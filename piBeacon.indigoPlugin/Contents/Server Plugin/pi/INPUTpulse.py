@@ -38,6 +38,13 @@ if useGPIO: GPIO.setmode(GPIO.BCM)
 
 
 def checkReset():
+	"""Checks whether the pulse input counters have been reset externally by comparing against U.checkresetCount, updating the global counter copy when a reset occurred.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if INPUTcount changed (a reset was applied), otherwise False
+	"""
 	global	INPUTcount
 	INPUTcount2 = U.checkresetCount(INPUTcount)
 	if INPUTcount2 != INPUTcount:
@@ -46,6 +53,13 @@ def checkReset():
 	return False
 
 def readParams():
+	"""Reads the latest sensor configuration and, for each pulse-input GPIO device, sets up or updates its edge-detection configuration (bounce time, dead times, burst/coincidence windows, rising/falling type) in GPIOdict, registering RPi.GPIO event callbacks or gpiozero Button handlers, removing stale entries, and triggering a restart or exit when definitions change.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates GPIOdict/coincidence config, registers GPIO callbacks, and may restart or exit the process
+	"""
 	global sensor, sensors, oldSensor
 	global INPgpioType,INPUTcount,INPUTlastvalue
 	global GPIOdict, restart
@@ -286,14 +300,35 @@ def readParams():
  
 def fillRAISING(but):
 	#U.logger.log(20,"fillRAISING   pin:{}".format(but.pin.number))
+	"""gpiozero when_released callback for a falling/rising edge that forwards the event to fillGPIOdict using the button's pin number.
+
+	Inputs:
+	    but (gpiozero.Button): The button object whose pin.number identifies the GPIO pin
+	Outputs:
+	    None: Calls fillGPIOdict with the pin number to record the pulse event
+	"""
 	fillGPIOdict(but.pin.number)
  
 def fillFALLING(but):
 	#U.logger.log(20,"fillFALLING   pin:{}".format(but.pin.number))
+	"""Falling-edge GPIO interrupt callback that simply forwards the pin number of the triggering button to fillGPIOdict for event processing.
+
+	Inputs:
+	    but (object): Button/event object carrying a .pin.number attribute identifying the GPIO pin
+	Outputs:
+	    None: delegates to fillGPIOdict; no return value
+	"""
 	fillGPIOdict(but.pin.number)
 
 
 def fillGPIOdict(gpioINT):
+	"""Core pulse-input event handler invoked on each GPIO edge: applies dead-time filtering, increments the pulse count, evaluates burst and continuous-event windows, checks coincidence groups across multiple GPIOs, and dispatches resulting count/burst/continuous data to Indigo via sendURL while persisting the count.
+
+	Inputs:
+	    gpioINT (int): GPIO pin number (coerced to int) that fired the edge event
+	Outputs:
+	    None: updates global GPIO/burst/coincidence state, sends data via U.sendURL, and writes INPUTcount to file
+	"""
 	global INPUTcount, GPIOdict, sensor, BURSTS, lastGPIO, contEVENT, sensors
 	global GPIOZERO
 
@@ -418,6 +453,13 @@ def fillGPIOdict(gpioINT):
 	#print 	INPUTcount			
 
 def resetContinuousEvents():
+	"""Periodically scans all configured GPIOs with continuous-event windows and, for any whose continuous event has expired beyond its time window, sends an OFF (continuous = -1) update to Indigo and resets the related send timers.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sends continuous-event end data via U.sendURL and mutates global GPIOdict/contEVENT state
+	"""
 	global GPIOdict, contEVENT, sensor
 	tt = time.time()
 	for gpio in GPIOdict:
@@ -437,6 +479,13 @@ def resetContinuousEvents():
 
   
 def execMain():
+	"""Main entry point for the pulse-input sensor program: initializes all global state, sets up logging, kills stale instances, loads persisted counts and parameters, then runs an endless loop that resets continuous events, periodically reloads params, checks for resets/restarts, sends alive echoes, and pushes accumulated count data to Indigo.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs an infinite service loop; initializes globals, logs, sends data via U.sendURL, may exit() or restart
+	"""
 	global sensors, sensor, oldSensor, INPUTcount
 	global oldParams
 	global GPIOdict, restart, BURSTS, lastGPIO, contEVENT
@@ -476,7 +525,7 @@ def execMain():
 	U.logger.log(30, "starting "+G.program+" program")
 
 	INPUTcount = U.readINPUTcount()
-	U.logger.log(20, u" INPUTcount:{}".format(INPUTcount) )
+	U.logger.log(20, " INPUTcount:{}".format(INPUTcount) )
 
 	readParams()
 

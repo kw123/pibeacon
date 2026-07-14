@@ -24,6 +24,13 @@ GPIO.setmode(GPIO.BCM)
 
 
 def readParams():
+	"""Reads the latest plugin/device configuration parameters for the RG-11 rain sensor, applying global params, sensor mode, GPIO/relay or I2C setup, sensitivity thresholds and rain scale factors, and restarting the process if the input GPIO channel changed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global config state, configures GPIO/I2C hardware, may restart the process
+	"""
 	global sensor, sensors
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, cyclePower, sensorMode
 	global ON, off
@@ -139,6 +146,13 @@ def readParams():
 
 def setupSensors():
 
+		"""Loads the Linux 1-Wire kernel modules (w1-gpio and w1_therm) via modprobe to initialize GPIO-based sensor support, returning False if either modprobe call errors.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if both modules loaded, False on modprobe error
+		"""
 		U.logger.log(30, "starting setup GPIOs ")
 
 		ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
@@ -154,6 +168,13 @@ def setupSensors():
 		return True
  
 def GPIOchanged(gpio):	
+	"""GPIO falling-edge callback fired when the RG-11 relay clicks; debounces the event, records click timing, and in static or dynamic mode escalates/sends rain messages, accumulates rain buckets, and switches sensitivity modes based on click intervals.
+
+	Inputs:
+	    gpio (int): GPIO pin number that triggered the event; ignored unless it equals the configured input pin
+	Outputs:
+	    None: updates rain status, sends messages, power-cycles and switches sensor modes
+	"""
 	global sensor, sensors
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, cyclePower
 	global lastClick,lastClick2, eventStartedList, lastCheckIfisRaining
@@ -301,6 +322,16 @@ def GPIOchanged(gpio):
 
 
 def setModeTo(newMode, calledFrom="", powerCycle=True, force = False):
+	"""Switches the rain sensor to a new sensitivity mode if allowed, respecting the minimum time between switches unless forced, applying the physical switch settings and updating current/last mode state.
+
+	Inputs:
+	    newMode (str): target sensitivity mode name
+	    calledFrom (str): caller label for logging
+	    powerCycle (bool): whether to power-cycle the relay during the switch
+	    force (bool): bypass the minimum-time-between-switches guard
+	Outputs:
+	    bool: True if the mode was changed, False if blocked or unchanged
+	"""
 	global nextModeSwitchNotBefore, minTimeBetweenModeSwitch
 	global status, ProgramStart
 
@@ -322,6 +353,14 @@ def setModeTo(newMode, calledFrom="", powerCycle=True, force = False):
 	return False
 
 def setSwitch(newMode, powerCycle=True):
+	"""Applies the physical relay/GPIO switch configuration for a given sensitivity mode by calling the matching set* helper, optionally power-cycling the sensor off before and on after the change.
+
+	Inputs:
+	    newMode (str): sensitivity mode to apply (checkIfIsRaining/lowSensitive/medSensitive/highSensitive)
+	    powerCycle (bool): whether to power-cycle the relay around the switch
+	Outputs:
+	    None: drives relay/GPIO hardware and power-cycles the sensor
+	"""
 	global cyclePower
 	if cyclePower and powerCycle:
 		powerOFF(calledFrom="setSwitch")
@@ -337,6 +376,13 @@ def setSwitch(newMode, powerCycle=True):
 
 			
 def checkIfDownGradedNeeded(force = False):
+	"""Periodically checks whether the rain sensor should be downgraded to a less sensitive mode after a period without rain clicks; in dynamic mode steps down through the sensitivity levels and in static mode returns to checkIfIsRaining, sending status messages as it goes.
+
+	Inputs:
+	    force (bool): skip timing/idle guards and force the downgrade evaluation
+	Outputs:
+	    None: switches sensor modes, sends status messages, updates timers
+	"""
 	global nextModeSwitchNotBefore, lastDownGradeCheck, checkForDowngradeEvery, eventStartedList
 	global minTimeBetweenModeSwitch
 	global sensorMode
@@ -389,6 +435,13 @@ def checkIfDownGradedNeeded(force = False):
 
 
 def accumBuckets(bucket):
+	"""Accumulates one rain measurement into the running status counters, adding the given bucket amount to the totals and recording the last bucket size and measurement timestamp.
+
+	Inputs:
+	    bucket (float): rain amount for this click to add to the accumulators
+	Outputs:
+	    None: updates the global rain status values dict
+	"""
 	global status
 	status["values"]["nMesSinceLastReset"] +=1
 	status["values"]["buckets"]	  += bucket
@@ -398,6 +451,13 @@ def accumBuckets(bucket):
 	return
 	
 def calcRates():
+	"""Computes the current rain rate (per hour) from accumulated buckets over the elapsed measurement time, adds the buckets to the running total, persists rain status, and returns the rate plus aggregate counters.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (rainRate, bucketsTotal, deltaTime, nMes, nMesSinceLastReset)
+	"""
 	status["values"]["bucketsTotal"] += status["values"]["buckets"]
 	deltaTime						  = time.time() -  status["values"]["startMes"]
 	rainRate						  = (status["values"]["buckets"] / max(0.01,deltaTime)) *3600  # per hour
@@ -406,6 +466,13 @@ def calcRates():
 	return rainRate, status["values"]["bucketsTotal"], deltaTime, status["values"]["nMes"], status["values"]["nMesSinceLastReset"]
 
 def resetMes(all=False):
+	"""Resets the per-interval rain measurement counters (buckets, count since last reset, start time, last bucket/measurement) and, when all is True, also clears the cumulative buckets total and total measurement count.
+
+	Inputs:
+	    all (bool): also reset the cumulative totals when True
+	Outputs:
+	    None: updates the global rain status values dict
+	"""
 	status["values"]["nMesSinceLastReset"]	  = 0
 	status["values"]["buckets"]	   = 0
 	status["values"]["startMes"]   = time.time()
@@ -416,12 +483,26 @@ def resetMes(all=False):
 		status["values"]["nMes"]		 = 0
 
 def resetValues():
+	"""Fully resets all rain measurement values by calling resetMes(all=True) and then persists the cleared status to disk.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: clears all rain counters and writes rain status to file
+	"""
 	resetMes(all=True)
 	U.writeRainStatus(status)
 
 
 			
 def checkIfRelayON():
+	"""Throttled watchdog (runs at most every 3s) that reads the signal relay's GPIO input; if it has been ON too long it either power-cycles/resets the device (in cyclePower mode) or escalates the sensor's sensitivity to highSensitive (drizzle) or medSensitive (rain) and sends a short status update based on how long the event has lasted.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates mode/sensitivity, power-cycles relay, sends status, and logs; returns early on errors or throttling
+	"""
 	global lastRelayONCheck
 	global gpioIn, gpioSWP, ON, off, cyclePower
 	global eventStartedList, lastGPIOStatus, newGPIOStatus
@@ -456,6 +537,13 @@ def checkIfRelayON():
 
 			
 def checkIfMSGtoBeSend(force =False):
+	"""Periodically (or when forced) computes rain rate/total and other measurements via calcRates, packages them into a per-sensor data dict, sends it to the configured URL, resets measurement accumulators, optionally triggers a downgrade check, and persists rain status.
+
+	Inputs:
+	    force (bool): If True, bypass the time-since-last-send throttle and send immediately
+	Outputs:
+	    None: Sends data via URL, resets measurements, writes rain status file, logs; returns early when throttled
+	"""
 	global lastCalcCheck, sendMSGEverySecs, ProgramStart, sensorMode, switchToLowerSensitive, bucketSize
 	try:
 		if time.time()- lastCalcCheck < max( sendMSGEverySecs, switchToLowerSensitive[status["currentMode"]] ) and not force: return 
@@ -477,6 +565,13 @@ def checkIfMSGtoBeSend(force =False):
 
 
 def sendShortStatus(level):
+	"""Sends a lightweight status update for each device of the sensor containing the current rain level, mode, sensitivity, and bucket size, but only if it differs from the last sent message and enough time has passed since the last send and program start.
+
+	Inputs:
+	    level (int): Rain level value to report in the status message
+	Outputs:
+	    None: Sends status via URL when changed and updates last-sent trackers
+	"""
 	global sensorMode, status, ProgramStart, lastShortMsgSend, lastShortMsg, bucketSize
 	if time.time() - ProgramStart < 5:		 return 
 	if time.time() - lastShortMsgSend < 0.5: return 
@@ -490,6 +585,13 @@ def sendShortStatus(level):
 	return
 
 def setcheckIfIsRaining():
+	"""Configures the relay switches for 'check if raining' mode by driving gpioSW5 on and gpioSW2/gpioSW1 off, using GPIO output for gpio-relay type or i2c writes otherwise, only when cyclePower is enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Sets GPIO pins or writes to the i2c relay
+	"""
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
@@ -504,6 +606,13 @@ def setcheckIfIsRaining():
 	
 
 def sethighSensitive():
+	"""Configures the relay switches for high-sensitivity mode by driving gpioSW2 on and gpioSW5/gpioSW1 off, via GPIO output for gpio-relay type or i2c writes otherwise, only when cyclePower is enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Sets GPIO pins or writes to the i2c relay
+	"""
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
@@ -517,6 +626,13 @@ def sethighSensitive():
 			seti2cRelay( gpioSW1, 0x00)
 
 def setmedSensitive():
+	"""Configures the relay switches for medium-sensitivity mode by driving gpioSW1 on and gpioSW5/gpioSW2 off, via GPIO output for gpio-relay type or i2c writes otherwise, only when cyclePower is enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Sets GPIO pins or writes to the i2c relay
+	"""
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
@@ -530,6 +646,13 @@ def setmedSensitive():
 			seti2cRelay( gpioSW1, 0xff)
 
 def setlowSensitive():
+	"""Configures the relay switches for low-sensitivity mode by driving all three switch lines (gpioSW5, gpioSW2, gpioSW1) off, via GPIO output for gpio-relay type or i2c writes otherwise, only when cyclePower is enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Sets GPIO pins or writes to the i2c relay
+	"""
 	global cyclePower
 	global gpioIn , gpioSW1 ,gpioSW2, gpioSW5, gpioSWP, ON, off, relayType
 	if cyclePower:
@@ -543,11 +666,25 @@ def setlowSensitive():
 			seti2cRelay( gpioSW1, 0x00)
 
 def powerCyleRelay():
+	"""Power-cycles the sensor's relay by calling powerOFF followed by powerON.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Toggles the power relay off then on
+	"""
 	global gpioSWP, ON, off
 	powerOFF(calledFrom="powerCyleRelay")
 	powerON(calledFrom="powerCyleRelay")
 
 def powerON(calledFrom=""):
+	"""Turns the sensor power on by driving the power switch pin gpioSWP to the off (de-energized) level via GPIO output for gpio-relay type or an i2c write otherwise.
+
+	Inputs:
+	    calledFrom (str): Caller identifier for logging/tracing context
+	Outputs:
+	    None: Sets the power GPIO pin or writes to the i2c relay
+	"""
 	global gpioSWP, ON, off
 	if relayType == "gpio-relay":
 		setGPIO(gpioSWP, off)
@@ -555,6 +692,13 @@ def powerON(calledFrom=""):
 		seti2cRelay( gpioSWP, 0x00)
 
 def powerOFF(calledFrom=""):
+	"""Turns the sensor power off by driving the power switch pin gpioSWP to the ON (energized) level via GPIO output for gpio-relay type or an i2c write otherwise.
+
+	Inputs:
+	    calledFrom (str): Caller identifier for logging/tracing context
+	Outputs:
+	    None: Sets the power GPIO pin or writes to the i2c relay
+	"""
 	global gpioSWP, ON, off, relayType
 	if relayType == "gpio-relay":
 		setGPIO(gpioSWP, ON)
@@ -563,15 +707,39 @@ def powerOFF(calledFrom=""):
 
 
 def seti2cRelay(pin,ONoff):
+	"""Writes a byte value to the i2c relay board at the configured address using the given pin/register as the command, but only when pin is greater than zero.
+
+	Inputs:
+	    pin (int): Register/command byte (relay channel) to write to; ignored if not positive
+	    ONoff (int): Byte value to write (e.g. 0x00 off, 0xff on)
+	Outputs:
+	    None: Writes a byte to the i2c bus
+	"""
 	global bus, i2cAddress
 	if pin > 0:
 		bus.write_byte_data(i2cAddress, pin, ONoff)
 
 def setGPIO(pin,ONoff):
+	"""Sets the output level of a GPIO pin via GPIO.output, but only when pin is greater than zero.
+
+	Inputs:
+	    pin (int): GPIO pin number to set; ignored if not positive
+	    ONoff (int): Output level to drive (ON/off)
+	Outputs:
+	    None: Drives the GPIO output pin
+	"""
 	if pin > 0:
 		GPIO.output(pin, ONoff)
 
 def getGPIO(pin,calledFrom=""):
+	"""Reads the current digital state of a GPIO pin, updating module-level last/new status globals, and returns whether the pin reads as ON. Returns 0 when no valid pin (pin <= 0) is given.
+
+	Inputs:
+	    pin (int): BCM GPIO pin number to read; values <= 0 are ignored
+	    calledFrom (str): Optional label identifying the caller (unused in body)
+	Outputs:
+	    bool or int: True/False if the pin equals the ON level, or 0 when pin is not positive
+	"""
 	global ON, lastGPIOStatus, newGPIOStatus
 	if pin > 0:
 			lastGPIOStatus = newGPIOStatus

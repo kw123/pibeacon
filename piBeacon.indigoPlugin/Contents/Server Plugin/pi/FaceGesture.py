@@ -21,7 +21,6 @@ import time
 from smbus2 import SMBus, i2c_msg
 
 import logging
-from ctypes import *
 import os, json, datetime, subprocess, copy
 
 sys.path.append("../")
@@ -458,6 +457,13 @@ class DFRobot_RTU(object):
 		return l[0]
 			
 	def _calculate_crc(self, data):
+		"""Computes a Modbus-RTU CRC16 (0xA001 polynomial) over the given byte sequence and returns it with its high and low bytes swapped.
+
+		Inputs:
+		    data (list): sequence of byte values to checksum
+		Outputs:
+		    int: 16-bit CRC with bytes swapped
+		"""
 		crc = 0xFFFF
 		length = len(data)
 		#U.logger.log(20,"len=%d"%length)
@@ -479,12 +485,28 @@ class DFRobot_RTU(object):
 		return crc
 
 	def _clear_recv_buffer(self):
+		"""Flushes the serial receive buffer by repeatedly reading and discarding all bytes currently waiting on the serial port.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: drains the serial input buffer
+		"""
 		remain = self._ser.inWaiting()
 		while remain:
 			self._ser.read(remain)
 			remain = self._ser.inWaiting()
 
 	def _packed(self, id, cmd, l):
+		"""Builds a Modbus-RTU command frame: an id byte, command byte, the payload list, and a two-byte CRC16 computed over the frame, returning the assembled byte list.
+
+		Inputs:
+		    id (int): slave/device id byte
+		    cmd (int): command byte
+		    l (list): payload bytes
+		Outputs:
+		    list: full framed packet including CRC bytes
+		"""
 		length = 4+len(l)
 		#U.logger.log(20,len(l))
 		package = [0]*length
@@ -503,12 +525,28 @@ class DFRobot_RTU(object):
 		return package
 
 	def _send_package(self, l):
+		"""Clears the receive buffer and, if the given byte list is non-empty, writes it to the serial port and waits the configured timeout interval.
+
+		Inputs:
+		    l (list): bytes to transmit over serial
+		Outputs:
+		    None: writes to the serial port and sleeps
+		"""
 		self._clear_recv_buffer()
 		if len(l):
 			self._ser.write(l)
 			time.sleep(self._timeout)
 
 	def recv_and_parse_package(self, id, cmd, val):
+		"""Reads a Modbus-RTU response from the serial port, matching the expected id, command and register/value, parsing the header and payload, validating the CRC, and returning the full packet (or an error code list) within the configured timeout.
+
+		Inputs:
+		    id (int): expected slave/device id
+		    cmd (int): expected command byte
+		    val (int): expected register address/value to match
+		Outputs:
+		    list: parsed response packet bytes, or a one-element error-code list
+		"""
 		package = [self.eRTU_ID_ERROR]
 		if id == 0:
 			return [0]
@@ -658,6 +696,13 @@ class DFRobot_GestureFaceDetection(object):
 	I2C_RETRY_MAX = 3
 	def __init__(self):
 			# Initialize the class
+			"""No-op constructor for the base class; performs no initialization.
+
+			Inputs:
+			    None.
+			Outputs:
+			    None: does nothing (pass)
+			"""
 			pass
 
 
@@ -837,11 +882,26 @@ class DFRobot_GestureFaceDetection(object):
 class DFRobot_GestureFaceDetection_I2C(DFRobot_GestureFaceDetection): 
 	def __init__(self, bus, addr):
 		# Initialize I2C address and bus
+		"""Constructor for the I2C variant of the gesture/face detection device; stores the I2C address and bus then calls the parent initializer.
+
+		Inputs:
+		    bus (smbus.SMBus): I2C bus object
+		    addr (int): I2C device address
+		Outputs:
+		    None: stores address/bus and chains to superclass init
+		"""
 		self.__addr = addr
 		self.__i2cbus = bus
 		super(DFRobot_GestureFaceDetection_I2C, self).__init__()
 
 	def calculate_crc(self, data):
+		"""Computes an 8-bit CRC (polynomial 0x07, init 0xFF) over the given byte sequence and returns the resulting checksum.
+
+		Inputs:
+		    data (list): sequence of byte values to checksum
+		Outputs:
+		    int: 8-bit CRC value
+		"""
 		crc = 0xFF
 		for byte in data:
 			crc ^= byte
@@ -905,12 +965,34 @@ class DFRobot_GestureFaceDetection_I2C(DFRobot_GestureFaceDetection):
 		return 0
 
 	def writeHoldingReg(self, reg, data):
+		"""Writes a value to a holding register by delegating to the underlying write_reg method.
+
+		Inputs:
+		    reg (int): register address
+		    data (int): value to write
+		Outputs:
+		    object: result of the underlying write_reg call
+		"""
 		return self.write_reg(reg, data)
 
 	def readInputReg(self, reg):
+		"""Reads a 2-byte input register from the device by adding the input register offset to the given register number and delegating to read_reg.
+
+		Inputs:
+		    reg (int): input register number relative to the input register offset
+		Outputs:
+		    int: the 2-byte value read from the input register
+		"""
 		return self.read_reg(self.INPUT_REG_OFFSET + reg, 2)
 
 	def readHoldingReg(self, reg):
+		"""Reads a 2-byte holding register at the given register address by delegating to read_reg.
+
+		Inputs:
+		    reg (int): holding register address to read
+		Outputs:
+		    int: the 2-byte value read from the holding register
+		"""
 		return self.read_reg(reg, 2)
 
 
@@ -918,16 +1000,40 @@ class DFRobot_GestureFaceDetection_I2C(DFRobot_GestureFaceDetection):
 class DFRobot_GestureFaceDetection_UART(DFRobot_GestureFaceDetection, DFRobot_RTU): 
 	def __init__(self, baud, addr, portName="serial0"):
 		# Initialize UART baud rate and address
+		"""Initializes the UART variant of the gesture/face-detection device, storing the baud rate and Modbus address and initializing both the gesture-detection and RTU base classes over the given serial port.
+
+		Inputs:
+		    baud (int): UART baud rate
+		    addr (int): Modbus device address
+		    portName (str): serial port name, defaults to 'serial0'
+		Outputs:
+		    None: stores baud/address and initializes the base classes
+		"""
 		self.__baud = baud
 		self.__addr = addr
 		DFRobot_GestureFaceDetection.__init__(self)
 		DFRobot_RTU.__init__(self, baud, 8, 'N', 1, portName=portName)
 
 	def writeHoldingReg(self, reg, data):
+		"""Writes a value to a holding register over Modbus RTU at the stored device address and reports whether the write succeeded.
+
+		Inputs:
+		    reg (int): holding register address to write
+		    data (int): value to write into the register
+		Outputs:
+		    bool: True if the write returned status 0 (success)
+		"""
 		ret = self.write_holding_register(self.__addr, reg, data)
 		return ret == 0
 
 	def readInputReg(self, reg):
+		"""Reads a single input register over Modbus RTU at the stored device address, combining the two data bytes into a 16-bit value, returning 0 on short responses or exceptions.
+
+		Inputs:
+		    reg (int): input register address to read
+		Outputs:
+		    int: the combined 16-bit register value, or 0 on failure
+		"""
 		try:
 			data = self.read_input_registers(self.__addr, reg, 1)
 			
@@ -943,6 +1049,13 @@ class DFRobot_GestureFaceDetection_UART(DFRobot_GestureFaceDetection, DFRobot_RT
 			return 0
 
 	def readHoldingReg(self, reg):
+		"""Reads a single holding register over Modbus RTU at the stored device address, combining the two data bytes into a 16-bit value, returning 0 on short responses or exceptions.
+
+		Inputs:
+		    reg (int): holding register address to read
+		Outputs:
+		    int: the combined 16-bit register value, or 0 on failure
+		"""
 		try:
 			data = self.read_holding_registers(self.__addr, reg, 1)
 			
@@ -1185,7 +1298,7 @@ def prepGPIOInfoForCommands(devIdSelect, output):
 				devIdList.append(xx)
 
 		doGpioInfoIndigoIDForMsgToReceivecommand = False
-		if logLevel > 1: U.logger.log(20, "starting  devIdSelect:{}, force:{}, devIds:{}".format(devIdSelect, force, devIdList) )
+		if logLevel > 1: U.logger.log(20, "starting  devIdSelect:{}, devIds:{}".format(devIdSelect, devIdList) )
 		for devId in devIdList:
 			for ii in range(1,9):
 				if gpioUsed[ii] == 0: 
@@ -1301,9 +1414,9 @@ def startSensor(devId):
 					else:
 						time.sleep(2)
 
-				elif len(USBitems) > 0:
-					for kk in range(len(USBitems)):
-						usePort = cmdCheckSerialPort(devId, USBitems[kk], doNotUse=usePort)
+				elif len(serialItems) > 0:
+					for kk in range(len(serialItems)):
+						usePort = cmdCheckSerialPort(devId, serialItems[kk], doNotUse=usePort)
 						if logLevel > 0: U.logger.log(20, "devId:{}; starting sensor,  serial port:{}, usePort:{}".format(devId, serialPortName[devId], usePort))
 						if usePort != "":
 							SENSOR[devId] = DFRobot_GestureFaceDetection_UART(baud=GLOB_RT_BAUD_RATE, addr=GLOB_DEVICE_ID, portName=usePort)
@@ -1442,6 +1555,13 @@ def readPORTownerFile():
 
 #################################
 def initPORTownerFile(firstRead):
+	"""Initializes the global port-owner file by reading it into a module-level dict, defaulting to an empty dict if invalid, and on the first read resets each device's owner entry and writes the file back.
+
+	Inputs:
+	    firstRead (bool): whether this is the first read, triggering a reset and rewrite of entries
+	Outputs:
+	    dict: the loaded (and possibly reset) port-owner mapping
+	"""
 	global logLevel, localPORTownerFile
 	"""
 		@brief this method will init the USB owner file 
@@ -1603,7 +1723,7 @@ def resetSensorRelay(devId):
 		tt = time.time()
 		for ii in range(8):
 			if sensors[sensor][devId].get("gpioCmdForAction"+str(ii),"") == str(GLOB_cmdCodeForrelay):
-				if commonRelayActive.get(devId,false):
+				if commonRelayActive.get(devId,False):
 					U.writeJson(GLOB_commonrelayActiveFile, json.dumps({"lastrelay":time.time()}))
 				cmdQueue.put(GLOB_cmdCodeForrelay)
 				time.sleep(6)
@@ -1621,11 +1741,25 @@ def resetSensorRelay(devId):
 
 ############################################
 def sendRecoveryMessage():
+	"""Sends a sensor-recovery notification message by calling sendxxRecoveryMessage with code 1001.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: triggers sending of recovery message code 1001
+	"""
 	sendxxRecoveryMessage(1001)
 	return
 
 ############################################
 def sendNotRecoveryMessage():
+	"""Sends a sensor not-recovered notification message by calling sendxxRecoveryMessage with code 1002.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: triggers sending of not-recovery message code 1002
+	"""
 	sendxxRecoveryMessage(1002)
 	return
 
@@ -1949,7 +2083,7 @@ def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 				if not checkifIdInOKPORTownerFile(devId, existingport):
 					for dddd in getdevIdsPORTownerFile():
 						if checkifIdInOKPORTownerFile(dddd, existingport): 
-							if logLevel > 1:U.logger.log(20, "devId:{}, already in use by devId:{}  port:{}".format(devId, dddd, findThis))
+							if logLevel > 1:U.logger.log(20, "devId:{}, already in use by devId:{}  port:{}".format(devId, dddd, existingport))
 							alreadyInUse = dddd
 							break
 						
@@ -1974,6 +2108,13 @@ def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 		
 ############################################
 def execSensorLoop():
+	"""Main sensor loop for the face/gesture sensor: initializes all global state, starts worker threads, then continuously reads each device's values, sends face/gesture detections or periodic alive messages to Indigo, handles bad-sensor recovery, periodically re-reads parameters and pending commands, and sleeps to maintain the refresh rate until the sensor is removed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs the main polling loop, sends data to Indigo, and signals the command thread to stop on exit
+	"""
 	global sensor, sensors, badSensor
 	global SENSOR, sensorMode
 	global oldRaw, lastRead

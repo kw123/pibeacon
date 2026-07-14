@@ -137,11 +137,25 @@ _VCSEL_PERIOD_FINAL_RANGE = const(1)
 
 def _decode_timeout(val: int) -> float:
 	# format: "(LSByte * 2^MSByte) + 1"
+	"""Decodes a VL53L0X register timeout value from its (LSByte * 2^MSByte) + 1 encoded format into a floating-point timeout count.
+
+	Inputs:
+	    val (int): encoded 16-bit timeout register value
+	Outputs:
+	    float: decoded timeout in MCLKs
+	"""
 	return float(val & 0xFF) * math.pow(2.0, ((val & 0xFF00) >> 8)) + 1
 
 
 def _encode_timeout(timeout_mclks: float) -> int:
 	# format: "(LSByte * 2^MSByte) + 1"
+	"""Encodes a timeout value in MCLKs into the VL53L0X (LSByte * 2^MSByte) + 1 register format.
+
+	Inputs:
+	    timeout_mclks (float): timeout count in MCLKs to encode
+	Outputs:
+	    int: 16-bit encoded timeout register value
+	"""
 	timeout_mclks = int(timeout_mclks) & 0xFFFF
 	ls_byte = 0
 	ms_byte = 0
@@ -156,12 +170,28 @@ def _encode_timeout(timeout_mclks: float) -> int:
 
 def _timeout_mclks_to_microseconds(
 	timeout_period_mclks: int, vcsel_period_pclks: int ) -> int:
+	"""Converts a VL53L0X timeout period expressed in MCLKs to microseconds using the VCSEL pulse period.
+
+	Inputs:
+	    timeout_period_mclks (int): timeout period in MCLKs
+	    vcsel_period_pclks (int): VCSEL period in PCLKs
+	Outputs:
+	    int: timeout period in microseconds
+	"""
 	macro_period_ns = ((2304 * (vcsel_period_pclks) * 1655) + 500) // 1000
 	return ((timeout_period_mclks * macro_period_ns) + (macro_period_ns // 2)) // 1000
 
 
 def _timeout_microseconds_to_mclks(
 	timeout_period_us: int, vcsel_period_pclks: int ) -> int:
+	"""Converts a VL53L0X timeout period expressed in microseconds to MCLKs using the VCSEL pulse period.
+
+	Inputs:
+	    timeout_period_us (int): timeout period in microseconds
+	    vcsel_period_pclks (int): VCSEL period in PCLKs
+	Outputs:
+	    int: timeout period in MCLKs
+	"""
 	macro_period_ns = ((2304 * (vcsel_period_pclks) * 1655) + 500) // 1000
 	return ((timeout_period_us * 1000) + (macro_period_ns // 2)) // macro_period_ns
 
@@ -179,6 +209,15 @@ class VL53L0X:
 
 	def __init__(self, i2c: I2C, address: int = 41, io_timeout_s: float = 0) -> None:
 		# pylint: disable=too-many-statements
+		"""Initializes the VL53L0X time-of-flight distance sensor over I2C: verifies the ID registers, runs the full Pololu-derived register configuration sequence, sets up SPADs, interrupt and sequence config, and performs reference calibration.
+
+		Inputs:
+		    i2c (object): busio I2C bus object
+		    address (int): I2C device address, defaults to 41 (0x29)
+		    io_timeout_s (float): I/O timeout in seconds
+		Outputs:
+		    None: configures the VL53L0X hardware and instance attributes; raises RuntimeError if ID check fails
+		"""
 		self._i2c = i2c
 		self._device = i2c_device.I2CDevice(i2c, address)
 		self.io_timeout_s = io_timeout_s
@@ -343,6 +382,13 @@ class VL53L0X:
 
 	def _read_u8(self, address: int) -> int:
 		# Read an 8-bit unsigned value from the specified 8-bit address.
+		"""Reads an 8-bit unsigned value from the given VL53L0X register over I2C using the shared buffer.
+
+		Inputs:
+		    address (int): 8-bit register address to read
+		Outputs:
+		    int: the 8-bit register value
+		"""
 		with self._device:
 			self._BUFFER[0] = address & 0xFF
 			self._device.write(self._BUFFER, end=1)
@@ -351,6 +397,13 @@ class VL53L0X:
 
 	def _read_u16(self, address: int) -> int:
 		# Read a 16-bit BE unsigned value from the specified 8-bit address.
+		"""Reads a 16-bit big-endian unsigned value from the given VL53L0X register over I2C using the shared buffer.
+
+		Inputs:
+		    address (int): 8-bit register address to read
+		Outputs:
+		    int: the 16-bit big-endian register value
+		"""
 		with self._device:
 			self._BUFFER[0] = address & 0xFF
 			self._device.write(self._BUFFER, end=1)
@@ -359,6 +412,14 @@ class VL53L0X:
 
 	def _write_u8(self, address: int, val: int) -> None:
 		# Write an 8-bit unsigned value to the specified 8-bit address.
+		"""Writes a single 8-bit unsigned value to the given register address over I2C using the device buffer.
+
+		Inputs:
+		    address (int): 8-bit register address to write to
+		    val (int): 8-bit value to write
+		Outputs:
+		    None: writes two bytes to the I2C device
+		"""
 		with self._device:
 			self._BUFFER[0] = address & 0xFF
 			self._BUFFER[1] = val & 0xFF
@@ -366,6 +427,14 @@ class VL53L0X:
 
 	def _write_u16(self, address: int, val: int) -> None:
 		# Write a 16-bit BE unsigned value to the specified 8-bit address.
+		"""Writes a 16-bit big-endian unsigned value to the given register address over I2C using the device buffer.
+
+		Inputs:
+		    address (int): 8-bit register address to write to
+		    val (int): 16-bit value to write (big-endian)
+		Outputs:
+		    None: writes three bytes to the I2C device
+		"""
 		with self._device:
 			self._BUFFER[0] = address & 0xFF
 			self._BUFFER[1] = (val >> 8) & 0xFF
@@ -376,6 +445,13 @@ class VL53L0X:
 		# Get reference SPAD count and type, returned as a 2-tuple of
 		# count and boolean is_aperture.  Based on code from:
 		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		"""Reads the VL53L0X reference SPAD configuration by toggling internal registers, returning the SPAD count and whether they are aperture-type; raises RuntimeError on timeout.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (count, is_aperture) as (int, bool)
+		"""
 		for pair in ((0x80, 0x01), (0xFF, 0x01), (0x00, 0x00), (0xFF, 0x06)):
 			self._write_u8(pair[0], pair[1])
 		self._write_u8(0x83, self._read_u8(0x83) | 0x04)
@@ -408,6 +484,13 @@ class VL53L0X:
 
 	def _perform_single_ref_calibration(self, vhv_init_byte: int) -> None:
 		# based on VL53L0X_perform_single_ref_calibration() from ST API.
+		"""Performs a single reference calibration on the VL53L0X by starting ranging with the given init byte, waiting for the interrupt, then clearing it; raises RuntimeError on timeout.
+
+		Inputs:
+		    vhv_init_byte (int): init byte ORed into the SYSRANGE_START command
+		Outputs:
+		    None: runs calibration via register writes/reads
+		"""
 		self._write_u8(_SYSRANGE_START, 0x01 | vhv_init_byte & 0xFF)
 		start = time.monotonic()
 		while (self._read_u8(_RESULT_INTERRUPT_STATUS) & 0x07) == 0:
@@ -422,6 +505,13 @@ class VL53L0X:
 	def _get_vcsel_pulse_period(self, vcsel_period_type: int) -> int:
 		# pylint: disable=no-else-return
 		# Disable should be removed when refactor can be tested
+		"""Returns the VCSEL pulse period in PCLKs for the requested period type (pre-range or final-range), reading the corresponding config register; returns 255 for an unknown type.
+
+		Inputs:
+		    vcsel_period_type (int): which VCSEL period to query (pre- or final-range)
+		Outputs:
+		    int: decoded VCSEL pulse period in PCLKs
+		"""
 		if vcsel_period_type == _VCSEL_PERIOD_PRE_RANGE:
 			val = self._read_u8(_PRE_RANGE_CONFIG_VCSEL_PERIOD)
 			return (((val) + 1) & 0xFF) << 1
@@ -432,6 +522,13 @@ class VL53L0X:
 
 	def _get_sequence_step_enables(self) -> Tuple[bool, bool, bool, bool, bool]:
 		# based on VL53L0X_GetSequenceStepEnables() from ST API
+		"""Reads the sequence step config register and returns booleans indicating which measurement steps (tcc, dss, msrc, pre_range, final_range) are enabled.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (tcc, dss, msrc, pre_range, final_range) booleans
+		"""
 		sequence_config = self._read_u8(_SYSTEM_SEQUENCE_CONFIG)
 		tcc = (sequence_config >> 4) & 0x1 > 0
 		dss = (sequence_config >> 3) & 0x1 > 0
@@ -446,6 +543,13 @@ class VL53L0X:
 		# based on get_sequence_step_timeout() from ST API but modified by
 		# pololu here:
 		#   https://github.com/pololu/vl53l0x-arduino/blob/master/VL53L0X.cpp
+		"""Computes the sequence step timeouts for the VL53L0X by reading and decoding config registers, returning MSRC/DSS/TCC and pre-range timeouts in microseconds plus final-range timing values.
+
+		Inputs:
+		    pre_range (bool): whether the pre-range step is enabled, affecting final-range mclks
+		Outputs:
+		    tuple: (msrc_dss_tcc_us, pre_range_us, final_range_us, final_range_vcsel_period_pclks, pre_range_mclks)
+		"""
 		pre_range_vcsel_period_pclks = self._get_vcsel_pulse_period(
 			_VCSEL_PERIOD_PRE_RANGE
 		)
@@ -487,6 +591,13 @@ class VL53L0X:
 
 	@signal_rate_limit.setter
 	def signal_rate_limit(self, val: float) -> None:
+		"""Setter for the signal rate limit property; asserts the range, converts the float to a 16-bit 9.7 fixed-point value, and writes it to the final-range min count rate register.
+
+		Inputs:
+		    val (float): signal rate limit in mega counts per second (0.0-511.99)
+		Outputs:
+		    None: writes the converted value to the device register
+		"""
 		assert 0.0 <= val <= 511.99
 		# Convert to 16-bit 9.7 fixed point value from a float.
 		val = int(val * (1 << 7))
@@ -515,6 +626,13 @@ class VL53L0X:
 	@measurement_timing_budget.setter
 	def measurement_timing_budget(self, budget_us: int) -> None:
 		# pylint: disable=too-many-locals
+		"""Setter for the measurement timing budget; computes the available final-range timeout from the requested budget and enabled sequence steps, then writes the encoded final-range timeout register. Raises ValueError if the budget is too small.
+
+		Inputs:
+		    budget_us (int): desired measurement timing budget in microseconds (>= 20000)
+		Outputs:
+		    None: writes final-range timeout register and updates internal budget
+		"""
 		assert budget_us >= 20000
 		used_budget_us = 1320 + 960  # Start (diff from get) + end overhead
 		tcc, dss, msrc, pre_range, final_range = self._get_sequence_step_enables()
@@ -715,6 +833,13 @@ class VL53L0X:
 
 #################################		
 def readParams():
+	"""Reads the plugin configuration via U.doRead, populates global sensor parameters (delta distances, accuracy/timing budget, xShut pins, refresh rate, etc.) for each device, and starts or stops the sensor depending on whether the configuration changed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True when no new data was processed or on error; otherwise falls through after starting/stopping the sensor
+	"""
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, distanceUnits
 	global oldRaw, lastRead
@@ -818,6 +943,13 @@ def readParams():
 
 #################################
 def startSensor():
+	"""Starts the VL53L0X sensors by initializing I2C, toggling xShut GPIO pins to bring devices up one at a time, assigning unique I2C addresses, instantiating each VL53L0X with its timing budget; restarts the plugin on failure.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: initializes hardware, sensor objects, and global state; may restart on error
+	"""
 	global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, xShutPin, i2cNumber, i2c, i2CseqNumber, deltaDist
 	try:
 		if i2c == "":
@@ -864,6 +996,15 @@ def startSensor():
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
+	"""Compares the new and old sensor configuration dictionaries to decide whether the sensor needs action, returning -1 to stop, 1 to (re)start when anything changed, or 0 when unchanged.
+
+	Inputs:
+	    sensors (dict): current sensor configuration
+	    sensorsOld (dict): previous sensor configuration
+	    selectedSensor (str): key of the sensor type being checked
+	Outputs:
+	    int: -1 stop, 1 start/restart, 0 no change
+	"""
 	if selectedSensor not in sensors:	return -1
 	if selectedSensor not in sensorsOld: return 1
 
@@ -886,6 +1027,13 @@ def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
 #################################
 #################################
 def getDist(devId):
+	"""Reads a distance measurement in centimeters from the VL53L0X sensor instance for the given device, updating the timing budget if the accuracy mode changed; returns the distance or 'badSensor' after repeated zero/failed readings.
+
+	Inputs:
+	    devId (str): device identifier keyed into the per-device sensor-class dictionary
+	Outputs:
+	    float or str: measured distance in cm, the string 'badSensor' after 30 bad reads, or '' on error/no data
+	"""
 	global sensor, sensors, badSensor, sensCl
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
 	global acuracyDistanceMode, acuracyDistanceModeOld

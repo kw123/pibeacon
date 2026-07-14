@@ -19,6 +19,17 @@ import	psutil
 import time
 
 def testIfRunningAndPossibleDelete(testPgm, paramsAnd="", paramsNot="",  pidNotkill=0, kill=False):
+	"""Checks whether one or more named programs are running via ps and psutil, building a dict of matching processes; intended to optionally filter by required/excluded params and kill matches, but currently returns False before that logic runs.
+
+	Inputs:
+	    testPgm (str or list): program name(s) to search for in process command lines
+	    paramsAnd (str): substring that must be present to match
+	    paramsNot (str): substring that must be absent to match
+	    pidNotkill (int): pid to exclude from killing
+	    kill (bool): whether to terminate matching processes
+	Outputs:
+	    bool: always False as written (early return); intended to indicate a match
+	"""
 	if type(testPgm) != type([]): testIfR = [testPgm]
 	else: testIfR = testPgm
 	retCode = False
@@ -60,7 +71,7 @@ def testIfRunningAndPossibleDelete(testPgm, paramsAnd="", paramsNot="",  pidNotk
 						try:
 							p.terminate()
 							#p.wait()
-							print("kill:{}".format(p.pid, cmdLine))
+							print("kill:{}, cmdLine:{}".format(p.pid, cmdLine))
 						except Exception as e:
 							print("excetion: {}".format(e))
 							

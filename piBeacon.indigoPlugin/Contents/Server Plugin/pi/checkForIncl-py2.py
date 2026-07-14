@@ -7,6 +7,13 @@ logger = logging.getLogger(__name__)
 
 
 def readPopen(cmd):
+		"""Runs a shell command via subprocess.Popen, logging the command and result, and returns the decoded stdout and stderr strings.
+
+		Inputs:
+		    cmd (str): shell command to execute
+		Outputs:
+		    tuple: (stdout, stderr) decoded utf-8 strings, or None on exception
+		"""
 		try:
 			logger.log(30,"doing:  {}".format(cmd) )
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -16,6 +23,13 @@ def readPopen(cmd):
 			logger.log(20,"", exc_info=True)
 
 def checkIfPy3():
+	"""Reads /etc/os-release and returns True if the OS VERSION_ID is 11 or greater, indicating a Python-3-only platform.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if OS VERSION_ID >= 11, else False
+	"""
 	osInfo	 = readPopen("cat /etc/os-release")[0].strip("\n").split("\n")
 	for line in osInfo:
 		if line .find("VERSION_ID=") == 0:
@@ -23,11 +37,25 @@ def checkIfPy3():
 	return False
 
 def checkOsVersionis3():
+	"""Returns whether the running Python interpreter is version 3 by checking the first character of sys.version.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if Python major version is 3
+	"""
 	return sys.version[0] == "3"
 
 
 def execInstall():
 
+	"""Performs the Python 2 dependency-install workflow: exits early if running Python 3 or a newer OS, waits for any running apt-get, then checks for and installs required packages (smbus2, hcidump, pigpio, RPi.GPIO, pexpect, expect), fixes broken apt packages, and writes a completion marker file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: installs system/python packages via apt/pip, logs progress, and writes the includepy2.done marker
+	"""
 	if checkOsVersionis3: 
 		logger.log(30,"python2 not installed stopping checking for include py2 "  )
 		readPopen('echo "done" > "/home/pi/pibeacon/includepy2.done"')

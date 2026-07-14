@@ -24,6 +24,13 @@ G.program = "OUTPUTgpio"
 
 
 def readParams():
+		"""Reads the latest plugin parameter file for the GPIO output driver and, if changed, parses global params and the output config; exits the process if the expected OUTPUTgpio-1-ONoff entry is missing.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates the output global and globals; calls exit() if config missing
+		"""
 		global output
 		global INPgpioType,OUTPUTlastvalue
 		global oldRaw, lastRead

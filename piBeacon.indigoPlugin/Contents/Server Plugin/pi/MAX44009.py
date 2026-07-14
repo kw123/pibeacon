@@ -35,14 +35,39 @@ class SENSORclass():
 	_REG_LOWER_THRESHOLD  	= 0x06
 	_REG_TIMER_THRESHOLD  	= 0x07
 	def __init__(self, bus=1, address=0x4a):
+		"""Initializes a MAX44009 ambient light sensor driver instance by opening the given I2C bus and storing the device's I2C address.
+
+		Inputs:
+		    bus (int): I2C bus number passed to smbus.SMBus (default 1)
+		    address (int): I2C device address (default 0x4a)
+		Outputs:
+		    None: Opens the smbus.SMBus handle and stores it on the instance
+		"""
 		self._bus = smbus.SMBus(bus)
 		self.address = address
 
 	def setParams(self, cont=0, manual=0, cdr=0, timer=0):
+		"""Packs the continuous, manual, current-division-ratio, and integration-timer bits into the MAX44009 configuration byte and writes it to the configuration register over I2C.
+
+		Inputs:
+		    cont (int): Continuous-mode bit (0/1), shifted to bit 7
+		    manual (int): Manual-mode bit (0/1), shifted to bit 6
+		    cdr (int): Current-division-ratio bit (0/1), shifted to bit 3
+		    timer (int): Integration timer value (lower 3 bits)
+		Outputs:
+		    None: Writes the assembled config byte to the MAX44009 configuration register
+		"""
 		config = (cont & 0x01) << 7 | (manual & 0x01) << 6 | (cdr & 0x01) << 3 | timer & 0x07
 		self._bus.write_byte_data(self.address,self._REG_CONFIGURATION, config)
 
 	def getLuminosity(self):
+		"""Reads the two lux data bytes from the MAX44009, extracts the exponent and mantissa, and computes the ambient light level in lux.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: Computed luminance in lux
+		"""
 		data      = self._bus.read_i2c_block_data(self.address, self._REG_LUX_HIGH_BYTE, 2)
 		exponent  = (data[0] & 0xF0) >> 4
 		mantissa  = ((data[0] & 0x0F) << 4) | (data[1] & 0x0F)
@@ -51,6 +76,14 @@ class SENSORclass():
 #
 #################################
 def startSensor(devId,i2cADR):
+	"""Lazily creates a MAX44009 sensor object for a device id at the given I2C address if not already present, and configures it (continuous off, manual off/autorange, cdr 0, timer 0).
+
+	Inputs:
+	    devId (str): Device identifier used as key in the SENSOR registry
+	    i2cADR (int): I2C address passed to the sensor constructor
+	Outputs:
+	    None: Registers and configures the sensor object; logs on error
+	"""
 	global SENSOR, sensors, sensor
 
 	try:
@@ -68,6 +101,13 @@ def startSensor(devId,i2cADR):
 # ===========================================================================
  
 def getValues():
+	"""Iterates over all known I2C addresses and their device ids, reads luminosity from each MAX44009 sensor, and returns a dict of per-device illuminance values rounded to two decimals; resets or increments the bad-sensor counter accordingly.
+
+	Inputs:
+	    None.
+	Outputs:
+	    dict: Maps device id to {'illuminance': value}; empty dict on error or unknown sensor
+	"""
 	global SENSOR, sensors, sensor
 	global badSensor, i2cAddress
 
@@ -94,6 +134,13 @@ def getValues():
 
 
 def readParams():
+	"""Reads the latest plugin parameter file, and if changed, parses global params and the sensors config, building the i2c-address-to-device map, per-device timing/delta settings, and starting each MAX44009 sensor; removes sensor objects no longer in the config. Exits if this sensor is not enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates module globals (sensors, i2cAddress, deltaX, SENSOR, timing) and starts/stops sensors; logs on error
+	"""
 	global sensorList, sensors, sensor, SENSOR
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global rawOld
@@ -167,6 +214,13 @@ def readParams():
 #################################
 #################################
 def execMAX44009():			 
+	"""Main run loop for the MAX44009 light-sensor process: initializes globals, kills old instances, loads params, then continuously reads illuminance from each device, decides when to send to Indigo based on delta/interval thresholds, writes data/DAT files, refreshes params periodically, and sleeps between cycles.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs an infinite measurement/reporting loop sending data to Indigo and writing files
+	"""
 	global sensorList, sensors, sensor, SENSOR
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global oldRaw, lastRead

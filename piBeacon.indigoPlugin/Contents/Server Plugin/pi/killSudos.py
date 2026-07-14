@@ -21,6 +21,13 @@ program = "killSudos"
 myOwnPID = int(os.getpid())
 
 def execKill(pgmtype):
+	"""Finds all sudo processes matching the given program-type string (excluding grep and this killer itself), and force-kills them with 'sudo kill -9', logging which PIDs and programs were killed. Reboots if a 'Too many open files' error occurs.
+
+	Inputs:
+	    pgmtype (str): Substring used to match target process command lines in ps output
+	Outputs:
+	    None: Kills matching sudo processes and logs the result
+	"""
 	try:
 		killedpgms = ""
 		verbose = True
@@ -52,7 +59,7 @@ def execKill(pgmtype):
 
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
-			doReboot(tt=3, text=str(e), force=True)
+			U.doReboot(tt=3, text=str(e), force=True)
 		if verbose: U.logger.log(30,"", exc_info=True)
 
 

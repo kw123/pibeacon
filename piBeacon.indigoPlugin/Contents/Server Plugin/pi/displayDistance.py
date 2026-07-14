@@ -18,6 +18,14 @@ import	piBeaconGlobals as G
 	
 #################################
 def formatNumber(data, distanceUnits):
+	"""Converts a raw distance (in cm) into a chosen display unit (cm, inches, feet, yard, or meters), returning the raw float, the converted value, a formatted whitespace-trimmed string, and the unit abbreviation.
+
+	Inputs:
+	    data (str): Raw distance value (parseable to float, in cm)
+	    distanceUnits (str): Target unit name or scale factor string
+	Outputs:
+	    tuple: (dist1:float raw, dist:float converted, dist0:str formatted, ud:str unit)
+	"""
 	dist1 = 0
 	dist  = 0 
 	dist0 = ""
@@ -52,6 +60,13 @@ def formatNumber(data, distanceUnits):
 
 #################################
 def startDisplay(outputType):
+	"""Launches the appropriate display helper script as a background subprocess, picking python3 vs python based on the environment and appending '3' to the program name for neopixel output.
+
+	Inputs:
+	    outputType (str): Display output type, e.g. 'display' or 'neopixel'
+	Outputs:
+	    None: Spawns display program subprocess; sets global displayPyPgm; logs
+	"""
 	global displayPyPgm
 	try:
 		mustUsePy3 = U.checkIfmustUsePy3()
@@ -64,13 +79,24 @@ def startDisplay(outputType):
 
 		displayPyPgm = outputType
 		if displayPyPgm == "neopixel": displayPyPgm+="3"
-		subprocess.call("{} {}.py &".format(pythonCMD, displayPyPgm, G.homeDir) , shell=True )
+		subprocess.call("{} {}{}.py &".format(pythonCMD, G.homeDir, displayPyPgm) , shell=True )
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
 	return 
 
 #################################
 def displayDistance(dist, sensor, sensors, output, distanceUnits):
+	"""Renders a measured distance to a display or neopixel output device, lazily starting/restarting the display helper process, formatting the distance and unit, and computing per-device-type layout (fonts, positions, fills, resolution, color bar) for the many supported RGB matrix and OLED/screen devices.
+
+	Inputs:
+	    dist (float): Measured distance value to display
+	    sensor (str): Sensor name whose config drives normalization/colors
+	    sensors (dict): Sensor configuration mapping (per-device settings)
+	    output (dict): Output device configuration keyed by output type and device id
+	    distanceUnits (str): Unit to format the distance in
+	Outputs:
+	    None: Drives display/neopixel hardware via helper process; updates globals; logs
+	"""
 	global initDisplay, lastDistVal,lastMSG, displayPyPgm, xDisplayLast, distLast, timeLast
 	
 	try:

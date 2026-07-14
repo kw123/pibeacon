@@ -50,6 +50,13 @@ except:
 
 ####################      #########################
 def checkIfUARThciChannelIsOnRPI4():
+	"""On a Raspberry Pi 4 only, verifies that the BLE/HCI stack is running on the UART bus; if not, restarts the BLE stack via hciattach commands and rechecks, reporting an error to the server if it still fails.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Restarts BLE stack and logs/reports errors as side effects
+	"""
 	try:
 		rpi = U.getRPiType().split(",")[0]
 		# returns Pi 4 Model B Rev 1.2
@@ -73,11 +80,11 @@ def checkIfUARThciChannelIsOnRPI4():
 		U.logger.log(20, text)
 		cmd = "timeout 5 sudo hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -"
 		ret = U.readPopen(cmd)
-		U.logger.log(20, "cmd: {} and ret:".format(cmd, ret))
+		U.logger.log(20, "cmd: {} and ret:{}".format(cmd, ret))
 
 		cmd = "timeout 20 sudo hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -"
 		ret = U.readPopen(cmd)
-		U.logger.log(20, "cmd: {} and ret:".format(cmd, ret))
+		U.logger.log(20, "cmd: {} and ret:{}".format(cmd, ret))
 		time.sleep(2)
 
 		HCIs = U.whichHCI()
@@ -97,6 +104,13 @@ def checkIfUARThciChannelIsOnRPI4():
 
 ####################      #########################
 def checkIfGpioIsInstalled():
+	"""Placeholder/no-op stub that immediately returns without checking or installing GPIO.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: No operation
+	"""
 	return
 
 
@@ -105,6 +119,13 @@ def checkIfGpioIsInstalled():
 ####################      #########################
 def checkWiFiSetupBootDir():
 
+	"""Checks the /boot directory for a new WiFi supplicant file or WiFi JSON config; if found, applies it and reboots the Raspberry Pi to activate the new WiFi setup.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: May trigger a reboot; returns after handling boot-dir WiFi files
+	"""
 	if U.copySupplicantFileFromBoot():
 		U.doReboot(tt=10., text="restart w new wifi setup supplicant file in /boot dir")
 		time.sleep(30)
@@ -117,6 +138,15 @@ def checkWiFiSetupBootDir():
 
 ####################      #########################
 def readNewParams(force=0, init=False, readfromTempDir=True):
+	"""Reads the plugin parameter file (from temp or home dir) and, when changed or forced, parses it to refresh a large set of global configuration variables and rebuild the list of programs/sensors that should be running.
+
+	Inputs:
+	    force (int): If 0, skips processing when data is unchanged; nonzero forces a re-read
+	    init (bool): Whether this is the initial startup read
+	    readfromTempDir (bool): Read from temp dir if True, else from home dir parameters file
+	Outputs:
+	    None: Updates many module-level globals; returns early if no new parameters
+	"""
 	global restart,sensorList,rPiCommandPORT, firstRead
 	global enableiBeacons, beforeLoop, cAddress,rebootHour,sensors,enableShutDownSwitch, rebootWatchDogTime
 	global shutdownInputPin, shutdownPinVoltSensor,shutDownPinVetoOutput , sensorAlive,useRamDiskForLogfiles, GPIOZEROshutdown
@@ -584,6 +614,13 @@ def readNewParams(force=0, init=False, readfromTempDir=True):
 
 ####################      #########################
 def checkIFSensorlistIsRunning():
+	"""Periodically (no more than once every ~68 seconds) iterates the sensor list and verifies each sensor's process is active, restarting it if needed via checkifActive.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Checks/restarts sensor processes; returns early if checked recently
+	"""
 	global sensorList, lastSensorRunningCheck
 	try:
 		if time.time() - lastSensorRunningCheck < 68: return 
@@ -598,6 +635,13 @@ def checkIFSensorlistIsRunning():
 
 ####################      #########################
 def setupX(action="leaveAlone"):
+	"""Starts or stops the X Window GUI based on the action argument: 'start' launches startx (configuring lxsession autostart and rebooting if switching from pygame), 'stop' kills the X display, and 'leaveAlone'/empty does nothing.
+
+	Inputs:
+	    action (str): One of 'start', 'stop', 'leaveAlone', or empty
+	Outputs:
+	    None: Starts/stops X via subprocess and may reboot or exit the process
+	"""
 	try:
 		if action == "leaveAlone" or  action == "": return 
 		U.logger.log(30, "startX called action: >>>{}<<<".format(action))
@@ -643,6 +687,13 @@ def setupX(action="leaveAlone"):
 
 ####################      #########################
 def startUPSShutdownPinAfterStart():
+	"""Initializes GPIO event listening for a UPS shutdown signal pin, setting it as a pull-down input and registering a falling-edge callback to shutdownSignalFromUPS.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Configures GPIO pin and adds an edge-detect callback
+	"""
 	global shutdownSignalFromUPSPin, shutdownSignalFromUPS_InitTime
 	U.logger.log(30,"UPS-V2 starting shutdown signal event listening pgm using pin#{}".format(shutdownSignalFromUPSPin))
 	shutdownSignalFromUPS_InitTime = -1
@@ -651,6 +702,13 @@ def startUPSShutdownPinAfterStart():
 
 ####################      #########################
 def shutdownSignalFromUPS(channel):
+	"""GPIO interrupt callback fired by a UPS low-battery signal; logs the event, ignores it if the channel doesn't match the configured pin or if input voltage is GOOD, and otherwise confirms the low state and triggers a controlled shutdown/halt of the Pi.
+
+	Inputs:
+	    channel (int): GPIO pin number that triggered the event
+	Outputs:
+	    None: logs and may initiate a system shutdown/halt
+	"""
 	global shutdownSignalFromUPS_pin, shutdownSignalFromUPS_InitTime, batteryUPSshutdown_Vin
 	U.logger.log(30, "LOW battery capacity event called for pi# {}".format(channel))
 	if channel != shutdownSignalFromUPSPin: return 
@@ -671,6 +729,15 @@ def shutdownSignalFromUPS(channel):
 
 ####################      #########################
 def checkifActive(sensorName, pyName, active):
+	"""If the sensor is active, ensures its driver program is running (restarting it and refreshing its alive file if needed); if inactive, kills any old instance of the program.
+
+	Inputs:
+	    sensorName (str): name used for the sensor's alive file
+	    pyName (str): name of the Python driver program to check/run
+	    active (bool): whether the sensor should be running
+	Outputs:
+	    None: starts or kills the driver program as needed
+	"""
 	if active:
 		U.logger.log(10," check if active: {}  {}".format(sensorName, pyName))
 		if not checkIfPGMisRunning(pyName, force=True, checkAliveFile=sensorName):
@@ -683,6 +750,13 @@ def checkifActive(sensorName, pyName, active):
 
 #########  start pgms  
 def installLibs():
+	"""Stub intended to launch installLibs.py in a subprocess (guarded against an existing instance), but it returns immediately so the install logic is currently disabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: returns immediately; install code is unreachable
+	"""
 	return 
 	if U.pgmStillRunning("installLibs.py"): return
 	subprocess.call("/usr/bin/python "+G.homeDir+"installLibs.py ", shell=True)
@@ -691,6 +765,16 @@ def installLibs():
 	
 ####################      #########################
 def startProgam(pgm, params="", reason="", force=False):
+	"""Launches a sensor/app Python script as a detached sudo subprocess, choosing the Python 2 or 3 interpreter based on global flags and per-program lists, and skipping nonexistent programs.
+
+	Inputs:
+	    pgm (str): program/script name (extension stripped)
+	    params (str): command-line arguments passed to the script
+	    reason (str): reason for starting, for logging
+	    force (bool): unused force flag
+	Outputs:
+	    None: spawns the program via subprocess and logs
+	"""
 	global usePython3, mustUsePy3
 	try:
 		pgm1 = pgm.split(".")[0]
@@ -724,6 +808,13 @@ def startProgam(pgm, params="", reason="", force=False):
 
 ####################      #########################
 def checkIfDisplayIsRunning():
+	"""Watchdog that ensures display.py is running and healthy: restarts it if not running, not sending an alive signal, or if its input file has grown too large, resetting the alive file after each restart.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: restarts display.py when needed
+	"""
 	global pgmStart
 
 	tt = time.time()
@@ -752,6 +843,13 @@ def checkIfDisplayIsRunning():
 
 ####################      #########################
 def checkIfNeopixelIsRunning(pgm= "neopixel3"):
+	"""Throttled watchdog (runs at most every 30s) that ensures the neopixel program is running and healthy, restarting it if it is not running, not sending an alive signal, or if its input file has grown too large.
+
+	Inputs:
+	    pgm (str): neopixel program name, defaults to 'neopixel3'
+	Outputs:
+	    None: restarts the neopixel program when needed
+	"""
 	global lastcheckIfNeopixelIsRunning
 	global pgmStart
 
@@ -785,6 +883,16 @@ def checkIfNeopixelIsRunning(pgm= "neopixel3"):
 
 ####################      #########################
 def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters=""):
+	"""Generic watchdog that checks whether a given program is running (optionally honoring its alive file), and restarts it if not; respects a startup grace period unless forced.
+
+	Inputs:
+	    pgmToStart (str): program/script name to check and start
+	    force (bool): bypass the startup grace period
+	    checkAliveFile (str): alive-file name to also validate, if any
+	    parameters (str): arguments passed when starting the program
+	Outputs:
+	    bool: True if the program was (re)started, else False
+	"""
 	global pgmStart
 
 	tt = time.time()
@@ -806,6 +914,13 @@ def checkIfPGMisRunning(pgmToStart, force=False, checkAliveFile="", parameters="
 
 ####################      #########################
 def checkIfbeaconloopIsRunning():
+	"""Watchdog for the iBeacon scanning loop: when beacons are enabled, checks beaconloop's alive file and either reboots the Pi, or kills and restarts beaconloop.py, depending on the configured reboot/restart policy.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: restarts beaconloop.py or reboots as configured
+	"""
 	global enableiBeacons, sensorAlive, sensors, lastAlive
 	global pgmStart
 
@@ -857,6 +972,14 @@ def checkIfbeaconloopIsRunning():
 
 ####################      #########################
 def checkIfAliveFileOK(sensor,force=""):
+	"""Reads a sensor's temp/alive.<sensor> timestamp file and reports whether the sensor is still alive (updated within the last ~200s); can also force-set the alive timestamp, and skips checks during startup and just after midnight.
+
+	Inputs:
+	    sensor (str): sensor name whose alive file is checked
+	    force (str): 'set' to force-write the alive timestamp, else ''
+	Outputs:
+	    bool: True if alive/within window, False if stale
+	"""
 	global sensorAlive
 	global pgmStart
 
@@ -920,6 +1043,14 @@ def checkIfAliveFileOK(sensor,force=""):
 
 ####################      #########################
 def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk space  left (min 10% or 500Mbyte)
+	"""Parses 'df' output to check free disk space on root, /var/log, and the plugin temp directory, returning a code indicating which filesystem is critically full.
+
+	Inputs:
+	    maxUsedPercent (int): max allowed used percentage for root
+	    kbytesLeft (int): min free kilobytes threshold for root
+	Outputs:
+	    int: 0 ok, 1 root full, 2 /var/log full, 3 temp full (None on exception)
+	"""
 	try:
 		ret,err = U.readPopen("df")
 		lines = ret.split("\n")
@@ -958,6 +1089,13 @@ def checkDiskSpace(maxUsedPercent=90,kbytesLeft=500000): # check if enough disk 
 
 ####################      #########################
 def rebootWatchDog():
+	"""Manages a shutdown-based reboot watchdog timer: cancels any pending scheduled shutdown, and if a positive timer is set, reschedules a shutdown that many minutes in the future.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: cancels or schedules an OS shutdown via subprocess
+	"""
 	global rebootWatchDogTime
 	try:
 
@@ -982,6 +1120,13 @@ def rebootWatchDog():
 
 ####################      #########################
 def checkIfRebootRequest():
+	"""Checks for pending reboot/restart requests and acts on them: after waiting for include/setup completion files, it either sends an HTML notice (noreboot), performs a hard reset via the RUN pin, or does a soft/forced reboot; also handles bluetooth_startup restart requests with a retry counter that reboots after repeated failures.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: reboots, restarts, or notifies the plugin per the request
+	"""
 	global usePython3, mustUsePy3
 	###print "into checkIfRebootRequest"
 	reason = U.checkifRebootRequested()
@@ -1039,6 +1184,13 @@ def checkIfRebootRequest():
 
 ####################      #########################
 def checkIfNightReboot():
+	"""Triggers a daily scheduled reboot when the current hour matches the configured rebootHour and the minute falls within a per-Pi staggered window, but only if no reboot has already happened today; logs the action and issues HTML notification plus reset/reboot commands.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: returns early or issues reboot commands and notifications
+	"""
 	global rebootHour
 
 	if rebootHour < 0:						return
@@ -1059,6 +1211,14 @@ def checkIfNightReboot():
 
 ####################      #########################
 def getreading(adc_address,adc_channel):
+	"""Reads a single ADC channel over the I2C bus by resetting config/data registers, triggering a one-shot conversion, reading the data word, reassembling the bits, and converting the raw value to millivolts.
+
+	Inputs:
+	    adc_address (int): I2C address of the ADC chip
+	    adc_channel (int): config-register byte selecting the channel to read
+	Outputs:
+	    float: measured voltage in millivolts (0 on error)
+	"""
 	global SMBUS
 	try:
 		max_reading	= 2047.0 # bits
@@ -1086,6 +1246,13 @@ def getreading(adc_address,adc_channel):
 
 ####################      #########################
 def getAlechemyUPSdata():
+	"""Reads V-in, V-out, V-battery and a temperature voltage from an Alchemy UPS over I2C, computes the temperature in Celsius and a battery capacity percentage, and flags VinOff when input voltage is low.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (Vin, Vtext, Vbat, capacity_percent_int, Vout, TempC)
+	"""
 	global batteryUPSshutdownALCHEMYupcI2C
 	try:
 		#U.logger.log(20, "into getAlechemyUPSdata")
@@ -1121,6 +1288,13 @@ def getAlechemyUPSdata():
 
 ####################      #########################
 def getupsv2UPSdata():
+	"""Reads and parses UPS-V2 status from a serial port, polling for a complete '$...$' framed line, then extracts firmware version, Vin status text, battery capacity and output voltage.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (version, Vtext, batCap, Vout) or a no-connection tuple
+	"""
 	global shutdownSignalFromUPS_SerialInput
 	try:
 		#U.logger.log(20, "into getupsv2UPSdata")
@@ -1191,6 +1365,13 @@ def getupsv2UPSdata():
 ####################      #########################
 
 def getUPSdata():
+	"""Dispatches to the appropriate UPS reader depending on configuration: Alchemy I2C UPS or serial UPS-V2, normalizing both into a common result tuple of UPS measurements.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (version, Vtext, Vin, Vbat, batCap, Vout, TempC)
+	"""
 	global shutdownSignalFromUPS_SerialInput
 	try:
 		version 	= ""
@@ -1217,6 +1398,13 @@ def getUPSdata():
 
 ####################      #########################
 def checkIfShutDownVoltage():
+	"""Periodically (throttled to 20s) checks UPS/battery shutdown conditions: reads UPS data and triggers a reboot/shutdown if input power is lost and capacity falls below the limit, and maintains a persisted batteryStatus charge/discharge model written to a JSON file, rebooting when the battery is empty.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global battery state, writes batteryStatus JSON, logs, and may issue reboot/shutdown
+	"""
 	global shutdownInputPin, shutdownPinVoltSensor,  batteryMinPinActiveTimeForShutdown, inputPinVoltRawLastONTime, GPIOZEROshutdown
 	global batteryChargeTimeForMaxCapacity, batteryCapacitySeconds
 	global batteryStatus,lastWriteBatteryStatus
@@ -1260,7 +1448,7 @@ def checkIfShutDownVoltage():
 							shutdownSignalFromUPS_LastCount +=1
 							U.logger.log(30, "UPS-V2 Vin is off and battery capacity {}%  below limit {}%.. checking countdown to 0: {}".format(batCap, batteryUPSshutdownAtxPercent, 5-shutdownSignalFromUPS_LastCount)) 
 							if shutdownSignalFromUPS_LastCount > 3:
-								U.logger.log(30, "UPS-V2.. rebooting after 4 wait / test".format(batteryUPSshutdownAtxPercent, batCap)) 
+								U.logger.log(30, "UPS-V2.. rebooting after 4 wait / test") 
 								U.doReboot(tt=10,  text="UPS-V2 shutdown by UPS  battery capacity message", cmd="sudo killall -9 python;sudo sync; wait 4;sudo shutdown now;sudo wait 3;sudo halt")
 
 				if version in ["ALCHEMY"] and batCap != "" and Vtext == "VinOff":
@@ -1268,7 +1456,7 @@ def checkIfShutDownVoltage():
 							shutdownSignalFromUPS_LastCount +=1
 							U.logger.log(30, "UPS- Alchemy Vin is off and battery capacity {}%  below limit {}%.. checking countdown to 0: {}".format(batCap, batteryUPSshutdownAtxPercent, 4-shutdownSignalFromUPS_LastCount)) 
 							if shutdownSignalFromUPS_LastCount > 2:
-								U.logger.log(30, "UPS-Alchemy.. rebooting after 4 wait / test".format(batteryUPSshutdownAtxPercent, batCap)) 
+								U.logger.log(30, "UPS-Alchemy.. rebooting after 4 wait / test") 
 								U.doReboot(tt=10,  text="UPS-Alchemy shutdown by UPS  battery capacity message", cmd="sudo killall -9 python;sudo sync; wait 4;sudo shutdown now;sudo wait 3;sudo halt")
 
 
@@ -1373,6 +1561,15 @@ def checkIfShutDownVoltage():
 
 ####################      #########################
 def writeJson2(data, fileName, lastWriteBatteryStatusI):
+	"""Writes the given data to a JSON file but rate-limits writes to at most once every 20 seconds, returning the timestamp of the last actual write.
+
+	Inputs:
+	    data (dict): battery status data to persist
+	    fileName (str): target JSON file path
+	    lastWriteBatteryStatusI (float): epoch time of the previous write
+	Outputs:
+	    float: epoch time of the last write (unchanged if skipped)
+	"""
 	try:
 		if time.time() - lastWriteBatteryStatusI < 20: return lastWriteBatteryStatusI
 		U.writeJson(fileName, data, sort_keys=True, indent=0)
@@ -1383,6 +1580,13 @@ def writeJson2(data, fileName, lastWriteBatteryStatusI):
 
 ####################      #########################
 def checkLogfiles():
+	"""Monitors disk space and log files: clears /var/log files or restarts the master when space is low, truncates the permanent log, and rotates the piBeacon and restart log files when they exceed size limits, restarting if rotation occurred.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: truncates/rotates log files, may restart or reboot, logs errors
+	"""
 	global usePython3, mustUsePy3
 	global maxSizeOfLogfileOnRPI
 	try:
@@ -1450,6 +1654,13 @@ def checkLogfiles():
 
 ####################      #########################
 def checkRamDisk(loopCount=99):
+	"""Checks whether the /var/log ramdisk (tmpfs) matches the configured useRamDiskForLogfiles setting and edits /etc/fstab to add or remove the tmpfs entry accordingly, requesting a reboot when changed.
+
+	Inputs:
+	    loopCount (int): main-loop counter; skips check when below 10
+	Outputs:
+	    None: may modify /etc/fstab, log, and trigger a reboot
+	"""
 	try:
 		if loopCount < 10: return 
 
@@ -1493,6 +1704,13 @@ def checkRamDisk(loopCount=99):
 
 ####################      #########################
 def delayAndWatchDog():
+	"""Runs a 20-second delay loop acting as a watchdog: each second it checks UPS shutdown voltage, monitors the shutdown input pin to trigger a halt when held low, and periodically polls the webserver input status.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sleeps, monitors pins/UPS, may issue reboot/halt, logs errors
+	"""
 	global shutdownInputPin, lastshutdownInputPinTime, shutdownPinVoltSensor, rebootWatchDogTime,lastrebootWatchDogTime
 	global GPIOZEROshutdown
 	global pgmStart
@@ -1534,6 +1752,13 @@ def delayAndWatchDog():
 
 ####################      #########################
 def checkSystemLOG():
+	"""Periodically (throttled to 25s) scans the tail of the system log for 'REGISTER DUMP' entries, deduplicates them, and forces a reboot (notifying the plugin) when a new register dump is detected.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: reads syslog, updates remembered lines, may send URL and force reboot
+	"""
 	global lastcheckSystemLOG, rememberLineSystemLOG
 	try: 
 		xx = lastcheckSystemLOG
@@ -1573,6 +1798,13 @@ def checkSystemLOG():
 
 ####################      #########################
 def cycleWifi():
+	"""Checks network configuration and, if WiFi is enabled but the Indigo server is unreachable, cycles the wlan0 interface down and back up to re-establish connectivity.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: may bounce the wlan0 interface via ifconfig
+	"""
 	eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 	#print "master:	 is wifi enabled : "+str(G.wifiEnabled)
 	if G.wifiEnabled:
@@ -1585,6 +1817,13 @@ def cycleWifi():
 
 ####################      #########################
 def doGPIOAfterBoot():
+	"""Generates and writes a doGPIOatStartup.py helper script into the home directory that, when run by callbeacon before master.py, quickly configures up to two GPIO pins as inputs (pull up/down/float) or outputs (high/low) right after boot, using either RPi.GPIO or gpiozero depending on the useGPIO flag and the configured after-boot pin types/numbers.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the doGPIOatStartup.py script file; logs on exception
+	"""
 	global GPIOTypeAfterBoot1, GPIOTypeAfterBoot2, GPIONumberAfterBoot1, GPIONumberAfterBoot2
 
 	try:
@@ -1665,6 +1904,13 @@ def doGPIOAfterBoot():
 	
 ####################      #########################
 def checkTempForFanOnOff(force = False):
+	"""Reads the current temperature (internal CPU sensor or a named sensor's .dat file) and switches a fan GPIO pin on or off based on configured on/off threshold temperatures with hysteresis, records on/off events, and computes the fan on-time percentage over the configured period; rate-limited to every 5 seconds unless forced.
+
+	Inputs:
+	    force (bool): if True, bypass the 5-second rate limit and check immediately
+	Outputs:
+	    None: toggles the fan GPIO/gpiozero output and updates global fan state and on-time tracking; logs on exception
+	"""
 	global fanGPIOPin, fanTempOnAtTempValue, fanTempOffAtTempValue, lastTempValue, fanWasOn,  lastTimeTempValueChecked, fanTempName, fanTempDevId, fanEnable
 	global fanOnTimePercent, fanOntimeData, fanOntimePeriod
 	global GPIOZEROfan
@@ -1754,6 +2000,13 @@ def checkTempForFanOnOff(force = False):
 	
 ####################      #########################
 def fixRcLocal():
+	"""Ensures /etc/rc.local launches callbeacon.py at boot: backs up the original, builds the correct python/python3 invocation line, then creates or rewrites rc.local so it contains exactly one callbeacon call followed by a single 'exit 0', copying the new file into place with sudo and making it executable.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: creates/rewrites /etc/rc.local via subprocess and logs progress; logs on exception
+	"""
 	global usePython3, mustUsePy3
 	try:
 		U.logger.log(20, "checking rc.local file... ")
@@ -1837,6 +2090,13 @@ def fixRcLocal():
 
 ####################      #########################
 def fixCallbeacon(sleepTime):
+	"""Rewrites the master.sh launch line inside callbeacon.py to set either no startup delay or a given sleep delay (and python3 flag), then copies the updated callbeacon.py to /home/pi/callbeacon.py.
+
+	Inputs:
+	    sleepTime (str): startup delay in seconds as a string ('0' for no delay)
+	Outputs:
+	    None: rewrites callbeacon.py and copies it into place; logs on exception
+	"""
 	global usePython3, mustUsePy3
 	try:
 		f = open("/home/pi/pibeacon/callbeacon.py","r")
@@ -1875,6 +2135,13 @@ def fixCallbeacon(sleepTime):
 
 ####################      #########################
 def sendRaspiConfig():
+	"""If a temp/sendRaspiConfig trigger file exists, removes it and sends the contents of the raspiConfig.params file to Indigo via a compressed sendURL call.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes trigger file and transmits raspi-config data to Indigo; logs on exception
+	"""
 	try:
 		if not os.path.isfile(G.homeDir+"temp/sendRaspiConfig"): return 
 		os.remove(G.homeDir+"temp/sendRaspiConfig")
@@ -1893,6 +2160,13 @@ def sendRaspiConfig():
 ####################      #########################
 def checkFSCHECKfile():
 	
+	"""Reads the temp/dosfsck filesystem-check result file and, if it reports possible data corruption, re-runs dosfsck on /dev/mmcblk0p1 and reports the outcome (fixed or still failing) to the plugin via sendURL.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: re-runs filesystem check and notifies Indigo of corruption status; logs on exception
+	"""
 	try:
 		f = open(G.homeDir+"temp/dosfsck","r")
 		data = f.read()
@@ -1921,6 +2195,13 @@ def checkFSCHECKfile():
 
 ####################      #########################
 def tryRestartNetwork():
+	"""If at least 120 seconds have passed since the last attempt and no IP address is present, restarts the networking service, waits, re-checks the master IP number, and restarts the plugin if the IP comes back on an Indigo network.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: restarts networking and may restart the plugin; logs on exception
+	"""
 	global startNetworkTimer
 
 	try:
@@ -1944,6 +2225,13 @@ def tryRestartNetwork():
 ####################      #########################
 def checkIfclearHostsFile():
 
+	"""If the clearHostsFile flag is set, deletes /home/pi/.ssh/known_hosts to reset the SSH known-hosts file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes the known_hosts file via sudo; logs on exception
+	"""
 	try:
 		if clearHostsFile: 
 			U.logger.log(20, "resetting file /home/pi/.ssh/known_hosts")
@@ -1954,6 +2242,13 @@ def checkIfclearHostsFile():
 
 ####################      #########################
 def checkPythonLibs():
+	"""Launches the checkForIncl-py3.py and checkForIncl-py2.py helper scripts in the background (one for Python 3, one for Python 2) if they are not already running, to verify/install required Python libraries.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: spawns the library-check subprocesses; logs on exception
+	"""
 	try:
 		if not U.pgmStillRunning("checkForIncl-py3"):
 			subprocess.call("sudo /usr/bin/python3 -E {}checkForIncl-py3.py & ".format(G.homeDir), shell=True)
@@ -1965,6 +2260,13 @@ def checkPythonLibs():
 
 ####################      #########################
 def checknetwork0():
+	"""Attempts to obtain the master/Indigo IP number, retrying once after toggling the network off; if no IP can be obtained on a clock-type network it gives up and switches the network type to standalone clockMANUAL. Returns the resulting Indigo server status.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (indigoServerOn, changed, connected) from getIPNumberMaster, or empty strings if not attempted
+	"""
 	try:
 		indigoServerOn, changed, connected = "", "", ""
 
@@ -2011,6 +2313,13 @@ def checknetwork0():
 
 ####################      #########################
 def checkIfFirstStart():
+	"""Checks whether the Raspberry Pi has been configured yet; if not configured or missing a Pi number, it loops up to 300 times (re-reading new param files every 5 seconds) waiting for configuration, restarting master.py and exiting if still unconfigured at the end.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: blocks waiting for configuration and may restart/exit the program; logs on exception
+	"""
 	global configured, adhocWifiStarted
 	try:
 		U.logger.log(20,"RPistrt configured?  at>{}<,  myPiNumber:{}".format(configured, G.myPiNumber) )
@@ -2033,6 +2342,13 @@ def checkIfFirstStart():
 
 ####################      #########################
 def	checkForAdhocWeb():
+	"""If ad-hoc WiFi has been started and the input webserver isn't running, starts the input webserver on port 80, waits up to ~12 minutes for it to come up or a stop signal, then stops ad-hoc WiFi and restarts the plugin back to normal WiFi mode.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: starts the webserver, stops ad-hoc WiFi and restarts the plugin; logs on exception
+	"""
 	global adhocWifiStarted, ipNumberForAdhoc
 	global usePython3, mustUsePy3
 
@@ -2055,6 +2371,15 @@ def	checkForAdhocWeb():
 
 ####################      #########################
 def checkIfNetworkStarted2(indigoServerOn, changed, connected ):
+	"""Repeatedly pings the Indigo server (for normal-wifi network types), reloading parameters when reachable, rebooting after 10 minutes without a ping, and switching from eth0 to wlan0 if the connection stays down past 100 seconds. Gives up and restarts master.py after ~99 failed attempts.
+
+	Inputs:
+	    indigoServerOn (int): flag/status indicating whether the Indigo server connection is up
+	    changed (bool): flag indicating the IP configuration changed
+	    connected (bool): flag indicating network connectivity state
+	Outputs:
+	    tuple: updated (indigoServerOn, changed, connected) values
+	"""
 	try:
 		if G.networkType  in G.useNetwork and G.wifiType =="normal":
 			for ii in range(100):
@@ -2088,6 +2413,16 @@ def checkIfNetworkStarted2(indigoServerOn, changed, connected ):
 
 ####################      #########################
 def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
+	"""Runs one iteration of the network maintenance loop: tests the network and NTP, syncs the hardware clock when an RTC is present, reboots if no ping reply for 10 minutes, and handles clock-mode wifi up/down transitions including cycling wifi, restarting master, or rebooting per configured policy.
+
+	Inputs:
+	    restartCLock (float): timestamp threshold controlling clock-mode wifi restart timing
+	    indigoServerOn (int): flag/status of the Indigo server connection
+	    changed (bool): flag indicating IP configuration changed
+	    connected (bool): flag indicating network connectivity state
+	Outputs:
+	    tuple: updated (restartCLock, indigoServerOn, changed, connected) values
+	"""
 	global ifNetworkChanges, startingnetworkStatus
 	try:
 		U.testNetwork(force = True)
@@ -2154,6 +2489,13 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 
 ####################      #########################
 def killOldPrograms():
+	"""Stops the display and builds a deduplicated list of all known piBeacon program/sensor/output script names, then kills any old running instances of those Python programs except the current process.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: stops display and terminates stale Python processes; logs the kill list
+	"""
 	global myPID, sensorList
 
 	try:
@@ -2174,6 +2516,13 @@ def killOldPrograms():
 
 ####################      #########################
 def checkInstallLibs():
+	"""Intended to ensure required libraries are installed and wait for completion, but currently returns immediately at the top so the install/wait logic is dead code.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: no-op (returns early); would otherwise install libs and poll for installLibs.done
+	"""
 	try:
 		return 
 		installLibs()
@@ -2190,6 +2539,13 @@ def checkInstallLibs():
 
 ####################      #########################
 def checkFileSystem():
+	"""Detects a read-only/failing filesystem by attempting to write a temp file; if read-only it reboots and force-kills python, otherwise removes the temp file and resets ownership of the home directory to pi:pi.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: may reboot the Pi; removes temp file and runs chown on home dir
+	"""
 	try:
 		if (str(U.readPopen("echo x > x")).find("Read-only file system")) > 0:
 			U.doReboot(tt=10., text=" reboot due to bad SSD, 'file system is read only'")				   
@@ -2207,6 +2563,15 @@ def checkFileSystem():
 
 ####################      #########################
 def checkIfipNumberchanged(indigoServerOn, changed, connected):
+	"""Re-reads the master IP number and reacts to changes: reboots if no IP and not in clock mode, restarts master when the IP changed, re-enables the network if the server was down, and restarts if eth0 or wifi0 lost its IP.
+
+	Inputs:
+	    indigoServerOn (int): flag/status of the Indigo server connection
+	    changed (bool): flag indicating IP configuration changed
+	    connected (bool): flag indicating network connectivity state
+	Outputs:
+	    tuple: updated (indigoServerOn, changed, connected) values
+	"""
 	global usePython3, mustUsePy3
 
 	try:
@@ -2235,6 +2600,13 @@ def checkIfipNumberchanged(indigoServerOn, changed, connected):
 
 ####################      #########################
 def checkIfSTDprogramsAreRunning(lastCheckAlive):
+	"""Verifies that the standard helper programs are running: checks BLEconnect when BLE is in use, and every ~100 seconds checks each active output program (display, neopixel, sundial, etc.), copyToTemp, and the beacon loop when iBeacons are enabled, relaunching any that died.
+
+	Inputs:
+	    lastCheckAlive (float): timestamp of the last full alive-check, used to throttle to ~100s intervals
+	Outputs:
+	    float: updated lastCheckAlive timestamp
+	"""
 	global sensors, enableiBeacons, activePGM, activePGMOutput, BLEdirectSensorDeviceActive, lastCheckAliveBeaconloop
 	try:
 		if "BLEconnect" in sensors or BLEdirectSensorDeviceActive or BLEdirectSwitchbotActive:
@@ -2267,6 +2639,13 @@ def checkIfSTDprogramsAreRunning(lastCheckAlive):
 
 ####################      #########################
 def checkNTP():
+	"""Installs and tests NTP, starting it in simple mode (and stopping it if it still fails); when the network is up, NTP is working, and an RTC is installed, writes the system time to the hardware clock.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: configures/starts NTP and may sync the hardware clock; updates G.ntpStatus
+	"""
 	try:
 		U.installNTP()
 		U.testNTP()
@@ -2288,6 +2667,13 @@ def checkNTP():
 
 ####################      #########################
 def setupTempDir():
+	"""Ensures the home temp directory exists, mounts it as a 2 MB tmpfs RAM disk if not already mounted, and clears any existing files in it.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: creates/mounts the tmpfs temp directory and empties it
+	"""
 	try:
 		if	not os.path.isdir(G.homeDir+"temp"):
 			subprocess.call("/usr/bin/mkdir   "+G.homeDir+"temp > /dev/null 2>&1" , shell=True)
@@ -2300,6 +2686,13 @@ def setupTempDir():
 
 ####################      #########################
 def checkFilesystem():
+	"""Runs a boot-sector filesystem check/repair on the SD card in the background and resets read/execute permissions and pi:pi ownership on home-directory files, key scripts, log files, and the hwclock-set helper.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs dosfsck and fixes file permissions/ownership
+	"""
 	try:
 		# do a system boot sector check / repair
 		subprocess.call("dosfsck -w -r -l -a -v -t /dev/mmcblk0p1 > "+G.homeDir+"temp/dosfsck & ", shell=True)
@@ -2322,6 +2715,13 @@ def checkFilesystem():
 
 ####################      #########################
 def checkIfWOLsendToIndigoServer():
+	"""Periodically (throttled to 100s) pings the Indigo/Mac server and, if it is unreachable, sends a Wake-on-LAN magic packet (built per Python 2/3) via a broadcast UDP socket to wake it; skips if no valid MAC is configured.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sends a WOL UDP broadcast packet when the server does not respond to ping; updates lastCheckWOL
+	"""
 	global macIfWOLsendToIndigoServer, IpnumberIfWOLsendToIndigoServer, lastCheckWOL
 
 	try:
@@ -2361,6 +2761,13 @@ def checkIfWOLsendToIndigoServer():
 
 ####################      #########################
 def setupUtilities():
+	"""Launches the setUtils.py helper script in the background using the configured Python command and home directory.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: spawns setUtils.py via subprocess
+	"""
 	global pyCommand
 	try:
 		subprocess.call("sudo {} {}setUtils.py & ".format(pyCommand, G.homeDir), shell=True)
@@ -2370,6 +2777,13 @@ def setupUtilities():
 
 ####################      #########################
 def getadhocIpNumber():
+	"""Reads the configured ad-hoc IP address from the home directory's 'interfaces-adhoc' file by parsing the 'address' line, falling back to a hardcoded default of 192.168.5.10 if the file is missing or unparseable.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: the ad-hoc IP address string
+	"""
 	adhocIP = "192.168.5.10"
 	try:
 		if	os.path.isfile(G.homeDir+"interfaces-adhoc"):
@@ -2384,6 +2798,13 @@ def getadhocIpNumber():
 
 ####################      #########################
 def checkstartOtherProgram(init=False):
+	"""Manages an optional user-defined external program: kills the previously running command when it changes, and starts the current 'startOtherProgram' via subprocess if it is not already running, tracking its start time and keep-running state in module globals.
+
+	Inputs:
+	    init (bool): unused flag indicating initialization call, defaults to False
+	Outputs:
+	    None: starts/kills subprocesses and updates module-global startOtherProgram state
+	"""
 	try:
 		global startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted
 		#U.logger.log(20, "startOtherProgram:{}<, startOtherProgramOld:{}<, startOtherProgramKeepRunning:{}, startOtherProgramStarted:{},".format(startOtherProgram, startOtherProgramOld, startOtherProgramKeepRunning, startOtherProgramStarted))
@@ -2426,11 +2847,18 @@ def checkstartOtherProgram(init=False):
 
 ####################      #########################
 def makeNeopix2Work():
+	"""Prepares the neopix2 and rgbmatrix Python package directories under the home dir, creating them and an __init__.py if needed, and moves the compiled _rpi_ws281x.so and rgbmatrix.so shared objects into their respective package folders.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: creates directories and moves shared-library files via shell commands
+	"""
 	try:
 		subprocess.call("/usr/bin/mkdir {}rgbmatrix > /dev/null 2>&1".format(G.homeDir), shell=True)
 		subprocess.call("/usr/bin/mkdir {}neopix2 > /dev/null 2>&1".format(G.homeDir), shell=True)
 		if not os.path.isfile(G.homeDir+"neopix2/__init__.py"):
-			subprocess.call("echo '' > {}neopix2/__init__.py".format(G.homeDir,G.homeDir), shell=True)
+			subprocess.call("echo '' > {}neopix2/__init__.py".format(G.homeDir), shell=True)
 		oldF = "_rpi_ws281x.so"
 		if os.path.isfile(oldF):
 			cmd = "mv {}{} {}neopix2/{}".format(G.homeDir, oldF, G.homeDir, oldF)
@@ -2450,6 +2878,13 @@ def makeNeopix2Work():
 
 ####################      #########################
 def copySupplicantToBoot(adhocWifi):
+	"""When ad-hoc WiFi mode is active (adhocWifi == -1), copies the wpa_supplicant.conf to /boot as a savable file so the WiFi SSID can be easily edited; otherwise returns immediately.
+
+	Inputs:
+	    adhocWifi (int): ad-hoc WiFi flag; -1 triggers the copy
+	Outputs:
+	    None: copies the supplicant config file to /boot via sudo
+	"""
 	if adhocWifi != -1: return 
 	cmd = "sudo cp /etc/wpa_supplicant/wpa_supplicant.conf /boot/wpa_supplicant.saveme_as_conf"
 	U.logger.log(20,"copying supplicant file to /boot to enable easy editing for new wifi sid  cmd:{}".format(cmd))
@@ -2458,6 +2893,13 @@ def copySupplicantToBoot(adhocWifi):
 
 ####################      #########################
 def makeRaspiConfigFile():
+	"""Launches the get_raspi_config.py helper script as a background subprocess (using python3 or python2 depending on usePython3) to gather Raspberry Pi configuration into the log directory.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: spawns the get_raspi_config.py background process
+	"""
 	global usePython3
 	try:
 		if usePython3:
@@ -2477,6 +2919,13 @@ def makeRaspiConfigFile():
 
 ### artificial indent to indicate main program 
 def execMaster():
+	"""Master process bootstrap routine: initializes the large set of module-global state variables to defaults, detects/enforces the required Python version, reads plugin parameters, sets up temp and log directories, kills old programs, and launches the supporting master.sh and various setup/utility scripts.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: initializes globals and starts the master process and helper subprocesses
+	"""
 	try:
 		global myPID,restart,sensorList,rPiCommandPORT,firstRead
 		global rebootWatchDogTime, lastrebootWatchDogTime

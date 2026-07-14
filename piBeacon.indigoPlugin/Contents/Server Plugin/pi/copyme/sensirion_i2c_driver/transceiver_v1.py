@@ -22,6 +22,13 @@ class I2cTransceiverV1(object):
     STATUS_UNSPECIFIED_ERROR = 4  #: Status code for "unspecified error".
 
     def __init__(self):
+        """Initializes the version-1 I2C transceiver by invoking the parent class initializer.
+
+        Inputs:
+            None.
+        Outputs:
+            None: calls superclass __init__ to set up the transceiver
+        """
         super(I2cTransceiverV1, self).__init__()
 
     @property

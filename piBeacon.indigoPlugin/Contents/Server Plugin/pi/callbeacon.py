@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 import os
 import time
@@ -15,7 +15,7 @@ except:
 	homeDir		= "/home/pi/pibeacon/"
 	homeDir0	= "/home/pi/"
 
-import os, time, subprocess, logging, sys
+import logging
 
 logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
 logger = logging.getLogger(__name__)
@@ -23,6 +23,13 @@ logger = logging.getLogger(__name__)
 
 ################################
 def readPopen(cmd):
+	"""Runs a shell command via subprocess.Popen, captures stdout and stderr, and returns them decoded as UTF-8 strings; returns empty strings on any exception.
+
+	Inputs:
+	    cmd (str): shell command to execute
+	Outputs:
+	    tuple: (stdout, stderr) as decoded strings, or empty strings on error
+	"""
 	try:
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 		return ret.decode('utf_8'), err.decode('utf_8')
@@ -31,14 +38,28 @@ def readPopen(cmd):
 
 #################################
 def simpleCall(cmd):
+	"""Fires off a shell command asynchronously via subprocess.Popen without waiting for it or capturing output; silently ignores any failure.
+
+	Inputs:
+	    cmd (str): shell command to launch
+	Outputs:
+	    None: spawns a subprocess for its side effects
+	"""
 	try:
-		ret, err = subprocess.Popen(cmd, shell=True)
-		return ret.decode('utf_8'), err.decode('utf_8')
-	except Exception as e:
-		return "","" 
+		subprocess.Popen(cmd, shell=True)
+	except:
+		pass
+	return 
 
 #################################
 def getOsVersion():
+	"""Reads /etc/os-release and parses the VERSION_ID line to return the OS version as an integer, or 0 if not found.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: OS VERSION_ID, or 0 if not found
+	"""
 	osInfo	 = readPopen("cat /etc/os-release")[0].strip("\n").split("\n")
 	for line in osInfo:
 		if line .find("VERSION_ID=") == 0:
@@ -47,6 +68,13 @@ def getOsVersion():
 
 #################################
 def checkIfmustUsePy3():
+	"""Determines whether Python 3 must be used, returning True if the OS version is 11 or higher or the running interpreter is Python 3, otherwise False.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if Python 3 should be used
+	"""
 	if getOsVersion() >= 11:  return True
 	if sys.version[0] == "3": return True
 	return False
@@ -108,7 +136,7 @@ delList =[
 		"beacon_minSignalCutoff", "beacon_onlyTheseMAC", "beacon_signalDelta",  "rejects.*", 
 		"logfile", "logfile-1", "call-log",  "errlog", "logfile", "master.log", 
 		"alive", "interface", "beaconloop",
-		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "getBeaconParameters.py", "beepBeacon.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py" 
+		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "getBeaconParameters.py", "beepBeacon.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py", 
 		"moistureSensorAdafruit","checkAdfruitInclude.py","checkForInclude.py","checkForInclude-py3.py","checkForInclude-py2.py","neopixel.py"]
 for dd in delList:
 	subprocess.call("rm {}{} > /dev/null 2>&1 ".format(homeDir, dd), shell=True)

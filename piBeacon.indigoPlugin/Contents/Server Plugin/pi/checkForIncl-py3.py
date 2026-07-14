@@ -1,12 +1,20 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
-import os, time, subprocess, logging
+import sys, os, time, subprocess, logging
 
 logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 ####-------------------------------------------------------------------------####
 def readPopen(cmd,doPrint= True):
+	"""Runs a shell command via subprocess.Popen, optionally logging the result, and returns the decoded stdout and stderr strings.
+
+	Inputs:
+	    cmd (str): shell command to execute
+	    doPrint (bool): whether to log the command result
+	Outputs:
+	    tuple: (stdout, stderr) decoded utf-8 strings, or None on exception
+	"""
 	try:
 		logger.log(30,"doing:  {}".format(cmd) )
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -18,6 +26,13 @@ def readPopen(cmd,doPrint= True):
 		logger.log(20,"", exc_info=True)
 
 def readFile(fName):
+	"""Opens the named file, reads its entire contents, and returns them as a string; returns an empty string on error.
+
+	Inputs:
+	    fName (str): path of the file to read
+	Outputs:
+	    str: file contents, or '' on error
+	"""
 	try:
 		f=open(fName,"r")
 		ret = f.read()
@@ -28,6 +43,14 @@ def readFile(fName):
 	return ""
 
 def writeFile(fName,NewFile):
+	"""Opens the named file for writing and writes the supplied content to it, logging any exception.
+
+	Inputs:
+	    fName (str): path of the file to write
+	    NewFile (str): content to write to the file
+	Outputs:
+	    None: writes the file to disk; logs on error
+	"""
 	try:
 		f=open(fName,"w")
 		f.write(NewFile)
@@ -38,6 +61,13 @@ def writeFile(fName,NewFile):
 	return 
 
 def checkIfOSlt9():
+	"""Reads /etc/os-release and returns the numeric OS VERSION_ID, or 0 if not found.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: the OS VERSION_ID number, or 0 if not present
+	"""
 	osInfo	 = readPopen("cat /etc/os-release",doPrint=False)[0].strip("\n").split("\n")
 	for line in osInfo:
 		if line .find("VERSION_ID=") == 0:
@@ -45,12 +75,26 @@ def checkIfOSlt9():
 	return 0
 
 def checkOsVersionis3():
+	"""Returns True if the running Python interpreter is version 3 or higher, based on the major version digit of sys.version.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if Python major version >= 3, else False
+	"""
 	return int(sys.version[0]) >= 3
 
 
 
 def execInstall():
 
+	"""Installs and verifies all the apt packages and pip3 libraries required for the plugin's Python 3 sensor drivers (wiringPi/GPIO, hcidump, pigpio, pexpect, seesaw, neopixel, lidarlite, tmp117, dht, etc.), skipping those listed in notSupported, and writes a 'done' marker file when finished. Bails out early if the OS version is below 9.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs shell/apt/pip install commands, imports test modules, logs progress, and writes the includepy3.done marker file
+	"""
 	notSupported = ["DHT","GPIO"]
 	v = checkIfOSlt9() 
 
@@ -126,7 +170,7 @@ def execInstall():
 				time.sleep(0.5)
 			import pigpio
 		except:
-			logger.log(20,"sudo apt-get install -y pigpio python3-pigpio ".format(usebreakOption) )
+			logger.log(20,"sudo apt-get install -y pigpio python3-pigpio " )
 			ret = readPopen("sudo apt-get install -y pigpio python3-pigpio ")
 
 

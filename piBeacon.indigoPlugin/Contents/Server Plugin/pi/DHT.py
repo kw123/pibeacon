@@ -31,6 +31,15 @@ import board
 
 
 def getDATAdht(DHTpinI,Type,devId):
+		"""Reads temperature and humidity from an Adafruit DHT11/DHT22 sensor on a given GPIO pin, lazily creating and caching the sensor object per pin on first use, throttling reads to avoid over-polling, and retrying up to 10 times before giving up.
+
+		Inputs:
+		    DHTpinI (int): BCM GPIO pin number the DHT sensor is wired to
+		    Type (str): sensor type, '11' for DHT11 otherwise DHT22
+		    devId (str): Indigo device id used to track per-device read timing
+		Outputs:
+		    tuple: (temperature, humidity) rounded floats, or ('','') on failure
+		"""
 		global sensorDHT, startDHT, lastRead
 		global lastSensorRead
 		t,h="",""
@@ -98,12 +107,19 @@ def getDATAdht(DHTpinI,Type,devId):
 			return t , h 
 		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
-			U.logger.log(20, u" pin: "+ str(DHTpinI)+" return value: t={}".format(t)+"; h={}".format(h) )
+			U.logger.log(20, " pin: "+ str(DHTpinI)+" return value: t={}".format(t)+"; h={}".format(h) )
 		lastSensorRead[devId] = time.time() 
 		return "",""
 
 
 def getDHTdata():
+	"""Iterates over all devices of the current sensor, reads temperature and humidity from each via getDATAdht using its configured GPIO pin and DHT type, and collects the readings into a per-device dictionary.
+
+	Inputs:
+	    None.
+	Outputs:
+	    dict: maps devId to {'temp':t,'hum':h} readings
+	"""
 	global badSensors
 	global sensors, sensor
 	try:
@@ -119,6 +135,13 @@ def getDHTdata():
 
 
 def getDHT(dataI):
+	"""Reads DHT data for all devices of the current sensor, applies per-device temperature and humidity offsets, populates the supplied data dictionary with the corrected values, clears bad-sensor tracking on success, and increments the bad-sensor counter on empty reads.
+
+	Inputs:
+	    dataI (dict): data dictionary to populate with sensor readings
+	Outputs:
+	    dict: the data dict updated with temp/hum (or badSensor) entries per device
+	"""
 	global badSensors
 	global sensors, sensor
 	try:
@@ -152,6 +175,15 @@ def getDHT(dataI):
 
 
 def incrementBadSensor(devId, dataI, theText="badSensor"):
+	"""Tracks repeated bad readings for a device by incrementing a per-device counter and appending status text; once the count exceeds two it writes a 'badSensor' marker into the data dictionary and clears the tracking entry.
+
+	Inputs:
+	    devId (str): Indigo device id with the bad reading
+	    dataI (dict): data dictionary to mark with the bad-sensor flag
+	    theText (str): status text describing the failure, defaults to 'badSensor'
+	Outputs:
+	    dict: the data dict, with a badSensor entry added once the threshold is exceeded
+	"""
 	global badSensors, sensor
 	try:
 		if devId not in badSensors: badSensors[devId] = {"count":0,"text":theText}
@@ -165,7 +197,7 @@ def incrementBadSensor(devId, dataI, theText="badSensor"):
 			del badSensors[devId]
 	except Exception as e:
 		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, u"theText{}".format(theText))
+		U.logger.log(30, "theText{}".format(theText))
 	return dataI
 
 
@@ -181,6 +213,13 @@ def incrementBadSensor(devId, dataI, theText="badSensor"):
 
 
 def readParams():
+		"""Reads the latest plugin configuration via U.doRead, and if changed updates global params, output, and the sensors dictionary, rebuilds the sensor list string, and exits the process if no DHT sensor is defined.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if new params were read and applied, False if unchanged or empty
+		"""
 		global sensorList, sensors, enableTXpinsAsGpio, sensorRefreshSecs
 		global output
 		global oldRaw, lastRead

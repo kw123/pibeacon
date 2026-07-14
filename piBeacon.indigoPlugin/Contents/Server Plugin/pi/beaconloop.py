@@ -93,6 +93,14 @@ shellyTagToProperty = {
 
 #################################
 def tryDeltaTime(test, oneDigit = False):
+	"""Computes the elapsed time since a given timestamp, optionally rounded to one decimal, returning -999 on any error.
+
+	Inputs:
+	    test (float): Reference epoch timestamp to subtract from now
+	    oneDigit (bool): If True, round the delta to one decimal
+	Outputs:
+	    float: Seconds elapsed since test, or -999. on error
+	"""
 	try: 
 		dt = time.time() - test
 		if oneDigit: dt = round(dt,1)
@@ -102,6 +110,14 @@ def tryDeltaTime(test, oneDigit = False):
 #
 
 def hex2str(inString,logLevel=1):
+	"""Decodes a hex-encoded string into a UTF-8 text string, handling both Python 2 and 3, and returns '00' (optionally logging) if conversion fails.
+
+	Inputs:
+	    inString (str): Hex-encoded input string to decode
+	    logLevel (int): If >0, log a warning when decoding fails
+	Outputs:
+	    str: Decoded UTF-8 string, or '00' on failure
+	"""
 	try:
 		if sys.version[0] == "3":
 			return codecs.decode(inString,"hex").decode("utf-8")
@@ -113,6 +129,13 @@ def hex2str(inString,logLevel=1):
 	
 ####-------------------------------------------------------------------------####
 def readPopen(cmd):
+		"""Runs a shell command via subprocess.Popen and returns its decoded stdout and stderr as a tuple of UTF-8 strings, logging on exception.
+
+		Inputs:
+		    cmd (str): Shell command line to execute
+		Outputs:
+		    tuple: (stdout, stderr) as decoded strings, or None on exception
+		"""
 		try:
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			return ret.decode("utf_8"), err.decode("utf_8")
@@ -165,11 +188,26 @@ ADV_SCAN_RSP=0x04
 
 
 def twos_complement(value, bits):
+	"""Interprets an unsigned integer as a signed two's-complement value given a bit width, subtracting 2^bits when the sign bit is set.
+
+	Inputs:
+	    value (int): Unsigned integer to interpret
+	    bits (int): Bit width of the value
+	Outputs:
+	    int: Signed two's-complement integer
+	"""
 	if (value & (1 << (bits - 1))) != 0:
 		value = value - (1 << bits)
 	return value
 
 def signedIntfrom8(string):
+	"""Parses a hex string into an 8-bit signed integer, treating values above 127 as negative, returning 0 on parse error.
+
+	Inputs:
+	    string (str): Hex string representing an 8-bit value
+	Outputs:
+	    int: Signed 8-bit integer, or 0 on error
+	"""
 	try:
 		intNumber = int(string,16)
 		if intNumber > 127: intNumber -= 256
@@ -179,6 +217,13 @@ def signedIntfrom8(string):
 	return intNumber
 
 def signedIntfrom16(string):
+	"""Parses a hex string into a 16-bit signed integer, treating values above 32767 as negative, returning 0 on parse error.
+
+	Inputs:
+	    string (str): Hex string representing a 16-bit value
+	Outputs:
+	    int: Signed 16-bit integer, or 0 on error
+	"""
 	try:
 		intNumber = int(string,16)
 		if intNumber > 32767: intNumber -= 65536
@@ -189,6 +234,14 @@ def signedIntfrom16(string):
 
 
 def signedintfromhexR(string, n): # eg aabbccdd, 4
+	"""Parses a little-endian hex string of n bytes into a signed integer by reversing the byte order, converting to int, and applying two's-complement adjustment when the value exceeds the signed positive range; returns 0 on error.
+
+	Inputs:
+	    string (str): hex string in little-endian byte order (e.g. 'aabbccdd')
+	    n (int): number of bytes to decode
+	Outputs:
+	    int: signed integer value, or 0 on exception
+	"""
 	try:
 		ss = ""
 		for i in range(n):
@@ -202,6 +255,14 @@ def signedintfromhexR(string, n): # eg aabbccdd, 4
 	return intNumber
 
 def intfromhexR(string, n): # eg aabbccdd, 4
+	"""Parses a little-endian hex string of n bytes into an unsigned integer by reversing the byte order and converting to int; returns 0 on error.
+
+	Inputs:
+	    string (str): hex string in little-endian byte order (e.g. 'aabbccdd')
+	    n (int): number of bytes to decode
+	Outputs:
+	    int: unsigned integer value, or 0 on exception
+	"""
 	try:
 		ss = ""
 		for i in range(n):
@@ -215,9 +276,25 @@ def intfromhexR(string, n): # eg aabbccdd, 4
 
 
 def intFrom8(hexString, start):
+	"""Reads a single byte (two hex characters) from the given start offset of a hex string and returns its integer value.
+
+	Inputs:
+	    hexString (str): hex string to read from
+	    start (int): character offset where the byte begins
+	Outputs:
+	    int: integer value of the 8-bit field
+	"""
 	return int(hexString[start:start+2],16)
 
 def intFrom16(hexString, start):
+	"""Reads a 16-bit value (four hex characters) from the given start offset of a hex string and returns its integer value.
+
+	Inputs:
+	    hexString (str): hex string to read from
+	    start (int): character offset where the field begins
+	Outputs:
+	    int: integer value of the 16-bit field
+	"""
 	return int(hexString[start:start+4],16)
 
 
@@ -230,6 +307,13 @@ def rshift(val, n):
 
 
 def returnnumberpacket(pkt):
+	"""Combines the bytes of a packed binary packet into a single integer where the first byte is weighted by 256 and subsequent bytes by 1, effectively forming a two-byte-style number.
+
+	Inputs:
+	    pkt (bytes): packed byte string to unpack
+	Outputs:
+	    int: the computed integer value
+	"""
 	myInteger = 0
 	multiple = 256
 	for c in pkt:
@@ -238,16 +322,37 @@ def returnnumberpacket(pkt):
 	return myInteger 
 
 def stringFromPacket(pkt):
+	"""Converts a packed binary packet into its hexadecimal string representation by formatting each byte as two hex digits.
+
+	Inputs:
+	    pkt (bytes): packed byte string to convert
+	Outputs:
+	    str: concatenated two-digit-per-byte hex string
+	"""
 	myString = ""
 	for c in pkt:
 		myString +=	 "%02x" %struct.unpack("B",c)[0]
 	return myString 
 
 def printpacket(pkt):
+	"""Writes each byte of a packed binary packet to standard output as space-separated two-digit hex values for debugging.
+
+	Inputs:
+	    pkt (bytes): packed byte string to print
+	Outputs:
+	    None: writes hex bytes to stdout
+	"""
 	for c in pkt:
 		sys.stdout.write("%02x " % struct.unpack("B",c)[0])
 
 def get_packed_bdaddr(bdaddr_string):
+	"""Converts a colon-separated Bluetooth device address string into a packed 6-byte little-endian binary structure suitable for HCI commands.
+
+	Inputs:
+	    bdaddr_string (str): Bluetooth address like 'AA:BB:CC:DD:EE:FF'
+	Outputs:
+	    bytes: 6-byte packed address in reversed (little-endian) order
+	"""
 	packable_addr = []
 	addr = bdaddr_string.split(":")
 	addr.reverse()
@@ -256,26 +361,69 @@ def get_packed_bdaddr(bdaddr_string):
 	return struct.pack("<BBBBBB", *packable_addr)
 
 def packed_bdaddr_to_string(bdaddr_packed):
+	"""Converts a packed 6-byte little-endian Bluetooth address back into a human-readable colon-separated hex string.
+
+	Inputs:
+	    bdaddr_packed (bytes): 6-byte packed Bluetooth address
+	Outputs:
+	    str: colon-separated MAC-style address string
+	"""
 	return ':'.join('%02x'%i for i in struct.unpack("<BBBBBB", bdaddr_packed[::-1]))
 
 def hci_enable_le_scan(sock):
+	"""Enables BLE scanning on the given HCI socket by calling hci_toggle_le_scan with the enable flag set.
+
+	Inputs:
+	    sock (socket.socket): open Bluetooth HCI socket
+	Outputs:
+	    None: sends an HCI command to enable LE scan
+	"""
 	hci_toggle_le_scan(sock, 0x01)
 
 def hci_disable_le_scan(sock):
+	"""Disables BLE scanning on the given HCI socket by calling hci_toggle_le_scan with the enable flag cleared.
+
+	Inputs:
+	    sock (socket.socket): open Bluetooth HCI socket
+	Outputs:
+	    None: sends an HCI command to disable LE scan
+	"""
 	hci_toggle_le_scan(sock, 0x00)
 
 def hci_toggle_le_scan(sock, enable):
+	"""Sends a Bluetooth HCI LE_SET_SCAN_ENABLE command over the socket, packing the enable flag and a zero filter-duplicates byte to turn LE scanning on or off.
+
+	Inputs:
+	    sock (socket.socket): open Bluetooth HCI socket
+	    enable (int): scan enable flag (0x01 on, 0x00 off)
+	Outputs:
+	    None: transmits the HCI command via bluez.hci_send_cmd
+	"""
 	cmd_pkt = struct.pack("<BB", enable, 0x00)
 	bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_SCAN_ENABLE, cmd_pkt)
 
 
 def hci_le_set_scan_parameters(sock):
+	"""Packs a fixed LE scan-enable HCI command packet and sends it to the open Bluetooth socket via bluez.hci_send_cmd to enable LE scanning.
+
+	Inputs:
+	    sock (object): Open BlueZ HCI device socket
+	Outputs:
+	    None: Sends an HCI command to the BLE controller
+	"""
 	cmd_pkt = struct.pack("<BBBBBBB", 0x01, 0x0, 0x10, 0x0, 0x10,0x01, 0x00)
 	bluez.hci_send_cmd(sock, OGF_LE_CTL,OCF_LE_SET_SCAN_ENABLE, cmd_pkt) 
 
 
 #################################
 def checkIfHCIIsBlockedAndFix():
+	"""Checks whether the HCI Bluetooth interface is rfkill-blocked; if so attempts to unblock it, logs the result, and reports an error via sendURL if it cannot be unblocked.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if HCI is unblocked/usable, False if still blocked or on error
+	"""
 	try:
 		### test hci blocked?
 		blocked, hciDict = U.checkIfHciBlocked(verbose=False)
@@ -299,6 +447,14 @@ def checkIfHCIIsBlockedAndFix():
 
 #################################
 def hardresetHCI(hci, startTime):
+	"""Performs a hard reset of the given HCI interface by bringing it down, restarting the bluetooth service, and bringing it back up via shell commands, logging each step.
+
+	Inputs:
+	    hci (str): HCI interface name, e.g. 'hci0'
+	    startTime (float): Start timestamp used for elapsed-time logging
+	Outputs:
+	    None: Runs hciconfig/service shell commands and logs output
+	"""
 	try:
 		cmd = "sudo hciconfig {} down".format(hci)
 		ret = readPopen(cmd) # enable bluetooth
@@ -321,6 +477,15 @@ def hardresetHCI(hci, startTime):
 
 #################################
 def normalStartHCI(hci, startTime, logLevelStart):
+	"""Performs a normal startup of the given HCI interface by resetting it (retrying on RF-kill), listing hciconfig status, and bringing it up, retrying once if errors occur.
+
+	Inputs:
+	    hci (str): HCI interface name, e.g. 'hci0'
+	    startTime (float): Start timestamp used for elapsed-time logging
+	    logLevelStart (int): Logging level for startup messages
+	Outputs:
+	    None: Runs hciconfig shell commands and logs output
+	"""
 	try:
 		cmd = "sudo hciconfig "+hci+" reset"
 		ret =readPopen(cmd)
@@ -348,6 +513,16 @@ def normalStartHCI(hci, startTime, logLevelStart):
 
 #################################
 def startHCIBroadCast(useHCIForBeacon, pi, startTime, logLevelStart):
+	"""Configures the HCI controller to broadcast an iBeacon advertisement by sending hcitool commands that set the beacon payload (UUID/major/minor/txpower), advertising parameters, and enable advertising; restarts LE scan if using hcidump mode.
+
+	Inputs:
+	    useHCIForBeacon (str): HCI interface to broadcast on, e.g. 'hci0'
+	    pi (int): Raspberry Pi number encoded into the beacon minor field
+	    startTime (float): Start timestamp used for elapsed-time logging
+	    logLevelStart (int): Logging level for startup messages
+	Outputs:
+	    None: Runs hcitool advertising commands and logs output
+	"""
 	try:
 		OGF						= " 0x08"
 		# setup broadcast message
@@ -355,7 +530,7 @@ def startHCIBroadCast(useHCIForBeacon, pi, startTime, logLevelStart):
 		iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
 		uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
 		MAJ					= " 00 01"
-		MIN					= " 00 "+"0%x"%(int(pi))
+		MIN					= " 00 "+"%02x"%(int(pi))
 		txP					= " C5 00"
 		#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
 		cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCIForBeacon, OGF, OCF, iBeaconPrefix, uuid,  MAJ, MIN, txP)
@@ -390,6 +565,15 @@ def startHCIBroadCast(useHCIForBeacon, pi, startTime, logLevelStart):
 
 #################################
 def reuseHCI(hci, startTime, logLevelStart):
+	"""Reuses an already-up HCI interface by issuing a single hciconfig reset command and logging the result.
+
+	Inputs:
+	    hci (str): HCI interface name, e.g. 'hci0'
+	    startTime (float): Start timestamp used for elapsed-time logging
+	    logLevelStart (int): Logging level for messages
+	Outputs:
+	    None: Runs hciconfig reset shell command and logs output
+	"""
 	try:
 				cmd = "sudo hciconfig "+hci+" reset"
 				ret = readPopen(cmd) # 
@@ -401,6 +585,15 @@ def reuseHCI(hci, startTime, logLevelStart):
 
 #################################
 def setNoLead(hci, logLevelStart, startTime):
+	"""Disables LE advertising and scanning on the given HCI interface by running hciconfig noleadv and noscan commands, logging the outcome.
+
+	Inputs:
+	    hci (str): HCI interface name, e.g. 'hci0'
+	    logLevelStart (int): Logging level for messages
+	    startTime (float): Start timestamp used for elapsed-time logging
+	Outputs:
+	    None: Runs hciconfig noleadv/noscan shell commands and logs output
+	"""
 	try:
 		cmd	 = "sudo hciconfig {} noleadv &\n sudo hciconfig {} noscan &".format(hci, hci)
 		ret = readPopen(cmd)
@@ -420,6 +613,17 @@ def setNoLead(hci, logLevelStart, startTime):
 
 #################################
 def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False):
+	"""Orchestrates full Bluetooth startup: unblocks HCI, selects and initializes the proper HCI interface (hard reset/reuse/normal start), determines the BLE MAC and bus, starts iBeacon broadcasting, and opens a socket or hcidump for data acquisition, handling errors and reboot requests.
+
+	Inputs:
+	    pi (int): Raspberry Pi number used for beacon minor and identification
+	    reUse (bool): If True, reuse existing HCI rather than full reset
+	    thisHCI (str): Specific HCI interface to use, empty for auto-select
+	    trymyBLEmac (str): Preferred BLE MAC address to try selecting
+	    hardreset (bool): If True, perform a hard reset of the HCI interface
+	Outputs:
+	    tuple: (socket-or-status, myBLEmac, returnCode) where returnCode 0 is success and negatives indicate errors
+	"""
 	global myBLEmac, downCount
 	global lastLESCANrestart
 	global rpiDataAcquistionMethod
@@ -551,7 +755,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			sock = bluez.hci_open_dev(devId)
 			U.logger.log(30, "ble thread started")
 		except Exception as e:
-			U.logger.log(30,"error accessing bluetooth device...".format(e))
+			U.logger.log(30,"error accessing bluetooth device...")
 			if downCount > 2:
 				U.setRebootRequest("bluetooth_startup.ERROR:{} FORCE ".format(e))
 				downHCI(useHCIForBeacon)
@@ -578,6 +782,15 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 
 #################################
 def restartLESCAN(hciUse, loglevel, force=False):
+	"""Restarts the BLE lescan process on the given HCI interface (skipped in socket mode), throttled to at most once every 5 seconds unless forced, by killing the old hcitool process and launching a new background lescan.
+
+	Inputs:
+	    hciUse (str): HCI interface to run lescan on, e.g. 'hci0'
+	    loglevel (int): Logging level for messages
+	    force (bool): If True, restart even if within the throttle interval
+	Outputs:
+	    None: Kills/relaunches hcitool lescan background process and logs output
+	"""
 	global rpiDataAcquistionMethod
 	global lastLESCANrestart
 	try:
@@ -594,7 +807,7 @@ def restartLESCAN(hciUse, loglevel, force=False):
 			#ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE).communicate()
 			# --privacy and -- duplicates does not work on some RPI / USB devices
 			U.killOldPgm(-1,"hcitool") # will kill the launching sudo parent process, lescan still running
-			cmd	 = "sudo hcitool -i {} lescan --duplicates  > /dev/null 2>&1 &".format(hciUse,G.homeDir)
+			cmd	 = "sudo hcitool -i {} lescan --duplicates  > /dev/null 2>&1 &".format(hciUse)
 			#cmd	 = "sudo hcitool -i {} lescan --privacy --passive --discovery=l  > /dev/null 2>&1 &".format(hciUse,G.homeDir)
 			#cmd	 = "sudo hcitool -i {} lescan --passive --discovery=l  > /dev/null 2>&1 &".format(hciUse,G.homeDir)
 			#cmd	 = "sudo hcitool -i {} lescan > /dev/null 2>&1 &".format(hciUse,G.homeDir)
@@ -607,6 +820,13 @@ def restartLESCAN(hciUse, loglevel, force=False):
 
 #################################
 def downHCI(hciUse):
+	"""Brings the given HCI interface down and restarts the bluetooth and dbus system services via background shell commands to recover the Bluetooth stack.
+
+	Inputs:
+	    hciUse (str): HCI interface to bring down, e.g. 'hci0'
+	Outputs:
+	    None: Runs hciconfig down and service restart shell commands
+	"""
 	try:
 		subprocess.Popen("sudo hciconfig {} down &".format(hciUse),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE) # enable bluetooth
 		time.sleep(0.2)
@@ -622,6 +842,13 @@ def downHCI(hciUse):
 
 #################################
 def startHCUIDUMPlistnr(hciUse):
+	"""Starts an hcidump --raw listener subprocess on the given HCI interface (up to 3 attempts), verifies it is running, sets its stdout to non-blocking, and stores the process handle globally for later reading.
+
+	Inputs:
+	    hciUse (str): HCI interface to dump from, e.g. 'hci0'
+	Outputs:
+	    str: Empty string on success, or an error message describing the failure
+	"""
 	global myBLEmac
 	global ListenProcessFileHandle
 	global readFrom
@@ -665,6 +892,13 @@ def startHCUIDUMPlistnr(hciUse):
 
 #################################
 def stopHCUIDUMPlistener():
+	"""Stops the hcidump and hcitool/lescan listener processes by killing them and terminating the stored subprocess handle; returns early if not reading from hcidump.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Kills listener processes and clears the global process handle
+	"""
 	global readFrom
 	global ListenProcessFileHandle
 	if readFrom =="": return 
@@ -682,12 +916,27 @@ def stopHCUIDUMPlistener():
 
 ####-------------------------------------------------------------------------####
 def openEncoding(ff, readOrWrite):
+	"""Opens a file with UTF-8 encoding in the given mode, using the built-in open with encoding on Python 3 or codecs.open on Python 2 for compatibility.
+
+	Inputs:
+	    ff (str): path to the file to open
+	    readOrWrite (str): open mode such as 'r' or 'w'
+	Outputs:
+	    file object: open UTF-8 encoded file handle
+	"""
 	if sys.version_info[0]  > 2:
 		return open( ff, readOrWrite, encoding="utf-8")
 	else:
 		return codecs.open( ff ,readOrWrite, "utf-8")
 
 def toBytesIfPy3(text):
+	"""Encodes a string to UTF-8 bytes when running under Python 3, otherwise returns the text unchanged for Python 2 compatibility.
+
+	Inputs:
+	    text (str): text to convert to bytes on Python 3
+	Outputs:
+	    bytes or str: UTF-8 bytes on Python 3, original string on Python 2
+	"""
 	if sys.version_info[0]  > 2:
 		return bytes(text,"utf8")
 	else:
@@ -696,6 +945,13 @@ def toBytesIfPy3(text):
 
 #################################
 def readHCUIDUMPlistener():
+	"""Reads BLE advertisement data either from a test file (test mode) or from the live hcidump listener subprocess stdout, decodes it, assembles it into complete messages via combineLines, and handles transient read errors gracefully.
+
+	Inputs:
+	    None.
+	Outputs:
+	    list: list of raw assembled HCI dump message strings, empty on no data or error
+	"""
 	global readBufferSize, ListenProcessFileHandle
 	global readFrom
 
@@ -756,6 +1012,13 @@ def readHCUIDUMPlistener():
 	return []
 #################################
 def combineLines(lines):
+	"""Accumulates raw hcidump output lines into a persistent buffer, filtering out non-data lines, splits on the '>' record marker, and returns complete fixed-length messages while retaining any incomplete trailing fragment in the buffer.
+
+	Inputs:
+	    lines (str): raw text chunk read from the hcidump listener
+	Outputs:
+	    list: list of complete message strings, empty if none ready or on error
+	"""
 	global readbuffer
 	"""
 > 04 3E 1A 02 01 00 00 78 D6 0F FB 22 3C 0E 02 01 06 0A FF 4C 
@@ -802,10 +1065,24 @@ def combineLines(lines):
 #################################
 def fixOldNames():
 
+	"""Migrates a legacy history file by renaming 'beaconsExistingHistory' to the current 'beacon_ExistingHistory' filename if the old file still exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: renames file on disk via shell mv
+	"""
 	if os.path.isfile(G.homeDir+"beaconsExistingHistory"):
 		subprocess.call("sudo mv "+G.homeDir+"beaconsExistingHistory " + G.homeDir+"beacon_ExistingHistory", shell=True)
 
 def readParams(init=False):
+	"""Reads the plugin parameter/config input and populates many module-level globals controlling BLE scanning, acceptance rules, and per-MAC BLE sensor settings/defaults; initializes globals on first call, restarts on data-acquisition-method change, and loads known beacon tags and beacon parameter files.
+
+	Inputs:
+	    init (bool): if True, initialize default global state before reading params
+	Outputs:
+	    None: updates many module globals and reads config/known-tag/parameter files
+	"""
 	global collectMsgs, loopMaxCallBLE,  beacon_ExistingHistory, signalDelta,fastDownList, ignoreMAC
 	global onlyTheseMAC,enableiBeacons, BLEsensorMACs, minSignalOff, minSignalOn, knownBeaconTags
 	global acceptNewiBeacons, acceptNewBeaconMAC, acceptNewTagiBeacons, acceptNewMFGNameBeacons
@@ -1024,6 +1301,13 @@ def readParams(init=False):
 
 #################################, check if signal strength is acceptable for fastdown 
 def setEmptybeaconsThisReadCycle(mac):
+	"""Initializes the per-cycle beacon data dictionary entry for a given MAC with a fresh template of default beacon fields (txPower, rssi, timeSt, batteryLevel, etc.).
+
+	Inputs:
+	    mac (str): beacon MAC address key to reset for this read cycle
+	Outputs:
+	    None: resets beaconsThisReadCycle[mac] global entry
+	"""
 	global beaconsThisReadCycle
 	try:
 			#beaconsThisReadCycle[mac]={"typeOfBeacon":"", "txPower":0, "rssi":0, "timeSt":0,"batteryLevel":"","mfg_info":"","mode":"","onOffState":"", "iBeacon":"","trigger":0,"TLMenabled":"","inMotion":"","calibrated":"","position":"","light":"","allowsConnection":""}
@@ -1033,6 +1317,13 @@ def setEmptybeaconsThisReadCycle(mac):
 
 #################################
 def readbeacon_ExistingHistory():
+	"""Loads the persisted beacon history from the beacon_ExistingHistory file into the global dict, discarding it entirely if any entry lacks the expected 'fastDown' field, and resets the last-write timestamp.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: populates beacon_ExistingHistory global from file
+	"""
 	global	beacon_ExistingHistory, lastWriteHistory
 	try:
 		fg = open("{}temp/beacon_ExistingHistory".format(G.homeDir),"r")
@@ -1053,6 +1344,13 @@ def readbeacon_ExistingHistory():
 
 #################################
 def writebeacon_ExistingHistory():
+	"""Writes the in-memory beacon history dictionary to the beacon_ExistingHistory file as JSON, but only if at least 30 seconds have passed since the last write; triggers a reboot if the filesystem is read-only.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes history JSON to file, may reboot on read-only filesystem
+	"""
 	global	 beacon_ExistingHistory, lastWriteHistory
 	if tryDeltaTime(lastWriteHistory ) < 30: return
 	lastWriteHistory=time.time()
@@ -1067,6 +1365,13 @@ def writebeacon_ExistingHistory():
 
 #################################
 def stripOldHistory(mac):
+	"""Trims a beacon's stored RSSI/timestamp/trigger history for a MAC, dropping oldest entries to keep at most a small recent window and removing entries older than the configured retention period.
+
+	Inputs:
+	    mac (str): beacon MAC whose history lists to prune
+	Outputs:
+	    None: mutates beacon_ExistingHistory[mac] lists in place
+	"""
 	global	beacon_ExistingHistory, deleteHistoryAfterSeconds
 
 	if  mac in beacon_ExistingHistory:
@@ -1090,6 +1395,13 @@ def stripOldHistory(mac):
 
 #################################
 def emptyHistory(mac):
+	"""Clears all accumulated history for a given beacon MAC by emptying its rssi, timeSt, and trigger lists and zeroing its count.
+
+	Inputs:
+	    mac (str): beacon MAC whose history to clear
+	Outputs:
+	    None: resets beacon_ExistingHistory[mac] history fields
+	"""
 	global	beacon_ExistingHistory
 	try:
 		if  mac in beacon_ExistingHistory:
@@ -1104,6 +1416,13 @@ def emptyHistory(mac):
 
 #################################
 def handleHistory():
+	"""Performs periodic history maintenance by pruning old entries for every tracked beacon and then persisting the history to disk.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: strips old history per beacon and saves to file
+	"""
 	global	beacon_ExistingHistory
 
 	for beacon in beacon_ExistingHistory:
@@ -1114,6 +1433,13 @@ def handleHistory():
 
 #################################, check if signal strength is acceptable for fastdown 
 def copyToHistory(mac):
+	"""Initializes (or resets) the running-history record for a given beacon MAC by copying its current read-cycle entry into beacon_ExistingHistory and clearing the accumulating fields (rssi, timeSt, trigger lists, txPower, fastDown flag, count).
+
+	Inputs:
+	    mac (str): Beacon MAC address key into the history dictionaries
+	Outputs:
+	    None: mutates the global beacon_ExistingHistory dict; logs on exception
+	"""
 	global beaconsThisReadCycle, beacon_ExistingHistory
 	try:
 		if mac not in beacon_ExistingHistory:
@@ -1133,6 +1459,13 @@ def copyToHistory(mac):
 
 #################################, check if signal strength is acceptable for fastdown 
 def fillHistory(mac):
+	"""Appends the current read-cycle's rssi, timestamp and trigger to the beacon's accumulated history, increments its message count, copies other state fields, and detects whether any monitored field changed so the message should be sent immediately; then trims old history.
+
+	Inputs:
+	    mac (str): Beacon MAC address key into the history dictionaries
+	Outputs:
+	    bool: True if a monitored field changed and the message should be sent now, else False
+	"""
 	global beaconsThisReadCycle, beacon_ExistingHistory
 	try:
 		sendNowdDataWasChanged = False
@@ -1175,6 +1508,14 @@ def fillHistory(mac):
 
 #################################
 def checkMinMaxSignalAcceptMessage(mac, rssi):
+	"""Applies per-beacon minimum-signal hysteresis: returns whether an RSSI reading is strong enough to be accepted, requiring it to exceed minSignalOn to switch on and stay above minSignalOff while already on (based on recent activity within 60 seconds).
+
+	Inputs:
+	    mac (str): Beacon MAC address used to look up signal thresholds
+	    rssi (int): Measured signal strength in dBm to test against thresholds
+	Outputs:
+	    bool: True if the signal passes the on/off threshold check (or no threshold set), else False
+	"""
 	global beacon_ExistingHistory, minSignalOff, minSignalOn
 	try:
 		#returns true signal accepted
@@ -1200,6 +1541,13 @@ def checkMinMaxSignalAcceptMessage(mac, rssi):
 	
 #################################
 def composeMSG(timeAtLoopStart):
+	"""Builds the aggregated outbound message for all beacons seen this read cycle: averages RSSI/txPower per MAC, maps the trigger reason to text, assembles per-beacon data records plus any sensor data and message statistics, sends them via U.sendURL, updates online-beacon tracking and persists beaconsOnline to disk.
+
+	Inputs:
+	    timeAtLoopStart (float): Epoch time at the start of the read loop, used to compute collection seconds
+	Outputs:
+	    int: Number of beacon messages assembled and sent (0 on error)
+	"""
 	global collectMsgs, loopMaxCallBLE
 	global myBLEmac, mapReasonToText, downCount, beaconsOnline
 	global beaconsThisReadCycle, beacon_ExistingHistory
@@ -1296,6 +1644,13 @@ def composeMSG(timeAtLoopStart):
 
 #################################
 def composeMSGForThisMacOnly(mac):
+	"""Builds and immediately sends a single-beacon message for one MAC using its latest RSSI and txPower, mapping the trigger to text and attaching extra state fields; used for urgent/out-of-band sends rather than the batched compose.
+
+	Inputs:
+	    mac (str): Beacon MAC address whose single message is composed and sent
+	Outputs:
+	    int: 1 if the message was sent, 0 on error
+	"""
 	global beaconsThisReadCycle, beacon_ExistingHistory, mapReasonToText
 	global myBLEmac, secsCollected
 	global trackMac, logCountTrackMac
@@ -1336,6 +1691,14 @@ def composeMSGForThisMacOnly(mac):
 
 #################################
 def checkIfinMotion(mac, tag):
+	"""Detects whether a beacon's motion or position state changed since the last reading and, if so, sets its trigger to 9, updates the stored motion/position, and sends an immediate single-beacon message reporting the change.
+
+	Inputs:
+	    mac (str): Beacon MAC address to test for motion change
+	    tag (str): Beacon tag/type that must be in knownBeaconTags to qualify
+	Outputs:
+	    bool: True if a motion/position change was detected and reported, else False
+	"""
 	global collectMsgs, loopMaxCallBLE, signalDelta
 	global onlyTheseMAC, beaconsThisReadCycle, beacon_ExistingHistory
 	global reasonMax
@@ -1384,6 +1747,13 @@ def checkIfinMotion(mac, tag):
 
 #################################
 def checkIfDeltaSignal(mac):
+	"""Checks whether the latest RSSI deviates from the running average by more than the configured per-beacon signalDelta threshold and, if so, sets trigger 7 and sends an immediate single-beacon message.
+
+	Inputs:
+	    mac (str): Beacon MAC address to test for an RSSI delta event
+	Outputs:
+	    bool: True if the signal delta exceeded the threshold and a message was sent, else False
+	"""
 	global collectMsgs, loopMaxCallBLE, signalDelta
 	global onlyTheseMAC, beaconsThisReadCycle, beacon_ExistingHistory
 	global reasonMax
@@ -1414,6 +1784,16 @@ def checkIfDeltaSignal(mac):
 
 #################################
 def checkIfFastDownForAll(iWhile, nMsgs, dtSend, lastMSGwithGoodData):
+	"""Iterates over fast-down beacons and, for any whose last timestamp is older than its configured seconds and not already marked fastDown, sets trigger 3 and the fastDown flag, sends an immediate down message, and empties that beacon's history.
+
+	Inputs:
+	    iWhile (int): Current loop iteration counter, used only for tracking logs
+	    nMsgs (int): Number of messages this cycle, used only for tracking logs
+	    dtSend (float): Seconds until next send, used only for tracking logs
+	    lastMSGwithGoodData (float): Epoch time of last good-data message, used only for tracking logs
+	Outputs:
+	    None: mutates beacon_ExistingHistory, sends messages and empties histories; logs on exception
+	"""
 	global fastDownList, beacon_ExistingHistory, trackMac, logCountTrackMac
 	global beaconsThisReadCycle
 	global reasonMax 
@@ -1450,6 +1830,13 @@ def checkIfFastDownForAll(iWhile, nMsgs, dtSend, lastMSGwithGoodData):
 
 ################################, check if signal strength is acceptable for fastdown 
 def checkIfBeaconIsBack(mac):
+	"""Determines whether a beacon that had gone down/quiet is now back, based on count, history gaps versus sendAfterSecsOfLastMsg, fastDown state and fast-down timing; if so sets the appropriate trigger (4 fastdown-back, 5 back, 2 new), clears fastDown and sends an immediate message.
+
+	Inputs:
+	    mac (str): Beacon MAC address to test for re-appearance
+	Outputs:
+	    bool: True if the beacon was determined to be back and a message was sent, else False
+	"""
 	global trackMac, logCountTrackMac, findMAC
 	global beacon_ExistingHistory 
 	global trackMacNumber
@@ -1523,6 +1910,13 @@ def checkIfBeaconIsBack(mac):
 
 #################################
 def checkIfBLErestart():
+	"""Checks for a temp/BLErestart marker file; if present it deletes the file, logs the request and reports that a BLE stack restart was requested.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the restart marker file existed (restart requested), else False
+	"""
 	if os.path.isfile(G.homeDir + "temp/BLErestart") :
 		os.remove(G.homeDir + "temp/BLErestart")
 		U.logger.log(30," restart of BLE stack requested") 
@@ -1533,6 +1927,14 @@ def checkIfBLErestart():
 
 #################################
 def doFastSwitchBotPress(mac, trigOnOff):
+	"""Triggers a fast SwitchBot press reaction for a beacon: validates the MAC is configured and not debounced, checks the trigger value matches, writes the SwitchBot command to a temp file, then either runs it locally or transfers it via sftp/pexpect to the remote SwitchBot Raspberry Pi.
+
+	Inputs:
+	    mac (str): Beacon MAC address whose fast-reaction config is looked up
+	    trigOnOff (str): Trigger state string matched against the configured sensorTriggerValue
+	Outputs:
+	    None: writes a command file and optionally sends it over sftp; logs progress and exceptions
+	"""
 	global fastBLEReaction
 	global fastBLEReactionLastAction
 	try:
@@ -1588,7 +1990,7 @@ def doFastSwitchBotPress(mac, trigOnOff):
 			U.logger.log(20,"ret3:{}".format(ret) )
 		if ret == 0:
 			expC.sendline("put /home/pi/pibeacon/temp/temp1 /home/pi/pibeacon/temp/"+fileName)
-			ret = expC.expect(["/home/pi/pibeacon/temp/"+fname,pexpect.TIMEOUT], timeout=10)
+			ret = expC.expect(["/home/pi/pibeacon/temp/"+fileName,pexpect.TIMEOUT], timeout=10)
 			U.logger.log(20,"ret4:{}".format(ret) )
 			if ret == 0:
 				U.logger.log(20,"file send to {} ".format(IPOfSwitchbotRPI)) 
@@ -1610,6 +2012,18 @@ def doFastSwitchBotPress(mac, trigOnOff):
 #################################
 ######################import bluetooth._bluetooth###########
 def doSensors( mac, macplain, macplainReverse, rx, tx, hexData):
+	"""Dispatches a BLE sensor reading to the correct decoder: if the MAC is a known BLE sensor, it matches the configured sensor type and calls the matching do<SensorType> parser (Ruuvi, SwitchBot, Xiaomi, Govee, Shelly, etc.) returning its result.
+
+	Inputs:
+	    mac (str): Beacon MAC address used to look up the sensor config
+	    macplain (str): MAC without separators, passed to sensor decoders
+	    macplainReverse (str): Byte-reversed plain MAC, passed to sensor decoders
+	    rx (str): Received raw advertisement data passed to decoders
+	    tx (str): Transmit/txPower data passed through to decoders
+	    hexData (str): Hex-encoded advertisement payload to decode
+	Outputs:
+	    tuple: Result of the matched sensor decoder, or ("", tx, "") if MAC is unknown or no type matches
+	"""
 	global BLEsensorMACs
 	bl = ""
 	try:
@@ -1712,6 +2126,19 @@ def doSensors( mac, macplain, macplainReverse, rx, tx, hexData):
 
 #################################
 def doBLEHunterNodeBT(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parser stub for the BLEHunter Node BT beacon: trims the leading header bytes of the advertisement and checks for the '121107' service marker, but the actual value extraction is commented out so it currently does nothing beyond validation and returns unchanged values.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel-string) tuple, with battery string empty in this stub
+	"""
 	global BLEsensorMACs, sensors
 	global parsedData, outLast
 	global bleServiceSections, bleServiceSectionsReverse
@@ -1750,6 +2177,19 @@ def doBLEHunterNodeBT(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 #################################
 def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses a Shelly BTHome-v2 BLE advertisement (service FCD2): walks the tag/value byte stream using shellyTagToProperty mapping, decoding char/int/intLR/sint fields into named values (battery, temperature, button, rotation, etc.), determines a trigger string from changed values or elapsed time, and if anything triggers, sends the data dict to Indigo via checkIfDelaySend and stores last values.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; battery level (or empty string) of the last decoded packet
+	"""
 	global BLEsensorMACs, sensors
 	#let ALLTERCO_MFD_ID_STR = "0ba9";  see: https://bthome.io/format/
 	#let BTHOME_SVC_ID_STR = "fcd2";
@@ -1942,6 +2382,19 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 
 def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses SwitchBot motion/contact/humidifier BLE advertisements: classifies the packet into a device subtype from the FF/16 manufacturer data and length, lazily loads/initializes per-MAC state in switchbotData, and decodes motion, brightness, open/close, button and humidifier fields. The shown portion sets up persistent per-device state before the decoding logic.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, value) tuple; value/battery string, empty when MAC absent or subtype unmatched
+	"""
 	global BLEsensorMACs, sensors
 	global switchbotData
 	global initSensor
@@ -2284,7 +2737,7 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 				BLEsensorMACs[mac]["lastUpdate"] 		= time.time()
 				fastSwitchBotPress = "on" if motion else ""
 				if fastSwitchBotPress != "" : doFastSwitchBotPress(mac, fastSwitchBotPress)
-			if doPrint or not switchbotData[mac]["init1"]: U.logger.log(20, "mac:{}, 1 trig:{}, lastMotion:{}, dd".format(mac, trig, updateEvery, lastMotion, dd ))
+			if doPrint or not switchbotData[mac]["init1"]: U.logger.log(20, "mac:{}, 1 trig:{}, updateEvery:{}, lastMotion:{}, dd:{}".format(mac, trig, updateEvery, lastMotion, dd ))
 
 			switchbotData[mac]["init1"]	 = True		
 			switchbotData[mac]["last1"] = time.time()
@@ -2610,6 +3063,19 @@ def doBLEswitchbotSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor
 
 
 def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses a SwitchBot temperature/humidity meter (model byte '54') from the type-16 service data: decodes battery level, signed temperature and humidity, applies configured offsets, builds a trigger string when temp/hum change beyond thresholds or the update interval elapses, and sends the reading to Indigo via checkIfDelaySend.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; battery int or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 		if mac not in parsedData: return sensor, tx,  ""
@@ -2720,6 +3186,19 @@ def doBLEswitchbotTempHum(mac, macplain, macplainReverse, rx, tx, hexData, senso
 
 
 def doBLEswitchbotTempHumCO2(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses a SwitchBot temperature/humidity/CO2 meter from the FF manufacturer data: decodes a change counter, battery, signed temperature, humidity, CO2 (high+low bytes) and alarm flag bits, applies offsets, builds a trigger string from value changes/counter/elapsed time, and sends the reading to Indigo when triggered.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; battery int or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 
@@ -2824,6 +3303,19 @@ other                   Nmsg: 8: 04 3E 13 02 01 04 00   73 0D D2 FE E9 B0     07
 
 
 def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses a BlueRadios SensorBug BLE advertisement: after matching the manufacturer tag, reads battery and config counter, then iterates over variable-length type tags (41=accel/open-close, 42=light/lux with range+resolution scaling, 43=temperature) to extract onOff, illuminance and temperature, builds a trigger string from changes/elapsed time, and sends the reading to Indigo when triggered.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; battery int or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 
@@ -2912,7 +3404,7 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 					Illuminance = round(int(dataFF[p+4:p+6],16) * rangeV[rangeInd] / resolutionMaxV[resInd],1)
 					sensorSetup["Light"] = "range={}k,{}b;".format(rangeText[rangeInd],resolutionBits[resInd])
 					p += 6		
-				if doPrint: U.logger.log(20, "mac:{}, sens:{}; Illuminance:{},  dataLen:{}, rangeInd:{}, range:{}, resInd:{} res:{}, testHEX:{},testbin:{:6b} testNumber:{}, rangeX:{}, resX:{}, dataFF".format(mac, sensor, Illuminance, dataLen, rangeInd, rangeV[rangeInd] ,resInd,resolutionMaxV[resInd], testHEX,testNumber, testNumber, testNumber & 0b00001100, testNumber & 0b00110000 , dataFF[p:p+8]))
+				if doPrint: U.logger.log(20, "mac:{}, sens:{}; Illuminance:{},  dataLen:{}, rangeInd:{}, range:{}, resInd:{} res:{}, testHEX:{},testbin:{:6b} testNumber:{}, rangeX:{}, resX:{}, dataFF:{}".format(mac, sensor, Illuminance, dataLen, rangeInd, rangeV[rangeInd] ,resInd,resolutionMaxV[resInd], testHEX,testNumber, testNumber, testNumber & 0b00001100, testNumber & 0b00110000 , dataFF[p:p+8]))
 
 			elif dType == "43":
 				temp = round(signedIntfrom16( dataFF[p+4:p+6] + dataFF[p+2:p+4] )*0.0625,1) + BLEsensorMACs[mac]["offsetTemp"]
@@ -2984,6 +3476,19 @@ def doBLEBLEblueradio(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 
 def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses Govee temperature/humidity beacons (e.g. GVH5075/5177): identifies one of three packet layouts by manufacturer-data id and length, decodes the packed 3-byte temperature/humidity value (or 2+2+1 layout) and battery level, applies offsets, builds a trigger string from changes/elapsed time, and sends the reading to Indigo when triggered.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; battery int or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 
@@ -3123,6 +3628,19 @@ def doBLEgoveeTempHum(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 #################################
 
 def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses Xiaomi Mi (MiJia) BLE sensors from the type-16 service data: matches the device id/type (round LYWSDCGQ, clock LYWSD02, or MJHFD formaldehyde), then by tag decodes temperature, humidity, combined temp+hum, formaldehyde or battery, smoothing temp/hum through tralingAv averaging, and (in the truncated tail) builds the data dict to send to Indigo.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key, used to select round/clock/formaldehyde variant
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; battery value or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 
@@ -3178,7 +3696,7 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		b'\x83\x00': ("YM-K1501", True),
 	}
 
-		MJHFD1_0010FC formaldehyd T H formA \mg/m**3
+		MJHFD1_0010FC formaldehyd T H formA mg/m**3
 
 	# Sensor type indexes dictionary for sensor platform
 	# Temperature, Humidity, Moisture, Conductivity, Illuminance, Formaldehyde, Consumable, Battery, Switch, Opening, Light
@@ -3375,6 +3893,19 @@ def doBLEXiaomiMi(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 #################################
 def doTempspike(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses a MeatStick/TempSpike (TP3...) BLE beacon: matches the 'TP3' name tag in service-08 data, decodes signed temperature and humidity from the FF manufacturer data plus a coarse battery level from a nibble, applies offsets, builds a trigger string from changes/elapsed time, and sends the reading to Indigo when triggered.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; stored battery level or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 		"""
@@ -3457,6 +3988,19 @@ def doTempspike(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 #################################
 def doThermopro(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses a ThermoPro (TP3... tagged) BLE beacon, near-identical to doTempspike: matches the 'TP3' name in service-08 data, decodes signed temperature, humidity and a coarse battery level from the FF manufacturer data, applies offsets, builds a trigger string from changes/elapsed time, and sends the reading to Indigo when triggered.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; stored battery level or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 
@@ -3533,6 +4077,19 @@ def doThermopro(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 #################################
 def doBLEthermoBeacon(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Parses a ThermoBeacon BLE advertisement: matches the '11' type tag and the fixed 40-char short-packet length, decodes button-pressed state, battery voltage, temperature (/16), humidity (/16) and an uptime counter, converts voltage to a battery level via batLevelTempCorrection, builds a trigger string from changes/elapsed time, and sends the reading to Indigo when triggered.
+
+	Inputs:
+	    mac (str): colon-formatted MAC address of the beacon
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): byte-reversed plain MAC address
+	    rx (int): received signal strength (RSSI)
+	    tx (int): transmit power / pass-through value
+	    hexData (str): raw advertisement payload as a hex string
+	    sensor (str): sensor type name key
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) tuple; stored battery level or empty string when unmatched
+	"""
 	global BLEsensorMACs, sensors
 	try:
 		if mac not in parsedData: return sensor, tx,  ""
@@ -3663,6 +4220,16 @@ def doBLEthermoBeacon(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 #################################
 def tralingAv(sensor, mac, avType, retVal):
+	"""Maintains a trailing/rolling average for a sensor value: appends the new reading to the per-MAC fixed-length list in BLEsensorMACs (dropping the oldest), then averages the entries while skipping placeholder -100 values and excluding the single min and max when more than two valid samples exist.
+
+	Inputs:
+	    sensor (str): sensor type name key (unused except logging)
+	    mac (str): colon-formatted MAC address used to index BLEsensorMACs
+	    avType (str): name of the rolling-average list field (e.g. 'tempAve', 'humAve')
+	    retVal (float): new sample value to add to the average
+	Outputs:
+	    float: trimmed average of recent samples, or the input value if too few valid samples
+	"""
 	global BLEsensorMACs
 	try:
 		BLEsensorMACs[mac][avType].append(retVal)
@@ -3692,6 +4259,19 @@ def tralingAv(sensor, mac, avType, retVal):
 
 #################################
 def doBLEiSensor(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Decodes KAIPULE/iSensor BLE advertisement manufacturer data (type FF) for either an on/off security sensor or a temperature/humidity sensor, extracting device type, event/alarm bits, counter, temperature and humidity (with configured offsets), and battery low flag, then sends the values to Indigo via checkIfDelaySend when a change or update-interval trigger fires.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): Byte-reversed plain MAC string
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through and returned
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name
+	Outputs:
+	    tuple: (sensor, tx, batL) with battery level (10/100 or '') after optionally sending data
+	"""
 	global BLEsensorMACs, sensors
 
 
@@ -4051,6 +4631,19 @@ format:
 
 #################################
 def doBLEmeeblue(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Decodes meeblue BLE beacon advertisements: on a regular service-data (16) packet it reads battery voltage, computes battery level via batLevelTempCorrection and periodically sends an off/battery status; on a button-press (name 'meeblue') packet within the active window it sends an onOff=True button-press event to Indigo.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): Byte-reversed plain MAC string
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through and returned
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name
+	Outputs:
+	    tuple: (sensor, tx, bl) with computed battery level or '' on no-update/error
+	"""
 	global BLEsensorMACs, sensors
 
 
@@ -4138,6 +4731,19 @@ format:
 
 #################################
 def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Decodes Ingics iBSxx-family BLE beacon advertisements, identifying the specific sub-type from the format/state bytes and extracting battery voltage/level plus per-type values such as on/off switch bits, temperature, humidity, ambient temperature, or 3-axis acceleration, then builds a data dict and sends it to Indigo when a change or timing trigger fires.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): Byte-reversed plain MAC string
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through and returned
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name selecting the decode branch
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) with decoded battery level or '' on early return
+	"""
 	global BLEsensorMACs
 	global fastBLEReaction
 
@@ -4388,6 +4994,19 @@ def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 #################################
 def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Decodes iTrack BLE tracker advertisements by matching the name (09) and manufacturer (FF) fields, extracting battery level, button-press/connect state and device type, then sends onOff and state-of-beacon data to Indigo when the state changes or the update interval elapses.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): Byte-reversed plain MAC, validated against the embedded MAC
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through and returned
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name
+	Outputs:
+	    tuple: (sensor, tx, batLevel) with battery level or '' on early/error return
+	"""
 	global BLEsensorMACs
 	global fastBLEReaction, trackMacNumber
 	global bleServiceSections, bleServiceSectionsReverse, parsedData
@@ -4510,6 +5129,19 @@ def doBLEiTrack( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 #################################
 def doBLESatech( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Decodes Satech beacon service-data (16) advertisements, dispatching on sub-type (tempHum, accel, genInfo, sos) to extract temperature/humidity, 3-axis acceleration, general info (battery voltage, chip temperature, counter, uptime) or SOS button state, and sends the values plus SOS on/off triggers to Indigo when changed or after the timing interval.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    macplain (str): MAC without separators, used to trim trailing MAC from data
+	    macplainReverse (str): Byte-reversed plain MAC string
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through and returned
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) with battery level or '' on early/error return
+	"""
 	global BLEsensorMACs
 	"""
 Assuming the following BL:E messages (starting directly afetr the reverse MAC #)
@@ -4708,6 +5340,16 @@ elif   HexStr.find("0201060303E1FF1016E1FFA108") == 2:
 
 #################################
 def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., batteryVoltAt0=2700.):
+	"""Computes a 0-100 battery percentage from a battery voltage with a temperature-dependent correction that raises the effective empty threshold as temperature drops below 10C, clamping the result between 0 and 100.
+
+	Inputs:
+	    batteryVoltage (float): Measured battery voltage in millivolts
+	    temp (float): Temperature in degrees C used for correction
+	    batteryVoltAt100 (float): Voltage corresponding to 100% (default 3000)
+	    batteryVoltAt0 (float): Voltage corresponding to 0% (default 2700)
+	Outputs:
+	    int: Battery level percentage 0-100, or 0 on error
+	"""
 	try:
 		## correction  formula voltage & temp --> level 
 		## at >=10C:correction = 0                 --> 100*(VB -2700)/(300)   ==>  > 3000 --> 100%  < 2.7 == 0%
@@ -4723,12 +5365,36 @@ def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., battery
 
 #################################
 def domyBlueT( mac, rx, tx, hexData,sensor):
+	"""Stub handler for myBlueT BLE devices that currently performs no decoding and immediately returns the passthrough values.
+
+	Inputs:
+	    mac (str): BLE MAC address
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, returned unchanged
+	    hexData (str): Raw advertisement hex payload (unused)
+	    sensor (str): Indigo sensor/device-type name
+	Outputs:
+	    tuple: (sensor, tx, '') unchanged passthrough
+	"""
 	global BLEsensorMACs
 	return sensor, tx,  ""
 
 
 #################################
 def doBLEapril(mac, macplain, macplainReverse, rx, tx, hexData,sensor):
+	"""Decodes April Brother BLE beacon service-data (16) advertisements for the TAccel sub-type (3-axis acceleration, move/button on-off bits, battery level) or the THL sub-type (temperature, humidity, illuminance, battery level), then sends the values to Indigo when deltas exceed thresholds or the update interval elapses, also triggering fast SwitchBot press handling for TAccel.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): Byte-reversed plain MAC used to match the data prefix
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through and returned
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) with battery level or '' on no-match/error
+	"""
 	global BLEsensorMACs, sensors
 	try:
 		
@@ -4879,6 +5545,19 @@ def doBLEapril(mac, macplain, macplainReverse, rx, tx, hexData,sensor):
 
 #################################
 def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
+	"""Decodes Minew BLE sensor service-data (16) advertisements, dispatching on sub-type (ACC acceleration, TH temperature/humidity, light on/off, batteryVoltage) to extract the relevant values plus battery level, and sends them to Indigo when deltas or timing thresholds are met, also driving fast SwitchBot press handling for the light type.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    macplain (str): MAC address without separators
+	    macplainReverse (str): Byte-reversed plain MAC string
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through and returned
+	    hexData (str): Raw advertisement hex payload (sliced past MAC)
+	    sensor (str): Indigo sensor/device-type name
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) with battery level or '' on early/error return
+	"""
 	global BLEsensorMACs, sensors
 	try:
 		
@@ -5098,6 +5777,17 @@ def doBLEminew(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 ## Ruuvi ########################
 #################################
 def doRuuviAir( mac, rx, tx, hexData,sensor):
+	"""Decodes Ruuvi Air (data format 6) BLE manufacturer-data advertisements, unpacking temperature, humidity, pressure, PM2.5, CO2, VOC, NOx and measurement count (applying configured offsets and calibration flags), then sends the air-quality data dict to Indigo when temperature delta or the update interval triggers.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name (overridden to 'BLERuuviAir')
+	Outputs:
+	    tuple: (sensor, txPower/tx, '') passthrough; sends data as side effect
+	"""
 	global BLEsensorMACs, sensors
 	global bleServiceSections, bleServiceSectionsReverse, parsedData
 
@@ -5249,6 +5939,17 @@ offset	Allowed Values		description
 	
 	
 def doRuuviTag( mac, rx, tx, hexData,sensor):
+	"""Decodes Ruuvi Tag (data format 5) BLE manufacturer-data advertisements, unpacking temperature, humidity, pressure, 3-axis acceleration, battery voltage/level, TX power, movement and measurement counters, then sends the data dict to Indigo when temperature/acceleration deltas or the update interval triggers.
+
+	Inputs:
+	    mac (str): BLE MAC address key into parsedData/BLEsensorMACs
+	    rx (str): Received signal strength (RSSI) value
+	    tx (str): TX power value, passed through
+	    hexData (str): Raw advertisement hex payload
+	    sensor (str): Indigo sensor/device-type name (overridden to 'BLERuuviTag')
+	Outputs:
+	    tuple: (sensor, str(txPower)/tx, batteryLevel) with battery level or '' on early/error return
+	"""
 	global BLEsensorMACs, sensors
 	global bleServiceSections, bleServiceSectionsReverse, parsedData
 
@@ -5411,7 +6112,7 @@ def doRuuviTag_pressure( data):
 
 #################################
 def doRuuviTag_PM25( data):
-	"""PM25"""
+	"""Decode the RuuviTag PM2.5 field: returns the particulate-matter 2.5 concentration in ug/m3 from the two raw bytes (scaled by 1/10), or 0 if the field is unset (0xFFFF)."""
 	if data[0:2] == bytearray.fromhex('FFFF'):
 		return 0
 
@@ -5420,7 +6121,7 @@ def doRuuviTag_PM25( data):
 
 #################################
 def doRuuviTag_CO2( data):
-	"""CO2"""
+	"""Decode the RuuviTag CO2 field: returns the CO2 concentration in ppm assembled from the two raw bytes (big-endian), or 0 if the field is unset (0xFFFF)."""
 	if data[0:2] == bytearray.fromhex('FFFF'):
 		return 0
 
@@ -5430,7 +6131,7 @@ def doRuuviTag_CO2( data):
 
 #################################
 def doRuuviTag_VOC( data, bit1):
-	"""VOC"""
+	"""Decode the RuuviTag VOC index: returns the 9-bit volatile-organic-compound index built from the data byte (shifted left one bit) plus the carried low bit, or 0 if the field is unset (0xFF)."""
 	if data[0] == bytearray.fromhex('FF'):
 		return 0
 	xx = (data[0] << 1) + bit1
@@ -5440,7 +6141,7 @@ def doRuuviTag_VOC( data, bit1):
 
 #################################
 def doRuuviTag_NOX( data, bit1):
-	"""NOX"""
+	"""Decode the RuuviTag NOx index: returns the 9-bit nitrogen-oxide index built from the data byte (shifted left one bit) plus the carried low bit, or 0 if the field is unset (0xFF)."""
 	if data[0] == bytearray.fromhex('FF'):
 		return 0
 	xx = (data[0] << 1) + bit1
@@ -5449,7 +6150,7 @@ def doRuuviTag_NOX( data, bit1):
 
 #################################
 def doRuuviTag_Lumi(data):
-	"""Lumi"""
+	"""Decode the RuuviTag luminosity field: maps the single raw byte through a logarithmic scale back to illuminance in lux, or returns 0 if the field is unset (0xFF)."""
 	if data == bytearray.fromhex('FF'):
 		return 0
 	xx = data[0]
@@ -5496,6 +6197,13 @@ def doRuuviTag_powerinfo( data, doLog=False):
 
 #################################
 def doRuuviTag_Flags( data):
+	"""Parses the Ruuvi flags byte, extracting the calibration bit (bit 0), NOx-valid bit (bit 7) and VOC-valid bit (bit 6) as individual 0/1 values.
+
+	Inputs:
+	    data (bytearray): Byte slice whose first byte holds the Ruuvi flag bits
+	Outputs:
+	    list: [calib, voc, nox] list of three 0/1 int flags
+	"""
 	calib 	=  data[0]      &0b00000001 
 	nox 	= (data[0] >> 7)&0b00000001 
 	voc 	= (data[0] >> 6)&0b00000001 
@@ -5504,16 +6212,37 @@ def doRuuviTag_Flags( data):
 
 #################################
 def doRuuviTag_movementcounter( data):
+	"""Extracts the Ruuvi Tag movement counter byte from the decoded payload, returning the first byte masked to 8 bits.
+
+	Inputs:
+	    data (list): Decoded Ruuvi Tag payload bytes
+	Outputs:
+	    int: Movement counter value (0-255)
+	"""
 	return data[0] & 0xFF
 
 
 #################################
 def doRuuviTag_measurementsequencenumber( data):
+	"""Computes the Ruuvi Tag measurement sequence number by combining the first two payload bytes as a big-endian 16-bit value.
+
+	Inputs:
+	    data (list): Decoded Ruuvi Tag payload bytes
+	Outputs:
+	    int: 16-bit measurement sequence number
+	"""
 	measurementSequenceNumber = (data[0] & 0xFF) << 8 | data[1] & 0xFF
 	return measurementSequenceNumber
 
 #################################
 def doRuuviTag_mac( data):
+	"""Formats the Ruuvi Tag MAC address from payload bytes 18-23 as a lowercase hex string.
+
+	Inputs:
+	    data (list): Decoded Ruuvi Tag payload bytes
+	Outputs:
+	    str: 12-character lowercase hex MAC string
+	"""
 	return ''.join('{:02x}'.format(x) for x in data[18:24])
 
 ## Ruuvi  END   #################
@@ -5525,6 +6254,17 @@ def doRuuviTag_mac( data):
 ## MKK ########################
 #################################
 def doBLEKKMsensor( mac, rx, tx, hexData,sensor):
+	"""Parses an Eddystone/KKM BLE sensor advertisement for a given MAC, decoding voltage, temperature, humidity, acceleration, button-press, system/model, MFG and TLM frames, updates the per-MAC state, and dispatches changed values to Indigo via checkIfDelaySend based on trigger thresholds and timing.
+
+	Inputs:
+	    mac (str): Beacon MAC address key
+	    rx (str or int): Received signal strength (RSSI)
+	    tx (str or int): Transmit power value
+	    hexData (str): Raw advertisement payload hex string
+	    sensor (str): Incoming sensor type identifier
+	Outputs:
+	    tuple: (sensor, tx, batteryLevel) sensor name, tx value, and battery level
+	"""
 	global BLEsensorMACs, sensors, findMAC
 
 	
@@ -5802,6 +6542,13 @@ and this for mfg info, not done here
 #################################
 
 def checkIfDelaySend(packet):
+	"""Decides whether a sensor data packet should be sent to Indigo immediately or buffered; packets without sensors, without a trigger, or triggered by non-time reasons (or with remote/force) are sent at once via sendURL, while time-only updates are stored in dataFromSensors for later batched sending.
+
+	Inputs:
+	    packet (dict): Sensor data packet to send or delay
+	Outputs:
+	    bool: True if sent immediately, False if buffered for delayed send
+	"""
 	global dataFromSensors, waitforcheckIfDelaySend
 	### delay send  if only update for time reason, then hand it over to regular send msgs
 	try:
@@ -5859,6 +6606,13 @@ def checkIfDelaySend(packet):
 
 #################################
 def checkIFtrackMacIsRequested():
+	"""Checks for a beaconloop.trackmac request file and, if present, parses its MAC, raw/filter options and collection time, initializes trackmac logging globals, writes a START entry, and removes the request and log files.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: False if no request file exists; otherwise None after setting up tracking
+	"""
 	global logCountTrackMac, trackMac, trackRawOnly, trackmacFilter, nLogMgsTrackMac, startTimeTrackMac, trackMacText, collectTime
 	try:
 		if not os.path.isfile(G.homeDir+"temp/beaconloop.trackmac"): return False
@@ -5904,6 +6658,14 @@ def checkIFtrackMacIsRequested():
 
 #################################
 def trackMacStopIf(hexstr, mac):
+	"""During an active trackmac session, logs raw hex data for the tracked MAC (or all MACs with '*') while a counter and time budget remain, and finalizes/sends the collected track log when the count reaches zero or the collection time expires.
+
+	Inputs:
+	    hexstr (str): Raw advertisement hex string for this packet
+	    mac (str): MAC address of the current packet
+	Outputs:
+	    None: Writes track entries to log/file and may send the track results via sendURL
+	"""
 	global logCountTrackMac, trackMac, nLogMgsTrackMac, startTimeTrackMac, trackMacText, collectTime
 	try:
 
@@ -5923,6 +6685,15 @@ def trackMacStopIf(hexstr, mac):
 
 #################################
 def writeTrackMac(textOut0, textOut2, mac):
+	"""Appends a formatted trackmac log line to temp/trackmac.log and to the in-memory trackMacText, honoring raw-only and filter options, and also logs it; entries are skipped when they do not match the active raw/filter constraints.
+
+	Inputs:
+	    textOut0 (str): Leading label/category tag for the entry
+	    textOut2 (str): Main message text
+	    mac (str): MAC address associated with the entry
+	Outputs:
+	    None: Writes to trackmac.log file, logger, and trackMacText global
+	"""
 	global logCountTrackMac, trackMac, trackRawOnly, trackmacFilter, nLogMgsTrackMac, trackMacText, startTimeTrackMac
 	try:
 		##print  textOut0+mac+", "+textOut2
@@ -5943,6 +6714,13 @@ def writeTrackMac(textOut0, textOut2, mac):
 
 #################################
 def fillHCIdump(hexstr):
+	"""When BLE collection is active and not using the socket method, appends the space-separated hex dump line to temp/hcidump.data, then returns the hex string with the 14-character preamble stripped so it starts at the MAC.
+
+	Inputs:
+	    hexstr (str): Raw advertisement hex string including preamble
+	Outputs:
+	    str: Hex string with leading 14 chars removed (starts at MAC)
+	"""
 	global rpiDataAcquistionMethod, BLEcollectStartTime, writeDumpDataHandle
 	try:
 		if BLEcollectStartTime > 0 and rpiDataAcquistionMethod != "socket":
@@ -5958,6 +6736,13 @@ def fillHCIdump(hexstr):
 
 #################################
 def BLEAnalysisSocket(hci):
+	"""Runs a BLE analysis scan using the socket acquisition method: cleans up old temp/data files, resets the HCI adapter, launches hcitool lescan and hcidump for the configured collection time, then calls BLEAnalysis to process the captured data.
+
+	Inputs:
+	    hci (str): HCI Bluetooth adapter name (e.g. hci0)
+	Outputs:
+	    bool: False if acquisition method is not socket; True after the scan completes
+	"""
 	global onlyTheseMAC, knownBeaconTags
 	global bleServiceSections, bleServiceSectionsReverse, BLEanalysisdataCollectionTime, BLEcollectStartTime
 	try:
@@ -6017,6 +6802,13 @@ def BLEAnalysisSocket(hci):
 	
 #################################
 def BLEAnalysisStart(hci):
+	"""Entry point/state machine for BLE analysis: when a beaconloop.BLEAnalysis request file exists it reads the rssi cutoff, starts collection (delegating to BLEAnalysisSocket for socket method), and on a subsequent call after the collection time elapses closes the dump handle and runs BLEAnalysis to finalize results.
+
+	Inputs:
+	    hci (str): HCI Bluetooth adapter name (e.g. hci0)
+	Outputs:
+	    bool: True only when a socket scan started successfully; otherwise False
+	"""
 	global onlyTheseMAC, knownBeaconTags, writeDumpDataHandle
 	global bleServiceSections, bleServiceSectionsReverse, BLEanalysisdataCollectionTime, BLEcollectStartTime, BLEanalysisrssiCutoff
 	global rpiDataAcquistionMethod
@@ -6054,6 +6846,13 @@ def BLEAnalysisStart(hci):
 
 #################################
 def BLEAnalysis():
+	"""Processes the collected temp/hcidump.data file once the collection time has elapsed, parsing each line into MAC and hex payload, deduplicating packets, accumulating per-MAC statistics (RSSI, TX, message counts, beacon types, raw data), and building the BLE analysis result that is written to the BLEAnalysis JSON output files.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Reads hcidump.data and writes BLEAnalysis result files / updates parsedData
+	"""
 	global onlyTheseMAC, knownBeaconTags, parsedData
 	global bleServiceSections, bleServiceSectionsReverse, BLEanalysisdataCollectionTime, BLEanalysisrssiCutoff, BLEcollectStartTime
 	try:
@@ -6272,6 +7071,13 @@ def BLEAnalysis():
 
 #################################
 def updateTimeAndZone(hciUse):
+	"""Reads a queued device list from the beaconloop.updateTimeAndZone temp file and, for each MAC, connects via gatttool/pexpect and writes the current Unix timestamp plus timezone offset to a BLE characteristic (handle 3e) to synchronize the beacon's clock (e.g. Xiaomi time devices), stopping the hcidump listener while doing so.
+
+	Inputs:
+	    hciUse (str): HCI adapter identifier (e.g. 'hci0') used in hciconfig/gatttool commands
+	Outputs:
+	    bool: True if the BLE listener was stopped/reset (needs restart), else False
+	"""
 	global beaconsOnline
 	"""
 	============
@@ -6340,7 +7146,7 @@ def updateTimeAndZone(hciUse):
 							U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
 							connected = True
 						else:
-							if ii < ntriesConnect-1:
+							if kk < 1:
 								if ret == 1:	U.logger.log(20, "... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
 								elif ret == 2:	U.logger.log(20, "... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
 								else:			U.logger.log(20, "... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
@@ -6461,6 +7267,14 @@ def updateTimeAndZone(hciUse):
 
 #################################
 def beep(hciUse, resetBLE=False):
+	"""Reads a queued device list from the beaconloop.beep temp file and, for each MAC, connects via gatttool/pexpect and sends the device's configured ON command repeatedly for the requested beep duration, then the OFF command, optionally resetting the BLE adapter first.
+
+	Inputs:
+	    hciUse (str): HCI adapter identifier used in hciconfig/gatttool commands
+	    resetBLE (bool): If True, stop the listener and reset the HCI adapter before beeping
+	Outputs:
+	    int: Restart-state code (0/1/2) indicating whether the BLE listener must be restarted
+	"""
 	global beaconsOnline, beepBatteryBusy
 	try:	
 		restart = 0
@@ -6525,7 +7339,7 @@ def beep(hciUse, resetBLE=False):
 							U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
 							connected = True
 						else:
-							if ii < ntriesConnect-1:
+							if kk < 2:
 								if ret == 1:	U.logger.log(20, "... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
 								elif ret == 2:	U.logger.log(20, "... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
 								else:			U.logger.log(20, "... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
@@ -6536,9 +7350,9 @@ def beep(hciUse, resetBLE=False):
 						time.sleep(0.1)
 
 						try:
-							cmdON		= params["cmdON"]
-							cmdOff		= params["cmdOff"]
-							beepTime	= float(params["beepTime"])
+							cmdON		= params.get("cmdON", [])
+							cmdOff		= params.get("cmdOff", [])
+							beepTime	= float(params.get("beepTime", 0))
 							U.logger.log(20,"{}:   cmdON:{};  cmdOff:{};  beepTime:{} ".format(mac, cmdON, cmdOff, beepTime) )
 
 							connected = False
@@ -6570,6 +7384,33 @@ def beep(hciUse, resetBLE=False):
 								tryAgain = 0
 					
 							else:
+								# ---- SwitchBot-style one-shot beep (e.g. WoBtn remote B0:E9:FE:8E:F4:40) ----
+								# Some devices beep from a fixed command sequence sent ONCE; there is no
+								# repeat and no separate OFF command, so handle them before the generic
+								# repeat-until-beepTime logic below. Bytes captured from a BLE sniff of the app.
+								# Device entry example (queued into temp/beaconloop.beep):
+								#   {"B0:E9:FE:8E:F4:40": {"cmdSeq": ["char-write-req 0x0011 0100",
+								#        "char-write-req 0x0013 570000000f2103bb",
+								#        "char-write-req 0x0013 57bbd9077db8"]}}
+								if "cmdSeq" in params:
+									for cc in params["cmdSeq"]:
+										U.logger.log(20,"sendline switchbot beep cmd {}".format(cc))
+										expCommands.sendline( cc )
+										ret = expCommands.expect([mac,"Error","failed",pexpect.TIMEOUT], timeout=5)
+										if ret == 0:	U.logger.log(20,"... successful: {}-{}".format(expCommands.before,expCommands.after))
+										else:			U.logger.log(20,"... no ack: {}-{}".format(expCommands.before,expCommands.after))
+										time.sleep(0.3)
+									tryAgain = -1
+									restart  = 2
+									expCommands.sendline("quit" )
+									U.logger.log(20,"sendline quit ")
+									ret = expCommands.expect([">","Error",pexpect.TIMEOUT], timeout=5)
+									if ret != 0:
+										try:	expCommands.kill(0)
+										except:	pass
+										expCommands = ""
+									continue
+
 								startbeep = time.time()
 								lastBeep = 0
 								success = True
@@ -6648,6 +7489,14 @@ def beep(hciUse, resetBLE=False):
 
 #################################
 def getBeaconParameters(hciUse, resetBLE=True):
+	"""Dispatcher for reading beacon battery/parameters; currently always delegates to getBeaconParametersInteractive (the batch variant is commented out).
+
+	Inputs:
+	    hciUse (str): HCI adapter identifier passed through to the worker
+	    resetBLE (bool): Whether to reset the BLE adapter before querying
+	Outputs:
+	    None: Delegates to getBeaconParametersInteractive; returns nothing
+	"""
 	global beaconsOnline
 	#if G.getBatteryMethod == "batch":	getBeaconParametersBatch(hciUse, resetBLE=resetBLE)
 	if True:							getBeaconParametersInteractive(hciUse,resetBLE=resetBLE)
@@ -6656,6 +7505,14 @@ def getBeaconParameters(hciUse, resetBLE=True):
 
 #################################
 def getBeaconParametersBatch(hciUse, resetBLE=True):
+	"""Batch implementation of beacon parameter reading: reads queued devices from the beaconloop.getBeaconParameters temp file and for each MAC runs a non-interactive gatttool --char-read by UUID, converts the raw value into a battery-level percentage using the device's bits/shift/norm/offset settings, and posts the results back via sendURL.
+
+	Inputs:
+	    hciUse (str): HCI adapter identifier used in gatttool/hciconfig commands
+	    resetBLE (bool): If True, kill hci tools and restart the HCI adapter before reading
+	Outputs:
+	    bool: True after processing (data sent if any), False if no temp file or no devices
+	"""
 	global beaconsOnline
 
 	data ={} 
@@ -6759,6 +7616,14 @@ def getBeaconParametersBatch(hciUse, resetBLE=True):
 
 #################################
 def getBeaconParametersInteractive(hciUse, resetBLE=True):
+	"""Interactive implementation of beacon parameter reading: reads queued devices from the beaconloop.getBeaconParameters temp file and for each MAC opens an interactive gatttool session via pexpect, connects, runs the device's configured GATT commands, parses the returned hex value into a battery-level percentage via bits/shift/norm/offset, and posts results with sendURL.
+
+	Inputs:
+	    hciUse (str): HCI adapter identifier used in gatttool/hciconfig commands
+	    resetBLE (bool): If True, stop the listener and restart the HCI adapter before reading
+	Outputs:
+	    bool: False on early exit (no temp file or no devices); otherwise returns None implicitly after processing
+	"""
 	global beaconsOnline
 	global beepBatteryBusy
 
@@ -6854,7 +7719,7 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 						U.logger.log(10,"... successful: {}-{}".format(expCommands.before,expCommands.after))
 						connected = True
 					else:
-						if ii < ntriesConnect-1:
+						if kk < nTries-1:
 							if ret == 1:	U.logger.log(20, "... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
 							elif ret == 2:	U.logger.log(20, "... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
 							else:			U.logger.log(20, "... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
@@ -7006,9 +7871,24 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 ###
 
 def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", tagString="", calledFrom="" ):
+	"""Tests whether a given known-beacon tag pattern matches an advertising hex string, handling wildcard 'X' positions and MAC-substitution placeholders, optional full-match vs. find semantics, and a secondary tag string; on a successful match it also resolves any sub-device type from the tag definition.
+
+	Inputs:
+	    hexstring (str): Advertising payload hex string to test against the tag
+	    tag (str): Tag name to look up in knownBeaconTags
+	    mac (str): Device MAC address (used for tracking/logging)
+	    macplain (str): MAC without separators, used to fill MAC placeholders
+	    macplainReverse (str): Reversed plain MAC, used to fill RMAC placeholders
+	    tagPos (int): Expected position of the tag pattern; defaults from tag definition
+	    tagString (str): Hex pattern to match; defaults from the tag's hexCode
+	    calledFrom (str): Caller label used only for diagnostic logging
+	Outputs:
+	    tuple: (posFound int, dPos int, subtypeOfBeacon dict or str) describing match position, offset delta, and resolved subtype
+	"""
 	global knownBeaconTags, logCountTrackMac, trackMac
+	global findMAC
 	try:
-		doPrint = False #mac.find("D1:AD:6B:3D:AB:2D") >-1 and tag == "SwitchbotCurtain3"
+		doPrint = mac  in findMAC  and tag == "BLERuuviTag"#.find("D1:AD:6B:3D:AB:2D") >-1 and tag == "SwitchbotCurtain3"
 		subtypeOfBeacon = ""
 		inputString = copy.copy(hexstring)
 		if tag != ""		: tagPos 		= int(knownBeaconTags[tag].get("pos",0))
@@ -7085,7 +7965,7 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 
 		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 				writeTrackMac("tst-F   ","posFound: {}, dPos: {}, tag: {}, tagString: {}".format(posFound, dPos, tag, tagString), mac)
-		if doPrint:	U.logger.log(20,"mac:{}, taginKnow:{}, posFound:{}, tag:{}, tagString:{}, inputString:{}, hexstr:{}".format(mac, tag in knownBeaconTags, posFound, tag, tagString, inputString, hexstring[12:]))
+		if posFound > -1 and doPrint:	U.logger.log(20,"mac:{}, taginKnow:{}, posFound:{}, tag:{}, dPos:{}, tagString:{}, inputString:{}, hexstr:{}".format(mac, tag in knownBeaconTags, posFound, tag, dPos, tagString, inputString, hexstring[12:]))
 		if  posFound > -1 and dPos == 0 and tag !="" and tag in knownBeaconTags :
 			#if tag == "iBSxx":U.logger.log(20,"{} tag:{}==\n  {},\n{} ".format(mac, tag,  tagString, hexstring))
 			if "subtypeOfBeacon" in knownBeaconTags[tag] and knownBeaconTags[tag]["subtypeOfBeacon"] != {}:
@@ -7122,6 +8002,15 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 
 #################################
 def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
+	"""Parses a BLE advertising hex packet (after the MAC) into its AD structures, decoding section lengths/types, converting name sections (08/09) to ASCII mfg_info, extracting iBeacon and Eddystone TLM service data, and storing the analyzed code/text dictionaries into the global parsedData for the MAC.
+
+	Inputs:
+	    mac (str): Device MAC address used as key in parsedData
+	    hexstring (str): Advertising payload hex string starting after the MAC
+	    logData (bool): If True, write parsed name sections to the track-MAC log
+	Outputs:
+	    dict: Always an empty dict; results are written into global parsedData[mac]
+	"""
 	global bleServiceSections, bleServiceSectionsReverse, parsedData
 
 	# 16 02 01 06   12 FF 0D 00 83 BC 20 01 00 AA AA FF FF 00 00 19 06 00 00 C6
@@ -7231,6 +8120,15 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 
 #################################
 def getTLMdata(mac, section, verbose = False):
+	"""Decodes an Eddystone TLM service-data section by locating the AAFE2000 tag and extracting battery voltage, temperature, advertising count, and time-since-boot from fixed-width hex fields.
+
+	Inputs:
+	    mac (str): Device MAC address (used for logging)
+	    section (str): Hex section string expected to contain the TLM frame
+	    verbose (bool): If True, log the decoded values
+	Outputs:
+	    dict: TLM values {batteryVoltage, temp, advCount, timeSince}, or empty dict if no TLM tag found
+	"""
 	try:
 		retData = {}
 		tagPos = section.find("AAFE2000") # tag for TLM data 
@@ -7279,6 +8177,16 @@ def getTLMdata(mac, section, verbose = False):
 
 #################################
 def checkForValueInfo( tag, tagFound, mac, hexstr ):
+	"""For a found beacon tag, runs the tag's configured 'msgGet' commands to extract value fields from the advertising hex (or a parsed AD section), applying position/and-mask/length/reverse/norm and a type conversion (int/float/bool/string/bits) to build a dictionary of decoded sensor values.
+
+	Inputs:
+	    tag (str): Beacon tag name whose command definitions to apply
+	    tagFound (str): Match status; commands only run when equal to 'found'
+	    mac (str): Device MAC address (used for tracking/parsedData lookup)
+	    hexstr (str): Full advertising hex string to extract values from
+	Outputs:
+	    dict: Decoded values keyed by command name plus a 'sendImmediatelyIfChanged' flag
+	"""
 	global knownBeaconTags
 	global trackMac, logCountTrackMac
 	global getMsgInfoCmds
@@ -7316,7 +8224,7 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 						pass
 					if len(params) > 1: 
 						if mac == trackMac and logCountTrackMac >0:
-							writeTrackMac("   ","params:{}".format(cmdName, params), mac )
+							writeTrackMac("   ","cmd:{}, params:{}".format(cmdName, params), mac )
 						pos	= int(params["pos"])*2
 					
 						if "and" in params:			andWith = int(params["and"])
@@ -7380,11 +8288,25 @@ def checkForValueInfo( tag, tagFound, mac, hexstr ):
 
 #################################
 def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, txPower):
+	"""Core classification routine for a received advertisement: pulls parsed data for the MAC, tries to match the device against its existing tag or any known tag (honoring accept-new-beacon settings and RSSI thresholds), decodes value/battery info, fills the read-cycle structure and history, and decides whether the message is accepted or rejected.
+
+	Inputs:
+	    mac (str): Device MAC address being evaluated
+	    macplain (str): MAC without separators, passed to tag matching
+	    macplainReverse (str): Reversed plain MAC, passed to tag matching
+	    hexstr (str): Full advertising hex string for this packet
+	    batteryLevel (int or str): Pre-computed battery level, or empty string if unknown
+	    rssi (int): Received signal strength, compared against accept thresholds
+	    txPower (int): Transmit power stored into the read-cycle data
+	Outputs:
+	    tuple: (rejectThisMessage str, sendNow bool) giving the accept/reject decision and whether to send immediately
+	"""
 	global trackMac, logCountTrackMac, onlyTheseMAC, knownBeaconTags
 	global beaconNew, beacon_ExistingHistory, ignoreMAC
 	global acceptNewiBeacons, acceptNewBeaconMAC, acceptNewTagiBeacons, acceptNewMFGNameBeacons
 	global batteryLevelUUID
 	global parsedData
+	global findMAC
 	doPrint = False
 	sendNow = False
 	try:
@@ -7416,7 +8338,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 			batteryVoltage = 0
 			temp = 20.
 			
-		doPrint = False # mac.find("D1:AD:6B:3D:AB:2D") > -1
+		doPrint = mac in findMAC 
 		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
 				writeTrackMac("parse   ", "parsedData {}".format(parsedData[mac]), mac)
 
@@ -7563,6 +8485,13 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 
 #################################
 def getStdIbeacon(hexstr):
+	"""Decodes a standard iBeacon advertisement hex string, extracting the reversed and normalized plain MAC, the colon-formatted MAC, the signed txPower, and the signed RSSI from fixed byte positions.
+
+	Inputs:
+	    hexstr (str): Raw advertisement hex string with MAC at the start and tx/rssi at the end
+	Outputs:
+	    tuple: (rssi int, txPower int, macplainReverse str, macplain str, mac str)
+	"""
 	try:
 		macplainReverse = hexstr[0:12]
 		macplain 		= macplainReverse[10:12]+macplainReverse[8:10]+macplainReverse[6:8]+macplainReverse[4:6]+macplainReverse[2:4]+macplainReverse[0:2]
@@ -7581,6 +8510,21 @@ def getStdIbeacon(hexstr):
 
 #################################
 def fillbeaconsThisReadCycle(mac, rssi, txPower, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedData, analyzed):
+	"""Stores or updates the per-cycle beacon record for a MAC in the global beaconsThisReadCycle dictionary, setting rssi, txPower, timestamp, beacon type/subtype, mfg info, TLM-enabled flag, analyzed AD data, and any non-empty decoded sensor values.
+
+	Inputs:
+	    mac (str): Device MAC address key
+	    rssi (int): Signal strength to store
+	    txPower (int): Transmit power, stored as float
+	    mfg_info (str): Manufacturer/name info string
+	    typeOfBeacon (str): Beacon type/tag name
+	    subtypeOfBeacon (str): Beacon subtype, stored if non-empty
+	    TLMenabled (bool or str): TLM-enabled flag (truthy enables it)
+	    decodedData (dict): Decoded sensor values to merge in
+	    analyzed (dict): Parsed AD code/text structures to store
+	Outputs:
+	    None: Updates the global beaconsThisReadCycle dictionary
+	"""
 	global beaconsThisReadCycle
 	try:
 		if mac not in beaconsThisReadCycle: setEmptybeaconsThisReadCycle(mac)
@@ -7612,6 +8556,13 @@ def fillbeaconsThisReadCycle(mac, rssi, txPower, mfg_info, typeOfBeacon, subtype
 #################################
 
 def checkIfBLEprogramIsRunning(hciUse):
+	"""Checks whether the BLE data-acquisition stack is operational on the given HCI adapter, verifying the adapter is up and (unless socket acquisition is used) that hcidump is still running.
+
+	Inputs:
+	    hciUse (str): HCI adapter identifier (e.g. 'hci0') to check
+	Outputs:
+	    bool: True if the adapter is up and the BLE program is running, else False
+	"""
 	global rpiDataAcquistionMethod
 
 	try:
@@ -7644,6 +8595,13 @@ def checkIfBLEprogramIsRunning(hciUse):
 
 #################################
 def startHCIcmdThread():
+	"""Creates and starts a background thread named 'loopCheck' that runs loopCheckBeepBattery, recording its state in the global threadCMD dict.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Starts a daemon thread and logs; no return value
+	"""
 	global threadCMD
 
 	U.logger.log(20, "start cmd thread ")
@@ -7662,6 +8620,13 @@ def startHCIcmdThread():
 
 #################################
 def loopCheckBeepBattery():
+	"""Background loop that repeatedly triggers beep and beacon battery-parameter checks, restarts the plugin when beep/battery changes are detected on the shared HCI, and re-evaluates which HCI to use for beeping until threadCMD is set to 'stop'.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs continuously; triggers restarts and updates beep/battery globals
+	"""
 	global threadCMD
 	global hciCheckLastTime, useHCIForBeep, useHCIForBeacon
 	global beepBatteryBusy
@@ -7687,6 +8652,13 @@ def loopCheckBeepBattery():
 
 #################################
 def checkWhichHCIForBeep():
+	"""Determines which HCI adapter should be used for beeping, picking an up adapter not already used by the beacon loop or BLE connect, resets it, notifies via URL, and writes the selection to temp/beaconbeep.hci.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates beep-HCI globals and writes the beaconbeep.hci selection file
+	"""
 	global hciCheckLastTime, useHCIForBeep, useHCIForBeacon
 	global HCIs
 	global beepBatteryBusy
@@ -7741,6 +8713,13 @@ def checkWhichHCIForBeep():
 
 #################################
 def doLoopCheck(sensor):
+	"""Periodically performs maintenance checks during the beacon loop: track-MAC requests, now-file detection, BLE analysis, time/zone updates (restarting the plugin when needed), and reloading parameters.
+
+	Inputs:
+	    sensor (str): Sensor/program name used for now-file checks
+	Outputs:
+	    None: May restart the plugin and updates reasonMax and check-timer globals
+	"""
 	global reasonMax
 	global sensCheckLastTime, paramCheckLastTime
 	global useHCIForBeacon
@@ -7775,6 +8754,13 @@ def doLoopCheck(sensor):
 
 
 def getSocketData(sock):
+	"""Receives one BLE HCI packet from the given socket and returns it as a single-element list of uppercased hex strings; on error it waits out any stopBLE file, removes it, and restarts the plugin.
+
+	Inputs:
+	    sock (bluetooth socket): Bluez HCI socket to read raw packets from
+	Outputs:
+	    list: List with one uppercased hex-string message, or empty list on error
+	"""
 	Msgs = []
 	try: 
 		pkt = sock.recv(255)
@@ -7796,6 +8782,13 @@ def getSocketData(sock):
 	return Msgs
 
 def setupSOCKET(sock):
+	"""Configures a Bluez HCI socket with an all-events filter for HCI event packets and a 12-second timeout, returning the previous filter so it can be restored later.
+
+	Inputs:
+	    sock (bluetooth socket): Bluez HCI socket to configure
+	Outputs:
+	    bytes: The socket's previous HCI_FILTER option value
+	"""
 	old_filter = sock.getsockopt( bluez.SOL_HCI, bluez.HCI_FILTER, 14)
 
 	# perform a device inquiry on bluetooth device #0
@@ -7811,6 +8804,14 @@ def setupSOCKET(sock):
 
 
 def setBeaconLastMsgTS(mac, setBy=""):
+	"""Records the current time as the last-received-message timestamp for the given beacon MAC and logs the event if that MAC is being tracked.
+
+	Inputs:
+	    mac (str): Beacon MAC address key
+	    setBy (str): Caller/reason label for logging; defaults to empty
+	Outputs:
+	    None: Updates the beaconLastMessageTS dict and may log
+	"""
 	global beaconLastMessageTS
 	global findMAC, trackMac, logCountTrackMac
 
@@ -7820,6 +8821,14 @@ def setBeaconLastMsgTS(mac, setBy=""):
 
 
 def setBeaconLastMsgSendTS(mac, setBy=""):
+	"""Records the current time as the last-message-sent timestamp for the given beacon MAC and logs the event if that MAC is being tracked.
+
+	Inputs:
+	    mac (str): Beacon MAC address key
+	    setBy (str): Caller/reason label for logging; defaults to empty
+	Outputs:
+	    None: Updates the beaconLastMessageSendTS dict and may log
+	"""
 	global beaconLastMessageSendTS
 	global findMAC, trackMac, logCountTrackMac
 
@@ -7832,6 +8841,16 @@ def setBeaconLastMsgSendTS(mac, setBy=""):
 
 ####### main pgm / loop through package set  ############
 def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
+	"""Iterates over a batch of raw BLE advertisement hex messages, parsing each into MAC/RSSI/TxPower, filtering and accepting/rejecting beacons and sensors per configured rules, handling sensor data and battery levels, and updating tracking timestamps and stats; signals a restart if junk-length data is seen.
+
+	Inputs:
+	    Msgs (list): List of raw BLE advertisement hex strings
+	    timeAtLoopStart (float): Epoch time when the collection loop started
+	    sendAfter (float): Seconds after which to stop collecting and send
+	    tt (float): Current epoch time used for the send-timeout comparison
+	Outputs:
+	    bool: True to request a restart (junk-length message), else False
+	"""
 	global lastMSGwithGoodData, lastMSGwithDataPlain, nMessagesSend, nMsgs, lastMessageOK, lastMSGwithDataPassed, lastTimeMAC
 	global trackMac, logCountTrackMac, beaconLastMessageTS
 	global BLEsensorMACs, onlyTheseMAC, acceptNewBeaconMAC, acceptNewMFGNameBeacons, acceptNewiBeacons, acceptNewTagiBeacons, messageStats
@@ -7866,7 +8885,7 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 
 			doPrint =  mac in findMAC
 
-			if doPrint : #or mac in findMAC: 
+			if False and doPrint : #or mac in findMAC: 
 				U.logger.log(20,  "mac:{:}, hexstr:{:}".format(mac,  hexstr[12:]))
 
 			if mac not in parsedData:
@@ -7881,7 +8900,7 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 
 			setBeaconLastMsgTS(mac, "received")
 
-			if False and mac in findMAC: #== trackMacNumber:# or mac in findMAC:
+			if mac in findMAC: #== trackMacNumber:# or mac in findMAC:
 				U.logger.log(20,  "mac:{:}, DT:{:4.1f}, new data: rssi:{}>{}?, hexstr:{:}\n".format(mac, tryDeltaTime(lastTimeMAC), rssi, ignoreBeaconsIfRssiLessThan, hexstr[12:]))
 				lastTimeMAC = time.time()
 
@@ -7974,6 +8993,13 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 ####### main pgm / loop ############
 
 def execbeaconloop(test):
+	"""Main entry point for the BLE beacon loop process: initializes all global state and config defaults, sets up BLE service-section maps, kills stale Bluetooth processes, reads parameters and history, restores prior HCI settings, and runs the continuous beacon scan/processing loop.
+
+	Inputs:
+	    test (str): 'normal' for live operation, otherwise a test source to read from
+	Outputs:
+	    None: Runs the long-lived beacon loop; sets globals, manages processes and may restart/reboot
+	"""
 	global collectMsgs, sendAfterSeconds, sendAfterSecsOfLastMsg, loopMaxCallBLE, deleteHistoryAfterSeconds,lastWriteHistory
 	global onlyTheseMAC,enableiBeacons, minSignalOff, minSignalOn, knownBeaconTags
 	global acceptNewiBeacons, acceptNewBeaconMAC, acceptNewTagiBeacons, acceptNewMFGNameBeacons
@@ -8401,7 +9427,7 @@ def execbeaconloop(test):
 					U.logger.log(20, "time w/out any message: "+out)
 					if debugRestarts: U.echoText(G.restartLogfileName, out)
 					if stackrestartcount < 5:
-						U.logger.log(20, "restarting stack  due to no messages  ".format(dt1, nEmptyMessagesInARow) )
+						U.logger.log(20, "restarting stack  due to no messages {}  ".format(dt1) )
 						if rpiDataAcquistionMethod == "socket":
 							sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
 							restartBLE = time.time()
@@ -8441,7 +9467,7 @@ def execbeaconloop(test):
 
 debugRestarts = True
 
-findMAC = ["xxB0:E9:FE:A4:58:82"] # ["B0:E9:FE:D2:0D:73"] # ["F5:3A:F7:18:BF:84"]
+findMAC = ["xxxE2:2A:F5:BF:5C:67"] # ["B0:E9:FE:D2:0D:73"] # ["F5:3A:F7:18:BF:84"]
 #["D0:EF:76:6F:18:96","D0:EF:76:6E:FC:5E"]# ["CB:25:B7:8F:BA:BE"] #["E4:88:7D:0D:4D:7A"] # ["E9:DD:2E:0E:3B:54"] # ["DD:53:FB:BF:03:40"] #["00:81:F9:86:3E:A0"] # ["CC:48:72:06:40:52","F0:66:AF:D4:9F:C1"] #["EC:44:51:19:C9:44"] # [,"E9:DD:2E:0E:3B:54","F0:D3:EF:76:A1:74"]
 trackmacFilter = ""
 U.echoLastAlive(G.program)

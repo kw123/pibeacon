@@ -88,6 +88,13 @@ raspiConfigCommand = {
 
 def execRaspi(params):
 	#print("params:{}".format(params))
+	"""Runs each Raspberry Pi configuration GET command from the raspiConfigCommand table via subprocess, maps the output to a result text, accumulates them in a dict, and writes the collected config as JSON to raspiConfig.params, logging to a file or console.
+
+	Inputs:
+	    params (list): argv-style list whose first element is the script path and optional second element is the log file path
+	Outputs:
+	    None: writes raspiConfig.params JSON file, logs results, and exits on error
+	"""
 	try:
 		logFile = ""
 		ll = len(params)

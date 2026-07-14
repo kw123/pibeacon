@@ -24,6 +24,13 @@ G.program = "spiMCP3008"
 
 
 def startMCP3008(devId):
+        """Initializes the SPI interface for an MCP3008 ADC device by reading its configured spiAddress (clamped to 0 or 1) and opening the corresponding spidev channel (spi0 on bus 0,0 or spi1 on bus 0,1).
+
+        Inputs:
+            devId (str): device id whose spiAddress config selects the SPI channel
+        Outputs:
+            None: opens the global spi0/spi1 SpiDev channel and logs on error
+        """
         global spi0,spi1
 
         spiAdd=0
@@ -48,9 +55,17 @@ def startMCP3008(devId):
                     #print spiAdd, spi0,spi1    
         except  Exception as e:
             U.logger.log(30,"", exc_info=True)
-            U.logger.log(30, u"spi channel used: {}".format(spiAdd)+";    dev= {}".format(devId))
+            U.logger.log(30, "spi channel used: {}".format(spiAdd)+";    dev= {}".format(devId))
 
 def getMCP3008(sensor, data):
+    """Reads analog values from MCP3008 ADC channels via SPI for each configured device, converting raw 10-bit readings to millivolts (scaled by 3.3V); reads all 8 input pins for the base sensor or a single selected input for the '-1' variant, storing results in the data dict.
+
+    Inputs:
+        sensor (str): sensor key (e.g. 'spiMCP3008' or 'spiMCP3008-1')
+        data (dict): results dict that gets populated with per-device INPUT readings
+    Outputs:
+        dict: the data dict with measured ADC values, or bad-sensor flags on error
+    """
     global sensorMCP3008, MCP3008Started
     global sensors
     global spi0,spi1
@@ -106,6 +121,16 @@ def getMCP3008(sensor, data):
 
 
 def incrementBadSensor(devId,sensor,data,text="badSensor"):
+    """Tracks consecutive read failures for a device in the global badSensors map; after more than two failures it writes a 'badSensor' marker into the data dict and clears the counter.
+
+    Inputs:
+        devId (str): device id that failed to read
+        sensor (str): sensor key under which the bad-sensor flag is stored
+        data (dict): results dict to annotate with the bad-sensor marker
+        text (str): failure description appended to the badSensors entry, default 'badSensor'
+    Outputs:
+        dict: the data dict, possibly with an added badSensor entry
+    """
     global badSensors
     try:
         if devId not in badSensors:badSensors[devId] ={"count":0,"text":text}
@@ -134,6 +159,13 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 
 
 def readParams():
+        """Reads the latest plugin parameter file via U.doRead, and if it changed updates global configuration (sensors, output, refresh seconds, GPIO enable flags, etc.); exits the process if no spi sensors are configured.
+
+        Inputs:
+            None.
+        Outputs:
+            bool: False (rCode) when no new data is available or after processing
+        """
         global sensorList, sensors, sendToIndigoSecs,enableTXpinsAsGpio,enableSPIpinsAsGpio, sensorRefreshSecs
         global output
         global tempUnits, pressureUnits, distanceUnits
@@ -179,6 +211,13 @@ def readParams():
 
 #################################
 def checkSPSstatus():
+    """Checks whether the SPI channels are uninitialized while spiMCP3008 sensors are configured and SPI-as-GPIO is disabled, and if so imports spidev and starts the MCP3008 for each configured device.
+
+    Inputs:
+        None.
+    Outputs:
+        None: initializes global spi channels by calling startMCP3008
+    """
     global sensorList, sensors,spi0,spi1, enableSPIpinsAsGpio
     if spi0 ==0 and spi1 ==0 and enableSPIpinsAsGpio=="0" and "spiMCP3008" in sensorList:
         #print "point1", spi0, spi1 , enableSPIpinsAsGpio, sensorList

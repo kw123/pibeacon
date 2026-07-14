@@ -23,6 +23,13 @@ class si7021:
 	def __init__(self, i2cAddress=""):
 
 
+		"""Initializes the Si7021 humidity/temperature sensor wrapper, defaulting the I2C address to 0x40 when none is given, and opens smbus.SMBus(1).
+
+		Inputs:
+		    i2cAddress (int or str): I2C address; defaults to 0x40 when empty or 0
+		Outputs:
+		    None: Sets self.i2cAddress and self.bus
+		"""
 		if i2cAddress =="" or i2cAddress ==0:
 			self.i2cAddress = 0x40
 		else:
@@ -31,6 +38,13 @@ class si7021:
 		self.bus = smbus.SMBus(1)
 
 	def getdata(self):
+		"""Reads humidity and temperature from the Si7021 over I2C by issuing the no-hold measurement commands (0xF5 for humidity, 0xF3 for temperature), converting the two-byte readings to physical units.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (temp, hum) floats, or ('', '') on error
+		"""
 		try:
 			result= self.bus.write_byte(self.i2cAddress,0xF5)
 			time.sleep(0.3)
@@ -54,6 +68,13 @@ class si7021:
 
 #################################		 
 def readParams():
+	"""Reads the updated parameter/sensor configuration file for the Si7021 driver, and if it changed, parses per-device settings and resolves the I2C address (including TCA9548A mux), creating new sensor instances and removing devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates module globals, creates sensor objects, and logs
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
 	global rawOld
 	global deltaX, SI7021sensor, minSendDelta
@@ -135,6 +156,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Selects the device's TCA9548A mux channel, reads temperature and humidity from the Si7021, rounds them into a dict, and resets the mux; tracks consecutive failures to flag a bad sensor.
+
+	Inputs:
+	    devId (str): Device identifier key for the SI7021sensor dict
+	Outputs:
+	    dict or str: Dict with 'temp' and 'hum', or 'badSensor'/'' on failure
+	"""
 	global sensor, sensors,	 SI7021sensor, badSensor
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
@@ -153,7 +181,7 @@ def getValues(devId):
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"temp>>{}<<".format(temp) )
+			U.logger.log(30, "temp>>{}<<".format(temp) )
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()

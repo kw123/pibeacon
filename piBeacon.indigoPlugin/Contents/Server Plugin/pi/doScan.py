@@ -16,6 +16,13 @@ G.program = "beepBeacon"
 
 
 def doScan():
+	"""Performs a BLE device scan by selecting a free HCI adapter (signaling beaconloop to pause if only one channel exists), resetting it, then driving bluetoothctl via pexpect to run scan on/off cycles; cleans up the stopBLE flag and sets killMyselfAtEnd when finished.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs hciconfig/bluetoothctl subprocesses, sets global killMyselfAtEnd; logs
+	"""
 	global killMyselfAtEnd
 	try:	
 
@@ -43,7 +50,7 @@ def doScan():
 		for kk in range(3):
 				tryAgain -= 1
 				if tryAgain < 0: break
-				if tryAgain != 2:
+				if tryAgain != 2 and kk > 0:
 					try: expCommands.sendline("disconnect")	
 					except: pass	
 				cmd = "sudo /usr/bin/bluetoothctl" 
@@ -54,17 +61,17 @@ def doScan():
 					U.logger.log(debugLevel,"... successful: {}-{}".format(expCommands.before,expCommands.after))
 					connected = True
 				elif ret == 1:
-					if ii < ntriesConnect-1: 
-						U.logger.log(debugLevel, u"... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
+					if kk < 2: 
+						U.logger.log(debugLevel, "... error, giving up: {}-{}".format(expCommands.before,expCommands.after))
 						time.sleep(1)
 						break
 				elif ret == 2:
-					if ii < ntriesConnect-1: 
-						U.logger.log(debugLevel, u"... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
+					if kk < 2: 
+						U.logger.log(debugLevel, "... timeout, giving up: {}-{}".format(expCommands.before,expCommands.after))
 						time.sleep(1)
 						break
 				else:
-					if ii < ntriesConnect-1: 
+					if kk < 2: 
 						U.logger.log(debugLevel,"... unexpected, giving up: {}-{}".format(expCommands.before,expCommands.after))
 						time.sleep(1)
 						break
@@ -98,8 +105,8 @@ def doScan():
 										time.sleep(0.1)
 										continue
 									elif ret in[1,2]:
-										if ii < ntriesConnect-1: 
-											U.logger.log(debugLevel, u"... error, quit: {}-{}".format(expCommands.before,expCommands.after))
+										if ii < 49: 
+											U.logger.log(debugLevel, "... error, quit: {}-{}".format(expCommands.before,expCommands.after))
 										success = False
 										break
 									elif ret == 3:
@@ -136,6 +143,13 @@ def doScan():
 
 
 def readParams():
+	"""Reads the latest plugin parameter input via U.doRead, sets the global killMyselfAtEnd flag, and applies the global parameters; returns early if no input is available.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals and applies global params; returns early on empty input
+	"""
 	global execcommands, PWM, typeForPWM, killMyselfAtEnd
 	killMyselfAtEnd = True
 	inp, inpRaw, x = U.doRead()
@@ -156,7 +170,7 @@ if True: #__name__ == "__main__":
 	execcommands={}
 	startTime = time.time()
 	doScan()
-	U.logger.log(debugLevel, u"finished  after {:.1f} secs".format(time.time()-startTime))
+	U.logger.log(debugLevel, "finished  after {:.1f} secs".format(time.time()-startTime))
 	#subprocess.Popen("/usr/bin/python "+G.homeDir+"master.py &" , shell=True)
 	if killMyselfAtEnd: 
 		#U.logger.log(debugLevel, u"exec cmd: killing myself at PID {}".format(myPID))

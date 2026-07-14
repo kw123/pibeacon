@@ -50,12 +50,26 @@ G.program = "amg88xx"
 
 class bitfield(object):
 	def __init__(self, _structure):
+		"""Initializes a bitfield helper from an ordered structure of (name, bit-width) pairs, storing it and creating an attribute initialized to 0 for each named field.
+
+		Inputs:
+		    _structure (list): ordered sequence of (field_name, bit_width) tuples defining the bitfield layout
+		Outputs:
+		    None: stores _structure and sets each field attribute to 0
+		"""
 		self._structure = OrderedDict(_structure)
 
 		for key, value in self._structure.items():
 			setattr(self, key, 0)
 
 	def get(self):
+		"""Packs the individual bitfield attributes back into a single integer register value by masking each field to its bit width and shifting it into its position.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: the combined register value assembled from all fields
+		"""
 		fullreg = 0
 		pos = 0
 		for key, value in self._structure.items():
@@ -65,6 +79,13 @@ class bitfield(object):
 		return fullreg
 
 	def set(self, data):
+		"""Unpacks a single integer register value into the individual bitfield attributes by shifting and masking each field according to its position and bit width.
+
+		Inputs:
+		    data (int): the raw register value to decompose into fields
+		Outputs:
+		    None: sets each field attribute from the decoded value
+		"""
 		pos = 0
 		for key, value in self._structure.items():
 			setattr(self, key, (data >> pos) & (2**value - 1))
@@ -120,11 +141,30 @@ AMG88xx_PIXEL_TEMP_CONVERSION = .25
 AMG88xx_THERMISTOR_CONVERSION = .0625
 
 def constrain(val, min_val, max_val):
+	"""Clamps a value to lie within the inclusive range defined by a minimum and maximum.
+
+	Inputs:
+	    val (int): value to clamp
+	    min_val (int): lower bound
+	    max_val (int): upper bound
+	Outputs:
+	    int: val constrained to [min_val, max_val]
+	"""
 	return min(max_val, max(min_val, val))
 		
 
 class AMG88xx_class(object):
 	def __init__(self, mode=AMG88xx_NORMAL_MODE, address=AMG88xx_I2CADDR, i2c=None, **kwargs):
+		"""Initializes the AMG88xx thermal-camera driver: validates the power mode, opens the I2C bus, builds bitfield register definitions, then writes the power-control register, performs a software reset, disables interrupts, and sets the frame rate to 10 FPS.
+
+		Inputs:
+		    mode (int): power mode (normal/sleep/standby); defaults to AMG88xx_NORMAL_MODE
+		    address (int): I2C address; defaults to AMG88xx_I2CADDR
+		    i2c (object or None): optional I2C device (unused; SMBus(1) is created internally)
+		    kwargs (dict): extra keyword arguments (unused)
+		Outputs:
+		    None: opens the I2C bus and writes power, reset, interrupt, and FPS registers
+		"""
 		try:
 			self._logger = logging.getLogger('AMG88xx')
 			# Check that mode is valid.
@@ -204,11 +244,27 @@ class AMG88xx_class(object):
 
 
 	def setMovingAverageMode(self, mode):
+		"""Sets the sensor's twice moving-average flag and writes the average control register over I2C.
+
+		Inputs:
+		    mode (int): moving-average enable bit (0 or 1)
+		Outputs:
+		    None: writes the AVE register over I2C
+		"""
 		self._ave.MAMOD = mode
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_AVE, self._ave.get())
 
 	def setInterruptLevels(self, high, low, hysteresis):
 
+		"""Converts high, low, and hysteresis temperature thresholds to the sensor's raw 12-bit units, clamps them, splits them into low/high byte registers, and writes all six interrupt-level registers over I2C.
+
+		Inputs:
+		    high (float): upper interrupt temperature threshold in degrees
+		    low (float): lower interrupt temperature threshold in degrees
+		    hysteresis (float): interrupt hysteresis in degrees
+		Outputs:
+		    None: writes the interrupt high/low/hysteresis level registers over I2C
+		"""
 		highConv = int(high // AMG88xx_PIXEL_TEMP_CONVERSION)
 		highConv = constrain(highConv, -4095, 4095)
 		self._inthl.INT_LVL_H = highConv & 0xFF
@@ -234,23 +290,51 @@ class AMG88xx_class(object):
 
 	def enableInterrupt(self):
 
+		"""Enables the sensor's interrupt output by setting the INTEN bit and writing the interrupt control register over I2C.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes the INTC register over I2C
+		"""
 		self._intc.INTEN = 1
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_INTC, self._intc.get())
 
 
 	def disableInterrupt(self):
 
+		"""Disables the sensor's interrupt output by clearing the INTEN bit and writing the interrupt control register over I2C.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes the INTC register over I2C
+		"""
 		self._intc.INTEN = 0
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_INTC, self._intc.get())
 
 
 	def setInterruptMode(self, mode):
 
+		"""Sets the interrupt mode (absolute vs difference) via the INTMOD bit and writes the interrupt control register over I2C.
+
+		Inputs:
+		    mode (int): interrupt mode bit value
+		Outputs:
+		    None: writes the INTC register over I2C
+		"""
 		self._intc.INTMOD = mode
 		self.bus.write_byte_data(self.i2c_addr,AMG88xx_INTC, self._intc.get())
 
 
 	def getInterrupt(self):
+		"""Reads the 8 interrupt-table registers from the sensor over I2C, returning the per-row interrupt flag bytes.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: list of 8 bytes from the interrupt registers
+		"""
 		buf = []
 		for i in range(0, 8):
 			buf.append(self.bus.read_byte_data(self.address,AMG88xx_INT_OFFSET + i))
@@ -259,16 +343,37 @@ class AMG88xx_class(object):
 
 	def clearInterrupt(self):
 
+		"""Resets the AMG88xx thermopile sensor by setting the reset flag in the cached reset register and writing it back to the AMG88xx_RST register, which clears any pending interrupt.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes reset flag to the AMG88xx_RST register over I2C
+		"""
 		self._rst.RST = AMG88xx_FLAG_RESET
 		self.write8(AMG88xx_RST, self._rst.get())
 
 
 	def readThermistor(self):
 
+		"""Reads the 16-bit raw thermistor value from the AMG88xx_TTHL register and converts it to a floating-point temperature using signed-magnitude decoding and the thermistor conversion factor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: thermistor temperature in degrees
+		"""
 		raw = self.readU16(AMG88xx_TTHL)
 		return self.signedMag12ToFloat(raw) * AMG88xx_THERMISTOR_CONVERSION
 	
 	def readPixels(self,oldPixels):
+		"""Reads the full 8x8 pixel thermal grid from the sensor in I2C blocks, converting each raw 12-bit value to a temperature, and computes statistics including min, max, average, ambient temperature, uniformity and frame-to-frame movement metrics relative to the previous frame.
+
+		Inputs:
+		    oldPixels (list): previous frame's 64 pixel temperatures used as movement baseline
+		Outputs:
+		    tuple: (buf, maxV, minV, aveV, nVal, ambtemp, uniformity, movement, movementabs), or empty string on error
+		"""
 		try:
 			buf = []
 	
@@ -345,12 +450,26 @@ class AMG88xx_class(object):
 		
 	def signedMag12ToFloat(self, val):
 		#take first 11 bits as absolute val
+		"""Converts a 12-bit signed-magnitude integer to a float, treating bit 11 as a sign bit so values outside the 11-bit positive range are returned as negative.
+
+		Inputs:
+		    val (int): raw 12-bit signed-magnitude value
+		Outputs:
+		    float: signed floating-point value
+		"""
 		if	0x7FF & val == val:
 			return float(val)
 		else:
 			return	- float(0x7FF & val)
 
 	def twoCompl12(self, val):
+		"""Converts a 12-bit two's-complement integer to a float, subtracting 4096 when the sign bit is set to produce the negative value.
+
+		Inputs:
+		    val (int): raw 12-bit two's-complement value
+		Outputs:
+		    float: signed floating-point value
+		"""
 		if	0x7FF & val == val:
 			return float(val)
 		else:
@@ -363,6 +482,13 @@ class AMG88xx_class(object):
 
 #################################		 
 def readParams():
+	"""Re-reads the plugin's parameter file, refreshing global sensor configuration (refresh interval, deltaX threshold, minimum send delta, I2C addresses) for each configured AMG88xx device, restarting sensors when settings change and removing sensors no longer present; exits if the amg88xx sensor type is no longer enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global config/sensor state, restarts sensors, and logs
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global rawOld
 	global deltaX, amg88xx, minSendDelta
@@ -463,6 +589,14 @@ def readParams():
 
 
 def startSensor(devId,i2cAddress):
+	"""Initializes a single AMG88xx sensor for the given device id by switching the TCA9548A I2C mux if needed, resetting the device's previous-pixel buffer, and constructing an AMG88xx_class instance at the resolved I2C address (storing empty string on failure).
+
+	Inputs:
+	    devId (str): device identifier key into the sensors dict
+	    i2cAddress (str): configured I2C address for the sensor
+	Outputs:
+	    None: creates the sensor object in the global amg88xxsensor dict and logs
+	"""
 	global sensors,sensor
 	global startTime
 	global amg88xxsensor, oldPixels
@@ -487,6 +621,13 @@ def startSensor(devId,i2cAddress):
 
 #################################
 def getValues(devId):
+	"""Reads a thermal frame for the given device, handling the I2C mux, and returns a dict of formatted string values (movement, absolute movement, uniformity, ambient temperature, max/min/average pixel temperatures, and raw JSON pixel data); tracks consecutive failures and reports a bad sensor.
+
+	Inputs:
+	    devId (str): device identifier key into the sensors dict
+	Outputs:
+	    dict or str: dict of formatted sensor readings, or 'badSensor' on repeated failure
+	"""
 	global sensor, sensors,	 amg88xxsensor, badSensor
 	global oldPixels
 	global startTime

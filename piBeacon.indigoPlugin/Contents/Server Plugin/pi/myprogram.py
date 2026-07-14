@@ -24,6 +24,14 @@ G.program = "myprogram"
 # ===========================================================================
 
 def getMyprogram(sensor, data):
+    """Collects readings for all devices of the given 'myprogram' sensor type, attempting to parse a per-device value payload into the data dict; devices whose value is empty are flagged via incrementBadSensor, and the updated data dict is returned (with the sensor entry removed if it ends up empty).
+
+    Inputs:
+        sensor (str): sensor type key to look up in the sensors dict
+        data (dict): accumulator dict that collected sensor readings are added to
+    Outputs:
+        dict: the data dict updated with this sensor's per-device values
+    """
     global sensors, sValues, displayInfo
 
     if sensor not in sensors : return data    
@@ -54,6 +62,16 @@ def getMyprogram(sensor, data):
 
 
 def incrementBadSensor(devId,sensor,data,text="badSensor"):
+    """Tracks repeated failures for a device by incrementing a counter and appending text in the global badSensors dict; once the failure count exceeds 2, it records the accumulated text under data[sensor][devId]["badSensor"] and clears the device's entry. Returns the updated data dict.
+
+    Inputs:
+        devId (str): device id whose failure count is tracked
+        sensor (str): sensor type key under which to record the bad-sensor flag
+        data (dict): data dict updated with the bad-sensor marker
+        text (str): failure description text appended on each increment (default 'badSensor')
+    Outputs:
+        dict: the data dict, possibly annotated with a badSensor entry
+    """
     global badSensors
     try:
         if devId not in badSensors:badSensors[devId] ={"count":0,"text":text}
@@ -82,6 +100,13 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 
 
 def readParams():
+        """Reads the latest parameter input from the plugin (via U.doRead), and if it is new and changed, applies global params, output, sensors and refresh interval to module globals and rebuilds the sensor list; exits the process if no 'myprogram' sensor is configured. Returns a boolean result code (always False here).
+
+        Inputs:
+            None.
+        Outputs:
+            bool: result code, False; may also call exit() if no myprogram sensor present
+        """
         global sensorList, sensors, sendToIndigoSecs, sensorRefreshSecs
         global output
         global tempUnits, pressureUnits, distanceUnits
@@ -122,6 +147,13 @@ def readParams():
 
 #################################
 def checkIfAliveNeedsToBeSend():
+    """Sends an alive/heartbeat signal to the plugin (via U.sendURL with sendAlive=True) if more than 330 seconds have elapsed since the last alive signal was sent.
+
+    Inputs:
+        None.
+    Outputs:
+        None: sends alive URL to plugin as a side effect; logs on exception
+    """
     try:
         if time.time() - G.lastAliveSend> 330:  # do we have to send alive signal to plugin?
             U.sendURL(sendAlive=True )
@@ -219,7 +251,7 @@ while True:
                             changed= 5
                             break
                         try:
-                            xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], xxx )
+                            xxx = U.testBad( data[sens][devid][devType],lastData[sens][devid][devType], -1 )
                             if xxx > (G.deltaChangedSensor/100.): 
                                 changed= xxx
                                 break

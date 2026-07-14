@@ -24,6 +24,13 @@ class SENSOR:
 	# Constructor
 	def __init__(self, i2cAddress=72):
 
+		"""Constructs a TMP117 temperature sensor driver using the Adafruit CircuitPython library on the board's I2C bus, configuring 8x averaging and a 0.125s measurement delay.
+
+		Inputs:
+		    i2cAddress (int): I2C address of the TMP117 (default 72/0x48)
+		Outputs:
+		    None: initializes the adafruit_tmp117.TMP117 instance and its measurement settings
+		"""
 		i2c = board.I2C()  # uses board.SCL and board.SDA
 		self.tmp117 = adafruit_tmp117.TMP117(i2c,address=i2cAddress)
 		self.tmp117.averaged_measurements 	= adafruit_tmp117.AverageCount.AVERAGE_8X
@@ -31,6 +38,13 @@ class SENSOR:
 		return 
 
 	def getTemp(self):
+		"""Returns the current temperature reading from the TMP117 sensor, or an empty string if reading raises an exception.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: temperature in degrees Celsius, or '' on failure
+		"""
 		try:
 			return self.tmp117.temperature
 		except: 
@@ -42,6 +56,13 @@ class SENSOR:
 
 #################################		 
 def readParams():
+	"""Reads the plugin parameter file, and if it changed, refreshes global sensor configuration (refresh interval, delta thresholds, I2C addresses), then instantiates a SENSOR (TMP117) driver for each newly configured device and removes drivers for devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global config dicts and the theSensor driver registry; logs errors
+	"""
 	global sensorList, sensors, sensor,	 sensorRefreshSecs
 	global rawOld
 	global deltaX, theSensor, minSendDelta
@@ -124,6 +145,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Reads the temperature from the TMP117 driver for the given device through the TCA9548A I2C multiplexer, returning a rounded data dict on success or a 'badSensor'/empty-string status after repeated failures.
+
+	Inputs:
+	    devId (str): device identifier selecting the sensor and its mux channel
+	Outputs:
+	    dict or str: dict with temp, or 'badSensor'/'' on error
+	"""
 	global sensor, sensors, theSensor, badSensor
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
@@ -143,7 +171,7 @@ def getValues(devId):
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(20,"", exc_info=True)
-			U.logger.log(20,u"temp>>{}".format(temp)+"<<")
+			U.logger.log(20,"temp>>{}".format(temp)+"<<")
 		badSensor +=1
 	if badSensor > 3: 
 		U.muxTCA9548Areset()

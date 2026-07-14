@@ -24,6 +24,13 @@ G.program = "setTEA5767"
 
 
 def readParams():
+    """Reads the plugin parameters file via U.doRead, and if it changed, parses the setTEA5767 device entry to update module-level FM radio globals (frequency, mute, mono, highCut, noiseCancel, bandLimit, DTCon, PLLREF, XTAL, HLSI, i2cAddress, devIdFound); exits if no device is defined and logs the new parameters.
+
+    Inputs:
+        None.
+    Outputs:
+        None: updates global FM radio config vars, logs, or exits if no device configured
+    """
     global frequency, defFreq, mute, mono, highCut, noiseCancel, bandLimit, DTCon, PLLREF, XTAL,i2cAddress, HLSI,devIdFound
 
     global fastFreq, fastMute,fastMono, inp
@@ -44,24 +51,24 @@ def readParams():
         if device in inp["output"]:
             for devId in inp["output"][device]:
                 input= inp["output"][device][devId][0]
-                if u"mute"              in input:  mute=                 int(input["mute"])
-                if u"mono"              in input:  mono=                 int(input["mono"])
-                if u"highCut"           in input:  highCut=              int(input["highCut"])
-                if u"noiseCancel"       in input:  noiseCancel=          int(input["noiseCancel"])
-                if u"bandLimit"         in input:  bandLimit=            int(input["bandLimit"])
-                if u"DTCon"             in input:  DTCon=                int(input["DTCon"])
-                if u"PLLREF"            in input:  PLLREF=               int(input["PLLREF"])
-                if u"XTAL"              in input:  XTAL=                 int(input["XTAL"])
-                if u"defFreq"           in input:  
+                if "mute"              in input:  mute=                 int(input["mute"])
+                if "mono"              in input:  mono=                 int(input["mono"])
+                if "highCut"           in input:  highCut=              int(input["highCut"])
+                if "noiseCancel"       in input:  noiseCancel=          int(input["noiseCancel"])
+                if "bandLimit"         in input:  bandLimit=            int(input["bandLimit"])
+                if "DTCon"             in input:  DTCon=                int(input["DTCon"])
+                if "PLLREF"            in input:  PLLREF=               int(input["PLLREF"])
+                if "XTAL"              in input:  XTAL=                 int(input["XTAL"])
+                if "defFreq"           in input:  
                                                    defFreq=            float(input["defFreq"])
                                                    frequency=          float(input["defFreq"])
-                if u"HLSI"              in input:  HLSI=                 int(input["HLSI"])
+                if "HLSI"              in input:  HLSI=                 int(input["HLSI"])
                 i2cAddress = U.getI2cAddress(input, default ="")
                 devIdFound = devId
                 break
 
         else:
-            U.logger.log(30, u"stopping FM radio, no device defined in parameters file")
+            U.logger.log(30, "stopping FM radio, no device defined in parameters file")
             exit()
     except  Exception as e:
         U.logger.log(30,"", exc_info=True)
@@ -70,6 +77,13 @@ def readParams():
          
 
 def readNew():
+    """Reads the .set command file for on-demand menu/action changes (frequency, mute, mono, scan, minSignal, restart), updates the fast* globals, optionally rewrites the persisted parameters file, deletes the .set file, and relaunches the radio program if restart was requested.
+
+    Inputs:
+        None.
+    Outputs:
+        None: updates fast* globals, rewrites parameters file, removes .set file, may restart subprocess, logs
+    """
     global fastFreq, fastMute,fastMono,fastScan,fastMinSignal, inp, inpRawOld, newCommand, restart
     global defFreq, mute, mono, highCut, noiseCancel, bandLimit, DTCon, PLLREF, XTAL, HLSI, devIdFound
 
@@ -81,20 +95,20 @@ def readNew():
         updateM = False
         updateO = False
         restart = False
-        if u"frequency"           in inpNew:  
+        if "frequency"           in inpNew:  
             fastFreq   = float(inpNew["frequency"])
             updateF    = True
-        if u"mute"                in inpNew:  
+        if "mute"                in inpNew:  
             fastMute   = int(inpNew["mute"])
             updateM    = True
-        if u"mono"                in inpNew:  
+        if "mono"                in inpNew:  
             fastMono   = int(inpNew["mono"])
             updateO    = True
-        if u"scan"                in inpNew:  
+        if "scan"                in inpNew:  
             fastScan   = int(inpNew["scan"])
-        if u"minSignal"                in inpNew:  
+        if "minSignal"                in inpNew:  
             fastMinSignal   = int(inpNew["minSignal"])
-        if u"restart"                in inpNew:  
+        if "restart"                in inpNew:  
             restart   = (inpNew["restart"] =="1")
         if len("{}".format(inp))> 200 and (updateF or updateM or updateO) and fastScan !=1:
             device = "setTEA5767"
@@ -112,7 +126,7 @@ def readNew():
                     break
         os.remove(G.homeDir+G.program+".set")
         if restart:
-            U.logger.log(10, u"restarting radio")
+            U.logger.log(10, "restarting radio")
             time.sleep(0.1)
             subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
     
@@ -159,9 +173,17 @@ class tea5767:
     short_timeout   = .3 # timeout for regular commands
 
     def __init__(self, i2cAddress = 0x60, bus = 1):
+        """Constructor for the TEA5767 FM radio driver; opens the I2C SMBus, stores the chip address, opens a binary read stream on the I2C device file, and configures it as an I2C slave via ioctl.
+
+        Inputs:
+            i2cAddress (int): I2C slave address of the TEA5767 chip (default 0x60)
+            bus (int): I2C bus number used to open /dev/i2c-N (default 1)
+        Outputs:
+            None: opens SMBus and I2C file handle, sets slave address, logs
+        """
         self.bus  = smbus.SMBus(1)
         self.add  = i2cAddress# I2C address circuit 
-        U.logger.log(10, u"FM Radio Module TEA5767 init")
+        U.logger.log(10, "FM Radio Module TEA5767 init")
 
         # open two file streams, one for reading and one for writing
         # the specific I2C channel is selected with bus
@@ -181,15 +203,47 @@ class tea5767:
 
 
     def close(self):
+        """Closes the I2C device read file handle opened by the constructor.
+
+        Inputs:
+            None.
+        Outputs:
+            None: closes the I2C read file stream
+        """
         self.file_read.close()
         #self.file_write.close()
 
     #script to get ready
     def init(self):
+        """Resets/initializes the TEA5767 by writing a zero byte to the chip register and sleeping one second.
+
+        Inputs:
+            None.
+        Outputs:
+            None: writes 0x00 to the I2C device and waits
+        """
         self.bus.write_byte(self.add, 0x00)
         time.sleep(1)
 
     def writeToDevice(self,freq, mute=0,mono=0,highCut=1,noiseCancel=1,bandLimit=0,DTCon=1,PLLREF=0,XTAL=1,HLSI=1, scan=0,searchLevel=1):
+        """Tunes the TEA5767 FM radio: computes the 14-bit frequency word, assembles the four control bytes from the mute/mono/highCut/noiseCancel/bandLimit/DTCon/PLLREF/XTAL/HLSI/scan/searchLevel flags, writes them over I2C, and when scanning reads back status to return the found frequency and signal info.
+
+        Inputs:
+            freq (float): target frequency in MHz
+            mute (int): 1 to mute audio output
+            mono (int): 1 to force mono/stereo bit
+            highCut (int): 1 to enable high cut control
+            noiseCancel (int): 1 to enable stereo noise cancellation
+            bandLimit (int): 1 for US/Europe band limits, 0 for Japan
+            DTCon (int): 1 to set the de-emphasis time constant
+            PLLREF (int): 1 to set the PLL reference bit
+            XTAL (int): 1 to select the 32.768 kHz crystal clock
+            HLSI (int): 1 for high-side injection (affects frequency offset)
+            scan (int): 1 to enable search/scan mode
+            searchLevel (int): search stop level (1-3) when scanning
+        Outputs:
+            dict or str: scan result dict with freq/Signal/Stero/BLF when scanning and signal>9, else empty dict or empty string
+        """
         U.logger.log(30,  "FM Radio Module frequency: " + str(freq)+
          "  mute: "        + str(mute)    +
          "  mono: "        + str(mono)+
@@ -287,6 +341,13 @@ class tea5767:
 
 
     def off(self):
+        """Turns the radio off by delegating to init(), which resets the chip via a zero-byte write.
+
+        Inputs:
+            None.
+        Outputs:
+            None: resets the TEA5767 chip
+        """
         self.init()
 
 

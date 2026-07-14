@@ -26,6 +26,13 @@ G.program = "myprogram"
 
 
 def readParams():
+	"""Reads the plugin input via U.doRead and, if non-empty, applies the global parameters from it via U.getGlobalParams.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global params from input
+	"""
 	inp, inpRaw, x = U.doRead()
 	if inp == "": return
 	U.getGlobalParams(inp)
@@ -43,6 +50,13 @@ class SHT21:
 	  Martin Steppuhn's code from http://www.emsystech.de/raspi-sht21"""
 
 	def __init__(self, i2cAdd):
+		"""Initializes an SHT21 sensor object: stores the I2C address and command constants, opens SMBus channel 1, sends a soft reset command, and waits 15ms.
+
+		Inputs:
+		    i2cAdd (int): I2C address of the SHT21 sensor
+		Outputs:
+		    None: opens the I2C bus and writes a soft-reset byte to the sensor
+		"""
 		self._I2C_ADDRESS = i2cAdd
 		self._SOFTRESET   = 0xFE
 		self._TRIGGER_TEMPERATURE_NO_HOLD = 0xF3
@@ -92,6 +106,13 @@ class SHT21:
 		return unadjusted
 
 def getSHT21(i2c=0):
+		"""Reads temperature and humidity from an SHT21 sensor at the given I2C address (default 0x40), lazily creating and caching the SHT21 instance, and returns formatted string values.
+
+		Inputs:
+		    i2c (int): I2C address to use; 0 means default 0x40
+		Outputs:
+		    tuple: (temperature, humidity) as formatted strings, or empty strings on error
+		"""
 		global cAddress
 		global sensorSHT21, SHT21started
 		t,h ="",""
@@ -115,8 +136,8 @@ def getSHT21(i2c=0):
 			return t,h
 		except  Exception as e:
 				U.logger.log(20,"", exc_info=True)
-				U.logger.log(30, u"return  value: t={}".format(t)+";  h={}".format(h)  )
-				U.logger.log(30, u"i2c address used: {}".format(i2cAdd) )
+				U.logger.log(30, "return  value: t={}".format(t)+";  h={}".format(h)  )
+				U.logger.log(30, "i2c address used: {}".format(i2cAdd) )
 		return "",""
 
 
@@ -158,7 +179,7 @@ returnMessage = {"INPUT_0":t,"INPUT_1":h,"INPUT_2":55,"INPUT_3":10,"INPUT_9":"ab
 sys.stdout.write(json.dumps(returnMessage))
 
 # you find the logoutput in /var/log/myprogram.log, if U.logger.log(30,
-U.logger.log(10, u"returning message:"+ json.dumps(returnMessage))
+U.logger.log(10, "returning message:"+ json.dumps(returnMessage))
 	
 sys.exit(0)
 

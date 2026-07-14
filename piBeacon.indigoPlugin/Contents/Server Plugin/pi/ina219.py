@@ -89,6 +89,14 @@ class INA219:
 	def __init__(self, i2cAddress="",shuntResistor=0.1):
 
 
+		"""Initializes the INA219 current/power sensor driver, selecting a default I2C address when none is given, opening SMBus(1), and applying the 32V/2A calibration with the supplied shunt resistor value.
+
+		Inputs:
+		    i2cAddress (int or str): I2C address; empty or 0 falls back to default address
+		    shuntResistor (float): shunt resistor value used for calibration scaling
+		Outputs:
+		    None: sets up instance attributes, opens SMBus, and writes calibration/config registers
+		"""
 		if i2cAddress =="" or i2cAddress ==0:
 			self.i2cAddress = self.__INA219_ADDRESS 
 		else:
@@ -100,11 +108,26 @@ class INA219:
 	
 	def twosToInt(self, val, ll):
 		# Convert twos compliment to integer
+		"""Converts a two's-complement value of bit-length ll to a signed Python integer.
+
+		Inputs:
+		    val (int): raw unsigned two's-complement value
+		    ll (int): bit width of the value
+		Outputs:
+		    int: signed integer interpretation of val
+		"""
 		if(val & (1 << ll - 1)):
 			val = val - (1<<ll)
 		return val
 
 	def ina219SetCalibration_32V_2A(self, shuntResistor):
+		"""Configures the INA219 for the 32V/2A range by setting the current/power/bus/shunt multipliers and writing the calibration and configuration registers over I2C.
+
+		Inputs:
+		    shuntResistor (float): shunt resistor value used to derive current and shunt-voltage multipliers
+		Outputs:
+		    None: stores multiplier attributes and writes calibration and config registers via I2C
+		"""
 		self.ina219_currentMultiplier_mA = shuntResistor	# Current LSB = 100uA per bit (1000/100 = 10)
 		self.ina219_powerMutiplier_mW	 = 2	 # Power LSB = 1mW per bit (2/1)
 		self.ina219_busMultiplier		 = 4./1000.		# bus voltage LSB = 4mV	 ==> in volt
@@ -125,6 +148,13 @@ class INA219:
 		self.bus.write_i2c_block_data(self.i2cAddress, self.__INA219_REG_CONFIG, bb)
 
 	def getBusVoltage_mV(self):
+		"""Reads the INA219 bus-voltage register, handles two's-complement sign, shifts out status bits and scales by the bus multiplier to return the bus voltage; returns '' on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: bus voltage (scaled) or empty string on read failure
+		"""
 		try:
 			result= self.bus.read_i2c_block_data(self.i2cAddress,self.__INA219_REG_BUSVOLTAGE,2)
 			#print "getBusVoltage_mV", result 
@@ -139,6 +169,13 @@ class INA219:
 			return ""
 		
 	def getShuntVoltage_mV(self):
+		"""Reads the INA219 shunt-voltage register, applies two's-complement correction and the shunt-voltage multiplier to return the shunt voltage; returns '' on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: shunt voltage (scaled) or empty string on read failure
+		"""
 		try:
 			result = self.bus.read_i2c_block_data(self.i2cAddress,self.__INA219_REG_SHUNTVOLTAGE,2)
 			#print "getShuntVoltage_mV", result 
@@ -153,6 +190,13 @@ class INA219:
 			return ""
 
 	def getCurrent_mA(self):
+		"""Reads the INA219 current register, applies two's-complement correction and the current multiplier to return the current in mA; returns '' on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: current in mA or empty string on read failure
+		"""
 		try:
 			result = self.bus.read_i2c_block_data(self.i2cAddress,self.__INA219_REG_CURRENT,2)
 			#print "getCurrent_mA", result 
@@ -167,6 +211,13 @@ class INA219:
 			return ""
 
 	def getPower_mW(self):
+		"""Reads the INA219 power register, applies two's-complement correction and the power multiplier to return the power in mW; returns '' on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: power in mW or empty string on read failure
+		"""
 		try:
 			result = self.bus.read_i2c_block_data(self.i2cAddress,self.__INA219_REG_POWER,2)
 			#print "getPower_mW", result 
@@ -185,6 +236,13 @@ class INA219:
 
 #################################		 
 def readParams():
+	"""Reloads plugin parameters from the shared config file, updates global sensor lists/settings and per-device options (refresh seconds, deltaX, minSendDelta, shunt resistor), instantiates new INA219 objects for added devices via the TCA9548A mux, and removes objects for devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global state and INAsensor dict; exits if this sensor is not enabled
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
 	global rawOld
 	global deltaX, INAsensor, minSendDelta
@@ -280,6 +338,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Selects the device's I2C mux channel and reads shunt voltage, bus voltage, current and power from its INA219, returning them as formatted strings in a dict; retries on failure and returns 'badSensor' or '' after repeated errors.
+
+	Inputs:
+	    devId (str): device id whose INA219 sensor is read
+	Outputs:
+	    dict or str: dict of ShuntVoltage/BusVoltage/Power/Current strings, or 'badSensor'/'' on failure
+	"""
 	global sensor, sensors,	 INAsensor, badSensor
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionMediumDistanceLimit, actionLongDistance, actionLongDistanceLimit
 
@@ -302,7 +367,7 @@ def getValues(devId):
 		except Exception as e:
 			if badSensor >2 and badSensor < 5: 
 				U.logger.log(30,"", exc_info=True)
-				U.logger.log(30, u"Current>>{}".format(Current)+"<<")
+				U.logger.log(30, "Current>>{}".format(Current)+"<<")
 			badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()

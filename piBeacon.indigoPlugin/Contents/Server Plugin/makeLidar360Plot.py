@@ -87,7 +87,7 @@ try: 	numberOfDotsY	= int(imageParams["numberOfDotsY"])
 except: numberOfDotsY 	= 4000
 
 try: 	compress		= imageParams["compress"]	 =="1"
-except:	compress		= Flase
+except:	compress		= False
 try:	yOffset 		= int(imageParams["yOffset"])
 except: yOffset 		= 0
 
@@ -166,7 +166,7 @@ try:
 	data = json.loads(f.read())
 	f.close()
 except  Exception as e:
-	logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
+	logger.log(30,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 	exit()
 #
 
@@ -424,7 +424,7 @@ try:
 				ax.text(pos[0], pos[1], out,  horizontalalignment='left',  verticalalignment='top',   transform=ax.transAxes)
 				logger.log(30,out )
 		except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
+			logger.log(30,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 	if showLegend !="":
 		plt.legend(fontsize = fontSize, loc=showLegend)
@@ -437,7 +437,7 @@ try:
 			if frameTight : plt.savefig((imageOutfile).encode('utf8'), bbox_inches='tight')
 			else: 			plt.savefig((imageOutfile).encode('utf8'))
 	except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
+			logger.log(30,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
 	try:	pngSize = os.path.getsize((imageOutfile).encode('utf8'))/1024.
 	except: pngSize = 0
@@ -460,7 +460,7 @@ try:
 			except: pass
 			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
 		except  Exception as e:
-			logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
+			logger.log(30,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )
 #### compress plotfile  ###################### END
 
 
@@ -468,6 +468,6 @@ try:
 	logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 
 except  Exception as e:
-	logger.log(30,u"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
+	logger.log(30,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e))
 
 sys.exit(0)

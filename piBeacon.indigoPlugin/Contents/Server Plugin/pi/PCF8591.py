@@ -29,6 +29,13 @@ except: pass
 
 #################################
 def getValues(devId):
+	"""Reads an analog value for the given device from a PCF8591 ADC over I2C, supporting single-channel reads or differential reads (channel0 minus channel1) based on the configured input string, routing through the TCA9548A mux and resetting it afterward.
+
+	Inputs:
+	    devId (str): Device identifier used to look up the SMBus object and input config
+	Outputs:
+	    dict or str: {'INPUT': value} on success, or empty string '' if device unknown or on error
+	"""
 	global sensor, sensors, badSensor, SENSOR
 	global input, Vmul
 
@@ -62,6 +69,13 @@ def getValues(devId):
 #
 #################################
 def startSensor(devId):
+	"""Lazily creates an smbus.SMBus(1) handle for the given PCF8591 device id if not already present, selecting it through the TCA9548A mux and resetting the mux afterward.
+
+	Inputs:
+	    devId (str): Device identifier used as key in the SENSOR registry
+	Outputs:
+	    None: Registers the SMBus object for the device; logs and resets mux on error
+	"""
 	global SENSOR, sensors, sensor
 
 	try:
@@ -85,6 +99,13 @@ def startSensor(devId):
 
 
 def readParams():
+	"""Reads the latest plugin parameter file for the PCF8591 driver and, if changed, parses global params and the sensors config, applying per-device timing, deltaX, and input-channel settings and starting each sensor; removes sensor objects no longer configured. Exits if this sensor is not enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates module globals (sensors, deltaX, input, SENSOR, timing) and starts/stops sensors; logs on error
+	"""
 	global sensorList, sensors, sensor, SENSOR
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global rawOld
@@ -166,6 +187,13 @@ def readParams():
 #################################
 #################################
 def execPCF():			 
+	"""Main loop for the PCF8591 ADC sensor program: initializes globals and logging, kills stale instances, reads parameters, then continuously polls each configured device via getValues, builds a sensor data dict, and sends it to Indigo when readings change significantly or a periodic alive interval elapses, while writing DAT files and honoring quick-poll requests.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs an infinite poll loop; sends readings to Indigo, writes DAT files, and logs
+	"""
 	global sensorList, sensors, sensor, SENSOR, input
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global sValues, displayInfo

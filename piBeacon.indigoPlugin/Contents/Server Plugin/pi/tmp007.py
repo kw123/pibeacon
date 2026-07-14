@@ -69,6 +69,13 @@ class TMP007:
 	# Constructor
 	def __init__(self, i2cAddress=""):
 
+		"""Constructs a TMP007 infrared thermopile sensor driver, defaulting the I2C address to 0x40 when none is supplied, opening SMBus 1, allocating a 4-byte buffer, and pausing briefly to let the device settle.
+
+		Inputs:
+		    i2cAddress (int or str): I2C address of the sensor; empty or 0 selects the default 0x40
+		Outputs:
+		    None: initializes instance attributes and opens the SMBus connection
+		"""
 		self.debug = G.debug
 		if i2cAddress == "" or i2cAddress == 0:
 			self.address = 0x40
@@ -87,6 +94,13 @@ class TMP007:
 
 	def begin(self):
 		# load_calibration()
+		"""Configures the TMP007 by byte-swapping the assembled config word (mode-on, data-ready enable, 8-sample averaging) and writing it to the device's config register over I2C.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes the configuration word to the TMP007 config register via I2C
+		"""
 		config = _TMP007_CFG_MODEON | _TMP007_CFG_DRDYEN | CFG_8SAMPLE
 		config = ((config & 0xFF) << 8) | (config >> 8)
 		self.bus.write_word_data(self.address, _TMP007_CONFIG, config)
@@ -94,12 +108,26 @@ class TMP007:
 
 	# read Obj Temp in C
 	def readObjTempC(self):
+		"""Reads the object (target) temperature register, shifts out the status bits, applies two's-complement sign handling, and converts the raw count to degrees Celsius using the 0.03125 C/LSB scale.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: object temperature in degrees Celsius
+		"""
 		raw = self.readU16BE(_TMP007_TOBJ) >>2
 		if raw > 16384: raw = 16384-raw
 		return raw *0.03125
 
 	# read voltage
 	def readVoltage(self):
+		"""Reads the raw 16-bit object-voltage register and applies two's-complement sign correction for negative values.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: signed raw sensor voltage register value
+		"""
 		raw = self.readU16BE(_TMP007_VOBJ)
 		if raw > 32767:
 			raw = (raw & 0x7fff) - 32768
@@ -114,6 +142,13 @@ class TMP007:
 
 
 	def getdata(self):
+		"""Reads and computes the die (ambient) temperature in Celsius along with the object temperature and sensor voltage, returning the object and die temperatures.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (objTempC, dieTempC) both floats in degrees Celsius
+		"""
 		dieTempC = (self.readU16BE(_TMP007_TAMB) >>2 )* 0.03125
 		objTempC = self.readObjTempC()
 		sensorVolts = self.readVoltage()
@@ -130,6 +165,14 @@ class TMP007:
 			return self.errMsg()
 
 	def writeu16(self, reg, value):
+		"""Writes a 16-bit value to the given register via I2C write_word_data; the byte-splitting computation it performs is unused and the original value is sent.
+
+		Inputs:
+		    reg (int): target register address
+		    value (int): 16-bit value to write
+		Outputs:
+		    None: writes a word to the register over I2C
+		"""
 		out = (value >> 8) & 0xFF
 		out+= value & 0xFF
 		self.bus.write_word_data(self.address, reg, value)
@@ -251,6 +294,13 @@ class TMP007:
 
 #################################		 
 def readParams():
+	"""Reads the plugin parameter file, and if it changed, refreshes global sensor configuration (refresh interval, delta thresholds, I2C addresses), then instantiates and begins a TMP007 driver for each newly configured device and removes drivers for devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global config dicts and the tmp007sensor driver registry; logs errors
+	"""
 	global sensorList, sensors, sensor,	 sensorRefreshSecs
 	global rawOld
 	global deltaX, tmp007sensor, minSendDelta
@@ -334,6 +384,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Reads object and ambient temperatures from the TMP007 driver for the given device through the TCA9548A I2C multiplexer, returning a rounded data dict on success or a 'badSensor'/empty-string status after repeated failures.
+
+	Inputs:
+	    devId (str): device identifier selecting the sensor and its mux channel
+	Outputs:
+	    dict or str: dict with temp and AmbientTemperature, or 'badSensor'/'' on error
+	"""
 	global sensor, sensors,	 tmp007sensor, badSensor
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
@@ -352,7 +409,7 @@ def getValues(devId):
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30,u"temp>>{}".format(temp)+"<<")
+			U.logger.log(30,"temp>>{}".format(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()

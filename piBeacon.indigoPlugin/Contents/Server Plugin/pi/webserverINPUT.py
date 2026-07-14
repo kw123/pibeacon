@@ -20,11 +20,25 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 class GetHandler(BaseHTTPRequestHandler):
 
 	def do_HEAD(self):
+		"""Sends an HTTP 200 response with an HTML content-type header for a HEAD request.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes HTTP response headers
+		"""
 		self.send_response(200)
 		self.send_header("Content-type", "text/html")
 		self.end_headers()
  
 	def do_GET(self):
+		"""Handles a GET request by serving the parameter-entry HTML form (WiFi SSID, passcode, timezone, and any extra fields), then parses submitted query-string parameters and writes changed regular and extra values to their output files.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes an HTML page to the client and persists submitted parameters to files
+		"""
 		global pid, defaults, regularOutputFile
 		global defaultsExtra, extraOutputFile, webServerInputHTML, extraInputFile
 		global lastCommand, ignoreCashedEntry
@@ -134,6 +148,13 @@ class GetHandler(BaseHTTPRequestHandler):
 		
 		
 def getwebServerInputHTML(init=False):
+	"""Loads extra input-form configuration from the extra input file (defaults, HTML snippet, output file path) into module globals, optionally resetting them first.
+
+	Inputs:
+	    init (bool): if True, reset the extra defaults/HTML/output globals first
+	Outputs:
+	    None: updates module globals from the extra input file
+	"""
 	global  defaultsExtra, extraOutputFile, webServerInputHTML, extraInputFile
 
 	if init:

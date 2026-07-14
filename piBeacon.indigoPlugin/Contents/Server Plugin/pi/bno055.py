@@ -4,7 +4,7 @@
 #
 #
 
-import sys, os, time, json, copy
+import sys, os, time, json, copy, subprocess
 import smbus
 
 sys.path.append(os.getcwd())
@@ -220,6 +220,15 @@ class BNO055():
 	def __init__(self, resetPin=None, i2cAddress=BNO055_ADDRESS_A, **kwargs):
 		# If reset pin is provided save it and a reference to provided GPIO
 		# bus (or the default system GPIO bus if none is provided).
+		"""Initializes a BNO055 sensor object: stores the I2C address and optional reset pin, drives the reset pin high (via GPIO or GPIOZERO) with a settling delay, opens the SMBus(1) I2C bus, and loads stored calibration from file.
+
+		Inputs:
+		    resetPin (int or None): Optional GPIO pin used to reset the chip
+		    i2cAddress (int): I2C address of the BNO055 sensor
+		    kwargs (dict): Additional unused keyword arguments
+		Outputs:
+		    None: Sets up GPIO/I2C bus and loads calibration into self.Calibration
+		"""
 		self.i2cAddress = i2cAddress
 		self.resetPin = resetPin
 		if self.resetPin is not None:
@@ -237,6 +246,13 @@ class BNO055():
 		self.Calibration = self.readCalibrationFromFile()
 
 	def readCalibrationFromFile(self):
+		"""Loads the sensor calibration data from the program's .calib file in the home directory, parsing it as JSON, and returns an empty list if the file is missing or unreadable.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: Parsed calibration list, or empty list on missing/error
+		"""
 		calib = []
 		try:
 			if os.path.isfile(G.homeDir +G.program+".calib"):
@@ -251,6 +267,13 @@ class BNO055():
 		return[]
 
 	def writeCalibrationToFile(self,calib):
+		"""Serializes the given calibration data to JSON and writes it to the program's .calib file in the home directory, silently ignoring any I/O errors.
+
+		Inputs:
+		    calib (list): Calibration data to serialize and persist
+		Outputs:
+		    None: Writes calibration JSON to the .calib file
+		"""
 		try:
 			f = open(G.homeDir +G.program+".calib","w")
 			f.write( json.dumps(calib))
@@ -262,23 +285,61 @@ class BNO055():
 
 	def _write_bytes(self, reg, ll):
 		# Write a list of 8-bit values starting at the provided register address.
+		"""Writes a list of 8-bit values to the BNO055 over I2C starting at the given register address using an I2C block-data write.
+
+		Inputs:
+		    reg (int): starting register address
+		    ll (list): list of byte values to write
+		Outputs:
+		    None: writes the bytes to the I2C bus
+		"""
 		self.bus.write_i2c_block_data(self.i2cAddress, reg, ll)
 		return 
 		
 	def _write_byte(self, reg, value):
 		# Write an 8-bit value to the provided register address.  If ack is True
+		"""Writes a single 8-bit value to the given BNO055 register over I2C.
+
+		Inputs:
+		    reg (int): register address to write
+		    value (int): 8-bit value to write
+		Outputs:
+		    None: result of smbus write_byte_data (typically None); writes to I2C bus
+		"""
 		return self.bus.write_byte_data(self.i2cAddress, reg, value)
 
 	def _read_bytes(self, reg, length):
 		# Read a number of unsigned byte values starting from the provided address.
+		"""Reads a number of unsigned bytes from the BNO055 starting at the given register via an I2C block-data read.
+
+		Inputs:
+		    reg (int): starting register address
+		    length (int): number of bytes to read
+		Outputs:
+		    list: list of unsigned byte values read from the bus
+		"""
 		return self.bus.read_i2c_block_data(self.i2cAddress, reg, length)
 		
 	def _read_byte(self, reg):
 		# Read an 8-bit unsigned value from the provided register address.
+		"""Reads a single unsigned 8-bit value from the given BNO055 register over I2C.
+
+		Inputs:
+		    reg (int): register address to read
+		Outputs:
+		    int: unsigned byte value read from the register
+		"""
 		return self.bus.read_byte_data(self.i2cAddress, reg)
 	
 	def _read_signed_byte(self, reg):
 		# Read an 8-bit signed value from the provided register address.
+		"""Reads an 8-bit value from the given register and interprets it as a signed (two's complement) byte, returning values in the range -128..127.
+
+		Inputs:
+		    reg (int): register address to read
+		Outputs:
+		    int: signed byte value (-128..127)
+		"""
 		data = self._read_byte(reg)
 		if data > 127:
 			return data - 256
@@ -287,10 +348,24 @@ class BNO055():
 
 	def _config_mode(self):
 		# Enter configuration mode.
+		"""Switches the BNO055 into configuration mode by calling set_mode with the config operation mode.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: changes the sensor operation mode register
+		"""
 		self.set_mode(OPERATION_MODE_CONFIG)
 
 	def _operation_mode(self):
 		# Enter operation mode to read sensor data.
+		"""Switches the BNO055 back into its stored operation mode by calling set_mode with self._mode.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: changes the sensor operation mode register
+		"""
 		self.set_mode(self._mode)
 
 	def begin(self, mode=OPERATION_MODE_NDOF):
@@ -403,6 +478,13 @@ class BNO055():
 		self._operation_mode()
 
 	def get_system_status(self, run_self_test=True):
+		"""Returns the BNO055 system status, optional self-test result, and system error register values; when run_self_test is True it enters config mode, triggers a self test, waits, reads the result, then returns to operation mode.
+
+		Inputs:
+		    run_self_test (bool): whether to run a self test (default True); if False self_test is None
+		Outputs:
+		    tuple: (status, self_test, error) ints, or None if an exception occurs
+		"""
 		try:
 			"""Return a tuple with status information.	Three values will be returned:
 			  - System status register value with the following meaning:
@@ -586,6 +668,14 @@ class BNO055():
 	def _read_vector(self, address, count=3):
 		# Read count number of 16-bit signed values starting from the provided
 		# address. Returns a tuple of the values that were read.
+		"""Reads count 16-bit signed little-endian values starting at the given register and returns them as a list, converting from two's complement.
+
+		Inputs:
+		    address (int): starting register address
+		    count (int): number of 16-bit values to read (default 3)
+		Outputs:
+		    list: list of signed 16-bit integers
+		"""
 		data = self._read_bytes(address, count*2)
 		result = [0]*count
 		for i in range(count):
@@ -684,6 +774,14 @@ class BNO055():
 		
 		
 def startBNO(devId, i2cAddress):
+	"""Initializes a BNO055 sensor instance for the given device id at the given I2C address, stores it in the global BNO055sensor dict, retries begin() once, logs system status/self-test and revision info, and restarts the plugin if sensor IDs report as zero.
+
+	Inputs:
+	    devId (str): device id key used in the BNO055sensor dict
+	    i2cAddress (int): I2C address of the sensor
+	Outputs:
+	    None: creates/stores the sensor object and logs diagnostics
+	"""
 	global BNO055sensor
 	try:
 		U.logger.log(30,"==== Start BNO055 ===== @ i2c= {}".format(i2cAddress)+"	 devId={}".format(devId))
@@ -723,6 +821,13 @@ def startBNO(devId, i2cAddress):
 
 #################################		 
 def readParams():
+	"""Reads the latest plugin parameters from the input file, updates global sensor config, and for each configured BNO055 device starts it if not yet running while removing sensor instances no longer present in the config.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global state, starts/removes sensors; returns early if no new input
+	"""
 	global sensors, sensor
 	global BNO055sensor, resetPin
 	global oldRaw, lastRead
@@ -782,6 +887,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Reads a full set of measurements from the BNO055 for the given device: checks calibration/self-test status (retrying and restarting on repeated failure), periodically writes calibration to file, and gathers temperature, Euler angles, gravity, magnetometer, gyroscope, accelerometer, and linear acceleration data into a dict.
+
+	Inputs:
+	    devId (str): device id key into the BNO055sensor dict
+	Outputs:
+	    dict: dict of sensor readings (calibration, EULER, GRAV, MAG, GYR, ACC, LIN), or {'MAG':'bad'} on error
+	"""
 	global sensor, sensors,	 BNO055sensor
 	global CALlast, lastWriteCalibration, badSelfTest 
 	try:
@@ -858,6 +970,15 @@ def getValues(devId):
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
+	"""Builds a dict by pairing each name in theItems with the correspondingly-indexed value from theList, rounding each value to the given number of decimal digits.
+
+	Inputs:
+	    theList (list): numeric values to round and store
+	    theItems (list): key names matched positionally to theList values
+	    digits (int): decimal places to round each value to
+	Outputs:
+	    dict: mapping of item name to rounded value
+	"""
 	out={}
 	for ii in range(len(theItems)):
 		out[theItems[ii]] = round(theList[ii],digits)

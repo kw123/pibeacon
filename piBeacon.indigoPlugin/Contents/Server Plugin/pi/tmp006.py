@@ -76,6 +76,13 @@ class TMP006:
 	# Constructor
 	def __init__(self, i2cAddress=""):
 
+		"""Initializes a TMP006 sensor object, setting the debug flag, defaulting the I2C address to 0x40 when none/zero is given, opening SMBus 1, and clearing the error message.
+
+		Inputs:
+		    i2cAddress (int or str): I2C address of the sensor; defaults to 0x40 when empty or 0
+		Outputs:
+		    None: Sets up instance attributes and opens the SMBus
+		"""
 		self.debug = G.debug
 		if i2cAddress =="" or i2cAddress ==0:
 			self.address = 0x40
@@ -152,6 +159,13 @@ class TMP006:
 		return ""
 		
 	def getdata(self):
+		"""Reads both the die (ambient) temperature and the object temperature in Celsius from the TMP006 sensor and returns them as a pair; returns empty strings on any error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (die temperature, object temperature) in Celsius, or ("", "") on error
+		"""
 		try:
 			tA = self.readDieTempC()
 			tO = self.readObjTempC()
@@ -161,6 +175,13 @@ class TMP006:
 			
 			
 	def readObjTempC(self):
+		"""Computes the object (target) temperature in degrees Celsius from the TMP006 by reading raw die temperature and thermopile voltage and applying the TI sensor calibration equations; returns empty string on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: Object temperature in Celsius, or empty string on exception
+		"""
 		try:
 			"""Read sensor object temperature (i.e. temperature of item in front of
 			the sensor) and return its value in degrees celsius."""
@@ -318,6 +339,13 @@ class TMP006:
 
 #################################		 
 def readParams():
+	"""Reads the plugin's parameter/config input, updates global sensor lists and per-device settings (refresh interval, I2C address, deltaX, minSendDelta), instantiates and begins a TMP006 object for each new device through the TCA9548A mux, and removes sensors no longer configured.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global config and tmp006sensor instances; logs and exits if sensor disabled
+	"""
 	global sensorList, sensors, sensor,	sensorRefreshSecs
 	global rawOld
 	global deltaX, tmp006sensor, minSendDelta
@@ -401,6 +429,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Selects the device's I2C mux channel, reads object and ambient temperature from its TMP006, and returns a rounded data dict; returns 'badSensor' after repeated failures or empty string transiently, resetting the mux each time.
+
+	Inputs:
+	    devId (str): Device identifier used to look up the sensor instance and mux config
+	Outputs:
+	    dict or str: {'temp':..., 'AmbientTemperature':...} on success, 'badSensor' on failure, or '' transiently
+	"""
 	global sensor, sensors,	 tmp006sensor, badSensor
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
@@ -418,7 +453,7 @@ def getValues(devId):
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"temp>>{}".format(temp)+"<<")
+			U.logger.log(30, "temp>>{}".format(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()

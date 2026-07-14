@@ -60,6 +60,13 @@ _defaultDateStampFormat = "%Y-%m-%d_%H:%M:%S"
 ####-------------------------------------------------------------------------####
 # ===========================================================================
 def readPopen(cmd):
+		"""Runs a shell command via subprocess.Popen, captures stdout and stderr, and returns both decoded as UTF-8 strings.
+
+		Inputs:
+		    cmd (str): Shell command line to execute
+		Outputs:
+		    tuple: (stdout, stderr) as decoded UTF-8 strings, or None on exception
+		"""
 		try:
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			return ret.decode('utf_8'), err.decode('utf_8')
@@ -89,6 +96,13 @@ def crc8(data):
 
 # ===========================================================================
 def checkIfReset(needToReset):
+	"""Conditionally performs a hardware reset of the one-wire bus: if no reset is needed it just clears the reset counter; otherwise it optionally triggers a hard reboot when the reset count exceeds a threshold, and toggles the configured reset GPIO (via GPIO or gpiozero) up/down for the configured duration while respecting a minimum interval between resets.
+
+	Inputs:
+	    needToReset (bool): Whether a one-wire bus reset should be performed
+	Outputs:
+	    None: Toggles reset GPIO/reboots hardware, updates reset counters/timestamps, and logs
+	"""
 	global oneWireResetGpio, oneWireResetIsUpDown, GPIOZEROReset
 	global lastReset, noResetBefore
 	global resetTime, lastResetDateTime
@@ -140,6 +154,13 @@ def checkIfReset(needToReset):
 # ===========================================================================
 
 def mapBusmasterToGpio():
+	"""Builds a mapping from one-wire busmaster numbers to their GPIO pins, either by parsing dtparam=gpiopin lines from the boot config.txt file (in reverse order) or from the oneWireGpios list set in the device config, throttled to run at most once per minute, and logs when the mapping changes.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates the global busMasterToGPIO mapping and logs changes
+	"""
 	global busMasterToGPIO, lastmapBusmasterToGpio, oneWireGpios
 	global bootFileName
 	try:
@@ -219,6 +240,13 @@ dtparam=gpiopin=26
 	"""
 # ===========================================================================
 def enableoneWireGPIO():
+	"""Ensures the one-wire GPIO busmasters are enabled: checks cached/already-active busmasters, and if needed loads the w1-gpio kernel module and adds each configured GPIO as a busmaster via dtoverlay, waiting for each to appear under /sys/bus/w1/devices, then records the busmaster-to-GPIO mapping and persists it to a JSON file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs modprobe/dtoverlay commands, updates busMasterToGPIO, writes a JSON cache, and logs
+	"""
 	global sensors, oneWireGpios,oneWireGpiosLast, lastmapBusmasterToGpio, busMasterToGPIO
 
 	try:
@@ -306,6 +334,13 @@ def enableoneWireGPIO():
 
 # ===========================================================================
 def readOneChannel(busMaster):
+	"""Worker run in a thread for a single one-wire busmaster: waits for its queue to be filled, then for each queued sensor reads the /sys/bus/w1/devices w1_slave file, validates the CRC, parses the temperature, stores good readings into the shared retData structure, and finally marks the busmaster state as finished.
+
+	Inputs:
+	    busMaster (str): Identifier of the one-wire busmaster channel to read
+	Outputs:
+	    None: Populates the global retData dict with per-sensor temperatures and updates thread state
+	"""
 	global retData, threadCMD, readQueue, devIdToSerialNumber, busMasterToGPIO
 	doPrint = False
 	doPrint1 = False
@@ -393,6 +428,13 @@ def readOneChannel(busMaster):
 # 18B20
 # ===========================================================================
 def get18B20(sensor):
+	"""Reads all DS18B20 sensors for a given sensor type by scanning /sys/bus/w1/devices, spawning a reader thread per busmaster, collecting temperature results, then mapping each serial number to its Indigo device, applying offsets, filtering implausible jumps, optionally adding new sensors, and assembling a data dict to return along with a flag indicating whether a bus reset is needed.
+
+	Inputs:
+	    sensor (str): Sensor/program key whose configured devices should be read
+	Outputs:
+	    tuple: (data dict of temperatures keyed by sensor/devId, needToReset bool)
+	"""
 	global sensors, oneWireAddNewSensors
 	global lastGoodRead
 	global tStartProgram
@@ -447,7 +489,7 @@ looking for the string at the end, eg: 28-3ce104570a38 and bus master # here 1..
 						sensorOnBusmaster[busMaster] = 0
 						readQueue[busMaster] = Queue.Queue()
 						threadCMD[busMaster] = {}
-						threadCMD[busMaster]["thread"]  = threading.Thread(name=u'readOneChannel', target=readOneChannel, args=(busMaster,))
+						threadCMD[busMaster]["thread"]  = threading.Thread(name='readOneChannel', target=readOneChannel, args=(busMaster,))
 						threadCMD[busMaster]["state"]   = "collecting"
 						threadCMD[busMaster]["thread"].start()
 					if line.find("/28-") > -1 and line.find("/devices/w1_") > -1:  
@@ -513,7 +555,7 @@ looking for the string at the end, eg: 28-3ce104570a38 and bus master # here 1..
 				if doPrint: U.logger.log(20,"{:>5.2f}..  missing devId:{},  serialNumber:{}".format(time.time()-tStart, devId, missingDevId[devId] ))
 
 
-		if doPrint: U.logger.log(20,"{:>5.2f}..  all finished  .. #of busMasters:{}, totalGoodSensors:{}".format(time.time()-tStart, len(retData["data"]), retData["totalGoodSensors"], retData["data"]))
+		if doPrint: U.logger.log(20,"{:>5.2f}..  all finished  .. #of busMasters:{}, totalGoodSensors:{}, data:{}".format(time.time()-tStart, len(retData["data"]), retData["totalGoodSensors"], retData["data"]))
 
 		sendMetaData += 1
 		count1 = 0
@@ -674,6 +716,16 @@ looking for the string at the end, eg: 28-3ce104570a38 and bus master # here 1..
 
 # ===========================================================================
 def incrementBadSensor(devId,sensor,data,text="badSensor"):
+	"""Tracks consecutive bad reads for a device by incrementing a per-device counter in the badSensors dict; once the count exceeds two, it records a badSensor message into the data dict for that device and clears the tracking entry.
+
+	Inputs:
+	    devId (str): Indigo device id being tracked
+	    sensor (str): Sensor/program key
+	    data (dict): Data dict to annotate with a badSensor marker
+	    text (str): Description appended to the bad-sensor message
+	Outputs:
+	    dict: The (possibly updated) data dict with a badSensor entry when threshold reached
+	"""
 	global badSensors
 	try:
 		if devId not in badSensors:badSensors[devId] ={"count":0,"text":text}
@@ -702,6 +754,13 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 
 
 def readParams():
+		"""Reads the plugin's parameter file and, if it changed since last read, updates global configuration such as sensors, units, refresh seconds, one-wire GPIO list, reset GPIO settings, and serial-number-to-device mappings; restarts the program if the GPIO parameters changed and exits if this program isn't defined in the parameters.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if parameters were freshly read/applied, False if unchanged or empty
+		"""
 		global sensorList, sensors, sendToIndigoSecs,enableTXpinsAsGpio,enableSPIpinsAsGpio, sensorRefreshSecs
 		global output
 		global tempUnits, pressureUnits, distanceUnits
@@ -793,6 +852,13 @@ def readParams():
 #################################
 #################################
 def execWire():			 
+	"""Main loop for the DS18B20 one-wire sensor program: initializes globals/logging, enables one-wire GPIO busmasters, maps busmasters to GPIOs, then repeatedly reads all sensors via get18B20, decides whether readings changed enough to send to Indigo, writes DAT files, performs bus resets when needed, and periodically refreshes parameters and mappings.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs an infinite poll loop; sends readings to Indigo, writes DAT files, resets hardware, and logs
+	"""
 	global sensorList, sensors,badSensors
 	global enableTXpinsAsGpio,enableSPIpinsAsGpio
 	global tempUnits, pressureUnits, distanceUnits

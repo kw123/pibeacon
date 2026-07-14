@@ -16,6 +16,13 @@ G.program = "mlx90614"
 
 #################################
 def doDisplay():
+	"""Renders the current sensor output onto an attached display by launching/keeping alive display.py and building per-device layout (fonts, sizes, positions, scroll behavior, intensity) based on the device type such as RGB matrices, OLED/TFT screens (ssd1351, st7735, ssd1306, sh1106) or generic screens.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: spawns/refreshes the display subprocess and writes display layout; returns early if display disabled or no output
+	"""
 	global displayInfo,sValues
 	global output
 	global initDisplay
@@ -280,10 +287,10 @@ def doDisplay():
 				if len(theValues) >0:
 					for	 ii in range(len(theValues)):
 						t =	 float(theValues[ii])
-						if tempUnits == u"Fahrenheit":
+						if tempUnits == "Fahrenheit":
 							t = t * 9. / 5. + 32.
 							tu = " Temp[F]"
-						elif tempUnits == u"Kelvin":
+						elif tempUnits == "Kelvin":
 							t+= 273.15
 							tu= " Temp[K]"
 						else:
@@ -304,10 +311,10 @@ def doDisplay():
 				if len(theValues) >0:
 					for	 ii in range(len(theValues)):
 						t =	 float(theValues[ii])
-						if tempUnits == u"Fahrenheit":
+						if tempUnits == "Fahrenheit":
 							t = t * 9. / 5. + 32.
 							tu = "A-Temp[F]"
-						elif tempUnits == u"Kelvin":
+						elif tempUnits == "Kelvin":
 							t+= 273.15
 							tu= "A-Temp[K]"
 						else:
@@ -486,6 +493,15 @@ def doDisplay():
 # ===========================================================================
 
 def putValText(sensorInfo,values,params):
+	"""Appends measured values, optional log-scale flags, and display-text labels into the global sValues structure for each parameter so they can later be shown on the display, and flags that a display update is needed. Returns early if display output is disabled.
+
+	Inputs:
+	    sensorInfo (dict): sensor config providing optional logScale and displayText fields
+	    values (list): measured values to append, one per parameter
+	    params (list): parameter names used as keys into sValues
+	Outputs:
+	    None: appends to global sValues and sets displayInfo['display']=True
+	"""
 	global sValues,displayInfo
 	if not G.displayEnable: return	  
 	llength= len(values)
@@ -514,6 +530,15 @@ def putValText(sensorInfo,values,params):
 	return 
 
 def incrementBadSensor(devId,sensor,data):
+	"""Increments a per-device bad-sensor counter and, once it exceeds two consecutive failures, marks the device as a bad sensor in the data structure and resets the counter. Returns the (possibly updated) data dict.
+
+	Inputs:
+	    devId (str): device id whose failure count is tracked
+	    sensor (str): sensor name used as a key in data
+	    data (dict): data structure to flag with badSensor
+	Outputs:
+	    dict: the data dict, possibly with data[sensor][devId]['badSensor']=True
+	"""
 	global badSensors
 	try:
 		if devId not in badSensors:badSensors[devId] =0
@@ -536,6 +561,13 @@ def incrementBadSensor(devId,sensor,data):
 
 #################################		 
 def readParams():
+	"""Reads the latest parameter/configuration input file, and if it changed since the last read updates global sensors, output and tempUnits, applies global and per-device MAG parameters, determines whether the sensor needs restarting, and removes the cached data file when configuration changed. Exits the program if the sensor is no longer enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global config state, removes cache file on change, or exits the program
+	"""
 	global sensorList, sensors,	 sensor,  sensorRefreshSecs, displayEnable
 	global output, sensorActive, timing
 	global oldRaw, lastRead
@@ -590,6 +622,15 @@ def readParams():
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
+	"""Compares the new and previous sensor configurations to decide whether the sensor needs (re)starting: returns -1 if the selected sensor is missing, 1 if it is new or any device/property was added, removed, or changed, and 0 if nothing changed.
+
+	Inputs:
+	    sensors (dict): current sensor configuration
+	    sensorsOld (dict): previous sensor configuration
+	    selectedSensor (str): the sensor name being checked
+	Outputs:
+	    int: -1 missing, 1 if changed/new, 0 if unchanged
+	"""
 	if selectedSensor not in sensors:	 return -1
 	if selectedSensor not in sensorsOld: return 1
 
@@ -644,6 +685,14 @@ class MLX90614:
 
 
 	def __init__(self, address=0x5a, bus_num=1):
+		"""Initializes an MLX90614 driver instance, storing the I2C address and bus number and opening an smbus.SMBus connection on the given bus.
+
+		Inputs:
+		    address (int): I2C address of the sensor (default 0x5a)
+		    bus_num (int): I2C bus number (default 1)
+		Outputs:
+		    None: sets self.bus_num, self.address and opens self.bus
+		"""
 		self.bus_num = bus_num
 		self.address = address
 		self.bus = smbus.SMBus(bus=bus_num)
@@ -661,10 +710,24 @@ class MLX90614:
 		return 
 
 	def get_amb_temp(self):
+		"""Reads the MLX90614 ambient temperature register over I2C and converts the raw word to degrees Celsius (raw*0.02 - 273.15).
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: ambient temperature in degrees Celsius
+		"""
 		data = self.bus.read_word_data(self.address, self.MLX90614_TA)
 		return (data*0.02) - 273.15
 
 	def get_obj_temp(self):
+		"""Reads the MLX90614 object temperature register (TOBJ1) over I2C and converts the raw word to degrees Celsius (raw*0.02 - 273.15).
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: object temperature in degrees Celsius
+		"""
 		data = self.bus.read_word_data(self.address, self.MLX90614_TOBJ1)
 		return (data*0.02) - 273.15
 
@@ -676,6 +739,14 @@ class MLX90614:
 # MLX90614
 # ===========================================================================
 def getMLX90614(sensor, data):
+		"""Reads object and ambient temperatures from each configured MLX90614 device (creating MLX90614 instances and switching the I2C mux as needed), applies the per-device temperature offset, stores them in the data structure, queues them for display, and flags bad sensors when reads fail.
+
+		Inputs:
+		    sensor (str): sensor name keyed into sensors and data
+		    data (dict): data structure updated with temp and AmbientTemperature readings
+		Outputs:
+		    dict: the data dict with per-device temperature readings, empty sensor entries removed
+		"""
 		global sensorMLX90614, MLX90614Started
 		global sensors, sValues, displayInfo
 

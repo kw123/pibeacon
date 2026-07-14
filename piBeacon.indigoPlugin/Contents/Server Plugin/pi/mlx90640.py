@@ -54,6 +54,13 @@ SOFTWARE."""
 
 # function to get Emissivity from MCU
 def get_emissivity():
+	"""Queries the MLX90640 device emissivity over the serial port by sending a fixed command frame, reading the 4-byte response, and returning the emissivity scaled by 1/100.
+
+	Inputs:
+	    None.
+	Outputs:
+	    float: emissivity value (response byte divided by 100)
+	"""
 	ser.write(serial.to_bytes([0xA5,0x55,0x01,0xFB]))
 	read = ser.read(4)
 	return read[2]/100
@@ -69,6 +76,13 @@ def get_emissivity():
 class MLX90640():
 	
 	def __init__(self, address=0x33):    #default 0x33
+		"""Initializes an MLX90640 thermal-camera driver over I2C (smbus2 bus 1), reading and storing calibration parameters such as gain, VDD, ambient temperature, TGC, KsTa, KsTo coefficients and corner temperatures, and precomputing alpha correction range factors.
+
+		Inputs:
+		    address (int): I2C address of the sensor (default 0x33)
+		Outputs:
+		    None: opens the I2C bus and populates calibration attributes; logs on exception
+		"""
 		try: 
 			self.address = address
 			self.bus = smbus2.SMBus(1)
@@ -95,12 +109,27 @@ class MLX90640():
 			U.logger.log(30,"", exc_info=True)
 		
 	def getRegs(self,reg,num):
+		"""Reads a block of bytes from an MLX90640 register over I2C by writing the 16-bit register address then reading num bytes via a combined i2c_rdwr transaction.
+
+		Inputs:
+		    reg (int): 16-bit register/EEPROM address to read from
+		    num (int): number of bytes to read
+		Outputs:
+		    list: list of raw bytes read from the register
+		"""
 		write = smbus2.i2c_msg.write(self.addr,[reg>>8,reg&0xFF])
 		read = smbus2.i2c_msg.read(self.address,num)
 		self.bus.i2c_rdwr(write, read)
 		return list(read)
 			
 	def getRegf(self,reg):
+		"""Reads a single 16-bit word from an MLX90640 register over I2C by writing the register address then reading two bytes and combining them big-endian.
+
+		Inputs:
+		    reg (int): 16-bit register/EEPROM address to read from
+		Outputs:
+		    int: the 16-bit unsigned value read from the register
+		"""
 		write = smbus2.i2c_msg.write(self.addr,[reg>>8,reg&0xFF])
 		read = smbus2.i2c_msg.read(self.address,2)
 		self.bus.i2c_rdwr(write, read)
@@ -108,6 +137,13 @@ class MLX90640():
 		return (result[0]<<8)+result[1]
 
 	def root4(self,num):
+		"""Computes the fourth root of a number (square root of square root), clamping negatives to zero, and returns 0 on any exception while logging it.
+
+		Inputs:
+		    num (float): value to take the fourth root of
+		Outputs:
+		    float: the fourth root of num, or 0.0 on error
+		"""
 		ret = 0
 		try:
 			ret = math.sqrt(math.sqrt(max(0.,num)))
@@ -116,6 +152,13 @@ class MLX90640():
 		return ret 
 
 	def getTGC(self):
+		"""Reads and decodes the TGC (temperature gradient coefficient) calibration value from EEPROM register 0x243C, applying two's-complement sign correction.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: signed TGC calibration coefficient
+		"""
 		TGC = self.getRegf(0x243C) & 0x00FF
 		if TGC > 127:
 			TGC = TGC - 256
@@ -123,6 +166,13 @@ class MLX90640():
 		return TGC
 		
 	def getVDD(self):
+		"""Reads VDD calibration parameters (Kvdd, Vdd25) from EEPROM and the current VDD RAM value, applying sign corrections, and computes the supply voltage deviation.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: computed VDD voltage deviation (DV)
+		"""
 		Kvdd = (self.getRegf(0x2433) & 0xFF00)/256
 		if Kvdd > 127:
 			Kvdd = Kvdd -256
@@ -140,6 +190,13 @@ class MLX90640():
 		return DV
 
 	def getTa(self):
+		"""Computes the ambient temperature (Ta) of the MLX90640 sensor by reading PTAT/VBE calibration constants and current readings, applying sign corrections and the datasheet ambient-temperature formula.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: computed ambient temperature in degrees C
+		"""
 		KVptat = (self.getRegf(0x2432) & 0xFC00)/1024
 		if KVptat > 31:
 			KVptat = KVptat - 62
@@ -169,6 +226,13 @@ class MLX90640():
 		return Ta
 
 	def getGain(self):
+		"""Reads the gain calibration value and the current gain RAM register, applies two's-complement sign correction to both, and returns their ratio as the gain factor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: gain correction factor (GAIN/RAM)
+		"""
 		GAIN = self.getRegf(0x2430)
 		if GAIN > 32767:
 			GAIN = GAIN - 65536
@@ -178,15 +242,38 @@ class MLX90640():
 		return GAIN/float(RAM)
 				
 	def pixnum(self,i,j):
+		"""Converts a 1-based (row, column) pixel coordinate of the 24x32 sensor array into a linear pixel index.
+
+		Inputs:
+		    i (int): 1-based row index
+		    j (int): 1-based column index
+		Outputs:
+		    int: linear pixel number for the given row/column
+		"""
 		return (i-1)*32 + j
 
 	def patternChess(self,i,j):
+		"""Determines the chess-pattern parity (0 or 1) of a pixel at the given row/column for the MLX90640 chess reading pattern, derived from its linear pixel number.
+
+		Inputs:
+		    i (int): 1-based row index
+		    j (int): 1-based column index
+		Outputs:
+		    int: chess pattern parity value (0 or 1)
+		"""
 		pixnum = self.pixnum(i,j)
 		a = (pixnum-1)/32
 		b = int((pixnum-1)/32)/2
 		return int(a) - int(b)*2
 		
 	def getKsTa(self):
+		"""Reads and decodes the KsTa calibration coefficient from EEPROM register 0x243C, applying sign correction and scaling by 8192.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: KsTa calibration coefficient
+		"""
 		KsTaEE = (self.getRegf(0x243C) & 0xFF00) >> 256
 		if KsTaEE > 127:
 			KsTaEE = KsTaEE -256
@@ -195,6 +282,13 @@ class MLX90640():
 		return KsTa
 	
 	def getKsTo(self):
+		"""Reads and decodes the four KsTo temperature-range slope calibration coefficients from EEPROM registers 0x243D/0x243E, applying two's-complement sign correction and a common scale factor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: four floats (KsTo1, KsTo2, KsTo3, KsTo4) calibration slopes
+		"""
 		EE1 = self.getRegf(0x243D)
 		EE2 = self.getRegf(0x243E)
 		KsTo1 = EE1 & 0x00FF
@@ -219,6 +313,13 @@ class MLX90640():
 		return KsTo1, KsTo2, KsTo3, KsTo4
 		
 	def getCorners(self):
+		"""Reads the temperature-range corner calibration data from EEPROM register 0x243F and computes the step size and the CT3/CT4 corner temperatures.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: three ints (step, CT3, CT4) corner temperature values
+		"""
 		EE = self.getRegf(0x243F)
 		step = ((EE & 0x3000)>>12)*10
 		CT3 = ((EE & 0x00f0)>>4)*step
@@ -226,6 +327,14 @@ class MLX90640():
 		return step, CT3, CT4
 		
 	def getPixData(self,i,j):
+		"""Computes the offset-compensated raw infrared reading for a single pixel (row i, column j) of an MLX90640 thermal camera by reading and decoding numerous EEPROM/RAM calibration registers (offset average, OCC scales, Kta, Kv) and applying the temperature/voltage compensation formula.
+
+		Inputs:
+		    i (int): 1-based pixel row index
+		    j (int): 1-based pixel column index
+		Outputs:
+		    float: offset-compensated pixel value (pixOs)
+		"""
 		Offsetavg = self.getRegf(0x2411)
 		if Offsetavg > 32676:
 			Offsetavg = Offsetavg-65536
@@ -268,7 +377,7 @@ class MLX90640():
 		
 		KtaRC = (self.getRegf(KtaAvAddr) & KtaAvMask) >> 8* rowOdd
 		if KtaRC > 127:
-			KtaRC = KtaAvRC - 256
+			KtaRC = KtaRC - 256
 		
 		KtaScale1 = ((self.getRegf(0x2438) & 0x00F0) >>4)+8
 		KtaScale2 = (self.getRegf(0x2438) & 0x000F)
@@ -294,6 +403,14 @@ class MLX90640():
 		return pixOs
 
 	def getCompensatedPixData(self,i,j):
+		"""Computes the fully calibrated temperature in degrees Celsius for a single MLX90640 pixel by taking the offset-compensated value, applying gain/CP compensation, emissivity, alpha sensitivity, TGC and the final radiometric (4th-root) temperature equation. Returns 0 on error.
+
+		Inputs:
+		    i (int): 1-based pixel row index
+		    j (int): 1-based pixel column index
+		Outputs:
+		    float: calibrated pixel temperature in degrees C, or 0 on failure
+		"""
 		try: 
 			pixOs = self.getPixData(i,j)
 			#print i,j,pixOs
@@ -400,6 +517,13 @@ class MLX90640():
 
 #################################		 
 def readParams():
+	"""Reads the plugin's parameter/config file, updates global sensor settings (sensorList, sensors, refresh interval, deltaX, minSendDelta, USB port), and (re)starts the MLX90640 sensor instance for each configured device when settings change, also removing devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals and starts sensors; logs errors
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global rawOld
 	global deltaX, amg88xx, minSendDelta
@@ -470,7 +594,7 @@ def readParams():
 					usbPort[devId] = U.findActiveUSB()
 				else: usbPort[devId] = test
 				if not U.checkIfusbSerialActive(usbPort[devId]):
-					U.logger.log(30, u"{} is not active, return ".format(usbPort[devId]))
+					U.logger.log(30, "{} is not active, return ".format(usbPort[devId]))
 					usbPort[devId] =""
 					continue
 			if old != usbPort[devId]:
@@ -524,6 +648,14 @@ def readParams():
 
 #################################
 def startSensor(devId,i2cAddress):
+	"""Initializes the thermal sensor for a given device by resetting the per-device old-pixel buffer, configuring the I2C mux, and creating either a serial-connected (USB/serial AMG-style at 115200 baud with 4Hz data collection commands) or an I2C MLX90640 sensor object stored in sensorClass.
+
+	Inputs:
+	    devId (str): Indigo device identifier
+	    i2cAddress (int or str): I2C address (or USB/serial marker) of the sensor
+	Outputs:
+	    None: creates sensor object in sensorClass global; writes to serial device; logs
+	"""
 	global sensors,sensor
 	global startTime
 	global sensorClass, oldPix,  ny,ny
@@ -570,7 +702,7 @@ def startSensor(devId,i2cAddress):
 
 		if int(i2cAdd) >0:
 				try:
-					U.logger.log(30, u" i2cAdd {}".format(i2cAdd) )
+					U.logger.log(30, " i2cAdd {}".format(i2cAdd) )
 					sensorClass[devId]  =	  MLX90640(address=i2cAdd)
 				except Exception as e:
 					U.logger.log(30,"", exc_info=True)
@@ -583,6 +715,16 @@ def startSensor(devId,i2cAddress):
 
 #################################
 def convertPixels(oldPix,pix,nx,ny):
+		"""Processes a 2D array of pixel temperatures versus the previous frame: computes average (ignoring out-of-range pixels), clamps outliers to the average, then derives max/min, signed and absolute movement metrics, and uniformity, returning these plus the raw pixel data as JSON in a dict.
+
+		Inputs:
+		    oldPix (list): previous frame's 2D pixel temperature grid
+		    pix (list): current frame's 2D pixel temperature grid (modified in place)
+		    nx (int): number of pixel rows
+		    ny (int): number of pixel columns
+		Outputs:
+		    dict: metrics (MaximumPixel, MinimumPixel, temp, Uniformity, Movement, MovementAbs, rawData), or empty string on error
+		"""
 		try:
 	
 			minV =9999
@@ -633,6 +775,13 @@ def convertPixels(oldPix,pix,nx,ny):
 
 #################################
 def getValues(devId):
+	"""Reads a full thermal frame from the sensor for a device (via serial read for USB/serial sensors or per-pixel compensated I2C reads), converts the raw grid into derived metrics via convertPixels, adds the ambient temperature, stores the frame as the new previous frame, and tracks consecutive failures.
+
+	Inputs:
+	    devId (str): Indigo device identifier
+	Outputs:
+	    dict or str: metrics dict from convertPixels, or 'badSensor' string on repeated failure
+	"""
 	global sensor, sensors,	 sensorClass, badSensor
 	global oldPix, ny,ny
 	global startTime

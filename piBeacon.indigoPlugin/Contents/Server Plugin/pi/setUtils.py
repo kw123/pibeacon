@@ -25,6 +25,13 @@ U.setLogging()
 
 
 def execAddingUtils():
+	"""Creates convenience shell helper scripts (tf, tm, ct, py) in the plugin home directory for tailing logs and viewing parameters, and appends the home directory to the shell PATH in the bash profile if not already present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes helper scripts, modifies bash profile PATH, logs
+	"""
 	try:
 		if True:
 			U.logger.log(20, "creating tf tm  py ct util commands")

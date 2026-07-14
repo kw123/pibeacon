@@ -98,6 +98,15 @@ class THESENSORCLASS(object):
 
 	def __init__(self, accelerationGain="1", magGain="4.7", magFregRate ="3.0" ):
 		# 'Initialize the sensor'
+		"""Constructs the LSM303 driver: opens I2C bus 1, enables all three accelerometer channels, selects hi-res or low-res accel output based on accelerationGain, enables the magnetometer, and applies the configured magnetometer gain and data rate.
+
+		Inputs:
+		    accelerationGain (str): '1' selects 12-bit hi-res accel mode, otherwise low-res
+		    magGain (str): magnetometer gain key looked up in MAG_GAIN
+		    magFregRate (str): magnetometer output rate key looked up in MAG_RATE
+		Outputs:
+		    None: initializes object and writes config registers over I2C
+		"""
 		self._bus	= smbus.SMBus(1)
 
 		# Enable the accelerometer - all 3 channels
@@ -121,6 +130,13 @@ class THESENSORCLASS(object):
 	def read_accel(self):
 		#'Read raw acceleration in meters/second squared'
 		# Read as signed 12-bit little endian values
+		"""Reads the six accelerometer output bytes over I2C, unpacks them as signed 12-bit little-endian values, and returns the X/Y/Z acceleration scaled to meters per second squared.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (x, y, z) acceleration in m/s^2 as floats
+		"""
 		accel_bytes	= self._bus.read_i2c_block_data(LSM303_ADDRESS_ACCEL, LSM303_REGISTER_ACCEL_OUT_X_L_A | 0x80, 6)
 		accel_raw	= struct.unpack('<hhh', bytearray(accel_bytes))
 
@@ -132,6 +148,13 @@ class THESENSORCLASS(object):
 
 	def set_mag_gain(self, gain):
 		#'Set magnetometer gain'
+		"""Sets the magnetometer gain by storing it and selecting the matching X/Y and Z LSB-per-gauss scaling constants, then writes the gain to the magnetometer CRB register over I2C.
+
+		Inputs:
+		    gain (int): register gain value from the MAG_GAIN table
+		Outputs:
+		    None: sets scaling fields and writes the gain register over I2C
+		"""
 		self._gain	= gain
 		if gain	== MAG_GAIN["130"]	:
 			self._lsb_per_gauss_xy	= 1100
@@ -159,11 +182,25 @@ class THESENSORCLASS(object):
 
 	def set_mag_rate(self, rate):
 		#'Set magnetometer rate'
+		"""Sets the magnetometer output data rate by writing the rate bits into the magnetometer CRA register over I2C.
+
+		Inputs:
+		    rate (int): data-rate code (lower 3 bits used)
+		Outputs:
+		    None: writes the rate register over I2C
+		"""
 		self._bus.write_i2c_block_data(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_CRA_REG_M, [(rate & 0x07) << 2])
 
 	def read_mag(self):
 		#'Read raw magnetic field in microtesla'
 		# Read as signed 16-bit big endian values
+		"""Reads the six magnetometer output bytes over I2C, unpacks them as signed 16-bit big-endian values, and returns the X/Y/Z magnetic field converted to microtesla using the stored gain scaling.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (x, y, z) magnetic field in microtesla as floats
+		"""
 		mag_bytes	= self._bus.read_i2c_block_data(LSM303_ADDRESS_MAG, LSM303_REGISTER_MAG_OUT_X_H_M, 6)
 		mag_raw	= struct.unpack('>hhh', bytearray(mag_bytes))
 
@@ -177,6 +214,17 @@ class THESENSORCLASS(object):
 
 		
 def startSENSOR(devId, i2cAddress,magGain,accelerationGain,magFregRate):
+	"""Module-level helper that instantiates the LSM303 sensor class for a given device id with the supplied gain and rate settings, stores it in the global theSENSORdict, and logs the start; errors are caught and logged.
+
+	Inputs:
+	    devId (str): device identifier used as dict key
+	    i2cAddress (int): I2C address, used only for logging
+	    magGain (str): magnetometer gain setting
+	    accelerationGain (str): accelerometer gain mode setting
+	    magFregRate (str): magnetometer data-rate setting
+	Outputs:
+	    None: creates sensor instance and stores it in theSENSORdict
+	"""
 	global theSENSORdict
 	try:
 		U.logger.log(30,"==== Start "+G.program+"	===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
@@ -189,6 +237,13 @@ def startSENSOR(devId, i2cAddress,magGain,accelerationGain,magFregRate):
 
 #################################		 
 def readParams():
+	"""Reads the plugin parameter input, and if changed, updates global sensor settings, restarts the process when gain/rate settings change, starts sensor instances for new device ids, and removes sensor instances for devices no longer configured.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates globals, may start/stop sensors or restart the process
+	"""
 	global sensors, sensor
 	global rawOld
 	global theSENSORdict, resetPin
@@ -237,6 +292,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Reads magnetometer and accelerometer values for a device, applies magnetometer offset/normalization, computes Euler angles, and returns a dict of rounded ACC, MAG and EULER readings; returns a fallback dict on error.
+
+	Inputs:
+	    devId (str): device identifier indexing theSENSORdict and sensors
+	Outputs:
+	    dict: dict with ACC, MAG, EULER sub-dicts, or {'MAG':'bad'} on error
+	"""
 	global sensor, sensors,	 theSENSORdict
 	try:
 		data	= {}
@@ -259,6 +321,15 @@ def getValues(devId):
 
 #################################
 def fillWithItems(theList, theItems, digits):
+	"""Builds a dictionary mapping each label in theItems to the correspondingly-indexed value from theList, rounded to the given number of digits.
+
+	Inputs:
+	    theList (list): sequence of numeric values
+	    theItems (list): label keys for each value
+	    digits (int): decimal places to round each value to
+	Outputs:
+	    dict: mapping of label to rounded value
+	"""
 	out={}
 	for ii in range(len(theItems)):
 		out[theItems[ii]]	= round(theList[ii],digits)
@@ -344,5 +415,5 @@ while True:
 		time.sleep(5.)
 try: 	G.sendThread["run"]	= False; time.sleep(1)
 except: pass
-ys.exit(0)
+sys.exit(0)
 

@@ -18,6 +18,13 @@ G.program  = "installLibs"
 
 
 def setupLibs(upgradeOpSys):
+		"""Installs and configures the sensor software libraries on a Raspberry Pi: checks network/nameserver, enables I2C/SPI/1-wire in boot and module config files, optionally runs apt-get upgrades, and installs Python dev tools, bluez, smbus, i2c-tools, and Adafruit GPIO/SPI libraries. Writes a completion marker file and reports whether a reboot is required.
+
+		Inputs:
+		    upgradeOpSys (str): Flag string (e.g. 'force', 'dist-upgrade', 'pygame') controlling which upgrade/install steps run
+		Outputs:
+		    bool: True if a reboot is needed because of config changes
+		"""
 		reBootNeeded = False
 		U.logger.log(30,	 "==== starting setup sensor libraries")
 		bootFile = U.getBootFileName()
@@ -239,12 +246,26 @@ def setupLibs(upgradeOpSys):
 		
 		
 def readNewParams():
+		"""Reads the plugin parameters file and, if present, updates the module-global rebootCommand from the parsed parameters.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates global rebootCommand; returns early if no params read
+		"""
 		global rebootCommand
 		inp, inpRaw = doRead()
 		if inp == "": return
-		if u"rebootCommand"			in inp: rebootCommand		  = inp["rebootCommand"]
+		if "rebootCommand"			in inp: rebootCommand		  = inp["rebootCommand"]
 
 def doRead():
+	"""Reads the parameters file from the home directory and parses it as JSON, retrying once after a short delay if the first read fails. Returns the parsed object and the raw text, or empty strings on failure.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (parsed params dict or '', raw file text or '')
+	"""
 	inp, inRaw = "",""
 	try:
 		f=open(G.homeDir+"parameters","r")
@@ -267,6 +288,15 @@ def doRead():
 
 		
 def doReboot(tt=1,text="",cmd=""):
+	"""Logs a message, waits a given number of seconds, then triggers a system reboot by running either the supplied command or the global rebootCommand via the shell.
+
+	Inputs:
+	    tt (int): Seconds to sleep before rebooting
+	    text (str): Message logged before rebooting
+	    cmd (str): Optional shell command to run; falls back to global rebootCommand if empty
+	Outputs:
+	    None: Logs, sleeps, and invokes a reboot shell command
+	"""
 	global rebootCommand
 	U.logger.log(30,text)
 	time.sleep(tt)

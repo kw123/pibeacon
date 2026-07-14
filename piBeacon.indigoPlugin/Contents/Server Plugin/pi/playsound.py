@@ -19,6 +19,14 @@ import	piBeaconGlobals as G
 
 
 def killOldPgm(myPID,pgmToKill):
+		"""Finds and kills any running processes matching the given program name (via ps/grep), skipping the caller's own PID, to terminate stale instances.
+
+		Inputs:
+		    myPID (int): the caller's process ID to exclude from killing
+		    pgmToKill (str): program name substring to match against running processes
+		Outputs:
+		    None: sends kill -9 to matching processes and logs
+		"""
 		global debug
 		try:
 			cmd= "ps -ef | grep "+pgmToKill+" | grep -v grep"
@@ -35,6 +43,13 @@ def killOldPgm(myPID,pgmToKill):
 			U.logger.log(30,"", exc_info=True)
 
 def readParams():
+		"""Reads and JSON-parses the plugin's parameters file from the home directory and applies the parsed values via U.getGlobalParams; returns early if parsing fails.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: loads parameters file and updates global params
+		"""
 		global debug
 		f=open(homeDir+"parameters","r")
 		try:	inp =json.loads(f.read())

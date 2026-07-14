@@ -18,6 +18,13 @@ G.program = "sensirionscd30"
 
 
 def interpret_as_float(integer: int):
+	"""Reinterprets a 32-bit integer's bit pattern as an IEEE-754 single-precision float using struct pack/unpack.
+
+	Inputs:
+	    integer (int): 32-bit integer whose bits are reinterpreted
+	Outputs:
+	    float: the float decoded from the integer's bit pattern
+	"""
 	return struct.unpack('!f', struct.pack('!I', integer))[0]
 
 
@@ -25,6 +32,13 @@ class SCD30:
 	"""Python I2C driver for the SCD30 CO2 sensor."""
 
 	def __init__(self):
+		"""Constructor for the low-level SCD30 driver; stores the sensor's I2C address (0x61) and opens an smbus2 SMBus connection on bus 1.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: initializes I2C address and opens an smbus2.SMBus(1) connection
+		"""
 		self._i2c_addr = 0x61
 		self._i2c = smbus2.SMBus(1)
 
@@ -145,7 +159,7 @@ class SCD30:
 		U.logger.log(10,"Received raw I2C response: " + self._pretty_hex(raw_response))
 
 		if len(raw_response) != 3 * num_response_words:
-			U.logger.log(30, "Wrong response length: {) expected:{}".format(len(raw_response),  3 * num_response_words))
+			U.logger.log(30, "Wrong response length: {} expected:{}".format(len(raw_response),  3 * num_response_words))
 
 		# Data is returned as a sequence of num_response_words 2-byte words
 		# (big-endian), each with a CRC-8 checksum:
@@ -174,6 +188,13 @@ class SCD30:
 		return self._word_or_none(self._send_command(0xD100))
 
 	def get_data_ready(self):
+		"""Polls the SCD30 data-ready status register by sending command 0x0202 and returns the resulting word (1 if a measurement is available, else 0).
+
+		Inputs:
+		    None.
+		Outputs:
+		    int or None: data-ready flag word from the sensor, or None if no response
+		"""
 		return self._word_or_none(self._send_command(0x0202))
 
 	def start_periodic_measurement(self, ambient_pressure: int = 0):
@@ -232,6 +253,13 @@ class SCD30:
 		self._send_command(0x4600, 1, [interval])
 
 	def read_measurement(self):
+		"""Reads out a CO2, temperature and humidity measurement from the SCD30 via command 0x0300, decodes the six response words as IEEE floats, and returns them as a tuple.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (CO2 ppm, temp Celsius, RH %) floats, or empty strings on failure, or None on exception
+		"""
 		try:
 			"""Reads out a CO2, temperature and humidity measurement.
 
@@ -244,7 +272,7 @@ class SCD30:
 			data = self._send_command(0x0300, num_response_words=6)
 
 			if data is None or len(data) != 6:
-				U.logger.log(30, "Failed to read measurement, received: ".format( self._pretty_hex(data)) )
+				U.logger.log(30, "Failed to read measurement, received: {}".format( self._pretty_hex(data)) )
 				return "","",""
 
 			co2_ppm = interpret_as_float((data[0] << 16) | data[1])
@@ -395,6 +423,13 @@ class SCD30:
 class SENSORclass():
 	def __init__(self):
 
+		"""Constructor for the higher-level sensor wrapper; instantiates an SCD30 driver, sets the measurement interval to 2 seconds and starts periodic measurement.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: creates self.scd30 and starts periodic measurement on the hardware
+		"""
 		try:
 			self.scd30 = SCD30()
 			time.sleep(0.1)
@@ -406,6 +441,13 @@ class SENSORclass():
 		return 
 
 	def getData(self): 
+		"""Polls the SCD30 up to 20 times (sleeping 0.2s between attempts) until data is ready, then reads and returns the CO2, temperature and humidity measurement.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (CO2, temp, hum) values once ready, or three empty strings if none available or on error
+		"""
 		try:
 			for ii in range (20):
 				if self.scd30.get_data_ready():
@@ -423,6 +465,13 @@ class SENSORclass():
 
 ###############################
 def readParams():
+	"""Reads the plugin's parameter file, updates global sensor/config dictionaries, detects changes to altitude/auto-calibration/temperature-offset settings, and (re)starts sensors for each device as needed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global sensor configuration state and starts sensors; logs errors
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global deltaX, SENSOR, minSendDelta, sensorMode
 	global oldRaw, lastRead
@@ -522,6 +571,15 @@ def readParams():
 
 #################################
 def startSensor(devId, Co2Target="", reset=False):
+	"""Initializes or reconfigures the SCD30 sensor for a given device: handles soft reset, forced/auto self-calibration, altitude compensation and temperature offset, reads firmware version and an initial measurement, and stores results in global state.
+
+	Inputs:
+	    devId (str): device identifier keying the SENSOR and config dictionaries
+	    Co2Target (int or str): forced CO2 calibration target; empty string to skip
+	    reset (bool): if True, perform a soft reset of the sensor first
+	Outputs:
+	    None: creates/updates the device's sensor object and global calibration state; logs on error
+	"""
 	global sensors,sensor
 	global startTime
 	global SENSOR, i2c_bus
@@ -581,6 +639,13 @@ def startSensor(devId, Co2Target="", reset=False):
 
 #################################
 def getValues(devId):
+	"""Reads a measurement for the given device (starting the sensor if needed), applies configured temp/humidity/CO2 offsets, and returns a dict of values plus calibration metadata, or a bad-sensor marker.
+
+	Inputs:
+	    devId (str): device identifier keying the SENSOR and config dictionaries
+	Outputs:
+	    dict or str: dict of temp/CO2/hum and calibration info, 'badSensor' on repeated failure, or '' if no valid data
+	"""
 	global sensor, sensors,	 SENSOR, badsensorCountCO2
 	global startTime, sendToIndigoSecs, sensorMode
 	global deviceVersion, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
@@ -617,6 +682,13 @@ def getValues(devId):
 
 ############################################
 def execSensor():
+	"""Main sensor process loop: initializes globals, reads parameters, then continuously polls each configured SCD30 device, handles recalibration/reset requests and bad-sensor conditions, and sends data to Indigo when deltas or timing thresholds are met.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs an infinite measurement/send loop; updates global state, sends URLs, writes DAT files, logs
+	"""
 	global sensor, sensors, sensorList, badsensorCountCO2
 	global deltaX, SENSOR, minSendDelta, sensorMode
 	global oldRaw, lastRead

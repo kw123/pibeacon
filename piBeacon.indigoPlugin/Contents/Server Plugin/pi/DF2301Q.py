@@ -16,7 +16,6 @@ version			= 1.4
 import serial
 
 import logging
-from ctypes import *
 import sys, os, time, json, datetime, subprocess, copy
 import smbus
 
@@ -184,6 +183,15 @@ DF2301Q_UART_PORT_NAME						= "serial0"
 class DFRobot_DF2301Q_I2C():
 
 	def __init__(self, i2c_addr=DF2301Q_I2C_ADDR, bus=1, sleepAfterWrite=DF2301Q_I2C_sleepAfterReadWrite):
+		"""Constructor for the DFRobot DF2301Q I2C voice-recognition module driver; stores the I2C address, opens an smbus connection on the given bus, and sets the debug level and post-write sleep delay (converted from ms to seconds).
+
+		Inputs:
+		    i2c_addr (int): I2C address of the DF2301Q module
+		    bus (int): I2C bus number to open
+		    sleepAfterWrite (float): Delay in milliseconds to wait after each write
+		Outputs:
+		    None: Initializes instance attributes and opens the smbus.SMBus connection
+		"""
 		self._addr = i2c_addr
 		self._i2c = smbus.SMBus(bus)
 		self.debug = 0
@@ -191,12 +199,28 @@ class DFRobot_DF2301Q_I2C():
 		#super(DFRobot_DF2301Q_I2C, self).__init__()
 
 	def set_Params(self, sleepAfterWrite=DF2301Q_I2C_sleepAfterReadWrite, logLevel=0, commandList={}):
+		"""Updates runtime parameters of the driver: sets the debug/log level and the post-write sleep delay (converted from ms to seconds), optionally logging the values.
+
+		Inputs:
+		    sleepAfterWrite (float): Delay in milliseconds to wait after each write
+		    logLevel (int): Debug verbosity level
+		    commandList (dict): Command list (accepted but unused)
+		Outputs:
+		    int: Always returns 0
+		"""
 		self.debug = int(logLevel)
 		self.sleepAfterWrite = sleepAfterWrite/1000.
 		if self.debug > 1: U.logger.log(20, "sleepAfterWrite:{}, logLevel:{}".format(sleepAfterWrite, logLevel) )
 		return 0
 
 	def get_CMDID(self):
+		"""Reads the recognized command ID register from the DF2301Q module after a short delay; returns the command ID (0 means nothing new was recognized).
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: Recognized command ID, or 0 if nothing new
+		"""
 		time.sleep(0.05)	 # Prevent the access rate from interfering with other functions of the voice module
 		CMDID =  self._read_reg(DF2301Q_I2C_REG_CMDID)  # 0 = nothig new
 		if self.debug > 1 and CMDID > 0: U.logger.log(20,": {}".format(CMDID))
@@ -204,34 +228,77 @@ class DFRobot_DF2301Q_I2C():
 
 	def play_CMDID(self, CMDID):
 		# note Can enter wake-up state through ID = 1 in I2C mode
+		"""Triggers the module to play/announce a given command ID by writing it to the play-command register, then waits one second.
+
+		Inputs:
+		    CMDID (int): Command ID to play
+		Outputs:
+		    int: Always returns 0
+		"""
 		if self.debug > 1: U.logger.log(20,": {}".format(CMDID))
 		self._write_reg(DF2301Q_I2C_REG_PLAY_CMDID, CMDID)
 		time.sleep(1)
 		return 0
 
 	def set_wakeup(self):
+		"""Forces the module into wake-up state by writing command ID 1 to the play-command register.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: Always returns 0
+		"""
 		if self.debug > 1: U.logger.log(20,":")
 		self._write_reg(DF2301Q_I2C_REG_PLAY_CMDID, 1)
 		return 0
 
 	def get_wake_time(self):
+		"""Reads and returns the module's current wake-up duration from the wake-time register.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: Wake time value read from the register
+		"""
 		wktime =  self._read_reg(DF2301Q_I2C_REG_WAKE_TIME)
 		if self.debug > 1: U.logger.log(20,": {}".format(wktime))
 		return wktime
 		return 0
 
 	def set_wake_time(self, wake_time):
+		"""Sets the module's wake-up duration by writing the low byte of the supplied value to the wake-time register.
+
+		Inputs:
+		    wake_time (int): Wake time value to set (low byte written)
+		Outputs:
+		    int: Always returns 0
+		"""
 		if self.debug > 1: U.logger.log(20,": {}".format(wake_time))
 		self._write_reg(DF2301Q_I2C_REG_WAKE_TIME, wake_time & 0xFF)
 		return 0
 
 	def set_volume(self, vol):
+		"""Sets the module's speaker volume, clamping the integer value to the range 0-20 before writing it to the volume register.
+
+		Inputs:
+		    vol (int): Desired volume, clamped to 0-20
+		Outputs:
+		    int: Always returns 0
+		"""
 		v = int(vol)
 		if self.debug > 1: U.logger.log(20,": {}".format(v))
 		self._write_reg(DF2301Q_I2C_REG_SET_VOLUME, max(0,min(v,20)))
 		return 0
 
 	def set_mute_mode(self, mode, calledFrom=""):
+		"""Sets the module's mute mode, normalizing any nonzero value to 1, and writes it to the mute register.
+
+		Inputs:
+		    mode (int): Mute mode; nonzero treated as 1 (muted)
+		    calledFrom (str): Caller identifier used only for logging
+		Outputs:
+		    int: Always returns 0
+		"""
 		m = int(mode)
 		if 0 != m:
 			m = 1
@@ -240,6 +307,14 @@ class DFRobot_DF2301Q_I2C():
 		return 0
 
 	def _write_reg(self, reg, data):
+		"""Low-level helper that writes a register on the DF2301Q over I2C; wraps a single int into a list and writes it as a block, then sleeps for the configured post-write delay.
+
+		Inputs:
+		    reg (int): Register address to write
+		    data (int or list): Byte value or list of bytes to write
+		Outputs:
+		    None: Writes block data to the I2C bus and sleeps
+		"""
 		if isinstance(data, int):
 			data = [data]
 		if self.debug > 2: U.logger.log(20,": {}->{}".format(reg, data))
@@ -247,21 +322,56 @@ class DFRobot_DF2301Q_I2C():
 		time.sleep(self.sleepAfterWrite)
 
 	def _read_reg(self, reg):
+		"""Low-level helper that reads a single byte from the given register over I2C and returns it.
+
+		Inputs:
+		    reg (int): Register address to read
+		Outputs:
+		    int: First byte read from the register
+		"""
 		ret =  self._i2c.read_i2c_block_data(self._addr, reg, 1)
 		if self.debug > 2: U.logger.log(20,": ret:{}".format(ret))
 		return ret[0]
 		#time.sleep(self.sleepAfterWrite)
 
 	def reset_module(self):
+		"""Stub for the I2C interface variant; resetting the module is unsupported, so it merely logs an informational message that reset is not implemented.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: logs that reset is not implemented for the I2C interface
+		"""
 		U.logger.log(20,": reset not implemented for i2c interface")
 
 	def set_need_ack(self):
+		"""Stub for the I2C interface variant; setting the need-ack flag is unsupported, so it merely logs an informational message that the feature is not implemented.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: logs that set_need_ack is not implemented for the I2C interface
+		"""
 		U.logger.log(20,": set_need_ack not implemented for i2c interface")
 
 	def set_need_string(self):
+		"""Stub for the I2C interface variant; setting the need-string flag is unsupported, so it merely logs an informational message that the feature is not implemented.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: logs that set_need_string is not implemented for the I2C interface
+		"""
 		U.logger.log(20,": set_need_string not implemented for i2c interface")
 
 	def close_Port(self):
+		"""Stub for the I2C interface variant; closing the port is unsupported, so it merely logs an informational message that the feature is not implemented.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: logs that close_Port is not implemented for the I2C interface
+		"""
 		U.logger.log(20,": close_Port not implemented for i2c interface")
 	
 
@@ -316,11 +426,27 @@ class DFRobot_DF2301Q_UART():
 		self.startTime = time.time()
 
 	def close_Port(self):
+		"""Closes the underlying serial port for the UART interface variant, closing the connection if it is currently open.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: closes the open serial port
+		"""
 		if self._ser.isOpen:
 			self._ser.close()
 		return 
 
 	def set_Params(self, sleepAfterWrite=0, logLevel=-1, commandList={}):
+		"""Updates the driver's configuration: optionally sets the debug log level, the post-write sleep delay (converting from milliseconds to seconds), and the command list. Errors are caught and logged.
+
+		Inputs:
+		    sleepAfterWrite (int): delay in milliseconds applied after a write, stored as seconds
+		    logLevel (int): debug log level; -1 leaves it unchanged
+		    commandList (dict): command mapping copied into the driver; empty dict leaves it unchanged
+		Outputs:
+		    None: updates self.debug, self.sleepAfterWrite, and self.commandList
+		"""
 		try:
 			if logLevel != -1:
 				self.debug = int(logLevel)
@@ -347,34 +473,77 @@ class DFRobot_DF2301Q_UART():
 
 
 	def set_volume(self,  set_value):
+		"""Sets the device output volume by sending the SET_VOLUME UART command, clamping the integer value to the range 0-20.
+
+		Inputs:
+		    set_value (int): desired volume, clamped to 0-20
+		Outputs:
+		    object: result of setting_CMD sending the SET_VOLUME command
+		"""
 		v = int(set_value)
 		if self.debug > 1: U.logger.log(20, "value:{}".format(v) )
 		return self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_VOLUME, max(0,min(v,20)))
 
 
 	def set_mute_mode(self,  set_value, calledFrom=""):
+		"""Enables or disables mute mode by sending the SET_MUTE UART command with a boolean derived from set_value (nonzero means mute).
+
+		Inputs:
+		    set_value (int): mute flag; nonzero enables mute
+		    calledFrom (str): optional caller identifier used only for debug logging
+		Outputs:
+		    object: result of setting_CMD sending the SET_MUTE command
+		"""
 		m = 0 != int(set_value)
 		if self.debug > 1: U.logger.log(20,": {}, from:{}".format(m, calledFrom))
 		return self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_MUTE, m)
 
 
 	def set_wake_time(self,  set_value):
+		"""Sets the wake-up duration by sending the SET_WAKE_TIME UART command with the value masked to a single byte (0xFF).
+
+		Inputs:
+		    set_value (int): wake time, masked to the low byte
+		Outputs:
+		    object: result of setting_CMD sending the SET_WAKE_TIME command
+		"""
 		if self.debug > 1: U.logger.log(20, "value:{}".format(set_value) )
 		return self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_WAKE_TIME, set_value & 0xFF)
 
 
 	def set_wakeup(self):
+		"""Forces the device into wake-up mode by sending the SET_ENTERWAKEUP UART command with value 1.
+
+		Inputs:
+		    None.
+		Outputs:
+		    object: result of setting_CMD sending the SET_ENTERWAKEUP command
+		"""
 		if self.debug > 1: U.logger.log(20, "value:{}".format(1) )
 		return self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_ENTERWAKEUP, 1)
 
 
 
 	def set_need_ack(self): 
+		"""Enables acknowledgement responses on the UART interface by sending the SET_NEEDACK command with value 1.
+
+		Inputs:
+		    None.
+		Outputs:
+		    object: result of setting_CMD sending the SET_NEEDACK command
+		"""
 		if self.debug > 1: U.logger.log(20, "value:{}".format(1) )
 		return self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_NEEDACK, 1)
 
 
 	def set_need_string(self): 
+		"""Enables string responses on the UART interface by sending the SET_NEEDSTRING command with value 1.
+
+		Inputs:
+		    None.
+		Outputs:
+		    object: result of setting_CMD sending the SET_NEEDSTRING command
+		"""
 		if self.debug > 1: U.logger.log(20, "value:{}".format(1) )
 		return self.setting_CMD( DF2301Q_UART_MSG_CMD_SET_NEEDSTRING, 1)
 
@@ -404,6 +573,13 @@ class DFRobot_DF2301Q_UART():
 
 
 	def setting_CMD_UP(self):
+		"""Builds an ASR-result CMD_UP UART message with an incrementing send sequence and two zero data bytes, then transmits it to the DF2301Q voice module via _send_packet.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: Result of _send_packet (0/1 status), or 1 on exception
+		"""
 		try:
 			msg = self.uart_msg()
 			msg.msg_type = DF2301Q_UART_MSG_TYPE_CMD_UP
@@ -421,6 +597,13 @@ class DFRobot_DF2301Q_UART():
 		return 1
 
 	def set_notify_Status(self): # does not work
+		"""Sends a NOTIFY-status setting command to the module requesting wakeup-enter notifications by calling setting_Notify with the appropriate type/cmd/value constants (noted as not working).
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Sends a notify-setting packet to the UART module
+		"""
 		if self.debug > 1: U.logger.log(20, "")
 		#self.setting_Notify( DF2301Q_UART_MSG_TYPE_CMD_DOWN, DF2301Q_UART_MSG_CMD_GET_VERSION, DF2301Q_UART_MSG_DATA_VER_PROTOCOL)
 		#self.setting_Notify( DF2301Q_UART_MSG_CMD_PLAY_VOICE, 0)
@@ -446,6 +629,13 @@ class DFRobot_DF2301Q_UART():
 
 
 	def get_wakeTime(self): #dummy not done yet
+		"""Placeholder/stub for retrieving the module wake time; currently unimplemented and does nothing.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: No operation; returns nothing
+		"""
 		return 
 
 
@@ -717,6 +907,13 @@ class DFRobot_DF2301Q_UART():
 
 ###############################
 def	makeUsbItemList():
+	"""Scans /dev via 'ls -l | grep ttyUSB' to discover connected USB serial devices and populates the global USBitems list with their device names.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Populates the global USBitems list with discovered ttyUSB device names
+	"""
 	global USBitems
 	USBitems = []
 	cmd = "/bin/ls -l /dev | /usr/bin/grep ttyUSB"
@@ -732,6 +929,13 @@ def	makeUsbItemList():
 
 ###############################
 def readParams():
+	"""Reads the plugin parameter file and, for each changed DF2301Q device, initializes/updates all per-device globals (log level, command lists, react/error commands, learning, mute, i2c-vs-uart interface, serial port, sleep/refresh/restart timings, keep-awake, etc.), refreshes the USB and PORT-owner files, and (re)starts the sensor when needed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Returns early on no/unchanged input; otherwise updates many module globals and starts sensors
+	"""
 	global sensors, logDir, sensor,	 displayEnable
 	global SENSOR, sensorOld
 	global oldRaw, lastRead, lastRead2
@@ -922,7 +1126,7 @@ def readParams():
 
 				serialPortName[devId] =  sensors[sensor][devId].get("serialPortName", DF2301Q_UART_PORT_NAME)	
 				if devId not in oldserialPortName or (serialPortName[devId] != "" and oldserialPortName[devId]  != serialPortName[devId]) :
-					restart = "portname changed"
+					restart = "portname changed "
 				oldserialPortName[devId]  = copy.copy(serialPortName[devId])
 			else:
 				if "i2cSleepAfterWrite" in sensors[sensor][devId]:
@@ -984,6 +1188,13 @@ def readParams():
 
 #################################
 def maxLogLevel():
+	"""Iterates the per-device logLevel dictionary and returns the highest log level configured across all devices.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: Maximum log level among all devices (0 if none/error)
+	"""
 	global logLevel
 	x = 0
 	try:
@@ -997,6 +1208,14 @@ def maxLogLevel():
 	
 #################################
 def prepGPIOInfoForCommands(devIdSelect, output):
+	"""For the selected device(s), reads GPIO-for-command parameters (gpio number, command id, on-time, inverse) from the sensor config, validates and caches them in the GPIO action globals, marks GPIOs used, and builds the gpioInfoIndigoIDForMsgToReceivecommand map linking GPIO numbers to Indigo output device IDs from the output structure.
+
+	Inputs:
+	    devIdSelect (int): Specific device id to process, or 0 for all devices
+	    output (dict): Output-device structure mapping devType to Indigo output device IDs and gpio info
+	Outputs:
+	    None: Updates GPIO action globals and the gpioInfoIndigoIDForMsgToReceivecommand mapping
+	"""
 	global sensors, sensor
 	global SENSOR
 	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction, anyCmdDefined
@@ -1086,6 +1305,13 @@ def prepGPIOInfoForCommands(devIdSelect, output):
 
 #################################
 def startSensor(devId):
+	"""Starts (or restarts) the DF2301Q sensor for a device: closes any existing instance, then opens it over UART (checking serial0/ttyS0 or scanning USB ports, retrying and verifying via get_CMDID) or over I2C, sets params/volume, and records the accepted port in the PORT-owner file.
+
+	Inputs:
+	    devId (str): Device id whose sensor instance to start
+	Outputs:
+	    bool: True if started (or no work needed), False if connection failed/errored
+	"""
 	global sensors,sensor
 	global lastRestart
 	global SENSOR
@@ -1222,6 +1448,16 @@ def startSensor(devId):
 # manage USB and serial ports between sensors of this type and other device types ##
 ###################################################################################################
 def updatePORTownerFile(devId, port="x", failed="x", calledFrom=""):
+	"""Records the result of a port-acquisition attempt for a device in the in-memory PORT-owner structure (setting the working port or appending a failed entry), writes it to the shared PORT-owner file, and reads it back.
+
+	Inputs:
+	    devId (str): Device id whose port-owner entry is updated
+	    port (str): Working port name to store, or 'x' to skip
+	    failed (str): Failed port/reason to append, or 'x'/'' to skip
+	    calledFrom (str): Caller label used for logging
+	Outputs:
+	    dict: The PORT-owner mapping re-read from file
+	"""
 	global logLevel, localPORTownerFile
 	try:
 		if devId in localPORTownerFile:
@@ -1241,6 +1477,13 @@ def updatePORTownerFile(devId, port="x", failed="x", calledFrom=""):
 	
 #################################
 def readPORTownerFile():
+	"""Reads and returns the shared PORT-owner JSON file (which tracks port ownership across device types) into the localPORTownerFile global.
+
+	Inputs:
+	    None.
+	Outputs:
+	    dict: Parsed PORT-owner mapping, or empty dict on error
+	"""
 	global logLevel, localPORTownerFile
 	try:
 		localPORTownerFile, xxx = U.readJson(GLOB_PORTownerFile)
@@ -1251,6 +1494,13 @@ def readPORTownerFile():
 
 #################################
 def initPORTownerFile(firstRead):
+	"""Initializes the PORT-owner file by loading it (defaulting to an empty dict) and, on the first read, resetting this program's device entries and writing the file back.
+
+	Inputs:
+	    firstRead (bool): True on the first parameter read to reset owner entries
+	Outputs:
+	    dict: The (possibly reset) PORT-owner mapping
+	"""
 	global logLevel, localPORTownerFile
 	try:
 		localPORTownerFile = readPORTownerFile()
@@ -1266,6 +1516,14 @@ def initPORTownerFile(firstRead):
 	
 #################################
 def clearPORTownerFile(devId, firstRead):
+	"""Clears a device's PORT-owner entry by resetting its 'ok' port to empty (creating a default entry if missing or on first read) and writing the updated PORT-owner file.
+
+	Inputs:
+	    devId (str): Device id whose port-owner entry is cleared
+	    firstRead (bool): True on first read to fully reset the device entry
+	Outputs:
+	    dict: The updated PORT-owner mapping
+	"""
 	global logLevel, localPORTownerFile
 	try:
 			if firstRead: localPORTownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
@@ -1278,6 +1536,13 @@ def clearPORTownerFile(devId, firstRead):
 	
 #################################
 def checkifdevIdInPORTownerFile(devId):
+	"""Ensures the given device id has an entry in the in-memory localPORTownerFile dict, creating a default record (empty failed list, empty ok port, current program as devType) if absent, then persists the dict to disk.
+
+	Inputs:
+	    devId (str): Indigo device id key used in the port-owner registry
+	Outputs:
+	    dict: the (possibly updated) localPORTownerFile mapping
+	"""
 	global logLevel, localPORTownerFile
 	try:
 			if devId not in localPORTownerFile: localPORTownerFile[devId] = {"failed":[], "ok":"", "devType":G.program}
@@ -1288,6 +1553,14 @@ def checkifdevIdInPORTownerFile(devId):
 
 #################################
 def checkifIdInOKPORTownerFile(devId, findThis):
+	"""Checks whether the given port/value (findThis) is currently recorded as the successfully owned ('ok') port for the device id in localPORTownerFile.
+
+	Inputs:
+	    devId (str): device id key to look up
+	    findThis (str): port/value to compare against the device's stored 'ok' entry
+	Outputs:
+	    bool: True if findThis matches the device's ok port, else False
+	"""
 	global logLevel, localPORTownerFile
 	try:
 			if devId not in localPORTownerFile: return False
@@ -1299,6 +1572,14 @@ def checkifIdInOKPORTownerFile(devId, findThis):
 
 #################################
 def checkifIdInFAILEDPORTownerFile(devId, findThis):
+	"""Checks whether the given port/value (findThis) appears in the device's list of previously failed ports in localPORTownerFile.
+
+	Inputs:
+	    devId (str): device id key to look up
+	    findThis (str): port/value to search for in the device's 'failed' list
+	Outputs:
+	    bool: True if findThis is in the device's failed list, else False
+	"""
 	global logLevel, localPORTownerFile
 	try:
 			if devId not in localPORTownerFile: return False
@@ -1310,6 +1591,13 @@ def checkifIdInFAILEDPORTownerFile(devId, findThis):
 
 #################################
 def getdevIdsPORTownerFile():
+	"""Returns a list of all device ids currently registered as keys in the in-memory localPORTownerFile dict.
+
+	Inputs:
+	    None.
+	Outputs:
+	    list: list of device id keys, or empty list on error
+	"""
 	global logLevel, localPORTownerFile
 	try:
 			retList = []
@@ -1322,6 +1610,13 @@ def getdevIdsPORTownerFile():
 
 #################################
 def writePORTownerFile(PORTownerFile):
+	"""Replaces the in-memory localPORTownerFile with a copy of the supplied dict and writes it as formatted JSON to the GLOB_PORTownerFile path.
+
+	Inputs:
+	    PORTownerFile (dict): port-owner registry mapping to store and persist
+	Outputs:
+	    None: updates global localPORTownerFile and writes the JSON file
+	"""
 	global logLevel, localPORTownerFile
 	try:
 		localPORTownerFile = copy.copy(PORTownerFile)
@@ -1334,6 +1629,13 @@ def writePORTownerFile(PORTownerFile):
 
 #################################
 def cycleUSBPort():
+	"""Power-cycles the Raspberry Pi USB bus by listing ttyUSB devices then unbinding and rebinding the usb driver via sudo tee, waits for recovery, clears the port-owner parameter file, and restarts the plugin program.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs shell commands to rebind USB, resets the port file, and restarts the process
+	"""
 	global logLevel
 	try:
 		cmdtty = "/bin/ls -l /dev | /usr/bin/grep ttyUSB"
@@ -1359,6 +1661,15 @@ def cycleUSBPort():
 
 #################################
 def setMute(devId, ON, CMDID=0):
+	"""Toggles the DF2301Q voice sensor's mute/learning behavior: when turned on during a learning window it temporarily unmutes, raises volume, and plays a command id; otherwise it restores mute to the configured value, and when turned off it ends learning mode and re-applies the configured setup.
+
+	Inputs:
+	    devId (str): device id of the sensor to configure
+	    ON (bool): True to enter the unmute/learning state, False to restore configured mute
+	    CMDID (int): optional command id to play on the sensor when unmuting during learning
+	Outputs:
+	    None: updates mute/learning globals and sends mute/volume/play commands to the sensor hardware
+	"""
 	global lastkeepAwake, SENSOR, tmpMuteOff, learningOn, currentMute, ignoreUntilEndOfLearning
 	global logLevel
 	try:
@@ -1408,6 +1719,15 @@ def setMute(devId, ON, CMDID=0):
 
 #################################
 def checkifRefreshSetup(devId,  restart=False, upd=False):
+	"""Periodically (or on demand) re-initializes the sensor's runtime settings — mute mode, wake time/wakeup, volume, and sleep/log parameters — when the refresh interval has elapsed or a restart/update is requested, skipping while learning is active and flagging an error if the sensor responds badly.
+
+	Inputs:
+	    devId (str): device id of the sensor to refresh
+	    restart (bool): force a full re-init including wake-time setup
+	    upd (bool): force a refresh/update even before the interval elapses
+	Outputs:
+	    None: sends configuration commands to the sensor, updates mute/keepAwake state, and increments badSensor on error
+	"""
 	global lastkeepAwake, keepAwake, sensors, sensor, SENSOR, tmpMuteOff, learningOn
 	global refreshRepeat, currentMute, badSensor, sleepAfterWrite, logLevel
 	global logLevel, commandList, expectResponse, setWakeTime
@@ -1457,6 +1777,14 @@ def checkifRefreshSetup(devId,  restart=False, upd=False):
 
 ############ check if we expect a response soon #####################
 def setNoExpectResponse(devId, calledfrom=""):
+	"""Disables response-expectation timing for a device by pushing its expectResponse timestamp far into the future, resetting the reconnect counter and refreshing the keep-awake timestamp.
+
+	Inputs:
+	    devId (str): device id whose response expectation is being cleared
+	    calledfrom (str): optional label of the caller, used only in log output
+	Outputs:
+	    None: updates expectResponse, restartConnectionCounter, and lastkeepAwake globals
+	"""
 	global expectResponse, restartConnectionCounter
 	expectResponse[devId] = time.time() + 9999999999
 	restartConnectionCounter[devId] = 0
@@ -1466,6 +1794,13 @@ def setNoExpectResponse(devId, calledfrom=""):
 
 #################################
 def setExpectResponse(devId):
+	"""Arms a response-timeout for the device by setting its expectResponse timestamp to the current time plus the configured GLOB_expectResponseAfter window.
+
+	Inputs:
+	    devId (str): device id for which a response is now expected
+	Outputs:
+	    None: updates the expectResponse global timestamp
+	"""
 	global expectResponse, logLevel
 	expectResponse[devId] = time.time() + GLOB_expectResponseAfter
 	if logLevel[devId]> 1: U.logger.log(20, "devId:{}; setting  expectResponse to {:.1f}".format(devId, GLOB_expectResponseAfter))
@@ -1474,6 +1809,13 @@ def setExpectResponse(devId):
 
 #################################
 def checkExpectResponse(devId):
+	"""For UART devices, checks whether an expected response has timed out and escalates accordingly: restarts the whole program after too many reconnects, otherwise restarts the connection; also triggers a setup refresh when the bad-sensor counter exceeds a threshold.
+
+	Inputs:
+	    devId (str): device id to check for an overdue response
+	Outputs:
+	    int: 3 if program restart triggered, 2 if connection restart, 1 if refresh-setup triggered, else 0
+	"""
 	global expectResponse, i2cOrUart, checkExpectResponse, restartConnectionCounter, minRestartConnectionTime
 
 	try:
@@ -1506,6 +1848,14 @@ def checkExpectResponse(devId):
 
 #################################
 def checkIfRestartConnection(devId, force=False):
+	"""Restarts the sensor connection when restarts are enabled (or forced) and the restart-repeat interval has elapsed, by clearing the cached port/sensor/read tracking variables and calling startSensor for each device.
+
+	Inputs:
+	    devId (str): device id (loop also iterates all devices in restartRepeat)
+	    force (bool): bypass the enabled flag and interval check to force a reconnect
+	Outputs:
+	    None: resets connection-tracking globals and re-starts the sensor connection
+	"""
 	global sensorOld, oldRaw, lastRead, oldi2cOrUart, oldserialPortName
 	global lastRestart, restartRepeat, restartON, SENSOR
 	global logLevel, restartConnectionCounter
@@ -1528,6 +1878,13 @@ def checkIfRestartConnection(devId, force=False):
 
 #################################
 def checkIfRestart(force=False):
+	"""Checks for the presence of a restart-flag file (or a forced request) and, if found, removes it, logs the restart, and triggers a plugin restart of itself.
+
+	Inputs:
+	    force (bool): When True, restart unconditionally even if the flag file is absent
+	Outputs:
+	    None: removes the restart flag file, logs, and restarts the plugin process
+	"""
 	global logLevel
 	try:
 		if os.path.isfile(GLOB_restartFile): 
@@ -1547,6 +1904,13 @@ def checkIfRestart(force=False):
 
 #################################
 def checkIfReset():
+	"""Checks for a reset-flag file; if present, removes it and performs a reset of every sensor device along with restarting its connection.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes the reset flag file, resets each sensor module, and logs
+	"""
 	global logLevel, SENSOR
 	try:
 		if not os.path.isfile(GLOB_resetFile): return
@@ -1563,6 +1927,14 @@ def checkIfReset():
 
 #################################
 def doReset(devId, force=False):
+	"""Resets the sensor module for the given device if more than 50 seconds have passed since its last reset (or if forced), recording the new reset time.
+
+	Inputs:
+	    devId (str): Device identifier whose sensor module to reset
+	    force (bool): When True, reset regardless of the time-since-last-reset throttle
+	Outputs:
+	    bool: True if a reset was performed, False if skipped due to throttling
+	"""
 	global lastReset, SENSOR
 	if time.time() - lastReset[devId] > 50 or force:
 		U.logger.log(20, "==== doing a reset ====")
@@ -1655,7 +2027,7 @@ def resetSensorRelay(devId):
 		startTime = time.time()
 		for ii in range(8):
 			if sensors[sensor][devId].get("gpioCmdForAction"+str(ii),"") == str(GLOB_cmdCodeForrelay):
-				if commonRelayActive.get(devId,false):
+				if commonRelayActive.get(devId,False):
 					U.writeJson(GLOB_commonrelayActiveFile, json.dumps({"lastrelay":time.time()}))
 				cmdQueue.put(GLOB_cmdCodeForrelay)
 				time.sleep(6)
@@ -1673,16 +2045,37 @@ def resetSensorRelay(devId):
 
 ############################################
 def sendRecoveryMessage():
+	"""Sends a recovery notification by invoking sendxxRecoveryMessage with the recovered-success code 1001.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: delegates to sendxxRecoveryMessage(1001)
+	"""
 	sendxxRecoveryMessage(1001)
 	return
 
 ############################################
 def sendNotRecoveryMessage():
+	"""Sends a not-recovered notification by invoking sendxxRecoveryMessage with the failure code 1002.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: delegates to sendxxRecoveryMessage(1002)
+	"""
 	sendxxRecoveryMessage(1002)
 	return
 
 ############################################
 def sendxxRecoveryMessage(code):
+	"""Reads the recovery-message JSON file (if present), rotates it to the previous-recovery file, computes elapsed time since the last reset and any prior reset timestamp, then posts a recovery/not-recovered status message to the plugin via sendURL.
+
+	Inputs:
+	    code (int): Recovery status code (1001 for recovered, 1002 for not recovered)
+	Outputs:
+	    None: rotates recovery files, sends a URL status message, and updates lastAliveSend
+	"""
 	global sensor, lastAliveSend
 	try:
 		if not os.path.isfile(GLOB_recoverymessage): return 
@@ -1714,6 +2107,14 @@ def sendxxRecoveryMessage(code):
 
 #################################
 def getValues(devId, wait=0.):
+	"""Reads the latest command ID (CMDID) from the sensor, handling bad-sensor retries, learning-mode entry/exit, keep-awake/refresh logic, and reset commands; returns a dict describing the accepted command or a bad-sensor marker.
+
+	Inputs:
+	    devId (str): Device identifier of the sensor to read
+	    wait (float): Seconds to sleep before reading the sensor
+	Outputs:
+	    dict or str: {'cmd': CMDID} on success/idle, or the string 'badSensor' / '' on repeated read failures
+	"""
 	global sensor, sensors,	 SENSOR, badSensor, tmpMuteOff, learningOn
 	global keepAwake
 	global commandList, lastkeepAwake
@@ -1867,6 +2268,14 @@ def getValues(devId, wait=0.):
 
 ############################################
 def acceptCMDID(devId, CMDID):
+	"""Determines whether a received command ID should be accepted, suppressing duplicates that arrive within each device's ignore-same-command window; updates last-command bookkeeping and queues accepted commands.
+
+	Inputs:
+	    devId (str): Device identifier that received the command
+	    CMDID (int): The received command ID to evaluate
+	Outputs:
+	    int: 0 if CMDID is 0, 1 to suppress a too-soon duplicate, 2 to accept
+	"""
 	global lastCommandReceived, lastValidCmdAt, ignoreSameCommands
 	global anyCmdDefined
 	
@@ -1895,10 +2304,24 @@ def acceptCMDID(devId, CMDID):
 
 ############################################
 def checkResetPower():
+	"""Placeholder hook for checking/resetting power that currently performs no action.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: no-op
+	"""
 	return
 
 ############################################
 def startThreads():
+	"""Starts the background command-processing thread that runs cmdCheckIfGPIOon, recording its running state.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: creates and starts the cmdCheckIfGPIOon thread and logs
+	"""
 	global threadCMD
 	global logLevel
 
@@ -1917,6 +2340,13 @@ def startThreads():
 
 ############################################
 def cmdCheckIfGPIOon():
+	"""Background thread loop that drains the command queue and, for each configured GPIO action matching a voice command, writes pulse-up output commands to the receive-commands file to actuate the mapped GPIO pins.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes GPIO pulse commands to the command file and logs until the thread state stops
+	"""
 	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction	
 	global cmdQueue, threadCMD
 	global logLevel, anyCmdDefined
@@ -1991,6 +2421,15 @@ def cmdCheckIfGPIOon():
 
 ############################################
 def cmdCheckSerialPort( devId, serialType, doNotUse=""):
+	"""Verifies and configures the serial port for a device: for hardware serial it checks/repairs the Raspberry Pi serial console/hardware config (rebooting if changed), then for non-reboot cases locates an available /dev device matching the configured port name, skipping ports already in use, and returns the chosen port.
+
+	Inputs:
+	    devId (str): Device identifier whose serial port to validate
+	    serialType (str): Serial type/name (e.g. contains 'USB' or a port suffix)
+	    doNotUse (str): Optional port to mark as failed/exclude when updating the owner file
+	Outputs:
+	    str: The selected available port device name, or empty string if none found or on error
+	"""
 	global gpioCmdForAction, gpioNumberForCmdAction, gpioInverseAction, gpioOnTimeAction, serialPortName
 	global sensor, sensors
 	global USBitems
@@ -2110,6 +2549,16 @@ def cmdCheckSerialPort( devId, serialType, doNotUse=""):
 		
 ############################################
 def checkErrorSend(devId, errorText, CMDID, action):
+	"""Manages error reporting/deduplication for a sensor command: on action 'reset' it clears the persisted error file, otherwise it logs the error, compares against the last stored error (by text and time), and conditionally sends the error to Indigo via URL, rewrites the error JSON file, and optionally restarts the process.
+
+	Inputs:
+	    devId (str): Indigo device id the error pertains to
+	    errorText (str): human-readable error message to report
+	    CMDID (int): command id sent with the error payload
+	    action (str): control flags such as 'reset', 'delayed', or 'restart'
+	Outputs:
+	    None: logs, writes/removes the error JSON file, sends URL to Indigo, may restart process
+	"""
 	global logLevel
 	global lastErrExists
 	try:
@@ -2147,6 +2596,13 @@ def checkErrorSend(devId, errorText, CMDID, action):
 
 ############################################
 def execSensorLoop():
+	"""Main sensor process entry point: initializes all global state dictionaries, sets up logging, kills old instances, reads parameters, starts worker threads, then runs the perpetual measurement loop that polls each device's values, sends data/alive pings to Indigo, handles bad-sensor restarts, and periodically checks for commands, restarts, and config refreshes until the sensor is removed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs the infinite sensor loop; updates globals, logs, sends URLs, signals command thread to stop on exit
+	"""
 	global sensor, sensors, badSensor
 	global SENSOR, sensorMode
 	global oldRaw, lastRead, lastRead2

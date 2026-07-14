@@ -1,3 +1,44 @@
+Added features / changes in added features / changes in v2022.191.171 @ 2026-07-13
+==================================================
+1.  harmless shell warnings on stderr (e.g. shell-init/getcwd after the plugin folder was replaced
+    under the running plugin) are no longer treated as ssh/sftp errors -> no more false
+    "fixHostsFile" log blocks for every rpi
+2.  the pi password is now masked in the fixHostsFile diagnostic log message
+3.  reminder: when the plugin bundle is replaced manually or via sync (not via the Indigo installer),
+    reload the plugin afterwards
+4.  added function to beep switchbot remote button
+
+Added features / changes in added features / changes in v2022.191.170 @ 2026-07-13
+==================================================
+1.  code cleanup release, no new features
+2.  removed all python2 u"..." string prefixes (217 occurrences in 45 files); no unicode() usage left
+3.  fixed misplaced comment "#" in plugin.py checkSensortoPi that created an undefined name
+
+Added features / changes in added features / changes in v2022.191.169 @ 2026-07-04
+==================================================
+1.  bug fix release, no new features
+2.  fixed many format errors in log messages (missing {} placeholders, wrong argument order, invalid format specs)
+3.  fixed undefined variable bugs (NameError) in plugin.py and several pi/*.py programs
+    e.g. BLE KKM button events, syncSensors device-to-pi sync, sftp file transfer, gatttool retry cleanup,
+    FaceGesture USB port scan, launchpgm, neopixel off(), LM75A init
+4.  fixed missing imports (subprocess, sys, serial, GPIO, U. prefixes)
+5.  removed unused "from ctypes import *" (DF2301Q, FaceGesture) that hid errors from checkers
+6.  completed serial MH-Z19 branch in mhzCO2.py (wrong class names, added start(), valid range)
+7.  removed python2 leftovers (raw_input, long, unicode, lowercase true/false)
+
+Added features / changes in added features / changes in v2022.191.168 @ 2026-05-25
+==================================================
+1.  reduced frequency for writing changedValues.json to prefs directory from 1/minute to 1 per day or restart 
+
+
+Added features / changes in added features / changes in v2022.191.167 @ 2026-04-09
+==================================================
+1.  fixed tag for ble ruuvi tag tag pos was 9 should be 8 do not know why this was wrong
+2.  some smaller format etc fixes 
+3.  added debug for set sensor icon color 
+4.  added check to fix wrong comparison  ie "< =" instead of "<=" in set sensor icon color 
+5.  when sensor icon color  is ste to blank temp, hum /light/ auto select  sensor icon will be restored (after plugin restart of device edit and save )
+
 Added features / changes in added features / changes in v2022.191.161 @ 2026-01-18
 ==================================================
 1. added sensor switchbot mm wave occupancy BLE sensor

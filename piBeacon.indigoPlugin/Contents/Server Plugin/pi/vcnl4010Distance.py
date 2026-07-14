@@ -25,6 +25,13 @@ import  displayDistance as DISP
 
 #################################		
 def readParams():
+	"""Reads the latest plugin parameter file via U.doRead, updates global sensor/distance configuration, detects sensor config changes, and starts or stops the VCNL40xx ranging sensor accordingly while reading each configured distance device.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True when processed (or no new data), False when input is unchanged/empty
+	"""
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, timing, sensCl, distanceUnits
 	global distanceOffset, distanceMax
@@ -131,6 +138,15 @@ def readParams():
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
+	"""Compares the new and old sensors configuration dictionaries for the selected sensor and decides whether ranging must be stopped, started, or left unchanged.
+
+	Inputs:
+	    sensors (dict): current sensor configuration mapping
+	    sensorsOld (dict): previous sensor configuration mapping
+	    selectedSensor (str): key of the sensor being checked
+	Outputs:
+	    int: -1 to stop, 1 to start/restart, 0 if no change
+	"""
 	if selectedSensor not in sensors:	return -1
 	if selectedSensor not in sensorsOld: return 1
 
@@ -210,6 +226,14 @@ VCNL4010_INT_ALS_READY	= 0x40
 class VCNL40xx():
 
 	def __init__(self,address=VCNL40xx_ADDRESS,maxCurrent=10):
+		"""Initializes the VCNL40xx proximity/ambient-light sensor over I2C by opening the SMBus and writing the command, IR-LED current, proximity-rate and ambient-light configuration registers.
+
+		Inputs:
+		    address (int): I2C address of the VCNL40xx sensor
+		    maxCurrent (int): IR-LED drive current setting (0-20)
+		Outputs:
+		    None: configures the I2C sensor hardware and instance attributes
+		"""
 		self.bus = smbus.SMBus(1)
 		self.address = address
 		
@@ -229,6 +253,13 @@ class VCNL40xx():
 
 
 	def read_Data(self, timeout_sec=1):
+		"""Reads a 4-byte I2C block from the VCNL40xx and computes ambient luminance and a proximity-derived distance value, returning empty values on error.
+
+		Inputs:
+		    timeout_sec (int): unused timeout placeholder, defaults to 1
+		Outputs:
+		    tuple: (distance, luminance, raw data list); empty strings and list on failure
+		"""
 		try:
 			data = self.bus.read_i2c_block_data(self.address, 0x85, 4)
 			luminance = data[0] * 256 + data[1]
@@ -244,6 +275,13 @@ class VCNL40xx():
 	   
 #################################
 def readSensor():
+	"""Polls the VCNL40xx sensor a couple of times to obtain a proximity reading, converts it to a distance in cm using offset and max scaling, and tracks consecutive bad-sensor failures.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (distance in cm, luminance in lux); 'badSensor'/empty on failure
+	"""
 	global sensor, sensors,  sensCl, badSensor, distanceMax
 	global actionDistanceOld, actionShortDistance, actionShortDistanceLimit, actionMediumDistance, actionLongDistance, actionLongDistanceLimit
 	global distance0Offset, distance0Max
@@ -268,7 +306,7 @@ def readSensor():
 			return "badSensor", ""
 	except  Exception as e:
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"distance>>{}<<".format(distance))
+			U.logger.log(30, "distance>>{}<<".format(distance))
 	return "",""	 
 
 

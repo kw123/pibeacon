@@ -103,7 +103,7 @@ try:	PWM = int(command["PWM"]) *100
 except: pass
 
 typeForPWM = "GPIO"
-if u"typeForPWM" in inp and inp["typeForPWM"] == "PIGPIO" and U.pgmStillRunning("pigpiod"):
+if "typeForPWM" in inp and inp["typeForPWM"] == "PIGPIO" and U.pgmStillRunning("pigpiod"):
 	import pigpio
 	PIGPIO = pigpio.pi()
 	pwmRange  = PWM

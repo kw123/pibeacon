@@ -55,6 +55,20 @@ class max31865(object):
 	"""
 	
 	def __init__(self, csPin, misoPin, mosiPin, clkPin, nWires, referenceResistor, resistorAt0C, hertz50_60):
+		"""Constructor for the MAX31865 RTD-to-digital converter driver; stores the SPI GPIO pin assignments and PT100 configuration (wire count, reference resistor, 0C resistance, line frequency), initializes GPIO, and precomputes resistance-ratio compensation constants.
+
+		Inputs:
+		    csPin (int): chip-select GPIO pin number
+		    misoPin (int): MISO GPIO pin number
+		    mosiPin (int): MOSI GPIO pin number
+		    clkPin (int): clock GPIO pin number
+		    nWires (int): RTD wiring configuration (e.g. 3-wire)
+		    referenceResistor (float): reference resistor value in ohms
+		    resistorAt0C (float): RTD resistance at 0 degrees C
+		    hertz50_60 (int): mains line frequency filter selection (50 or 60)
+		Outputs:
+		    None: initializes instance attributes and configures GPIO
+		"""
 		self.csPin = csPin
 		self.misoPin = misoPin
 		self.mosiPin = mosiPin
@@ -70,6 +84,13 @@ class max31865(object):
 		
 		
 	def setupGPIO(self):
+		"""Configures the bit-banged SPI GPIO pins for the MAX31865: sets BCM mode, defines chip-select/MOSI/clock as outputs and MISO as input, and drives the lines to their idle states (CS high, clock and MOSI low).
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: configures RPi.GPIO pin modes and initial output levels
+		"""
 		GPIO.setwarnings(False)
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setup(self.csPin, GPIO.OUT)
@@ -103,6 +124,13 @@ class max31865(object):
 		#
 
 		#one shot
+		"""Performs a one-shot MAX31865 temperature measurement: writes the configuration register to trigger conversion, waits ~100ms, reads all 8 registers, decodes the RTD ADC code into temperature via calcPT100Temp, checks fault-status bits raising FaultError on cable/voltage faults, and returns the temperature in Celsius.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: measured temperature in degrees Celsius
+		"""
 		outByte=  0b10100010
 		#if self.hertz50_60 ==50: outByte | 0b00000001
 		#if self.nWires     ==3:  outByte | 0b00010000
@@ -152,6 +180,14 @@ class max31865(object):
 		return  temp_C
 		
 	def writeRegister(self, regNum, dataByte):
+		"""Writes a single byte to a MAX31865 register over bit-banged SPI: pulls chip-select low, sends the write address byte (0x80 | regNum) followed by the data byte, then raises chip-select.
+
+		Inputs:
+		    regNum (int): register number to write to
+		    dataByte (int): byte value to write into the register
+		Outputs:
+		    None: sends bytes over SPI GPIO to the device register
+		"""
 		GPIO.output(self.csPin, GPIO.LOW)
 		
 		# 0x8x to specify 'write register value'
@@ -165,6 +201,14 @@ class max31865(object):
 		GPIO.output(self.csPin, GPIO.HIGH)
 		
 	def readRegisters(self, regNumStart, numRegisters):
+		"""Reads a consecutive block of MAX31865 registers over bit-banged SPI: pulls chip-select low, sends the starting register address, receives numRegisters bytes, raises chip-select, and returns the collected bytes.
+
+		Inputs:
+		    regNumStart (int): starting register address to read from
+		    numRegisters (int): number of consecutive registers to read
+		Outputs:
+		    list: list of received register byte values
+		"""
 		out = []
 		GPIO.output(self.csPin, GPIO.LOW)
 		
@@ -179,6 +223,13 @@ class max31865(object):
 		return out
 
 	def sendByte(self,byte):
+		"""Transmits one byte to the MAX31865 by bit-banging SPI: for each of the 8 bits (MSB first) it pulses the clock high, drives MOSI according to the bit, shifts the byte left, then pulses the clock low.
+
+		Inputs:
+		    byte (int): byte value to shift out over MOSI
+		Outputs:
+		    None: drives clock and MOSI GPIO lines to clock out the byte
+		"""
 		for bit in range(8):
 			GPIO.output(self.clkPin, GPIO.HIGH)
 			if (byte & 0x80):
@@ -189,6 +240,13 @@ class max31865(object):
 			GPIO.output(self.clkPin, GPIO.LOW)
 
 	def recvByte(self):
+		"""Reads a single byte over the bit-banged SPI interface by toggling the clock pin and sampling the MISO line for each of 8 bits, shifting them into the result MSB-first.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: The 8-bit value clocked in from the MISO pin
+		"""
 		byte = 0x00
 		for bit in range(8):
 			GPIO.output(self.clkPin, GPIO.HIGH)
@@ -199,6 +257,13 @@ class max31865(object):
 		return byte	
 	
 	def calcPT100Temp(self, RTD_ADC):
+		"""Converts a raw MAX31865 RTD ADC code into a PT100/PT1000 temperature in degrees Celsius using the Callendar-Van Dusen equation, applying a quadratic solution above 0 C and a linearized or numpy polynomial-root solution below 0 C.
+
+		Inputs:
+		    RTD_ADC (int): Raw 15-bit RTD ADC code read from the sensor
+		Outputs:
+		    float or str: Temperature in degrees Celsius, or an empty string if the ADC code is zero
+		"""
 		if RTD_ADC == 0: return ""
 		a = .00390830
 		b = -.000000577500
@@ -260,6 +325,13 @@ class FaultError(Exception):
 
 #################################		 
 def readParams():
+	"""Module-level routine that reads the plugin parameter file, extracts the sensor configuration, and for each configured device parses GPIO pins, wire count, reference/0C resistors, frequency, and delta thresholds, then instantiates or removes max31865 sensor objects accordingly.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global sensor state and the max31865sensor dict; logs and exits if not enabled
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
 	global rawOld
 	global deltaX, max31865sensor, minSendDelta
@@ -374,6 +446,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Reads the temperature from the max31865 sensor object for the given device id, returning it rounded in a dict; tracks consecutive failures and reports 'badSensor' after repeated read errors.
+
+	Inputs:
+	    devId (str): Device identifier keying into the max31865sensor dict
+	Outputs:
+	    dict or str: {'temp': rounded float} on success, 'badSensor' on repeated failures, or empty string
+	"""
 	global sensor, sensors,	 max31865sensor, badSensor
 
 	temp = "" 
@@ -388,7 +467,7 @@ def getValues(devId):
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"temp>>{}<<".format(temp))
+			U.logger.log(30, "temp>>{}<<".format(temp))
 		badSensor+=1
 	if badSensor >3: 
 		return "badSensor"

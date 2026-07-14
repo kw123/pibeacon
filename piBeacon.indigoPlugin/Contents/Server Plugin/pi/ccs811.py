@@ -26,12 +26,26 @@ from collections import OrderedDict
 
 class Adafruit_bitfield(object):
 	def __init__(self, _structure):
+		"""Initializes an Adafruit bitfield helper by storing the field structure as an OrderedDict and creating an attribute initialized to 0 for each field name.
+
+		Inputs:
+		    _structure (list): list of (field name, bit width) pairs defining the bitfield layout
+		Outputs:
+		    None: sets up structure and zeroed field attributes
+		"""
 		self._structure = OrderedDict(_structure)
 
 		for key, value in self._structure.items():
 			setattr(self, key, 0)
 
 	def get(self):
+		"""Packs all bitfield attribute values back into a single integer register value according to each field's bit width and position.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: combined register value from all bitfields
+		"""
 		fullreg = 0
 		pos = 0
 		for key, value in self._structure.items():
@@ -41,6 +55,13 @@ class Adafruit_bitfield(object):
 		return fullreg
 
 	def set(self, data):
+		"""Unpacks an integer register value into the individual bitfield attributes, masking and shifting each field by its width and position.
+
+		Inputs:
+		    data (int): raw register value to decode into bitfields
+		Outputs:
+		    None: updates the per-field attributes from the value
+		"""
 		pos = 0
 		for key, value in self._structure.items():
 			setattr(self, key, (data >> pos) & (2**value - 1))
@@ -102,6 +123,14 @@ CCS811_REF_RESISTOR			 = 100000
 class ccs811_class(object):
 	def __init__(self, mode=CCS811_DRIVE_MODE_250MS, address=CCS811_ADDRESS):
 		# Check that mode is valid.
+		"""Constructs a CCS811 air-quality sensor driver: validates the drive mode, opens I2C bus 1 via smbus, stores the device address, sets up the status/measurement/error bitfields, and starts the sensor in the given mode.
+
+		Inputs:
+		    mode (int): CCS811 drive mode constant (default 250ms)
+		    address (int): I2C address of the sensor (default 0x5A)
+		Outputs:
+		    None: initializes I2C bus, registers, and starts the sensor
+		"""
 		if mode not in [CCS811_DRIVE_MODE_IDLE, CCS811_DRIVE_MODE_1SEC, CCS811_DRIVE_MODE_10SEC, CCS811_DRIVE_MODE_60SEC, CCS811_DRIVE_MODE_250MS]:
 			raise ValueError('Unexpected mode value {0}.  Set mode to one of CCS811_DRIVE_MODE_IDLE, CCS811_DRIVE_MODE_1SEC, CCS811_DRIVE_MODE_10SEC, CCS811_DRIVE_MODE_60SEC or CCS811_DRIVE_MODE_250MS'.format(mode))
 
@@ -119,6 +148,13 @@ class ccs811_class(object):
 		self.start(mode = mode)
 
 	def start(self, mode = CCS811_DRIVE_MODE_250MS):
+		"""Boots and starts the CCS811 sensor: resets readings, performs a software reset, verifies the hardware ID, starts the application firmware, checks for errors and firmware mode, disables the interrupt, and sets the drive mode; logs and swallows exceptions.
+
+		Inputs:
+		    mode (int): CCS811 drive mode constant to set (default 250ms)
+		Outputs:
+		    None: resets and configures the sensor over I2C, logs status
+		"""
 		try:
 			self._TVOC = 0
 			self._eCO2 = 0
@@ -157,24 +193,52 @@ class ccs811_class(object):
 
 	def setDriveMode(self, mode):
 
+		"""Sets the CCS811 measurement drive mode by updating the DRIVE_MODE bitfield and writing the packed measurement-mode register over I2C.
+
+		Inputs:
+		    mode (int): CCS811 drive mode constant
+		Outputs:
+		    None: writes the MEAS_MODE register over I2C
+		"""
 		self._meas_mode.DRIVE_MODE = mode
 		self.write8(CCS811_MEAS_MODE, self._meas_mode.get())
 
 
 	def enableInterrupt(self):
 
+		"""Enables the CCS811 data-ready interrupt by setting the INT_DATARDY bit in the measurement-mode bitfield and writing the register over I2C.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes the MEAS_MODE register over I2C
+		"""
 		self._meas_mode.INT_DATARDY = 1
 		self.write8(CCS811_MEAS_MODE, self._meas_mode.get())
 
 
 	def disableInterrupt(self):
 
+		"""Disables the CCS811 data-ready interrupt by clearing the INT_DATARDY bit of the cached measurement mode and writing the updated mode byte to the MEAS_MODE register.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes the measurement-mode register over I2C
+		"""
 		self._meas_mode.INT_DATARDY = 0
 		self.write8(CCS811_MEAS_MODE, self._meas_mode.get())
 
 
 	def available(self):
 
+		"""Reads the CCS811 STATUS register into the cached status object and returns whether new sensor data is ready to be read.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if the DATA_READY status bit is set, otherwise False
+		"""
 		self._status.set(self.readU8(CCS811_STATUS))
 		if(not self._status.DATA_READY):
 			return False
@@ -184,6 +248,13 @@ class ccs811_class(object):
 
 	def readData(self):
 
+		"""If new data is available, reads the 8-byte algorithm result block and decodes the eCO2 and TVOC 16-bit values into instance attributes; returns the error byte when the status error flag is set.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int or bool: False if no data available, the error code byte on error, else 0
+		"""
 		try:
 			if(not self.available()):
 				return False
@@ -236,6 +307,13 @@ class ccs811_class(object):
 	#calculate temperature based on the NTC register
 	def calculateTemperature(self):
 
+		"""Reads the NTC thermistor register, computes the thermistor resistance from the reference voltages, and converts it via a Beta/Steinhart formula to a temperature in Celsius adjusted by the configured offset.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: calculated temperature in degrees Celsius minus the configured offset
+		"""
 		buf = self.readList(CCS811_NTC, 4)
 
 		vref  = (buf[0] << 8) | buf[1]
@@ -252,6 +330,15 @@ class ccs811_class(object):
 
 	def setThresholds(self, low_med, med_high, hysteresis):
 
+		"""Packs the low/medium and medium/high eCO2 threshold values plus a hysteresis byte into a buffer and writes them to the CCS811 thresholds register to configure interrupt thresholds.
+
+		Inputs:
+		    low_med (int): low-to-medium eCO2 threshold value
+		    med_high (int): medium-to-high eCO2 threshold value
+		    hysteresis (int): hysteresis byte for the thresholds
+		Outputs:
+		    None: writes the thresholds register over I2C
+		"""
 		buf = [((low_med >> 8) & 0xF), (low_med & 0xF), ((med_high >> 8) & 0xF), (med_high & 0xF), hysteresis ]
 		
 		self.writeList(CCS811_THRESHOLDS, buf)
@@ -260,30 +347,74 @@ class ccs811_class(object):
 	def SWReset(self):
 
 		#reset sequence from the datasheet
+		"""Performs the datasheet-specified software reset by writing the magic byte sequence to the CCS811 software-reset register.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes the reset sequence over I2C
+		"""
 		seq = [0x11, 0xE5, 0x72, 0x8A]
 		self.writeList(CCS811_SW_RESET, seq)
 
 
 	def checkError(self):
 
+		"""Reads the STATUS register into the cached status object and returns its error flag.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: the ERROR bit from the device status register
+		"""
 		self._status.set(self.readU8(CCS811_STATUS))
 		return self._status.ERROR
 
 	def getTVOC(self):
+		"""Returns the most recently decoded total volatile organic compound (TVOC) reading.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: cached TVOC value
+		"""
 		return self._TVOC
 
 	def geteCO2(self):
+		"""Returns the most recently decoded equivalent CO2 (eCO2) reading.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: cached eCO2 value
+		"""
 		return self._eCO2
 
 
 ######## io methods		   
 	def writeList(self, command,buf):
+		"""Writes a block of bytes to the given CCS811 command register over the I2C bus, logging any exception that occurs.
+
+		Inputs:
+		    command (int): command/register address to write to
+		    buf (list): list of data bytes to write
+		Outputs:
+		    None: writes an I2C block; logs on failure
+		"""
 		try:
 			self.bus.write_i2c_block_data(self.i2c_address, command, buf)
 		except Exception as e:
 			U.logger.log(20,"", exc_info=True)
 
 	def readList(self, command,	 length):
+		"""Reads a block of the requested length from the given CCS811 command register over I2C, returning an empty list on failure.
+
+		Inputs:
+		    command (int): command/register address to read from
+		    length (int): number of bytes to read
+		Outputs:
+		    list: list of bytes read, or empty list on error
+		"""
 		try:
 			return self.bus.read_i2c_block_data(self.i2c_address,command,length)
 		except Exception as e:
@@ -291,6 +422,13 @@ class ccs811_class(object):
 		return []
 
 	def readU8(self, reg):
+		"""Reads a single unsigned byte from the given register over I2C, returning 0 on failure.
+
+		Inputs:
+		    reg (int): register address to read
+		Outputs:
+		    int: the byte value read, or 0 on error
+		"""
 		try:
 			return	self.bus.read_byte_data(self.i2c_address, reg)
 		except Exception as e:
@@ -298,6 +436,14 @@ class ccs811_class(object):
 		return 0
 
 	def write8(self, reg,value):
+		"""Writes a single byte value to the given register of the CCS811 sensor over the I2C bus, logging any exception.
+
+		Inputs:
+		    reg (int): I2C register address to write to
+		    value (int): byte value to write into the register
+		Outputs:
+		    None: writes a byte to the I2C bus; logs on error
+		"""
 		try:
 			self.bus.write_byte_data(self.i2c_address, reg, value)
 		except Exception as e:
@@ -311,6 +457,13 @@ class ccs811_class(object):
 
 #################################		 
 def readParams():
+	"""Reads the latest parameter file, and if it changed, updates global sensor configuration (refresh interval, deltaX, minSendDelta, I2C address) for each configured CCS811 device, (re)starting sensors when settings change and removing devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global config variables and starts/removes sensor instances; logs on error
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global rawOld
 	global deltaX, ccs811, minSendDelta
@@ -410,6 +563,14 @@ def readParams():
 
 #################################
 def startSensor(devId,i2cAddress):
+	"""Initializes a CCS811 sensor instance for the given device at its I2C address (handling any multiplexer switching), waits until it is available, computes and stores a temperature offset, and starts it; sets the device entry to empty string on failure.
+
+	Inputs:
+	    devId (str): device identifier key into the sensors dict
+	    i2cAddress (str): configured I2C address for the sensor
+	Outputs:
+	    None: creates/initializes the global ccs811sensor[devId] instance; logs on error
+	"""
 	global sensors,sensor
 	global startTime
 	global ccs811sensor
@@ -444,6 +605,13 @@ def startSensor(devId,i2cAddress):
 
 #################################
 def getValues(devId):
+	"""Reads CO2, TVOC, and temperature from the CCS811 sensor for a device, repeatedly sampling and rejecting out-of-bounds or jumpy readings, averaging accepted samples, and returning the result; returns the string 'badSensor' when the sensor is unavailable or repeatedly fails.
+
+	Inputs:
+	    devId (str): device identifier key into the sensors/ccs811sensor dicts
+	Outputs:
+	    dict or str: dict with 'CO2','VOC','temp' string values, '' if no good data, or 'badSensor' on failure
+	"""
 	global sensor, sensors,	 ccs811sensor, badSensor
 	global startTime, lastTemp, lastVOC, countVOC, countCO2, lastCO2
 	global lastMeasurement

@@ -132,6 +132,14 @@ class vl6180x:
 		# change the SMBus number in the initializer below!
 
 		# setup i2c bus and SFR address
+		"""Initializes the VL6180X sensor driver over SMBus 1 at the given address, checks the fresh-out-of-reset register to set readiness, and writes the datasheet-mandated register initialization sequence while logging each register value.
+
+		Inputs:
+		    address (int): I2C slave address of the sensor (default 0x29)
+		    debug (int): logging level for debug output
+		Outputs:
+		    None: sets up the I2C bus, instance attributes, and writes initial registers
+		"""
 		self.i2c				= smbus.SMBus(1)
 		self.address			= address
 
@@ -220,6 +228,13 @@ class vl6180x:
 		# Recommended settings from datasheet
 		# http://www.st.com/st-web-ui/static/active/en/resource/technical/document/application_note/DM00122600.pdf
 		# Set GPIO1 high when sample complete
+		"""Applies the recommended/default VL6180X register settings from the datasheet (GPIO sample-complete, averaging period, ALS gain, calibration, integration and inter-measurement periods, interrupt config) and logs the resulting register values.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes configuration registers to the sensor and logs them
+		"""
 		self.set_register(self.__VL6180X_SYSTEM_MODE_GPIO1, 0x10)
 
 		# Set Avg sample period
@@ -283,6 +298,13 @@ class vl6180x:
 
 	def get_identification(self):
 
+		"""Reads the VL6180X identification registers (model ID, model/module revisions, manufacture date and time) and stores them as instance attributes.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: populates idModel, revision, date, and time attributes from sensor registers
+		"""
 		self.idModel		  = self.get_register(self.__VL6180X_IDENTIFICATION_MODEL_ID)
 		self.idModelRevMajor  = self.get_register(self.__VL6180X_IDENTIFICATION_MODEL_REV_MAJOR)
 		self.idModelRevMinor  = self.get_register(self.__VL6180X_IDENTIFICATION_MODEL_REV_MINOR)
@@ -296,6 +318,14 @@ class vl6180x:
 		# NOTICE:  IT APPEARS THAT CHANGING THE ADDRESS IS NOT STORED IN NON-
 		# VOLATILE MEMORY POWER CYCLING THE DEVICE REVERTS ADDRESS BACK TO 0X29
 
+		"""Changes the VL6180X I2C slave device address by writing the new address register, with no-op guards when the address is unchanged or above 127; note the change is not persisted across power cycles.
+
+		Inputs:
+		    old_address (int): current I2C address, returned unchanged on no-op/invalid
+		    new_address (int): desired new I2C address (must be <= 127)
+		Outputs:
+		    int: the resulting device address read back from the register
+		"""
 		if old_address == new_address:
 			return old_address
 		if new_address > 127:
@@ -306,6 +336,13 @@ class vl6180x:
 
 	def get_distance(self):
 		# Start Single shot mode
+		"""Triggers a single-shot range measurement on the VL6180X, waits briefly, reads the range result register, clears the interrupt, and returns the distance in mm.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: measured distance in mm, or -1 on exception
+		"""
 		try: 
 			self.set_register(self.__VL6180X_SYSRANGE_START, 0x01)
 			time.sleep(0.05)
@@ -319,6 +356,13 @@ class vl6180x:
 
 	def get_ambient_light(self, lastGain):
 
+		"""Performs an ambient-light (ALS) measurement on the VL6180X, iteratively adjusting gain and integration period to avoid under/overflow, then computes and returns the calculated lux value along with the adjusted gain settings.
+
+		Inputs:
+		    lastGain (list): two-element [gain index, integration period] to start from and adjust
+		Outputs:
+		    tuple: (calculated lux float, adjusted [gain, period] list), or (0, 0) on error
+		"""
 		try:
 			# First load in Gain we are using, do it every time in case someone
 			# changes it on us.
@@ -414,6 +458,13 @@ class vl6180x:
 		return 0,0
 		
 	def get_register(self, register_address):
+		"""Reads a single 8-bit value from a VL6180X register by writing the 16-bit register address (split into two bytes) over I2C and reading back one byte.
+
+		Inputs:
+		    register_address (int): 16-bit register address to read
+		Outputs:
+		    int: the 8-bit register value
+		"""
 		a1 = (register_address >> 8) & 0xFF
 		a0 = register_address & 0xFF
 		self.i2c.write_i2c_block_data(self.address, a1, [a0])
@@ -421,6 +472,13 @@ class vl6180x:
 		return data
 
 	def get_register_16bit(self, register_address):
+		"""Reads a 16-bit value from a VL6180X register by writing the register address over I2C and reading two consecutive bytes, combining them into a single big-endian 16-bit integer.
+
+		Inputs:
+		    register_address (int): 16-bit register address to read
+		Outputs:
+		    int: the combined 16-bit register value
+		"""
 		a1 = (register_address >> 8) & 0xFF
 		a0 = register_address & 0xFF
 		self.i2c.write_i2c_block_data(self.address, a1, [a0])
@@ -429,11 +487,27 @@ class vl6180x:
 		return (data0 << 8) | (data1 & 0xFF)
 
 	def set_register(self, register_address, data):
+		"""Writes a single data byte to a 16-bit register address on the VL6180X over I2C, splitting the address into high and low bytes.
+
+		Inputs:
+		    register_address (int): 16-bit register address to write to
+		    data (int): byte value (masked to 0xFF) to store
+		Outputs:
+		    None: performs an I2C block write to the sensor
+		"""
 		a1 = (register_address >> 8) & 0xFF
 		a0 = register_address & 0xFF
 		self.i2c.write_i2c_block_data(self.address, a1, [a0, (data & 0xFF)])
 
 	def set_register_16bit(self, register_address, data):
+		"""Writes a 16-bit data word to a 16-bit register address on the VL6180X over I2C, splitting both address and data into high/low bytes.
+
+		Inputs:
+		    register_address (int): 16-bit register address to write to
+		    data (int): 16-bit value to store
+		Outputs:
+		    None: performs an I2C block write to the sensor
+		"""
 		a1 = (register_address >> 8) & 0xFF
 		a0 = register_address & 0xFF
 		d1 = (data >> 8) & 0xFF
@@ -447,6 +521,13 @@ class vl6180x:
 
 #################################		
 def readParams():
+	"""Reads the latest plugin parameters, updates global sensor configuration (refresh rate, deltas, distance units, display flags), exits if this sensor is no longer enabled, and starts or stops ranging on the VL6180X when the config changed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals, may instantiate the sensor, remove temp files, or exit the process
+	"""
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, mode, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, timing, sensCl, distanceUnits, rawOld
 	global oldRaw, lastRead
@@ -547,6 +628,15 @@ def readParams():
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
+	"""Compares the new and previous sensor configuration dictionaries to decide whether the sensor must be (re)started; returns -1 if removed, 1 if added or changed, and 0 if unchanged.
+
+	Inputs:
+	    sensors (dict): current sensor configuration
+	    sensorsOld (dict): previous sensor configuration
+	    selectedSensor (str): key of the sensor being checked
+	Outputs:
+	    int: -1 stop, 1 start/restart, 0 no change
+	"""
 	if selectedSensor not in sensors:	return -1
 	if selectedSensor not in sensorsOld: return 1
 
@@ -568,6 +658,13 @@ def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
 
 #################################
 def getDistance():
+	"""Reads a distance measurement from the VL6180X, retrying up to twice for a positive value; tracks consecutive failures and returns 'badSensor' after too many, or an empty string on error.
+
+	Inputs:
+	    None.
+	Outputs:
+	    float or str: measured distance, 'badSensor', or empty string
+	"""
 	global sensor, sensors,  sensCl, badSensor
 	try:
 		for ii in range(2):
@@ -588,6 +685,13 @@ def getDistance():
 
 #################################
 def getLight():
+	"""Reads an ambient light (lux) measurement from the VL6180X using the current gain, retrying up to twice for a positive value; returns an empty string on error or failure.
+
+	Inputs:
+	    None.
+	Outputs:
+	    float or str: measured lux value or empty string
+	"""
 	global sensCl, gain
 
 	try:
@@ -660,6 +764,7 @@ G.lastAliveSend		= time.time() -1000
 lastLux   			= -999999
 lastLux2  			= 0
 distLast 			= -100
+deltaN				= 0
 while True:
 	try:
 		if sensCl == "":

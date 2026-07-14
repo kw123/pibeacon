@@ -44,4 +44,11 @@ class Scd4xTemperatureOffsetDegC(object):
         self.ticks = int(round(self.degrees_celsius * 65536. / 175.))
 
     def __str__(self):
+        """Returns a human-readable string of the temperature measurement formatted as degrees Celsius with one decimal place.
+
+        Inputs:
+            None.
+        Outputs:
+            str: temperature formatted like '23.4 °C'
+        """
         return '{:0.1f} °C'.format(self.degrees_celsius)

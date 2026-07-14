@@ -73,7 +73,7 @@ class Adafruit_I2C(object):
 				for line in infile:
 					# Match a line of the form "Revision : 0002" while ignoring extra
 					# info in front of the revsion (like 1000 when the Pi was over-volted).
-					match = re.match('Revision\s+:\s+.*(\w{4})$', line)
+					match = re.match(r'Revision\s+:\s+.*(\w{4})$', line)
 					if match and match.group(1) in ['0000', '0002', '0003']:
 						# Return revision 1 if revision ends with 0000, 0002 or 0003.
 						return 1
@@ -88,9 +88,25 @@ class Adafruit_I2C(object):
 	@staticmethod
 	def getPiI2CBusNumber():
 		# Gets the I2C bus number /dev/i2c#
+		"""Returns the fixed I2C bus number (1) used for the Raspberry Pi /dev/i2c device.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: The I2C bus number, always 1
+		"""
 		return 1 
 
 	def __init__(self, address, busnum=-1, debug=False):
+		"""Initializes the Adafruit_I2C helper for the given device address, opening smbus.SMBus on the specified bus number or auto-detecting bus 1 when busnum is negative.
+
+		Inputs:
+		    address (int): I2C device address
+		    busnum (int): I2C bus number; -1 to auto-detect
+		    debug (bool): Enable debug mode
+		Outputs:
+		    None: Sets self.address, self.bus, and self.debug
+		"""
 		self.address = address
 		# By default, the correct I2C bus is auto-detected using /proc/cpuinfo
 		# Alternatively, you can hard-code the bus version below:
@@ -102,6 +118,13 @@ class Adafruit_I2C(object):
 	def reverseByteOrder(self, data):
 		#"Reverses the byte order of an int (16-bit) or long (32-bit) value"
 		# Courtesy Vishal Sapre
+		"""Reverses the byte order of a 16-bit or 32-bit integer value by shifting bytes out of the input and accumulating them in reverse.
+
+		Inputs:
+		    data (int): Integer value whose bytes are reversed
+		Outputs:
+		    int: The byte-swapped integer value
+		"""
 		byteCount = len(hex(data)[2:].replace('L','')[::2])
 		val				= 0
 		for i in range(byteCount):
@@ -110,10 +133,25 @@ class Adafruit_I2C(object):
 		return val
 
 	def errMsg(self):
+		"""Returns the sentinel error value (-1) used to indicate an I2C operation failure.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: The error code -1
+		"""
 		return -1
 
 	def write8(self, reg, value):
 		#"Writes an 8-bit value to the specified register/address"
+		"""Writes an 8-bit value to the specified register/address over the I2C bus, returning an error code if the write raises an IOError.
+
+		Inputs:
+		    reg (int): Register address to write to
+		    value (int): 8-bit value to write
+		Outputs:
+		    int or None: None on success, errMsg() (-1) on IOError
+		"""
 		try:
 			self.bus.write_byte_data(self.address, reg, value)
 		except IOError as err:
@@ -142,6 +180,14 @@ class Adafruit_I2C(object):
 
 	def readList(self, reg, length):
 		#"Read a list of bytes from the I2C device"
+		"""Reads a block of consecutive bytes from the given register of the I2C device, returning them as a list; on IOError returns the result of errMsg().
+
+		Inputs:
+		    reg (int): Register/command address to read from
+		    length (int): Number of bytes to read
+		Outputs:
+		    list: List of bytes read, or errMsg() result on IOError
+		"""
 		try:
 			results = self.bus.read_i2c_block_data(self.address, reg, length)
 			return results
@@ -150,6 +196,13 @@ class Adafruit_I2C(object):
 
 	def readU8(self, reg):
 		#"Read an unsigned byte from the I2C device"
+		"""Reads a single unsigned byte from the given register of the I2C device; on IOError returns the result of errMsg().
+
+		Inputs:
+		    reg (int): Register address to read from
+		Outputs:
+		    int: Unsigned byte value (0-255), or errMsg() result on IOError
+		"""
 		try:
 			result = self.bus.read_byte_data(self.address, reg)
 			return result
@@ -158,6 +211,13 @@ class Adafruit_I2C(object):
 
 	def readS8(self, reg):
 		#"Reads a signed byte from the I2C device"
+		"""Reads a single signed byte from the given register of the I2C device, converting values above 127 to negative; on IOError returns the result of errMsg().
+
+		Inputs:
+		    reg (int): Register address to read from
+		Outputs:
+		    int: Signed byte value (-128 to 127), or errMsg() result on IOError
+		"""
 		try:
 			result = self.bus.read_byte_data(self.address, reg)
 			if result > 127: result -= 256
@@ -167,6 +227,14 @@ class Adafruit_I2C(object):
 
 	def readU16(self, reg, little_endian=True):
 		#"Reads an unsigned 16-bit value from the I2C device"
+		"""Reads an unsigned 16-bit word from the given register of the I2C device, swapping bytes when big-endian order is requested; on IOError returns the result of errMsg().
+
+		Inputs:
+		    reg (int): Register address to read from
+		    little_endian (bool): Whether to interpret the word as little endian (default True)
+		Outputs:
+		    int: Unsigned 16-bit value, or errMsg() result on IOError
+		"""
 		try:
 			result = self.bus.read_word_data(self.address,reg)
 			# Swap bytes if using big endian because read_word_data assumes little
@@ -185,6 +253,13 @@ class Adafruit_I2C(object):
 
 	def readU16Rev(self, reg):
 		#"Reads an unsigned 16-bit value from the I2C device with rev byte order"
+		"""Reads an unsigned 16-bit value by separately reading the low byte at reg and the high byte at reg+1 and combining them with the high byte shifted; on IOError returns the result of errMsg().
+
+		Inputs:
+		    reg (int): Register address of the low byte
+		Outputs:
+		    int: Unsigned 16-bit value, or errMsg() result on IOError
+		"""
 		try:
 			lobyte = self.readU8(reg)
 			hibyte = self.readU8(reg+1)
@@ -202,6 +277,14 @@ class Adafruit_I2C(object):
 
 	def readS16(self, reg, little_endian=True):
 		#"Reads a signed 16-bit value from the I2C device"
+		"""Reads a signed 16-bit value from the given register via readU16, converting values above 32767 to negative; on IOError returns the result of errMsg().
+
+		Inputs:
+		    reg (int): Register address to read from
+		    little_endian (bool): Whether to interpret the word as little endian (default True)
+		Outputs:
+		    int: Signed 16-bit value, or errMsg() result on IOError
+		"""
 		try:
 			result = self.readU16(reg,little_endian)
 			if result > 32767: result -= 65536
@@ -216,6 +299,13 @@ class Adafruit_I2C(object):
 
 	def readS16Rev(self, reg):
 		#"Reads a signed 16-bit value from the I2C device with rev byte order"
+		"""Reads a signed 16-bit value by reading the signed low byte at reg and unsigned high byte at reg+1 and combining them with the high byte shifted; on IOError returns the result of errMsg().
+
+		Inputs:
+		    reg (int): Register address of the low byte
+		Outputs:
+		    int: Signed 16-bit value, or errMsg() result on IOError
+		"""
 		try:
 			lobyte = self.readS8(reg)
 			hibyte = self.readU8(reg+1)
@@ -259,6 +349,15 @@ class VEML6070:
 	INTEGRATIONTIME_4T	=0x03
 
 	def __init__(self, i2c_bus=1, rSet=270000, integrationTime=0x02):
+		"""Initializes a VEML6070 UV sensor driver by opening the given SMBus, storing the sensor I2C address and RSET resistor value, setting the integration time, and disabling (shutting down) the sensor; logs an error on failure.
+
+		Inputs:
+		    i2c_bus (int): I2C bus number to open (default 1)
+		    rSet (int): RSET resistor value in ohms (default 270000)
+		    integrationTime (int): Integration time setting, masked to 2 bits (default 0x02)
+		Outputs:
+		    None: Initializes object state and writes to the I2C sensor; logs on exception
+		"""
 		try:
 			self.bus = smbus.SMBus(i2c_bus)
 			self.sensor_address = 0x38
@@ -270,6 +369,13 @@ class VEML6070:
 			U.logger.log(30,"", exc_info=True)
 
 	def set_integration_time(self, integrationTime):
+		"""Sets the sensor integration time (masked to 2 bits), writes the resulting command byte to the sensor over I2C, and sleeps briefly to let the sensor readjust; logs an error on failure.
+
+		Inputs:
+		    integrationTime (int): Integration time setting, masked to 2 bits
+		Outputs:
+		    None: Updates integration_time and writes the command byte to the I2C sensor
+		"""
 		try:
 			self.integration_time = integrationTime&0x03
 			self.bus.write_byte(self.sensor_address, self.get_command_byte())
@@ -279,17 +385,45 @@ class VEML6070:
 			U.logger.log(30,"", exc_info=True)
 
 	def get_integration_time(self):
+		"""Returns the currently stored integration time setting of the sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: The stored integration_time value
+		"""
 		return self.integration_time
 
 	def enable(self):
+		"""Enables (powers up) the sensor by clearing the shutdown flag and writing the resulting command byte to the sensor over I2C.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Sets shutdown to disable and writes the command byte to the I2C sensor
+		"""
 		self.shutdown = self.SHUTDOWN_DISABLE
 		self.bus.write_byte(self.sensor_address, self.get_command_byte())
 
 	def disable(self):
+		"""Disables (shuts down) the sensor by setting the shutdown flag and writing the resulting command byte to the sensor over I2C.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Sets shutdown to enable and writes the command byte to the I2C sensor
+		"""
 		self.shutdown = self.SHUTDOWN_ENABLE
 		self.bus.write_byte(self.sensor_address, self.get_command_byte())
 
 	def get_uva_light_intensity_raw(self):
+		"""Enables the UVA sensor, waits twice the refresh time to ensure a fresh conversion, reads the high and low data bytes over I2C, disables the sensor, and combines them into a 16-bit raw UVA reading.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: 16-bit raw UVA light value combining MSB and LSB
+		"""
 		self.enable()
 		# wait two times the refresh time to allow completion of a previous cycle with old settings (worst case)
 		time.sleep(self.get_refresh_time()*2)
@@ -299,6 +433,13 @@ class VEML6070:
 		return (msb << 8) | lsb
 
 	def get_uva_light_intensity(self):
+		"""Reads the raw UVA intensity and multiplies it by the configured UVA sensitivity to return a scaled UVA light intensity value.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: raw UVA reading scaled by the sensor sensitivity
+		"""
 		uv	 = self.get_uva_light_intensity_raw()
 		sensi= self.get_uva_light_sensitivity()
 		return uv * sensi
@@ -403,6 +544,16 @@ class BME280:
 
 
 	def __init__(self, mode=4, address=0x77, i2c=None,**kwargs):
+		"""Initializes a BME280 sensor driver: validates the oversampling mode, stores it, creates an Adafruit_I2C device at the given address, loads factory calibration coefficients, writes the control register, and initializes t_fine.
+
+		Inputs:
+		    mode (int): oversampling mode constant, must be one of the BME280_OSAMPLE values
+		    address (int): I2C bus address of the BME280 (default 0x77)
+		    i2c (object or None): optional I2C interface (unused; Adafruit_I2C is created from address)
+		    kwargs (dict): additional keyword arguments (ignored)
+		Outputs:
+		    None: sets up the I2C device, loads calibration, and configures the sensor
+		"""
 		try:
 			# Check that mode is valid.
 			if mode not in [self.BME280_OSAMPLE_1, self.BME280_OSAMPLE_2, self.BME280_OSAMPLE_4,
@@ -422,6 +573,13 @@ class BME280:
 
 	def _load_calibration(self):
 
+		"""Reads the BME280 factory calibration registers (temperature, pressure, and humidity coefficients) over I2C and stores them as instance attributes, applying bit manipulation for the packed H4/H5 humidity values.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: populates dig_T*, dig_P*, and dig_H* calibration attributes
+		"""
 		self.dig_T1 = self._device.readU16(self.BME280_REGISTER_DIG_T1)
 		self.dig_T2 = self._device.readS16(self.BME280_REGISTER_DIG_T2)
 		self.dig_T3 = self._device.readS16(self.BME280_REGISTER_DIG_T3)
@@ -514,6 +672,13 @@ class BME280:
 		return p
 
 	def read_humidity(self):
+		"""Reads the raw humidity ADC value and applies the BME280 datasheet compensation formula using the loaded calibration coefficients and t_fine, clamping the result to the 0-100% range.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: compensated relative humidity percentage clamped to 0-100
+		"""
 		adc = self.read_raw_humidity()
 		# print 'Raw humidity = {0:d}'.format (adc)
 		h = self.t_fine - 76800.0
@@ -594,6 +759,16 @@ class BMP085:
 
 	def __init__(self, mode=1, address=0x77, i2c=None, **kwargs):
 		# Check that mode is valid.
+		"""Initializes a BMP085 sensor driver: validates the oversampling mode, stores it, creates an Adafruit_I2C device at the given address, and loads the factory calibration coefficients.
+
+		Inputs:
+		    mode (int): oversampling mode constant, must be one of the BMP085 mode values
+		    address (int): I2C bus address of the BMP085 (default 0x77)
+		    i2c (object or None): optional I2C interface (unused; Adafruit_I2C is created from address)
+		    kwargs (dict): additional keyword arguments (ignored)
+		Outputs:
+		    None: sets up the I2C device and loads calibration
+		"""
 		if mode not in [self.BMP085_ULTRALOWPOWER, self.BMP085_STANDARD, self.BMP085_HIGHRES, self.BMP085_ULTRAHIGHRES]:
 			raise ValueError('Unexpected mode value {0}.  Set mode to one of self.BMP085_ULTRALOWPOWER, self.BMP085_STANDARD, self.BMP085_HIGHRES, or self.BMP085_ULTRAHIGHRES'.format(mode))
 		self._mode = mode
@@ -603,6 +778,13 @@ class BMP085:
 		self._load_calibration()
 
 	def _load_calibration(self):
+		"""Reads the BMP085 factory calibration registers (AC1-AC6, B1, B2, MB, MC, MD) over I2C as big-endian signed/unsigned 16-bit values, stores them as instance attributes, and logs each value at debug level.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: populates cal_* calibration attributes and logs them
+		"""
 		self.cal_AC1 = self._device.readS16BE(self.BMP085_CAL_AC1)	 # INT16
 		self.cal_AC2 = self._device.readS16BE(self.BMP085_CAL_AC2)	 # INT16
 		self.cal_AC3 = self._device.readS16BE(self.BMP085_CAL_AC3)	 # INT16
@@ -629,6 +811,13 @@ class BMP085:
 	def _load_datasheet_calibration(self):
 		# Set calibration from values in the datasheet example.	 Useful for debugging the
 		# temp and pressure calculation accuracy.
+		"""Sets the BMP085 calibration coefficients to the fixed example values from the datasheet, useful for debugging the temperature and pressure calculation accuracy.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: assigns hard-coded cal_* attributes from the datasheet example
+		"""
 		self.cal_AC1 = 408
 		self.cal_AC2 = -72
 		self.cal_AC3 = -14383
@@ -866,6 +1055,15 @@ class ADS1x15:
 
 	# Constructor
 	def __init__(self, address=0x4a, ic=__IC_ADS1115, debug=False):
+		"""Initializes an ADS1x15 ADC driver: creates an Adafruit_I2C device at the given address, stores the address and debug flag, validates the IC type, and sets the default PGA value used for later conversions.
+
+		Inputs:
+		    address (int): I2C bus address of the ADC (default 0x4a)
+		    ic (int): IC type identifier (ADS1015 or ADS1115 constant)
+		    debug (bool): enable debug output (default False)
+		Outputs:
+		    None: sets up the I2C device and stores ADC configuration; returns early if IC type invalid
+		"""
 		try:
 			# Depending on if you have an old or a new Raspberry Pi, you
 			# may need to change the I2C bus.  Older Pis use SMBus 0,
@@ -891,6 +1089,15 @@ class ADS1x15:
 
 
 	def readADCSingleEnded(self, channel=0, pga=6144, sps=250):
+		"""Performs a single-shot single-ended ADC conversion on the given channel: builds the config register from comparator, sample-rate, PGA, and channel settings, writes it, waits for conversion, reads the result, and converts it to millivolts (handling signed values for the ADS1115).
+
+		Inputs:
+		    channel (int): ADC input channel 0-3 (returns -1 if greater than 3)
+		    pga (int): programmable gain amplifier full-scale range in mV (default 6144)
+		    sps (int): samples per second / data rate (default 250)
+		Outputs:
+		    float: ADC reading in millivolts, -1 for invalid channel, or None on exception
+		"""
 		try:
 			"Gets a single-ended ADC reading from the specified channel in mV. \
 			The sample rate for this mode (single-shot) can be used to lower the noise \
@@ -979,6 +1186,14 @@ class ADS1x15:
 class TSL2561:
 
 	def __init__(self, address=0x29, debug=0):
+		"""Initializes a TSL2561-style light sensor driver: opens SMBus 1, stores address and debug flag, powers on the device and resets a register via I2C writes, initializes gain/integration-time defaults, and applies an initial gain and integration-time setting.
+
+		Inputs:
+		    address (int): I2C bus address of the sensor (default 0x29)
+		    debug (int): debug flag (default 0)
+		Outputs:
+		    None: opens the SMBus, powers on the sensor, and sets initial gain/integration time
+		"""
 		self.bus = smbus.SMBus(1)
 		self.address = address
 		self.debug = debug
@@ -1073,6 +1288,13 @@ class TSL2561:
 class OPT3001:
 
 	def __init__(self, address = 0x44):
+		"""Initializes a temperature sensor driver (HDC-style at 0x44): stores the device address, opens SMBus 1, packs the reset/start/limit command frames, creates a simpleI2cReadWrite helper, writes the start-single and low/high limit configuration frames, and waits for conversion to settle.
+
+		Inputs:
+		    address (int): I2C bus address of the sensor (default 0x44)
+		Outputs:
+		    None: opens the SMBus, builds command frames, and configures the sensor over I2C
+		"""
 		try:
 			self._DeviceAddress = address
 			self.bus = smbus.SMBus(1)
@@ -1094,6 +1316,13 @@ class OPT3001:
 			U.logger.log(20,"", exc_info=True)
 
 	def readLux(self):
+		"""Reads an ambient light value (lux) from the sensor by writing the start/limit commands, reading a word from register 0x00, decoding the flipped mantissa and exponent bytes, and computing lux as (base << exp) * 0.01; retries up to 10 times if the value is out of range.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: computed lux value, or empty string on exception
+		"""
 		try:
 			nn = 0
 			while True:
@@ -1207,16 +1436,48 @@ class TCS34725:
 
 	# Private Methods
 	def __readU8(self, reg):
+		"""Reads an unsigned 8-bit value from the given register, OR-ing the register address with the TCS34725 command bit before reading.
+
+		Inputs:
+		    reg (int): register address to read
+		Outputs:
+		    int: unsigned 8-bit register value
+		"""
 		return self._Device.readU8(self.__TCS34725_COMMAND_BIT | reg)
 
 	def __readU16Rev(self, reg):
+		"""Reads an unsigned 16-bit value (byte-reversed) from the given register, OR-ing the register address with the TCS34725 command bit before reading.
+
+		Inputs:
+		    reg (int): register address to read
+		Outputs:
+		    int: unsigned 16-bit register value with bytes reversed
+		"""
 		return self._Device.readU16Rev(self.__TCS34725_COMMAND_BIT | reg)
 
 	def __write8(self, reg, value):
+		"""Writes an 8-bit value to the given register, OR-ing the register address with the TCS34725 command bit and masking the value to one byte.
+
+		Inputs:
+		    reg (int): register address to write
+		    value (int): byte value to write (masked to 0xff)
+		Outputs:
+		    None: writes to the I2C device register
+		"""
 		self._Device.write8(self.__TCS34725_COMMAND_BIT | reg, value & 0xff)
 
 	# Constructor
 	def __init__(self, address=0x29, debug=False, integrationTime=0xFF, gain=0x01):
+		"""Constructs the TCS34725 sensor driver, creating an Adafruit_I2C device for the given address, storing configuration, and calling initialize() with the integration time and gain.
+
+		Inputs:
+		    address (int): I2C device address (default 0x29)
+		    debug (bool): debug flag (default False)
+		    integrationTime (int): integration time register value (default 0xFF)
+		    gain (int): gain register value (default 0x01)
+		Outputs:
+		    None: initializes the object and configures the sensor
+		"""
 		self._Device = Adafruit_I2C(address)
 
 		self.address = address
@@ -1240,11 +1501,25 @@ class TCS34725:
 		self.enable()
 
 	def enable(self):
+		"""Powers on the sensor by writing the PON enable bit, waiting 10ms, then writing both the PON and AEN (ADC enable) bits to the enable register.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes to the I2C enable register to power on the sensor
+		"""
 		self.__write8(self.__TCS34725_ENABLE, self.__TCS34725_ENABLE_PON)
 		time.sleep(0.01)
 		self.__write8(self.__TCS34725_ENABLE, (self.__TCS34725_ENABLE_PON | self.__TCS34725_ENABLE_AEN))
 
 	def disable(self):
+		"""Disables the sensor by reading the current enable register and writing it back with the PON and AEN bits cleared, putting the device into power-down mode.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes to the I2C enable register to power down the sensor
+		"""
 		reg = 0
 		reg = self.__readU8(self.__TCS34725_ENABLE)
 		self.__write8(self.__TCS34725_ENABLE, (reg & ~(self.__TCS34725_ENABLE_PON | self.__TCS34725_ENABLE_AEN)))
@@ -1256,6 +1531,13 @@ class TCS34725:
 		self.__write8(self.__TCS34725_ATIME, integrationTime)
 
 	def getIntegrationTime(self):
+		"""Returns the current integration time setting by reading the ATIME register from the sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: ATIME register value (integration time)
+		"""
 		return self.__readU8(self.__TCS34725_ATIME)
 
 	def setGain(self, gain):
@@ -1263,6 +1545,13 @@ class TCS34725:
 		self.__write8(self.__TCS34725_CONTROL, gain)
 
 	def getGain(self):
+		"""Returns the current gain setting by reading the CONTROL register from the sensor.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: CONTROL register value (gain)
+		"""
 		return self.__readU8(self.__TCS34725_CONTROL)
 
 	def getRawData(self):
@@ -1282,6 +1571,13 @@ class TCS34725:
 		return color
 
 	def setInterrupt(self, int):
+		"""Enables or disables the sensor's interrupt by reading the enable register, setting or clearing the AIEN interrupt-enable bit based on the argument, and writing it back.
+
+		Inputs:
+		    int (bool): whether to enable (truthy) or disable the interrupt
+		Outputs:
+		    None: writes to the I2C enable register to toggle the interrupt bit
+		"""
 		r = self.__readU8(self.__TCS34725_ENABLE)
 
 		if (int):
@@ -1292,9 +1588,24 @@ class TCS34725:
 		self.__write8(self.__TCS34725_ENABLE, r)
 
 	def clearInterrupt(self):
+		"""Clears a pending sensor interrupt by writing the special clear command (0x66) to the enable register.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes to the I2C device to clear the interrupt
+		"""
 		self._Device.write8(self.__TCS34725_ENABLE, 0x66 & 0xff)
 
 	def setIntLimits(self, low, high):
+		"""Sets the low and high interrupt threshold limits by writing the low and high byte of each 16-bit limit to registers 0x04-0x07.
+
+		Inputs:
+		    low (int): low interrupt threshold (16-bit)
+		    high (int): high interrupt threshold (16-bit)
+		Outputs:
+		    None: writes the threshold bytes to the I2C device registers
+		"""
 		self._Device.write8(0x04, low & 0xFF)
 		self._Device.write8(0x05, low >> 8)
 		self._Device.write8(0x06, high & 0xFF)
@@ -1338,7 +1649,7 @@ class TCS34725:
 
 	@staticmethod
 	def calculateLux(rgb):
-		"""Converts the raw R/G/B values to color temperature in degrees Kelvin"""
+		"""Converts the raw R/G/B values to illuminance in lux, returning the integer Y (luminance) component of the RGB-to-XYZ transform."""
 
 		if not isinstance(rgb, dict):
 			raise ValueError('calculateLux expects dict as parameter')
@@ -1355,6 +1666,13 @@ class TCS34725:
 class SHT21:
 
 	def __init__(self,i2cAdd= 0x40):
+		"""Initializes an Si7021-style temperature/humidity sensor: stores command constants, opens a simple I2C read/write helper at the given address, and issues a soft-reset command followed by a 20ms settle delay.
+
+		Inputs:
+		    i2cAdd (int): I2C bus address of the sensor (default 0x40)
+		Outputs:
+		    None: configures sensor object and resets hardware over I2C
+		"""
 		self._SOFTRESET					  = 0xFE
 		self._TRIGGER_TEMPERATURE_NO_HOLD = 0xF3
 		self._TRIGGER_HUMIDITY_NO_HOLD	  = 0xF5
@@ -1366,6 +1684,13 @@ class SHT21:
 		time.sleep(0.02)
 
 	def read_temperature(self):	   
+		"""Triggers a no-hold temperature measurement, waits 250ms, reads two data bytes, and converts the raw 16-bit value to a temperature in degrees Celsius; returns an empty string on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: temperature in Celsius, or empty string on failure
+		"""
 		try:
 			self.sens.write(struct.pack("B",self._TRIGGER_TEMPERATURE_NO_HOLD))
 			time.sleep(0.25)
@@ -1384,6 +1709,13 @@ class SHT21:
 		
 
 	def read_humidity(self):   
+		"""Triggers a no-hold humidity measurement, waits 250ms, reads two data bytes, converts the raw value to relative humidity percent, and clamps it to a maximum of 100; returns an empty string on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float or str: relative humidity percent capped at 100, or empty string on failure
+		"""
 		try: 
 			self.sens.write(struct.pack("B",self._TRIGGER_HUMIDITY_NO_HOLD))
 			time.sleep(0.25)
@@ -1415,6 +1747,13 @@ class LM75A:
 
 
 	def __init__(self, i2cAdd):
+		"""Initializes an LM75A temperature sensor by storing the I2C device address, opening SMBus bus 1, and pausing 15ms to let the device settle.
+
+		Inputs:
+		    i2cAdd (int): I2C bus address of the LM75A sensor
+		Outputs:
+		    None: opens the SMBus and stores the device address
+		"""
 		self._DeviceAddress = i2cAdd
 		self.bus = smbus.SMBus(1)
 		time.sleep(0.015)
@@ -1452,6 +1791,13 @@ class AM2320:
 	"""
 
 	def __init__(self, i2cAdd=0x5c):
+		"""Initializes an AM2320 temperature/humidity sensor by storing the I2C address, opening SMBus bus 1, and defining the read command and register address constants.
+
+		Inputs:
+		    i2cAdd (int): I2C bus address of the AM2320 sensor (default 0x5c)
+		Outputs:
+		    None: opens the SMBus and sets up register constants
+		"""
 		self._Device_address = i2cAdd
 		self.bus = smbus.SMBus(1)
 		self.PARAM_AM2320_READ = 0x03
@@ -1462,6 +1808,15 @@ class AM2320:
 		self.REG_AM2320_DEVICE_ID_BIT_24_31 = 0x0B
 
 	def _read_raw(self, command, regaddr, regcount):
+		"""Wakes the AM2320 and reads a block of register data: sends the read command for the given register address and count, reads 8 bytes, verifies the trailing CRC16, and returns the payload bytes; returns a placeholder string on error or CRC mismatch.
+
+		Inputs:
+		    command (int): AM2320 function command code (e.g. read)
+		    regaddr (int): starting register address to read
+		    regcount (int): number of registers to read
+		Outputs:
+		    str: decoded payload bytes between header and CRC, or a tab/placeholder string on failure
+		"""
 		try:
 			# need to read twice then it works	 , no clue why
 			try:	 self.bus.write_i2c_block_data(self._Device_address, 0x00, [])
@@ -1485,6 +1840,13 @@ class AM2320:
 		return "	"
 
 	def _am_crc16(self, buf):
+		"""Computes the AM2320 Modbus-style CRC16 checksum over the given bytes using the 0xA001 polynomial, used to validate sensor responses.
+
+		Inputs:
+		    buf (list): sequence of integer bytes to checksum
+		Outputs:
+		    int: 16-bit CRC value
+		"""
 		crc = 0xFFFF
 		for c in buf:
 			crc ^= c
@@ -1519,7 +1881,7 @@ class AM2320:
 			h = struct.unpack('>H', raw_data[-4:2])[0] / 10.0
 		except Exception as e:
 				U.logger.log(20,"", exc_info=True)
-				U.logger.log(20, u"return  value: t={}".format(t)+"; h={}".format(h)	 )
+				U.logger.log(20, "return  value: t={}".format(t)+"; h={}".format(h)	 )
 		return t,h
 
 
@@ -1688,6 +2050,13 @@ class VEML6030:
 
 
 	def __init__(self,address=""):
+		"""Initializes a VEML6030 ambient light sensor: enables the stop condition, selects the default or supplied I2C address, opens SMBus bus 1, disables power-save mode, and sets initial gain, integration-time, wait-time and result-range bounds for auto-ranging.
+
+		Inputs:
+		    address (int or str): I2C address; empty string uses the default VEML6030 address
+		Outputs:
+		    None: opens the SMBus and writes initial configuration to the sensor
+		"""
 		U.setStopCondition(on=True)
 
 		if address =="":
@@ -1706,6 +2075,13 @@ class VEML6030:
 		self.itLast	   = 1
 		
 	def getLight(self):
+		"""Reads ambient light from the VEML6030 with auto-ranging: takes up to three measurements, adjusting gain and integration time so the raw count stays between the min and max thresholds, applies the scaling factor, and returns the median ALS and white-channel lux values; returns empty strings on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (ALS lux, white-channel lux) as floats, or ('','') on failure
+		"""
 		try:
 			alsData	  = [0,0,0]
 			whiteData = [0,0,0]
@@ -1841,6 +2217,13 @@ class VEML7700:
 
 
 	def __init__(self,address=""):
+		"""Initializes a VEML7700 ambient light sensor: enables the stop condition, selects the default or supplied I2C address, opens SMBus bus 1, sets initial gain/integration-time and result-range bounds, and writes the starting configuration register.
+
+		Inputs:
+		    address (int or str): I2C address; empty string uses the default VEML7700 address
+		Outputs:
+		    None: opens the SMBus and writes initial configuration to the sensor
+		"""
 		U.setStopCondition(on=True)
 
 		if address =="":
@@ -1860,6 +2243,13 @@ class VEML7700:
 		self.bus.write_word_data(self._DeviceAddress,self.COMMAND_CODE_CONF, configuration)
 		
 	def getLight(self):
+		"""Reads ambient light from the VEML7700 with auto-ranging: takes up to three measurements, iteratively adjusting gain and integration time so the raw count falls within the configured range, applies the scaling factor, and returns the median ALS and white-channel lux values; returns empty strings on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (ALS lux, white-channel lux) as floats, or ('','') on failure
+		"""
 		try:
 			alsData	  = [0,0,0]
 			whiteData = [0,0,0]
@@ -1969,6 +2359,13 @@ class VEML6075:
 	UV_IT_800MS	  =0b01000000
 
 	def __init__(self,i2cAddress=""):
+		"""Initializes a VEML6075 UV sensor: enables the stop condition, selects the default or supplied I2C address, opens SMBus bus 1, sets up integration-time tables, shuts down then re-enables the sensor at the default integration time, and stores UVA/UVB calibration coefficients and responsivity constants.
+
+		Inputs:
+		    i2cAddress (int or str): I2C address; empty string uses the default VEML6075 address
+		Outputs:
+		    None: opens the SMBus, configures the sensor, and stores calibration coefficients
+		"""
 		U.setStopCondition(on=True)
 		if i2cAddress =="":
 			self._DeviceAddress = self.ADDR 
@@ -2010,6 +2407,13 @@ class VEML6075:
 
 
 	def setDefBits(self,index):
+		"""Sets the VEML6075 UV sensor integration-time index, builds a config word (auto force, no trigger, plus the selected integration-time bits) and writes it to the configuration register, then sleeps for the active integration time.
+
+		Inputs:
+		    index (int): index into the integration-time table selecting exposure duration
+		Outputs:
+		    None: writes the config word to the I2C register and sleeps; updates self.intIndex and self.actualIntegrationTime
+		"""
 		self.intIndex				= index
 		configBits					= (self.UV_AF_AUTO |  self.UV_TRIG_NO |	 self.intBits[self.intIndex])
 		self.actualIntegrationTime	= self.intList[self.intIndex]
@@ -2017,6 +2421,13 @@ class VEML6075:
 		time.sleep(self.actualIntegrationTime+0.05)
 		
 	def getLight(self):
+		"""Reads UVA/UVB and compensation channels from the VEML6075 over I2C, auto-adjusting integration time if UVA is out of range, then computes and returns compensated UV index A and B values.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (UVIA, UVIB) floats clamped at 0, or ('','') on error
+		"""
 		try:
 			for ii in range(3):
 			
@@ -2069,12 +2480,27 @@ class ADC121:
 	# https://github.com/ControlEverythingCommunity
 
 
+		"""Initializes an MQ-series gas sensor (default type MQ9) ADC reader by storing the I2C address and opening SMBus bus 1.
+
+		Inputs:
+		    address (int): I2C device address of the sensor
+		    type (str): sensor model identifier, default 'MQ9'
+		Outputs:
+		    None: stores address and opens smbus.SMBus(1)
+		"""
 		self.i2cAddress = address
 		self.bus		= smbus.SMBus(1)
 
 
 
 	def getData(self):
+		"""Reads two consecutive 12-bit ADC samples from the gas sensor over I2C and returns their average; returns -99 if the read fails.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: averaged 12-bit ADC value, or -99 on failure
+		"""
 		try:
 			ADC		= -99
 
@@ -2111,6 +2537,14 @@ class MS5803:
 	# https://www.controleverything.com/content/Analog-Digital-Converters?sku=MS5803-30BA_I2CS#tabs-0-product_tabset-2
 
 
+		"""Initializes an MS5803 pressure/temperature sensor (default variant 30BA) by opening SMBus bus 1, resetting the device, and reading the six factory calibration coefficients C1-C6 from the PROM.
+
+		Inputs:
+		    address (int): I2C device address of the MS5803 sensor
+		    type (str): sensor variant identifier, default '30BA'
+		Outputs:
+		    None: resets the device and stores calibration coefficients C1-C6
+		"""
 		self.sensType = type
 
 		self.i2cAddress= address
@@ -2149,6 +2583,13 @@ class MS5803:
 
 
 	def getData(self):
+		"""Triggers raw pressure (D1) and temperature (D2) conversions on the MS5803 over I2C, then applies the variant-specific (30BA/05BA/01BA/07BA/02BA/14BA) second-order compensation formulas to compute temperature in Celsius and pressure in pascals.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (cTemp, pressure) compensated temperature in Celsius and pressure in pascals, -99 if read fails
+		"""
 		try:
 			cTemp		= -99
 			pressure	= -99
@@ -2529,6 +2970,13 @@ class IS1145():
 
 	def __init__(self, i2cAddress=IS1145_ADDR):
 
+			"""Initializes a SI1145 UV/IR/visible light sensor by opening SMBus bus 1, selecting the I2C address (default IS1145_ADDR), resetting the device, and loading its calibration/configuration.
+
+			Inputs:
+			    i2cAddress (int): I2C device address; falls back to default if empty or 0
+			Outputs:
+			    None: opens bus, resets and configures the SI1145 device
+			"""
 			self.bus = smbus.SMBus(1)
 			if i2cAddress =="" or i2cAddress ==0:
 				self._DeviceAddress = self.IS1145_ADDR 
@@ -2543,6 +2991,13 @@ class IS1145():
 
 	# device reset
 	def _reset(self):
+			"""Resets the SI1145 sensor by zeroing its measure-rate, interrupt, and config registers, clearing pending IRQs, issuing the reset command, and writing the hardware key register.
+
+			Inputs:
+			    None.
+			Outputs:
+			    None: writes reset/config bytes to the SI1145 over I2C
+			"""
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_MEASRATE0, 0)
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_MEASRATE1, 0)
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_IRQEN, 0)
@@ -2558,6 +3013,14 @@ class IS1145():
 
 	# write Param
 	def writeParam(self, p, v):
+			"""Writes a parameter value to the SI1145 parameter RAM by setting the PARAMWR register, issuing a PARAM_SET command for the parameter offset, then reads back and returns the confirmed parameter value.
+
+			Inputs:
+			    p (int): parameter offset/address to set
+			    v (int): value to write to the parameter
+			Outputs:
+			    int: the parameter value read back from PARAMRD
+			"""
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_PARAMWR, v)
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_COMMAND, p | self.IS1145_PARAM_SET)
 			paramVal = self.bus.read_byte_data(self._DeviceAddress,self.IS1145_REG_PARAMRD)
@@ -2567,6 +3030,13 @@ class IS1145():
 	def _load_calibration(self):
 			# /***********************************/
 			# Enable UVindex measurement coefficients!
+			"""Configures the SI1145 for UV-index measurement by writing UV coefficient registers, enabling the UV/IR/visible/proximity channels, setting up interrupts, LED current and ADC gain/counter/range parameters, and starting auto measurement mode.
+
+			Inputs:
+			    None.
+			Outputs:
+			    None: writes calibration coefficients and channel/ADC configuration to the SI1145
+			"""
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_UCOEFF0, 0x29)
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_UCOEFF1, 0x89)
 			self.bus.write_byte_data(self._DeviceAddress, self.IS1145_REG_UCOEFF2, 0x02)
@@ -2624,6 +3094,13 @@ class IS1145():
 
 
 	def getLight(self):
+		"""Reads the SI1145 measurement registers over I2C and returns visible light, UV index (scaled by 1/100), and IR readings.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (visible, uv_index, ir) sensor readings
+		"""
 		v = self.bus.read_word_data(self._DeviceAddress,0x22)  ## ( overlaps somewhat with IR  )
 		i = self.bus.read_word_data(self._DeviceAddress,0x24)
 		u = self.bus.read_word_data(self._DeviceAddress,0x2C)/100.
@@ -2672,6 +3149,13 @@ class VEML6040:
 
 
 	def __init__(self,address=""):
+		"""Initializes a VEML6040 RGBW color sensor by opening SMBus bus 1, selecting the I2C address (default slave address), powering the sensor off then on with a 40ms integration time, and setting default wait-time and result-range thresholds.
+
+		Inputs:
+		    address (int): I2C device address; falls back to default slave address if empty
+		Outputs:
+		    None: opens bus and configures the VEML6040; logs on exception
+		"""
 		U.setStopCondition(on=True)
 
 		try:
@@ -2700,6 +3184,13 @@ class VEML6040:
 
 	def getLight(self):
 		# RGB W data
+		"""Reads RGB and white light from a VEML6040 sensor over I2C, auto-adjusting the integration time across up to three measurement rounds to keep raw values within a usable range, then returns the median of the gain-normalized lux values for each channel.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: [R, G, B, W] normalized lux values, or ("", "") on error
+		"""
 		R_DATA	 = [0,0,0]
 		G_DATA	 = [0,0,0]
 		B_DATA	 = [0,0,0]
@@ -2793,6 +3284,13 @@ T5403_MODE_HIGH = 0x10
 T5403_MODE_ULTRA = 0x11
 
 def startT5403(i2c=0):
+	"""Opens an SMBus connection to a T5403 barometric pressure sensor and reads its eight factory calibration coefficients (c1-c8) into module globals, applying signed conversion to c5-c8.
+
+	Inputs:
+	    i2c (int): I2C address of the sensor; if 0, uses the default T5403 slave address
+	Outputs:
+	    None: populates global calibration coefficients and the sensor bus object, logs enablement
+	"""
 	global c1,c2,c3,c4,c5,c6,c7,c8,sensorT5403
 	sensorT5403 = smbus.SMBus(1)
 
@@ -2813,19 +3311,49 @@ def startT5403(i2c=0):
 	c6 = uint16Toint16(c6)
 	c7 = uint16Toint16(c7)
 	c8 = uint16Toint16(c8)
-	U.logger.log(0, u"enabled T5403")
+	U.logger.log(0, "enabled T5403")
 
 def uint16Toint16(data):
+		"""Converts an unsigned 16-bit integer into a signed 16-bit value using two's complement when the value exceeds 32767.
+
+		Inputs:
+		    data (int): unsigned 16-bit value to convert
+		Outputs:
+		    int: signed 16-bit equivalent
+		"""
 		if data > 32767:
 				return data - 0x10000
 		else:
 				return data
 def sendCommandT5403(cmd,address=T5403_slaveAddress):
+		"""Writes a command byte to the T5403 sensor's command register over I2C.
+
+		Inputs:
+		    cmd (int): command byte to send
+		    address (int): I2C address of the sensor, defaulting to the T5403 slave address
+		Outputs:
+		    None: writes a byte to the I2C command register
+		"""
 		sensorT5403.write_byte_data(address,T5403_COMMAND_REG,cmd)
 def getT5403RawData(address=T5403_slaveAddress):
+		"""Reads the T5403 sensor's two data registers (MSB and LSB) over I2C and combines them into a single 16-bit value.
+
+		Inputs:
+		    address (int): I2C address of the sensor, defaulting to the T5403 slave address
+		Outputs:
+		    int: combined 16-bit raw measurement value
+		"""
 		return (sensorT5403.read_byte_data(address,T5403_DATA_REG_MSB)<<8) + sensorT5403.read_byte_data(address,T5403_DATA_REG_LSB)
 		
 def getT5403(sensor, data):
+	"""Reads temperature and pressure from one or more T5403 sensors behind a TCA9548A I2C multiplexer, applying calibration coefficients and per-device offsets, stores results in the data dict, and tracks bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key into the sensors config dict
+	    data (dict): accumulator dict to store per-device temp/press readings
+	Outputs:
+	    dict: the data dict updated with T5403 readings
+	"""
 	global sensorT5403i, T5403started
 	global c1,c2,c3,c4,c5,c6,c7,c8, sensorT5403
 	global sensors, sValues, displayInfo
@@ -2891,7 +3419,7 @@ def getT5403(sensor, data):
 
 	except Exception as e:
 			U.logger.log(20,"", exc_info=True)
-			U.logger.log(2, u" sensor bad T5403 @ {}".format(sensorT5403i))
+			U.logger.log(2, " sensor bad T5403 @ {}".format(sensorT5403i))
 			
 	if sensor in data and data[sensor]=={}: del data[sensor]
 	U.muxTCA9548Areset()
@@ -2903,6 +3431,14 @@ def getT5403(sensor, data):
 # BMP
 # ===========================================================================
 def getBMP(sensor, data):
+	"""Reads temperature and pressure from one or more BMP085 sensors behind a TCA9548A I2C multiplexer, applying per-device offsets, stores results in the data dict, and marks failing sensors as bad.
+
+	Inputs:
+	    sensor (str): sensor type key into the sensors config dict
+	    data (dict): accumulator dict to store per-device temp/press readings
+	Outputs:
+	    dict: the data dict updated with BMP readings
+	"""
 	global sensorBMP, BMPstarted
 	global sensors, sValues, displayInfo
 	
@@ -2930,7 +3466,7 @@ def getBMP(sensor, data):
 					raise ValueError("bad return value, pressure < 0") 
 			except Exception as e:
 					U.logger.log(20,"", exc_info=True)
-					U.logger.log(20, u"return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
+					U.logger.log(20, "return  value: t={} ; p={};   i2c address used:{}".format(t, p, i2cAdd) )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
 			if t == "":
@@ -2958,6 +3494,15 @@ def getBMP(sensor, data):
 # BME
 # ===========================================================================
 def getBME(sensor, data,BMP=False):
+	"""Reads temperature, pressure, and (unless in BMP mode) humidity from one or more BME280 sensors behind a TCA9548A I2C multiplexer, applies per-device offsets, stores results in the data dict, and marks failing sensors as bad.
+
+	Inputs:
+	    sensor (str): sensor type key into the sensors config dict
+	    data (dict): accumulator dict to store per-device readings
+	    BMP (bool): if True, skip humidity and treat the device as pressure/temperature only
+	Outputs:
+	    dict: the data dict updated with BME280 readings
+	"""
 	global sensorBME280, BME280started
 	global sensors, sValues, displayInfo
 	
@@ -2989,7 +3534,7 @@ def getBME(sensor, data,BMP=False):
 					h = round( sensorBME280[devId].read_humidity() + float(sensors[sensor][devId]["offsetHum"]), 1)
 			except Exception as e:
 					U.logger.log(20,"", exc_info=True)
-					U.logger.log(20, u"return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
+					U.logger.log(20, "return  value: t={} ; p={}; h={} ;   i2c address used:{}".format(t, p, h, i2cAdd)	  )
 					data = incrementBadSensor(devId,sensor,data)
 					return data
 			if t== "":
@@ -3023,6 +3568,14 @@ def getBME(sensor, data,BMP=False):
 # getSHT21
 # ===========================================================================
 def getSHT21(sensor, data):
+	"""Reads temperature and humidity from one or more SHT21 sensors behind a TCA9548A I2C multiplexer, applies per-device offsets, stores results in the data dict, and marks failing sensors as bad.
+
+	Inputs:
+	    sensor (str): sensor type key into the sensors config dict
+	    data (dict): accumulator dict to store per-device temp/hum readings
+	Outputs:
+	    dict: the data dict updated with SHT21 readings
+	"""
 	global sensorSHT21, SHT21started
 	global sensors, sValues, displayInfo
 	
@@ -3070,16 +3623,21 @@ def getSHT21(sensor, data):
 # getLM75A
 # ===========================================================================
 def getLM75A(sensor, data):
-	global sensorLM75A, LM75Astarted
+	"""Reads temperature from one or more LM75A sensors behind a TCA9548A I2C multiplexer, applies per-device offsets, stores results in the data dict, and marks failing sensors as bad.
+
+	Inputs:
+	    sensor (str): sensor type key into the sensors config dict
+	    data (dict): accumulator dict to store per-device temp readings
+	Outputs:
+	    dict: the data dict updated with LM75A readings
+	"""
+	global sensorLM75A
 	global sensors, sValues, displayInfo
 	
 	if sensor not in sensors: return data
 
 	try:
-		try:
-			ii= M75Astarted
-		except:	   
-			M75Astarted=1
+		if sensorLM75A is None:
 			sensorLM75A ={}
 
 		try:
@@ -3112,6 +3670,14 @@ def getLM75A(sensor, data):
 # getAM2320
 # ===========================================================================
 def getAM2320(sensor, data):
+	"""Reads temperature and humidity from one or more AM2320 sensors behind a TCA9548A I2C multiplexer, applies per-device offsets, stores results in the data dict, and marks failing sensors as bad.
+
+	Inputs:
+	    sensor (str): sensor type key (overridden internally to 'i2cAM2320')
+	    data (dict): accumulator dict to store per-device temp/hum readings
+	Outputs:
+	    dict: the data dict updated with AM2320 readings
+	"""
 	global sensorAM2320, AM2320started
 	global sensors, sValues, displayInfo
 	
@@ -3163,6 +3729,14 @@ def getAM2320(sensor, data):
 # getMCP9808
 # ===========================================================================
 def getMCP9808(sensor, data):
+	"""Reads temperature from one or more MCP9808 sensors behind a TCA9548A I2C multiplexer, applies per-device offsets, stores results in the data dict, and marks failing sensors as bad.
+
+	Inputs:
+	    sensor (str): sensor type key into the sensors config dict
+	    data (dict): accumulator dict to store per-device temp readings
+	Outputs:
+	    dict: the data dict updated with MCP9808 readings
+	"""
 	global sensorMCP9808, MCP9808Started
 	global sensors, sValues, displayInfo
 	
@@ -3204,6 +3778,14 @@ def getMCP9808(sensor, data):
 # ===========================================================================
 
 def getTCS34725(sensor, data):
+	"""Reads each configured TCS34725 RGB color/light sensor, initializing it once with a fixed integration time and gain, then records raw clear/red/green/blue counts, computed color temperature, and lux into the data dict and publishes illuminance; bad sensors are tracked and empty results pruned.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device readings and returned
+	Outputs:
+	    dict: the data dict updated with TCS34725 color and illuminance values per device
+	"""
 	global sensorTCS, TCSStarted
 	global sensors, sValues, displayInfo
 	if sensor not in sensors: return data
@@ -3257,6 +3839,14 @@ def getTCS34725(sensor, data):
 # ===========================================================================
 
 def getMS5803(sensor, data):
+	"""Reads each configured MS5803 pressure/temperature sensor, applying configured temperature and pressure offsets, and stores valid temp and press values into the data dict while tracking bad sensors and resetting the I2C multiplexer.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device temp/press readings and returned
+	Outputs:
+	    dict: the data dict updated with MS5803 temperature and pressure values per device
+	"""
 	global sensorMS5803, MS5803Started
 	global sensors, sValues, displayInfo
 	if sensor not in sensors: return data
@@ -3310,6 +3900,14 @@ def getMS5803(sensor, data):
 # ===========================================================================
 
 def getADC121(sensor, data):
+	"""Reads each configured ADC121 analog-to-digital converter and stores its raw ADC value into the data dict, incrementing the bad-sensor counter when the reading is invalid.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device ADC readings and returned
+	Outputs:
+	    dict: the data dict updated with ADC121 raw adc values per device
+	"""
 	global sensorADC121, ADC121Started
 	global sensors, sValues, displayInfo
 	if sensor not in sensors: return data
@@ -3351,6 +3949,14 @@ def getADC121(sensor, data):
 # ===========================================================================
 
 def getOPT3001(sensor, data):
+	"""Reads each configured OPT3001 ambient light sensor, recording its lux reading as Illuminance into the data dict, publishing the value, tracking bad sensors, and resetting the I2C multiplexer.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device illuminance readings and returned
+	Outputs:
+	    dict: the data dict updated with OPT3001 illuminance values per device
+	"""
 	global sensorOPT3001, OPT3001Started
 	global sensors, sValues, displayInfo
 	if sensor not in sensors: return data
@@ -3394,6 +4000,14 @@ def getOPT3001(sensor, data):
 # getVEM7700
 # ===========================================================================
 def getVEML7700(sensor, data):
+	"""Reads each configured VEML7700 ambient light sensor, storing rounded ambient light and white channel values into the data dict, publishing illuminance, logging the result, and tracking bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device light readings and returned
+	Outputs:
+	    dict: the data dict updated with VEML7700 AmbientLight and White values per device
+	"""
 	global sensorVEML7700, VEML7700Started
 	global sensors, sValues, displayInfo
 
@@ -3418,7 +4032,7 @@ def getVEML7700(sensor, data):
 					data[sensor][devId]["AmbientLight"]	= round(ambient,2)
 					data[sensor][devId]["White"]		= round(white,2)
 					putValText(sensors[sensor][devId],[ambient],["Illuminance"])
-					U.logger.log(10, u"VEML7700: {}".format(data[sensor][devId]))
+					U.logger.log(10, "VEML7700: {}".format(data[sensor][devId]))
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except Exception as e:
@@ -3435,6 +4049,14 @@ def getVEML7700(sensor, data):
 # getVEML6030
 # ===========================================================================
 def getVEML6030(sensor, data):
+	"""Reads each configured VEML6030 ambient light sensor, storing rounded ambient light and white channel values into the data dict, publishing illuminance, logging the result, and tracking bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device light readings and returned
+	Outputs:
+	    dict: the data dict updated with VEML6030 AmbientLight and White values per device
+	"""
 	global sensorVEML6030, VEML6030Started
 	global sensors, sValues, displayInfo
 
@@ -3458,7 +4080,7 @@ def getVEML6030(sensor, data):
 					data[sensor][devId]["AmbientLight"]	= round(ambient,2)
 					data[sensor][devId]["White"]		= round(white,2)
 					putValText(sensors[sensor][devId],[ambient],["Illuminance"])
-					U.logger.log(10, u"VEML6030: {}".format(data[sensor][devId]))
+					U.logger.log(10, "VEML6030: {}".format(data[sensor][devId]))
 					time.sleep(0.1)	   
 				if devId in badSensors: del badSensors[devId]
 			except: 
@@ -3475,6 +4097,14 @@ def getVEML6030(sensor, data):
 # ===========================================================================
 
 def getVEML6040(sensor, data):
+	"""Reads each configured VEML6040 RGBW color light sensor, storing rounded red, green, blue, and white values into the data dict, publishing the white channel as illuminance, and tracking bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device RGBW readings and returned
+	Outputs:
+	    dict: the data dict updated with VEML6040 red/green/blue/White values per device
+	"""
 	global sensorVEML6040, VEML6040Started
 	global sensors, sValues, displayInfo
 
@@ -3517,6 +4147,14 @@ def getVEML6040(sensor, data):
 # TMP102
 # ===========================================================================
 def getTMP102(sensor, data):
+	"""Reads each configured TMP102 temperature sensor directly over SMBus, decoding the 12-bit two's-complement word to degrees, applying a configured temperature offset, and storing the temp into the data dict while tracking bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device temperature readings and returned
+	Outputs:
+	    dict: the data dict updated with TMP102 temp values per device
+	"""
 	global sensorTMP102, TMP102Started
 	global sensors, sValues, displayInfo
    
@@ -3562,6 +4200,14 @@ def getTMP102(sensor, data):
 # ===========================================================================
 
 def getIS1145(sensor, data):
+	"""Reads each configured IS1145 (SI1145) light sensor, storing rounded visible, UV, and IR values into the data dict, publishing visible light as illuminance, and tracking bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll (checked against sensorList)
+	    data (dict): results dict that is populated with per-device light readings and returned
+	Outputs:
+	    dict: the data dict updated with IS1145 visible/UV/IR values per device
+	"""
 	global sensorIS1145, IS1145Started
 	global sensors, sValues, displayInfo
 
@@ -3605,6 +4251,14 @@ def getIS1145(sensor, data):
 # ===========================================================================
 
 def getVEML6075(sensor, data):
+	"""Reads each configured VEML6075 UV sensor, storing UVA and UVB values into the data dict when valid, and tracking bad sensors while resetting the I2C multiplexer.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll (checked against sensorList)
+	    data (dict): results dict that is populated with per-device UV readings and returned
+	Outputs:
+	    dict: the data dict updated with VEML6075 UVA and UVB values per device
+	"""
 	global sensorVEML6075, VEML6075Started
 	global sensors, sValues, displayInfo
 
@@ -3647,6 +4301,14 @@ def getVEML6075(sensor, data):
 # TSL2561
 # ===========================================================================
 def getTSL2561(sensor, data):
+	"""Reads each configured TSL2561 light sensor with gain 1, rounding the returned Illuminance, AmbientLight, and IR fields and storing the result dict per device while publishing ambient light as illuminance and tracking bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll (checked against sensorList)
+	    data (dict): results dict that is populated with per-device light readings and returned
+	Outputs:
+	    dict: the data dict updated with TSL2561 Illuminance/AmbientLight/IR values per device
+	"""
 	global sensorTSL2561, TSL2561Started
 	global sensors, sValues, displayInfo
 
@@ -3689,6 +4351,14 @@ def getTSL2561(sensor, data):
 # ===========================================================================
  
 def getADS1x15(sensor, data):
+	"""Reads each configured ADS1x15 ADC, deriving the IC resolution model and gain (PGA) from device config, then reads all four single-ended channels and stores them as INPUT_0..3 (or a single selected input) into the data dict, tracking bad sensors.
+
+	Inputs:
+	    sensor (str): sensor type key identifying which configured devices to poll
+	    data (dict): results dict that is populated with per-device channel readings and returned
+	Outputs:
+	    dict: the data dict updated with ADS1x15 INPUT_n channel voltage readings per device
+	"""
 	global sensorADS1x15, ADS1x15Started
 	global sensors, sValues, displayInfo
 
@@ -3753,6 +4423,14 @@ def getADS1x15(sensor, data):
 
 
 def getVEML6070(sensor, data):
+	"""Reads UVA light intensity from each configured VEML6070 UV sensor over I2C (via a TCA9548A mux), lazily instantiating each sensor with its configured integration time and resistor setting, and stores the rounded UV value under data[sensor][devId]['UV']; flags non-responding sensors as bad.
+
+	Inputs:
+	    sensor (str): sensor type key into the global sensors dict
+	    data (dict): accumulator dict of readings to populate and return
+	Outputs:
+	    dict: the data dict updated with UV readings, empty sensor entry removed
+	"""
 	global sensorVEML6070, VEML6070Started
 	global sensors, sValues, displayInfo
 
@@ -3805,6 +4483,14 @@ def getVEML6070(sensor, data):
 # ===========================================================================
 
 def getPCF8591(sensor, data):
+	"""Reads all four analog input channels of each configured PCF8591 ADC over I2C (via a TCA9548A mux), converting each raw byte to a scaled value in millivolts, and stores them under data[sensor][devId] as INPUT_0..INPUT_3 (or a single selected input for '-1' sensors).
+
+	Inputs:
+	    sensor (str): sensor type key into the global sensors dict
+	    data (dict): accumulator dict of readings to populate and return
+	Outputs:
+	    dict: the data dict updated with analog input readings, empty sensor entry removed
+	"""
 	global PCF8591Started, sensorPCF8591
 	global sensors, sValues, displayInfo
 
@@ -3851,6 +4537,15 @@ def getPCF8591(sensor, data):
 # ===========================================================================
 
 def putValText(sensorInfo,values,params):
+	"""Appends each measured value (and an optional per-value display text and log-scale flag) into the global sValues display buffers for the matching parameters, but only when the sensor has display output enabled; sets the global display flag.
+
+	Inputs:
+	    sensorInfo (dict): sensor configuration including displayEnable, displayText and logScale
+	    values (list): list of measured values to queue for display
+	    params (list): parameter names indexing into the sValues buffers
+	Outputs:
+	    None: appends to global sValues buffers and sets displayInfo['display']
+	"""
 	global sValues,displayInfo
 	if "displayEnable" not in sensorInfo: return 
 	if sensorInfo["displayEnable"] !="1": return 
@@ -3881,6 +4576,16 @@ def putValText(sensorInfo,values,params):
 	return 
 
 def incrementBadSensor(devId,sensor,data,text="badSensor"):
+	"""Increments a failure counter for a misbehaving sensor in the global badSensors dict; once the count exceeds two it records a 'badSensor' entry in the data dict for that device and clears the tracking state.
+
+	Inputs:
+	    devId (str): device identifier of the failing sensor
+	    sensor (str): sensor type key
+	    data (dict): readings dict to annotate with a badSensor entry
+	    text (str): failure description appended to the bad-sensor text
+	Outputs:
+	    dict: the data dict, possibly annotated with a badSensor entry
+	"""
 	global badSensors
 	try:
 		if devId not in badSensors:badSensors[devId] ={"count":0,"text":text}
@@ -3909,6 +4614,13 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
 
 
 def readParams():
+		"""Reads the plugin's parameter/configuration file (deduplicated against the last read), updates global settings such as sensors, output, unit preferences and refresh interval, restarts the process if device or sensor settings changed, and exits if no i2c sensors are defined.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: updates global config state, may restart or exit the process
+		"""
 		global sensorList, sensors, sensorRefreshSecs
 		global output, outputOld
 		global tempUnits, pressureUnits, distanceUnits
@@ -3946,7 +4658,7 @@ def readParams():
 		if sensorList.find("i2c") == -1:
 			if os.path.isfile(G.homeDir+"temp/simplei2csensors.dat"):
 				os.remove(G.homeDir+"temp/simplei2csensors.dat")
-			U.logger.log(20, u"{}:  exit, i2c sensors not defined".format(G.program) )
+			U.logger.log(20, "{}:  exit, i2c sensors not defined".format(G.program) )
 			exit(0)
 
 		return 
@@ -3955,6 +4667,13 @@ def readParams():
 
 #################################
 def doDisplay():
+	"""Renders the queued sensor values to a configured display device: ensures the display.py helper process is running (starting/restarting it as needed), then iterates the output display config to set per-device-type geometry, fonts, colors, scrolling and intensity for matrix/OLED/LCD/screen displays.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: launches/manages display.py subprocess and builds display layout for output devices
+	"""
 	global displayInfo,sValues
 	global output
 	global initDisplay
@@ -4220,10 +4939,10 @@ def doDisplay():
 				if len(theValues) >0:
 					for	 ii in range(len(theValues)):
 						t =	 float(theValues[ii])
-						if tempUnits == u"Fahrenheit":
+						if tempUnits == "Fahrenheit":
 							t = t * 9. / 5. + 32.
 							tu = " Temp[F]"
-						elif tempUnits == u"Kelvin":
+						elif tempUnits == "Kelvin":
 							t+= 273.15
 							tu= " Temp[K]"
 						else:
@@ -4400,6 +5119,13 @@ def doDisplay():
 
 #################################
 def makeLightsensorFile(data):
+	"""Throttled to once every five seconds, extracts the first available light-type reading (AmbientLight, White, visible or Illuminance) per sensor/device from the data dict and writes a JSON lightSensor.dat file with those float light values and a timestamp.
+
+	Inputs:
+	    data (dict): nested sensor readings keyed by sensor then device id
+	Outputs:
+	    None: writes temp/lightSensor.dat JSON file when light readings exist
+	"""
 	global makeLightsensorFileTime
 	try:
 		ii=makeLightsensorFileTime
@@ -4455,6 +5181,7 @@ distanceUnits		= "1"
 loopCount			= 0
 sensorList			= []
 sensors				= {}
+sensorLM75A			= None
 DHTpin				= 17
 spi0				= 0
 spi1				= 0

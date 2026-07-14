@@ -31,6 +31,13 @@ class THESENSORCLASS:
 	 # Constructor
 	def __init__(self, i2cAddress=""):
 
+		"""Constructs the L3G4200 gyroscope driver: stores the I2C address (defaulting to the chip's built-in address), opens SMBus 1, and applies the sensor calibration registers.
+
+		Inputs:
+		    i2cAddress (int or str): I2C address; empty/0 uses the default __L3G4200_ADDRESS
+		Outputs:
+		    None: Initializes bus, address, and calibration; logs on exception
+		"""
 		try:
 			if i2cAddress =="" or i2cAddress ==0:
 				self.i2cAddress = self.__L3G4200_ADDRESS 
@@ -55,6 +62,13 @@ class THESENSORCLASS:
 		#  z	  = 0100
 		#  Y	  = 0010
 		#  X	  = 0001  
+		"""Configures the L3G4200 gyroscope by writing control registers: enables all three axes in normal mode (CTRL_REG1) and sets continuous update with 2000 dps full-scale range (CTRL_REG4).
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Writes calibration values to the gyroscope's I2C control registers
+		"""
 		self.bus.write_byte_data(self.i2cAddress, 0x20, 0b00001111)
 
 		# L3G4200D address, i2cAddress(104)
@@ -69,6 +83,13 @@ class THESENSORCLASS:
 		self.bus.write_byte_data(self.i2cAddress, 0x23, 0b00110000)
 
 	def getXYZ(self):
+		"""Reads the X, Y, and Z angular-rate values from the L3G4200 gyroscope over I2C, combining the LSB/MSB byte pairs and converting to signed 16-bit values. Returns a sentinel tuple on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (xGyro, yGyro, zGyro) ints, or (-9999999999990, 0, 0) on error
+		"""
 		try:
 			# L3G4200D address, i2cAddress(104)
 			# Read data back from 0x28(40), 2 bytes, X-Axis LSB first
@@ -103,6 +124,13 @@ class THESENSORCLASS:
 		return -9999999999990,0,0
 
 	def getTemp(self):	### very rough in celsius
+		"""Reads the L3G4200 temperature register over I2C and converts it to a rough Celsius value using a fixed inversion and fudge-factor offset. Returns -99 on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: Approximate temperature in Celsius, or -99 on error
+		"""
 		try:
 			temp = self.bus.read_byte_data(self.i2cAddress, 0x26)
 			# Convert the data
@@ -120,6 +148,13 @@ class THESENSORCLASS:
 
 #################################		 
 def readParams():
+	"""Reads the plugin parameters file, and if it has changed, updates global sensor configuration: refreshes per-device read parameters, instantiates sensor driver objects for newly added device IDs, and removes drivers for devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global sensors/theSENSORdict state; exits if this sensor is no longer enabled
+	"""
 	global sensors, sensor
 	global threshold, theSENSORdict
 	global oldRaw, lastRead
@@ -168,6 +203,13 @@ def readParams():
 
 #################################
 def getValues(devId):
+	"""Reads gyroscope X/Y/Z and temperature for a given device from its L3G4200 driver, applies the per-device temperature offset, and returns them in a data dict. Retries on failure and returns 'badSensor' after repeated errors.
+
+	Inputs:
+	    devId (str): Device identifier keying into theSENSORdict to select the driver instance
+	Outputs:
+	    dict or str: Dict with 'GYR' x/y/z and 'temp', or 'badSensor' on persistent error
+	"""
 	global sensor, sensors,	 theSENSORdict, badSensor
 
 	for ii in range(2):

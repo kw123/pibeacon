@@ -23,6 +23,20 @@ G.program = "mag3110"
 class THESENSORCLASS():
 	myaddress = 0x0E
 	def __init__(self, busNumber=1, address=0x0E,	 magDivider=1, enableCalibration=False, declination=0,magOffset="", offsetTemp=0, magResolution =1):
+		"""Constructs the MAG3110 magnetometer driver: opens the requested SMBus, sets up calibration/offset/declination state, applies magnetometer parameters, initializes the sensor, and optionally loads calibration data and calibrates.
+
+		Inputs:
+		    busNumber (int): I2C bus number to open
+		    address (int): I2C device address (defaults if empty string)
+		    magDivider (float): magnetometer scaling divider
+		    enableCalibration (bool): whether to run calibration
+		    declination (float): magnetic declination correction
+		    magOffset (str): magnetometer offset; non-empty disables calibration
+		    offsetTemp (int): temperature offset correction
+		    magResolution (int): magnetometer resolution setting
+		Outputs:
+		    None: initializes object, opens bus, and configures sensor
+		"""
 		try:
 
 			self.busNumber			 = busNumber
@@ -58,6 +72,13 @@ class THESENSORCLASS():
 
 
 	def initSensor(self):
+		"""Initializes the MAG3110 sensor by probing the I2C connection and configuring CTRL_REG2 (reset/raw mode) and CTRL_REG1 (oversampling, continuous active measurement); returns success or failure.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if sensor configured successfully, False on I2C error
+		"""
 		try:
 			# read a byte to see if the i2c connection is working
 			# disregared
@@ -95,6 +116,13 @@ class THESENSORCLASS():
 
 
 	def rawMagAllData(self):
+		"""Triggers a read and reads 18 bytes from the MAG3110, unpacks the raw X/Y/Z magnetometer values and temperature (with sign and offset correction), returning the field vector and temperature; returns a fallback on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: ([x, y, z], temp); ([0,0,0,0], -1000) on error
+		"""
 		try:
 			self.bus.write_byte(self.address, 0x00)
 			# disable=unused-variable
@@ -116,6 +144,13 @@ class THESENSORCLASS():
 		return [x,y,z],temp
 
 	def getRawMagData(self):
+		"""Reads all magnetometer data via rawMagAllData and returns only the raw X/Y/Z magnetic field values, discarding the temperature reading.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: Raw magnetometer axis values
+		"""
 		raw,temp = self.rawMagAllData()
 		return raw
 
@@ -130,6 +165,13 @@ class THESENSORCLASS():
 
 #################################		 
 def readParams():
+	"""Reads the latest parameter file, updates global sensor configuration, and for each MAG device applies calibration/offset parameters, starting any newly seen sensor and cleaning up the active sensor dictionary.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global sensor state and configures hardware sensors; returns early if no new data
+	"""
 	global sensors, sensor
 	global rawOld
 	global theSENSORdict
@@ -164,6 +206,20 @@ def readParams():
 
 #################################
 def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declination, magResolution,enableCalibration):
+	"""Instantiates a MAG3110 sensor object for the given device at the I2C address with the supplied calibration parameters, storing it in the global sensor dictionary and optionally running a 5-second calibration when no magnetic offset is preset.
+
+	Inputs:
+	    devId (str): Device identifier key into the sensor dictionary
+	    i2cAddress (int): I2C bus address of the sensor
+	    offsetTemp (float): Temperature offset correction
+	    magOffset (list): Per-axis magnetic offset; [0,0,0] triggers calibration
+	    magDivider (float): Scaling divider for magnetic readings
+	    declination (float): Magnetic declination correction in degrees
+	    magResolution (float): Magnetometer resolution setting
+	    enableCalibration (bool): Whether to run/apply calibration
+	Outputs:
+	    None: Creates and stores a sensor object in the global theSENSORdict
+	"""
 	global theSENSORdict
 	try:
 		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
@@ -180,6 +236,13 @@ def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declina
 
 #################################
 def getValues(devId):
+	"""Reads corrected magnetometer and temperature data for a device, computes Euler angles (heading, roll, pitch), logs the values, and returns a dict with MAG, EULER, and optional temp entries; returns {'MAG':'bad'} on bad reads or errors.
+
+	Inputs:
+	    devId (str): Device identifier key into the sensor dictionary
+	Outputs:
+	    dict: Mapping with MAG/EULER/temp values, or {'MAG':'bad'} on failure
+	"""
 	global sensor, sensors,	 theSENSORdict
 	data={}
 	try:
@@ -203,6 +266,16 @@ def getValues(devId):
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits,mult=1):
+	"""Builds a dict mapping each label in theItems to the corresponding value in theList, scaled by mult and rounded to the given number of digits.
+
+	Inputs:
+	    theList (list): Numeric values to map
+	    theItems (list): Key labels for each value
+	    digits (int): Decimal places to round to
+	    mult (float): Multiplier applied before rounding
+	Outputs:
+	    dict: Labels mapped to rounded, scaled values
+	"""
 	out={}
 	for ii in range(len(theItems)):
 		out[theItems[ii]] = round(mult*theList[ii],digits)
@@ -263,11 +336,11 @@ while True:
 		loopCount +=1
 		quick = U.checkNowFile(G.program)				 
 		if U.checkNewCalibration(G.program):
-			U.logger.log(30, u"starting new calibration in 5 sec for 1 minute.. move sensor around")
+			U.logger.log(30, "starting new calibration in 5 sec for 1 minute.. move sensor around")
 			time.sleep(5)
 			for devId in theSENSORdict:
 				U.magCalibrate(theSENSORdict[devId], force = False,calibTime=30)
-			U.logger.log(30, u"finished	new calibration")
+			U.logger.log(30, "finished	new calibration")
 			
 		U.echoLastAlive(G.program)
 

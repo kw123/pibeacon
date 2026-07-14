@@ -19,8 +19,6 @@ import threading
 try: import Queue
 except: import queue as Queue
 import zlib
-try: 	unicode
-except: unicode = str
 
 import traceback
 
@@ -58,10 +56,24 @@ OSVersion = -1
 #
 #################################
 def test():
+	"""No-op placeholder function that immediately returns without doing anything.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: does nothing
+	"""
 	return 
 
 #################################
 def setLogging():
+	"""Configures the module-wide logging system, setting up a main log file, a permanent critical-only log handler, and a console stream handler, then applies log levels and marks the logger as initialized.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: initializes global logger/handlers and sets G.loggerSet
+	"""
 	global logging, logger
 	import logging
 	import logging.handlers
@@ -92,6 +104,13 @@ def setLogging():
 
 #################################
 def setLogLevel():
+	"""Sets the logger level to DEBUG or INFO based on the global debug flag, and fixes the permanent log handler to CRITICAL and the console stream handler to WARNING.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: adjusts logging levels on the global handlers
+	"""
 	global streamhandler, permLogHandler, logger
 	if G.debug !=0:
 		logger.setLevel(logging.DEBUG)
@@ -105,6 +124,19 @@ def setLogLevel():
 
 #################################
 def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,wait=False):
+	"""Finds and kills other running instances of a Python program by scanning the process list (or delegating to an external killOldPgm.py script), filtering by program name and optional grep parameters, and excluding the caller's own PID; reboots the Pi if it hits a too-many-open-files error.
+
+	Inputs:
+	    myPID (int): the caller's own process ID to exclude from killing
+	    pgmToKill (str): program name pattern to match in the process list
+	    delList (list): optional list of program base names to restrict which processes are killed
+	    param1 (str): optional additional grep filter string
+	    param2 (str): optional second additional grep filter string
+	    verbose (bool): if True logs detailed kill diagnostics
+	    wait (bool): if True runs the kill command synchronously instead of backgrounded
+	Outputs:
+	    int: count of processes killed (or 1 when delegated to external script)
+	"""
 	global failedURLimport, logger
 
 	#print ("cBY:{:<20} sys info:{}".format(G.program, sys.version_info))
@@ -129,7 +161,7 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 		if param1 !="":
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 !="":
-			cmd = "{} | grep ".format(cmd,param2)
+			cmd = "{} | grep {}".format(cmd,param2)
 		if verbose: logger.log(20, "cBY:{:<20} kill mypid:{}, command {}, {}, \nps:{}".format(G.program, myPID, cmd, delList, ps) )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
@@ -168,6 +200,18 @@ def killOldPgm(myPID,pgmToKill, delList=[], param1="", param2="", verbose=False,
 
 #################################
 def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doRestartCount=True):
+	"""Restarts the current program by relaunching its .py file via sudo python/python3, optionally tracking restart frequency and forcing a reboot if it has restarted too often in a short window, then exits the current process.
+
+	Inputs:
+	    param (str): command-line argument passed to the relaunched program
+	    reason (str): reason for the restart, used in log output
+	    delay (int): seconds to sleep before restarting
+	    doPrint (bool): if True logs the restart commands
+	    python3 (bool): if True forces relaunch under python3
+	    doRestartCount (bool): if True tracks restart count and may trigger a reboot on excessive restarts
+	Outputs:
+	    None: relaunches the program via subprocess and calls exit()
+	"""
 	py3 = python3 or checkIfmustUsePy3()
 	try:
 		if doPrint: logger.log(20, "cBY:{:<20} --- restarting --- {}  due to: {}, py3:{}, delay:{}".format(G.program, param, reason, py3, delay) )
@@ -214,6 +258,13 @@ def restartMyself(param="", reason="", delay=1, doPrint=True, python3=False, doR
 
 #################################
 def setStopCondition(on=True):
+	"""Enables or disables the I2C 'combined' transactions mode by chmod-ing the I2C device nodes world-writable and writing '1' (on) or 'N' (off) to the bcm2708 combined parameter via sudo shell calls.
+
+	Inputs:
+	    on (bool): True enables combined I2C mode, False disables it
+	Outputs:
+	    None: runs sudo chmod/echo shell commands against I2C kernel device nodes
+	"""
 	if on:
 		subprocess.call("/usr/bin/sudo chmod 666 /dev/i2c-*", shell=True)
 		subprocess.call("/usr/bin/sudo chmod 666 /sys/module/i2c_bcm2708/parameters/combined", shell=True)
@@ -227,6 +278,13 @@ def setStopCondition(on=True):
 #################################################################
 def doReadSimpleFile(fname):
 
+		"""Reads and returns the entire text contents of the given file if it exists, otherwise returns an empty string.
+
+		Inputs:
+		    fname (str): path to the file to read
+		Outputs:
+		    str: file contents, or empty string if the file does not exist
+		"""
 		if os.path.isfile(fname):
 			f = open(fname,"r")
 			ddd =  f.read()
@@ -237,6 +295,14 @@ def doReadSimpleFile(fname):
 #################################################################
 def doWriteSimpleFile(fname, data):
 
+		"""Writes the given data (formatted as a string) to the named file, overwriting any existing contents.
+
+		Inputs:
+		    fname (str): path to the file to write
+		    data (object): value written to the file via str formatting
+		Outputs:
+		    None: writes the data to the file on disk
+		"""
 		f = open(fname,"w")
 		ddd =  f.write("{}".format(data))
 		f.close()
@@ -245,6 +311,13 @@ def doWriteSimpleFile(fname, data):
 
 #################################
 def checkrclocalFile():
+	"""Checks whether /etc/rc.local exists and references python; if missing or lacking python, it copies the default rc.local from the plugin home dir into place, makes it executable, and logs the replacement.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: may replace /etc/rc.local via sudo cp/chmod and log the action
+	"""
 	replace = False
 	if not os.path.isfile("/etc/rc.local"):	 # does not exist
 		replace = True
@@ -257,7 +330,7 @@ def checkrclocalFile():
 	if replace:
 		subprocess.call("/usr/bin/sudo cp {}rc.local.default /etc/rc.local ".format(G.homeDir), shell=True)
 		subprocess.call("/usr/bin/sudo chmod a+x /etc/rc.local", shell=True)
-		logger.log(30, u"{:<20}replacing rc.local file".format(G.program) )
+		logger.log(30, "{:<20}replacing rc.local file".format(G.program) )
 
 
 	return
@@ -266,6 +339,13 @@ def checkrclocalFile():
 
 #################################
 def fixoutofdiskspace():
+	"""Attempts to free disk space by deleting all files in the log directory and force-running logrotate on the rsyslog config twice, ignoring any errors.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes log files and forces logrotate via shell commands
+	"""
 	try:	subprocess.call("rm {} *".format(G.logDir), shell=True)
 	except: pass
 	try:	subprocess.call("logrotate -f /etc/logrotate.d/rsyslog; sleep 1; logrotate -f /etc/logrotate.d/rsyslog", shell=True)
@@ -273,6 +353,16 @@ def fixoutofdiskspace():
 
 #################################
 def pgmStillRunning(pgmToTest, notPresent ="", verbose=False, param="") :
+	"""Checks whether a given program is currently running by grepping the process list (ps -ef) for it, optionally excluding a string and adding parameters, returning True if a matching process line is found.
+
+	Inputs:
+	    pgmToTest (str): program/string to search for in the process list
+	    notPresent (str): optional string to exclude (grep -v); empty means no exclusion
+	    verbose (bool): if True, logs the command and matching lines
+	    param (str): optional extra grep filter string
+	Outputs:
+	    bool: True if a matching running process is found, else False
+	"""
 	try :
 		pgmToTest = pgmToTest.strip()
 		if verbose: logger.log(20, "testing  for '{}',  {}".format(pgmToTest, param))
@@ -293,6 +383,14 @@ def pgmStillRunning(pgmToTest, notPresent ="", verbose=False, param="") :
 
 ################################# 2020-12-12 12:12:12
 def getTimetimeFromDateString( dateString, fmrt="%Y-%m-%d %H:%M:%S"):
+	"""Parses a date/time string using the given strptime format and returns the corresponding Unix timestamp; returns 0 if the string is too short or cannot be parsed.
+
+	Inputs:
+	    dateString (str): date/time string to parse
+	    fmrt (str): strptime format string (default '%Y-%m-%d %H:%M:%S')
+	Outputs:
+	    float: Unix epoch timestamp, or 0 on failure/short input
+	"""
 	if len(dateString) >9:
 		try:
 			return  time.mktime( datetime.datetime.strptime(dateString, fmrt).timetuple()  )
@@ -303,11 +401,18 @@ def getTimetimeFromDateString( dateString, fmrt="%Y-%m-%d %H:%M:%S"):
 
 #################################
 def checkParametersFile(force=False):
+		"""Validates the parameters file by reading it; if the raw content is shorter than 100 bytes or force is set, it restores the parameters file from the saved copy, touches a trigger file, and restarts the plugin.
+
+		Inputs:
+		    force (bool): if True, forces restore/restart regardless of file size
+		Outputs:
+		    None: may copy/touch files and trigger a plugin restart
+		"""
 		inp, inpRaw, lastRead2 = doRead(lastTimeStamp=1)
 		#print "checking parameters file"
 		if len(inpRaw) < 100 or force:
 			# restore old parameters"
-			subprocess.call("cp {}parameters {}temp\parameters".format(G.homeDir,G.homeDir), shell=True)
+			subprocess.call("cp {}parameters {}temp/parameters".format(G.homeDir,G.homeDir), shell=True)
 			subprocess.call("touch {}temp\touchFile".format(G.homeDir), shell=True)
 			restartMyself(reason="bad parameter... file.. restored" , doPrint= True)
 
@@ -318,6 +423,15 @@ def checkParametersFile(force=False):
 #################################
 ######### distance actions ###### START -----------------------------------------------------------------
 def readDistanceSensor(devId, sensors, sensor):
+	"""Initializes the global distance-action state dictionaries for a device and loads its distance-action configuration (region commands, distance limits, stop wait/min-speed) from the sensor config, setting flags for whether limit and command actions are active.
+
+	Inputs:
+	    devId (str): device identifier keyed into the global state dicts
+	    sensors (dict): sensor configuration mapping sensor name to per-device settings
+	    sensor (str): sensor name used to index into the sensors dict
+	Outputs:
+	    None: populates module-level distance-action globals for the device
+	"""
 	global actionDistance, actionShortDistanceLimit,actionVeryShortDistanceLimit, actionLongDistanceLimit, actionVeryLongDistanceLimit, actionStopMinSpeed, actionStopWait, debugDistance
 	global actionSpeedLast, actionShortDistanceLimit, distanceActiveCommand, distanceActiveLimit, oldStop, oldRegion, actionEnable, oldSpeed, lastCommandExecuted
 
@@ -410,6 +524,15 @@ def readDistanceSensor(devId, sensors, sensor):
 
 #################################
 def doActionDistance(distance, speed, devId):
+	"""Evaluates the current distance and speed for a device against its configured region limits and stop thresholds, executes any region or stop commands that apply, and reports the region/stop state plus whether a change occurred.
+
+	Inputs:
+	    distance (float): current measured distance
+	    speed (float): current measured speed
+	    devId (str): device identifier keyed into the global action state
+	Outputs:
+	    list: three-element [region, stopFlag, changedFlag]; or ('','',False) tuple when action is disabled/invalid
+	"""
 	global actionDistance, actionShortDistanceLimit,actionVeryShortDistanceLimit, actionLongDistanceLimit, actionVeryLongDistanceLimit, actionStopMinSpeed, actionStopWait, debugDistance
 	global actionSpeedLast, distanceActiveCommand, distanceActiveLimit, oldStop, oldRegion, actionEnable, oldSpeed
 
@@ -467,6 +590,17 @@ def doActionDistance(distance, speed, devId):
 
 #################################
 def execDistanceCommand(region, distance, speed, oldAction, devId):
+	"""Executes the shell command configured for a device's distance region if it differs from the last action, skipping repeated identical neopixel commands and injecting the device id into neopixel status payloads; returns the new region and the execution timestamp.
+
+	Inputs:
+	    region (str): distance region whose command should run
+	    distance (float): current distance (used for debug logging)
+	    speed (float): current speed (used for debug logging)
+	    oldAction (str): previously active region/action
+	    devId (str): device identifier keyed into the global action state
+	Outputs:
+	    tuple: (region, timestamp) after running the command, or (oldAction, lastSpeedTime) if unchanged/on error
+	"""
 	global debugDistance, actionDistance, lastCommandExecuted,  actionSpeedLast
 	try:
 		if region == oldAction: return oldAction, actionSpeedLast[devId]
@@ -497,6 +631,14 @@ def execDistanceCommand(region, distance, speed, oldAction, devId):
 
 #################################
 def readFloat(filename, default=0.):
+	"""Opens the named file, parses its contents as a float and returns it; on any error returns the supplied default value.
+
+	Inputs:
+	    filename (str): path to the file containing a float value
+	    default (float): value returned if reading/parsing fails (default 0.)
+	Outputs:
+	    float: parsed float from the file, or the default on failure
+	"""
 	try:
 		f = open(filename)
 		v = float(f.read())
@@ -509,6 +651,14 @@ def readFloat(filename, default=0.):
 
 #################################
 def readInt(filename, default=0):
+	"""Opens the given file, reads its contents, and returns them parsed as an integer; on any error (missing file, non-integer contents) returns the supplied default value.
+
+	Inputs:
+	    filename (str): Path of the file whose integer contents to read
+	    default (int): Fallback value returned if reading or parsing fails
+	Outputs:
+	    int: Parsed integer from the file, or the default on failure
+	"""
 	try:
 		f = open(filename)
 		v = int(f.read())
@@ -522,6 +672,13 @@ def readInt(filename, default=0):
 
 #################################
 def getOsVersion():
+	"""Determines the Raspberry Pi OS major version by parsing VERSION_ID from /etc/os-release, caching the result in the global OSVersion; defaults to 8 if it cannot be parsed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: Cached or freshly parsed OS major version number
+	"""
 	global OSVersion
 	if OSVersion !=-1: return  OSVersion
 
@@ -542,6 +699,16 @@ def getOsVersion():
 #################################
 def doRead(inFile="{}temp/parameters".format(G.homeDir), lastTimeStamp="", testTimeOnly=False, deleteAfterRead=False):
 
+	"""Reads a JSON parameter file if it exists and has changed since lastTimeStamp, returning the parsed dict, raw content, and modification time; supports timestamp-only checks and optional deletion after reading, and triggers a reboot if it hits a 'Too many open files' error.
+
+	Inputs:
+	    inFile (str): Path of the JSON file to read (defaults to temp/parameters)
+	    lastTimeStamp (str or float): Previous mtime to compare against; empty string disables comparison and the timestamp return
+	    testTimeOnly (bool): If True, only checks/returns the timestamp without reading content
+	    deleteAfterRead (bool): If True, removes the file after reading it
+	Outputs:
+	    tuple: (parsed dict or marker string, raw content or 'error', mtime float) where the third element is included only when lastTimeStamp is set
+	"""
 	try:
 		if not G.loggerSet:
 			setLogging()
@@ -590,13 +757,34 @@ def doRead(inFile="{}temp/parameters".format(G.homeDir), lastTimeStamp="", testT
 
 #################################
 def setNetwork(mode):
+	"""Persists the desired network mode by writing it to the temp/networkMODE file.
+
+	Inputs:
+	    mode (str): Network mode to store (e.g. 'on', 'off', 'clock')
+	Outputs:
+	    None: Writes the mode to temp/networkMODE file
+	"""
 	writeFile("temp/networkMODE", mode)
 #################################
 def clearNetwork():
+	"""Removes the temp/networkMODE file if it exists, clearing any stored network mode setting.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Deletes the temp/networkMODE file via shell rm
+	"""
 	if os.path.isfile("{}temp/networkMODE".format(G.homeDir)):
 		subprocess.call("rm {}temp/networkMODE".format(G.homeDir), shell=True)
 #################################
 def getNetwork():
+	"""Reads the stored network mode from the temp/networkMODE file and returns it, normalizing to 'off', 'on', or 'clock'; defaults to 'on' if the file is absent, unreadable, or holds an unknown value.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Network mode: 'off', 'on', or 'clock' (default 'on')
+	"""
 	try:
 		if os.path.isfile("{}temp/networkMODE".format(G.homeDir)):
 			f=open("{}temp/networkMODE".format(G.homeDir),"r")
@@ -616,6 +804,13 @@ def getNetwork():
 
 #################################
 def getGlobalParams(inp):
+	"""Updates the global configuration (G) object from a parameters dict, assigning values such as server IP/port, HCI device numbers, debug flag, network type, timeouts, WiFi/Ethernet interfaces, I2C mux, and timezone, applying type conversions and triggering log-level and timezone updates when those change.
+
+	Inputs:
+	    inp (dict): Parameter dictionary of configuration key/value pairs
+	Outputs:
+	    None: Mutates global G config attributes and may rewrite timezone and reset log level
+	"""
 	try:
 		sensors = {}
 		oldDebug = G.debug
@@ -643,26 +838,26 @@ def getGlobalParams(inp):
 			if "rebootIfNoMessages"	in inp:	 G.rebootIfNoMessages=	 int(inp["rebootIfNoMessages"])
 		except: pass
 		try:	
-			if u"deltaChangedSensor" in inp:  G.deltaChangedSensor=	float(inp["deltaChangedSensor"])
+			if "deltaChangedSensor" in inp:  G.deltaChangedSensor=	float(inp["deltaChangedSensor"])
 		except: pass
 
 
-		if u"compressRPItoPlugin"	in inp:	 
+		if "compressRPItoPlugin"	in inp:	 
 			try:	G.compressRPItoPlugin =	int(inp["compressRPItoPlugin"])
 			except: G.compressRPItoPlugin = 20000
 
-		if u"wifiEth"				in inp:
+		if "wifiEth"				in inp:
 			xxx = inp["wifiEth"]
 			if len(xxx) == 2 and "eth0" in xxx and "wlan0" in xxx:
 				if xxx != G.wifiEthOld:
 					G.wifiEth = xxx
 					G.wifiEthOld = G.wifiEth
 
-		if u"shutDownPinOutput"		 in inp:
+		if "shutDownPinOutput"		 in inp:
 			try:							 	G.shutDownPinOutput=		int(inp["shutDownPinOutput"])
 			except:							 	G.shutDownPinOutput=		-1
 
-		if u"enableMuxI2C"			in inp:
+		if "enableMuxI2C"			in inp:
 			try:							 	G.enableMuxI2C=			int(inp["enableMuxI2C"])
 			except:							 	G.enableMuxI2C=			-1
 		else:
@@ -682,6 +877,14 @@ def getGlobalParams(inp):
 
 #################################
 def cleanUpSensorlist(sens, theSENSORlist):
+	"""Prunes a sensor list dict by removing entries whose device IDs are not present in the current sensors set, returning the cleaned list (or an empty dict on error).
+
+	Inputs:
+	    sens (dict): Collection of currently valid sensor/device IDs
+	    theSENSORlist (dict): Sensor list keyed by device ID to be cleaned in place
+	Outputs:
+	    dict: The sensor list with stale device IDs removed, or {} on error
+	"""
 	try:
 		deldevID={}
 		for devId in theSENSORlist:
@@ -702,6 +905,16 @@ def cleanUpSensorlist(sens, theSENSORlist):
 #######  reboot utils ##########
 #################################
 def doReboot(tt=10., text="", cmd="", force=False):
+	"""Initiates a Raspberry Pi reboot: marks that a reboot happened today, records the reboot reason, waits tt seconds, then runs either the default forceReboot.sh script or a supplied command, and triggers a RUN-pin reset reboot.
+
+	Inputs:
+	    tt (float): Seconds to sleep before issuing the reboot
+	    text (str): Reason text recorded for the reboot
+	    cmd (str): Optional shell command to run instead of the default reboot script
+	    force (bool): Force flag (accepted by callers; not used in body logic)
+	Outputs:
+	    None: Sleeps then executes a reboot via shell command and pin reset
+	"""
 	try:
 		setRebootedToday()
 		setRebootingNow(text=text)
@@ -718,50 +931,113 @@ def doReboot(tt=10., text="", cmd="", force=False):
 
 #################################
 def checkifRebootedToday():
+	"""Checks whether the device has already rebooted today by testing for the 'rebootedToday' marker file and comparing its modification day to the current day.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the rebootedToday file exists and was modified today, else False
+	"""
 	if not os.path.isfile("{}rebootedToday".format(G.homeDir)): return False
 	if time.localtime(os.path.getmtime("rebootedToday")).tm_mday == datetime.datetime.now().day: return True
 	return False
 
 #################################
 def resetRebootedToday():
+	"""Clears the 'rebooted today' state by removing the rebootedToday marker file if it exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Deletes the rebootedToday marker file
+	"""
 	if os.path.isfile("{}rebootedToday".format(G.homeDir)):
 		os.remove("{}rebootedToday".format(G.homeDir))
 	return 
 #################################
 
 def resetRebootRequest():
+	"""Clears a pending reboot request by removing the temp/rebootNeeded marker file if it exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Deletes the temp/rebootNeeded marker file
+	"""
 	if os.path.isfile("{}temp/rebootNeeded".format(G.homeDir)):
 		os.remove("{}temp/rebootNeeded".format(G.homeDir))
 	return 
 
 #################################
 def setRebootedToday(text=""):
+	"""Writes a marker file named 'rebootedToday' in the plugin home directory, recording that a reboot occurred today along with optional descriptive text.
+
+	Inputs:
+	    text (str): optional content written into the rebootedToday marker file
+	Outputs:
+	    None: writes the rebootedToday file via doWriteSimpleFile
+	"""
 	doWriteSimpleFile("{}rebootedToday".format(G.homeDir), text)
 	return 
 
 #################################
 def setRebootRequest(reason):
+	"""Records a pending reboot request by writing the given reason into the temp/rebootNeeded file in the plugin home directory.
+
+	Inputs:
+	    reason (str): reason text stored in the rebootNeeded request file
+	Outputs:
+	    None: writes the temp/rebootNeeded file via doWriteSimpleFile
+	"""
 	doWriteSimpleFile("{}temp/rebootNeeded".format(G.homeDir), reason)
 	return 
 
 #################################
 def resetRebootingNow():
+	"""Clears the 'rebooting now' state by deleting the temp/rebooting.now file if it exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes the temp/rebooting.now file if present
+	"""
 	if os.path.isfile("{}temp/rebooting.now".format(G.homeDir)):
 		os.remove("{}temp/rebooting.now".format(G.homeDir))
 	return 
 
 #################################
 def setRebootingNow(text=""):
+	"""Marks that a reboot or shutdown is in progress by writing a 'rebooting / shutdown' message (with optional extra text) to the temp/rebooting.now file.
+
+	Inputs:
+	    text (str): optional extra text appended to the rebooting status message
+	Outputs:
+	    None: writes the temp/rebooting.now file via doWriteSimpleFile
+	"""
 	doWriteSimpleFile("{}temp/rebooting.now".format(G.homeDir), "rebooting / shutdown {}".format(text) )
 	return 
 	
 #################################
 def checkifRebooting():
+	"""Checks whether a reboot/shutdown is currently in progress by testing for the existence of the temp/rebooting.now file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the rebooting.now file exists, otherwise False
+	"""
 	if os.path.isfile("{}temp/rebooting.now".format(G.homeDir)): return True
 	return False
 	
 #################################
 def checkifRebootRequested():
+	"""Checks whether a reboot has been requested by reading the temp/rebootNeeded file and returning its stored reason; returns an empty string if no request exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: the reboot reason, 'other' if empty/unreadable, or '' if no request file
+	"""
 	if not os.path.isfile("{}temp/rebootNeeded".format(G.homeDir)): return ""
 	f = open(G.homeDir+"temp/rebootNeeded") 
 	try: reason = f.read()
@@ -772,6 +1048,13 @@ def checkifRebootRequested():
 
 #################################
 def doRebootThroughRUNpinReset(tt =20):
+	"""Triggers a hardware reboot by pulsing the configured shutdown GPIO pin: marks rebooting state, waits tt seconds, then sets the pin high and low to reset the Pi via the RUN pin.
+
+	Inputs:
+	    tt (int): seconds to sleep before pulsing the reset pin (default 20)
+	Outputs:
+	    None: sets rebooting state and toggles the shutdown GPIO pin
+	"""
 	if G.shutDownPinOutput > 1:
 		setRebootingNow()
 		time.sleep(tt)
@@ -782,6 +1065,16 @@ def doRebootThroughRUNpinReset(tt =20):
 
 #################################
 def sendRebootHTML(reason, reboot=True, force=False, wait=10.):
+	"""Notifies the controller of a reboot via an HTTP alive call, marks the rebooting state, then either reboots normally or kills python3 and runs a shutdown -r now command.
+
+	Inputs:
+	    reason (str): reason text sent in the URL notification and reboot call
+	    reboot (bool): if True do a normal reboot, otherwise force a kill-and-shutdown reboot
+	    force (bool): whether to force the reboot in the normal path
+	    wait (float): delay in seconds before performing the reboot
+	Outputs:
+	    None: sends URL notification, sets rebooting state, and invokes doReboot
+	"""
 	sendURL(sendAlive="reboot", text=reason)
 	setRebootingNow()
 	if reboot:
@@ -795,50 +1088,113 @@ def sendRebootHTML(reason, reboot=True, force=False, wait=10.):
 #######  restart utils ##########
 #################################
 def checkifRestartedToday():
+	"""Checks whether the device was restarted today by testing for a restart marker file and comparing its modification day to the current day.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the restart marker's mtime day matches today, otherwise False
+	"""
 	if not os.path.isfile("{}restartedoday".format(G.homeDir)): return False
 	if time.localtime(os.path.getmtime("restartedoday")).tm_mday == datetime.datetime.now().day: return True
 	return False
 
 #################################
 def resetRestartedToday():
+	"""Clears the daily restart marker by deleting the restartedToday file in the plugin home directory if it exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes the restartedToday file if present
+	"""
 	if os.path.isfile("{}restartedToday".format(G.homeDir)):
 		os.remove("{}restartedToday".format(G.homeDir))
 	return 
 
 #################################
 def setRestartedToday(text=""):
+	"""Writes a marker file named 'restartedToday' in the plugin home directory with optional descriptive text to record that a restart happened today.
+
+	Inputs:
+	    text (str): optional content written into the restartedToday marker file
+	Outputs:
+	    None: writes the restartedToday file via doWriteSimpleFile
+	"""
 	doWriteSimpleFile("{}restartedToday".format(G.homeDir), text)
 	return 
 
 #################################
 def setRestartRequest(reason):
+	"""Records a pending restart request by writing the given reason into the temp/restartNeeded file in the plugin home directory.
+
+	Inputs:
+	    reason (str): reason text stored in the restartNeeded request file
+	Outputs:
+	    None: writes the temp/restartNeeded file via doWriteSimpleFile
+	"""
 	doWriteSimpleFile("{}temp/restartNeeded".format(G.homeDir), reason)
 	return 
 
 #################################
 def resetRestartRequest():
+	"""Clears a pending restart request by deleting the 'restartNeeded' marker file in the plugin home directory if it exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes the restartNeeded marker file
+	"""
 	if os.path.isfile("{}restartNeeded".format(G.homeDir)):
 		os.remove("{}restartNeeded".format(G.homeDir))
 	return 
 
 #################################
 def resetRestartingNow():
+	"""Clears the 'restarting now' state by deleting the temp/restarting.now marker file if a temp/restarting file is present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: removes the restarting.now marker file
+	"""
 	if os.path.isfile("{}temp/restarting".format(G.homeDir)):
 		os.remove("{}temp/restarting.now".format(G.homeDir))
 	return 
 
 #################################
 def setRestaringNow(text=""):
+	"""Marks the device as currently restarting by writing a 'rebooting / shutdown' message (with optional extra text) to the temp/restarting.now file.
+
+	Inputs:
+	    text (str): optional extra detail appended to the reboot/shutdown message
+	Outputs:
+	    None: writes the restarting.now marker file
+	"""
 	doWriteSimpleFile("{}temp/restarting.now".format(G.homeDir), "rebooting / shutdown {}".format(text) )
 	return 
 	
 #################################
 def checkifRestarting():
+	"""Checks whether a restart is currently in progress by testing for the existence of the temp/restarting.now marker file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the restarting.now file exists, else False
+	"""
 	if os.path.isfile("{}temp/restarting.now".format(G.homeDir)): return True
 	return False
 	
 #################################
 def checkifRestartRequested():
+	"""Checks whether a restart has been requested; if the temp/restartNeeded file exists, returns its contents (the reason), otherwise returns an empty string.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: the restart reason from the marker file, or empty string if none
+	"""
 	if not os.path.isfile("{}temp/restartNeeded".format(G.homeDir)): return ""
 	f = open(G.homeDir+"temp/restartNeeded") 
 	reason = f.read()
@@ -850,6 +1206,13 @@ def checkifRestartRequested():
 
 #################################
 def manualStartOfRTC():
+	"""Starts the DS1307 hardware RTC clock manually once, but skips if already started this session or if NTP/network time is active, by instantiating the i2c device and syncing the system clock from hardware.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: registers the DS1307 i2c device and runs hwclock; logs status
+	"""
 	try:
 		global checkIfmanualStartOfRTC
 		try:
@@ -876,6 +1239,13 @@ def manualStartOfRTC():
 
 #################################
 def setUpRTC(useRTCnew):
+	"""Configures the hardware RTC overlay (ds3231, ds1307, or none) by editing the boot config, rc.local and udev hwclock-set files, adding/removing fake-hwclock, and rebooting; skips work when the requested mode is already in effect or 'manual'.
+
+	Inputs:
+	    useRTCnew (str): requested RTC mode: 'ds3231', 'ds1307', 'manual', or other meaning none
+	Outputs:
+	    None: edits boot/udev files, installs/removes packages, and triggers a reboot
+	"""
 	try:
 		global initRTC
 		try:
@@ -950,6 +1320,13 @@ def setUpRTC(useRTCnew):
 
 #################################
 def getIPNumber(doPrint=True):
+	"""Reads the stored IP address from the home-directory ipAddress file, validates it, and updates the global G.ipAddress if it changed, logging when no valid IP is found.
+
+	Inputs:
+	    doPrint (bool): whether to log when a new IP number is detected
+	Outputs:
+	    int: 0 if a valid IP was read and stored, 1 if no valid IP could be determined
+	"""
 	ipAddressRead = ""
 	###  if G.networkType  not in G.useNetwork or G.wifiType !="normal": return 0
 	try:
@@ -969,6 +1346,13 @@ def getIPNumber(doPrint=True):
 
 
 def isValidIP(ip0):
+	"""Validates an IPv4 address string by checking it splits into exactly four dot-separated integer octets each in the range 0-255.
+
+	Inputs:
+	    ip0 (str): the IP address string to validate
+	Outputs:
+	    bool: True if it is a well-formed IPv4 address, else False
+	"""
 	ipx = ip0.split(".")
 	if len(ipx) != 4:
 		return False
@@ -983,11 +1367,25 @@ def isValidIP(ip0):
 
 ################################
 def gethostnameIP():
+	"""Runs 'hostname -I' and returns the space-separated list of IP addresses assigned to the host.
+
+	Inputs:
+	    None.
+	Outputs:
+	    list: list of host IP address strings
+	"""
 	ret = (subprocess.Popen("hostname -I " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip()
 	return	ret.strip().split(" ")
 
 ################################
 def getIPCONFIG():
+	"""Gathers network interface state for eth0 and wlan by parsing 'ip addr show' (or ifconfig/route on older OS) plus /proc/net/dev packet counts and iwgetid, updating numerous global network flags/counters and returning the discovered interface addresses and enabled states.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (eth0IP, wlan0IP, G.eth0Enabled, G.wifiEnabled)
+	"""
 	wlan0IP 			= ""
 	eth0IP 				= ""
 	G.packetsTimeOld	= G.packetsTime
@@ -1230,6 +1628,13 @@ def getIPCONFIG():
 
 ################################
 def getIPofRouter():
+	"""Determines the router/gateway IP by parsing 'ip route' output and returning the validated address from the 'default via' line.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: the gateway IP address, or empty string if not found
+	"""
 	try:
 		retRoute = (subprocess.Popen("/sbin/ip route" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip().split("\n")
 		#default via 192.168.1.1 dev eth0 proto dhcp src 192.168.1.22 metric 202
@@ -1246,6 +1651,13 @@ def getIPofRouter():
 
 ################################
 def whichWifi():
+	"""Reads /etc/network/interfaces and sets the global G.wifiType to 'adhoc' if the file shows an ad-hoc clock network configuration, otherwise 'normal'.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: the detected WiFi type, either 'adhoc' or 'normal'
+	"""
 	try:
 		lines = ""
 		if os.path.isfile("/etc/network/interfaces"):
@@ -1262,6 +1674,13 @@ def whichWifi():
 
 ################################
 def checkWhenAdhocWifistarted():
+	"""Returns the timestamp at which ad-hoc WiFi was started by reading the adhocWifistarted.time JSON file, or -1 if the file is missing or contains no start time.
+
+	Inputs:
+	    None.
+	Outputs:
+	    float: the recorded ad-hoc start time, or -1 if unavailable
+	"""
 	try:
 		if not os.path.isfile("{}adhocWifistarted.time".format(G.homeDir)): return -1
 		xxx, ddd = readJson("{}adhocWifistarted.time".format(G.homeDir))
@@ -1274,6 +1693,13 @@ def checkWhenAdhocWifistarted():
 
 #################################
 def startAdhocWifi():
+	"""Switches the Pi into ad-hoc 'clock' WiFi mode by backing up the current network interfaces and wpa_supplicant config, copying in the ad-hoc interfaces file, recording the start time, and rebooting.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: backs up and replaces network config files, writes start-time file, and triggers a reboot
+	"""
 	try:
 		logger.log(30, "cBY:{:<20}  prepAdhoc Wifi: starting wifi servers as clock  no password ".format(G.program))
 		#subprocess.call("/usr/bin/sudo ifconfig wlan0 up", shell=True)
@@ -1293,6 +1719,13 @@ def startAdhocWifi():
 
 #################################
 def prepNextNormalRestartFromAdhocWifi():
+	"""Restores the original /etc/network/interfaces and wpa_supplicant.conf from the pre-adhoc backup files (if present) so the next boot returns to normal WiFi, removing the backup interfaces file afterward.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: restores network config files from backups and logs the action
+	"""
 	try:
 		if  os.path.isfile("{}interfaces-fromBeforeAdhoc".format(G.homeDir)):
 			logger.log(20, "cBY:{:<20}  restoring wifi /etc/network/interface file from before wifi adhoc start ".format(G.program))
@@ -1307,6 +1740,13 @@ def prepNextNormalRestartFromAdhocWifi():
 	return
 #################################
 def stopAdhocWifi():
+	"""Stops ad-hoc WiFi mode by restoring the normal network config, clearing ad-hoc marker files, and rebooting the Pi.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: restores config, clears ad-hoc files, logs, and triggers a reboot
+	"""
 	try:
 		prepNextNormalRestartFromAdhocWifi()
 		clearAdhocWifi()
@@ -1320,6 +1760,13 @@ def stopAdhocWifi():
 
 #################################
 def clearAdhocWifi():
+	"""Removes the ad-hoc WiFi marker and control files (adhocWifistarted.time and temp/adhocWifi.start/stop) via sudo rm if they exist.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: deletes ad-hoc marker/control files and logs
+	"""
 	try:
 		logger.log(20, "cBY:{:<20}  clearing adhoc files".format(G.program))
 
@@ -1339,6 +1786,13 @@ def clearAdhocWifi():
 
 #################################
 def startWiFi():
+	"""Brings up the wlan0 WiFi interface unless configured to 'dontChange': unblocks rfkill, reconfigures wpa_supplicant, brings the link up (using ifconfig or ip depending on OS version), starts dhcp, reassociates, restarts networking, and sets G.wifiEnabled True.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs system networking commands to enable WiFi and sets global wifiEnabled flag
+	"""
 	try:
 
 		if G.wifiEth["wlan0"]["on"] == "dontChange": return
@@ -1372,6 +1826,13 @@ def startWiFi():
 	return
 #################################
 def startEth():
+	"""Brings up the eth0 Ethernet interface unless configured to 'dontChange': unblocks rfkill, brings the link up (ifconfig or ip per OS version), starts dhcpcd, restarts networking, and sets G.eth0Enabled True.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs system networking commands to enable Ethernet and sets global eth0Enabled flag
+	"""
 	try:
 		ret = []
 		if G.wifiEth["eth0"]["on"] == "dontChange": return
@@ -1392,6 +1853,13 @@ def startEth():
 
 #################################
 def stopWiFi(calledFrom=""):
+	"""Brings down the wlan0 WiFi interface unless configured to 'dontChange', using ifconfig or ip depending on OS version, and clears the G.wifiEnabled flag.
+
+	Inputs:
+	    calledFrom (str): label of the caller, used only for logging
+	Outputs:
+	    None: runs system commands to disable WiFi and clears global wifiEnabled flag
+	"""
 	try:
 		ret = []
 		osVersion = getOsVersion()
@@ -1410,6 +1878,13 @@ def stopWiFi(calledFrom=""):
 	return
 #################################
 def stopEth():
+	"""Brings down the eth0 Ethernet interface unless configured to 'dontChange', using ifconfig or ip depending on OS version, and clears the G.eth0Enabled flag.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs system commands to disable Ethernet and clears global eth0Enabled flag
+	"""
 	try:
 		if G.wifiEth["eth0"]["on"] == "dontChange": return
 		osVersion = getOsVersion()
@@ -1428,13 +1903,29 @@ def stopEth():
 
 #################################
 def stopDisplay():
-	subprocess.call("echo stop > {}temp/display.inp".format(G.homeDir), shell=True)
+	"""Signals the display process to stop by writing 'stop' into the temp/display.stop file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes a stop marker file for the display process
+	"""
+	subprocess.call("echo stop > {}temp/display.stop".format(G.homeDir), shell=True)
 	return
 
 
 
 #################################
 def startwebserverINPUT(port, useIP="", force=False):
+	"""Launches the webserverINPUT.py helper as a background process on the given IP and port, guarded by a retry counter (max 5) and an already-running check unless forced; skips if no valid IP is available.
+
+	Inputs:
+	    port (int): TCP port for the input web server
+	    useIP (str): IP to bind to; falls back to G.ipAddress when empty
+	    force (bool): if True, start even when the server appears already running
+	Outputs:
+	    None: spawns the web server subprocess and logs, or returns early on limits/missing IP
+	"""
 	global startwebserverINPUTTries
 	try: 
 		startwebserverINPUTTries +=1
@@ -1463,11 +1954,27 @@ def startwebserverINPUT(port, useIP="", force=False):
 
 #################################
 def stopwebserverINPUT():
+	"""Stops the running INPUT web server by killing any process matching the webserverINPUT.py script.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: terminates the webserverINPUT.py process
+	"""
 	killOldPgm(-1,"/webserverINPUT.py")
 	return
 
 #################################
 def startwebserverSTATUS(port, useIP="", force=False):
+	"""Starts the STATUS web server as a background subprocess on the given IP and port, retrying up to a few times and skipping if already running unless forced; logs errors and missing-IP conditions.
+
+	Inputs:
+	    port (int): TCP port the status web server listens on
+	    useIP (str): IP address to bind to; falls back to G.ipAddress if empty
+	    force (bool): if True, start even when the server appears already running
+	Outputs:
+	    None: spawns webserverSTATUS.py subprocess and writes log/output files
+	"""
 	global startwebserverSTATUSTries
 	try: 
 		startwebserverSTATUSTries +=1
@@ -1497,6 +2004,13 @@ def startwebserverSTATUS(port, useIP="", force=False):
 
 #################################
 def stopwebserverSTATUS():
+	"""Stops the running STATUS web server by logging the action and killing any process matching the webserverSTATUS.py script.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: terminates the webserverSTATUS.py process and logs
+	"""
 	logger.log(30, "cBY:{:<20} webserverSTATUS stop".format(G.program) )
 	killOldPgm(-1,"/webserverSTATUS.py")
 	return
@@ -1504,78 +2018,198 @@ def stopwebserverSTATUS():
 
 #################################
 def setStartwebserverINPUT():
+	"""Signals a request to start the INPUT web server by writing 'start' to the temp/webserverINPUT.start flag file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the webserverINPUT.start flag file
+	"""
 	setFileTo("{}temp/webserverINPUT.start".format(G.homeDir), "start")
 	return
 #################################
 def setStopwebserverINPUT():
+	"""Signals a request to stop the INPUT web server by writing 'stop' to the temp/webserverINPUT.stop flag file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the webserverINPUT.stop flag file
+	"""
 	setFileTo("{}temp/webserverINPUT.stop".format(G.homeDir), "stop")
 	return
 #################################
 def setStartwebserverSTATUS():
+	"""Signals a request to start the STATUS web server by writing 'start' to the temp/webserverSTATUS.start flag file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the webserverSTATUS.start flag file
+	"""
 	setFileTo("{}temp/webserverSTATUS.start".format(G.homeDir), "start")
 	return
 #################################
 def setStopwebserverSTATUS():
+	"""Signals a request to stop the STATUS web server by writing 'stop' to the temp/webserverSTATUS.stop flag file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the webserverSTATUS.stop flag file
+	"""
 	setFileTo("{}temp/webserverSTATUS.stop".format(G.homeDir), "stop")
 	return
 #################################
 def setStartAdhocWiFi():
+	"""Signals a request to start ad-hoc WiFi mode by writing 'start' to the temp/adhocWifi.start flag file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the adhocWifi.start flag file
+	"""
 	setFileTo("{}temp/adhocWifi.start".format(G.homeDir), "start")
 	return
 #################################
 def setStopAdhocWiFi():
+	"""Signals a request to stop ad-hoc WiFi mode by writing 'stop' to the temp/adhocWifi.stop flag file.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the adhocWifi.stop flag file
+	"""
 	setFileTo("{}temp/adhocWifi.stop".format(G.homeDir), "stop")
 	return
 #################################
 def setFileTo(file, value):
+	"""Writes a value to a file by shelling out to an echo redirect, used as a helper to create flag/signal files.
+
+	Inputs:
+	    file (str): path of the file to write to
+	    value (str): text content echoed into the file
+	Outputs:
+	    None: writes the value into the named file via subprocess
+	"""
 	subprocess.call('echo  '+value+' > '+file, shell=True)
 	return
 
 
 #################################
 def checkIfStartAdhocWiFi():
+	"""Checks whether the start-adhoc-WiFi request flag file (temp/adhocWifi.start) exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the adhocWifi.start flag file exists
+	"""
 	return testForFile("{}temp/adhocWifi.start".format(G.homeDir))
 
 #################################
 def checkIfStopAdhocWiFi():
+	"""Checks whether the stop-adhoc-WiFi request flag file (temp/adhocWifi.stop) exists.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the adhocWifi.stop flag file exists
+	"""
 	return testForFile("{}temp/adhocWifi.stop".format(G.homeDir))
 
 #################################
 def checkIfStartwebserverINPUT():
+	"""Checks whether the webserver INPUT start trigger file (temp/webserverINPUT.start) exists; if present it deletes the file and reports True.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the start trigger file existed (and was removed), else False
+	"""
 	return testForFile("{}temp/webserverINPUT.start".format(G.homeDir))
 
 #################################
 def checkIfwebserverINPUTrunning():
+	"""Reports whether the INPUT webserver process is running by checking for a running webserverSTATUS.py process (note: it checks the STATUS script, not the INPUT script).
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the matching process is running, else False
+	"""
 	if pgmStillRunning("/webserverSTATUS.py"): return True
 	return False
 
 #################################
 def checkIfStopwebserverINPUT():
+	"""Checks whether the webserver INPUT stop trigger file (temp/webserverINPUT.stop) exists; if present it deletes the file and reports True.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the stop trigger file existed (and was removed), else False
+	"""
 	return testForFile("{}temp/webserverINPUT.stop".format(G.homeDir))
 
 #################################
 def checkIfStartwebserverSTATUS():
+	"""Checks whether the webserver STATUS start trigger file (temp/webserverSTATUS.start) exists; if present it deletes the file and reports True.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the start trigger file existed (and was removed), else False
+	"""
 	return testForFile("{}temp/webserverSTATUS.start".format(G.homeDir))
 
 #################################
 def checkIfStopwebserverSTATUS():
+	"""Checks whether the webserver STATUS stop trigger file (temp/webserverSTATUS.stop) exists; if present it deletes the file and reports True.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the stop trigger file existed (and was removed), else False
+	"""
 	return testForFile("{}temp/webserverSTATUS.stop".format(G.homeDir))
 
 
 #################################
 def checkIfwebserverSTATUSrunning():
+	"""Reports whether the STATUS webserver process is running by checking for a running webserverSTATUS.py process.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the webserverSTATUS.py process is running, else False
+	"""
 	if pgmStillRunning("/webserverSTATUS.py"): return True
 	return False
 
 
 #################################
 def checkIfwebserverINPUTrunning():
+	"""Reports whether the INPUT webserver process is running by checking for a running webserverINPUT.py process.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the webserverINPUT.py process is running, else False
+	"""
 	if pgmStillRunning("/webserverINPUT.py"): return True
 	return False
 
 
 #################################
 def updateWebStatus(data):
+	"""Logs a debug message and writes the given data to the temp/webserverSTATUS.show file so the status webserver can display it.
+
+	Inputs:
+	    data (str): status content to write to the webserver show file
+	Outputs:
+	    None: logs and writes the status to temp/webserverSTATUS.show
+	"""
 	logger.log(10, "cBY:{:<20} updating web status {}".format(G.program, data))
 	writeFile("temp/webserverSTATUS.show", data)
 	return
@@ -1583,12 +2217,26 @@ def updateWebStatus(data):
 
 #################################
 def updateWebINPUT(data):
+	"""Logs a debug message and writes the given data to the temp/webserverINPUT.show file so the input webserver can display it.
+
+	Inputs:
+	    data (str): input content to write to the webserver show file
+	Outputs:
+	    None: logs and writes the data to temp/webserverINPUT.show
+	"""
 	logger.log(10, "cBY:{:<20} updating web INPUT {}".format(G.program, data))
 	writeFile("temp/webserverINPUT.show", data)
 	return
 
 #################################
 def testForFile(fname):
+	"""Tests whether a file at the given path exists, and if so deletes it via sudo rm and returns True; otherwise returns False.
+
+	Inputs:
+	    fname (str): absolute path of the file to test for and remove
+	Outputs:
+	    bool: True if the file existed (and was removed), else False
+	"""
 	if os.path.isfile(fname):
 		subprocess.call('/usr/bin/sudo rm '+fname, shell=True)
 		return True
@@ -1597,6 +2245,13 @@ def testForFile(fname):
 
 #################################
 def checkwebserverINPUT():
+	"""Reads and removes the temp/webparameters.input JSON file; if it contains a timezone it applies/writes the new timezone, and processes any wifi supplicant data, returning whether a new file/config was generated.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if a timezone or supplicant file change was applied, else False
+	"""
 	try:
 		newFile = False
 		fName	= "{}temp/webparameters.input".format(G.homeDir)
@@ -1645,6 +2300,13 @@ def getTZ():
 #NTP synchronized: yes
 # RTC in local TZ: no
 
+	"""Runs the timedatectl command and parses its output to extract and return the system's configured time zone string.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: the time zone substring from timedatectl output, or empty string on failure
+	"""
 	try:
 		ret  = (subprocess.Popen("timedatectl" ,shell=True,stdout=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip("\r").split("\n")
 	except:
@@ -1660,6 +2322,13 @@ def getTZ():
 def getTZNumber():
 
 # returns time relative to GMZ
+	"""Computes the local timezone offset relative to GMT by shelling out to the `date` command for January 1st and returning the offset in whole hours.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int or str: GMT offset in hours (empty string on failure)
+	"""
 	tznumber = ""
 	try:
 		#JulDelta = int(subprocess.Popen("date -d '1 Jul' +%z " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].strip("\n").strip())/100
@@ -1670,6 +2339,15 @@ def getTZNumber():
 	return tznumber
 ###############################
 def writeTZ( iTZ = 99, cTZ="",force=False ):
+	"""Sets the Raspberry Pi system timezone to the one indexed by iTZ, comparing the requested, stored, and current offsets (accounting for DST) and, when a change is needed, runs timedatectl, updates the parameters JSON, and restarts the master process.
+
+	Inputs:
+	    iTZ (int): timezone index (-12..+12); 99 means no-op
+	    cTZ (str): unused current-timezone string argument
+	    force (bool): force the timezone change even if it appears unchanged
+	Outputs:
+	    None: changes system timezone, writes parameters file, restarts master, logs
+	"""
 	try:
 
 		if iTZ == 99: return
@@ -1726,14 +2404,14 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 						inp, raw, x = doRead()
 						if raw != "error" and raw != "":
 							if "timeZone" in inp:
-								inp["timeZone"] = u"{} {}".format(setNew, G.timeZones[setNew+12])
-								writeJson(u"{}parameters".format(G.homeDir), inp, sort_keys=True)
+								inp["timeZone"] = "{} {}".format(setNew, G.timeZones[setNew+12])
+								writeJson("{}parameters".format(G.homeDir), inp, sort_keys=True)
 								subprocess.call("touch {}temp\touchFile".format(G.homeDir), shell=True)
 					# must restart master to get clean restart w new time 
 						if sys.version_info[0] == 3:
-							cmd = "/usr/bin/sudo /usr/bin/python3 master.py &".format(G.homeDir)
+							cmd = "/usr/bin/sudo /usr/bin/python3 {}master.py &".format(G.homeDir)
 						else:
-							cmd = "/usr/bin/sudo /usr/bin/python master.py &".format(G.homeDir)
+							cmd = "/usr/bin/sudo /usr/bin/python {}master.py &".format(G.homeDir)
 						subprocess.call(cmd, shell=True)
 					else:
 						logger.log(20, "cBY:{:<20} error bad timezone:{}".format(G.program, G.timeZones[setNew+12]) )
@@ -1750,6 +2428,13 @@ def writeTZ( iTZ = 99, cTZ="",force=False ):
 
 #################################... not used !!
 def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
+	"""Resets WiFi to a default network configuration by copying a default interfaces file to /etc/network/interfaces, then stopping and restarting the WiFi for the next reboot.
+
+	Inputs:
+	    defaultFile (str): name of the default interfaces file in the home dir
+	Outputs:
+	    None: copies config file, stops/starts WiFi, logs
+	"""
 	try:
 		logger.log(30, "cBY:{:<20} resetting wifi to default for next re-boot".format(G.program))
 		if os.path.isfile("{}{}".format(G.homeDir, defaultFile)):
@@ -1763,6 +2448,13 @@ def resetWifi(defaultFile= "interfaces-DEFAULT-clock"):
 
 #################################
 def restartWifi():
+	"""Restarts WiFi to pick up new config and WPS files by stopping then starting the WiFi interface.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: stops and starts WiFi, logs
+	"""
 	try:
 		logger.log(30, "cBY:{:<20} restartWifi  w new config and wps files".format(G.program))
 		stopWiFi(calledFrom="restartWifi")
@@ -1776,6 +2468,13 @@ def restartWifi():
 
 #################################
 def copySupplicantFileFromBoot():
+	"""Checks the /boot directory for wpa_supplicant.conf and/or interfaces files dropped in by the user, copies them into their system locations, and deletes the originals from /boot.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if any file was copied from /boot, else False
+	"""
 	try:
 		logger.log(20, "cBY:{:<20} checking if interfaces or wpa_supplicant.conf files in /boot/".format(G.program))
 		retCode = False
@@ -1796,6 +2495,13 @@ def copySupplicantFileFromBoot():
 
 #################################
 def checkifWifiJsonFileInBootDir():
+	"""Checks for /boot/wifiInfo.json, reads the SSID and passCode from it, deletes the file, and if valid uses it to generate a new WPA supplicant configuration.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if a valid wifiInfo.json was found and applied, else False
+	"""
 	if os.path.isfile("/boot/wifiInfo.json"):
 		wifiInfo, raw = readJson("/boot/wifiInfo.json")
 		logger.log(20, 'reading wifi info file:{}'.format(raw) )
@@ -1809,6 +2515,13 @@ def checkifWifiJsonFileInBootDir():
 
 #################################
 def makeNewSupplicantFile(data):
+	"""Builds or updates the wpa_supplicant.conf WiFi configuration from a given SSID/passCode, either replacing an existing network's password or appending a new network block, copies the result into place, stops adhoc mode if active, and reboots.
+
+	Inputs:
+	    data (dict): dict with 'SSID' and 'passCode' keys
+	Outputs:
+	    bool: True if the supplicant file was updated, False on validation failure or no change
+	"""
 	try:
 		logger.log(50, "cBY:{:<20} enter with {}".format(G.program, data))
 
@@ -1824,7 +2537,7 @@ def makeNewSupplicantFile(data):
 		tryFileAdhoc = "{}wpa_supplicant.conf-fromBeforeAdhoc".format(G.homeDir)
 		tryFileActive = "/etc/wpa_supplicant/wpa_supplicant.conf"
 
-		minFile = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\mnetwork={}\n"
+		minFile = "ctrl_interface=DIR=/var/run/wpa_supplicant GROUP=netdev\nupdate_config=1\ncountry=US\nnetwork={}\n"
 
 		useFile = "{}wpa_supplicant.conf-temp".format(G.homeDir)
 
@@ -1898,6 +2611,14 @@ def makeNewSupplicantFile(data):
 
 ################################
 def getIPNumberMaster(quiet=True, noRestart=False):
+	"""Determines the Pi's current IP address by reading the stored ipAddress file and live ifconfig data, reconciling eth0/wlan0 on/off state, testing router and Indigo-server connectivity, choosing the active IP, and writing it back to file if it changed.
+
+	Inputs:
+	    quiet (bool): suppress informational logging when True
+	    noRestart (bool): skip restarting network interfaces when True
+	Outputs:
+	    tuple: (indigoServer reachable bool, changed bool, connected bool)
+	"""
 	ipAddressRead		= ""
 	retcode				= 0
 	connected			= False
@@ -1999,6 +2720,16 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP, noRestart=False):
 # G.wifiEth["eth0"]  ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 # G.wifiEth["wlan0"] ={"on":{"on"/"onIf"/"off"/"dontChange"}, "useIP":"use"/"useIf"/"off"}}
 #  /usr/bin/sudo /etc/init.d/networking restart
+	"""Adjusts which network interfaces (wlan0/eth0) are enabled based on the configured G.wifiEth policy and current IP/connectivity state, starting or stopping WiFi/ethernet as needed and handling failover between them.
+
+	Inputs:
+	    wlan0IP (str): current wlan0 IP address (empty if none)
+	    eth0IP (str): current eth0 IP address (empty if none)
+	    oldIP (str): previously stored IP address for comparison
+	    noRestart (bool): skip starting/stopping interfaces when True
+	Outputs:
+	    tuple: (wlan0IP, eth0IP, changed) where changed is a reason string or empty
+	"""
 	changed	= ""
 
 	
@@ -2023,7 +2754,7 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP, noRestart=False):
 					startWiFi()
 					time.sleep(10)
 				changed	= "WIFIon"
-				logger.log(30, "cBY:{:<20} etWlanEthONoff  ip changed: switchedToWifi:T , wlan0IP:/, wifiEnabled:F starting WiFi".format(G.program, wlan0IP, G.eth0Packets, G.wlan0Packets) )
+				logger.log(30, "cBY:{:<20} etWlanEthONoff  ip changed: wlan0IP:{}, eth0Packets:{}, wlan0Packets:{}, starting WiFi".format(G.program, wlan0IP, G.eth0Packets, G.wlan0Packets) )
 
 		# check if ethernet is back after 5 minutes
 		if G.switchedToWifi != 0 and time.time() - G.switchedToWifi > 300:
@@ -2080,6 +2811,14 @@ def setWlanEthONoff(wlan0IP, eth0IP,oldIP, noRestart=False):
 
 #################################
 def writeIPtoFile(ip,reason=""):
+	"""Stores the given IP address into G.ipAddress and writes it (trimmed) to the 'ipAddress' file, logging the value and reason.
+
+	Inputs:
+	    ip (str): IP address to store
+	    reason (str): reason string for the change, used in the log
+	Outputs:
+	    None: sets G.ipAddress, writes ipAddress file, logs
+	"""
 	try:
 		G.ipAddress = ip
 		writeFile("ipAddress", G.ipAddress.strip(" ").strip("\n").strip(" "))
@@ -2091,6 +2830,13 @@ def writeIPtoFile(ip,reason=""):
 
 #################################
 def findActiveUSB():
+	"""Lists active USB serial devices by parsing `ls -l /dev` output for dialout tty entries and returning the suffix after 'tty' for each.
+
+	Inputs:
+	    None.
+	Outputs:
+	    list: list of active USB serial device name suffixes
+	"""
 	activUsbList=[]
 	try:
 		cmd = "/bin/ls -l /dev | grep USB"
@@ -2112,6 +2858,13 @@ def findActiveUSB():
 
 #################################
 def checkIfusbSerialActive(usb):
+	"""Checks whether a given USB serial device is present and active by grepping `ls -l /dev` for the device name and a 'dialout' group entry.
+
+	Inputs:
+	    usb (str): USB device name to look for in /dev
+	Outputs:
+	    bool: True if the device exists as a dialout serial device, else False
+	"""
 	try:
 		cmd = "/bin/ls -l /dev | grep {}".format(usb)
 		ret = (subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
@@ -2127,6 +2880,13 @@ def checkIfusbSerialActive(usb):
 
 #################################
 def getBootFileName():
+	"""Determines the path of the Raspberry Pi boot config file, returning /boot/config.txt if it exists (and does not redirect) or otherwise /boot/firmware/config.txt.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Path to the active boot config.txt file
+	"""
 	try:
 		bootFile = "/boot/config.txt"
 		if not os.path.isfile(bootFile):
@@ -2142,6 +2902,13 @@ def getBootFileName():
 
 #################################
 def getSerialDEV():
+	"""Detects the Raspberry Pi model and returns the appropriate serial device path (/dev/ttyAMA0 or /dev/ttyS0), disabling the serial console getty service and verifying the serial port symlink exists; returns an empty string on misconfiguration or error.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Serial device path, or empty string if unavailable/misconfigured
+	"""
 	try:
 		version = subprocess.Popen("cat /proc/device-tree/model" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 		# return eg
@@ -2213,6 +2980,18 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 	# useDev  is UART or USB, used if available
 	# doNotUseHCI is ""/hci0/hci1/..2/..3/..4
 	#logger.log(20, "cBY:{:<20} HCIs:{}, useDev:{}, defaultBus:{}, doNotUseHCI:{}".format(G.program,HCIs, useDev, defaultBus, doNotUseHCI ))
+	"""Chooses which Bluetooth HCI adapter to use from the available adapters, honoring a preferred device/bus, an optional target BLE MAC, and excluded adapters; returns the chosen adapter's name, BLE MAC, number, and bus, or a failure tuple if none can be selected.
+
+	Inputs:
+	    HCIs (dict): Mapping of HCI names to their bus/numb/BLEmac info
+	    useDev (str): Preferred bus type ('USB' or 'UART') to use if available
+	    defaultBus (str): Fallback bus type to select when no preference matches
+	    doNotUseHCI (str): HCI adapter name to exclude from selection
+	    tryBLEmac (str): Specific BLE MAC address to match an adapter against
+	    doNotUseHCI2 (str): Second HCI adapter name to exclude from selection
+	Outputs:
+	    tuple: (hciName, BLEmac, number, bus) for chosen adapter, or (0,-1,-1,-1) on failure
+	"""
 	try:
 		if len(HCIs) == 1:
 			useHCI = list(HCIs)[0]
@@ -2261,7 +3040,7 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 						return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 				
 			else:
-				hh = hciChannel[0]
+				hh = hciChannels[0]
 				return hh,  HCIs[hh]["BLEmac"], HCIs[hh]["numb"], HCIs[hh]["bus"]
 
 	except Exception as e:
@@ -2276,6 +3055,13 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 
 #################################
 def whichHCI():
+	"""Runs hciconfig to enumerate Bluetooth HCI adapters, parsing each adapter's bus type, number, BD address, and up/down state into a nested dict, retrying once if the first call returns no output.
+
+	Inputs:
+	    None.
+	Outputs:
+	    dict: Dict with 'hci' adapter info and raw 'ret' output, or empty dict on error
+	"""
 	try:
 
 		#hci={"hci0":{"bus":"UART", "numb":0 ,"BLEmac":"xx:xx:xx:xx:xx:xx","upDown":"UP/Down"},"ret":ret[0,1]}
@@ -2402,6 +3188,20 @@ def hciUnblock():
 #################################
 def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=True, escape=False, forceCompress=False):
 
+	"""Queues a data payload to be sent to the Indigo plugin server, starting the background send thread if not already running; skips sending entirely when the network is unavailable or off.
+
+	Inputs:
+	    data (dict): Payload to send to the plugin server
+	    sendAlive (str): Alive-message type tag (e.g. 'alive', 'reboot') or empty for regular
+	    text (str): Optional text field added to the payload
+	    wait (bool): Whether the send should wait
+	    verbose (bool): Enable verbose logging of the send
+	    squeeze (bool): Whether to strip spaces from serialized data
+	    escape (bool): Whether to escape the data
+	    forceCompress (bool): Force zlib compression of the payload
+	Outputs:
+	    None: Enqueues data on the send thread queue; no return value
+	"""
 	try:
 			netwM = getNetwork()
 			if (G.networkType  not in G.useNetwork or G.wifiType !="normal") or (netwM=="off" or netwM =="clock") :
@@ -2410,7 +3210,7 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 				return
 
 			if G.sendThread == {}:
-				G.sendThread = { "run":True, "queue": Queue.Queue(), "thread": threading.Thread(name=u'execSend', target=execSend, args=())}
+				G.sendThread = { "run":True, "queue": Queue.Queue(), "thread": threading.Thread(name='execSend', target=execSend, args=())}
 				G.sendThread["thread"].start()
 
 			G.sendThread["queue"].put({"data":data, "sendAlive":sendAlive, "text":text, "wait":wait, "verbose":verbose, "squeeze":squeeze, "escape":escape, "forceCompress":forceCompress})
@@ -2421,6 +3221,13 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 
 #################################
 def execSend():
+	"""Background worker loop that pulls queued payloads, augments them with program/pi/IP/timestamp metadata, optionally compresses them, and sends them over a TCP socket to the Indigo plugin, retrying up to five times and triggering a reboot after too many network errors.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs until thread stopped; sends data over socket, writes status files, logs
+	"""
 	global varNanmes
 	global socketError
 
@@ -2578,6 +3385,14 @@ def execSend():
 
 ######## un decode i2c ether from in or from hex
 def echoToMessageSend(data, wasSend):
+	"""Logs and appends a record of a sent (or unsent) message to the temp/messageSend file, truncating very long data payloads before writing.
+
+	Inputs:
+	    data (str): Serialized message content that was sent
+	    wasSend (str): Status label describing the send outcome
+	Outputs:
+	    None: Logs and writes the send record to a file
+	"""
 	try:
 		if len(data) > 6000: data = data[0:5000]+"    ...    "+data[-990:]
 		logger.log(10, "cBY:{:<20}  {} {}\n".format(G.program, wasSend, data) )
@@ -2588,6 +3403,14 @@ def echoToMessageSend(data, wasSend):
 
 ######## un decode i2c ether from in or from hex
 def getI2cAddress(item,default =0):
+	"""Extracts the I2C address from a sensor item dict, parsing hex strings (containing 'x'), returning USB-marked addresses unchanged, or parsing decimal; falls back to the supplied default if absent or on error.
+
+	Inputs:
+	    item (dict): Sensor config dict possibly containing an 'i2cAddress' field
+	    default (int): Default address returned when none is found
+	Outputs:
+	    int or str: Parsed integer I2C address, USB address string, or the default
+	"""
 	try:
 		if "i2cAddress" in item:
 			if item["i2cAddress"].find("x") >-1:
@@ -2609,14 +3432,22 @@ def getI2cAddress(item,default =0):
 ######## setup and use	multiplexer if requested
 def muxTCA9548A(sens,i2c=""):
 
+	"""Activates the requested channel on a TCA9548A I2C multiplexer for a given sensor by writing the channel bit over SMBus, initializing the bus on first use; returns the sensor's I2C address, bypassing the mux if disabled or no channel is configured.
+
+	Inputs:
+	    sens (dict): Sensor config dict, optionally with 'useMuxChannel' and i2c address
+	    i2c (int or str): I2C address; resolved from sens if empty string
+	Outputs:
+	    int or str: The sensor's I2C address
+	"""
 	if i2c == "":
 		i2c = getI2cAddress(sens, default=0)
 
 	if G.enableMuxI2C == -1:
 						return	i2c
-	if u"useMuxChannel" not in sens:
+	if "useMuxChannel" not in sens:
 						return	i2c
-	try:				channel = int(sens[u"useMuxChannel"])
+	try:				channel = int(sens["useMuxChannel"])
 	except:				return	i2c
 	if channel == -1:	return	i2c
 	channelBit	= (1 << channel )
@@ -2635,11 +3466,26 @@ def muxTCA9548A(sens,i2c=""):
 
 ################################
 def muxTCA9548Areset():
+	"""Resets the TCA9548A I2C multiplexer by writing 0x0 to disable all channels, if the mux SMBus has been initialized.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Writes 0x0 to the mux over SMBus to deselect all channels
+	"""
 	if G.enableMuxBus !="":
 		G.enableMuxBus.write_byte(G.enableMuxI2C,0x0)
 
 #################################
 def removeOutPutFromFutureCommands(pin, devType):
+	"""Removes pending exec commands for a given pin and device type from the execcommands.current file when their scheduled start time has expired, skipping analogWrite/up/down commands; reboots if the filesystem is read-only.
+
+	Inputs:
+	    pin (int): Channel/pin number whose commands should be pruned
+	    devType (str): Device type that must match the command's device
+	Outputs:
+	    None: Rewrites execcommands.current with expired commands removed
+	"""
 	try:
 		if os.path.isfile("{}execcommands.current".format(G.homeDir)):
 			execcommands, input = readJson("{}execcommands.current".format(G.homeDir))
@@ -2654,7 +3500,7 @@ def removeOutPutFromFutureCommands(pin, devType):
 						if execcommands[channel]["command"]	 not in ["analogWrite","up","down"]:
 							logger.log(10, "cBY:{:<20} removing testing channel time expired".format(G.program) )
 							rmEXEC[channel] = 1
-							logger.log(10, "cBY:{:<20} removing removing channel".format(G.program,channel))
+							logger.log(10, "cBY:{:<20} removing channel:{}".format(G.program,channel))
 			for channel in rmEXEC:
 				del execcommands[channel]
 			writeJson("{}execcommands.current".format(G.homeDir),execcommands)
@@ -2666,6 +3512,13 @@ def removeOutPutFromFutureCommands(pin, devType):
 
 #################################
 def echoLastAlive(sensor):
+	"""Writes the current timestamp to a per-sensor temp/alive.<sensor> file to mark the sensor as alive, but at most once every 30 seconds.
+
+	Inputs:
+	    sensor (str): Sensor name used in the alive file name
+	Outputs:
+	    None: Writes current time to the sensor's alive temp file
+	"""
 	try:
 		tt = time.time()
 		if time.time() - G.lastAliveEcho > 30.:
@@ -2679,6 +3532,15 @@ def echoLastAlive(sensor):
 
 #################################
 def echoText(fileName, text, start=False):
+	"""Appends (or, if start is True, overwrites) a line of text to the given file, prefixing it with the current day-and-time timestamp; errors are logged.
+
+	Inputs:
+	    fileName (str): Path of the file to write/append to
+	    text (str): Message text to write after the timestamp
+	    start (bool): If True open in write mode (truncate), else append
+	Outputs:
+	    None: Writes a timestamped line to the file; logs on error
+	"""
 	try:
 		#logger.log(20, " echoText to file:{}, text:{}".format(fileName, text))
 		if start:
@@ -2694,6 +3556,14 @@ def echoText(fileName, text, start=False):
 
 #################################
 def calcStartTime(data,timeStamp):
+	"""Looks up a start-time value in the data dict by the given key (or its lowercase form), interpreting values under 1000000 as an offset from now and larger values as an absolute epoch time; falls back to the current time if no usable value is found.
+
+	Inputs:
+	    data (dict): Dictionary possibly holding the start-time value
+	    timeStamp (str): Key under which the start time is stored
+	Outputs:
+	    float: Absolute epoch start time in seconds
+	"""
 	if timeStamp in data:
 		try:
 			startAtDateTime =  float(data[timeStamp])
@@ -2714,17 +3584,46 @@ def calcStartTime(data,timeStamp):
 
 #################################
 def checkNowFile(xxx):
+	"""Convenience wrapper that checks for a sensor's '.now' trigger file by delegating to doFileCheck with the 'now' extension.
+
+	Inputs:
+	    xxx (str): Base filename / sensor identifier
+	Outputs:
+	    dict or bool: Parsed JSON data, True if file existed, or False if absent
+	"""
 	return doFileCheck(xxx, "now")
 #################################
 def checkResetFile(xxx):
+	"""Convenience wrapper that checks for a sensor's '.reset' trigger file by delegating to doFileCheck with the 'reset' extension.
+
+	Inputs:
+	    xxx (str): Base filename / sensor identifier
+	Outputs:
+	    dict or bool: Parsed JSON data, True if file existed, or False if absent
+	"""
 	return doFileCheck(xxx, "reset")
 
 #################################
 def checkNewCalibration(xxx):
+	"""Convenience wrapper that checks for a sensor's '.startCalibration' trigger file by delegating to doFileCheck with the 'startCalibration' extension.
+
+	Inputs:
+	    xxx (str): Base filename / sensor identifier
+	Outputs:
+	    dict or bool: Parsed JSON data, True if file existed, or False if absent
+	"""
 	return doFileCheck(xxx, "startCalibration")
 
 #################################
 def doFileCheck(xxx,extension):
+	"""Checks for a trigger file at homeDir/temp/<xxx>.<extension>; if present, reads and deletes it, returning its parsed JSON contents if it contains valid JSON, otherwise True; returns False when the file does not exist.
+
+	Inputs:
+	    xxx (str): Base filename / sensor identifier
+	    extension (str): File extension marking the trigger type
+	Outputs:
+	    dict or bool: Parsed JSON data, True if file existed without valid JSON, or False if absent
+	"""
 	try:
 		thefile = "{}temp/{}.{}".format(G.homeDir, xxx, extension)
 		if os.path.isfile(thefile):
@@ -2751,6 +3650,13 @@ def doFileCheck(xxx,extension):
 
 #################################
 def checkForNewCommand(fname):
+	"""Checks for a command file at homeDir/temp/<fname>; if present, reads its JSON contents via readJson, deletes the file, and returns the parsed data; returns an empty string if the file is missing or unreadable.
+
+	Inputs:
+	    fname (str): Command filename within the temp directory
+	Outputs:
+	    dict or str: Parsed JSON command data, or empty string if none/error
+	"""
 	try:
 		if os.path.isfile("{}temp/{}".format(G.homeDir, fname)):
 			try:
@@ -2767,6 +3673,16 @@ def checkForNewCommand(fname):
 
 #################################
 def writeFile(outFile, text, writeOrAppend="w", useHomeDir=True):
+	"""Writes or appends the given text to a file (optionally prefixed with the plugin home directory); on a read-only filesystem error it triggers a reboot, and other errors are logged.
+
+	Inputs:
+	    outFile (str): Output file path or name
+	    text (str): Text content to write
+	    writeOrAppend (str): File open mode, 'w' to write or 'a' to append
+	    useHomeDir (bool): If True prepend G.homeDir to outFile
+	Outputs:
+	    None: Writes text to file; may trigger reboot on read-only filesystem
+	"""
 	try:
 		if useHomeDir:
 			f = open("{}{}".format(G.homeDir, outFile), writeOrAppend)
@@ -2785,6 +3701,14 @@ def writeFile(outFile, text, writeOrAppend="w", useHomeDir=True):
 
 #################################
 def makeDATfile(sensor, data):
+	"""Writes sensor data out as .dat JSON files in homeDir/temp; if the data contains a 'sensors' key it writes one file per sub-sensor, otherwise writes a single file named after the given sensor.
+
+	Inputs:
+	    sensor (str): Sensor name used for the output filename
+	    data (dict): Sensor data, possibly nested under a 'sensors' key
+	Outputs:
+	    None: Writes one or more .dat JSON files to temp directory
+	"""
 	if "sensors" in data:
 		for sens in data["sensors"]:
 			#print sensor, "makeDATfile", sens, data["sensors"][sens]
@@ -2796,6 +3720,16 @@ def makeDATfile(sensor, data):
 
 #################################
 def writeJson(fName, data, sort_keys=False, indent=0):
+	"""Serializes the given data to JSON (optionally sorting keys and indenting) and writes it to the named file; on a read-only filesystem error it triggers a reboot, and other errors are logged.
+
+	Inputs:
+	    fName (str): Output file path
+	    data (object): JSON-serializable data to write
+	    sort_keys (bool): Whether to sort object keys in output
+	    indent (int): Indentation level; 0 means compact output
+	Outputs:
+	    None: Writes JSON to file; may trigger reboot on read-only filesystem
+	"""
 	try:
 		if indent != 0:
 			out = json.dumps(data,sort_keys=sort_keys, indent=indent)
@@ -2815,6 +3749,13 @@ def writeJson(fName, data, sort_keys=False, indent=0):
 
 #################################
 def readPopen(cmd):
+	"""Runs a shell command via subprocess.Popen, captures its stdout and stderr, and returns both decoded as UTF-8 strings; logs on error.
+
+	Inputs:
+	    cmd (str): Shell command to execute
+	Outputs:
+	    tuple: (stdout, stderr) as decoded UTF-8 strings, or None on error
+	"""
 	try:
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 		return ret.decode('utf_8'), err.decode('utf_8')
@@ -2823,12 +3764,26 @@ def readPopen(cmd):
 
 #################################
 def checkIfmustUsePy3():
+	"""Determines whether Python 3 must be used by checking if the OS version is 11 or greater.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if OS version >= 11, else False
+	"""
 	if getOsVersion() >= 11:
 		return True
 	return False
 
 #################################
 def getOsVersion():
+	"""Reads /etc/os-release via a shell cat command and parses out the numeric VERSION_ID value, returning it as an integer (or 0 if not found).
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: OS version id parsed from VERSION_ID, or 0 if absent
+	"""
 	osInfo	 = readPopen("cat /etc/os-release")[0].strip("\n").split("\n")
 	for line in osInfo:
 		if line .find("VERSION_ID=") == 0:
@@ -2837,6 +3792,13 @@ def getOsVersion():
 
 #################################
 def readJson(fName):
+	"""Reads and JSON-parses a file, retrying once after a 1-second pause on parse error. Returns the parsed dict and the raw text; returns empty values if the file is missing or parsing keeps failing.
+
+	Inputs:
+	    fName (str): path of the JSON file to read
+	Outputs:
+	    tuple: (parsed dict, raw file text); ({}, '') on missing file or error
+	"""
 	data = {}
 	raw  = ""
 	if not os.path.isfile(fName):
@@ -2863,6 +3825,17 @@ def readJson(fName):
 #################################
 def compareDict(oldDict, newDict, levels=3, mustHaveKey="", mustHaveSensor=""):
 
+	"""Recursively compares two nested sensor dictionaries down to a given depth, returning True if they differ in keys, types, or values. Supports filtering to a specific sensor and requiring a specific key, and returns True on any exception.
+
+	Inputs:
+	    oldDict (dict): previous sensor dictionary
+	    newDict (dict): new sensor dictionary to compare against
+	    levels (int): nesting depth to compare (default 3)
+	    mustHaveKey (str): if set, only compare entries containing this key
+	    mustHaveSensor (str): if set, restrict comparison to this sensor name
+	Outputs:
+	    bool: True if the dicts differ (or on error), False if equal
+	"""
 	sens = ""
 	try:
 		for sens in newDict:
@@ -2906,6 +3879,13 @@ def compareDict(oldDict, newDict, levels=3, mustHaveKey="", mustHaveSensor=""):
 
 #################################
 def checkresetCount(IPCin):
+	"""Checks for a per-program reset file in the temp dir; if present, zeroes the input counts for the pins listed in that file, persists the updated counts, deletes the reset file, and returns the modified count dict.
+
+	Inputs:
+	    IPCin (dict): current input-count dictionary keyed by pin
+	Outputs:
+	    dict: input-count dict with reset pins zeroed (copy of input)
+	"""
 	IPC = copy.copy(IPCin)
 	try:
 		resetfile = "{}temp/{}.reset".format(G.homeDir, G.program)
@@ -2928,12 +3908,19 @@ def checkresetCount(IPCin):
 
 ######################################
 def readINPUTcount():
+		"""Loads the persisted input-count dictionary from the program's .count file, initializing/repairing it (keys 1-29 set to 0) if it is missing, malformed, or too small, then rewrites and returns the cleaned dict.
+
+		Inputs:
+		    None.
+		Outputs:
+		    dict: input-count dictionary keyed by pin string with integer counts
+		"""
 		IPC={}
 		for ii in range(1,30):
 			IPC[str(ii)] = 0
 		try:
 			IPC, ddd = readJson("{}{}.count".format(G.homeDir, G.program))
-			logger.log(10, u" readINPUTcount-0:{}\nddd: {}".format(IPC, ddd) )
+			logger.log(10, " readINPUTcount-0:{}\nddd: {}".format(IPC, ddd) )
 		except:
 			pass
 		## check if change from list to dict
@@ -2958,18 +3945,52 @@ def readINPUTcount():
 
 ######################################
 def writeINPUTcount(IPC):
+	"""Persists the input-count dictionary to the program's .count file as JSON.
+
+	Inputs:
+	    IPC (dict): input-count dictionary to write
+	Outputs:
+	    None: writes the count dict to the .count JSON file
+	"""
 	writeJson("{}{}.count".format(G.homeDir, G.program), IPC)
 
 ######################################
 def readRainStatus():
+	"""Reads the program's .status JSON file and returns the stored rain/status dictionary.
+
+	Inputs:
+	    None.
+	Outputs:
+	    dict: status dictionary read from the .status file
+	"""
 	status, ddd = readJson("{}{}.status".format(G.homeDir, G.program))
 	return status
 
 ######################################
 def writeRainStatus(status):
+	"""Persists the given status dictionary to the program's .status JSON file.
+
+	Inputs:
+	    status (dict): status data to persist
+	Outputs:
+	    None: writes the status dict to the .status JSON file
+	"""
 	writeJson("{}{}.status".format(G.homeDir, G.program),status)
 ######################################
 def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAction=""): # theAction can be 1 2 3 4 5
+	"""Detects state changes on a sensor's GPIO inputs (or a forced action) and runs the corresponding configured shell action (action1-5/UP/DOWN), delegating double-click and long-click handling to manageActions. Updates and returns the lastGPIO state tracking.
+
+	Inputs:
+	    data0 (dict): current sensor data keyed by sensor and device id
+	    lastGPIO (list): previous GPIO values indexed by pin number
+	    sensors (dict): sensor configuration dictionary
+	    sensor (str): sensor name/type to process
+	    sensorType (str): input key prefix to match (default 'INPUT_')
+	    gpio (str): optional GPIO identifier (unused in body)
+	    theAction (str): explicit action to force instead of deriving from state
+	Outputs:
+	    list: updated lastGPIO values, or '' if sensor not present
+	"""
 	try:
 		if sensor not in sensors: return ""
 		for devId in sensors[sensor]:
@@ -3011,7 +4032,7 @@ def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAct
 					if "action{}".format(action) in sens and sens["action{}".format(action)] !="":
 						if	action =="UP" or action =="DOWN" or action =="1" or action =="2" or action =="3" or action =="4" or action =="5":
 
-							logger.log(20, "cBY:{:<20} action:{}  {}".format(G.program, action, sens["action".format(action)]) )
+							logger.log(20, "cBY:{:<20} action:{}  {}".format(G.program, action, sens["action{}".format(action)]) )
 							checkIfrebootAction(sens["action{}".format(action)])
 							subprocess.call(sens["action{}".format(action)], shell=True)
 
@@ -3030,6 +4051,17 @@ def doActions(data0,lastGPIO, sensors, sensor,sensorType="INPUT_",gpio="",theAct
 
 #################################
 def manageActions(action,waitTime=3,click="UP", aType="actionDoubleClick",devId=""):
+	"""Manages timed double-click and long-click actions using the global G.actionDict: records first clicks with a timer, fires the configured shell command when click timing criteria are met, and on the '-loop-' call prunes expired/empty action entries.
+
+	Inputs:
+	    action (str): shell command string, or '-loop-' to run cleanup pass
+	    waitTime (int): timing window in seconds (default 3)
+	    click (str): click direction such as 'UP' or 'DOWN' (default 'UP')
+	    aType (str): action type ('actionDoubleClick' or 'actionLongClick')
+	    devId (str): device id the action belongs to
+	Outputs:
+	    None: mutates G.actionDict and may invoke subprocess shell commands
+	"""
 	try:
 		tt = time.time()
 		if action == "-loop-":
@@ -3089,6 +4121,13 @@ def manageActions(action,waitTime=3,click="UP", aType="actionDoubleClick",devId=
 #################################
 def checkIfrebootAction(action):
 	# display.py might stop shutdown from going through, need to kill first
+	"""If the action command contains 'shutdown' or 'reboot', kills the display.py process first (since it could block shutdown) and pauses briefly before the caller executes the command.
+
+	Inputs:
+	    action (str): shell action command string to inspect
+	Outputs:
+	    None: kills display.py process when a shutdown/reboot action is detected
+	"""
 	try:
 		if action.find("shutdown") >-1 or  action.find("reboot") >-1 :
 			logger.log(30, "cBY:{:<20}  executing action: {}".format(G.program, action))
@@ -3105,6 +4144,14 @@ def checkIfrebootAction(action):
 
 #################################
 def getSensorInfo(sensDict, i2cList):
+	"""Builds a human-readable sensor list string from the sensor dictionary and checks each I2C-addressed sensor against a list of active I2C devices, collecting an error string for any configured I2C address with no match.
+
+	Inputs:
+	    sensDict (dict): sensor configuration dictionary keyed by sensor and device id
+	    i2cList (list): list of active i2c device strings ('addr=...')
+	Outputs:
+	    tuple: (i2cError string of unmatched addresses, sensList summary string)
+	"""
 	i2cError	= ""
 	try:
 		#logger.log(30, "cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
@@ -3151,6 +4198,13 @@ def getSensorInfo(sensDict, i2cList):
 
 #################################
 def getRPiType():
+	"""Reads the Raspberry Pi model and serial number from /sys/firmware/devicetree/base via shell commands and returns a combined descriptive string like 'Pi 3 Model B Plus Rev 1.3, ser#dcfb216c'.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Formatted Pi model and serial string, or empty string on error
+	"""
 	try:
 		#logger.log(30, "cBY:{:<20}  into sendi2cToPlugin".format(G.program) )
 		#																	remove trailing null chars;  \\ for escape  of \
@@ -3170,6 +4224,13 @@ def getRPiType():
 
 #################################
 def getOSinfo():
+	"""Gathers operating system version from /etc/os-release plus kernel release (uname -r) and version (uname -v), returning them as a single comma-separated string.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Combined OS version and kernel info string, or empty string on error
+	"""
 	try:
 		os = ""
 		osInfo	 = (subprocess.Popen("cat /etc/os-release" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").split("\n")
@@ -3187,6 +4248,13 @@ def getOSinfo():
 
 #################################
 def getTemperatureOfRPI():
+	"""Reads the Raspberry Pi CPU/SoC temperature via vcgencmd measure_temp (trying both /opt/vc/bin and /usr/bin paths) and returns the numeric temperature value parsed from the output.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Temperature reading as a string (e.g. '45.3'), '0' if unparseable, or empty string on error
+	"""
 	try:
 		tempInfo = (subprocess.Popen("/opt/vc/bin/vcgencmd measure_temp" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8'))
 		if tempInfo.find("No such file") >-1 or tempInfo == "":
@@ -3202,6 +4270,13 @@ def getTemperatureOfRPI():
 
 #################################
 def checkIfThrottled():
+	"""Runs vcgencmd get_throttled to read the Pi power/throttle status code, decodes its bit flags against a message map (under-voltage, throttling, ARM frequency capping, soft temperature limit), and returns a human-readable status string.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Status string of detected throttle/power conditions, 'no_problem_detected', an error marker, or empty string on exception
+	"""
 	try:
 		MESSAGES = {
 			0:  'E#0_Under-volt',
@@ -3256,6 +4331,13 @@ def checkIfThrottled():
 
 #################################
 def getLastBoot():
+	"""Runs 'uptime -s' to get the timestamp of the last system boot and returns it as a string.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: Last boot timestamp string, or empty string on error
+	"""
 	try:
 		lastBoot = (subprocess.Popen("uptime -s" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n")
 		return lastBoot
@@ -3265,6 +4347,13 @@ def getLastBoot():
 
 #################################
 def resetI2cBus():
+	"""Attempts to reset the I2C bus by unbinding and rebinding the i2c-bcm2835 platform driver via a shell command.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: No return value; spawns a shell subprocess to reset the I2C hardware bus
+	"""
 	try:
 		cmd = "sudo su; echo '3f804000.i2c' > /sys/bus/platform/drivers/i2c-bcm2835/unbind;echo '3f804000.i2c' > /sys/bus/platform/drivers/i2c-bcm2835/bind &"
 		subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -3275,6 +4364,13 @@ def resetI2cBus():
 
 #################################
 def checki2cdetect():
+	"""Runs i2cdetect on bus 1, writing output to a temp file, then reads it back and checks for the expected detection header/footer to determine whether the I2C bus is functioning.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: 'ok' if i2cdetect output looks valid, otherwise 'bad'
+	"""
 	try:
 		i2cfile = "{}temp/i2cdetect".format(G.homeDir)
 		if os.path.isfile(i2cfile):
@@ -3301,6 +4397,13 @@ def checki2cdetect():
 
 #################################
 def geti2c():
+	"""Runs i2cdetect on bus 1, parses the grid output to find active I2C device addresses (negating addresses marked 'UU'/in-use), and returns two parallel lists describing each detected channel in decimal=hex and hex-only form.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: Tuple of (list of 'int=hex' strings, list of hex strings); an error list on failure
+	"""
 	try:
 		i2cChannelsINTHex=[]
 		i2cChannelsHEX=[]
@@ -3340,6 +4443,13 @@ def geti2c():
 
 #################################
 def geti2cIntChannels():
+	"""Calls geti2c() and extracts just the integer addresses of detected I2C channels from the 'int=hex' entries, returning them as a list of ints.
+
+	Inputs:
+	    None.
+	Outputs:
+	    list: List of int I2C channel addresses, or empty list on error
+	"""
 	retInt = []
 	try:
 		i2cChannelsINTHex,i2cChannelsHEX = geti2c()
@@ -3353,6 +4463,14 @@ def geti2cIntChannels():
 
 #################################
 def sendSensorAndRPiInfoToPlugin(sensDict, fanOnTimePercent="", ):
+	"""Collects system status (I2C health, detected I2C devices, active sensors, Pi model, OS info, temperature, throttle status, last boot) into a data dict and sends it to the plugin via sendURL; re-enables I2C if required and currently failing.
+
+	Inputs:
+	    sensDict (dict): Sensor configuration/state dict used to build the active sensor list
+	    fanOnTimePercent (float or str): Fan on-time fraction; multiplied by 100 and reported if not empty string
+	Outputs:
+	    None: No return value; sends collected status data to the plugin and may enable I2C
+	"""
 	try:
 
 		i2cok 						= checki2cdetect()
@@ -3379,6 +4497,13 @@ def sendSensorAndRPiInfoToPlugin(sensDict, fanOnTimePercent="", ):
 
 #################################
 def startI2C(text=""):
+	"""Enables the I2C interface on the Raspberry Pi by running 'raspi-config nonint do_i2c 0' as a subprocess and logs the action.
+
+	Inputs:
+	    text (str): Reason/context string for enabling I2C (used by caller/logging)
+	Outputs:
+	    None: No return value; spawns a subprocess to enable the I2C interface and logs it
+	"""
 	try:
 		cmd = "sudo raspi-config nonint do_i2c 0 "
 		subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -3390,6 +4515,16 @@ def startI2C(text=""):
 #################################
 def testBad(newX, lastX, inXXX, deltaAbs=99999999.):
 
+	"""Computes a quality/badness score comparing a new reading to the last one, returning a relative change ratio, a large sentinel value when readings are 'bad' or exceed an absolute delta threshold, or 0 when values are missing or recovering from a prior bad state.
+
+	Inputs:
+	    newX (float or str or None): New sensor reading, possibly the string 'bad' or None
+	    lastX (float or str or None): Previous sensor reading, possibly the string 'bad' or None
+	    inXXX (float): Incoming/base score used as the default and lower bound
+	    deltaAbs (float): Maximum allowed absolute change before flagging as bad; defaults to 99999999.
+	Outputs:
+	    float: Computed badness/quality score (relative change ratio or a sentinel value like 999/9991/9992/9993)
+	"""
 	xxx = inXXX
 	try:
 		if lastX is not None and newX is not None:
@@ -3417,6 +4552,13 @@ def testBad(newX, lastX, inXXX, deltaAbs=99999999.):
 
 #################################
 def checkIfAliveNeedsToBeSend():
+	"""Checks the modification time of the temp/messageSend file and, if more than 100 seconds have elapsed since the last message, sends an 'alive' signal to the plugin via sendURL.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: may call sendURL to send an alive heartbeat; logs errors
+	"""
 	try:
 		lastSend = 0
 		if os.path.isfile("{}temp/messageSend".format(G.homeDir)):
@@ -3432,6 +4574,13 @@ def checkIfAliveNeedsToBeSend():
 
 #################################
 def checkIfPauseSensor(sensor):
+	"""Reads the temp/pauseSensor file and, if it names the given sensor, sleeps for the configured duration (echoing keep-alive every 5 seconds) and then deletes the pause file, effectively pausing that sensor.
+
+	Inputs:
+	    sensor (str): name of the sensor to check for a pause request
+	Outputs:
+	    None: sleeps while paused, echoes alive, removes pause file, logs
+	"""
 	try:
 		tt = time.time()
 		lastSend = 0
@@ -3462,6 +4611,16 @@ def checkIfPauseSensor(sensor):
 
 #################################
 def doWeNeedToStartSensor(sensors, sensorsOld, selectedSensor="",sensorType=""):
+	"""Compares the current and previous sensor configuration dicts to determine which sensors changed and need (re)starting. With no selectedSensor it returns a dict mapping changed sensor names to 1; with a selectedSensor it returns -1 (removed), 1 (changed/new), or 0 (unchanged).
+
+	Inputs:
+	    sensors (dict): current nested sensor/device/property configuration
+	    sensorsOld (dict): previous nested sensor/device/property configuration
+	    selectedSensor (str): optional single sensor name to test instead of all
+	    sensorType (str): optional substring filter restricting which sensors are compared
+	Outputs:
+	    dict or int: dict of changed sensors, or -1/0/1 status for a single selected sensor
+	"""
 	if selectedSensor =="":
 		sensorUp ={}
 		for sensor in sensors:
@@ -3505,6 +4664,14 @@ def doWeNeedToStartSensor(sensors, sensorsOld, selectedSensor="",sensorType=""):
 		return 0
 #################################
 def doWeNeedToStartGPIO(sensors, sensorsOld):
+	"""Compares current and previous sensor configurations focused on GPIO sensors to decide whether GPIO needs to be restarted, returning True when any relevant addition, removal, or property change is detected.
+
+	Inputs:
+	    sensors (dict): current nested sensor/device/property configuration
+	    sensorsOld (dict): previous nested sensor/device/property configuration
+	Outputs:
+	    bool: True if GPIO must be (re)started, False otherwise
+	"""
 	oneFound = False
 	for sensor in sensors:
 		if sensor.find("INPUTgpio") ==1: continue
@@ -3594,11 +4761,26 @@ def magCalibrate(theClass, force = False, calibTime=10):
 
 #################################
 def saveCalibration(theClass, calib):
+	"""Writes the magnetometer calibration data to the class's calibration file as sorted JSON and logs the action.
+
+	Inputs:
+	    theClass (object): sensor driver object holding the calibrationFile path
+	    calib (dict): calibration data to persist
+	Outputs:
+	    None: writes calibration JSON to file and logs
+	"""
 	logger.log(20,'saveCalibration:  enableCalibration = {}'.format(calib))
 	writeJson(theClass.calibrationFile, calib, sort_keys=True)
 
 #################################
 def setOffsetFromCalibration(calib):
+		"""Computes the per-axis magnetometer offset as the midpoint of the calibrated min/max for X, Y, and Z, returning [0,0,0] on error.
+
+		Inputs:
+		    calib (dict): calibration dict with minX/maxX/minY/maxY/minZ/maxZ keys
+		Outputs:
+		    list: three-element [x,y,z] offset list, or [0,0,0] on failure
+		"""
 		try:
 			offset=[]
 			offset[0] = (calib['minX'] + calib['maxX'])/2
@@ -3612,11 +4794,26 @@ def setOffsetFromCalibration(calib):
 
 #################################
 def loadCalibration(calibrationFile):
+		"""Loads calibration data by reading the plugin's status JSON file and returns the parsed calibrations object.
+
+		Inputs:
+		    calibrationFile (str): calibration file argument (unused; status file path is derived from G.program)
+		Outputs:
+		    dict: calibrations parsed from the status JSON file
+		"""
 		calibrations, calib = readJson("{}{}.status".format(G.program, G.program))
 		return calibrations
 
 #################################
 def magDataCorrected(theClass,data):
+		"""Applies the magnetometer offset and divider correction to each element of a raw data vector, returning the normalized corrected values.
+
+		Inputs:
+		    theClass (object): sensor object providing magOffset list and magDivider
+		    data (list): raw magnetometer readings to correct
+		Outputs:
+		    list: offset-subtracted, divider-scaled corrected values
+		"""
 		out=[0 for ii in range(len(data))]
 		for ii in range(len(data)):
 			out[ii] = (data[ii]	 - theClass.magOffset[ii] ) / max(0.01,theClass.magDivider )
@@ -3624,6 +4821,18 @@ def magDataCorrected(theClass,data):
 
 #################################
 def setMAGParams(theClass, magOffset="",magDivider="", enableCalibration="", declination="", offsetTemp=""):
+		"""Copies any provided magnetometer parameters (offset, divider, calibration enable, declination, temperature offset) onto the sensor class, ignoring blank values and any attribute that fails to set.
+
+		Inputs:
+		    theClass (object): sensor object whose magnetometer attributes are updated
+		    magOffset (list or str): per-axis offset list, blank to skip
+		    magDivider (float or str): scaling divider, blank to skip
+		    enableCalibration (bool or str): calibration enable flag, blank to skip
+		    declination (float or str): magnetic declination, blank to skip
+		    offsetTemp (float or str): temperature offset, blank to skip
+		Outputs:
+		    None: mutates attributes on theClass
+		"""
 		try:
 			if magOffset !="":
 				theClass.magOffset = copy.copy(magOffset)
@@ -3681,6 +4890,14 @@ def getEULER(v,theClass=""):
 #################################
 def getMAGReadParameters( sens,devId):
 		#global magOffsetX, magOffsetY, magOffsetZ, magDivider, magResolution, declination, deltaX, sensorRefreshSecs, enableCalibration, displayEnable, sensorLoopWait, minSendDelta, offsetTemp, magFregRate, accelerationGain, 
+		"""Reads many magnetometer/sensor configuration values out of a sensor settings dict and stores them into per-device global state (offsets, divider, resolution, declination, deltaX, refresh interval, calibration, gains, etc.), tracking which frequency/gain fields changed.
+
+		Inputs:
+		    sens (dict): sensor settings dict of configuration string/number values
+		    devId (str): device identifier keying the per-device global parameters
+		Outputs:
+		    str: concatenated names of changed parameters (magFregRate/accelerationGain/magGain)
+		"""
 		changed = ""
 
 		G.i2cAddress = getI2cAddress(sens,default="")
@@ -3805,6 +5022,22 @@ def getMAGReadParameters( sens,devId):
 
 #################################
 def checkMGACCGYRdata(new, oldIN, dims, coords, testForBad, devId, sensor, quick, sumTest = {"dim":"","limits":[1000000,-100000]}, singleTest={"dim":"","coord":"","limits":[1000000,-100000]}):
+		"""Validates a new magnetometer/accelerometer/gyro reading against bad-sensor, single-axis, and sum-of-values limits, counting failures and triggering a restart after repeated bad reads; on acceptable readings it computes change deltas, decides whether to send immediately, transmits valid data via sendURL when due, and returns the updated previous-reading dict.
+
+		Inputs:
+		    new (dict): new sensor reading keyed by dimension and coordinate
+		    oldIN (dict): previous accepted reading per device, copied before mutation
+		    dims (list): measurement dimensions to iterate (e.g. mag/acc/gyr)
+		    coords (list): coordinate axes to iterate (e.g. x/y/z)
+		    testForBad (str): key checked to detect missing/bad sensor data
+		    devId (str): device identifier used for thresholds and stored state
+		    sensor (str): sensor name used in the outgoing data structure
+		    quick (bool): force a quicker send regardless of normal interval
+		    sumTest (dict): optional dimension/limits config for sum-of-values validation
+		    singleTest (dict): optional dimension/coord/limits config for single-axis validation
+		Outputs:
+		    dict: updated previous-reading dict (old), possibly refreshed with new data
+		"""
 		old = copy.copy(oldIN)
 		try:
 			data = {"sensors":{sensor:{devId:{}}}}
@@ -3854,7 +5087,7 @@ def checkMGACCGYRdata(new, oldIN, dims, coords, testForBad, devId, sensor, quick
 				dd= sumTest["dim"]
 				SUM = sum(	[abs(new[dd][x]) for x in new[dd] ]	 )
 				if SUM <=sumTest["limits"][0] or SUM > sumTest["limits"][1]:
-					logger.log(10, "{} sum of values bad ".format(sumTest, SUM))
+					logger.log(10, "{} sum of values bad, sum:{}".format(sumTest, SUM))
 					G.badCount3 +=1
 					if G.badCount3 > 10:
 						restartMyself(reason="{}- wrong, need to restart to get sensors reset".format(sumTest),doPrint= False)
@@ -3914,6 +5147,16 @@ def checkMGACCGYRdata(new, oldIN, dims, coords, testForBad, devId, sensor, quick
 
 #################################
 def applyOffsetNorm(vector, params, offset, norm):
+	"""Returns a copy of the vector with each element offset-subtracted and normalized using values looked up from a params dict, leaving elements unchanged when the relevant param is missing or invalid.
+
+	Inputs:
+	    vector (list): input values to offset and normalize
+	    params (dict): parameter dict supplying offset and norm values
+	    offset (list): per-element keys into params for the offset to subtract
+	    norm (str): key into params for the normalization divisor
+	Outputs:
+	    list: offset-adjusted, normalized copy of the input vector
+	"""
 	out =copy.copy(vector)
 	for ii in range(len(vector)):
 		if offset[ii] in params:
@@ -3932,23 +5175,60 @@ class simpleI2cReadWrite:
 	I2C_SLAVE=0x0703
 
 	def __init__(self, i2cAddress, bus):
+		"""Initializes an I2C device wrapper by opening read and write file handles on /dev/i2c-<bus> and binding both to the given slave address via fcntl ioctl I2C_SLAVE calls.
+
+		Inputs:
+		    i2cAddress (int): I2C slave address to bind the file handles to
+		    bus (int): I2C bus number used to build the /dev/i2c-<bus> path
+		Outputs:
+		    None: opens read/write file handles and configures the I2C slave address
+		"""
 		self.fr = io.open("/dev/i2c-{}".format(bus), "rb", buffering=0)
 		self.fw = io.open("/dev/i2c-{}".format(bus), "wb", buffering=0)
 		fcntl.ioctl(self.fr, self.I2C_SLAVE, i2cAddress)
 		fcntl.ioctl(self.fw, self.I2C_SLAVE, i2cAddress)
 
 	def write(self, bytes):
+		"""Writes raw bytes to the I2C device through the previously opened write file handle.
+
+		Inputs:
+		    bytes (bytes): raw byte data to write to the I2C device
+		Outputs:
+		    None: writes the bytes to the I2C bus
+		"""
 		self.fw.write(bytes)
 
 	def read(self, bytes):
+		"""Reads the requested number of bytes from the I2C device through the previously opened read file handle.
+
+		Inputs:
+		    bytes (int): number of bytes to read from the I2C device
+		Outputs:
+		    bytes: the bytes read from the I2C bus
+		"""
 		return self.fr.read(bytes)
 
 	def close(self):
+		"""Closes both the read and write I2C file handles held by the object.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: closes the I2C read and write file handles
+		"""
 		self.fw.close()
 		self.fr.close()
 
 #################################
 def findString(string, filename):
+	"""Searches a file for a line that begins with the given string, returning a status code indicating whether it was found uncommented (2), found commented out with a leading '#' (1), absent (0), or an error occurred (3).
+
+	Inputs:
+	    string (str): string to search for at the start of a line
+	    filename (str): path of the file to read and scan
+	Outputs:
+	    int: 2 if found uncommented, 1 if found commented, 0 if absent, 3 on error
+	"""
 	if string == "": return 0
 
 	try:
@@ -3961,7 +5241,7 @@ def findString(string, filename):
 		return 0
 	except Exception as e:
 		logger.log(30, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
-		logger.log(30, "string:{}, fname:{}".format(G.program, string, filename))
+		logger.log(30, "cBY:{:<20} string:{}, fname:{}".format(G.program, string, filename))
 		if str(e).find("Read-only file system:") >-1:
 			doReboot(tt=0)
 	return 3
@@ -3969,6 +5249,14 @@ def findString(string, filename):
 
 #################################
 def checkIfInFile(stringItems, file):
+	"""Checks whether any single line of the file contains all of the given whitespace-separated string items (empty items count as automatically matched), returning a status string.
+
+	Inputs:
+	    stringItems (list): list of token strings that must all appear in one line
+	    file (str): path of the file to read and scan
+	Outputs:
+	    str: 'found', 'not found', or 'error'
+	"""
 	if stringItems =="" or stringItems ==[]: return "error"
 	if stringItems[0] == "": return "error"
 	nItems		= len(stringItems)
@@ -3998,6 +5286,16 @@ def checkIfInFile(stringItems, file):
 
 #################################
 def uncommentOrAdd(string, file, before="", nLines=1):
+	"""Ensures a line is present and active in a config file: if already uncommented it does nothing, if commented out it uncomments it (and optionally up to nLines following lines), and if missing it appends the string or inserts it after a given anchor line.
+
+	Inputs:
+	    string (str): the config line to ensure is present and uncommented
+	    file (str): path of the file to modify
+	    before (str): optional anchor line after which to insert the string when missing
+	    nLines (int): number of additional following lines to uncomment when uncommenting
+	Outputs:
+	    int: 0 if already present/empty input, 1 if added or uncommented, None on error
+	"""
 	if string =="": return 0
 
 	try:
@@ -4055,6 +5353,15 @@ def uncommentOrAdd(string, file, before="", nLines=1):
 
 #################################
 def removefromFile(string, file, nLines=1):
+	"""Removes from a file every line that contains all whitespace-separated tokens of the given string (plus nLines-1 following lines), rewriting the file only if its content changed.
+
+	Inputs:
+	    string (str): whitespace-separated tokens identifying lines to remove
+	    file (str): path of the file to modify
+	    nLines (int): number of lines (including the match) to skip/remove per match
+	Outputs:
+	    int: 0 on success or empty input, 1 on error
+	"""
 	if string =="": return 0
 	stringItems = string.split()
 	nItems		= len(stringItems)
@@ -4094,6 +5401,13 @@ def removefromFile(string, file, nLines=1):
 
 #################################
 def startNTP(mode=""):
+	"""Starts the NTP daemon via init.d; in 'simple' mode it just starts the service, otherwise it stops, performs a one-shot ntpd time sync, and restarts it, then verifies status with testNTP.
+
+	Inputs:
+	    mode (str): 'simple' for a plain start, otherwise full stop/sync/restart
+	Outputs:
+	    None: starts/restarts the NTP service and runs testNTP
+	"""
 	if mode == "simple": subprocess.call("/usr/bin/sudo /etc/init.d/ntp start ", shell=True)
 	else: subprocess.call("/usr/bin/sudo /etc/init.d/ntp stop ; /usr/bin/sudo ntpd -q -g ; /usr/bin/sudo /etc/init.d/ntp start ", shell=True)
 
@@ -4104,6 +5418,13 @@ def startNTP(mode=""):
 
 #################################
 def installNTP():
+	"""Installs the ntp package via apt-get if /etc/init.d/ntp is not already present, launching the install in the background and sleeping 30 seconds.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: triggers background apt-get install of ntp and logs the action
+	"""
 	if os.path.isfile("/etc/init.d/ntp"): return 
 	logger.log(30, "cBY:{:<20} started NTP install w >>/usr/bin/sudo apt-get -y install ntp &<<;  will be installed next time around")
 	subprocess.call("/usr/bin/sudo apt-get -y install ntp & ", shell=True)
@@ -4114,6 +5435,13 @@ def installNTP():
 
 #################################
 def checkNTP(mode=""):
+	"""Checks NTP health and manages its lifecycle: skips when temporarily disabled, marks it stopped on local-only networks, tests it, and stops or restarts the daemon based on the resulting G.ntpStatus.
+
+	Inputs:
+	    mode (str): mode flag passed through to NTP control logic
+	Outputs:
+	    None: updates G.ntpStatus and starts/stops the NTP daemon
+	"""
 	if G.ntpStatus == "temp disabled":
 		return
 
@@ -4135,6 +5463,13 @@ def checkNTP(mode=""):
 
 #################################
 def testNTP(mode=""):
+	"""Tests whether ntpd is running and synchronizing by parsing the output of ntpq -p, then sets G.ntpStatus to a descriptive state ('started, working', 'not started', 'temp disabled', etc.) depending on the result and the given mode.
+
+	Inputs:
+	    mode (str): context flag ('temp', 'test', 'finalTest', or default) controlling the status string set
+	Outputs:
+	    None: sets the global G.ntpStatus based on ntpd state
+	"""
 	if not pgmStillRunning("/usr/sbin/ntpd "):
 		if mode == "temp":
 			G.ntpStatus = "temp disabled"
@@ -4192,6 +5527,13 @@ def testNTP(mode=""):
 #################################
 def stopNTP(mode=""):
 	#print " stopping NTP, mode=", mode
+	"""Stops the system NTP daemon via a sudo init.d call and records the resulting NTP status in the global G.ntpStatus based on the mode (temporary disable, final stop, or normal stop).
+
+	Inputs:
+	    mode (str): stop mode: empty for normal, 'temp' for temporary, or containing 'final' for permanent stop
+	Outputs:
+	    None: stops ntp service and sets G.ntpStatus
+	"""
 	subprocess.call("/usr/bin/sudo /etc/init.d/ntp stop &", shell=True)
 	if mode =="":
 		G.ntpStatus = "not started"
@@ -4204,7 +5546,14 @@ def stopNTP(mode=""):
 
 ####-------------------------------------------------------------------------####
 def isValidMAC(mac0):
-		macx = mac0.split(u":")
+		"""Validates whether the given string is a well-formed MAC address (six colon-separated two-character hexadecimal octets).
+
+		Inputs:
+		    mac0 (str): MAC address string to validate
+		Outputs:
+		    bool: True if the string is a valid MAC address, False otherwise
+		"""
+		macx = mac0.split(":")
 		if len(macx) != 6 : # len(mac.split(u"D0:D2:B0:88:7B:76")):
 			return False
 
@@ -4219,6 +5568,13 @@ def isValidMAC(mac0):
 
 #################################
 def testPing(ipToPing):
+	"""Pings the given IP address up to four times (one packet each) and returns a status code indicating reachability; updates G.ipConnection timestamp on success and handles bad IPs and the in-progress installLibs case.
+
+	Inputs:
+	    ipToPing (str): IP address to ping
+	Outputs:
+	    int: 0 reachable, 1 bad/unreachable IP, 2 connection failure/error, -1 installLibs still running
+	"""
 	if (G.networkType  not in G.useNetwork and ipToPing =="")  or G.wifiType !="normal": return 0
 	try:
 		if pgmStillRunning("installLibs.py"):
@@ -4256,6 +5612,13 @@ def testPing(ipToPing):
 
 ################################
 def testROUTER():
+	"""Determines the router's IP via getIPofRouter and tests reachability by pinging it (retrying once after refreshing the IP), logging the outcome and returning a reachability status code.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: 0 if router is reachable, 1 if not reachable or on error
+	"""
 	try:
 		G.ipOfRouter = getIPofRouter()
 		if isValidIP(G.ipOfRouter):
@@ -4286,6 +5649,13 @@ def testROUTER():
 	return 1
 ################################
 def testIndigoServer():
+	"""Tests whether the configured Indigo server (G.ipOfServer) is reachable by validating its IP and pinging it, returning a status code.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: 0 if the Indigo server is reachable, 1 if not reachable or invalid
+	"""
 	try:
 		if not isValidIP(G.ipOfServer):
 			return 1
@@ -4308,6 +5678,13 @@ def testIndigoServer():
 #################################
 ##networkStatus		  = "no"   # "no" = no network what so ever / "local" =only local cant find anything else/ "inet" = internet yes, indigo no / "indigoLocal" = indigo not internet / "indigoInet" = indigo with inetrnet
 def testNetwork(force=False):
+	"""Periodically (throttled to once every 180 seconds unless forced) tests connectivity to both the Indigo server and the router, then classifies and stores the overall network status in G.networkStatus (indigoInet, indigoLocal, Inet, or local).
+
+	Inputs:
+	    force (bool): if True, bypass the 180-second throttle and test immediately
+	Outputs:
+	    None: updates the global G.networkStatus
+	"""
 	global lasttestNetwork
 	try:
 		ii = lasttestNetwork

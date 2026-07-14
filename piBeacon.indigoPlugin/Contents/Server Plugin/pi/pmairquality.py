@@ -35,6 +35,13 @@ checksum0	= sum(startBytes)
 class thisSensorClass:
 	def __init__(self,	serialPort="/dev/ttyAMA0"):
 
+		"""Initializes the particulate-matter sensor object by opening a 9600-baud 8N1 serial connection on the given port and logging the started state.
+
+		Inputs:
+		    serialPort (str): serial device path to open, defaults to /dev/ttyAMA0
+		Outputs:
+		    None: opens the serial port and stores it on self.ser
+		"""
 		self.ser			= serial.Serial()
 		self.ser.port		= serialPort 
 		self.ser.stopbits	= serial.STOPBITS_ONE
@@ -45,6 +52,13 @@ class thisSensorClass:
 		U.logger.log(20,"thisSensorClass started,  params:{}".format( self.ser))
 
 	def getData(self): 
+		"""Reads particulate-matter measurement frames from the serial port (locating the 0x42 0x4d start bytes, validating frame length and checksum), averages up to three valid reads, and returns the 14 decoded PM concentration and particle-count values.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list or str: list of averaged decoded sensor values, or 'badSensor' if no valid reading
+		"""
 		debugPrint 				= G.debug
 		data					= ""
 		rawData					= ""
@@ -154,6 +168,13 @@ class thisSensorClass:
 
 #################################		 
 def readParams():
+	"""Reads the parameters file (only if it changed since the last read), updates global sensor configuration such as sensorList, sensors, refresh interval, deltaX and minSendDelta, starts/resets sensors as needed, removes deleted devices, and exits if this sensor is no longer enabled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module-level sensor config globals and starts/resets/removes sensors
+	"""
 	global sensorList, sensors,  sensor,	 sensorRefreshSecs
 	global deltaX, minSendDelta
 	global oldRaw, lastRead
@@ -270,6 +291,13 @@ def readParams():
 
 #################################
 def startSensor(devId):
+	"""Starts the PM sensor for a given device id by obtaining the serial device and instantiating the sensor class, storing it in thisSensor (empty string on failure).
+
+	Inputs:
+	    devId (str): device id for which to start the sensor
+	Outputs:
+	    None: creates the sensor instance in thisSensor[devId]
+	"""
 	global sensors,sensor
 	global startTime
 	global thisSensor, firstValue
@@ -288,6 +316,13 @@ def startSensor(devId):
 
 #################################
 def getValues(devId):
+	"""Resets the given PM air-quality sensor then reads a measurement, returning a dict of particulate matter concentrations (PM1.0/2.5/10 standard and environmental) and particle counts by size. Returns the string 'badSensor' after repeated failures or '' on a recoverable miss.
+
+	Inputs:
+	    devId (str): device id key into the thisSensor sensor-object map
+	Outputs:
+	    dict or str: dict of PM/particle readings, '' on transient failure, or 'badSensor' after repeated errors
+	"""
 	global sensor, sensors,	 thisSensor, badSensor
 	global startTime
 	try:
@@ -322,6 +357,13 @@ def getValues(devId):
 
 #################################
 def resetSensor(devId =""):
+	"""Hardware-resets one or all PM air-quality sensors by toggling each sensor's configured GPIO reset pin high-low-high with short delays, skipping pins outside the valid range (2-26).
+
+	Inputs:
+	    devId (str): device id to reset; empty string resets all configured sensors
+	Outputs:
+	    None: drives GPIO reset pins on the hardware
+	"""
 	global resetPin
 	for id in resetPin:
 		if devId == "" or id == devId:
@@ -330,7 +372,7 @@ def resetSensor(devId =""):
 			pin = int(pin)
 			if pin > 26:  continue 
 			if pin < 2:	  continue	
-			if G.debug >1: U.logger.log(20, u"resetting pmAirquality device")
+			if G.debug >1: U.logger.log(20, "resetting pmAirquality device")
 			GPIO.setup(pin, GPIO.OUT)
 			GPIO.output(pin, True)
 			time.sleep(0.1)

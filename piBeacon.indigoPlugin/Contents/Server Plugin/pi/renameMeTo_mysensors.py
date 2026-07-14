@@ -22,6 +22,13 @@ G.program = "mysensors"
 # read params do not change
 # ===========================================================================
 def readParams():
+        """Reads plugin input via U.doRead, applies global params, extracts the sensors config for this program, updates per-id freeParameter globals, and calls startMySensors when the free parameters have changed; exits if this program is absent from the sensors dict.
+
+        Inputs:
+            None.
+        Outputs:
+            None: updates sensor globals and conditionally starts sensors; may exit the process
+        """
         global debug, sensorList,freeParameter,sensorRefreshSecs, sensors
 
         sensorList  = "0"
@@ -48,16 +55,30 @@ def readParams():
 # ===========================================================================
 
 def startMySensors(parameter):
+        """Template/example sensor initialization hook that logs the start of the sensors with the given parameter; intended to be customized with real init code.
+
+        Inputs:
+            parameter (object): free parameter value passed to the sensor init
+        Outputs:
+            None: logs the start; placeholder for user init code
+        """
         try:
             # do your init here
 
             ## add any init code here for address # addr
-            U.logger.log(30, u"starting my sensors {}".format(parameter) )
+            U.logger.log(30, "starting my sensors {}".format(parameter) )
         except  Exception as e:
             U.logger.log(20,"", exc_info=True)
-            U.logger.log(30, u"channel used: {}".format(parameter) )
+            U.logger.log(30, "channel used: {}".format(parameter) )
 
 def getMySensors(parameter):
+        """Template/example sensor read hook that returns a list of dummy data values (based on the current time) to be sent back to getsensorvalues; intended to be replaced with real sensor reading code.
+
+        Inputs:
+            parameter (object): free parameter identifying the sensor/channel to read
+        Outputs:
+            list: list of 10 string values (dummy data), or empty string on error
+        """
         try:
             v = ["","","","","","","","","","",]   # set return to empty
             # do your stuff here, this if for testing to something into the data

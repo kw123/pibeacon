@@ -70,6 +70,13 @@ class THESENSORCLASS:
 	GYRO_CONFIG = 0x1B
 
 	def __init__(self, i2cAddress=""):
+		"""Initializes an MPU-6050 accelerometer/gyroscope object: optionally overrides the I2C address, wakes the chip out of sleep mode, and sets the gyro range to 500 deg/s and accel range to 4G.
+
+		Inputs:
+		    i2cAddress (str): optional I2C address override; empty string keeps default
+		Outputs:
+		    None: configures the MPU-6050 registers over the I2C bus
+		"""
 		if i2cAddress!="":
 			self.address = i2cAddress
 
@@ -259,6 +266,13 @@ class THESENSORCLASS:
 
 #################################		 
 def readParams():
+	"""Reads updated plugin parameters via U.doRead, skipping if unchanged, then updates the global sensors config, exits if this sensor is not enabled, starts sensor instances for new device ids, and removes sensor entries no longer present in the config.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global sensor config and theSENSORdict, may exit the process
+	"""
 	global sensors, sensor
 	global rawOld
 	global theSENSORdict
@@ -306,6 +320,14 @@ def readParams():
 
 #################################
 def startSENSOR(devId, i2cAddress):
+	"""Creates and registers a new MPU-6050 sensor instance for the given device id at the given I2C address, storing it in the global theSENSORdict and logging the startup.
+
+	Inputs:
+	    devId (str): device id used as the key in theSENSORdict
+	    i2cAddress (str): I2C address passed to the sensor class constructor
+	Outputs:
+	    None: instantiates the sensor class and stores it in theSENSORdict
+	"""
 	global theSENSORdict
 	try:
 		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
@@ -317,6 +339,13 @@ def startSENSOR(devId, i2cAddress):
 
 #################################
 def getValues(devId):
+	"""Reads temperature, accelerometer (in g), and gyroscope data from the MPU-6050 instance for the given device, logs each value, and returns them in a dict; returns a bad marker on error.
+
+	Inputs:
+	    devId (str): device id key into theSENSORdict
+	Outputs:
+	    dict: dict with temp/ACC/GYR readings, or {'ACC':'bad'} on error
+	"""
 	global theSENSORdict
 	data={}
 	try:
@@ -332,6 +361,15 @@ def getValues(devId):
 	return {"ACC":"bad"}
 
 def fillWithItems(theList,theItems,digits):
+	"""Builds a dict by pairing each name in theItems with the correspondingly indexed value in theList, rounding each value to the specified number of digits.
+
+	Inputs:
+	    theList (list): numeric values to round and assign
+	    theItems (list): key names matching theList by index
+	    digits (int): number of decimal places to round to
+	Outputs:
+	    dict: mapping of item names to rounded values
+	"""
 	out={}
 	for ii in range(len(theItems)):
 		out[theItems[ii]] = round(theList[ii],digits)
@@ -393,10 +431,10 @@ while True:
 		loopCount +=1
 		quick = U.checkNowFile(G.program)				 
 		if U.checkNewCalibration(G.program):
-			U.logger.log(30, u"starting new calibration in 5 sec for 1 minute.. move sensor around")
+			U.logger.log(30, "starting new calibration in 5 sec for 1 minute.. move sensor around")
 			time.sleep(5)
 			theSENSORdict[devId].calibrate(force=True,calibTime=60)
-			U.logger.log(30, u"finished	new calibration")
+			U.logger.log(30, "finished	new calibration")
 			
 		U.echoLastAlive(G.program)
 

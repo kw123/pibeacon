@@ -89,7 +89,7 @@ plt.figure(figsize=(numberOfPixels/pltDpi, numberOfPixels/pltDpi), dpi=pltDpi)
 if True:
 
 	if	 imageType == "fixed":
-		norm = mpl.colors.Normalize(vmin=float(imageFileDynamic[0]),vmax=float(imageFileDynamic[1]))
+		norm = mlp.colors.Normalize(vmin=float(imageFileDynamic[0]),vmax=float(imageFileDynamic[1]))
 	elif imageType == "dynamicWindow":
 		ma = -999
 		mm = +999
@@ -98,8 +98,8 @@ if True:
 			mm = min(mm,min(data[ii]))
 		
 		vmid = (mm-ma) /2. +mm
-		norm = mpl.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
-		logger.log(20, "min:{3.1f};  max:{3.1f};  mid:{3.1f}; lower:{3.1f};   upper:{3.1f}".format(mm, ma, vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
+		norm = mlp.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
+		logger.log(20, "min:{:3.1f};  max:{:3.1f};  mid:{:3.1f}; lower:{:3.1f};   upper:{:3.1f}".format(mm, ma, vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
 
 
 	cur_axes = plt.gca()

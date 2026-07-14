@@ -48,8 +48,8 @@ try:
 		if param1 != "":
 			cmd = "{} | grep {}".format(cmd,param1)
 		if param2 != "":
-			cmd = "{} | grep ".format(cmd,param2)
-		if verbose: U.logger.log(20, u"== ext-kill== 2 kill command {}, {}".format(cmd, delList) )
+			cmd = "{} | grep {}".format(cmd,param2)
+		if verbose: U.logger.log(20, "== ext-kill== 2 kill command {}, {}".format(cmd, delList) )
 
 		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
 		lines = ret.split("\n")
@@ -57,20 +57,25 @@ try:
 		xlist = ""
 		for line in lines:
 			if len(line) < 10: continue
+			if line.find("display") >-1: 
+				f=open(G.homeDir+"temp/display.stop","w")
+				f.write("stop")
+				f.close()
+				time.sleep(1)
 			items = line.split()
 			pid = int(items[1])
 			if pid == int(myPID): 
-				if verbose: U.logger.log(20, u"== ext-kill== 3 not killing pid={}, line:{}".format( pid, line) )
+				if verbose: U.logger.log(20, "== ext-kill== 3 not killing pid={}, line:{}".format( pid, line) )
 				continue
 			if pid == int(myOwnPID): continue
-			if verbose: U.logger.log(20, u"== ext-kill== 3 killing {}  {}  {}, pid={}, line:{}".format( pgmToKill, param1, param2, pid,  line ) )
+			if verbose: U.logger.log(20, "== ext-kill== 3 killing {}  {}  {}, pid={}, line:{}".format( pgmToKill, param1, param2, pid,  line ) )
 			xlist += str(pid)+ " "
 			count += 1
 		if len(xlist) > 3:
 			if verbose: 
-				U.logger.log(20,u"== ext-kill== 4 /usr/bin/sudo kill -9 {} ".format(xlist) )
-			subprocess.call("/usr/bin/sudo kill -9 {}".format(xlist), shell=True)
+				U.logger.log(20,"== ext-kill== 4 /usr/bin/sudo kill -9 {} ".format(xlist) )
+			subprocess.call("/usr/bin/sudo kill -15 {}".format(xlist), shell=True)
 except Exception as e:
 		if str(e).find("Too many open files") >-1:
-			doReboot(tt=3, text=str(e), force=True)
+			U.doReboot(tt=3, text=str(e), force=True)
 		if verbose: U.logger.log(30,"", exc_info=True)

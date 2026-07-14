@@ -178,6 +178,14 @@ class ADS1x15:
 
 	# Constructor
 	def __init__(self, address=0x4a, debug=False):
+		"""Initializes the ADS1x15 ADC driver by opening the I2C bus (SMBus 1) and storing the device address and debug flag.
+
+		Inputs:
+		    address (int): I2C address of the ADS1x15 chip (default 0x4a)
+		    debug (bool): Whether to emit verbose debug logging
+		Outputs:
+		    None: Opens the SMBus and stores bus, address, and debug on the instance
+		"""
 		try:
 			self.bus 		= smbus.SMBus(1)
 			self.address 	= address
@@ -186,6 +194,16 @@ class ADS1x15:
 				U.logger.log(30,"", exc_info=True)
 
 	def readADC(self, channel=0, pga=6144, sps=250, singleOrDiff="single"):
+		"""Performs a single-shot ADC reading on the ADS1115: validates the channel, builds the configuration word from sample rate, PGA gain, and single/differential mux settings, writes it to the config register, waits for conversion, and reads back the result converted to millivolts.
+
+		Inputs:
+		    channel (int or str): Input channel 0-3 for single-ended, or pair string like '0-1' for differential
+		    pga (int): Programmable gain amplifier full-scale range in mV (default 6144)
+		    sps (int): Samples per second / data rate (default 250)
+		    singleOrDiff (str): 'single' for single-ended or otherwise differential measurement
+		Outputs:
+		    float: Measured value in mV; -1 for an invalid channel, or '' on exception
+		"""
 		try:
 			"Gets a ADC reading  in mV. \
 			The sample rate for this mode (single-shot) can be used to lower the noise \
@@ -265,6 +283,14 @@ class ADS1x15:
 #
 #################################
 def startSensor(devId,i2cADR):
+	"""Registers and starts an ADS1x15 sensor for a given device ID by instantiating the driver at the specified I2C address and storing it in the global SENSOR map, if not already present.
+
+	Inputs:
+	    devId (str): Indigo device identifier key into the SENSOR dict
+	    i2cADR (int): I2C address to instantiate the ADS1x15 at
+	Outputs:
+	    None: Stores a new ADS1x15 instance in the global SENSOR dict
+	"""
 	global SENSOR, sensors, sensor
 
 	try:
@@ -281,6 +307,13 @@ def startSensor(devId,i2cADR):
 # ===========================================================================
  
 def getValues():
+	"""Reads ADC values for all configured devices across the I2C addresses, calling readADC in single-ended or differential mode per the device's input-channel setting, and returns a dict mapping each device ID to its rounded INPUT value while tracking sensor read failures.
+
+	Inputs:
+	    None.
+	Outputs:
+	    dict: Maps device ID to {'INPUT': value}; empty dict or '' on error/bad sensor
+	"""
 	global SENSOR, sensors, sensor, inputChannel, gain, sps
 	global badSensor, i2cAddress
 
@@ -322,6 +355,13 @@ def getValues():
 
 
 def readParams():
+	"""Reads the latest plugin parameter/configuration data via U.doRead, and if it has changed, parses out the global sensor list, per-device I2C addresses, gain, sample rate, input channel and timing thresholds, then starts each configured ADS1x15 sensor and prunes devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals (sensors, gain, sps, i2cAddress, etc.), starts sensors, and logs
+	"""
 	global sensorList, sensors, sensor, SENSOR
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global rawOld
@@ -421,6 +461,13 @@ def readParams():
 #################################
 #################################
 def execADS1x15():			 
+	"""Main entry/run loop for the ADS1x15 analog-to-digital sensor driver: initializes globals, kills stale instances, reads parameters, then loops forever reading channel values, computing deltas, and sending data to Indigo when thresholds or timing conditions are met.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs an infinite measurement loop, sends data to Indigo, writes DAT files, and logs
+	"""
 	global sensorList, sensors, sensor, SENSOR, gain, sps, inputChannel
 	global sensorRefreshSecs, sendToIndigoEvery, minSendDelta
 	global sValues, displayInfo

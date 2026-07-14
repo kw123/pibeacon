@@ -24,11 +24,12 @@ import	smbus
 import threading
 import signal
 import math
-
+import base64
+import io
 
 try:
 	#1/0 # use GPIO
-	if subprocess.popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep").communicate()[0].decode('utf-8').find("pigpiod") < 5:
+	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep").communicate()[0].decode('utf-8').find("pigpiod") < 5:
 		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
 	import gpiozero
 	from gpiozero.pins.pigpio import PiGPIOFactory
@@ -53,20 +54,35 @@ G.program = "display"
 U.setLogging()
 
 #
-_defaultDateStampFormat			   = u"%Y-%m-%d %H:%M:%S"
+_defaultDateStampFormat			   = "%Y-%m-%d %H:%M:%S"
 
 
 class setupKillMyself:
 	def __init__(self):
+		"""Installs SIGINT and SIGTERM signal handlers that route to the doExit method so the display process can shut down cleanly on termination signals.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: registers signal handlers via signal.signal
+		"""
 		signal.signal(signal.SIGINT, self.doExit)
 		signal.signal(signal.SIGTERM, self.doExit)
 
 	def doExit(self, signum, xxx):
+		"""Signal handler that, after an initial startup grace period of 20 seconds, deletes the output device, logs the shutdown, and terminates the display process.
+
+		Inputs:
+		    signum (int): the signal number that triggered the handler
+		    xxx (frame or None): current stack frame passed by the signal mechanism (unused)
+		Outputs:
+		    None: logs and kills the current process via os.kill and sys.exit
+		"""
 		global klillMyselfTimeout
 		if klillMyselfTimeout > 0 and time.time() - klillMyselfTimeout > 20: # need to ignore for some seconds, receiving signals at startup 
 			try: outputDev.delPy()
 			except: pass
-			U.logger.log(20, u"exiting display, received kill signal ")
+			U.logger.log(20, "exiting display, received kill signal ")
 			os.kill(os.getpid(), signal.SIGTERM)
 			sys.exit()
 
@@ -74,6 +90,14 @@ class setupKillMyself:
 class LCD1602():
 	def __init__(self, i2caddr=0x3f,backgroundLightEnabed=1): 
 
+		"""Initializes an LCD1602 I2C display by opening SMBus 1 and sending the standard HD44780 setup command sequence (8-bit then 4-bit mode, 2 lines/5x7 dots, display on without cursor), then clears the screen and enables the backlight.
+
+		Inputs:
+		    i2caddr (int): I2C address of the LCD (default 0x3f)
+		    backgroundLightEnabed (int): backlight enable flag, 1 to turn on (default 1)
+		Outputs:
+		    None: opens the SMBus and configures the LCD hardware
+		"""
 		self.BUS= smbus.SMBus(1)
 		self.LCD_ADDR = i2caddr
 		self.BLEN = backgroundLightEnabed
@@ -94,6 +118,13 @@ class LCD1602():
 			
 
 	def write_word(self, xxxx):
+		"""Writes a single byte to the LCD over I2C, OR-ing in or masking out the backlight bit (0x08) depending on whether the backlight is enabled.
+
+		Inputs:
+		    xxxx (int): the byte value to write to the LCD
+		Outputs:
+		    None: writes the byte to the LCD via SMBus.write_byte
+		"""
 		temp = xxxx
 		if self.BLEN == 1:
 			temp |= 0x08
@@ -102,6 +133,13 @@ class LCD1602():
 		self.BUS.write_byte(self.LCD_ADDR ,temp)
 
 	def send_command(self, comm):
+		"""Sends a command byte to an I2C HD44780-style LCD in 4-bit mode by splitting it into high and low nibbles, toggling the EN strobe bit (with RS=0) around each nibble write to the I2C bus.
+
+		Inputs:
+		    comm (int): command byte to send to the LCD controller
+		Outputs:
+		    None: writes nibbles to the I2C LCD; logs on exception
+		"""
 		try:
 			# Send bit7-4 firstly
 			buf = comm & 0xF0
@@ -122,6 +160,13 @@ class LCD1602():
 				U.logger.log(20,"", exc_info=True)
 
 	def send_data(self, xxx):
+		"""Sends a data byte to an I2C HD44780-style LCD in 4-bit mode by writing the high and low nibbles separately, toggling the EN strobe (with RS=1) for each nibble over the I2C bus.
+
+		Inputs:
+		    xxx (int): data byte (character code) to display on the LCD
+		Outputs:
+		    None: writes nibbles to the I2C LCD; logs on exception
+		"""
 		try:
 			# Send bit7-4 first
 			buf = xxx & 0xF0
@@ -143,12 +188,35 @@ class LCD1602():
 
 
 	def clear(self):
+		"""Clears the LCD screen by issuing the HD44780 clear-display command (0x01).
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: sends clear command to the LCD
+		"""
 		self.send_command(0x01) # Clear Screen
 
 	def openlight(self):  # Enable the backlight
+		"""Enables the LCD backlight by writing the backlight-on byte (0x08) directly to the LCD's I2C address.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes backlight byte to the I2C bus
+		"""
 		self.BUS.write_byte(self.LCD_ADDR,0x08)
 
 	def write(self,x, y, yyy):
+		"""Positions the LCD cursor at the given clamped column/row and writes a text string by sending each character's ordinal value as data.
+
+		Inputs:
+		    x (int): column position, clamped to 0-15
+		    y (int): row position, clamped to 0-1
+		    yyy (str): text string to write at the cursor
+		Outputs:
+		    None: moves cursor and writes characters to the LCD
+		"""
 		x = max(0,min(x,15))
 		y = max(0,min(y, 1))
 
@@ -160,6 +228,13 @@ class LCD1602():
 			self.send_data(ord(xxx))
 
 	def destroy(self):
+		"""Tears down the LCD interface by deleting the I2C bus object reference.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: deletes self.BUS
+		"""
 		del self.BUS
 
 
@@ -169,6 +244,13 @@ class LCD1602():
 #### this is the magic: need to kill the child (actually this pid !!!) , 
 ###	  otherwise its hanging, but not too early, let it finish starting up 
 def doInterrupt():
+		"""Module-level helper that waits two seconds then sends SIGTERM to its own process, terminating the program after a delay.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: kills the current process via SIGTERM
+		"""
 		time.sleep(2.)
 		os.kill(os.getpid(), signal.SIGTERM)
 		return
@@ -179,6 +261,15 @@ class bigScreen:
 	#  error message : self.pygame.display.init()
 
 	def __init__(self,overwriteXmax=0,overwriteYmax=0, name="pibeacon display"):
+		"""Initializes a pygame framebuffer display: verifies and repairs required display settings in the boot config.txt (rebooting if changed), initializes pygame and a video driver, chooses a screen resolution (honoring overrides, X display, or fullscreen), creates the screen surface, and clears it.
+
+		Inputs:
+		    overwriteXmax (int): optional override for screen width, 0 means auto
+		    overwriteYmax (int): optional override for screen height, 0 means auto
+		    name (str): window caption title for the pygame display
+		Outputs:
+		    None: sets up pygame screen; may fix config.txt, request reboot, or exit on failure
+		"""
 		global bigScreenSize, pygameInitialized
 		time.sleep(0.5)
 		## check display setup in /boot/firmware/config.txt
@@ -341,14 +432,35 @@ class bigScreen:
 		except: pass
 	
 	def delPy(self):
+		"""Shuts down pygame by calling pygame.quit(), silently ignoring any errors.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: quits pygame
+		"""
 		try:  self.pygame.quit()
 		except: pass
 
 	def clearScreen(self):
+		"""No-op placeholder for clearing the screen; returns immediately without doing anything.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: does nothing
+		"""
 		return
 
 
 	def sendImage(self,idata):
+		"""Renders a PIL image onto the pygame screen by converting its raw bytes into a pygame surface, blitting it at the origin, and flipping the display buffer.
+
+		Inputs:
+		    idata (PIL.Image.Image): image whose bytes/size/mode are drawn to the screen
+		Outputs:
+		    None: blits the image and updates the pygame display
+		"""
 		global bigScreenSize
 		# Fill the screen with red (255, 0, 0)
 		t = self.pygame.image.frombuffer(idata.tobytes() , idata.size, idata.mode)
@@ -448,6 +560,16 @@ class SSD1351:
 		DATA	= True
 
 	def __init__(self, dc, rst, cs,ce):
+		"""Initializes an SSD1351 OLED SPI display driver: stores the DC/RST/CS pin numbers and SPI channel, configures the control GPIO pins (via RPi.GPIO or gpiozero), then opens the SPI interface and runs the device setup sequence.
+
+		Inputs:
+		    dc (int): data/command GPIO pin number
+		    rst (int): reset GPIO pin number
+		    cs (int): chip-select GPIO pin number
+		    ce (int): SPI chip-enable channel (0 or 1)
+		Outputs:
+		    None: configures GPIO and initializes the SSD1351 display; logs on failure
+		"""
 		try:
 			self.rst = int(rst)
 			self.dc = int(dc)
@@ -478,9 +600,16 @@ class SSD1351:
 			return
 		except Exception as e:
 				U.logger.log(20,"", exc_info=True)
-				U.logger.log(20, u"SPI likely not enabled")
+				U.logger.log(20, "SPI likely not enabled")
 
 	def __OpenSPI(self):
+		"""Opens the SPI device on bus 0 using the configured chip-enable channel and configures it for the SSD1351 display: SPI mode 3, 8 MHz clock speed, and chip-select active-low.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: initializes self.spi (spidev.SpiDev) and configures the SPI bus
+		"""
 		self.spi = spidev.SpiDev()
 		self.spi.open(0, self.ce )
 		self.spi.mode = 3
@@ -489,6 +618,13 @@ class SSD1351:
 		return
 
 	def __WriteCommand(self, zzz):
+		"""Sends a command byte sequence to the SSD1351 display by driving the DC line low (command mode) and transferring the bytes over SPI.
+
+		Inputs:
+		    zzz (list or tuple): command byte(s) to send over SPI
+		Outputs:
+		    None: drives the DC GPIO line and writes command bytes to the SPI bus
+		"""
 		if useGPIO:	GPIO.output(self.dc, self.COMMAND)
 		else:		self.GPIOZERO[self.dc].off()
 		if isinstance(zzz, list) or isinstance(zzz, tuple):
@@ -496,6 +632,13 @@ class SSD1351:
 		return
 
 	def __WriteData(self, zzz):
+		"""Sends a data byte sequence to the SSD1351 display by setting the DC line for data mode and transferring the bytes over SPI.
+
+		Inputs:
+		    zzz (list or tuple): data byte(s) to send over SPI
+		Outputs:
+		    None: drives the DC GPIO line and writes data bytes to the SPI bus
+		"""
 		if useGPIO:	GPIO.output(self.dc, zzz)
 		else:		self.GPIOZERO[self.dc].on()
 		if isinstance(data, list) or isinstance(zzz, tuple):
@@ -503,6 +646,13 @@ class SSD1351:
 		return
 		
 	def restart0(self):
+		"""Re-initializes a subset of SSD1351 display registers (command lock, remap, column/row range, start line, and display offset) to restart the display configuration without a full setup.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes a sequence of command and data bytes to the display via SPI
+		"""
 		self.__WriteCommand([SSD1351_COMMANDLOCK])	# set command lock
 		self.__WriteData([0x12])
 		self.__WriteCommand([SSD1351_COMMANDLOCK])	# set command lock
@@ -521,6 +671,13 @@ class SSD1351:
 		self.__WriteData([0x0])
 	
 	def __Setup(self):
+		"""Performs the full hardware initialization of the SSD1351 OLED display: toggles chip-select and reset GPIO lines, then writes the complete sequence of configuration commands (clock divider, mux ratio, remap, column/row range, contrast, precharge, VCOMH, etc.).
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: resets GPIO lines and writes the full initialization command sequence to the display via SPI
+		"""
 		self.spi.cshigh = True
 		self.spi.xfer([0])
 		if useGPIO:
@@ -588,6 +745,13 @@ class SSD1351:
 		return
 
 	def Remove(self):
+		"""Tears down the display interface by cleaning up GPIO (when using RPi.GPIO) and closing the SPI connection.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: cleans up GPIO and closes the SPI device
+		"""
 		if useGPIO: GPIO.cleanup()
 		self.spi.close()
 		return
@@ -595,9 +759,23 @@ class SSD1351:
 
 	def Clear(self):
 		# self.__WriteCommand([CLEAR_WINDOW, 0, 0, 128, 128])
+		"""Intended to clear the display window, but the implementation is commented out so it currently does nothing and returns immediately.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: no-op; performs no action
+		"""
 		return
 
 	def TestEntireDisplay(self, enable):
+		"""Turns the entire display all-on (every pixel lit) or all-off as a test pattern, depending on the enable flag, by sending the corresponding SSD1351 command.
+
+		Inputs:
+		    enable (bool): True to turn all pixels on, False to turn all off
+		Outputs:
+		    None: writes the display-all-on/off command to the display via SPI
+		"""
 		if enable:
 			self.__WriteCommand([SSD1351_DISPLAYALLON])
 		else:
@@ -605,6 +783,13 @@ class SSD1351:
 		return
 
 	def EnableDisplay(self, enable):
+		"""Turns the SSD1351 display panel on or off by sending the corresponding display-on or display-off command based on the enable flag.
+
+		Inputs:
+		    enable (bool): True to power the display on, False to turn it off
+		Outputs:
+		    None: writes the display-on/off command to the display via SPI
+		"""
 		if enable:
 			self.__WriteCommand([SSD1351_DISPLAYON])
 		else:
@@ -617,6 +802,13 @@ class SSD1351:
 		return
 
 	def EnableScrollMode(self, enable):
+		"""Activates or deactivates the display's hardware scroll mode by sending the SSD1351 activate-scroll or deactivate-scroll command based on the enable flag.
+
+		Inputs:
+		    enable (bool): True to activate scrolling, False to deactivate
+		Outputs:
+		    None: writes the activate/deactivate scroll command to the display via SPI
+		"""
 		if enable:
 			self.__WriteCommand([SSD1351_ACTIVATE_SCROLL])
 		else:
@@ -626,6 +818,13 @@ class SSD1351:
 
 
 	def sendImage(self, buff):
+		"""Writes a full image buffer to display RAM by issuing the WRITERAM command and then sending the buffer in 4096-byte chunks over SPI.
+
+		Inputs:
+		    buff (list): pixel data buffer to write to display RAM
+		Outputs:
+		    None: writes the WRITERAM command and the chunked image data to the display via SPI
+		"""
 		self.__WriteCommand([SSD1351_WRITERAM])
 		bufLen= len(buff)
 		for ll in range(0,bufLen,4096):
@@ -686,6 +885,16 @@ class st7735:
 		COMMAND = GPIO.LOW
 		DATA	= GPIO.HIGH
 	def __init__(self, dc, rst, cs,ce):
+		"""Constructs the display driver: stores the DC, reset, chip-select, and SPI channel pin numbers, sets the panel width/height, configures the DC GPIO output (via RPi.GPIO or gpiozero), then opens the SPI bus and runs the full display setup.
+
+		Inputs:
+		    dc (int): data/command GPIO pin number
+		    rst (int): reset GPIO pin number
+		    cs (int): chip-select GPIO pin number
+		    ce (int): SPI chip-enable channel (0 or 1)
+		Outputs:
+		    None: initializes instance attributes, configures GPIO/SPI, and runs display setup; logs on failure
+		"""
 		try:
 			self.rst = int(rst)
 			self.dc = int(dc)
@@ -706,9 +915,16 @@ class st7735:
 			return
 		except Exception as e:
 				U.logger.log(20,"", exc_info=True)
-				U.logger.log(20, u"SPI likely not enabled")
+				U.logger.log(20, "SPI likely not enabled")
 
 	def __OpenSPI(self):
+		"""Opens the SPI device on bus 0 with the configured chip-enable line, sets SPI mode 0, and sets the maximum clock speed to 15 MHz for communicating with the ST7735 display.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: initializes self.spi via spidev
+		"""
 		self.spi = spidev.SpiDev()
 		self.spi.open(0, self.ce )
 		#self.spi.mode = 0
@@ -718,6 +934,13 @@ class st7735:
 	
 	def __Setup(self):
 		#print " st7735: __Setup"
+		"""Runs the ST7735 power-on initialization sequence: software reset, sleep-out, 16-bit color mode, display on, then clears the screen.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: sends init commands over SPI to the display
+		"""
 		self.__WriteCommand([st7735_SWRESET]) 
 		time.sleep(0.2)
 		self.__WriteCommand([st7735_SLPOUT])  # set command lock
@@ -742,6 +965,13 @@ class st7735:
 
 	def clearScreen(self):		  
 		#print " st7735: clearScreen"
+		"""Clears the ST7735 display by setting the full column/row address range and writing a buffer of fixed color values to display RAM in 2048-byte chunks over SPI.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes a full-screen buffer to display RAM over SPI
+		"""
 		self.__WriteCommand([st7735_CASET]) #set column range (x0,x1)
 		self.__WriteData([0,0,0,self.width])			  
 		self.__WriteCommand([st7735_RASET]) #	  set row range (y0,y1)
@@ -756,7 +986,7 @@ class st7735:
 		#print "bufLen", bufLen
 		self.__WriteCommand([st7735_RAMWR]) #	  RAM write
 		if useGPIO:	GPIO.output(self.dc, self.DATA)
-		else:		self.GPIOZERO[dc].on()
+		else:		self.GPIOZERO[self.dc].on()
 
 		for ll in range(0,bufLen,2048):
 			self.spi.writebytes(buff[ll:min(bufLen,ll+2048)])
@@ -766,19 +996,40 @@ class st7735:
 
 
 	def restart0(self):
+		"""Restart handler that simply clears the ST7735 screen.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: clears the display
+		"""
 		self.clearScreen()
 		return
 
 	def __WriteCommand(self, zzz):
+		"""Sets the display's D/C line to command mode, then writes the given command byte list/tuple to the ST7735 over SPI.
+
+		Inputs:
+		    zzz (list): command byte(s) to send
+		Outputs:
+		    None: sets D/C low and writes bytes over SPI
+		"""
 		if useGPIO:	GPIO.output(self.dc, self.COMMAND)
-		else:		self.GPIOZERO[dc].off()
+		else:		self.GPIOZERO[self.dc].off()
 		if isinstance(zzz, list) or isinstance(zzz, tuple):
 			self.spi.writebytes(zzz)
 		return
 
 	def __WriteData(self, zzz):
+		"""Sets the display's D/C line to data mode and writes the given data byte list/tuple to the ST7735 over SPI.
+
+		Inputs:
+		    zzz (list): data byte(s) to send
+		Outputs:
+		    None: sets D/C and writes bytes over SPI
+		"""
 		if useGPIO:	GPIO.output(self.dc, zzz)
-		else:		self.GPIOZERO[dc].on()
+		else:		self.GPIOZERO[self.dc].on()
 		if isinstance(zzz, list) or isinstance(zzz, tuple):
 			self.spi.writebytes(zzz)
 		return
@@ -786,11 +1037,25 @@ class st7735:
 
 
 	def Remove(self):
+		"""Cleans up GPIO resources (if GPIO is in use) and closes the SPI connection to the display.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: releases GPIO and closes SPI
+		"""
 		if useGPIO: GPIO.cleanup()
 		self.spi.close()
 		return
 
 	def EnableDisplay(self, enable):
+		"""Turns the ST7735 display on or off by sending the corresponding DISPON or DISPOFF command based on the enable flag.
+
+		Inputs:
+		    enable (bool): True to turn the display on, False to turn it off
+		Outputs:
+		    None: sends display on/off command over SPI
+		"""
 		if enable:
 			self.__WriteCommand([st7735_DISPON])
 		else:
@@ -799,6 +1064,13 @@ class st7735:
 
 	def sendImage(self, buff):
 		##self.clearScreen()
+		"""Sends a full image buffer to the ST7735 display RAM by issuing a RAM-write command then writing the buffer in 2048-byte chunks.
+
+		Inputs:
+		    buff (list): pixel data bytes to write to display RAM
+		Outputs:
+		    None: writes image data to display RAM over SPI
+		"""
 		self.__WriteCommand([st7735_RAMWR])
 		bufLen= len(buff)
 		for ll in range(0,bufLen,2048):
@@ -846,6 +1118,16 @@ class sh1106():
 
 	def __init__(self, port=1, address=0x3C, width=128, height=64):
 		##super(sh1106, self).__init__(port, address)
+		"""Initializes an SH1106 OLED device by storing dimensions, computing page count, opening the I2C SMBus, and sending the full command sequence to configure and turn on the display.
+
+		Inputs:
+		    port (int): I2C bus number
+		    address (int): I2C device address
+		    width (int): display width in pixels
+		    height (int): display height in pixels
+		Outputs:
+		    None: opens SMBus and sends init commands
+		"""
 		self.width = width
 		self.height = height
 		self.pages = int(self.height / 8)
@@ -902,6 +1184,13 @@ class sh1106():
 
 	def display1(self, zzz):
 		# will receive just the bits, not the image
+		"""Renders raw 1-bit pixel data onto the SH1106 OLED by iterating over display pages, packing each column's bits into bytes, and sending them via the data command.
+
+		Inputs:
+		    zzz (list): flat list of 1-bit pixel values
+		Outputs:
+		    None: writes packed pixel bytes to the OLED over I2C
+		"""
 		page = 0xB0
 		step = self.width * 8
 		for y in range(0, self.pages * step, step):
@@ -950,6 +1239,16 @@ class ssd1306():
 	"""
 	def __init__(self, port=1, address=0x3C, width=128, height=64):
 		#super(ssd1306, self).__init__(port, address)
+		"""Initializes an SSD1306 OLED device by storing dimensions, computing page count, opening the I2C SMBus, and sending the full command sequence to configure and turn on the display.
+
+		Inputs:
+		    port (int): I2C bus number
+		    address (int): I2C device address
+		    width (int): display width in pixels
+		    height (int): display height in pixels
+		Outputs:
+		    None: opens SMBus and sends init commands
+		"""
 		self.width = width
 		self.height = height
 		self.pages = int(self.height / 8)
@@ -1006,6 +1305,13 @@ class ssd1306():
 
 	def display1(self, zzz):
 		# will receive just the bits, not the image
+		"""Renders a monochrome bit buffer onto a paged OLED display by iterating over display pages, sending page/column address commands, packing 8 vertical pixel bits per column byte, and writing the resulting buffer over the data bus.
+
+		Inputs:
+		    zzz (list): Flat list of pixel bits (0/1) to pack and send to the display
+		Outputs:
+		    None: Writes command and data bytes to the display hardware
+		"""
 		page = 0xB0
 		step = self.width * 8
 		for y in range(0, self.pages * step, step):
@@ -1076,6 +1382,13 @@ class const:
 
 ################### ###################	 analogClock  ############################################### START
 def analogClockInit(inParms=None):
+		"""Initializes the global analog clock parameters by merging caller-supplied overrides into a default dict (tick marks, hand styles, box, position, radius, fonts), scaling hand widths and positions for the actual display resolution, resolving fill colors, then drawing the first clock frame.
+
+		Inputs:
+		    inParms (dict or None): Optional overrides for clock parameters; defaults to empty dict
+		Outputs:
+		    None: Sets global analogClockParams/minStartForNegative and draws the initial clock
+		"""
 		global analogClockParams, minStartForNegative
 		if inParms is None: inParms= {}
 		defparams = {"ticks12": {"start":0.9,  "end":1.0,  "width":6,  "fill":(150,150,150)}, ## ticks every 5 minutes
@@ -1144,6 +1457,15 @@ def analogClockInit(inParms=None):
 	
 	
 def analogClockShow(hours=True, minutes=True, seconds=True):
+		"""Draws a complete analog clock frame: the surrounding box or circle, the 12 and 4 tick marks (or numbers), and the hour, minute, and second hands based on the current system time.
+
+		Inputs:
+		    hours (bool): Whether to draw the hour hand
+		    minutes (bool): Whether to draw the minute hand
+		    seconds (bool): Whether to draw the second hand
+		Outputs:
+		    None: Draws clock elements onto the global draw surface
+		"""
 		global analogClockParams, minStartForNegative
 		try:		
 
@@ -1203,6 +1525,15 @@ def analogClockShow(hours=True, minutes=True, seconds=True):
 
 
 def analogClockdrNumbers(angle,number,hand):
+		"""Draws a clock-face number at the position computed from the given angle and radius, applying per-number offsets so digits like 12, 3, 6, and 9 are visually centered, and renders the text with the configured font and intensity-scaled white fill.
+
+		Inputs:
+		    angle (float): Angle (radians) locating the number around the clock face
+		    number (int): The clock number to render (e.g. 3, 6, 9, 12)
+		    hand (str): Parameter key (e.g. 'ticks4') selecting style/position settings
+		Outputs:
+		    None: Draws the number text onto the global draw surface
+		"""
 		global analogClockParams, minStartForNegative
 		global digitalClockParams
 		global multIntensity
@@ -1244,6 +1575,15 @@ def analogClockdrNumbers(angle,number,hand):
 
 
 def analogClockdrTheLine(angle,hand,ss=0):
+		"""Draws a single clock hand or tick mark at the given angle, supporting tick lines, straight line hands (with optional rounded ends and opposite-side tails), and triangle-shaped hands, scaling and positioning according to the clock radius, center, and flip settings.
+
+		Inputs:
+		    angle (float): Angle (radians) at which to draw the hand or tick
+		    hand (str): Parameter key selecting hand/tick style (e.g. 'hh','mm','ss','ticks12')
+		    ss (int): Current seconds value, used for the second hand; defaults to 0
+		Outputs:
+		    None: Draws a line, rounded dot, or polygon onto the global draw surface
+		"""
 		global analogClockParams, minStartForNegative
 		try:
 			mode   = analogClockParams["mode"]
@@ -1329,6 +1669,18 @@ def analogClockdrTheLine(angle,hand,ss=0):
 
 		
 def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
+		"""Draws a filled ellipse (a dot with independent X and Y radii) centered at the given coordinates, used to render round hand caps and circular clock boxes.
+
+		Inputs:
+		    x0 (float): X coordinate of the ellipse center
+		    y0 (float): Y coordinate of the ellipse center
+		    fill (tuple): RGB fill color for the ellipse
+		    widthX (float): Horizontal radius of the ellipse
+		    widthY (float): Vertical radius of the ellipse
+		    outline (tuple or None): Optional outline color; defaults to None
+		Outputs:
+		    None: Draws an ellipse onto the global draw surface
+		"""
 		try:
 			draw.ellipse( (x0 - widthX , y0 - widthY , x0 + widthX , y0 + widthY ), fill=fill, outline=outline)
 		except Exception as e:
@@ -1340,6 +1692,13 @@ def dotWRadius( x0, y0,	 fill, widthX, widthY,outline=None):
 
 ################### ###################	 digitalClock  ############################################### START
 def digitalClockInit(inParms=None):
+		"""Initializes the global digital clock parameters by merging caller overrides into a default dict (position, font size, fill color, flip, time format, font), then draws the first digital clock frame.
+
+		Inputs:
+		    inParms (dict or None): Optional overrides for digital clock parameters; defaults to empty dict
+		Outputs:
+		    None: Sets global digitalClockParams and draws the initial digital clock
+		"""
 		global intensity, intensityDevice
 		global digitalClockParams, minStartForNegative
 		if inParms is None: inParms= {}
@@ -1367,6 +1726,15 @@ def digitalClockInit(inParms=None):
 	
 	
 def digitalClockShow(hours=True, minutes=True, seconds=True):
+		"""Renders the current system time as text using the configured strftime format, font, position, and intensity-scaled fill color onto the draw surface.
+
+		Inputs:
+		    hours (bool): Hour flag (unused in body; kept for signature symmetry)
+		    minutes (bool): Minute flag (unused in body)
+		    seconds (bool): Second flag (unused in body)
+		Outputs:
+		    None: Draws the formatted time text onto the global draw surface
+		"""
 		global multIntensity
 		try:
 			P		= digitalClockParams["position"]
@@ -1394,6 +1762,14 @@ def digitalClockShow(hours=True, minutes=True, seconds=True):
 ############# oled import ####################################
 	
 def RGBto565array( image,invert=False):
+		"""Converts an RGB image into a flat list of bytes in 16-bit RGB565 format (high/low byte pairs), optionally transposing and mirroring the image for displays that need rotation.
+
+		Inputs:
+		    image (PIL.Image.Image): RGB image to convert (array-convertible)
+		    invert (bool): If True, transpose and flip the image before conversion
+		Outputs:
+		    list: Flat list of uint8 byte values encoding the image in RGB565
+		"""
 		pb = np.array(image).astype('uint16')
 		if invert:
 			pb= np.fliplr(np.transpose(pb,(1,0,2)))
@@ -1404,6 +1780,13 @@ def RGBto565array( image,invert=False):
 
 
 def readParams():
+		"""Reads the latest display parameters from the plugin input file, updating global device configuration (device type, I2C address, font, intensity, flip, SPI pins, light-sensor settings, resolution); if no display output is defined it tears down the device, removes the input file, and terminates the process.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates many global config variables; may delete files and kill/exit the process
+		"""
 		global i2cAddress, devType, font, flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
 		global lastRead, newRead
 		global useLightSensorType, useLightSensorDevId, lightSensorSlopeForDisplay, lightSensorOnForDisplay, lightMinDimForDisplay
@@ -1499,7 +1882,7 @@ def readParams():
 			runLoop = False
 		if not runLoop:
 			subprocess.call("rm "+G.homeDir+"temp/display.inp > /dev/null 2>&1", shell=True)
-			U.logger.log(20, u"exiting display, output dev display not defined")
+			U.logger.log(20, "exiting display, output dev display not defined")
 			try: outputDev.delPy()
 			except: pass
 			os.kill(os.getpid(), signal.SIGTERM)
@@ -1508,6 +1891,16 @@ def readParams():
 
 		
 def checkRGBcolor(inV, defColor, RGBtype="RGB", minIntValue= 0):
+	"""Parses and validates a color value: for RGB type it splits and converts a comma-separated triple into an intensity-scaled RGB tuple (clamped to a minimum non-zero value), and for non-RGB it returns a single intensity-clamped integer, falling back to a default color on any error.
+
+	Inputs:
+	    inV (str): Input color value (RGB triple string or single value)
+	    defColor (object): Default color returned on parse failure
+	    RGBtype (str): Color type, 'RGB' for triple else single int; defaults to 'RGB'
+	    minIntValue (int): Minimum value enforced on non-zero channels; defaults to 0
+	Outputs:
+	    tuple: An intensity-scaled RGB tuple, a single int, or defColor on error
+	"""
 	global multIntensity
 	try:
 		inValue=str(inV)
@@ -1517,7 +1910,7 @@ def checkRGBcolor(inV, defColor, RGBtype="RGB", minIntValue= 0):
 				for ii in range(3):
 					value[ii]=int(float(value[ii])*multIntensity)
 					if value[ii] !=0: value[ii]=max(minIntValue,value[ii])
-				#U.logger.log(20, u"checkRGBcolor  inV:{}, value:{}".format inV, value))
+				#U.logger.log(20, "checkRGBcolor  inV:{}, value:{}".format inV, value))
 				return tuple(value)
 			elif inValue.count(",") == 0:
 				for ii in range(3):
@@ -1536,6 +1929,17 @@ def checkRGBcolor(inV, defColor, RGBtype="RGB", minIntValue= 0):
 
 
 def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
+	"""Instantiates and returns the correct display output device driver for the configured device type (RGB LED matrices, SSD1306, SH1106, SSD1351, ST7735, big screen, LCD1602), determining the X/Y pixel bounds, handling screen reset/stop requests, and resolving the font directory; exits the process on hardware setup errors.
+
+	Inputs:
+	    outputDev (object): Existing device driver instance, or '' to create a new one
+	    matrix (object): Existing RGB matrix object, or '' to create a new one
+	    overwriteXmax (int): Override for big-screen X resolution; defaults to 0
+	    overwriteYmax (int): Override for big-screen Y resolution; defaults to 0
+	    reset (str): Reset directive for screen device ('stop' returns early); defaults to ''
+	Outputs:
+	    tuple: (fontDir, xmin, xmax, ymin, ymax, matrix, outputDev)
+	"""
 	global	maxPages, i2cAddress,lasti2cAddress, devType,devTypeLast, font, flipDisplay, PIN_CS , PIN_RST, PIN_DC, PIN_CE
 	global bigScreenSize
 	#print (" starting updateDevice\n devType:{}".format(devType))
@@ -1574,7 +1978,7 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 					options.chain_length = 1
 					options.parallel = 1
 					options.hardware_mapping = 'regular'  # If you have an Adafruit HAT: 'adafruit-hat'
-					matrix = RGBMatrix(options = options)
+					matrix = Adafruit_RGBmatrix(options = options)
 
 				else:
 					sys.path.append(os.getcwd()+"/neopix2")
@@ -1641,6 +2045,13 @@ def updateDevice(outputDev,matrix, overwriteXmax=0, overwriteYmax=0, reset=""):
 
 
 def getScrollPages(data):
+	"""Extracts scrolling configuration from a command/data dict, reading scroll direction (scrollxy), number of pages, per-step scroll delay, and delay between pages, applying sensible defaults when keys are missing or unparseable.
+
+	Inputs:
+	    data (dict): Command dict possibly holding scrollxy, scrollPages, scrollDelay and scrollDelayBetweenPages keys
+	Outputs:
+	    tuple: (scrollPages:int, scrollDelay:float, scrollDelayBetweenPages:float, scrollxy:str)
+	"""
 	try:
 		if "scrollxy" in data:
 			scrollxy = data["scrollxy"]
@@ -1669,6 +2080,14 @@ def getScrollPages(data):
 			U.logger.log(20,"", exc_info=True)
 
 def setScrollPages(scrollxy,scrollPages):
+	"""Computes the effective number of scroll pages and per-axis page maxima based on the scroll direction, clamping requested pages against the global maxPages and remembering the last scroll settings.
+
+	Inputs:
+	    scrollxy (str): Scroll direction (up/down/left/right) or empty for none
+	    scrollPages (int): Requested number of scroll pages
+	Outputs:
+	    tuple: (scrollPages, maxPagesY, maxPagesX, scrollxy, lastScrollxy, lastscrollPages)
+	"""
 	global maxPages
 	maxPagesX=1
 	maxPagesY=1
@@ -1701,6 +2120,13 @@ def setScrollPages(scrollxy,scrollPages):
 
 
 def mkfont(cmd):
+	"""Resolves and lazily loads a PIL font (either a .pil bitmap font or a .ttf TrueType font at a zoomed width) from the command dict, caching it in the global fontx dictionary keyed by font name plus width, and returns that cache key.
+
+	Inputs:
+	    cmd (dict): Command dict with optional 'font' name and 'width' size
+	Outputs:
+	    str: Cache key (font name + width) identifying the loaded font, or '0' if none
+	"""
 	global fontx
 	fontF ="0"
 	if "font" in cmd and len(cmd["font"]) >0:
@@ -1726,6 +2152,15 @@ def mkfont(cmd):
 	return fontF
 
 def getFill(devType,fill,minIntValue = 0):
+		"""Normalizes a fill color value for a given display device type by routing it through checkRGBcolor with the appropriate RGB mode (full RGB for matrix/screen/color OLED types, mode '1' for monochrome sh1106/ssd1306 displays).
+
+		Inputs:
+		    devType (str): Display device type identifier
+		    fill (object): Color value (string or list) to validate/convert
+		    minIntValue (int): Minimum intensity floor passed to checkRGBcolor
+		Outputs:
+		    object: Validated/converted fill color from checkRGBcolor
+		"""
 		if devType.lower().find("rgbmatrix")> -1: 
 			fill = checkRGBcolor(str(fill),fill, minIntValue=minIntValue)
 		elif  devType.lower() in ["ssd1351"]: 
@@ -1740,6 +2175,18 @@ def getFill(devType,fill,minIntValue = 0):
 
 # ------------------    ------------------ 
 def onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
+	"""Determines whether an element should currently be lit during a blink/repeat cycle by computing where the current time falls within the on/off period; always on when both off-times are zero.
+
+	Inputs:
+	    cType (str): Element type label (used only for debug)
+	    offTime0 (float): Off duration before the on phase
+	    onTime (float): On duration within the cycle
+	    offTime1 (float): Off duration after the on phase
+	    startRepeatTime (float): Cycle start reference time
+	    tti (float): Current time to test against the cycle
+	Outputs:
+	    bool: True if the element should be on at time tti, False otherwise
+	"""
 	if offTime0 == 0 and offTime1==0: 
 		#print cType, offTime0,onTime,offTime1,startRepeatTime,tti, True
 		return True
@@ -1753,6 +2200,13 @@ def onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 
 # ------------------    ------------------ 
 def getLightSensorValue(force=False):
+	"""Reads the latest ambient light sensor reading from temp/lightSensor.dat, normalizes it against the sensor's max range and configured slope, smooths it against the previous value, and updates the global display intensity multiplier; throttled and only acts when the light sensor display feature is enabled.
+
+	Inputs:
+	    force (bool): If True, bypasses the 2-second throttle to read immediately
+	Outputs:
+	    bool: True if a new light value was read and applied, False otherwise
+	"""
 	global  lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
 	global lightSensMax, lightMinDimForDisplay, lightSensorOnForDisplay, intensity, useLightSensorType, useLightSensorDevId
 	global multIntensity, intensity, intensityDevice, lightSensorValue
@@ -1812,6 +2266,13 @@ def getLightSensorValue(force=False):
 
 # ------------------    ------------------ 
 def checkLightSensor():
+	"""Periodically refreshes the light-sensor-driven display intensity by forcing a sensor read; if no new value is available it nudges the current smoothed light value toward the last raw value (step up/down) and recomputes the global intensity multiplier.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global lightSensorValue and multIntensity; logs
+	"""
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
 	global lightSensMax, lightMinDimForDisplay, lightSensorOnForDisplay
 	global multIntensity, intensity, intensityDevice, lightSensorValue
@@ -1836,29 +2297,40 @@ def checkLightSensor():
 
 
 # ------------------    ------------------ 
-def zoomit(inVar):
+def zoomit(inVar, calledfrom=""):
+	"""Scales a numeric value (or each element of a list) by the global zoom factor, casting to int and forcing positive values to at least 1; non-numeric inputs are coerced to int and the original value is returned on error.
+
+	Inputs:
+	    inVar (object): Number or list of numbers to scale by zoom
+	    calledfrom (str): Caller label used only in error logging
+	Outputs:
+	    object: Zoom-scaled int or list of ints (original value on failure)
+	"""
 	global zoom
 	var = copy.copy(inVar)
 	try:
 		#U.logger.log(20, u"zoomit1 var:{}; type(var):{}".format(var, type(var)) )
 		if type(var) == type([]):
 			for ll in range(len(var)):
-				if var[ll] >0:
+				try: 	var[ll] > 0
+				except:	var[ll] = int(var[ll])
+				if var[ll] > 0:
 					var[ll] = int(max(1.0,var[ll]*zoom))
 				else:
 					var[ll] = int(var[ll]*zoom)
 			#U.logger.log(20, u"zoomit2 var:{}; type(var):{} ".format(var, type(var)) )
 			return var
 		else:
-			if inVar > 0:
+			try: 	var > 0
+			except:	var = int(var)
+			if var > 0:
 				var = int(max(1.0,var*zoom))
 			else:
 				var = int(var*zoom)
 			return   var
 
 	except Exception as e:
-		U.logger.log(40,"", exc_info=True)
-		U.logger.log(40, u"zoomitE var:{}; type(var):{} ".format(var, type(var)) )
+		U.logger.log(30, "zoomit E var:>>{}<< type(var):{}, zoom:{}, calledfrom:{}<".format(str(inVar)[0:10], type(inVar), zoom, calledfrom) )
 	return inVar
 
 ######### main	########
@@ -1942,7 +2414,9 @@ myPID						= str(os.getpid())
 U.setLogLevel()
 U.logger.log(0,"starting display")
 U.killOldPgm(myPID,G.program+".py")
+
 U.echoLastAlive(G.program)
+startTime = time.time()
 
 #
 try:
@@ -1974,6 +2448,7 @@ lastAnalog					= time.time()
 lastDigital					= time.time()
 digitalclockInitialized		= ""
 analogclockInitialized		= ""
+lastPictureUpdate			= 0
 
 U.logger.log(20,"looping over input" )
 time.sleep(1)
@@ -1997,7 +2472,7 @@ while runLoop:
 				time.sleep(0.2)
 				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 			if i2cAddress != lasti2cAddress :  # restart  myself if new device type
-				U.logger.log(20, " restarting due to new device type, old={}, new=".format(lasti2cAddress, i2cAddress))
+				U.logger.log(20, " restarting due to new device type, old={}, new={}".format(lasti2cAddress, i2cAddress))
 				time.sleep(0.2)
 				subprocess.call("/usr/bin/python "+G.homeDir+"display.py &", shell=True)
 
@@ -2030,7 +2505,7 @@ while runLoop:
 
 				elif devType.lower() in ["ssd1351"]:
 					imData= Image.new('RGB', (xmax*maxPagesX, ymax*maxPagesY))
-					draw =ImageDraw.Draw(imData)
+					draw = ImageDraw.Draw(imData)
 					draw.rectangle((0,0, xmax*maxPagesX, ymax*maxPagesY), outline=0, fill= checkRGBcolor(resetInitial,(0,0,0)) )
 					outputDev = SSD1351(PIN_DC, PIN_RST, PIN_CS,PIN_CE)
 					outputDev.EnableDisplay(True)
@@ -2228,7 +2703,7 @@ while runLoop:
 								maxPages		= 1
 
 						if cType == "NOP" :
-								U.logger.log(10,u"skipping display .. NOP")
+								U.logger.log(10, "skipping display .. NOP")
 								continue
 
 						npage+=1
@@ -2244,11 +2719,11 @@ while runLoop:
 							if "," in "{}".format(cmd["width"]):
 								try:
 									w = "{}".format(cmd["width"]).strip("[").strip("]").split(",")
-									width = [zoomit(w[0]),zoomit(w[1])]
+									width = [zoomit(w[0], calledfrom="width"),zoomit(w[1], calledfrom="width")]
 								except: 
 									width =[1,1]
 							else:
-								try:	width = int(zoomit(cmd["width"]))
+								try:	width = int(zoomit(cmd["width"], calledfrom="width"))
 								except: pass
 
 						tti= int(time.time())
@@ -2265,32 +2740,44 @@ while runLoop:
 											TextForLCD[1]	= cmd["text"]
 									else:
 										fontF =	 mkfont(cmd)
-										#U.logger.log(20,u"cType:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"]+" fontF:{}".format(fontF)+" fill:{}".format(fill))
-										#U.logger.log(20,u"text pos:{}, zomit:{} ".format(pos,zoomit(pos)) )
-										draw.text(zoomit(pos), cmd["text"], font=fontx[fontF], fill=fill)
+										#U.logger.log(20, "cType:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"]+" fontF:{}".format(fontF)+" fill:{}".format(fill))
+										#U.logger.log(20, "text pos:{}, zomit:{} ".format(pos,zoomit(pos)) )
+										draw.text(zoomit(pos, calledfrom="text"), cmd["text"], font=fontx[fontF], fill=fill)
 
 
 						elif cType == "dateString":	 ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
 								theText = datetime.datetime.now().strftime(cmd["text"])
 								fontF =	 mkfont(cmd)
 								draw.text(zoomit(pos), theText, font=fontx[fontF], fill=fill)
 
 
+						elif cType == "image":  ###########################################################################
+							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
+								try:
+									#U.logger.log(20, "cType:{}, pos:{},".format(cType, str(pos)[0:20]))
+									posxy = zoomit( [pos[0],pos[1]], calledfrom="image")
+									crop = (pos[2], pos[3], pos[4], pos[5] ) 
+									pic =   Image.open(io.BytesIO(base64.b64decode(cmd["text"])))
+									pic =   pic.crop(crop)
+									imData.paste(pic, posxy)
+								except Exception as e:
+									U.logger.log(20,"", exc_info=True)
+
 						elif cType == "line":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
 								if type(pos[0]) == type([]) or type(pos[0]) == type(()):
 									for xx in pos:
-										draw.line(zoomit(xx),fill=fill,width=width)
+										draw.line(zoomit(xx, calledfrom="line"),fill=fill,width=width)
 								else:		
-									draw.line(zoomit(pos),fill=fill,width=width)
+									draw.line(zoomit(pos, calledfrom="line"),fill=fill,width=width)
 
 						elif cType == "dot":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
-								p = zoomit(pos)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								p = zoomit(pos, calledfrom="dot")
 								if isinstance(width,int):
 									dotWRadius( p[0], p[1],	 fill, width,	 width,	  outline=None)
 								else:
@@ -2299,25 +2786,36 @@ while runLoop:
 				
 						elif cType == "vBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
-								p = zoomit(pos)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								p = zoomit(pos, calledfrom="vBar")
 								p =[p[0],p[1],p[0],p[1],p+p[2]]
 								draw.line(p,fill=fill,width=width)
 
 
 						elif cType == "hBar":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:	"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
 								#print u"cType:	 "+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill)
-								p = zoomit(pos)
+								p = zoomit(pos, calledfrom="hBar")
 								p =[p[0],p[1],p[0]+p[2],p[1]]
 								draw.line(p,fill=fill,width=width)
 
 
+						elif cType == "hBar":  ###########################################################################
+							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								p = zoomit(pos, calledfrom="hBar")
+								draw.line([p[0]+width/2,p[1]	   ,p[0]+width/2,p[1]+p[3]]	,fill=fill,width=1)
+								draw.line([p[0]-width/2,p[1]	   ,p[0]-width/2,p[1]+p[3]]	,fill=fill,width=1)
+								draw.line([p[0]-width/2,p[1]+p[3],p[0]+width/2,p[1]+p[3]]	,fill=fill,width=1)
+								lastPos = ["vBarwBox",copy.copy(p),width]
+								draw.line([p[0],p[1],p[0],p[1]+p[2]],fill=fill,width=width)
+
+
 						elif cType == "vBarwBox":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
-								p = zoomit(pos)
+								U.logger.log(10,"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
+								p = zoomit(pos, calledfrom="vBarwBox")
 								draw.line([p[0]+width/2,p[1]	   ,p[0]+width/2,p[1]+p[3]]	,fill=fill,width=1)
 								draw.line([p[0]-width/2,p[1]	   ,p[0]-width/2,p[1]+p[3]]	,fill=fill,width=1)
 								draw.line([p[0]-width/2,p[1]+p[3],p[0]+width/2,p[1]+p[3]]	,fill=fill,width=1)
@@ -2327,8 +2825,8 @@ while runLoop:
 
 						elif cType == "hBarwBox":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
-								p = zoomit(pos)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								p = zoomit(pos, calledfrom="hBarwBox")
 								draw.line([p[0],		  p[1]-width/2 ,p[0]+p[3] ,p[1]-width/2]   ,fill=fill,width=1)
 								draw.line([p[0],		  p[1]+width/2 ,p[0]+p[3] ,p[1]+width/2]   ,fill=fill,width=1)
 								draw.line([p[0]+p[3], p[1]-width/2 ,p[0]+p[3] ,p[1]+width/2]   ,fill=fill,width=1)
@@ -2338,7 +2836,7 @@ while runLoop:
 
 						elif cType == "labelsForPreviousObject":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" width:{}".format(width)+" fill:{}".format(fill))
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
 								if len(lastPos) ==3:
 									fontF 		= mkfont(cmd)
 									direction 	= lastPos[0]
@@ -2347,14 +2845,14 @@ while runLoop:
 									ll 			= len(frame)
 										
 									if 	len(pos) ==3:
-										lineWidth	= zoomit(pos[1])
+										lineWidth	= zoomit(pos[1], calledfrom="labelsForPreviousObject")
 										pp 			= pos[2]
 										if direction == "vBarwBox":
 											if ll >0 and len(pp) >0:
 												x0 = int(frame[0]  - frameW/2)
 												y0 = frame[1] 
 												for tick in pp:
-													valueNumber = zoomit(tick[0])
+													valueNumber = zoomit(tick[0], calledfrom="vBarwBox")
 													valueText   = str(tick[1])
 													if pos[0].upper() =="R": LR = lineWidth +width
 													else:					 LR = -len(valueText)*width*0.6
@@ -2367,7 +2865,7 @@ while runLoop:
 												y0 = int(frame[3] - frameW/2)
 												x0 = frame[0] 
 												for tick in pp:
-													valueNumber = zoomit(tick[0])
+													valueNumber = zoomit(tick[0], calledfrom="hBarwBox")
 													valueText   = str(tick[1])
 													if pos[0].upper() =="T": TB = -width*1.05
 													else:					 TB = lineWidth*1.5
@@ -2379,8 +2877,8 @@ while runLoop:
 
 						elif cType == "hist":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
-								p = zoomit(pos)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								p = zoomit(pos, calledfrom="hist")
 								x0= pos[0]
 								y0= pos[1]
 								ymax = p[2]
@@ -2393,8 +2891,8 @@ while runLoop:
  
 						elif cType == "point":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
-								p = zoomit(pos)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								p = zoomit(pos, calledfrom="point")
 								if isinstance(p[0], list):
 									for x in p:
 										U.logger.log(10, "{}".format(cmd))
@@ -2405,40 +2903,22 @@ while runLoop:
 
 						elif cType == "ellipse":  ###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
-								draw.ellipse(zoomit(pos),fill=fill)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								draw.ellipse(zoomit(pos, calledfrom="ellipse"),fill=fill)
 
 
 						elif cType == "rectangle":	###########################################################################
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:	"+cType+" pos:{}".format(pos) +" fill:{}".format(fill)+" multIntensity:{}".format(multIntensity))
-								draw.rectangle(zoomit(pos), fill=fill)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{}, multIntensity:{}".format(cType,pos, width,  fill, multIntensity))
+								draw.rectangle(zoomit(pos, calledfrom="rectangle"), fill=fill)
 
 
 						elif cType == "triangle":  ###########################################################################
 							# pos:[x0,y0,length,value], width =wdith, fill = color of thermomether, 
 							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" fill:{}".format(fill))
-								p = zoomit(pos)
+								U.logger.log(10, "cType:{}, pos:{}, width:{}, fill:{},".format(cType, pos, width, fill))
+								p = zoomit(pos, calledfrom="triangle")
 								draw.polygon( [(p[0], p[1]),(p[2], p[3]),(p[4], p[5])], fill = fill )
-
-
-
-					
-						elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:  ###########################################################################
-							if onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
-								U.logger.log(10,u"cType:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"]+" fill:{}".format(fill))
-								imData = Image.open("/home/pi/pibeacon/displayfiles/"+cmd["text"])
-								p = zoomit(pos)
-								if devType.lower().find("rgbmatrix")== -1 and devType.lower() not in ["ssd1351"]: 
-									out = imData.convert("1")
-									if fill ==0:
-										out = out.convert('L')
-										out = PIL.ImageOps.invert(out)
-										out = out.convert('1')
-									draw.bitmap(p, out,fill=255)
-								else:
-									imData.load()
 
 
 						elif cType == "clock" or cType == "date" and onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti): ###########################################################################
@@ -2478,7 +2958,7 @@ while runLoop:
 									fontF =	 mkfont({"font":"8x13.pil","width":"0"})
 									draw.text((dx,dy+10)	, HM+":"+sec	 , font=fontx[fontF], fill=fill)
 
-								U.logger.log(10,u"cType:"+cType+" fill:{}".format(fill)+" font"+str(fontF)+" at:"+str(dx)+" "+ str(dy))
+								U.logger.log(10, "cType:{} fill:{}, font:{} at :{},{}".format(cType, fill, fontF, dx, dy )) 
 
 							elif cType == "date" : ###########################################################################
 								if devType.lower()	== "ssd1351": 
@@ -2544,7 +3024,7 @@ while runLoop:
 
 						if "display" not in cmd or cmd["display"] != "wait":  ###########################################################################
 
-							U.logger.log(10, u"displaying  "+ cmd["type"]+ "  scrollxy:"+scrollxy+"  delay:"+str(scrollDelay))
+							U.logger.log(10, "displaying  "+ cmd["type"]+ "  scrollxy:"+scrollxy+"  delay:"+str(scrollDelay))
 							
 							if flipDisplay == "1":
 								imData = imData.transpose(PIL.Image.ROTATE_180)
@@ -2785,6 +3265,10 @@ while runLoop:
 				except: pass
 				klillMyselfTimeout = -1 # killing myself..
 				U.logger.log(20, " exiting - stop was requested ") 	
+				try: 
+					outputDev.delPy()
+					time.sleep(2)
+				except: pass
 				os.kill(os.getpid(), signal.SIGTERM)
 				runLoop = False
 				break
@@ -2801,16 +3285,29 @@ while runLoop:
 				f.close()
 				os.remove(G.homeDir+"temp/display.inp")
 				#U.logger.log(20, " read new inputfile items:{}...".format(str(items)[0:100])) 	
-				if xxx == "stop":
-					try: outputDev.delPy()
-					except: pass
-					klillMyselfTimeout = -1 # killing myself..
-					U.logger.log(20, " exiting - stop was requested ") 	
-					os.kill(os.getpid(), signal.SIGTERM)
-					runLoop = False
-					break
+				
+				
+				
+			if os.path.isfile(G.homeDir+"temp/display.stop"):
+				f = open(G.homeDir+"temp/display.stop","r")
+				xxx = f.read().strip("\n") 
+				f.close()
+				os.remove(G.homeDir+"temp/display.stop")
+				if time.time() - startTime  > 10:
+					if xxx == "stop":
+						try: 
+							outputDev.delPy()
+							time.sleep(2)
+						except: pass
+						klillMyselfTimeout = -1 # killing myself..
+						U.logger.log(20, "{} exiting - stop was requested  after start:{:.1f}".format(myPID, time.time()-startTime)) 	
+						os.kill(os.getpid(), signal.SIGTERM)
+						runLoop = False
+						break
+				else:
+					U.logger.log(20, "{} stop ignored within 5 secs  after start:{:.1f}".format(myPID, time.time()-startTime) ) 	
 
-				newRead = True
+			newRead = True
 		except:	 
 			items = []
 			try:

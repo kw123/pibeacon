@@ -48,9 +48,25 @@ class LinuxI2cTransceiver(object):
             self.open()
 
     def __enter__(self):
+        """Context-manager entry method that returns the transceiver instance itself so it can be used in a 'with' block.
+
+        Inputs:
+            None.
+        Outputs:
+            LinuxI2cTransceiver: the transceiver instance itself (self)
+        """
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context-manager exit method that closes the underlying I2C connection when leaving a 'with' block.
+
+        Inputs:
+            exc_type (type or None): exception class if one was raised in the block
+            exc_val (BaseException or None): exception instance if one was raised
+            exc_tb (traceback or None): traceback if an exception was raised
+        Outputs:
+            None: closes the I2C device by calling self.close()
+        """
         self.close()
 
     def open(self):

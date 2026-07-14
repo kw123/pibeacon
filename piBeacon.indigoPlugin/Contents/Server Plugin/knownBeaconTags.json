@@ -34,7 +34,7 @@
     "hexCode":"FF990406",
     "hexCode2": "",
     "pos": 18,
-    "posDelta": 1,
+    "posDelta": 2,
     "sensorFunctions": "",
     "sequence": 0,
     "subType": {},
@@ -53,8 +53,8 @@
     "advData":{"":{"len":0,"completeData":"","useTag":""}},
     "hexCode":"1BFF990405",
     "hexCode2": "",
-    "pos": 9,
-    "posDelta": 0,
+    "pos": 8,
+    "posDelta": 2,
     "sensorFunctions": "",
     "sequence": 0,
     "subType": {},
@@ -1608,6 +1608,15 @@
           "pos": 7
         },
         "type": "msgGet"
+      },
+      "beep": {
+        "cmdSeq": [
+          "char-write-req 0x0011 0100",
+          "char-write-req 0x0013 570000000f2103bb",
+          "char-write-req 0x0013 57bbd9077db8"
+        ],
+        "random": "public",
+        "type": "BLEconnect"
       }
     },
     "comment": "",
@@ -1722,7 +1731,7 @@
     "sequence": 0,
     "subType": {},
     "text": "SwitchBot Humidifier Evap",
-    "textForMenu": "RuuviAir xxxxx as tag",
+    "textForMenu": "SwitchBot Humidifier Evap",
     "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   },
   
@@ -2157,7 +2166,7 @@
     "hexCode":"MYBLUET",
     "hexCode2": "",
     "pos": 1,
-    "posDelta": 0,
+    "posDelta": 1,
     "sensorFunctions": "",
     "sequence": 0,
     "subType": {},

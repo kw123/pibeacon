@@ -45,21 +45,49 @@ else:					  usePython3 = False
 
 #################################
 def escape_ansi(line):
+	"""Strips ANSI escape sequences from a line of text using a precompiled regex and encodes the result to ASCII, ignoring non-ASCII characters; returns an empty string on failure.
+
+	Inputs:
+	    line (str): text line possibly containing ANSI escape codes
+	Outputs:
+	    bytes: ASCII-encoded line with ANSI codes removed, or empty string on error
+	"""
 	try:	ret = ansi_escape.sub('', line).encode('ascii',errors='ignore')
 	except: ret = ""
 	return ret
 
 ####-------------------------------------------------------------------------####
 def toStringAndstripRNetc(inX):
+	"""Converts a value to a string, strips a leading bytes-literal b' wrapper, replaces escaped and literal carriage-return/newline characters with spaces, and trims surrounding whitespace.
+
+	Inputs:
+	    inX (object): value (often bytes) to stringify and clean
+	Outputs:
+	    str: cleaned single-line string
+	"""
 	return str(inX).strip("b'").replace("\\r"," ").replace("\\n"," ").replace("\r"," ").replace("\n"," ").strip()
 
 ####-------------------------------------------------------------------------####
 def toStringAndstripB(inX):
+	"""Converts a value to a string and strips the leading bytes-literal b' wrapper characters.
+
+	Inputs:
+	    inX (object): value (often bytes) to stringify
+	Outputs:
+	    str: string with b' characters stripped
+	"""
 	return str(inX).strip("b'")
 
 
 ####-------------------------------------------------------------------------####
 def readPopen(cmd):
+		"""Runs a shell command via subprocess.Popen, captures stdout and stderr, and returns them decoded as UTF-8 strings; logs and returns None on exception.
+
+		Inputs:
+		    cmd (str): shell command to execute
+		Outputs:
+		    tuple: (stdout_str, stderr_str) decoded UTF-8, or None on error
+		"""
 		try:
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			return ret.decode('utf_8'), err.decode('utf_8')
@@ -70,6 +98,13 @@ def readPopen(cmd):
 
 #################################
 def signedIntfrom16(string):
+	"""Parses a hexadecimal string into an integer and interprets it as a signed 16-bit value (subtracting 65536 when above 32767); returns 0 on error.
+
+	Inputs:
+	    string (str): hex string representing a 16-bit value
+	Outputs:
+	    int: signed 16-bit integer, or 0 on error
+	"""
 	try:
 		intNumber = int(string,16)
 		if intNumber > 32767: intNumber -= 65536
@@ -81,6 +116,13 @@ def signedIntfrom16(string):
 
 #################################
 def checkIFQuickRequested():
+	"""Checks whether a quick-refresh request file exists for the sensor and, if so, resets per-MAC connection state in macList (last data, timestamps, retry and up flags) for BLE connect and long-connect device types.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: mutates the macList global and logs on error
+	"""
 	global macList
 	global sensor
 	try:
@@ -104,6 +146,13 @@ def checkIFQuickRequested():
 
 #################################
 def startHCI():
+	"""Selects and brings up the appropriate HCI Bluetooth adapter for BLE(long)connect: waits for other BLE functions, reads which HCI beaconloop is using, queries available adapters, ensures enough dongles, picks one (and optionally a second) HCI, persists the choice to temp/BLEconnect.hci, and exits with error notifications if the BLE stack is unavailable.
+
+	Inputs:
+	    None.
+	Outputs:
+	    tuple: (useHCI, myBLEmac, BLEid, bus, useHCI2) on success; exits the process on failure
+	"""
 	global BLEconnectMode
 	global macList
 	global oneisBLElongConnectDevice, switchBotPresent
@@ -146,11 +195,11 @@ def startHCI():
 			U.sendURL( data={"data":{"error":text}}, squeeze=False, wait=True )
 			cmd = "timeout 5 sudo hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -"
 			ret = readPopen(cmd)
-			U.logger.log(20, "cmd: {} and ret:".format(cmd, ret))
+			U.logger.log(20, "cmd: {} and ret:{}".format(cmd, ret))
 
 			cmd = "timeout 20 sudo hciattach /dev/ttyAMA0 bcm43xx 921600 noflow -"
 			ret = readPopen(cmd)
-			U.logger.log(20, "cmd: {} and ret:".format(cmd, ret))
+			U.logger.log(20, "cmd: {} and ret:{}".format(cmd, ret))
 			U.sendURL( data={"data":{"hciInfo":"err-need-2-USB"}}, squeeze=False, wait=False )
 			threadDictReadSwitchbot["state"] = "stop"
 			threadDictDoSwitchbot["state"] = "stop"
@@ -203,6 +252,13 @@ def startHCI():
 
 #################################
 def checkIfHCIup(useHCI):
+	"""Queries the available HCI adapters and returns whether the given HCI interface is present and in the UP state.
+
+	Inputs:
+	    useHCI (str): HCI interface name to check (e.g. 'hci0')
+	Outputs:
+	    bool: True if the interface exists and is UP, else False
+	"""
 	HCIs = U.whichHCI()
 	if useHCI in HCIs["hci"]:
 		if HCIs["hci"][useHCI]["upDown"] == "UP": return True
@@ -210,6 +266,16 @@ def checkIfHCIup(useHCI):
 
 #################################
 def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., batteryVoltAt0=2700.):
+	"""Computes a battery charge percentage (0-100) from a measured battery voltage, applying a temperature correction that raises the effective empty-voltage threshold as temperature drops below 10C.
+
+	Inputs:
+	    batteryVoltage (float): measured battery voltage in mV
+	    temp (float): ambient temperature in Celsius used for correction
+	    batteryVoltAt100 (float): voltage corresponding to 100% charge (default 3000.0)
+	    batteryVoltAt0 (float): voltage corresponding to 0% charge (default 2700.0)
+	Outputs:
+	    int: battery level percentage clamped to 0-100, or 0 on error
+	"""
 	try:
 		batteryLowVsTemp			= (1. + 0.7*min(0.,temp-10.)/100.) * batteryVoltAt0 # (changes to 0.9* 2700 @ 0C; to = 0.8*2700 @-10C )
 		batteryLevel 				= int(min(100.,max(0.,100.* (batteryVoltage - batteryLowVsTemp)/(batteryVoltAt100-batteryLowVsTemp))))
@@ -222,6 +288,13 @@ def batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=3000., battery
 
 #################################
 def checkSwitchBotPrio(thisMAC):
+	"""Determines whether a non-SwitchBot BLE operation should yield priority to an active/waiting SwitchBot: returns False if no SwitchBot is present or this MAC already holds priority, otherwise clears nonSwitchBotActive and returns True when a SwitchBot is active or waiting.
+
+	Inputs:
+	    thisMAC (str): MAC address of the device requesting/checking priority
+	Outputs:
+	    bool: True if priority should be ceded to a SwitchBot, else False
+	"""
 	global currentActiveSwitchbotMAC, switchbotActive, nonSwitchBotActive
 	global switchBotPresent
 
@@ -236,6 +309,21 @@ def checkSwitchBotPrio(thisMAC):
 
 #################################
 def launchGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5, random=False, verbose=False, nTries=1, waitbetween=0.5):
+	"""Spawns a gatttool interactive session via pexpect for the given BLE MAC address (optionally using random addressing), waiting for the gatttool prompt, then issues a connect command through connectGATT. Retries the whole launch nTries times and yields to higher-priority SwitchBot commands.
+
+	Inputs:
+	    useHCI (str): HCI adapter identifier (e.g. hci0) passed to gatttool -i
+	    thisMAC (str): BLE device MAC address to connect to
+	    timeoutGattool (float): Seconds to wait for the gatttool prompt to appear
+	    timeoutConnect (float): Seconds to wait for the connect command to succeed
+	    retryConnect (int): Number of connect attempts passed to connectGATT
+	    random (bool): If True, use random BLE addressing (-t random)
+	    verbose (bool): If True, log detailed progress
+	    nTries (int): Number of times to retry the entire launch sequence
+	    waitbetween (float): Seconds to wait between connect retries
+	Outputs:
+	    str: 'ok' on successful connection, otherwise '' (empty string)
+	"""
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot, switchbotActive, lastSwitchbotCMD
 	global nonSwitchBotActive
 	global expCommands
@@ -287,6 +375,17 @@ def launchGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5, 
 
 
 def connectGATT(thisMAC, retryConnect, timeoutConnect=0.5, waitbetween=0.5, verbose=False):
+	"""Sends the gatttool 'connect' command on an already-spawned pexpect session for the given MAC and waits for 'Connection successful', retrying up to retryConnect times. Tracks 'Function not implemented' errors via a global counter and yields to higher-priority SwitchBot commands.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address whose pexpect session to connect
+	    retryConnect (int): Maximum number of connect attempts
+	    timeoutConnect (float): Seconds to wait for connection success per attempt
+	    waitbetween (float): Seconds to sleep between failed attempts
+	    verbose (bool): If True, log detailed progress
+	Outputs:
+	    str: 'ok' if connected, otherwise '' (empty string)
+	"""
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot, switchbotActive, lastSwitchbotCMD
 	global nonSwitchBotActive
 	global expCommands
@@ -337,6 +436,15 @@ def connectGATT(thisMAC, retryConnect, timeoutConnect=0.5, waitbetween=0.5, verb
 
 #################################
 def disconnectGattcmd(thisMAC, timeout, verbose=False):	
+	"""Sends 'quit' to the gatttool pexpect session for the given MAC, then kills and force-closes the process and removes any lingering gatttool process for that MAC. Clears the stored session and returns whether disconnection completed.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address whose gatttool session to close
+	    timeout (float): Seconds to wait for the quit command response
+	    verbose (bool): If True, log detailed progress
+	Outputs:
+	    bool: True if disconnected/cleaned up (or no session existed), False on exception
+	"""
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	global expCommands
 	doPrint = verbose
@@ -373,6 +481,18 @@ def disconnectGattcmd(thisMAC, timeout, verbose=False):
 
 #################################
 def writeGattcmd(thisMAC, cc,  expectedTag, timeout, verbose=False, retryCMD=3):	
+	"""Sends a gatttool command line on the MAC's pexpect session and waits for the expectedTag response, retrying up to retryCMD times. On a dropped connection it attempts a reconnect via connectGATT before retrying.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address whose session to write to
+	    cc (str): gatttool command string to send
+	    expectedTag (str): Expected substring/pattern in the success response
+	    timeout (float): Timeout value for the command (note: expect uses a hardcoded 5s)
+	    verbose (bool): If True, log detailed progress
+	    retryCMD (int): Maximum number of command attempts
+	Outputs:
+	    bool: True if the expected response was received, otherwise False
+	"""
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	global expCommands
 	global counterFunctionNotImplemented
@@ -424,7 +544,19 @@ def writeGattcmd(thisMAC, cc,  expectedTag, timeout, verbose=False, retryCMD=3):
 
 
 #################################
-def writeAndListenGattcmd(cc, expectedTag, nBytes, timeout, verbose=False):
+def writeAndListenGattcmd(thisMAC, cc, expectedTag, nBytes, timeout, verbose=False):
+	"""Sends a gatttool command and listens for the expectedTag response, then parses the following line into whitespace-separated byte tokens, requiring exactly nBytes tokens (or any count if nBytes is negative). Retries up to twice and yields to SwitchBot priority.
+
+	Inputs:
+	    thisMAC (str): MAC address of the BLE device (key into expCommands)
+	    cc (str): gatttool command string to send
+	    expectedTag (str): Expected substring/pattern marking a valid response
+	    nBytes (int): Expected number of returned byte tokens; negative accepts any length
+	    timeout (float): Seconds to wait for the response
+	    verbose (bool): If True, log detailed progress
+	Outputs:
+	    list: List of byte token strings on success, otherwise empty list
+	"""
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	global expCommands
 	BF = ""
@@ -461,6 +593,18 @@ def writeAndListenGattcmd(cc, expectedTag, nBytes, timeout, verbose=False):
 
 #################################
 def readGattcmd(thisMAC, cc, expectedTag, nBytes, timeout, verbose=False):
+	"""Sends a gatttool read command on the MAC's session, waits for expectedTag, and parses the following line into whitespace-separated byte tokens, requiring exactly nBytes tokens (or any count if nBytes is negative). Retries up to twice and yields to SwitchBot priority.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address whose session to read from
+	    cc (str): gatttool read command string to send
+	    expectedTag (str): Expected substring/pattern marking a valid response
+	    nBytes (int): Expected number of returned byte tokens; negative accepts any length
+	    timeout (float): Seconds to wait for the response
+	    verbose (bool): If True, log detailed progress
+	Outputs:
+	    list: List of byte token strings on success, otherwise empty list
+	"""
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	global expCommands
 	BF = ""
@@ -495,6 +639,21 @@ def readGattcmd(thisMAC, cc, expectedTag, nBytes, timeout, verbose=False):
 
 #################################
 def batchGattcmd(useHCI, thisMAC, cc, expectedTag, nBytes=0, retryCMD=3, verbose=False, timeout=6, thisIsASwitchbotCommand = False):
+	"""Runs a one-shot gatttool command via a timeout-wrapped subprocess (readPopen) instead of an interactive session, retrying up to retryCMD times until the output contains expectedTag. Coordinates with a global flag so SwitchBot and non-SwitchBot commands do not run concurrently, and parses the output into nBytes byte tokens.
+
+	Inputs:
+	    useHCI (str): HCI adapter identifier passed to gatttool -i
+	    thisMAC (str): BLE device MAC address to query
+	    cc (str): gatttool command arguments string
+	    expectedTag (str): Expected substring in the command output
+	    nBytes (int): Expected number of byte tokens; 0 returns the tag, negative accepts any length
+	    retryCMD (int): Maximum number of command attempts
+	    verbose (bool): If True, log detailed progress
+	    timeout (float): Seconds passed to the timeout wrapper around gatttool
+	    thisIsASwitchbotCommand (bool): Marks the command as a SwitchBot command for concurrency arbitration
+	Outputs:
+	    str or list: expectedTag when nBytes==0, a list of byte tokens on success, or empty list on failure
+	"""
 	global switchBotConfig, switchbotActive, switchBotPresent, maxwaitForSwitchBot
 	global currentActiveGattCommandisSwitchBot
 
@@ -539,6 +698,15 @@ def batchGattcmd(useHCI, thisMAC, cc, expectedTag, nBytes=0, retryCMD=3, verbose
 
 #################################
 def tryToConnectSocket(thisMAC,BLEtimeout,devId):
+	"""Opens a raw Bluetooth L2CAP socket and HCI device to connect to the MAC, then issues an HCI Read RSSI request to obtain RSSI and transmit power. Returns a dict of signal data; on repeated IOErrors it eventually restarts the plugin.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address to connect to
+	    BLEtimeout (float): Socket timeout in seconds
+	    devId (int): HCI device index to open
+	Outputs:
+	    dict: Dict with rssi/txPower/flag0ok/byte2 keys, or empty dict on connection failure
+	"""
 	global BLEsocketErrCount, lastConnect
 
 	retdata	 = {"rssi": -999, "txPower": -999,"flag0ok":0,"byte2":0}
@@ -607,6 +775,14 @@ def tryToConnectSocket(thisMAC,BLEtimeout,devId):
 
 #################################
 def tryToConnectCommandLine(thisMAC, BLEtimeout):
+	"""Connects to a BLE device using command-line hcitool (cc/rssi/tpl) wrapped in a timeout, parsing the textual output to extract RSSI and transmit power. Retries up to twice and waits for any in-progress WiFi sending to finish first.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address to query
+	    BLEtimeout (float): Seconds passed to the hcitool timeout wrapper
+	Outputs:
+	    dict: Dict with rssi/txPower/flag0ok/byte2 keys, or empty dict on error
+	"""
 	global BLEsocketErrCount, lastConnect, useHCI
 	global switchBotPresent, switchbotActive, nonSwitchBotActive
 
@@ -657,6 +833,14 @@ def tryToConnectCommandLine(thisMAC, BLEtimeout):
 
 #################################
 def BLEXiaomiMiTempHumSquare(thisMAC, data0):
+	"""Reads a Xiaomi Mi square temperature/humidity BLE sensor by launching gatttool, enabling notifications (char-write-req 0038 0100), and parsing the notification value into temperature, humidity, battery voltage and computed battery level. Applies configured offsets, flags changed data, and updates the per-MAC state in macList.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address of the sensor
+	    data0 (dict): Base data dict deep-copied and populated with the reading
+	Outputs:
+	    dict or str: Data dict with sensor values/flags, or '' if it yielded to a SwitchBot command
+	"""
 	global BLEsocketErrCount, macList, maxTrieslongConnect, useHCI
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
@@ -713,7 +897,7 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 					nonSwitchBotActive = ""
 					return ""
 
-				readData = writeAndListenGattcmd( "char-write-req 0038 0100", "value:", 5, 15, verbose=verbose)
+				readData = writeAndListenGattcmd( thisMAC, "char-write-req 0038 0100", "value:", 5, 15, verbose=verbose)
 				if readData != []: break
 				time.sleep(1)
 			disconnectGattcmd(thisMAC, 2)
@@ -763,6 +947,14 @@ def BLEXiaomiMiTempHumSquare(thisMAC, data0):
 
 #################################
 def BLEXiaomiMiVegTrug(thisMAC, data0):
+	"""Reads a Xiaomi Mi / VegTrug plant sensor over gatttool: triggers a read (char-write-req 33 A01F), then reads handle 38 (battery/firmware version) and handle 35 (temp, illuminance, moisture, conductivity), parsing the little-endian byte data. Flags changed data and updates per-MAC state in macList.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address of the sensor
+	    data0 (dict): Base data dict deep-copied and populated with the reading
+	Outputs:
+	    dict or None: Data dict with sensor values/flags, or None on connection failure or SwitchBot yield
+	"""
 	global BLEsocketErrCount, macList, maxTrieslongConnect, useHCI
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
@@ -902,6 +1094,14 @@ def BLEXiaomiMiVegTrug(thisMAC, data0):
 
 #################################
 def BLEinkBirdPool01B(thisMAC, data0):
+	"""Reads an InkBird pool thermometer over a one-shot gatttool read (batchGattcmd on the configured handle), decoding the first two little-endian bytes into temperature with the configured offset. Flags changed data and updates per-MAC state in macList.
+
+	Inputs:
+	    thisMAC (str): BLE device MAC address of the sensor
+	    data0 (dict): Base data dict deep-copied and populated with the reading
+	Outputs:
+	    dict: Data dict with temperature and connection flags, or with badSensor set on error
+	"""
 	global BLEsocketErrCount, macList, maxTrieslongConnect, useHCI
 	global switchBotConfig, switchbotActive, switchBotPresent, nonSwitchBotActive
 
@@ -964,6 +1164,13 @@ def BLEinkBirdPool01B(thisMAC, data0):
 
 #################################
 def checkSwitchbotForCmd():
+	"""Worker-thread loop that polls the 'switchbot.cmd' command file for new SwitchBot commands and feeds them onto the switchbotQueue. It handles stop requests (recording per-MAC stop windows and purging that MAC's queued commands), suppresses duplicate commands issued too soon after the previous one, and runs until its thread state is set to 'stop'.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs until thread stop; reads command files, enqueues commands, mutates global switchbot state dicts, logs
+	"""
 	global switchbotActive, switchBotPresent
 	global nonSwitchBotActive
 	global switchbotQueue
@@ -995,7 +1202,7 @@ def checkSwitchbotForCmd():
 
 			U.logger.log(20, " read new data: {}".format(jData))
 			if "mac" not in jData: 
-				U.logger.log(20," read new data, bad data".format(jData))
+				U.logger.log(20," read new data, bad data")
 				jData = {}
 				continue
 
@@ -1045,6 +1252,13 @@ def checkSwitchbotForCmd():
 
 #################################
 def doSwitchBotThread():
+	"""Worker-thread loop that dispatches queued SwitchBot commands by calling doSwitchBot() whenever the queue is non-empty and no command is currently active, pacing executions at least 3.5 seconds apart. After each command it clears active-MAC state, resets expired per-MAC stop windows, and disconnects/clears any open GATT connections.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs until thread stop; invokes doSwitchBot, disconnects GATT, mutates global switchbot state, logs
+	"""
 	global switchbotActive, switchBotPresent
 	global nonSwitchBotActive
 	global switchbotQueue
@@ -1086,6 +1300,16 @@ def doSwitchBotThread():
 
 #################################
 def setSwitchbotParameters(thisMAC, retryCount, jData, verbose):
+	"""Configures a SwitchBot device by connecting over GATT (if needed) and writing its mode-of-device characteristic (press/switch normal or inverse) and its hold-time characteristic. On connection or write failure it re-queues the command for a retry.
+
+	Inputs:
+	    thisMAC (str): BLE MAC address of the target SwitchBot device
+	    retryCount (int): current retry attempt count, re-queued on failure
+	    jData (dict): command/parameter data, re-queued on failure
+	    verbose (bool): whether to emit detailed log messages
+	Outputs:
+	    None: writes GATT characteristics over BLE; may re-queue command; logs
+	"""
 	global expCommands
 	global switchBotConfig
 	global useHCI, useHCI2
@@ -1131,6 +1355,13 @@ def setSwitchbotParameters(thisMAC, retryCount, jData, verbose):
 
 #################################
 def checkIfSwitchbotStop(thisMAC):
+	"""Returns True if the given MAC currently has an active stop request, meaning either an indefinite stop (duration 0) or a timed stop whose elapsed time is still within its configured stop-for-seconds window; otherwise returns False.
+
+	Inputs:
+	    thisMAC (str): BLE MAC address to check for an active stop request
+	Outputs:
+	    bool: True if commands for this MAC are currently stopped
+	"""
 	global switchbotStop
 	if thisMAC not in switchbotStop: return False
 	if switchbotStop[thisMAC] != [0.,0.] and (switchbotStop[thisMAC][1] == 0 or (time.time() - switchbotStop[thisMAC][0] < switchbotStop[thisMAC][1])): 
@@ -1140,6 +1371,13 @@ def checkIfSwitchbotStop(thisMAC):
 
 #################################
 def checkIfSwitchbotStopAND(thisMAC):
+	"""Returns True if the given MAC has a recorded stop timestamp greater than zero and the current time is past that timestamp; otherwise returns False. A variant stop check used in AND-style conditions.
+
+	Inputs:
+	    thisMAC (str): BLE MAC address to check against its recorded stop timestamp
+	Outputs:
+	    bool: True if the stop timestamp exists and has passed
+	"""
 	global switchbotStop
 	if thisMAC not in switchbotStop: return False
 	if thisMAC in switchbotStop and (switchbotStop[thisMAC][0] >0. and time.time() > switchbotStop[thisMAC][0]): return True
@@ -1147,6 +1385,13 @@ def checkIfSwitchbotStopAND(thisMAC):
 
 #################################
 def doSwitchBot():
+	"""Pulls the next SwitchBot command off the queue and executes it. It validates the MAC against switchBotConfig, honors stop and quick-suppress windows, enforces a retry limit, and then performs the requested action (onoff, pulses, statusrequest, setparameters) in either 'batch' mode (command-line GATT write) or 'interactive' mode (persistent GATT connection), re-queuing the command on failure and reporting errors back via sendURL.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: executes BLE GATT commands, re-queues on failure, sends status/error via sendURL, mutates global switchbot state, logs
+	"""
 	global useHCI, useHCI2
 	global switchBotConfig
 	global switchbotQueue, expCommands
@@ -1540,7 +1785,7 @@ def doSwitchBot():
 							retData["error"] = "connection error to switchbot, >> please setup device on phone << {}".format(result)
 							retData["actualStatus"] = "unkownError"
 
-						if verbose2: U.logger.log(20, "{} statusRequest: setup device on phone".format(thisMAC, result))
+						if verbose2: U.logger.log(20, "{} statusRequest: setup device on phone".format(thisMAC))
 					else :
 						if verbose2 or verbose3: U.logger.log(20, "{} statusRequest:  unexpected result {}".format(thisMAC, result))
 
@@ -1619,6 +1864,13 @@ def doSwitchBot():
 
 ##################################
 def readParams():
+		"""Reads the plugin's beacon parameter/sensor configuration files and rebuilds the in-memory device tables. It loads beacon_parameters and knownBeaconTags, refreshes globals via doRead, builds macList entries for BLEconnect and long-connect BLE sensor devices, and populates switchBotConfig for SwitchBot relay and curtain outputs. If no relevant sensors or SwitchBot outputs are defined it stops the worker threads and exits.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: False if no new/changed input data; otherwise rebuilds global config tables (or exits if nothing configured)
+		"""
 		global debug, ipOfServer,myPiNumber,passwordOfServer, userIdOfServer, authentication,ipOfServer,portOfServer,sensorList,restartBLEifNoConnect
 		global macList, BLEconnectLastUp
 		global oldRaw, lastRead, BLEconnectMode
@@ -1855,6 +2107,14 @@ def readParams():
 
 ################################
 def tryToConnectToBLEconnect(thisMAC, BLEid):
+	"""Attempts to read RSSI/presence data from a BLEconnect (iPhone) device, throttling attempts according to per-device up/down refresh intervals. On a valid reading it marks the device up, clears any BLE-restart flag, and sends new data to Indigo via sendURL when the value changed or the last message is stale; otherwise it marks the device down.
+
+	Inputs:
+	    thisMAC (str): BLE MAC address of the device to poll
+	    BLEid (str): BLE identifier passed to the socket/command-line connect routine
+	Outputs:
+	    None: connects over BLE, updates macList presence state, sends data via sendURL, logs
+	"""
 	global BLEconnectMode
 	global macList
 	global oneisBLElongConnectDevice
@@ -1934,10 +2194,24 @@ def tryToConnectToBLEconnect(thisMAC, BLEid):
 	return 
 
 def tryDeltaTime(tt):
+	"""Stub method that ignores its argument and always returns 0.
+
+	Inputs:
+	    tt (float): unused timestamp argument
+	Outputs:
+	    int: always 0
+	"""
 	return 0
 	
 def hardresetHCI(hci):
 	
+	"""Hard-resets a Bluetooth HCI adapter by shelling out to bring the interface down, restart the bluetooth service, and bring the interface back up, logging each command and its result.
+
+	Inputs:
+	    hci (str): HCI adapter name (e.g. 'hci0') to reset
+	Outputs:
+	    None: runs hciconfig/service shell commands to reset the adapter; logs
+	"""
 	try:
 		cmd = "sudo hciconfig {} down".format(hci)
 		ret = readPopen(cmd) # enable bluetooth
@@ -1955,6 +2229,13 @@ def hardresetHCI(hci):
 
 #################################
 def tryToConnectToSensorDevice(thisMAC):
+	"""Reads sensor data from a long-connect BLE sensor device by dispatching to the appropriate driver based on its devType (Xiaomi Mi temp/hum square, Mi VegTrug, or InkBird pool). It tracks bad-sensor counts, sends readings to Indigo via sendURL when changed or due, and requests a BLE stack restart if the device produces no data for too many tries.
+
+	Inputs:
+	    thisMAC (str): BLE MAC address of the sensor device to read
+	Outputs:
+	    None: reads BLE sensor, updates macList state, sends data via sendURL, may flag BLE restart, logs
+	"""
 	global macList
 	data = {"connected":False, "mac":thisMAC, "dataChanged":False, "dataRead":False, "triesWOdata":macList[thisMAC]["triesWOdata"], "badSensor": False}
 	try:
@@ -2009,6 +2290,13 @@ def tryToConnectToSensorDevice(thisMAC):
 
 #################################
 def startReadCmdThread():
+	"""Initializes SwitchBot worker globals and the command queue, then starts the two background threads: checkSwitchbotForCmd (reads commands) and doSwitchBotThread (executes commands), recording their state and thread objects in the thread-tracking dicts.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: creates the queue and starts the reader/executor threads, sets global thread state, logs
+	"""
 	global switchbotActive, switchBotPresent
 	global nonSwitchBotActive
 	global maxwaitForSwitchBot
@@ -2026,13 +2314,13 @@ def startReadCmdThread():
 	try:
 		threadDictReadSwitchbot = {}
 		threadDictReadSwitchbot["state"]   		= "start"
-		threadDictReadSwitchbot[u"thread"]  = threading.Thread(name=u'checkSwitchbotForCmd', target=checkSwitchbotForCmd)
-		threadDictReadSwitchbot[u"thread"].start()
+		threadDictReadSwitchbot["thread"]  = threading.Thread(name='checkSwitchbotForCmd', target=checkSwitchbotForCmd)
+		threadDictReadSwitchbot["thread"].start()
 
 		threadDictDoSwitchbot = {}
 		threadDictDoSwitchbot["state"]   		= "start"
-		threadDictDoSwitchbot[u"thread"]  = threading.Thread(name=u'doSwitchBotThread', target=doSwitchBotThread)
-		threadDictDoSwitchbot[u"thread"].start()
+		threadDictDoSwitchbot["thread"]  = threading.Thread(name='doSwitchBotThread', target=doSwitchBotThread)
+		threadDictDoSwitchbot["thread"].start()
 
 	except  Exception as e:
 		U.logger.log(30,"", exc_info=True)
@@ -2044,6 +2332,13 @@ def startReadCmdThread():
 ####################################################################################################################################
 ####################################################################################################################################
 def execBLEconnect():
+	"""Main entry point and infinite loop for the BLEconnect helper process: initializes all global state, reads parameters, starts the HCI/Bluetooth stack and the read-command thread, then continuously monitors HCI health (restarting the BLE stack when it goes down or no signal is seen) and polls each tracked MAC to connect to BLEconnect and long-connect sensor devices.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs forever; manages BLE connections, restarts HCI, sends URL updates, and writes logs/files
+	"""
 	global sensorList,restartBLEifNoConnect
 	global macList,oldParams
 	global oldRaw,	lastRead

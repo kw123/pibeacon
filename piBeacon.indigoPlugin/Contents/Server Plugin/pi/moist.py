@@ -317,6 +317,13 @@ class Chirp(object):
 			self.bus_num, self.address)
 
 def print_usage():
+		"""Prints command-line usage instructions for the moisture sensor script, showing how to run continuous measurements and how to change the sensor's I2C address.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: prints usage text to stdout
+		"""
 		print('Usage:\n')
 		print('{} <address> [[set] [new address]]\n'.format(sys.argv[0]))
 		print('Examples:\n')

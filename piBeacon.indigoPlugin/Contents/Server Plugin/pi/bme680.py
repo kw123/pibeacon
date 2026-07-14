@@ -244,12 +244,30 @@ lookupTable2 = [4096000000, 2048000000, 1024000000, 512000000,
 		1000000, 500000, 250000, 125000]
 
 def bytes_to_word(msb, lsb, bits=16, signed=False):
+	"""Combines two bytes (most- and least-significant) into a single word, optionally interpreting it as a signed two's-complement value of the given bit width.
+
+	Inputs:
+	    msb (int): Most-significant byte
+	    lsb (int): Least-significant byte
+	    bits (int): Bit width for signed conversion; defaults to 16
+	    signed (bool): Whether to interpret as signed two's complement; defaults to False
+	Outputs:
+	    int: The combined 16-bit word, signed if requested
+	"""
 	word = (msb << 8) | lsb
 	if signed:
 		word = twos_comp(word, bits)
 	return word
 
 def twos_comp(val, bits=16):
+	"""Computes the two's-complement signed interpretation of an unsigned integer for a given bit width, subtracting 2**bits when the sign bit is set.
+
+	Inputs:
+	    val (int): Raw unsigned integer value to interpret
+	    bits (int): Bit width of the value (defaults to 16)
+	Outputs:
+	    int: Signed integer value
+	"""
 	if val & (1 << (bits - 1)) != 0:
 		val = val - (1 << bits)
 	return val
@@ -259,6 +277,13 @@ def twos_comp(val, bits=16):
 class FieldData:
 	def __init__(self):
 		# Contains new_data, gasm_valid & heat_stab
+		"""Initializes a FieldData container, setting status, heater stability, gas/measurement indices and the temperature, pressure, humidity and gas-resistance fields to None.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Initializes instance attributes
+		"""
 		self.status = None
 		self.heat_stable = False
 		# The index of the heater profile used
@@ -278,6 +303,13 @@ class FieldData:
 
 class CalibrationData:
 	def __init__(self):
+		"""Initializes a CalibrationData container, setting all temperature, pressure, humidity and gas-heater calibration coefficients plus t_fine and heater range/error fields to None.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Initializes instance attributes
+		"""
 		self.par_h1 = None
 		self.par_h2 = None
 		self.par_h3 = None
@@ -312,6 +344,13 @@ class CalibrationData:
 
 	def set_from_array(self, calibration):
 		# Temperature related coefficients
+		"""Parses the raw calibration register array read from the BME680 and decodes it into the temperature, pressure, humidity and gas-heater calibration coefficients stored on the object.
+
+		Inputs:
+		    calibration (list): Raw calibration register bytes indexed by register constants
+		Outputs:
+		    None: Sets par_* calibration coefficient attributes
+		"""
 		self.par_t1 = bytes_to_word(calibration[T1_MSB_REG], calibration[T1_LSB_REG])
 		self.par_t2 = bytes_to_word(calibration[T2_MSB_REG], calibration[T2_LSB_REG], bits=16, signed=True)
 		self.par_t3 = twos_comp(calibration[T3_REG], bits=8)
@@ -343,6 +382,15 @@ class CalibrationData:
 		self.par_gh3 = twos_comp(calibration[GH3_REG], bits=8)
 
 	def set_other(self, heat_range, heat_value, sw_error):
+		"""Stores the heater resistance range, heater resistance value and software error coefficients (scaled with their masks) into the calibration data attributes.
+
+		Inputs:
+		    heat_range (int): Raw heater resistance range register value
+		    heat_value (int): Raw heater resistance value
+		    sw_error (int): Raw software error register value
+		Outputs:
+		    None: Sets res_heat_range, res_heat_val and range_sw_err attributes
+		"""
 		self.res_heat_range = (heat_range & RHRANGE_MSK) / 16
 		self.res_heat_val = heat_value
 		self.range_sw_err = (sw_error * RSERROR_MSK) / 16
@@ -353,6 +401,13 @@ class CalibrationData:
 class TPHSettings:
 	def __init__(self):
 		# Humidity oversampling
+		"""Initializes a TPHSettings container, setting humidity, temperature and pressure oversampling and the filter coefficient attributes to None.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Initializes instance attributes
+		"""
 		self.os_hum = None
 		# Temperature oversampling
 		self.os_temp = None
@@ -367,6 +422,13 @@ class TPHSettings:
 class GasSettings:
 	def __init__(self):
 		# Variable to store nb conversion
+		"""Initializes a GasSettings container, setting the number of conversions, heater control, run-gas enable, heater temperature and heater duration attributes to None.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Initializes instance attributes
+		"""
 		self.nb_conv = None
 		# Variable to store heater control
 		self.heatr_ctrl = None
@@ -382,6 +444,13 @@ class GasSettings:
 class BME680Data:
 	def __init__(self):
 		# Chip Id
+		"""Initializes a BME680Data container, setting chip/device identifiers and interface fields and constructing the nested FieldData, CalibrationData, TPHSettings and GasSettings objects.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Initializes instance attributes and nested settings objects
+		"""
 		self.chip_id = None
 		# Device Id
 		self.dev_id = None
@@ -418,6 +487,14 @@ class BME680(BME680Data):
 
 	"""
 	def __init__(self, i2c_addr=I2C_ADDR_PRIMARY, i2c_device=None):
+		"""Initializes the BME680 sensor driver: opens the I2C bus, verifies the chip ID, performs a soft reset, reads calibration data, and configures default oversampling, filter and gas measurement settings before taking an initial reading.
+
+		Inputs:
+		    i2c_addr (int): I2C address of the sensor (defaults to primary address)
+		    i2c_device (smbus.SMBus or None): Existing SMBus instance, or None to open bus 1
+		Outputs:
+		    None: Configures hardware and populates initial sensor data; raises ValueError on bad chip ID
+		"""
 		BME680Data.__init__(self)
 
 		self.i2c_addr = i2c_addr
@@ -691,6 +768,13 @@ class BME680(BME680Data):
 			return self._i2c.read_i2c_block_data(self.i2c_addr, register, length)
 		
 	def _calc_temperature(self, temperature_adc):
+		"""Converts a raw temperature ADC reading into a compensated temperature using the calibration coefficients, also updating the calibration t_fine value used by later pressure/humidity calculations.
+
+		Inputs:
+		    temperature_adc (int): Raw temperature ADC value from the sensor
+		Outputs:
+		    int: Compensated temperature in hundredths of degrees Celsius
+		"""
 		var1 = (temperature_adc >> 3) - (self.calibration_data.par_t1 << 1)
 		var2 = (var1 * self.calibration_data.par_t2) >> 11
 		var3 = ((var1 >> 1) * (var1 >> 1)) >> 12
@@ -703,6 +787,13 @@ class BME680(BME680Data):
 		return calc_temp
 
 	def _calc_pressure(self, pressure_adc):
+		"""Converts a raw pressure ADC reading into a compensated pressure value using the calibration coefficients and the previously computed t_fine.
+
+		Inputs:
+		    pressure_adc (int): Raw pressure ADC value from the sensor
+		Outputs:
+		    int: Compensated pressure in Pascals
+		"""
 		var1 = ((self.calibration_data.t_fine) >> 1) - 64000
 		var2 = ((((var1 >> 2) * (var1 >> 2)) >> 11) *
 			self.calibration_data.par_p6) >> 2
@@ -736,6 +827,13 @@ class BME680(BME680Data):
 		return calc_pressure
 
 	def _calc_humidity(self, humidity_adc):
+		"""Converts a raw humidity ADC reading into a compensated relative humidity using the calibration coefficients and t_fine, clamped to the range 0..100000.
+
+		Inputs:
+		    humidity_adc (int): Raw humidity ADC value from the sensor
+		Outputs:
+		    int: Compensated relative humidity in thousandths of percent, clamped to 0..100000
+		"""
 		temp_scaled = ((self.calibration_data.t_fine * 5) + 128) >> 8
 		var1 = (humidity_adc - ((self.calibration_data.par_h1 * 16))) \
 				- (((temp_scaled * self.calibration_data.par_h3) // (100)) >> 1)
@@ -753,6 +851,14 @@ class BME680(BME680Data):
 		return min(max(calc_hum,0),100000)
 
 	def _calc_gas_resistance(self, gas_res_adc, gas_range):
+		"""Converts a raw gas-resistance ADC reading into an actual gas resistance value using the BME680 calibration data and the per-range lookup tables.
+
+		Inputs:
+		    gas_res_adc (int): raw gas-resistance ADC value from the sensor
+		    gas_range (int): gas range index used to select lookup-table entries
+		Outputs:
+		    float: calculated gas resistance in ohms
+		"""
 		var1 = int(   (1340 + (5 * self.calibration_data.range_sw_err)) * (lookupTable1[gas_range])   ) >> 16
 		var2 = (((int(gas_res_adc) << 15) - (16777216)) + var1)
 		var3 = ((lookupTable2[gas_range] * var1) >> 9)
@@ -761,6 +867,13 @@ class BME680(BME680Data):
 		return calc_gas_res
 
 	def _calc_heater_resistance(self, temperature):
+		"""Computes the heater resistance register value for a desired target gas-heater temperature, clamping the temperature to 200-400 degrees and applying the BME680 heater calibration coefficients.
+
+		Inputs:
+		    temperature (int): desired heater target temperature in degrees C
+		Outputs:
+		    float: computed heater resistance register value
+		"""
 		temperature = min(max(temperature,200),400)
 
 		var1 = ((self.ambient_temperature * self.calibration_data.par_gh3) / 1000) * 256
@@ -774,6 +887,13 @@ class BME680(BME680Data):
 		return heatr_res
 
 	def _calc_heater_duration(self, duration):
+		"""Encodes a gas-heater duration in milliseconds into the BME680's single-byte duration register format using a value-plus-multiplier-factor scheme, capping at 0xff.
+
+		Inputs:
+		    duration (int): desired heater duration in milliseconds
+		Outputs:
+		    int: encoded duration byte for the heater register
+		"""
 		if duration < 0xfc0:
 			factor = 0
 
@@ -794,6 +914,13 @@ class BME680(BME680Data):
 
 ###############################
 def readParams():
+	"""Reads the plugin's parameter/sensor file, detects changes, and updates the BME680 module's global per-device settings (calibration mode, refresh interval, i2c address, deltas, baselines); starts or restarts sensors as needed and prunes devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals, starts/restarts sensors, writes baselines, and logs
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global rawOld
 	global deltaX, BME680, minSendDelta
@@ -940,6 +1067,13 @@ def readParams():
 		
 #################################
 def initdevId(devId):
+	"""Initializes the per-device global dictionaries (calibration setting, recalibrate threshold, calibration state, fixed value, gas burn-in list, gas baseline) with default entries for a device ID if not already present.
+
+	Inputs:
+	    devId (str): device identifier key for the per-device global dicts
+	Outputs:
+	    None: populates default entries in module-level global dictionaries
+	"""
 	global calibrateSetting, recalibrateIfGT, StateOfSensorCalibration, setCalibrationToFixedValue
 	global gasBaseLine, gasBurnIn
 	if devId not in calibrateSetting: 				calibrateSetting[devId] 			= ""
@@ -952,12 +1086,27 @@ def initdevId(devId):
 ################################
 def saveBaseLine(baseline,devId):
 	
+	"""Writes the gas baseline calibration value for a device to a per-device JSON calibration file in the plugin home directory.
+
+	Inputs:
+	    baseline (float): gas baseline value to persist
+	    devId (str): device identifier used in the calibration filename
+	Outputs:
+	    None: writes the baseline to a JSON calibration file
+	"""
 	f = open(G.homeDir+"bme680-"+devId+".Calibration","w")
 	f.write(json.dumps({"baseline":baseline}))
 	f.close()
 
 #################################
 def getBaseLine(devId):
+	"""Reads and returns the saved gas baseline calibration value for a device from its JSON calibration file, returning 0 if the file is missing or unreadable.
+
+	Inputs:
+	    devId (str): device identifier used in the calibration filename
+	Outputs:
+	    float or int: stored baseline value, or 0 on failure
+	"""
 	try:
 		f = open(G.homeDir+"bme680-"+devId+"Calibration","r")
 		baseline = json.loads(f.read())["baseline"]
@@ -969,6 +1118,13 @@ def getBaseLine(devId):
 
 #################################
 def startSensor(devId):
+	"""Instantiates and configures a BME680 sensor for the given device, switching the I2C mux if needed, setting oversampling, filter, and gas-heater profile, logging the initial reading; records the start time and stores the sensor in the global dict.
+
+	Inputs:
+	    devId (str): device identifier for the sensor to start
+	Outputs:
+	    None: creates and configures the sensor object, sets globals, and logs
+	"""
 	global sensors,sensor
 	global startTime
 	global gasBaseLine, gasBurnIn
@@ -1022,6 +1178,13 @@ def startSensor(devId):
 
 #################################
 def getValues(devId):
+	"""Reads temperature, pressure, humidity, and gas resistance from a device's BME680, manages the gas burn-in calibration and baseline logic, computes an air-quality gas score, applies configured offsets, and returns a measurement dict once warmed up.
+
+	Inputs:
+	    devId (str): device identifier for the sensor to read
+	Outputs:
+	    dict or str: measurement dict (temp/press/hum/gas/baseline/status/air quality), or 'badSensor'/'' while calibrating or on error
+	"""
 	global sensor, sensors,	 BMEsensor, badSensor
 	global startTime, gasBurnIn, gasBaseLine, lastMeasurement, sendToIndigoSecs, calibrationReadFromFile
 	global calibrateSetting, recalibrateIfGT,  setCalibrationToFixedValue, StateOfSensorCalibration

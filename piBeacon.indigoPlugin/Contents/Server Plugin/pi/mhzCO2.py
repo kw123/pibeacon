@@ -16,6 +16,10 @@ import sys, os, time, json, datetime,subprocess,copy
 import math
 import copy
 import smbus
+try:	import serial
+except:	pass
+try:	import RPi.GPIO as GPIO
+except:	pass
 
 
 sys.path.append(os.getcwd())
@@ -42,6 +46,14 @@ class mhz16_class_i2c:
 
 
 	def __init__(self, address = 0x4d, sensorType=1):
+		"""Initializes an MH-Z CO2 sensor driver, opening the SMBus I2C connection at the given address and selecting the measure/calibrate command byte sequences and data offsets based on the sensor type.
+
+		Inputs:
+		    address (int): I2C bus address of the sensor (default 0x4d)
+		    sensorType (int): Sensor variant selecting which command set and data offset to use
+		Outputs:
+		    None: Sets up I2C handle and command/data attributes
+		"""
 		self.i2c_addr = address
 		self.i2c	  = smbus.SMBus(1)
 		if sensorType ==1:
@@ -57,6 +69,13 @@ class mhz16_class_i2c:
 			self.commandByteReturn = self.cmd_measure[2]
 
 	def start(self):
+		"""Initializes the sensor's UART-over-I2C bridge registers by writing IOCONTROL, FIFO control, line control, and baud-rate divisor registers to configure communication.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Writes configuration values to the device registers over I2C
+		"""
 		try:
 			self.write_register(self.IOCONTROL, 0x08)
 		except IOError:
@@ -69,6 +88,13 @@ class mhz16_class_i2c:
 		self.write_register(self.LCR, 0x03)
  
 	def calibrate(self):
+		"""Performs a zero-point calibration of the CO2 sensor by resetting the FIFO and sending the calibrate-zero command sequence; on error logs the exception and sets co2 to -1.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Sends the calibration command; sets self.co2 to -1 on failure
+		"""
 		try:
 			self.write_register(self.FCR, 0x07)
 			self.send(self.cmd_calibrateZero)
@@ -79,6 +105,13 @@ class mhz16_class_i2c:
 		self.co2 = -1
  
 	def measure(self):
+		"""Triggers a CO2 measurement by resetting the FIFO, sending the measure command, and parsing the received response; on error logs the exception and sets co2 to -1.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates self.co2 via parse(); sets it to -1 on failure
+		"""
 		try:
 			self.write_register(self.FCR, 0x07)
 			self.send(self.cmd_measure)
@@ -89,6 +122,13 @@ class mhz16_class_i2c:
 		self.co2 = -1
  
 	def parse(self, response):
+		"""Parses a 9-byte sensor response frame, validating the start byte, command byte echo, and checksum, then extracts the CO2 value from the two data bytes into self.co2 (or -1 if invalid).
+
+		Inputs:
+		    response (list): List of byte values returned by the sensor
+		Outputs:
+		    None: Sets self.co2 to the parsed CO2 ppm value or -1 if the frame is invalid
+		"""
 		checksum = 0
 		#print response
  
@@ -111,19 +151,48 @@ class mhz16_class_i2c:
 		#print self.co2
  
 	def read_register(self, reg_addr):
+		"""Reads a single byte from the given register address over I2C after a short delay.
+
+		Inputs:
+		    reg_addr (int): Register address to read from
+		Outputs:
+		    int: The byte value read from the register
+		"""
 		time.sleep(0.001)
 		return self.i2c.read_byte_data(self.i2c_addr, reg_addr)
 
 	def write_register(self, reg_addr, val):
+		"""Writes a single byte value to the given register address over I2C after a short delay.
+
+		Inputs:
+		    reg_addr (int): Register address to write to
+		    val (int): Byte value to write
+		Outputs:
+		    None: Writes the value to the register over I2C
+		"""
 		time.sleep(0.001)
 		self.i2c.write_byte_data(self.i2c_addr, reg_addr, val)
 
 	def send(self, command):
+		"""Sends a command byte sequence to the sensor by recording the command byte and, if the transmit FIFO has enough room, writing the command bytes as an I2C block to the THR register.
+
+		Inputs:
+		    command (list): List of command bytes to transmit to the sensor
+		Outputs:
+		    None: Writes the command block to the device over I2C if TX buffer space permits
+		"""
 		self.commandByte= command[2]
 		if self.read_register(self.TXLVL) >= len(command):	# can we send enough bytes , should be 9
 			self.i2c.write_i2c_block_data(self.i2c_addr, self.THR, command)
 
 	def receive(self):
+		"""Reads up to 9 response bytes from the I2C UART bridge by polling the RX FIFO level register and reading available bytes from the RHR register, retrying briefly on errors and timing out after 0.2 seconds.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: List of received byte values (empty list on failure or timeout)
+		"""
 		try:
 			n	  = 9
 			buf	  = []
@@ -136,7 +205,7 @@ class mhz16_class_i2c:
 					time.sleep(0.004)
 					errcountMAX -= 1
 					if errcountMAX == 0: 
-						U.logger.log(10, u"receive read_register too may tries stopping read,  has error='%s'" % ( e))
+						U.logger.log(10, "receive read_register too may tries stopping read,  has error='%s'" % ( e))
 						return buf
 					continue
 					
@@ -161,6 +230,14 @@ class mhz_class_serial:
 	def __init__(self,serialPort="/dev/serial0",sensorType = 2):
 	
 	
+		"""Initializes the serial-based MH-Z CO2 sensor driver, setting up measure/calibration command byte sequences and amplification-range command tables for the given sensor type, then opens a 9600-baud pyserial connection on the specified serial port.
+
+		Inputs:
+		    serialPort (str): Serial device path to open (defaults to /dev/serial0)
+		    sensorType (int): Sensor variant selector choosing the command byte set (defaults to 2)
+		Outputs:
+		    None: Configures instance attributes and opens the serial port
+		"""
 		if sensorType ==1:
 			self.cmd_measure		= [0xFF,0x01,0x9C,0x00,0x00,0x00,0x00,0x00,0x63]
 			self.cmd_calibrateZero	= [0xFF,0x01,0x87,0x00,0x00,0x00,0x00,0x00,0x78]
@@ -190,7 +267,25 @@ class mhz_class_serial:
 		self.ser.open()
 
 #################################		 
+	def start(self):
+		"""Ensures the serial connection is open; reopens it if it was closed. Serial counterpart to mhz16_class_i2c.start() so shared restart paths work for both sensor types.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Opens the serial port if not already open
+		"""
+		if not self.ser.is_open: self.ser.open()
+
+#################################		 
 	def measure(self):
+		"""Triggers a CO2 measurement by sending the measure command over serial, then parsing the received response into the co2 attribute; sets co2 to -1 on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates self.co2 with the measured value or -1
+		"""
 		try:
 			self.send(self.cmd_measure)
 			self.parse(self.receive())
@@ -200,7 +295,14 @@ class mhz_class_serial:
 		self.co2 = -1
 
 #################################		 
-	def setRange(self,range):
+	def setRange(self,range=3000):
+		"""Sets the sensor's measurement amplification/range by looking up the matching command sequence in the amplification table for the given range value and sending it over serial.
+
+		Inputs:
+		    range (int or str): Desired CO2 range key (e.g. 1000/2000/3000/5000)
+		Outputs:
+		    None: Sends a range command over serial; no-op if range not recognized
+		"""
 		r = str(range)
 		try:
 			if r in self.amplification:
@@ -211,6 +313,13 @@ class mhz_class_serial:
 
 #################################		 
 	def calibrate(self):
+		"""Performs zero-point calibration by sending the calibrate-zero command over serial and parsing the response into the co2 attribute; sets co2 to -1 on error.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Sends calibration command and updates self.co2
+		"""
 		try:
 			self.send(self.cmd_calibrateZero)
 			self.parse(self.receive())
@@ -222,10 +331,24 @@ class mhz_class_serial:
 
 #################################		 
 	def send(self,cmd):
+		"""Writes a raw command byte sequence to the sensor over the serial port.
+
+		Inputs:
+		    cmd (list): Byte values forming the command to transmit
+		Outputs:
+		    None: Writes the command bytes to the serial port
+		"""
 		self.ser.write(cmd)
 
 #################################		 
 	def receive(self):			  
+		"""Reads 9 bytes from the serial port and converts them into a list of integer byte values.
+
+		Inputs:
+		    None.
+		Outputs:
+		    list: List of up to 9 received byte values
+		"""
 		s = self.ser.read(9)
 		z=bytearray(s)
 		retV =[]
@@ -236,6 +359,13 @@ class mhz_class_serial:
 
 #################################		 
 	def parse(self, response):
+		"""Validates a 9-byte sensor response by checking the start byte, command echo byte and checksum, and on success extracts the CO2 concentration into self.co2 (otherwise leaves it at -1).
+
+		Inputs:
+		    response (list): 9-element list of response byte values from the sensor
+		Outputs:
+		    None: Sets self.co2 and self.raw from the parsed response
+		"""
 		checksum = 0
 		#print response
 
@@ -265,6 +395,13 @@ class mhz_class_serial:
 
 #################################		 
 def readParams():
+	"""Reads the plugin's parameter/config file, and when it has changed, updates global sensor settings (refresh interval, I2C address, interface type, deltaX, CO2 normal/offset, sensitivity, calibration thresholds, send delta) for each configured device, (re)starting sensors whose settings changed and removing sensors no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates module-level globals and starts/removes sensor instances
+	"""
 	global sensorList, sensors, logDir, sensor, sensorRefreshSecs, displayEnable
 	global rawOld,i2cAddress
 	global deltaX, mhz16, minSendDelta
@@ -402,6 +539,14 @@ def readParams():
 
 #################################
 def startSensor(devId,i2cAddress):
+	"""Starts a CO2 sensor for the given device by selecting the I2C mux channel and creating either an I2C sensor instance or, for serial interfaces, setting up GPIO calibration, opening a serial MH-Z sensor, setting its range, calibrating it and creating the serial sensor object.
+
+	Inputs:
+	    devId (str): Indigo device identifier to start the sensor for
+	    i2cAddress (str): I2C address for the sensor (default fallback used if empty)
+	Outputs:
+	    None: Creates the sensor instance in mhz16sensor and resets the I2C mux
+	"""
 	global sensors, sensor
 	global startTime
 	global mhz16sensor , interfaceType
@@ -424,10 +569,9 @@ def startSensor(devId,i2cAddress):
 			GPIO.setup(calibrationPin, GPIO.OUT)
 			restartSensor()
 		
-			mhz19sensor[devId]	= mhz_class(serialPort = sP)
-			mhz19sensor[devId].setRange(amplification)
+			mhz16sensor[devId]	= mhz_class_serial(serialPort = sP)
+			mhz16sensor[devId].setRange(range=3000)
 			calibrateSensor(devId)
-			mhz16sensor[devId]	=  mhz16_class_serial(address=i2cAdd, sensorType=2)
 			time.sleep(1)
 			mhz16sensor[devId].start()
 						
@@ -442,7 +586,14 @@ def startSensor(devId,i2cAddress):
 
 #################################
 def restartSensor():
-	global mhz19sensor, calibrationPin
+	"""Power-cycles or resets the sensor by toggling the calibration GPIO pin low for 7 seconds and then back high.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Drives the calibration GPIO pin to restart the sensor
+	"""
+	global mhz16sensor, calibrationPin
 	try: 
 		GPIO.output(calibrationPin, False)
 		time.sleep(7)
@@ -457,6 +608,13 @@ def restartSensor():
 
 #################################
 def calibrateSensor(devId):
+	"""Calibrates the CO2 sensor for a device by selecting the I2C mux channel, zeroing the CO2 offset, calling the sensor calibrate routine, taking three measurements, and computing a new CO2 offset as the configured normal value minus the measured CO2.
+
+	Inputs:
+	    devId (str): Indigo device identifier to calibrate
+	Outputs:
+	    None: Updates the global CO2offset for the device
+	"""
 	global sensors, sensor
 	global mhz16sensor
 	global CO2normal, CO2offset,sensitivity
@@ -485,6 +643,14 @@ def calibrateSensor(devId):
 
 #################################
 def getValues(devId,nMeasurements=5):
+	"""Reads CO2 from an MH-Z16 sensor on the given device, averaging multiple measurements while skipping invalid (-1) readings, applies a per-device offset, and returns the computed values. On failure or all-bad reads it increments a bad-sensor counter, restarts the sensor, and may return 'badSensor'.
+
+	Inputs:
+	    devId (str): device id keyed into the mhz16sensor/sensors maps
+	    nMeasurements (int): number of readings to average (minimum 2)
+	Outputs:
+	    dict or str: dict with CO2, CO2offset, CO2calibration and raw values, or the string 'badSensor' on failure
+	"""
 	global sensor, sensors, mhz16sensor, badSensor
 	global startTime, CO2offset, CO2normal, sensitivity
 
@@ -510,7 +676,7 @@ def getValues(devId,nMeasurements=5):
 			if co2 ==-1: 
 				ii -= addIfBad	# onetime only 
 				addIfBad = 0
-				U.logger.log(30, u"bad data read ")
+				U.logger.log(30, "bad data read ")
 
 				continue
 			raw += co2
@@ -715,7 +881,7 @@ while True:
 				lastRead = time.time()
 
 		if U.checkNewCalibration(G.program) or needCalibration :
-			U.logger.log(30, u"set CO2 calibration")
+			U.logger.log(30, "set CO2 calibration")
 			if sensor in sensors:
 				for devId in sensors[sensor]:
 					calibrateSensor(devId)

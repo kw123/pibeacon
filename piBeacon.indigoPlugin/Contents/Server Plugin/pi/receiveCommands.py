@@ -13,7 +13,7 @@ import smbus
 import threading
 try: import Queue
 except: import queue as Queue
-
+import base64
 
 try:
 	#1/0 # use GPIO
@@ -49,6 +49,13 @@ externalGPIO = False
 mapCmds	= {"pu":"pulseUp","pd":"pulseDown","cup":"continuousUpDown","aw":"analogWrite"}
 ####-------------------------------------------------------------------------####
 def readPopen(cmd):
+	"""Runs a shell command via subprocess.Popen, captures stdout and stderr, and returns them as decoded UTF-8 strings.
+
+	Inputs:
+	    cmd (str): Shell command line to execute
+	Outputs:
+	    tuple: (stdout, stderr) decoded UTF-8 strings, or None on exception
+	"""
 	global DEBUG
 	try:
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
@@ -62,6 +69,13 @@ def readPopen(cmd):
 
 ### ----------------------------------------- ###
 def OUTPUTi2cRelay(command):
+	"""Drives an I2C relay board over the SMBus, interpreting a command dict to set a relay pin up/down or pulse it (with optional inversion, delayed start, and repeated pulses), and reports the resulting state back via sendURL.
+
+	Inputs:
+	    command (dict): Relay command with cmd, pin, i2cAddress, pulse/timing and devId fields
+	Outputs:
+	    None: Writes relay bytes to the I2C bus, sends state updates via URL, and logs
+	"""
 	global myPID
 	global threadsActive
 	global DEBUG
@@ -168,6 +182,13 @@ def OUTPUTi2cRelay(command):
 
 ### ----------------------------------------- ###
 def setGPIO(command):
+	"""Drives a GPIO output pin per a command dict, handling up/down, analogWrite (PWM via pigpio, RPi.GPIO, or gpiozero), and pulseUp/pulseDown actions with optional inversion and delayed start, while reporting actual GPIO values back via sendURL.
+
+	Inputs:
+	    command (dict): GPIO command with cmd, pin, PWM, pulse/value and devId fields
+	Outputs:
+	    None: Configures and drives GPIO/PWM hardware, sends state updates, and logs
+	"""
 	global PWM, myPID, typeForPWM
 	global threadsActive
 	global DEBUG
@@ -418,6 +439,13 @@ def setGPIO(command):
 
 ### ----------------------------------------- ###
 def sleepForxSecs(sleepTime):
+	"""Sleeps in small increments for up to the requested number of seconds, aborting early and returning True if the current thread is no longer active or its state is no longer 'running'; returns False if the full sleep completes.
+
+	Inputs:
+	    sleepTime (float): Total seconds to wait before completing normally
+	Outputs:
+	    bool: True if interrupted/aborted, False if the full sleep elapsed
+	"""
 	global DEBUG
 	global threadsActive
 	try:
@@ -440,6 +468,13 @@ def sleepForxSecs(sleepTime):
 
 ### ----------------------------------------- ###
 def execCMDS(nextItem):
+	"""Worker run by a thread that interprets a command dict and dispatches it to the appropriate action: running shell commands, writing files, signaling the beacon loop (beep, getBeaconParameters, updateTimeAndZone, BLEAnalysis, trackMac), or handing off to stepper-motor, display, and neopixel helper programs.
+
+	Inputs:
+	    nextItem (dict): Command descriptor with command, device, values and timing fields
+	Outputs:
+	    None: Executes commands, writes signal/input files, spawns helper processes, and logs
+	"""
 	global threadsActive
 	global execcommands, PWM
 	global py3Cmd, readOutput, readInput
@@ -722,7 +757,7 @@ def execCMDS(nextItem):
 						try:
 							i2cAddress = U.getI2cAddress(nextItem, default =0)
 							if cmd == "disable" :
-								if sthreadName in execcommandsList:
+								if threadName in execcommandsList:
 									del execcommandsList[threadName]
 
 							cmdJ= json.dumps({"cmd":cmd,"i2cAddress":i2cAddress,"startAtDateTime":startAtDateTime,"values":values, "devId":devId })
@@ -871,6 +906,13 @@ def execCMDS(nextItem):
 				 
 ### ----------------------------------------- ###
 def stopThreadsIfEnded(all=False):
+	"""Scans the active-threads registry and stops command threads, either all of them when all=True or only those whose state is no longer 'running', by calling stopExecCmd on each.
+
+	Inputs:
+	    all (bool): If True stop every thread, otherwise only non-running ones
+	Outputs:
+	    None: Stops matching threads via stopExecCmd and logs on error
+	"""
 	global threadsActive
 	global DEBUG
 	try:
@@ -889,6 +931,13 @@ def stopThreadsIfEnded(all=False):
 				 
 ### ----------------------------------------- ###
 def execSimple(nextItem):
+	"""Quickly handles simple 'general' commands inline (without spawning a thread): executes reboot/halt, setTime, refreshNTP, and stopNTP command lines, returning True if it handled one and False otherwise.
+
+	Inputs:
+	    nextItem (dict): Command descriptor expected to have command and cmdLine fields
+	Outputs:
+	    bool: True if a simple command was executed, False if not applicable
+	"""
 	global DEBUG
 	global inp
 	if "command" not in nextItem:		 return False
@@ -943,6 +992,13 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 	### ----------------------------------------- ###
 	def handle(self):
+		"""TCP socket request handler that reads the full client message, parses it as a JSON list of commands, and processes each either inline via execSimple or by spawning a command thread via setupexecThreads, then refreshes params and reaps finished threads.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Reads the socket, dispatches commands, and refreshes params/threads
+		"""
 		global DEBUG
 		global threadsActive
 		# self.request is the TCP socket connected to the client
@@ -974,6 +1030,14 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 
 ### ----------------------------------------- ###
 def setupexecThreads(nextItem, source):
+	"""Builds a thread name from the command's pin/device/i2cAddress/command, stops any existing thread with that name, then starts a new daemon thread running execCMDS for the command and records it in the active-threads registry with logging of changes.
+
+	Inputs:
+	    nextItem (dict): Command descriptor used to derive the thread name and run
+	    source (str): Origin label of the command for logging (e.g. 'socket')
+	Outputs:
+	    bool: True if a thread was started, False on missing command or error
+	"""
 	global inp
 	global threadsActive
 	global lastOut
@@ -1034,6 +1098,13 @@ def setupexecThreads(nextItem, source):
 
 ### ----------------------------------------- ###
 def stopExecCmd(threadName):
+	"""Signals a named command thread to stop by setting its state to 'stop', waits briefly for it to notice, and removes it from the active-threads registry.
+
+	Inputs:
+	    threadName (str): Key of the thread in the active-threads registry to stop
+	Outputs:
+	    None: Marks the thread to stop and deletes its registry entry
+	"""
 	global inp
 	global threadsActive
 	global DEBUG
@@ -1053,6 +1124,13 @@ def stopExecCmd(threadName):
 
 ### ----------------------------------------- ###
 def getcurentCMDS():
+	"""Loads the persisted execcommandsList.current JSON file and, unless the action is 'delete', restarts an exec thread for each stored command entry, then rewrites the file with the retained commands; deletes the file on a delete action or if the contents are invalid.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: restarts exec threads, rewrites/deletes the execcommandsList.current file, and logs errors
+	"""
 	global	execcommandsList, output, execcommandsListAction
 	global DEBUG
 	try:
@@ -1097,6 +1175,13 @@ def getcurentCMDS():
 ### -- read from file in temp dir and then execute command--- ###
 ### ----------------------------------------- ###
 def setupReadTempDirThread():
+	"""Creates and starts a daemon background thread named 'readTempDir' that runs readTempDirThread, registering it in the global threadsActive dict.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the thread started successfully, False on exception
+	"""
 	global DEBUG
 	global threadsActive
 	threadName = "readTempDir"
@@ -1112,6 +1197,13 @@ def setupReadTempDirThread():
 
 ### ----------------------------------------- ###
 def readTempDirThread():
+	"""Long-running thread loop that polls the temp/receiveCommands.input file every 50ms, parses each JSON command line, deletes the file, and dispatches each command either inline via execSimple or by spawning an exec thread.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs until thread state changes; executes commands, deletes input file, and logs
+	"""
 	global DEBUG
 	global threadsActive
 	threadName = "readTempDir"
@@ -1168,6 +1260,13 @@ def readTempDirThread():
 				 
 ### ----------------------------------------- ###
 def readParams():
+	"""Reads the plugin input via U.doRead, applies global params, and populates module globals (output, readOutput, PWM, typeForPWM, execcommandsListAction, readInput, usePython3) from the parsed input dict.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sets module-level globals from input and logs errors
+	"""
 	global	output, useLocalTime, myPiNumber, inp, readOutput, readInput, execcommandsListAction, PWM, typeForPWM
 	global usePython3, tempcmdCount
 	global DEBUG

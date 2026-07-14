@@ -22,6 +22,13 @@ G.program 		= "copyToTemp"
 
 ####-------------------------------------------------------------------------####
 def readPopen(cmd):
+		"""Runs a shell command via subprocess.Popen and returns its decoded stdout and stderr as a tuple of strings; logs an exception on failure.
+
+		Inputs:
+		    cmd (str): Shell command line to execute
+		Outputs:
+		    tuple: (stdout, stderr) decoded as UTF-8 strings, or None on exception
+		"""
 		try:
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			return ret.decode('utf_8'), err.decode('utf_8')
@@ -30,6 +37,13 @@ def readPopen(cmd):
 
 
 def setupTempDir():
+	"""Creates the plugin's temp directory if missing, mounts it as a 2MB tmpfs RAM filesystem if not already mounted, and clears any existing files in it.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Creates/mounts the temp directory and removes its contents via shell commands; logs on error
+	"""
 	try:
 		if	not os.path.isdir(G.homeDir+"temp"):
 			subprocess.call("mkdir  "+G.homeDir+"temp", shell=True)
@@ -73,7 +87,7 @@ if __name__ == "__main__":
 				
 		###print G.program, doCopy 
 		if doCopy >0:
-				U.logger.log(10,u"copying to files to temp dir files={}".format(G.parameterFileList))
+				U.logger.log(10,"copying to files to temp dir files={}".format(G.parameterFileList))
 				for fileName in G.parameterFileList:
 					if os.path.isfile(G.homeDir+fileName):
 							cmd = "sudo cp "+G.homeDir+fileName +" " +G.homeDir+"temp/"+fileName

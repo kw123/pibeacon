@@ -39,7 +39,15 @@ G.program = "INPUTRotarySwitchIncremental"
 
 #################################
 def readParams():
+		"""Reads the latest plugin parameter file, and if sensor definitions changed, updates each device's INPUTS configuration (pins A/B, inverse, transition, ignore-pin, reset-time, increment options), initializes count tracking, sets the GPIO backend to pigpio with threads, and starts GPIO or restarts the program when pins change.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates global sensors/INPUTS/counts config, starts GPIO, may restart the program
+		"""
 		global sensors
+		global sensor
 		global oldRaw, lastRead, INPUTS
 		global counts, countSignals
 		global useWhichGPIO, useThreads
@@ -123,6 +131,13 @@ def readParams():
 
 #################################
 def saveCounts():
+	"""Persists the current per-device counts dictionary to a JSON file in the plugin home directory named after the program with a .counts extension.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Writes the counts dict as JSON to disk
+	"""
 	global counts
 	f= open(G.homeDir+G.program+".counts", "w")
 	f.write(json.dumps(counts))	
@@ -130,6 +145,13 @@ def saveCounts():
 
 #################################
 def readCounts():
+	"""Loads the persisted per-device counts from the program's .counts JSON file into the global counts dict, defaulting to an empty dict if the file is missing or unparseable.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Populates the global counts dict from the .counts file
+	"""
 	global counts
 	if os.path.isfile(G.homeDir+G.program+".counts"):
 		f= open(G.homeDir+G.program+".counts", "r")
@@ -143,6 +165,15 @@ def readCounts():
 
 #################################
 def pigEVENTthread(pin, level, tick):
+	"""pigpio edge-event callback for an incremental rotary encoder: looks up the device by pin, reads the current states of both A and B pins based on which pin fired and its level, then enqueues a (pin, stateA, stateB, timestamp) tuple to the worker thread queue.
+
+	Inputs:
+	    pin (int): GPIO pin number that triggered the event
+	    level (int): Edge level (1=up/0=down/other=watchdog) of the triggered pin
+	    tick (int): pigpio microsecond timestamp of the event
+	Outputs:
+	    None: Records lastTick and puts an event tuple on the thread queue
+	"""
 	global lastTick
 	global INPUTS, pinsToDevid
 	global threadDict
@@ -169,6 +200,13 @@ def pigEVENTthread(pin, level, tick):
 
 #################################
 def workQueue():
+	"""Worker thread loop that drains the encoder event queue, dispatching each queued (pin, stateA, stateB, tt) item to workEvent until the stop flag is set; sleeps briefly when the queue is empty and logs any exception.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Processes queued encoder events via workEvent until stopped
+	"""
 	global lastTick
 	global INPUTS, pinsToDevid
 	global threadDict
@@ -187,6 +225,13 @@ def workQueue():
 
 #################################
 def startGPIO(devId):
+	"""Configures the GPIO pins (pinA/pinB) for a rotary encoder device via pigpio, starting the pigpiod daemon and a worker queue thread if needed, and registers EITHER_EDGE callbacks so pin transitions are dispatched to the event handler.
+
+	Inputs:
+	    devId (str): Device identifier whose pinA/pinB are looked up in INPUTS and bound to pigpio edge callbacks
+	Outputs:
+	    None: Registers pigpio callbacks, starts daemon/thread, and updates pinsToDevid and threadDict; logs on error
+	"""
 	global INPUTS, pinsToDevid
 	global threadDict, useThreads
 	global useWhichGPIO, PIGPIO, pigpio, lastTick
@@ -244,6 +289,16 @@ def startGPIO(devId):
 	   
 #################################
 def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
+	"""Handles a rotary-encoder pin edge event: resolves the device from the pin, reads or normalizes the A/B pin states (applying inversion and ignorePinValue compensation), defaults the timestamp, and forwards the resolved states to executePinChange.
+
+	Inputs:
+	    pin (int): GPIO pin number that triggered the event, used to look up the device
+	    stateA (bool or int): State of pin A; -1 means read it live from pigpio
+	    stateB (bool or int): State of pin B; -1 means read it live from pigpio
+	    tt (float): Event timestamp; -1 means use current time.time()
+	Outputs:
+	    None: Delegates to executePinChange; logs on error
+	"""
 	global INPUTS, pinsToDevid, newData, PIGPIO
 	global counts
 	global countSignals
@@ -304,6 +359,17 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 
 #################################
 def executePinChange(devIDUsed, pin, stateA, stateB, tt):
+	"""Applies the quadrature decoding logic for a rotary encoder: tracks new-cycle state and last pin values, and increments or decrements the device count (setting direction) when a valid A/B transition completes a cycle, also handling reset timeouts and the increment-on-many-signals option.
+
+	Inputs:
+	    devIDUsed (str): Device identifier indexing INPUTS, counts, and countSignals
+	    pin (int): GPIO pin number of the transition (pinA or pinB)
+	    stateA (bool): Current state of pin A
+	    stateB (bool): Current state of pin B
+	    tt (float): Timestamp of the event
+	Outputs:
+	    None: Mutates counts, direction, newCycle, timing fields, and sets newData; logs on error
+	"""
 	global INPUTS, pinsToDevid, newData
 	global counts
 	global countSignals
@@ -373,6 +439,13 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 
 #################################
 def checkReset():
+	"""Checks for the existence of a reset trigger file in the temp directory; if found, deletes it and reports that a reset was requested.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True if the reset file existed (and was removed), otherwise False
+	"""
 	if not os.path.isfile(G.homeDir+"temp/"+ G.program+".reset"): return False
 	try:    os.remove(G.homeDir+"temp/" + G.program+".reset")
 	except: pass
@@ -381,6 +454,13 @@ def checkReset():
 
 #################################
 def stopProgram(action=""):
+	"""Stops the background worker thread by signaling stopThread and joining it; unless action is 'onlyThread', then exits the whole program via sys.exit.
+
+	Inputs:
+	    action (str): If 'onlyThread', only stops the thread without exiting the process
+	Outputs:
+	    None: Joins the worker thread and may call sys.exit(0)
+	"""
 	global threadDict, stopThread
 
 	if "tread" in threadDict:
@@ -397,8 +477,15 @@ def execMain():
 	######      MAIN     ############
 	#################################
 	#################################
+	"""Main entry point of the rotary-switch driver: initializes global state, sets up logging, kills old instances, loads saved counts and parameters, then runs the main loop that reads counts, sends changed data via URL, periodically re-reads params, handles reset requests, and finally stops the program.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs the indefinite main loop and terminates the program via stopProgram
+	"""
 	global sensors
-	global sensors
+	global sensor
 	global oldRaw, lastRead
 	global INPUTS
 	global newData

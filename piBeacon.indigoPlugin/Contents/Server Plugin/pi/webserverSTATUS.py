@@ -18,11 +18,25 @@ from http.server import BaseHTTPRequestHandler, HTTPServer
 class GetHandler(BaseHTTPRequestHandler):
 
 	def do_HEAD(self):
+		"""Sends an HTTP 200 response with an HTML content-type header for a HEAD request.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes HTTP response headers
+		"""
 		self.send_response(200)
 		self.send_header("Content-type", "text/html")
 		self.end_headers()
  
 	def do_GET(self):
+		"""Handles a GET request by reading the status data file and serving its contents wrapped in an auto-refreshing styled HTML page; logs and aborts on read errors.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes an HTML status page to the client
+		"""
 		global pid, dataFile
 		x = self.wfile.write
 		self.send_response(200)
@@ -38,7 +52,7 @@ class GetHandler(BaseHTTPRequestHandler):
 			U.logger.log(30,"", exc_info=True)
 			return 
 		if len(data) < 2: 
-			U.logger.log(40, u"data read {}".format(data))
+			U.logger.log(40, "data read {}".format(data))
 
 		x('<!DOCTYPE html>'.encode("utf-8"))
 		x('<html>'.encode("utf-8"))

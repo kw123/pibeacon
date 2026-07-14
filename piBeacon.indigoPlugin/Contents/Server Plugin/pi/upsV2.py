@@ -16,6 +16,13 @@ import datetime
 
 class UPS2:
 	def __init__(self, port):
+		"""Constructor that opens a serial connection to the UPS on the given port at 9600 baud, storing it as self.ser.
+
+		Inputs:
+		    port (str): serial port device path to open
+		Outputs:
+		    None: initializes the serial connection on self.ser
+		"""
 		self.ser  = serial.Serial(port, 9600)
 		
 	def getData(self):
@@ -28,6 +35,13 @@ class UPS2:
 		#$ SmartUPS V1.00,Vin GOO 
 		####
 
+		"""Reads and parses a status line from the SmartUPS over the serial connection, retrying up to 10 times to assemble a complete delimited line, and extracts the firmware version, input voltage status, battery capacity, and output voltage.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (version, vin, batcap, vout); ('','no connection','','') if no data received
+		"""
 		line = ""
 		uart_string =""
 		lines = ""
@@ -79,6 +93,13 @@ class UPS2:
 	
 
 def setupShutdownSignalFromUPS(bcm_io):
+	"""Configures the GPIO pin that the UPS uses to signal shutdown: sets it as an input with pull-down and registers a falling-edge interrupt callback to shutdownSignalFromUPS. Does nothing if bcm_io is less than 1.
+
+	Inputs:
+	    bcm_io (int): BCM GPIO pin number for the UPS shutdown signal
+	Outputs:
+	    None: sets up the GPIO pin and event detection; updates global shutdownSignalFromUPSPin
+	"""
 	global shutdownSignalFromUPSPin
 	if bcm_io < 1: return 
 	shutdownSignalFromUPSPin = bcm_io
@@ -87,6 +108,13 @@ def setupShutdownSignalFromUPS(bcm_io):
 
 
 def shutdownSignalFromUPS(channel):
+	"""GPIO falling-edge callback fired when the UPS signals low battery; after a 1-second delay it rechecks the pin and prints whether the system has recovered, returning early if the channel does not match the configured pin.
+
+	Inputs:
+	    channel (int): GPIO channel that triggered the interrupt
+	Outputs:
+	    None: prints low-battery/recovery status; no return value
+	"""
 	global shutdownSignalFromUPS_pin
 	if channel != shutdownSignalFromUPSPin: return 
 	print("detect LOW bat capacity::: ")

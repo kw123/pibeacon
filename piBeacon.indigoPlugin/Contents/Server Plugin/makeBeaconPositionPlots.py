@@ -24,8 +24,6 @@ import logging.handlers
 global logging, logger
 _defaultDateStampFormat				= "%Y-%m-%d %H:%M:%S"
 
-try:	unicode
-except:	unicode = str
 
 #
 #################################
@@ -346,7 +344,7 @@ try:
 			ax.add_patch(square)
 			ax.text(19.3* textDeltaXCaption,y,"expired" ,size=captionTextSize)
 
-			ax.text(29* textDeltaXCaption,y,"levels: {}".format(unicode(hatches).strip("[]" )) ,size=captionTextSize)
+			ax.text(29* textDeltaXCaption,y,"levels: {}".format(str(hatches).strip("[]" )) ,size=captionTextSize)
 
 
 			if plotData["ShowRPIs"] != "0":

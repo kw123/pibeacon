@@ -102,6 +102,14 @@ class VL53L1X:
 	"""Driver for the VL53L1X distance sensor."""
 
 	def __init__(self, i2c, address=41):
+		"""Constructor for the VL53L1X driver; wraps the I2C bus in an I2CDevice at the given address, reads model info, runs sensor_init, and sets the default 50ms timing budget.
+
+		Inputs:
+		    i2c (object): busio I2C bus object used for communication
+		    address (int): I2C device address, default 41 (0x29)
+		Outputs:
+		    None: initializes the sensor object and configures hardware
+		"""
 		self.i2c_device = i2c_device.I2CDevice(i2c, address)
 		self._i2c = i2c
 		model_id, module_type, mask_rev = self.model_info
@@ -114,6 +122,13 @@ class VL53L1X:
 
 	def sensor_init(self):
 		# pylint: disable=line-too-long
+		"""Writes the full VL53L1X register initialization byte sequence (starting at 0x2D), then starts and stops a ranging cycle to prime the sensor, retrying up to three times on failure.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: writes init registers and primes the sensor over I2C
+		"""
 		init_seq = bytes(
 				[  # value	 addr : description
 					 0x00,  # 0x2d : set bit 2 and 5 to 1 for fast plus mode (1MHz I2C), else don't touch
@@ -274,6 +289,13 @@ class VL53L1X:
 
 	@timing_budget.setter
 	def timing_budget(self, val):
+		"""Setter for the measurement timing budget; selects the short- or long-distance register table based on the current distance mode, validates the value, and writes the corresponding macro-period timeout registers.
+
+		Inputs:
+		    val (int): timing budget value that must be a key in the mode's register table
+		Outputs:
+		    None: writes timeout registers and stores the new timing budget; raises on invalid mode/value
+		"""
 		reg_vals = None
 		mode = self.distance_mode
 		if mode == 1:
@@ -290,6 +312,13 @@ class VL53L1X:
 
 	@property
 	def _interrupt_polarity(self):
+		"""Property that reads the GPIO HV mux control register and returns the configured interrupt polarity (inverted bit 4).
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: interrupt polarity, 0 or 1
+		"""
 		int_pol = self._read_register(_GPIO_HV_MUX__CTRL)[0] & 0x10
 		int_pol = (int_pol >> 4) & 0x01
 		return 0 if int_pol else 1
@@ -306,6 +335,13 @@ class VL53L1X:
 
 	@distance_mode.setter
 	def distance_mode(self, mode):
+		"""Setter for the distance mode; writes the short-distance (mode 1) or long-distance (mode 2) phasecal, VCSEL period, valid-phase, and sigma-delta config registers, then reapplies the timing budget.
+
+		Inputs:
+		    mode (int): 1 for short distance, 2 for long distance
+		Outputs:
+		    None: writes mode-specific registers; raises ValueError for unsupported mode
+		"""
 		if mode == 1:
 				# short distance
 				self._write_register(_PHASECAL_CONFIG__TIMEOUT_MACROP, b"\x14")
@@ -327,12 +363,29 @@ class VL53L1X:
 		self.timing_budget = self._timing_budget
 
 	def _write_register(self, address, data, length=None):
+		"""Writes a block of data bytes to the given 16-bit register address over the I2C bus, packing the address big-endian ahead of the data.
+
+		Inputs:
+		    address (int): 16-bit register address to write to
+		    data (bytes): bytes to write to the register
+		    length (int or None): number of data bytes to write; defaults to len(data)
+		Outputs:
+		    None: writes the register over I2C
+		"""
 		if length is None:
 				length = len(data)
 		with self.i2c_device as i2c:
 				i2c.write(struct.pack(">H", address) + data[:length])
 
 	def _read_register(self, address, length=1):
+		"""Reads a block of bytes from the given 16-bit register address over I2C by writing the big-endian address then reading into a buffer.
+
+		Inputs:
+		    address (int): 16-bit register address to read from
+		    length (int): number of bytes to read, default 1
+		Outputs:
+		    bytearray: the bytes read from the register
+		"""
 		data = bytearray(length)
 		with self.i2c_device as i2c:
 				i2c.write(struct.pack(">H", address))
@@ -356,6 +409,13 @@ class VL53L1X:
 
 #################################		
 def readParams():
+	"""Reads the plugin parameter file and, if it has changed, parses global/sensor config, populates per-device settings (timing budget, mode, xShut pin, deltas, refresh rate), and starts or stops the sensor as needed.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool: True when no work needed, exits via sys.exit when stopping, True on error
+	"""
 	global sensorList, sensors, logDir, sensor,  sensorRefreshSecs, dynamic, deltaDist, deltaDistAbs,displayEnable
 	global output, sensorActive, distanceUnits
 	global oldRaw, lastRead
@@ -471,6 +531,14 @@ def readParams():
 
 #################################
 def reInitSensor(devId, reason):
+	"""Re-initializes all sensors for the given device by deleting and recreating their sensor-class entries and restarting them; if the re-init counter exceeds the max, restarts the whole program instead.
+
+	Inputs:
+	    devId (str): device identifier whose re-init counter is tracked
+	    reason (str): reason string logged and used in restart messages
+	Outputs:
+	    None: tears down and restarts sensors, or restarts the program
+	"""
 	global tryReInitSensorCounter, maxReInitSensorMaxTries
 
 	tryReInitSensorCounter[devId] +=1
@@ -493,6 +561,13 @@ def reInitSensor(devId, reason):
 
 #################################
 def startSensor():
+	"""Initializes the I2C bus and creates a VL53L1X instance per device, using xShut GPIO pins to assign sequential I2C addresses, then sets each sensor's distance mode and timing budget and starts ranging; restarts the program on failure.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: creates sensor objects, configures hardware, and begins ranging
+	"""
 	global mode, modeOld
 	global acuracyDistanceMode, acuracyDistanceModeOld, sensCl, xShutPin, i2cNumbers, i2c, i2CseqNumber, deltaDist
 	global i2cChannelsActive, lastI2cCheck, nonesInArow
@@ -534,7 +609,7 @@ def startSensor():
 					U.logger.log(20, "==== setting up sensor class xshut for devid:{}, xShutPin:{} i2c:0x{:x}".format( devId, xShutPin.get(devId,"off"), runningI2C+0x29))
 					sensCl[devId] = VL53L1X(i2c)
 				except Exception as e:
-					U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+					U.logger.log(20, "Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 					if not checkI2cNPresent(i2cNumbers[devId]):
 						time.sleep(5)
 					U.restartMyself(reason="error starting sensor ", delay = 2,doPrint=True, doRestartCount=False)
@@ -575,7 +650,7 @@ def startSensor():
 		return 
 
 	except Exception as e:
-			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			if not checkI2cNPresent(i2cNumbers[devId]):
 				time.sleep(5)
 	U.restartMyself(reason="connection to sensor is hanging at startSensor ", delay = 10,doPrint=True, doRestartCount=False)
@@ -583,6 +658,13 @@ def startSensor():
 
 #################################
 def checkI2cOnline():
+	"""Throttled check (no more than every 10 seconds) that refreshes the list of active I2C channels by querying the system.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates the global active I2C channels list and last-check timestamp
+	"""
 	global i2cChannelsActive, lastI2cCheck
 	try:
 		if time.time() - lastI2cCheck < 10: return 
@@ -590,22 +672,38 @@ def checkI2cOnline():
 		#U.logger.log(20, "====== i2cchannels:{}".format(i2cChannelsActive))
 		lastI2cCheck = time.time()
 	except Exception as e:
-			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 
 
 #################################
 def checkI2cNPresent(i2cN):
+	"""Checks whether the given I2C channel number is in the global list of active I2C channels; if not, logs a message and forces a re-check of online channels by resetting lastI2cCheck.
+
+	Inputs:
+	    i2cN (int): I2C channel/bus number to verify is active
+	Outputs:
+	    bool: True if the channel is active, otherwise False
+	"""
 	global i2cChannelsActive, lastI2cCheck
 	try:
 		if i2cN in i2cChannelsActive: return True
 		U.logger.log(20, "i2cNumbers[devId]:{} not in active i2cchannels:{}".format(i2cN, i2cChannelsActive))
 		lastI2cCheck = time.time() -100
 	except Exception as e:
-			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	return False
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
+	"""Compares the current and previous sensor configuration dicts for a selected sensor to decide if the sensor needs (re)starting; returns a flag indicating add/change, no change, or that the sensor is absent.
+
+	Inputs:
+	    sensors (dict): current sensor configuration mapping
+	    sensorsOld (dict): previous sensor configuration mapping
+	    selectedSensor (str): key of the sensor being evaluated
+	Outputs:
+	    int: -1 if sensor absent, 1 if start/restart needed, 0 if unchanged
+	"""
 	if selectedSensor not in sensors:	return -1
 	if selectedSensor not in sensorsOld: return 1
 
@@ -627,6 +725,13 @@ def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
 
 #################################
 def getDistance(devId):
+	"""Reads a distance measurement (in cm) from the VL53L1X sensor for the given device, applying mode/timing settings, retrying on errors, averaging multiple good reads, and returning status strings like 'badSensor', 'badi2c', or 'dataready' on failure conditions.
+
+	Inputs:
+	    devId (str): device identifier whose sensor distance is read
+	Outputs:
+	    float or str: rounded distance in cm, or an error/status string
+	"""
 	global sensor, sensors, badSensor
 	global acuracyDistanceMode, acuracyDistanceModeOld, sensCl
 	global mode, modeOld, i2cNumbers, waitIfNone, restartAfterNones, nonesInArow
@@ -664,7 +769,7 @@ def getDistance(devId):
 				time.sleep(0.1)
 				try:	pass# sensCl[devId].clear_interrupt()
 				except Exception as e:
-					U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+					U.logger.log(20, "Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 					if not checkI2cNPresent(i2cNumbers[devId]):
 						time.sleep(5)
 						return "badi2c"
@@ -788,7 +893,7 @@ def getDistance(devId):
 
 
 	except  Exception as e:
-			U.logger.log(20, u"Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			if not checkI2cNPresent(i2cNumbers[devId]):
 				time.sleep(5)
 				return "badi2c"
@@ -803,6 +908,13 @@ def getDistance(devId):
 
 def execVL503I1():
 			 
+	"""Main execution loop for the VL53L1X distance sensor process: initializes globals and logging, checks I2C and reads params, then continuously polls each configured device for distance, computes deltas/speed/region events, displays values, and sends triggered data to Indigo.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs an infinite polling loop; updates hardware, logs, DAT files, and sends URLs to Indigo
+	"""
 	global sensorList, externalSensor,senors,sensorRefreshSecs,sensor, sensors, NSleep, ipAddress, dynamic, mode, deltaDist, deltaDistAbs, displayEnable
 	global output, authentication, badSensor
 	global distanceUnits, sensorActive

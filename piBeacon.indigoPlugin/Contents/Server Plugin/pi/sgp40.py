@@ -52,6 +52,13 @@ FIX16_ONE                                                = 0x00010000
 
 class DFRobot_vocalgorithmParams:
 	def __init__(self):
+		"""Constructor for the DFRobot VOC-algorithm parameter container that initializes all mean-variance estimator, MOX model, sigmoid, and adaptive-lowpass state fields to zero.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: initializes all instance attributes to 0
+		"""
 		self.mvoc_index_offset = 0
 		self.mtau_mean_variance_hours = 0
 		self.mgating_max_duration_minutes = 0
@@ -87,20 +94,56 @@ class DFRobot_vocalgorithmParams:
 class DFRobot_VOCAlgorithm:
 	
 	def __init__(self):
+		"""Constructor for the DFRobot_VOCAlgorithm class that creates and stores a DFRobot_vocalgorithmParams parameter object.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: sets self.params to a new parameter container
+		"""
 		self.params = DFRobot_vocalgorithmParams()
 	def _f16(self,x):
+		"""Converts a floating-point value into Q16.16 fixed-point integer representation by scaling by 65536 and rounding toward the nearest integer (with sign-aware rounding).
+
+		Inputs:
+		    x (float): real number to convert to fixed-point
+		Outputs:
+		    int: Q16.16 fixed-point integer representation of x
+		"""
 		if x >= 0:
 			return int((x)*65536.0 + 0.5)
 		else:
 			return int((x)*65536.0 - 0.5)
 
 	def _fix16_from_int(self,a):
+		"""Converts an integer to Q16.16 fixed-point form by multiplying by FIX16_ONE.
+
+		Inputs:
+		    a (int): integer value to convert to fixed-point
+		Outputs:
+		    int: fixed-point integer value of a
+		"""
 		return int(a * FIX16_ONE)
 
 	def _fix16_cast_to_int(self,a):
+		"""Casts a Q16.16 fixed-point value back to a plain integer by arithmetic right-shifting 16 bits to drop the fractional part.
+
+		Inputs:
+		    a (int): fixed-point value to truncate to an integer
+		Outputs:
+		    int: integer part of the fixed-point value
+		"""
 		return int(a) >> 16
 
 	def _fix16_mul(self,inarg0,inarg1):
+		"""Multiplies two Q16.16 fixed-point integers using cross-term decomposition with 32-bit masking and overflow detection, returning FIX16_OVERFLOW on overflow.
+
+		Inputs:
+		    inarg0 (int): first fixed-point operand
+		    inarg1 (int): second fixed-point operand
+		Outputs:
+		    int: fixed-point product, or FIX16_OVERFLOW on overflow
+		"""
 		inarg0=int(inarg0)
 		inarg1=int(inarg1)
 		A = (inarg0 >> 16)
@@ -133,6 +176,14 @@ class DFRobot_VOCAlgorithm:
 		return result
 	
 	def _fix16_div(self,a, b):
+		"""Divides two Q16.16 fixed-point integers using a bit-by-bit long-division algorithm with sign handling, returning FIX16_MINIMUM on divide-by-zero and FIX16_OVERFLOW on overflow.
+
+		Inputs:
+		    a (int): fixed-point dividend
+		    b (int): fixed-point divisor
+		Outputs:
+		    int: fixed-point quotient, or FIX16_MINIMUM/FIX16_OVERFLOW on error
+		"""
 		a=int(a)
 		b=int(b)
 		if b==0 :
@@ -174,6 +225,13 @@ class DFRobot_VOCAlgorithm:
 		return result
 	
 	def _fix16_sqrt(self,x):
+		"""Computes the square root of a Q16.16 fixed-point integer using an iterative bit-shifting integer square-root algorithm.
+
+		Inputs:
+		    x (int): fixed-point value to take the square root of
+		Outputs:
+		    int: fixed-point square root of x
+		"""
 		x=int(x)
 		num=x&0xFFFFFFFF
 		result = 0
@@ -202,6 +260,13 @@ class DFRobot_VOCAlgorithm:
 		return result
 	
 	def _fix16_exp(self,x):
+		"""Computes the exponential (e^x) of a Q16.16 fixed-point value using precomputed factor tables and repeated fixed-point multiplication, clamping to FIX16_MAXIMUM or 0 at the input range limits.
+
+		Inputs:
+		    x (int): fixed-point exponent
+		Outputs:
+		    int: fixed-point value of e^x, clamped at range extremes
+		"""
 		x=int(x)
 		exp_pos_values=[self._f16(2.7182818), self._f16(1.1331485), self._f16(1.0157477), self._f16(1.0019550)]
 		exp_neg_values=[self._f16(0.3678794), self._f16(0.8824969), self._f16(0.9844964), self._f16(0.9980488)]
@@ -224,6 +289,13 @@ class DFRobot_VOCAlgorithm:
 		return res
 	
 	def vocalgorithm_init(self):
+		"""Initializes the VOC algorithm by setting the parameter object's offset, tau, gating, and SRAW-std fields from default constants (in fixed-point), zeroing uptime/sraw/index, and initializing all sub-model instances.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: populates self.params and calls _vocalgorithm__init_instances
+		"""
 		self.params.mvoc_index_offset = (self._f16(VOCALGORITHM_VOC_INDEX_OFFSET_DEFAULT))
 		self.params.mtau_mean_variance_hours = self._f16(VOCALGORITHM_TAU_MEAN_VARIANCE_HOURS)
 		self.params.mgating_max_duration_minutes =self._f16(VOCALGORITHM_GATING_MAX_DURATION_MINUTES)
@@ -234,6 +306,13 @@ class DFRobot_VOCAlgorithm:
 		self._vocalgorithm__init_instances()
 	
 	def _vocalgorithm__init_instances(self):
+		"""Initializes and configures all VOC-algorithm sub-components: the mean-variance estimator, MOX model, scaled sigmoid, and adaptive lowpass filter, wiring estimator std/mean into the MOX model parameters.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: initializes and sets parameters on all estimator/model/filter sub-instances
+		"""
 		self._vocalgorithm__mean_variance_estimator__init()
 		self._vocalgorithm__mean_variance_estimator__set_parameters(self._f16(VOCALGORITHM_SRAW_STD_INITIAL), self.params.mtau_mean_variance_hours,self.params.mgating_max_duration_minutes)
 		self._vocalgorithm__mox_model__init()
@@ -244,15 +323,40 @@ class DFRobot_VOCAlgorithm:
 		self._vocalgorithm__adaptive_lowpass__set_parameters()
 	
 	def _vocalgorithm_get_states(self):
+		"""Retrieves the current persisted state of the VOC algorithm by reading the mean-variance estimator's mean and standard deviation, returning them as a tuple.
+
+		Inputs:
+		    None.
+		Outputs:
+		    tuple: (mean state0, std state1) of the mean-variance estimator
+		"""
 		state0 = self._vocalgorithm__mean_variance_estimator__get_mean()
-		state1 = _vocalgorithm__mean_variance_estimator__get_std()
+		state1 = self._vocalgorithm__mean_variance_estimator__get_std()
 		return state0, state1
 	
 	def _vocalgorithm_set_states(self,state0,state1):
+		"""Restores a previously saved VOC algorithm state by setting the mean-variance estimator's mean and std from the supplied values (using a fixed uptime gamma) and storing state0 as the current sraw.
+
+		Inputs:
+		    state0 (float): saved mean value to restore
+		    state1 (float): saved std value to restore
+		Outputs:
+		    None: updates mean-variance estimator state and self.params.msraw
+		"""
 		self._vocalgorithm__mean_variance_estimator__set_states( state0, state1, self._f16(VOCALGORITHM_PERSISTENCE_UPTIME_GAMMA))
 		self.params.msraw = state0
 	
 	def _vocalgorithm_set_tuning_parameters(self, voc_index_offset, learning_time_hours, gating_max_duration_minutes, std_initial):
+		"""Configures the VOC algorithm tuning parameters (index offset, learning time, gating max duration, initial std) as fix16 values and reinitializes the algorithm instances.
+
+		Inputs:
+		    voc_index_offset (int): VOC index offset, converted to fix16
+		    learning_time_hours (int): mean-variance learning time in hours
+		    gating_max_duration_minutes (int): max gating duration in minutes
+		    std_initial (int): initial standard deviation
+		Outputs:
+		    None: stores tuning params and calls _vocalgorithm__init_instances
+		"""
 		self.params.mvoc_index_offset = self._fix16_from_int(voc_index_offset)
 		self.params.mtau_mean_variance_hours = self._fix16_from_int(learning_time_hours)
 		self.params.mgating_max_duration_minutes =self._fix16_from_int(gating_max_duration_minutes)
@@ -260,6 +364,13 @@ class DFRobot_VOCAlgorithm:
 		self._vocalgorithm__init_instances()
 	
 	def vocalgorithm_process(self, sraw):
+		"""Processes one raw SGP sensor reading through the VOC algorithm pipeline (blackout handling, mox model, sigmoid scaling, adaptive lowpass, mean-variance estimation) and returns the resulting integer VOC index.
+
+		Inputs:
+		    sraw (int): raw VOC signal from the SGP sensor
+		Outputs:
+		    int: computed VOC index
+		"""
 		if ((self.params.muptime <= self._f16(VOCALGORITHM_INITIAL_BLACKOUT))):
 			self.params.muptime = self.params.muptime + self._f16(VOCALGORITHM_SAMPLING_INTERVAL)
 		else:
@@ -281,13 +392,36 @@ class DFRobot_VOCAlgorithm:
 		return voc_index
 	
 	def _vocalgorithm__mean_variance_estimator__init(self):
+		"""Initializes the mean-variance estimator subcomponent by resetting its parameters to zero and initializing its sigmoid instances.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: resets estimator parameters and instances
+		"""
 		self._vocalgorithm__mean_variance_estimator__set_parameters(self._f16(0.),self._f16(0.),self._f16(0.))
 		self._vocalgorithm__mean_variance_estimator___init_instances()
 	
 	def _vocalgorithm__mean_variance_estimator___init_instances(self):
+		"""Initializes the mean-variance estimator's internal instances by initializing its sigmoid helper.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: initializes the sigmoid sub-instance
+		"""
 		self._vocalgorithm__mean_variance_estimator___sigmoid__init()
 	
 	def _vocalgorithm__mean_variance_estimator__set_parameters(self, std_initial, tau_mean_variance_hours, gating_max_duration_minutes):
+		"""Sets up all mean-variance estimator parameters, computing the gamma decay factors from the initial std, mean-variance time constant, and gating duration, and resetting accumulators to zero.
+
+		Inputs:
+		    std_initial (float): initial standard deviation (fix16)
+		    tau_mean_variance_hours (float): mean-variance time constant in hours (fix16)
+		    gating_max_duration_minutes (float): max gating duration in minutes (fix16)
+		Outputs:
+		    None: computes and stores estimator gamma/state parameters
+		"""
 		self.params.m_mean_variance_estimator_gating_max_duration_minutes = gating_max_duration_minutes
 		self.params.m_mean_variance_estimator_initialized = 0
 		self.params.m_mean_variance_estimator_mean = self._f16(0.)
@@ -306,19 +440,49 @@ class DFRobot_VOCAlgorithm:
 		self.params.m_mean_variance_estimator_gating_duration_minutes = self._f16(0.)
 	
 	def _vocalgorithm__mean_variance_estimator__set_states(self, mean, std, uptime_gamma):
+		"""Restores the mean-variance estimator's mean, std, and uptime gamma from supplied values and marks the estimator as initialized.
+
+		Inputs:
+		    mean (float): mean value to restore (fix16)
+		    std (float): std value to restore (fix16)
+		    uptime_gamma (float): uptime gamma value to restore (fix16)
+		Outputs:
+		    None: sets estimator mean/std/uptime_gamma and initialized flag
+		"""
 		self.params.m_mean_variance_estimator_mean = mean
 		self.params.m_mean_variance_estimator_std = std
 		self.params.m_mean_variance_estimator_uptime_gamma = uptime_gamma
-		self.params.m_mean_variance_estimator_initialized = true
+		self.params.m_mean_variance_estimator_initialized = True
 		
 	
 	def _vocalgorithm__mean_variance_estimator__get_std(self):
+		"""Returns the current standard deviation stored in the mean-variance estimator.
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: the estimator's std value (fix16)
+		"""
 		return self.params.m_mean_variance_estimator_std
 	
 	def _vocalgorithm__mean_variance_estimator__get_mean(self):
+		"""Returns the estimator's mean adjusted by the sraw offset (mean plus sraw_offset).
+
+		Inputs:
+		    None.
+		Outputs:
+		    float: the offset-corrected mean value (fix16)
+		"""
 		return (self.params.m_mean_variance_estimator_mean +self.params.m_mean_variance_estimator_sraw_offset)
 	
 	def _vocalgorithm__mean_variance_estimator___calculate_gamma(self, voc_index_from_prior):
+		"""Advances the estimator uptimes and computes the gamma_mean and gamma_variance gains using sigmoid-based initialization and gating thresholds, also updating the gating duration and resetting gating uptime when the max duration is exceeded.
+
+		Inputs:
+		    voc_index_from_prior (float): prior VOC index used for gating sigmoids (fix16)
+		Outputs:
+		    None: updates gamma_mean, gamma_variance, uptimes and gating duration on the estimator
+		"""
 		uptime_limit = self._f16((VOCALGORITHM_MEAN_VARIANCE_ESTIMATOR__FIX16_MAX -VOCALGORITHM_SAMPLING_INTERVAL))
 		if self.params.m_mean_variance_estimator_uptime_gamma < uptime_limit:
 			self.params.m_mean_variance_estimator_uptime_gamma =(self.params.m_mean_variance_estimator_uptime_gamma +self._f16(VOCALGORITHM_SAMPLING_INTERVAL))
@@ -369,6 +533,14 @@ class DFRobot_VOCAlgorithm:
 			self.params.m_mean_variance_estimator_uptime_gating = self._f16(0.)
 	
 	def _vocalgorithm__mean_variance_estimator__process(self, sraw, voc_index_from_prior):
+		"""Performs one mean-variance estimation update step from the raw signal and prior VOC index, handling first-time initialization, mean offset rebasing, gamma calculation, and updating the running standard deviation and mean.
+
+		Inputs:
+		    sraw (float): raw signal value (fix16) to incorporate
+		    voc_index_from_prior (float): prior VOC index used to compute gamma (fix16)
+		Outputs:
+		    None: updates the estimator's mean, std, and sraw_offset
+		"""
 		if ((self.params.m_mean_variance_estimator_initialized == 0)):
 			self.params.m_mean_variance_estimator_initialized = 1
 			self.params.m_mean_variance_estimator_sraw_offset = sraw
@@ -398,14 +570,37 @@ class DFRobot_VOCAlgorithm:
 			self.params.m_mean_variance_estimator_mean =(self.params.m_mean_variance_estimator_mean +(self._fix16_mul(self.params.m_mean_variance_estimator_gamma_mean,delta_sgp)))
 	
 	def _vocalgorithm__mean_variance_estimator___sigmoid__init(self):
+		"""Initializes the mean-variance estimator's sigmoid by calling set_parameters with fixed-point zero values for L, X0, and K.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Resets the sigmoid parameters to zero
+		"""
 		self._vocalgorithm__mean_variance_estimator___sigmoid__set_parameters(self._f16(0.), self._f16(0.), self._f16(0.))
 	
 	def _vocalgorithm__mean_variance_estimator___sigmoid__set_parameters(self, L, X0, K):
+		"""Stores the sigmoid curve parameters (L, K, X0) for the mean-variance estimator into the params object.
+
+		Inputs:
+		    L (int): Fixed-point maximum/scale value of the sigmoid
+		    X0 (int): Fixed-point sigmoid midpoint
+		    K (int): Fixed-point steepness/slope coefficient
+		Outputs:
+		    None: Updates m_mean_variance_estimator_sigmoid_l/k/x0 in params
+		"""
 		self.params.m_mean_variance_estimator_sigmoid_l = L
 		self.params.m_mean_variance_estimator_sigmoid_k = K
 		self.params.m_mean_variance_estimator_sigmoid_x0 = X0
 	
 	def _vocalgorithm__mean_variance_estimator___sigmoid__process(self, sample):
+		"""Evaluates the mean-variance estimator's logistic sigmoid for a sample using fixed-point math, clamping to L or 0 for extreme arguments and otherwise computing L/(1+exp(x)).
+
+		Inputs:
+		    sample (int): Fixed-point input value to evaluate
+		Outputs:
+		    int: Fixed-point sigmoid output value
+		"""
 		x = (self._fix16_mul(self.params.m_mean_variance_estimator_sigmoid_k,(sample - self.params.m_mean_variance_estimator_sigmoid_x0)))
 		if ((x < self._f16(-50.))):
 			return self.params.m_mean_variance_estimator_sigmoid_l
@@ -415,22 +610,65 @@ class DFRobot_VOCAlgorithm:
 			return (self._fix16_div(self.params.m_mean_variance_estimator_sigmoid_l,(self._f16(1.) + self._fix16_exp(x))))
 	
 	def _vocalgorithm__mox_model__init(self):
+		"""Initializes the gas-index MOX model by calling set_parameters with default fixed-point SRAW standard deviation of 1 and mean of 0.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Sets default MOX model parameters
+		"""
 		self._vocalgorithm__mox_model__set_parameters(self._f16(1.),self._f16(0.))
 	
 	def _vocalgorithm__mox_model__set_parameters(self,SRAW_STD,SRAW_MEAN):
+		"""Stores the MOX model's SRAW standard deviation and mean parameters into the params object.
+
+		Inputs:
+		    SRAW_STD (int): Fixed-point SRAW standard deviation
+		    SRAW_MEAN (int): Fixed-point SRAW mean
+		Outputs:
+		    None: Updates m_mox_model_sraw_std and m_mox_model_sraw_mean in params
+		"""
 		self.params.m_mox_model_sraw_std = SRAW_STD
 		self.params.m_mox_model_sraw_mean = SRAW_MEAN
 	
 	def _vocalgorithm__mox_model__process(self,sraw):
+		"""Converts a raw SRAW sensor signal into a VOC index value using the MOX model, normalizing by the stored mean and standard deviation (plus a bonus) and scaling by the VOC index gain.
+
+		Inputs:
+		    sraw (int): Fixed-point raw SRAW sensor signal
+		Outputs:
+		    int: Fixed-point computed VOC index contribution
+		"""
 		return (self._fix16_mul((self._fix16_div((sraw - self.params.m_mox_model_sraw_mean),(-(self.params.m_mox_model_sraw_std +self._f16(VOCALGORITHM_SRAW_STD_BONUS))))),self._f16(VOCALGORITHM_VOC_INDEX_GAIN)))
 	
 	def _vocalgorithm__sigmoid_scaled__init(self):
+		"""Initializes the scaled sigmoid by calling set_parameters with a fixed-point offset of zero.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Resets the scaled sigmoid offset to zero
+		"""
 		self._vocalgorithm__sigmoid_scaled__set_parameters(self._f16(0.))
 	
 	def _vocalgorithm__sigmoid_scaled__set_parameters(self,offset):
+		"""Stores the scaled sigmoid offset parameter into the params object.
+
+		Inputs:
+		    offset (int): Fixed-point offset value for the scaled sigmoid
+		Outputs:
+		    None: Updates m_sigmoid_scaled_offset in params
+		"""
 		self.params.m_sigmoid_scaled_offset = offset
 	
 	def _vocalgorithm__sigmoid_scaled__process(self,sample):
+		"""Applies the scaled sigmoid transform to a sample using fixed-point math, clamping for extreme arguments and otherwise computing an offset-shifted logistic value that differs for non-negative versus negative samples.
+
+		Inputs:
+		    sample (int): Fixed-point input value to transform
+		Outputs:
+		    int: Fixed-point scaled sigmoid output value
+		"""
 		x = (self._fix16_mul(self._f16(VOCALGORITHM_SIGMOID_K),(sample - self._f16(VOCALGORITHM_SIGMOID_X0))))
 		if ((x < self._f16(-50.))):
 			return self._f16(VOCALGORITHM_SIGMOID_L)
@@ -445,14 +683,35 @@ class DFRobot_VOCAlgorithm:
 						                 (self._fix16_div(self._f16(VOCALGORITHM_SIGMOID_L),(self._f16(1.) + self._fix16_exp(x))))))
 	
 	def _vocalgorithm__adaptive_lowpass__init(self):
+		"""Initializes the adaptive low-pass filter by calling its set_parameters method.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Sets up adaptive low-pass filter coefficients and state
+		"""
 		self._vocalgorithm__adaptive_lowpass__set_parameters()
 	
 	def _vocalgorithm__adaptive_lowpass__set_parameters(self):
+		"""Computes the adaptive low-pass filter coefficients a1 and a2 from the sampling interval and the fast/slow time constants, and marks the filter as uninitialized.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates m_adaptive_lowpass_a1, a2 and resets m_adaptive_lowpass_initialized to 0
+		"""
 		self.params.m_adaptive_lowpass_a1 =self._f16((VOCALGORITHM_SAMPLING_INTERVAL /(VOCALGORITHM_LP_TAU_FAST + VOCALGORITHM_SAMPLING_INTERVAL)))
 		self.params.m_adaptive_lowpass_a2 =self._f16((VOCALGORITHM_SAMPLING_INTERVAL /(VOCALGORITHM_LP_TAU_SLOW + VOCALGORITHM_SAMPLING_INTERVAL)))
 		self.params.m_adaptive_lowpass_initialized = 0
 	
 	def _vocalgorithm__adaptive_lowpass__process(self,sample):
+		"""Runs the adaptive low-pass filter on a sample using fixed-point math: seeds its state on first call, updates fast (x1) and slow (x2) filtered values, then derives an adaptive coefficient from their absolute difference to update and return the adaptively filtered output x3.
+
+		Inputs:
+		    sample (int): Fixed-point input sample to filter
+		Outputs:
+		    int: Fixed-point adaptively low-pass filtered value (x3)
+		"""
 		if ((self.params.m_adaptive_lowpass_initialized == 0)):
 			self.params.m_adaptive_lowpass_x1 = sample
 			self.params.m_adaptive_lowpass_x2 = sample
@@ -660,6 +919,13 @@ class DFRobot_SGP40:
 
 ###############################
 def readParams():
+	"""Reads the updated parameter/sensor configuration file for the SGP40 driver, and if it changed, parses per-device settings (sendToIndigoSecs, sensorRefreshSecs, deltaX, minSendDelta), starting newly-added sensors and removing devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates module globals, starts/stops sensors, and logs
+	"""
 	global sensorList, sensors, logDir, sensor, sensorRefreshSecs
 	global rawOld
 	global deltaX, minSendDelta
@@ -751,6 +1017,13 @@ def readParams():
 
 #################################
 def startSensor(devId):
+	"""Instantiates a DFRobot_SGP40 sensor object on I2C bus 1 for the given device and calls begin() to initialize it, recording it in the SENSOR dict; on failure stores an empty marker.
+
+	Inputs:
+	    devId (str): Device identifier key for the SENSOR dict
+	Outputs:
+	    None: Populates SENSOR[devId] with a sensor object or empty string
+	"""
 	global sensors, sensor
 	global SENSOR
 
@@ -771,6 +1044,13 @@ def startSensor(devId):
 
 #################################
 def getValues(devId):
+	"""Reads the raw VOC measurement and computed VOC index from the SGP40 sensor for the given device, returning them as a dict; tracks consecutive failures and signals a bad sensor after repeated errors.
+
+	Inputs:
+	    devId (str): Device identifier key for the SENSOR dict
+	Outputs:
+	    dict or str: Dict with 'raw' and 'VOC' values, or 'badSensor'/'' on failure
+	"""
 	global sensor, sensors,	 SENSOR, badSensor
 	global lastMeasurement, sendToIndigoSecs
 

@@ -23,6 +23,13 @@ G.program = "moistureSensor"
 class MoistureChirp:
 	def __init__(self,  address=0x20):
 
+		"""Initializes a Chirp moisture sensor wrapper: opens SMBus 1, sends a wake-up read to the device, and reads the firmware version register into self.version. Logs and ignores errors.
+
+		Inputs:
+		    address (int): I2C address of the sensor (default 0x20, though overridden to 0x20 internally)
+		Outputs:
+		    None: sets self.version, self.address, self.bus; reads from I2C
+		"""
 		try:
 			self.version = 0
 			import smbus
@@ -40,13 +47,29 @@ class MoistureChirp:
 
 			time.sleep(1)
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 		return 
 
 	def getVersion(self): 
+		"""Returns the firmware version of the Chirp moisture sensor that was read during initialization.
+
+		Inputs:
+		    None.
+		Outputs:
+		    int: the sensor's firmware version value
+		"""
 		return self.version
 
 	def getdata(self, moisture=True, temp=True, Illuminance=True): 
+		"""Reads moisture, temperature, and/or illuminance from the Chirp sensor over I2C, polling a busy register and byte-swapping each 16-bit word, returning a dict with the requested values (defaulting to -99 for unread/failed readings).
+
+		Inputs:
+		    moisture (bool): whether to read the moisture value
+		    temp (bool): whether to read the temperature value
+		    Illuminance (bool): whether to read the illuminance value
+		Outputs:
+		    dict: {'temp':..., 'Illuminance':..., 'moisture':...} with sensor readings or -99 defaults
+		"""
 		retData={"temp":-99, "Illuminance":-99, "moisture":-99}
 		try:
 			if temp:
@@ -57,7 +80,7 @@ class MoistureChirp:
 						retData["temp"] =  ((ret & 0xFF) << 8) + (ret >> 8)
 						break 
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={} temp ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={} temp ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		try:
 			if moisture:
@@ -68,7 +91,7 @@ class MoistureChirp:
 						retData["moisture"] = ((ret & 0xFF) << 8) + (ret >> 8) 
 						break 
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={} moisture ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={} moisture ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		try:
 			if Illuminance:
@@ -85,7 +108,7 @@ class MoistureChirp:
 					time.sleep(1)
 				retData["Illuminance"] = il 
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={} Illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={} Illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		return retData
 # ===========================================================================
@@ -94,6 +117,13 @@ class MoistureChirp:
 
 ###############################
 def readParams():
+	"""Reads the plugin's parameter/config file and updates global moisture-sensor settings (sensors, deltaX, sensorMode, minSendDelta, I2C address) for each configured device, (re)starting the sensor when settings change and removing devices no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module globals and starts sensors; logs errors
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs, displayEnable
 	global deltaX, SENSOR, minSendDelta, sensorMode
 	global oldRaw, lastRead
@@ -181,13 +211,21 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 		U.logger.log(30, "{}".format(sensors[sensor]))
 		
 
 
 #################################
 def startSensor(devId,i2cAddress):
+	"""Initializes the moisture sensor for a given device by configuring the I2C mux and, if not already started, creating either an Adafruit Seesaw sensor or a MoistureChirp sensor (per sensorMode) at the given I2C address, storing it in the SENSOR global and resetting the mux afterward.
+
+	Inputs:
+	    devId (str): Indigo device identifier
+	    i2cAddress (int): I2C address of the moisture sensor
+	Outputs:
+	    None: creates sensor object in SENSOR global; resets mux; logs errors
+	"""
 	global sensors,sensor
 	global startTime
 	global gasBaseLine, gasBurnIn
@@ -211,10 +249,10 @@ def startSensor(devId,i2cAddress):
 			elif sensorMode[devId].find("chirp") >-1:
 				SENSOR[devId] = MoistureChirp(address=i2cAddress)
 				v = SENSOR[devId].getVersion()
-				U.logger.log(30, u"started chirp sensor, version={}".format(v) )
+				U.logger.log(30, "started chirp sensor, version={}".format(v) )
 	
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			SENSOR[devId] = ""
 			U.muxTCA9548Areset()
 			return
@@ -224,6 +262,13 @@ def startSensor(devId,i2cAddress):
 
 #################################
 def getValues(devId):
+	"""Reads a moisture/soil sensor for one device, taking 10 samples at 0.2s intervals, discarding outliers, and averaging temperature, moisture, and illuminance; applies a temperature offset and returns rounded values. Supports adafruit, chirp-2.7, and default sensor modes, and returns a bad-sensor marker after repeated failures.
+
+	Inputs:
+	    devId (str): device id key into the sensors/SENSOR dictionaries
+	Outputs:
+	    dict or str: dict with temp/Illuminance/moisture, or 'badSensor', or empty string on error
+	"""
 	global sensor, sensors,	 SENSOR, badSensor
 	global startTime, sendToIndigoSecs, sensorMode
 
@@ -282,7 +327,7 @@ def getValues(devId):
 		badSensor = 0
 		return data
 	except Exception as e:
-		U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	badSensor += 1
 	if badSensor > 5: return "badSensor"
 	return ""
@@ -293,6 +338,13 @@ def getValues(devId):
 
 ############################################
 def execMoistureSensor():
+	"""Main daemon loop for the moisture sensor process: initializes globals, kills old instances, reads parameters, then repeatedly polls each configured device via getValues, sends data to Indigo when values change beyond a delta or on a heartbeat interval, writes DAT files, and refreshes parameters periodically.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs an infinite loop sending sensor data to Indigo and writing files/logs
+	"""
 	global sensor, sensors, badSensor, sensorList
 	global deltaX, SENSOR, minSendDelta, sensorMode
 	global oldRaw, lastRead
@@ -406,7 +458,7 @@ def execMoistureSensor():
 			lastMeasurement = time.time()
 
 		except Exception as e:
-			U.logger.log(30, u"in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			time.sleep(5.)
 
 

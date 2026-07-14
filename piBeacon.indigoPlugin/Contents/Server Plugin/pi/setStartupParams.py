@@ -24,6 +24,13 @@ program = "setStartupParams"
 
 #################################
 def readPopen(cmd):
+	"""Runs a shell command via subprocess.Popen, capturing stdout and stderr, and returns them decoded as UTF-8 strings; returns two empty strings on any exception.
+
+	Inputs:
+	    cmd (str): shell command line to execute
+	Outputs:
+	    tuple: (stdout, stderr) decoded UTF-8 strings, or ('','') on error
+	"""
 	try:
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 		return ret.decode('utf_8'), err.decode('utf_8')
@@ -32,6 +39,13 @@ def readPopen(cmd):
 
 #################################
 def getOsVersion():
+	"""Determines the Raspberry Pi OS version by reading /etc/os-release and parsing the VERSION_ID line, returning it as an integer.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: OS VERSION_ID as integer, or 0 if not found
+	"""
 	osInfo	 = readPopen("cat /etc/os-release")[0].strip("\n").split("\n")
 	for line in osInfo:
 		if line .find("VERSION_ID=") == 0:
@@ -39,6 +53,13 @@ def getOsVersion():
 	return 0 
 
 def execUpdate():
+	"""Performs one-time Raspberry Pi startup configuration via raspi-config (boot behaviour, I2C, LEDs, splash, rootfs expansion) when the setStartupParams.done marker file is absent, writes the marker, waits for other installs to finish, and reboots the Pi.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs raspi-config commands, writes a marker file, logs progress and may reboot the system
+	"""
 	osV = getOsVersion()
 	U.logger.log(20, "starting w osV:{}".format(osV))
 	if not os.path.isfile("{}setStartupParams.done".format(homeDir)):

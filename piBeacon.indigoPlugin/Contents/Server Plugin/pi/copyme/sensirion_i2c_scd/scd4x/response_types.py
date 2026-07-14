@@ -30,6 +30,13 @@ class Scd4xTemperature(object):
         self.degrees_fahrenheit = -49. + 315. * ticks / 65536.
 
     def __str__(self):
+        """Returns a human-readable string of the temperature measurement formatted as degrees Celsius with one decimal place.
+
+        Inputs:
+            None.
+        Outputs:
+            str: temperature formatted like '23.4 °C'
+        """
         return '{:0.1f} °C'.format(self.degrees_celsius)
 
 
@@ -56,6 +63,13 @@ class Scd4xHumidity(object):
         self.percent_rh = 100. * ticks / 65536.
 
     def __str__(self):
+        """Returns a human-readable string of the humidity measurement formatted as percent relative humidity with one decimal place.
+
+        Inputs:
+            None.
+        Outputs:
+            str: humidity formatted like '45.0 %RH'
+        """
         return '{:0.1f} %RH'.format(self.percent_rh)
 
 
@@ -82,6 +96,13 @@ class Scd4xCarbonDioxide(object):
         self.co2 = ticks
 
     def __str__(self):
+        """Returns a human-readable string of the CO2 measurement formatted as an integer ppm value.
+
+        Inputs:
+            None.
+        Outputs:
+            str: CO2 formatted like '400 ppm'
+        """
         return '{:d} ppm'.format(self.co2)
 
 
@@ -111,4 +132,11 @@ class Scd4xTemperatureOffset(object):
         self.degrees_fahrenheit = 32. + (self.degrees_celsius * 9. / 5.)
 
     def __str__(self):
+        """Returns a human-readable string of the temperature offset formatted as degrees Celsius with one decimal place.
+
+        Inputs:
+            None.
+        Outputs:
+            str: temperature offset formatted like '4.0 °C'
+        """
         return '{:0.1f} °C'.format(self.degrees_celsius)

@@ -25,6 +25,13 @@ version = 1.0
 
 #################################		 
 def readParams():
+	"""Reads the latest sensor parameters via U.doRead, detects whether the raw input changed since the last read, updates the module globals (output, targetData, etc.) and extracts the heating target data for this program. Returns a change/error code.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: 0 if unchanged, 3 on exception/error
+	"""
 	global sensor, output, inpRaw, inp
 	global oldRaw, lastRead, targetData
 
@@ -70,6 +77,13 @@ def readParams():
 
 #################################		 
 def checkNewtempfile():
+	"""Reads the latest 18B20 temperature data file, builds a sorted list of per-sensor labels/colors/positions scaled to a temperature axis, assembles a JSON drawing command set (frame, scale, target/room/valve markers, legend, date) and writes it to temp/display.inp for the display renderer.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes display command JSON file, logs, and sleeps; returns nothing
+	"""
 	global lastOut, lastRaw, targetData
 	try:
 
@@ -231,6 +245,13 @@ def checkNewtempfile():
 #################################
 #################################
 def fbhexec():
+	"""Main entry loop for the FBH temperature display program: initializes globals and logging, validates the parameters file, reads params, kills old instances, then loops reading params and rendering the temperature display while ensuring display.py stays running.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: runs the main display loop; spawns display.py and updates files/logs
+	"""
 	global sensor, output, inpRaw, lastCl,clockMarks,maRGB
 	global oldRaw,	lastRead, inp, lastOut, lastRaw, output
 

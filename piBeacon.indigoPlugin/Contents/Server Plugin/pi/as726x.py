@@ -147,6 +147,13 @@ class Adafruit_AS726x(object):
 	DRIVER_CURRENT_LIMITS = (12.5, 25, 50, 100)
 
 	def __init__(self,i2cAddress=_AS726X_ADDRESS):
+		"""Constructor for the AS726x spectral-sensor driver; initializes LED/gain/integration-time/conversion-mode defaults, opens the I2C bus, soft-resets the device, verifies the hardware version register, and sets up integration time, gain, conversion mode, and a normalization factor.
+
+		Inputs:
+		    i2cAddress (int): I2C address of the AS726x sensor (defaults to _AS726X_ADDRESS)
+		Outputs:
+		    None: initializes attributes, opens I2C bus, resets and verifies the device, and logs on error
+		"""
 		try:
 			self._driver_led			= False
 			self._indicator_led			= False
@@ -184,6 +191,13 @@ class Adafruit_AS726x(object):
 
 
 	def enable_driver_led(self, val):
+		"""Enables or disables the AS726x driver LED by updating bit 3 of the LED control register via a virtual register write, doing nothing if the state already matches.
+
+		Inputs:
+		    val (bool): True to enable the driver LED, False to disable
+		Outputs:
+		    None: writes the LED control register over I2C
+		"""
 		val = bool(val)
 		if self._driver_led == val:
 			return
@@ -194,6 +208,13 @@ class Adafruit_AS726x(object):
 		return
 
 	def set_driver_led_current(self, val):
+		"""Sets the AS726x driver LED current to one of the allowed limits (12.5, 25, 50, or 100 mA) by writing the corresponding bits of the LED control register; raises ValueError for invalid values and skips the write if already set.
+
+		Inputs:
+		    val (float): driver LED current limit; must be 12.5, 25, 50, or 100
+		Outputs:
+		    None: writes the LED control register over I2C, or raises ValueError
+		"""
 		if val not in Adafruit_AS726x.DRIVER_CURRENT_LIMITS:
 			raise ValueError("Must be 12.5, 25, 50 or 100")
 		if self._driver_led_current == val:
@@ -206,6 +227,13 @@ class Adafruit_AS726x(object):
 		return
 
 	def indicator_led(self, val):
+		"""Enables or disables the AS726x indicator LED by updating bit 0 of the LED control register via a virtual register write, doing nothing if the state already matches.
+
+		Inputs:
+		    val (bool): True to enable the indicator LED, False to disable
+		Outputs:
+		    None: writes the LED control register over I2C
+		"""
 		val = bool(val)
 		if self._indicator_led == val:
 			return
@@ -216,6 +244,13 @@ class Adafruit_AS726x(object):
 		return
 
 	def indicator_led_current(self, val):
+		"""Sets the AS726x indicator LED drive current (must be 1, 2, 4 or 8 mA), updating the cached value and writing the masked bits into the LED control register via a virtual write.
+
+		Inputs:
+		    val (int): Indicator LED current limit, one of 1/2/4/8 mA
+		Outputs:
+		    None: Writes to the AS726x LED control register; raises ValueError on invalid value
+		"""
 		if val not in Adafruit_AS726x.INDICATOR_CURRENT_LIMITS:
 			raise ValueError("Must be 1, 2, 4 or 8")
 		if self._indicator_led_current == val:
@@ -244,6 +279,13 @@ class Adafruit_AS726x(object):
 		return
 
 	def set_Gain(self, val):
+		"""Sets the sensor gain (1, 3.7, 16 or 64), recomputes the internal normalization factor, and writes the gain bits into the AS726x control setup register if the gain changed.
+
+		Inputs:
+		    val (float): Gain value, one of 1, 3.7, 16 or 64
+		Outputs:
+		    None: Updates normalization, writes to control setup register, logs on exception
+		"""
 		try:
 			if val not in Adafruit_AS726x.GAIN:
 				raise ValueError("Must be 1, 3.7, 16 or 64")
@@ -260,6 +302,13 @@ class Adafruit_AS726x(object):
 			U.logger.log(20,"", exc_info=True)
 
 	def set_Integration_time(self, val):
+		"""Sets the sensor integration time in milliseconds (range 2.8-714), converting it to register steps, recomputing the normalization factor, and writing the value to the AS726x integration time register.
+
+		Inputs:
+		    val (float): Integration time in ms, between 2.8 and 714
+		Outputs:
+		    None: Writes to the AS726x integration time register; raises ValueError if out of range
+		"""
 		if not 2.8 <= val <= 714:
 			raise ValueError("Out of supported range 2.8 - 714 ms")
 		val = int(val/2.8)
@@ -412,6 +461,13 @@ class Adafruit_AS726x(object):
 
 #################################		 
 def readParams():
+	"""Reads the plugin's shared parameter file, and if it changed, parses sensor/device configuration (refresh interval, deltas, gain, integration time, averaging, LED current/blink) and creates or reconfigures Adafruit_AS726x sensor objects per device, pruning sensors no longer present.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global config state and AS726x sensor objects; logs on exception
+	"""
 	global sensorList, sensors, logDir, sensor,	 sensorRefreshSecs
 	global rawOld
 	global deltaX, as726xsensor, minSendDelta
@@ -526,6 +582,14 @@ def readParams():
 		U.logger.log(30,"", exc_info=True)
 
 def setLED(devId,value):
+	"""Controls the AS726x driver LED for a device: disables it when value is 0, otherwise sets the LED drive current to the given value and enables it, handling the I2C multiplexer around the access.
+
+	Inputs:
+	    devId (str): Device identifier keying into the sensors config
+	    value (float): LED drive current; 0 disables the LED
+	Outputs:
+	    None: Enables/disables and sets AS726x driver LED current; logs on exception
+	"""
 	global sensor, sensors,	 as726xsensor
 	try:
 		i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
@@ -542,6 +606,13 @@ def setLED(devId,value):
 
 #################################
 def getValues(devId):
+	"""Reads a full set of spectral channel measurements (blue, green, yellow, orange, red, violet) plus temperature from the AS726x sensor for a device after waiting for data-ready, returning them in a dict, or the string 'badSensor' on repeated failure.
+
+	Inputs:
+	    devId (str): Device identifier keying into the sensors config
+	Outputs:
+	    dict or str: Dict of channel/temperature readings, or 'badSensor' on error
+	"""
 	global sensor, sensors,	 as726xsensor, badSensor
 	global LEDmA, doAverage, LEDBlink, gain
 

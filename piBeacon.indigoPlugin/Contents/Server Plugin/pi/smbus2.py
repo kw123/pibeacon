@@ -140,6 +140,15 @@ class i2c_smbus_ioctl_data(Structure):
 
     @staticmethod
     def create(read_write=I2C_SMBUS_READ, command=0, size=I2C_SMBUS_BYTE_DATA):
+        """Static helper that builds and returns an i2c_smbus_ioctl_data ctypes structure wrapping a freshly allocated union_i2c_smbus_data buffer, used to issue SMBus ioctl operations.
+
+        Inputs:
+            read_write (int): read/write direction flag (defaults to I2C_SMBUS_READ)
+            command (int): SMBus command/register byte
+            size (int): SMBus transaction size constant (defaults to I2C_SMBUS_BYTE_DATA)
+        Outputs:
+            i2c_smbus_ioctl_data: populated ioctl data structure pointing at the data union
+        """
         u = union_i2c_smbus_data()
         return i2c_smbus_ioctl_data(
             read_write=read_write, command=command, size=size,
@@ -172,15 +181,43 @@ class i2c_msg(Structure):
             idx += 1
 
     def __len__(self):
+        """Returns the length of the i2c_msg buffer as stored in the structure's len field, supporting len() on the message.
+
+        Inputs:
+            None.
+        Outputs:
+            int: the message buffer length (self.len)
+        """
         return self.len
 
     def __bytes__(self):
+        """Returns the raw byte contents of the i2c_msg buffer by reading self.len bytes from the buf pointer.
+
+        Inputs:
+            None.
+        Outputs:
+            bytes: the message buffer contents as bytes
+        """
         return string_at(self.buf, self.len)
 
     def __repr__(self):
+        """Returns a developer-readable representation of the i2c_msg showing its address, flags and byte buffer contents.
+
+        Inputs:
+            None.
+        Outputs:
+            str: repr string like i2c_msg(addr,flags,bytes)
+        """
         return 'i2c_msg(%d,%d,%r)' % (self.addr, self.flags, self.__bytes__())
 
     def __str__(self):
+        """Returns the i2c_msg buffer as a string, decoding the raw bytes to characters on Python 3.
+
+        Inputs:
+            None.
+        Outputs:
+            str: the buffer contents as a string
+        """
         s = self.__bytes__()
         if sys.version_info.major >= 3:
             s = ''.join(map(chr, s))
@@ -659,9 +696,25 @@ class SMBusWrapper:
         self.force = force
 
     def __enter__(self):
+        """Context-manager entry that opens the I2C SMBus using the stored bus number and force flag, stores it on the instance, and returns the open bus object.
+
+        Inputs:
+            None.
+        Outputs:
+            SMBus: the opened SMBus bus object
+        """
         self.bus = SMBus(bus=self.bus_number, force=self.force)
         return self.bus
 
     def __exit__(self, exc_type, exc_val, exc_tb):
+        """Context-manager exit that closes the I2C SMBus if auto_cleanup is enabled.
+
+        Inputs:
+            exc_type (type or None): exception class if one was raised in the with-block
+            exc_val (Exception or None): exception instance if one was raised
+            exc_tb (traceback or None): traceback if an exception was raised
+        Outputs:
+            None: closes the SMBus when auto_cleanup is set
+        """
         if self.auto_cleanup:
             self.bus.close()

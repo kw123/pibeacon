@@ -94,8 +94,7 @@ class RD200M:
 		time.sleep(1)
 
 	def test(self, period=None):
-		"""
-		"""
+		"""Sends the RD200M self-test command (cmd_test) to the device over serial; the optional period argument is accepted for signature compatibility but unused."""
 		self._send_cmd(self.cmd_test)
 
 	def force_read(self):
@@ -167,6 +166,13 @@ class RD200M:
 		return True
 
 	def getData(self):
+		"""Polls the RD200 radon sensor's serial port for waiting bytes, reads any pending response, validates its 8-byte frame length and checksum, and dispatches valid measurement frames to the measurement-processing handler.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Processes serial data and logs; dispatches valid frames to _process_measurement_data
+		"""
 		try:
 				nData = self.__serial.inWaiting()
 				self.logger.debug("ndata: {}".format(nData))

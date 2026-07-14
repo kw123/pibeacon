@@ -40,6 +40,13 @@ G.program = "INPUTgpio"
 
 devId = ""
 def readParams():
+		"""Reads the latest sensor configuration JSON, updates global params and the sensors dict, and if the INPUTgpio sensor definitions changed since the last read it restarts the program; exits if no INPUTgpio sensor is present.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates sensors/global state and may restart or exit the process; returns early if no new data
+		"""
 		global sList,sensors
 		global INPgpioType,INPUTcount,INPUTlastvalue
 		global oldRaw, lastRead
@@ -93,6 +100,14 @@ def readParams():
  
 	   
 def getINPUTgpio(all, sens):
+		"""Reads the current digital values of all configured GPIO input pins for a sensor (via RPi.GPIO or gpiozero), applying low/high polarity, and builds a dict of INPUT_n entries either as raw on/off states or accumulated edge counts depending on the count mode.
+
+		Inputs:
+		    all (bool): If True, always include every input's value/count; if False, only include inputs that changed
+		    sens (dict): Sensor definition containing the INPUTS list and optional lowHighAs polarity
+		Outputs:
+		    tuple: (d, new): dict of INPUT_n values/counts and a bool indicating whether any value changed
+		"""
 		global INPUTlastvalue, INPUTcount, GPIOZERO
 		d = {}
 		new = False
@@ -160,6 +175,13 @@ def getINPUTgpio(all, sens):
 
 
 def startGPIO():
+	"""Iterates over all configured INPUTgpio sensors and sets up each GPIO pin as an input with the appropriate pull configuration (open/high/low/inOpen) using either RPi.GPIO or gpiozero Buttons, resetting counts for pins in 'off' mode.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Configures GPIO pin modes/pull-ups and populates GPIOZERO/INPUTcount; logs on error
+	"""
 	global sensors, INPUTcount, lastGPIO, GPIOZERO
 	try:
 		lastGPIO={}

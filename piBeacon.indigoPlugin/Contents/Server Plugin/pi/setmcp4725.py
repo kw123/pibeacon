@@ -17,6 +17,14 @@ G.program = "setmcp4725"
 
 
 def setVoltage(bytes, persist=False):
+	"""Writes a voltage value to an MCP4725 DAC over I2C, using register 0x60 to persist the value to EEPROM or 0x40 for a one-time (non-persistent) write.
+
+	Inputs:
+	    bytes (list): data bytes encoding the DAC output value
+	    persist (bool): if True store value in EEPROM, else volatile write
+	Outputs:
+	    None: writes an I2C block to the MCP4725 DAC, logs on error
+	"""
 	try:
 		if persist:
 			bus.write_i2c_block_data(i2cAddress, 0x60, bytes)
@@ -27,6 +35,13 @@ def setVoltage(bytes, persist=False):
 
 ###########
 def readParams():
+	"""Reads the plugin parameters file via U.doRead and, if non-empty, loads the global parameters (including allowedGPIOoutputPins) through U.getGlobalParams.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global parameters, returns early if no parameters
+	"""
 	global allowedGPIOoutputPins
 	inp, inpRaw, x = U.doRead()
 	if inp == "": return
@@ -139,7 +154,7 @@ if cmd =="pulseDown":
 		U.logger.log(30,"", exc_info=True)
 	exit()
 	
-U.logger.log(30, u"cmd not implemented: "+cmd)
+U.logger.log(30, "cmd not implemented: "+cmd)
 
 
 

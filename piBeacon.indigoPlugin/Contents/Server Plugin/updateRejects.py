@@ -7,15 +7,17 @@ import json
 import logging
 import logging.handlers
 global logging, logger
-try:
-	unicode
-except:
-	str = unicode
-
 
 ####### main pgm / loop ############
 #################################
 def readRejects():
+	"""Reads per-Pi 'rejects.N' files from the data directory, validates and parses each line, accumulates them into the global rejectsIn list (prefixed by Pi number), appends raw lines to a master rejects.in file, removes the consumed files, and loads any existing rejectedByPi.json into the rejectExisting dict.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Populates globals rejectsIn, rejectExisting, nFiles, nExistingMacs; reads/deletes files and logs errors
+	"""
 	global dataDir, rejectsIn, rejectExisting, nFiles, nExistingMacs
 	rejectsIn=[]
 	for pi in range(11):
@@ -61,6 +63,13 @@ def readRejects():
 	
 #################################
 def writeRejects():
+	"""Merges the parsed rejectsIn entries into the rejectExisting dict keyed by MAC (updating first/last timestamps, count, and contributing Pi list), sorts the entries by last-seen date, and writes the result out as rejectedByPi.json.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Updates global rejectExisting and nRejects, writes rejectedByPi.json file, and logs progress
+	"""
 	global homeDir, rejectsIn, rejectExisting, nRejects
 	
 	for r in rejectsIn:
@@ -119,14 +128,14 @@ def writeRejects():
 			logger.log(20,"\n"+out)
 		except: 
 			logger.log(20,"error for "+ mac)
-			logger.log(20,(unicode(rejectExisting[mac]))
+			logger.log(20, str(rejectExisting[mac]))
 	lastDate.sort()	 
 	nRejects = len(out0)
 	out1=[]
 	#print lastDate
 	for ii in range(len(lastDate)):
 		out1.append(out0[lastDate[ii][1]])
-		logger.log(20,+"{} {}".format(lastDate[ii], out0[lastDate[ii][1]]) )
+		logger.log(20,"{} {}".format(lastDate[ii], out0[lastDate[ii][1]]) )
 	
 	if nRejects > 0:
 		logger.log(20,"nunber of macs rejected:{}".format(nRejects) )
@@ -168,9 +177,9 @@ else:
 
 
 	
-logger.log(20,"========= start    @ {}  =========== ".format(datetime.datetime.now() )
+logger.log(20,"========= start    @ {}  =========== ".format(datetime.datetime.now() ))
 readRejects()
 writeRejects()
 
-logger.log(20,"========= finished @ {}; read {} files from RPIs ;  MACs in reject list before {},  after: {}"format(datetime.datetime.now(), nFiles, nExistingMacs, nRejects) )
+logger.log(20,"========= finished @ {}; read {} files from RPIs ;  MACs in reject list before {},  after: {}".format(datetime.datetime.now(), nFiles, nExistingMacs, nRejects) )
 sys.exit(0)		

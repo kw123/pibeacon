@@ -241,6 +241,13 @@ class MPR121():
 		return self._reset()
 
 	def _reset(self):
+		"""Performs a soft reset of the MPR121 capacitive touch controller over I2C, restoring default electrode, threshold, baseline-filter, debounce, and configuration register values, then re-enables all electrodes; verifies the CONFIG2 register reads the expected default.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if reset succeeded, False if the CONFIG2 register did not read the expected 0x24
+		"""
 		global TOU_THRESH, REL_THRESH
 		# Soft reset of device.
 		self._i2c_retry(self.write8, MPR121_SOFTRESET, 0x63)
@@ -279,6 +286,14 @@ class MPR121():
 		# retries times.  For some reason the Pi 2 hardware I2C appears to be
 		# flakey and randomly return timeout errors on I2C reads.  This will
 		# catch those errors, reset the MPR121, and retry.
+		"""Wrapper that executes an I2C read/write function and retries it after resetting the MPR121 on timeout (IOError errno 110), re-raising other errors and raising RuntimeError once the maximum retry count is exceeded.
+
+		Inputs:
+		    func (callable): I2C operation (e.g. self.write8/self.readU8) to invoke
+		    params (tuple): variadic positional arguments forwarded to func
+		Outputs:
+		    object: the return value of func on success; raises RuntimeError when retries are exhausted
+		"""
 		count = 0
 		while True:
 			try:
@@ -332,6 +347,13 @@ class MPR121():
 
 
 def startTouch16Serial():
+	"""Initializes the bit-banged serial interface for a 16-channel touch sensor: sets half-bit and character timing constants and configures the SCL output and SDO input pins using either RPi.GPIO or gpiozero depending on the useGPIO flag.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sets timing globals and configures GPIO/gpiozero pins for serial touch reading
+	"""
 	global SCLPin,SDOPin, HALF_BIT_TIME, CHARACTER_DELAY, sensBase, GPIOZERO
 	global INPUTlastvalue, INPUTcount, INPUTtouchCountFilename
 	HALF_BIT_TIME		= .001#	 1 msec
@@ -347,6 +369,13 @@ def startTouch16Serial():
 
 
 def getTouched16Serial(np):
+	"""Clocks the bit-banged serial line to read the state of np touch buttons from a 16-channel serial touch sensor, returning a per-button list where pressed channels are marked 1 (active-low input).
+
+	Inputs:
+	    np (int): number of button channels to clock out and read
+	Outputs:
+	    list: list of np ints (1 = touched, 0 = not) or None on exception
+	"""
 	global SCLPin,SDOPin, zeroPINS, GPIOZERO
 
 	try:
@@ -385,6 +414,13 @@ def getTouched16Serial(np):
 
 
 def getTouched16i2c(np):
+	"""Reads two bytes over I2C from a 16-channel touch device and unpacks them into a per-channel list of np ints, setting 1 for each touched pad based on the bit positions of the two bytes.
+
+	Inputs:
+	    np (int): number of pad channels to populate in the result list
+	Outputs:
+	    list: list of np ints (1 = touched, 0 = not) or None on exception
+	"""
 	global NumberOfPads , devClass16i2c
 	try:
 		keys = [0 for ii in range(np)]
@@ -404,6 +440,13 @@ def getTouched16i2c(np):
 
 
 def startTouch12i2c():
+	"""Initializes the 12-channel MPR121 I2C touch sensor by setting touch/release thresholds and instantiating the MPR121 driver, exiting the program if the device fails to begin (wiring error).
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: sets threshold globals and devClass12i2c; calls sys.exit(1) on init failure
+	"""
 	global sensBase
 	global TOU_THRESH, REL_THRESH
 	global devClass12i2c
@@ -415,6 +458,13 @@ def startTouch12i2c():
 		sys.exit(1)
 
 def getTouched12i2c(np):
+	"""Queries the 12-channel MPR121 sensor for its current touch bitmask and converts it into a per-channel list of np 0/1 values; increments restartCount and logs on error.
+
+	Inputs:
+	    np (int): number of channels to extract from the touch bitmask
+	Outputs:
+	    list: list of np ints (1 = touched, 0 = not) or None on exception
+	"""
 	global restartCount
 	global devClass12i2c
 
@@ -433,6 +483,13 @@ def getTouched12i2c(np):
 
 
 def readParams():
+		"""Reads the latest sensor configuration: fetches/refreshes parameters, skips work if unchanged, parses the INPUTtouch sensor definitions and their device types, and lazily initializes the appropriate touch driver (16Serial, 16i2c, or 12i2c) including resolving SCL/SDO pins; exits if no touch sensors are defined.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: updates global sensor/config state and initializes touch device drivers; returns early or exits if nothing applies
+		"""
 		global sensors,	 sensor, sensBase, oldSensParams
 		global INPgpioType,INPUTcount,INPUTlastvalue,	oldParams
 		global SCLPin, SDOPin
@@ -504,6 +561,16 @@ def readParams():
 
 
 def getINPUTcapacitor(sensors,data,devType, NPads):
+	"""Reads capacitive touch pad states for the given device type (16Serial, 16i2c, or 12i2c), maps each configured INPUT's gpio pin to a 0/1 value (optionally inverted via lowHighAs), and either reports the raw level or increments a persisted edge counter for count-enabled inputs. Updates the data dict per sensor/device and persists the counters when any counter changed.
+
+	Inputs:
+	    sensors (dict): Sensor configuration keyed by sensor name then device id
+	    data (dict): Result accumulator that gets per-device INPUT readings written into it
+	    devType (str): Touch hardware type: '16Serial', '16i2c', or '12i2c'
+	    NPads (int): Number of touch pads/channels to read
+	Outputs:
+	    tuple: (data dict with INPUT readings, new bool flag indicating a counter changed)
+	"""
 	global INPUTlastvalue, INPUTcount
 	new = False
 	try:

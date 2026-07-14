@@ -21,6 +21,13 @@ import	piBeaconGlobals as G
 
 
 def readParams():
+		"""Reads the plugin parameter file and, if its raw content changed since the last read, updates the global actions list from the parsed input.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates the global actions and oldParams variables
+		"""
 		global oldParams, actions
 
 		inp, inpRaw, x = U.doRead()
@@ -33,6 +40,13 @@ def readParams():
 
 
 def doActions():
+		"""Intended to process the configured actions, but the body currently returns immediately so it performs no work (placeholder/stub wrapped in a try/except that logs exceptions).
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: No-op stub; returns immediately
+		"""
 		global actions
 		try:
 			return
@@ -47,6 +61,13 @@ def doActions():
 
 
 def execMain():
+	"""Main entry point for the actions worker process: sets globals, kills stale instances of itself, configures logging, reads action parameters, and runs an endless loop that periodically refreshes an alive heartbeat file, reloads parameters, and executes queued actions.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Runs forever; writes heartbeat files, reads params, executes actions, and logs
+	"""
 	global oldParams,actions
 	
 	
@@ -57,7 +78,7 @@ def execMain():
 	actions			 = []
 	myPID		= str(os.getpid())
 	
-	killOldPgm(myPID,"actions.py")# old old instances of myself if they are still running
+	U.killOldPgm(myPID,"actions.py")# old old instances of myself if they are still running
 	
 	U.setLogging()
 	

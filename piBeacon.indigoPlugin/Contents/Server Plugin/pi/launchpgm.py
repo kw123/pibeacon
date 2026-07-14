@@ -22,6 +22,13 @@ G.program = "launchpgm"
 # read params do not change
 # ===========================================================================
 def readParams():
+		"""Reads the plugin's global/sensor configuration from the input pipe, extracts per-sensor launchCommand, launchCheck, refresh interval and minSendDelta settings, and starts or stops sensor launch commands when they have changed since the previous read.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: updates module globals and starts/stops sensor subprocesses; may call exit()
+		"""
 		global debug, sensorList,launchCommand, launchCheck,sensorRefreshSecs, sensors, minSendDelta
 
 		sensorList	= "0"
@@ -34,9 +41,9 @@ def readParams():
 		if G.program not in sensors: 
 			exit()
 		sensor = sensors[G.program]
-		for id in sensor:
-			if "launchCommand"	in sensor[id]:	launchCommand[id] =				sensor[id]["launchCommand"]
-			if "launchCheck"  in sensor[id]:	launchCheck[id]	  =				sensor[id]["launchCheck"]
+		for devId in sensor:
+			if "launchCommand"	in sensor[devId]:	launchCommand[devId] =	sensor[devId]["launchCommand"]
+			if "launchCheck"  	in sensor[devId]:	launchCheck[devId]	 =	sensor[devId]["launchCheck"]
 			try:
 				xx = sensors[sensor][devId]["sensorRefreshSecs"].split("#")
 				sensorRefreshSecs = float(xx[0]) 
@@ -49,12 +56,12 @@ def readParams():
 			except:
 				minSendDelta = 5.
 
-		# check if anything new
-		if id not in oldlaunchCommand or launchCommand[id] != oldlaunchCommand[id]:
-			startSensors(launchCommand[id])
-
-		if id in oldlaunchCommand and id not in	 launchCommand:
-			stopSensor(launchCommand[id])
+			# check if anything new
+			if devId not in oldlaunchCommand or launchCommand[devId] != oldlaunchCommand[devId]:
+				startSensors(launchCommand[devId])
+	
+			if devId in oldlaunchCommand and devId not in	 launchCommand:
+				stopSensors(launchCommand[devId])
 
 
 
@@ -63,32 +70,53 @@ def readParams():
 # ===========================================================================
 
 def stopSensors(launchCmd):
+		"""Stops a running sensor launch command by killing the old process matching the given command and logging the action.
+
+		Inputs:
+		    launchCmd (str): shell launch command identifying the process to kill
+		Outputs:
+		    None: kills the matching process and logs; logs traceback on error
+		"""
 		try:
 			# do your init here
 			U.killOldPgm(myPID, launchCmd)
 			## add any init code here for address # addr
-			U.logger.log(30, u"stopping	{}".format(launchCmd) )
+			U.logger.log(30, "stopping	{}".format(launchCmd) )
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"launchCmd used: {}".format(launchCmd) )
+			U.logger.log(30, "launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
 
 def startSensors(launchCmd):
+		"""Starts a sensor by running the given launch command in the background via a shell subprocess and logging the action.
+
+		Inputs:
+		    launchCmd (str): shell command to launch in the background
+		Outputs:
+		    None: spawns a background subprocess and logs; logs traceback on error
+		"""
 		try:
 			# do your init here
 			subprocess.call(launchCmd+" &", shell=True)
 			## add any init code here for address # addr
-			U.logger.log(30, u"starting	{}".format(launchCmd) )
+			U.logger.log(30, "starting	{}".format(launchCmd) )
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"launchCmd used: {}".format(launchCmd) )
+			U.logger.log(30, "launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
 
 def checkIfRunning(check):
+		"""Checks whether a process matching the given check string is currently running, returning a human-readable status string.
+
+		Inputs:
+		    check (str): process identifier string to test; empty string skips the check
+		Outputs:
+		    str: 'running', 'not running', or 'not checked'
+		"""
 		try:
 			# do your init here
 			if check !="": 
@@ -97,7 +125,7 @@ def checkIfRunning(check):
 				return "not checked"
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"checking used: {}".format(check) )
+			U.logger.log(30, "checking used: {}".format(check) )
 
 
 # ===========================================================================

@@ -20,6 +20,13 @@ devType = "i2cPCF8591dac"
 
 
 def readParams():
+	"""Reads the latest plugin parameter file via U.doRead and applies the global parameters (updating allowedGPIOoutputPins and other globals); returns early if no input is available.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates module-level global parameters from the parameter file
+	"""
 	global allowedGPIOoutputPins
 	inp, inpRaw, x = U.doRead()
 	if inp == "": return

@@ -22,6 +22,13 @@ G.program = "myoutput"
 #  ===========================================================================
 
 def readParams():
+	"""Reads the plugin input via U.doRead and, if non-empty, applies the global parameters from it via U.getGlobalParams.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: updates global params from input
+	"""
 	inp, inpRaw, x = U.doRead()
 	if inp == "": return
 	U.getGlobalParams(inp)

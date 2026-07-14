@@ -24,6 +24,13 @@ import atexit
 
 
 def dummyExit(): 
+	"""No-op function registered with atexit; does nothing and exists only to provide an exit handler hook.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Does nothing
+	"""
 	return 
 
 atexit.register(dummyExit)
@@ -52,12 +59,26 @@ class pix():
 		# Required because Python will complain about memory leaks
 		# However there's no guarantee that "ws" will even be set 
 		# when the __del__ method for this class is reached.
+		"""Destructor for the pix LED-display class; if the underlying NeoPixel object exists, it invokes the cleanup routine to free library resources.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Calls _cleanup to release the NeoPixel object
+		"""
 		if self.pixels  is not None:
 			self._cleanup()
 		return 
 
 	def _cleanup(self):
 		# Clean up memory used by the library when not needed anymore.
+		"""Releases the NeoPixel library resources by deleting the internal pixels object if it is set, printing a confirmation message.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Deletes self.pixels and prints a cleanup message
+		"""
 		if self.pixels is not None:
 			print("Exiting cleanly")
 			del self.pixels 
@@ -65,11 +86,26 @@ class pix():
 		
 	def show(self):
 		#print "Update the display with the data from the LED buffer."
+		"""Pushes the current LED buffer to the physical NeoPixel display by calling the underlying pixels.show().
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Updates the physical LED display
+		"""
 		self.pixels.show()
 		return 
 
 	def setPixels(self, ind, pixelsIn):
 		#print "Update the display with the data from the LED buffer."
+		"""Sets the color value of a single pixel at the given index in the NeoPixel buffer.
+
+		Inputs:
+		    ind (int): Index of the pixel to set
+		    pixelsIn (tuple): Color value (e.g. RGB tuple) to assign to the pixel
+		Outputs:
+		    None: Writes the color into the NeoPixel buffer
+		"""
 		self.pixels[ind] = pixelsIn
 		return 
 #=============================
@@ -78,6 +114,13 @@ class pix():
 
 #============================= utils
 def applyIntensity(c):
+	"""Scales an input RGB color by the global intensity and light-sensor multiplier, clamping each channel between the configured min and max dim levels (the min only applied to nonzero channels), and returns the adjusted RGB list.
+
+	Inputs:
+	    c (list): Input RGB color as a 3-element sequence
+	Outputs:
+	    list: Intensity-adjusted, clamped [r,g,b] integer list
+	"""
 	global intensity, multIntensity
 	global lightMinDimForDisplay, lightMaxDimForDisplay
 	ret = [0,0,0]
@@ -96,6 +139,14 @@ def applyIntensity(c):
 
 
 def get_index_from_xy(x, y):
+	"""Converts (x, y) display coordinates into a linear LED buffer index using the MAP lookup table, applying flip/rotation (90/180/270 degrees) based on the global flipDisplay setting. Falls back to the last LED index if the coordinates are out of range.
+
+	Inputs:
+	    x (int): Horizontal position on the display
+	    y (int): Vertical position on the display
+	Outputs:
+	    int: Linear LED index for the given coordinate
+	"""
 	global flipDisplay, height,width, LED_COUNT
 	"""Convert an x, y value to an index on the display
 
@@ -175,6 +226,14 @@ class draw():
 
 	def __init__(self,  nx=8,ny=8):
 		
+		"""Constructor for a NeoPixel matrix image buffer; stores the matrix width and height, computes derived dimensions (max-1 indices and total LED count), and initializes a blank pixel grid via resetImage().
+
+		Inputs:
+		    nx (int): Number of LEDs in the X direction (matrix width)
+		    ny (int): Number of LEDs in the Y direction (matrix height)
+		Outputs:
+		    None: Initializes instance attributes (maxX, maxY, maxX1, maxY1, numberOfLed, PIXELS)
+		"""
 		self.maxX  = nx
 		self.maxY  = ny
 		self.maxX1 = nx - 1
@@ -184,10 +243,24 @@ class draw():
 
 
 	def resetImage(self, RGB=[0,0,0]):
+		"""Resets the PIXELS image buffer to a maxY-by-maxX grid where every pixel is filled with the given RGB color after applying the global intensity scaling.
+
+		Inputs:
+		    RGB (list): Three-element [R,G,B] color used to fill every pixel; defaults to black [0,0,0]
+		Outputs:
+		    None: Replaces self.PIXELS with a freshly filled 2D color grid
+		"""
 		self.PIXELS = [[applyIntensity(RGB) for x in range(self.maxX)] for y in range(self.maxY)]
 		#print " pixels:", self.PIXELS
 
 	def rectangle(self,pos):
+		"""Draws a filled rectangle into the pixel grid, setting all pixels within the clamped left/right corner coordinates to the intensity-adjusted RGB color taken from pos[4:7].
+
+		Inputs:
+		    pos (list): [xleft, yleft, xright, yright, R, G, B] rectangle corners and fill color
+		Outputs:
+		    None: Updates a rectangular region of self.PIXELS
+		"""
 		global intensity
 		xleft  = pos[0]
 		yleft  = pos[1]
@@ -199,6 +272,13 @@ class draw():
 		return
 		
 	def line(self, pos):
+		"""Draws a straight line between two endpoints into the pixel grid; handles vertical lines specially and otherwise computes slope/intercept to plot the line, clamping coordinates and coloring with the intensity-adjusted RGB from pos[4:7]. Logs exceptions.
+
+		Inputs:
+		    pos (list): [y0, x0, y1, x1, R, G, B] line endpoints and color
+		Outputs:
+		    None: Draws line pixels into self.PIXELS; logs on error
+		"""
 		try:
 			sx = 1
 			sy = 1
@@ -228,10 +308,17 @@ class draw():
 			return
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"pos {}".format(pos))
+			U.logger.log(30, "pos {}".format(pos))
 
 		
 	def sLine(self, pos):
+		"""Draws a horizontal line on the top row (row 0) of the pixel grid from xStart to xEnd, coloring each pixel with the intensity-adjusted RGB taken from the last three elements of pos. Logs exceptions.
+
+		Inputs:
+		    pos (list): [xStart, xEnd, ..., R, G, B] start/end columns and trailing color
+		Outputs:
+		    None: Sets pixels in row 0 of self.PIXELS; logs on error
+		"""
 		try:
 			xStart = pos[0]
 			xEnd   = pos[1]
@@ -241,11 +328,18 @@ class draw():
 			return
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, u"pos {}".format(pos))
+			U.logger.log(30, "pos {}".format(pos))
 
 
 
 	def point(self,pos):
+		"""Sets a single pixel at the clamped (y, x) coordinate to the intensity-adjusted RGB color taken from pos[2:5]. Logs any exception.
+
+		Inputs:
+		    pos (list): [y, x, R, G, B] pixel coordinate and color
+		Outputs:
+		    None: Updates one entry in self.PIXELS; logs on error
+		"""
 		try:
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] = applyIntensity(pos[2:5])
 		except Exception as e:
@@ -255,6 +349,14 @@ class draw():
 
 	def pixelImage(self, pos, pixs):
 		
+		"""Blits a 2D array of pixel colors into the grid starting at the given x/y offset, copying each source pixel (intensity-adjusted) into the clamped target position within the matrix bounds.
+
+		Inputs:
+		    pos (list): Position descriptor whose [1] and [2] give the x/y start offsets
+		    pixs (numpy.ndarray): 2D array of RGB pixel values indexed as pixs[y, x]
+		Outputs:
+		    None: Copies the image region into self.PIXELS
+		"""
 		xstart = pos[1]
 		ystart = pos[2]
 		xN = len(pixs[0])
@@ -270,15 +372,29 @@ class draw():
 
 
 	def matrix(self, pos):
+		"""Loads a full 2D matrix of colors into the pixel grid, setting each clamped (y, x) cell to the intensity-adjusted color from pos[y][x]; logs an error if pos is not a nested list.
+
+		Inputs:
+		    pos (list): 2D list of RGB triples (rows of columns) defining the full image
+		Outputs:
+		    None: Fills self.PIXELS from the matrix; logs on type error
+		"""
 		if isinstance(pos[0], list):
 			for y in range(len(pos)):
 				for x in range(len(pos[0])):
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))] = applyIntensity(pos[y][x])
 		else:		 
-			U.logger.log(30,u" error type:{} pos:{}".format(cType, pos) )
+			U.logger.log(30," error type:{} pos:{}".format(cType, pos) )
 		return
 		
 	def points(self, pos):
+		"""Sets multiple individual pixels; if a '*' wildcard appears it fills the entire grid with the RGB taken from the last three numbers, otherwise it treats pos as a list of [y, x, R, G, B] entries and colors each clamped pixel with the intensity-adjusted RGB. Logs errors.
+
+		Inputs:
+		    pos (list): List of [y,x,R,G,B] pixel entries, or a wildcard form using '*' to fill all pixels
+		Outputs:
+		    None: Updates one or more entries of self.PIXELS; logs on error
+		"""
 		try:
 			ppp = "{}".format(pos)
 			if ppp.find("*") > -1:  # get rgb values = last three numbers in eg [["*","*",3,4,5]] or ["*","*",3,4,5]
@@ -295,13 +411,20 @@ class draw():
 					x= pos[kk][1]
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))] = applyIntensity(pos[kk][2:5])
 			else:		 
-				U.logger.log(30,u" error type:{} pos:{}".format(cType, pos) )
+				U.logger.log(30," error type:{} pos:{}".format(cType, pos) )
 		except Exception as e:
 			U.logger.log(30,"", exc_info=True)
 
 
 	def rotateCenter(self, phi=math.pi/2.):
 		
+		"""Rotates the pixel image about its center by angle phi by copying the original buffer and remapping each source cell to a new position computed via cosine/sine transforms (note: an approximate rotation, defaults to 90 degrees).
+
+		Inputs:
+		    phi (float): Rotation angle in radians; defaults to pi/2 (90 degrees)
+		Outputs:
+		    None: Rewrites self.PIXELS with the rotated image
+		"""
 		temp = copy.copy(self.PIXELS)
 		x0 = int(self.maxX/2.)
 		y0 = int(self.maxY/2.)
@@ -317,6 +440,13 @@ class draw():
 
 	def shiftHorizontal(self,dx):
 		
+		"""Shifts the pixel image horizontally by dx columns: copies the current buffer, clears the grid via resetImage(), then writes each source column into its shifted destination, dropping columns that fall off the right edge.
+
+		Inputs:
+		    dx (int): Number of columns to shift the image to the right
+		Outputs:
+		    None: Replaces self.PIXELS with the horizontally shifted image
+		"""
 		temp = copy.copy(self.PIXELS)
 		self.resetImage()
 		for xA in range(0,self.maxX):
@@ -328,6 +458,13 @@ class draw():
 
 	def shiftVertical(self,dy):
 		
+		"""Shifts the pixel image vertically by dy rows: copies the current buffer, clears the grid via resetImage(), then writes each source row into its shifted destination, dropping rows that fall off the bottom edge.
+
+		Inputs:
+		    dy (int): Number of rows to shift the image down
+		Outputs:
+		    None: Replaces self.PIXELS with the vertically shifted image
+		"""
 		temp = copy.copy(self.PIXELS)
 		self.resetImage()
 		for yA in range(0,self.maxY):
@@ -338,10 +475,26 @@ class draw():
 		return
 		
 	def printPIXELS(self, calledFrom=""):
+		"""Logs a debug message showing the caller label, the length of the PIXELS buffer, and the first 50 elements of it for diagnostics.
+
+		Inputs:
+		    calledFrom (str): Label identifying the calling context, included in the log line
+		Outputs:
+		    None: Writes a debug log entry only
+		"""
 		U.logger.log(10,"pixels {} {} {} <<<".format(calledFrom, len(self.PIXELS), self.PIXELS[0:50]) )
 		return
 
 	def show(self,rotate = 0, rotateSeconds=0,speedOfChange=0):
+		"""Renders the 2D PIXELS matrix onto the physical NeoPixel LED strip by mapping x/y coordinates to a linear index; optionally fades smoothly between the old and new colors over a given duration, or rotates the pattern around the strip while polling for new input or reboot/parameter changes.
+
+		Inputs:
+		    rotate (int): Number of rotation steps; 0 means no rotation, sign sets direction
+		    rotateSeconds (float): Delay in seconds between each rotation step
+		    speedOfChange (float): Fade duration in seconds for transitioning from previous to new colors; 0 means instant
+		Outputs:
+		    None: Pushes pixel data to the LED hardware via doPix.setPixels/show
+		"""
 		global LED_COUNT, linearDATA
 		try:
 			##print "hello"
@@ -419,6 +572,13 @@ class draw():
 			U.logger.log(30," pixel len:{}".format(len(self.PIXELS))+"  {}".format(self.PIXELS)[0:100])
 			
 	def clear(self,RGB):
+		"""Sets every LED on the strip to the given RGB color (after applying the global intensity) and pushes the result to the hardware, effectively clearing or filling the whole display.
+
+		Inputs:
+		    RGB (list): Three-element [red, green, blue] color applied to all LEDs
+		Outputs:
+		    None: Writes the color to all LEDs and calls doPix.show()
+		"""
 		global LED_COUNT
 		for x in range(LED_COUNT):
 			doPix.setPixels(x,applyIntensity(RGB))
@@ -429,6 +589,13 @@ class draw():
 
 #============================= std pgms 
 def readParams():
+	"""Reads the latest input/parameter file, and if it has changed parses the global device configuration (device type, signal pin, matrix order, intensity, PWM/DMA channel, frequency, light-sensor settings) into module globals; returns 1 if a hardware-relevant parameter changed and a restart is required.
+
+	Inputs:
+	    None.
+	Outputs:
+	    int: 1 if a hardware-affecting parameter changed (restart needed), else 0
+	"""
 	global devType,	 intensityDevice,flipDisplay, signalPin,OrderOfMatrix, PWMchannel, DMAchannel, frequency
 	global astOrderOfMatrix, lastdevType, lastsignalPin, lastintensityDevice, lastPWMchannel, lastDMAchannel,lastfrequency
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
@@ -555,6 +722,13 @@ def readParams():
 					   
 # ------------------    ------------------ 
 def readNewInput():
+	"""Checks for the temp/neopixel.inp input file, and if present reads it, splits its contents into a list of lines, deletes the file, optionally logs the new input, and returns the parsed lines.
+
+	Inputs:
+	    None.
+	Outputs:
+	    list: Lines read from the input file, or empty list if none/error
+	"""
 	global debugLevel
 	if os.path.isfile(G.homeDir+"temp/neopixel.inp"):
 		try:
@@ -577,15 +751,36 @@ def readNewInput():
 		
 # ------------------    ------------------ 
 def checkIfnewInput():
+		"""Returns whether a new NeoPixel input command file (temp/neopixel.inp) currently exists.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if the input file exists, else False
+		"""
 		return os.path.isfile(G.homeDir+"temp/neopixel.inp")
 
 # ------------------    ------------------ 
 def checkIfnewReboot():
+		"""Returns whether a reboot-in-progress marker file (temp/rebooting.now) currently exists.
+
+		Inputs:
+		    None.
+		Outputs:
+		    bool: True if the reboot marker file exists, else False
+		"""
 		return os.path.isfile(G.homeDir+"temp/rebooting.now")
 
 
 # ------------------    ------------------ 
 def saveLastCommands(data):
+	"""Serializes the given command data to JSON and writes it to the neopixel.last file so the last commands can be restored later.
+
+	Inputs:
+	    data (object): JSON-serializable command data to persist
+	Outputs:
+	    None: Writes JSON to the neopixel.last file
+	"""
 	try:
 		f = open(G.homeDir+"neopixel.last","w")
 		f.write(json.dumps(data))	
@@ -595,6 +790,13 @@ def saveLastCommands(data):
 
 # ------------------    ------------------ 
 def readLastCommands():
+	"""Reads the neopixel.last file if it exists and returns the JSON-decoded last command data.
+
+	Inputs:
+	    None.
+	Outputs:
+	    object: Decoded last commands, or empty list if file missing or on error
+	"""
 	try:
 		if os.path.isfile(G.homeDir+"neopixel.last"):
 			f	= open(G.homeDir+"neopixel.last","r")
@@ -607,6 +809,13 @@ def readLastCommands():
 
 # ------------------    ------------------ 
 def deleteLastCommands():
+	"""Deletes the neopixel.last persisted-commands file if it exists, ignoring any errors.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Removes the neopixel.last file
+	"""
 	try:
 		if os.path.isfile(G.homeDir+"neopixel.last"):
 			os.remove(G.homeDir+"neopixel.last")
@@ -614,6 +823,13 @@ def deleteLastCommands():
 	
 # ------------------    ------------------ 
 def restartNEOpixel():
+	"""Triggers a restart of the NeoPixel program via U.restartMyself, citing a changed device type as the reason.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Initiates a process restart
+	"""
 	global devType,lastdevType
 	global pgmType
 	U.restartMyself(reason="restarting due to new device type, old={} new={}".format(devTypeLast, devType), param=pgmType, doPrint=True)
@@ -621,6 +837,13 @@ def restartNEOpixel():
 
 
 def setLightSnsor():
+	"""If the light sensor is not in use, forces the global intensity multiplier to 1 so display brightness is not scaled.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: Sets the global multIntensity to 1 when no light sensor is used
+	"""
 	global useLightSensor, multIntensity
 	 
 	if not useLightSensor:
@@ -628,6 +851,13 @@ def setLightSnsor():
 		
 # ------------------    ------------------ 
 def getLightSensorValue(force=False):
+	"""Reads the latest light-sensor reading from temp/lightSensor.dat, scales it by the configured slope and sensor-type max range, smooths it against the previous value, and updates the global intensity multiplier used to dim the NeoPixel display. Returns False (and skips) if the sensor is disabled, the file is missing/stale, or the change is below a 5% threshold.
+
+	Inputs:
+	    force (bool): If True, bypass the 2-second rate-limit between reads
+	Outputs:
+	    bool or None: True if a new value was applied, False if skipped/invalid, None if light sensor is disabled
+	"""
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw, lightSensorSlopeForDisplay
 	global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay, intensity, useLightSensorType, useLightSensorDevId
 	global multIntensity, intensityDevice, lightSensorValue, useLightSensor
@@ -691,6 +921,13 @@ def getLightSensorValue(force=False):
 
 # ------------------    ------------------ 
 def checkLightSensor():
+	"""Polls the light sensor via getLightSensorValue(force=True) and, when no fresh reading is applied, gradually steps the current light value toward the last raw value (or snaps to it) to update the global intensity multiplier. Returns early if the sensor is disabled or display light is off.
+
+	Inputs:
+	    None.
+	Outputs:
+	    bool or None: True if the light value/intensity was updated, False if unchanged, None if disabled
+	"""
 	global lastlightSensorValue, lastTimeLightSensorValue, lastTimeLightSensorFile, lightSensorValueRaw
 	global lightMinDimForDisplay, lightMaxDimForDisplay, lightSensorOnForDisplay
 	global multIntensity, intensityDevice, lightSensorValue, useLightSensor
@@ -720,6 +957,14 @@ def checkLightSensor():
 
 # ------------------    ------------------ 
 def sendToIndigo(data, devId):
+	"""Extracts a status field from the first JSON element of the data list and sends it to Indigo as a neopixel device output update via U.sendURL. No-op if Indigo is not up or data is empty.
+
+	Inputs:
+	    data (list): List whose first element is a JSON string containing a status key
+	    devId (str): Neopixel device id used as the output key
+	Outputs:
+	    None: Posts a status update to Indigo via U.sendURL; no return value
+	"""
 	global indigoUP
 	if not indigoUP: return 
 	if data == []: return 
@@ -803,11 +1048,11 @@ inpRaw			= ""
 U.setLogging()
 
 readParams()
-U.logger.log(20, u"=========== (re) started neopixel3  ============{}".format(sys.argv))
+U.logger.log(20, "=========== (re) started neopixel3  ============{}".format(sys.argv))
 
 
 if devType	  == "": 
-	U.logger.log(30, u"{} , no neopixel3 section in parameters file available".format(datetime.datetime.now()))
+	U.logger.log(30, "{} , no neopixel3 section in parameters file available".format(datetime.datetime.now()))
 	exit()
 
 MAP,linMAP	 = makeMAP(devType, OrderOfMatrix=OrderOfMatrix)
@@ -922,7 +1167,7 @@ while True:
 						if resetInitial !=[] and resetInitial !="":
 							try:resetInitial= json.loads(resetInitial)
 							except: pass
-							U.logger.log(10, "resetting initial:".format(resetInitial))
+							U.logger.log(10, "resetting initial:{}".format(resetInitial))
 							image.resetImage(resetInitial)
 							image.show()
 					except: pass
@@ -977,7 +1222,7 @@ while True:
 						#print "comand", data["command"]
 						try: ncmds = len(data["command"])
 						except:
-							U.logger.log(20, " read error type:{} and data:{}".format(type(nextLine), type(data), data))
+							U.logger.log(20, " read error type:{} and data type:{}, data:{}".format(type(nextLine), type(data), data))
 							continue
 						npage=-1
 						waited =False
@@ -1014,7 +1259,7 @@ while True:
 											except: pass
 								
 									if cType == "NOP" :
-											U.logger.log(10,u"skipping display .. NOP")
+											U.logger.log(10,"skipping display .. NOP")
 											continue
 
 									rotate=0
@@ -1057,7 +1302,7 @@ while True:
 										image.point(pos)
 					
 									elif cType == "image" and "text" in cmd and len(cmd["text"]) >0:
-											U.logger.log(10,u"type:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"])
+											U.logger.log(10,"type:"+cType+" pos:{}".format(pos) +" text:" + cmd["text"])
 											pass
 
 									elif cType == "matrix":
@@ -1070,7 +1315,7 @@ while True:
 									elif cType == "circle":
 											# pos:= [sleeptime, nled, starts, ends, rgb]
 											if len(pos) != 5:
-												U.logger.log(20,u"not enough parameters for postion:{}, should be 4".format(pos))
+												U.logger.log(20,"not enough parameters for postion:{}, should be 4".format(pos))
 												time.sleep(3)
 												continue
 
@@ -1097,7 +1342,7 @@ while True:
 
 									elif cType == "knightrider" or cType == "kr":
 											if len(pos) != 7:
-												U.logger.log(20,u"not enough parameters for postion:{}, should be 7".format(pos))
+												U.logger.log(20,"not enough parameters for postion:{}, should be 7".format(pos))
 												time.sleep(3)
 												continue
 
@@ -1121,7 +1366,7 @@ while True:
 											#  delay 	#0f steps	start	nLEDs   led   r  g  b   r   g   b    r  g    b colors 
 											#[0.01,		240,		1,		64,		     30, 0, 0,  0,  30, 0,   0, 0,  30]}
 											if len(pos) < 6:
-												U.logger.log(20,u"not enough parameters for postion:{}, should be > +3/6/9/...".format(pos))
+												U.logger.log(20,"not enough parameters for postion:{}, should be > +3/6/9/...".format(pos))
 												time.sleep(3)
 												continue
 
@@ -1163,7 +1408,7 @@ while True:
 											exit()
 										speed = 1
 										if len("{}".format(pos)) < 20: 
-											U.logger.log(30, u"clock:  bad data, exiting")
+											U.logger.log(30, "clock:  bad data, exiting")
 											time.sleep(1)
 											exit()
 										if "speed" in pos:
@@ -1262,7 +1507,7 @@ while True:
 										image.points(lin)
 
 									if "display" not in cmd or cmd["display"] != "wait": 
-										U.logger.log(10, u"displaying	 {}".format(cmd["type"]) )
+										U.logger.log(10, "displaying	 {}".format(cmd["type"]) )
 										tt3 = time.time()
 										image.show(rotate=rotate, rotateSeconds=rotateSeconds, speedOfChange=speedOfChange)
 									if cType == "clock":
@@ -1333,7 +1578,7 @@ while True:
 		U.logger.log(30,"", exc_info=True)
 		lines=[]
 
-U.logger.log(30, u"exiting at end")
+U.logger.log(30, "exiting at end")
 
 	
 sys.exit(0)		   
