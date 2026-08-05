@@ -68,11 +68,11 @@ def readParams():
                 break
 
         else:
-            U.logger.log(30, "stopping FM radio, no device defined in parameters file")
+            U.logger.log(20, "stopping FM radio, no device defined in parameters file")
             exit()
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
-    U.logger.log(30,  "FM Radio Module new params  from parameter file;  frequency: " + str(defFreq)+"  mute: "+ str(mute)+"  mono: "+ str(mono)+"  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL))
+        U.logger.log(20,"", exc_info=True)
+    U.logger.log(20,  "FM Radio Module new params  from parameter file;  frequency: " + str(defFreq)+"  mute: "+ str(mute)+"  mono: "+ str(mono)+"  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL))
     return
          
 
@@ -131,8 +131,8 @@ def readNew():
             subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
     
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
-    U.logger.log(30,  "FM Radio Module new params from menue/action; frequency: " + str(fastFreq)+"  mute: "+ str(fastMute)+"  mono: "+ str(fastMono)+" ////  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL) )
+        U.logger.log(20,"", exc_info=True)
+    U.logger.log(20,  "FM Radio Module new params from menue/action; frequency: " + str(fastFreq)+"  mute: "+ str(fastMute)+"  mono: "+ str(fastMono)+" ////  highCut: "+ str(highCut) +"  noiseCancel: " + str(noiseCancel)+"  DTCon: "+ str(DTCon)+"  PLLREF: "+ str(PLLREF) +"  HLSI: "+ str(HLSI)+"  XTAL: "+ str(XTAL) )
    
 class tea5767:
     ### tea flags
@@ -244,7 +244,7 @@ class tea5767:
         Outputs:
             dict or str: scan result dict with freq/Signal/Stero/BLF when scanning and signal>9, else empty dict or empty string
         """
-        U.logger.log(30,  "FM Radio Module frequency: " + str(freq)+
+        U.logger.log(20,  "FM Radio Module frequency: " + str(freq)+
          "  mute: "        + str(mute)    +
          "  mono: "        + str(mono)+
          "  highCut: "     + str(highCut) + 
@@ -406,7 +406,7 @@ except:
     pass
 
 lastAlive      = time.time()
-subprocess.call("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor, shell=True)
+U.doWriteSimpleFile(G.homeDir+"temp/alive."+sensor, time.time())
 
 frequency       =  defFreq
 if "frequency" in command:
@@ -443,7 +443,7 @@ oldPLLREF      = PLLREF
 oldXTAL        = XTAL
 oldHLSI        = HLSI
 
-U.logger.log(30,  " FM Radio Module TEA5767 radio v 4.2")
+U.logger.log(20,  " FM Radio Module TEA5767 radio v 4.2")
 
 lastParams     = time.time()
 while (True):
@@ -529,7 +529,7 @@ while (True):
             U.echoLastAlive(G.program)
 
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
     
     
 

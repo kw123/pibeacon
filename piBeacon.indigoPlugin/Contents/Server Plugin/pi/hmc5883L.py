@@ -36,7 +36,7 @@ class THESENSORCLASS:
 		try:
 			self.bus			= smbus.SMBus(self.busNumber)
 		except Exception as e:
-			U.logger.log(30,'couldn\'t open bus: {0}'.format(e))
+			U.logger.log(20,'couldn\'t open bus: {0}'.format(e))
 			return 
 			
 		self.enableCalibration	 = enableCalibration
@@ -75,7 +75,7 @@ class THESENSORCLASS:
 			self.bus.write_byte_data(self.address, 0x01, magResolution<< 5) # Scale = bits 5,6,7
 			self.bus.write_byte_data(self.address, 0x02, 0x00) # Continuous measurement
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 	def twos_complement(self,val, len):
 		# Convert twos compliment to integer
 		"""Converts a two's-complement value of the given bit length into a signed integer.
@@ -157,7 +157,7 @@ def readParams():
 		if "sensors"			in inp:	 sensors =				 (inp["sensors"])
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 				
 		for devId in sensors[sensor]:
@@ -169,7 +169,7 @@ def readParams():
 		theSENSORdict = U.cleanUpSensorlist( sensors[sensor], theSENSORdict)	   
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 #################################
 def startTheSensor(devId, i2cAddress, magResolution, declination, magOffset, magDivider, enableCalibration=False):
@@ -188,7 +188,7 @@ def startTheSensor(devId, i2cAddress, magResolution, declination, magOffset, mag
 	"""
 	global theSENSORdict
 	try:
-		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
+		U.logger.log(20,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
 		if magOffset == [0,0,0]:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress, magResolution = magResolution, enableCalibration=enableCalibration, magDivider=magDivider, declination = declination, magOffset= magOffset)
 			if enableCalibration:
@@ -197,7 +197,7 @@ def startTheSensor(devId, i2cAddress, magResolution, declination, magOffset, mag
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress, magResolution = magResolution, enableCalibration=enableCalibration, magDivider=magDivider, declination = declination)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -224,7 +224,7 @@ def getValues(devId):
 			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits,mult=1):
@@ -306,7 +306,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

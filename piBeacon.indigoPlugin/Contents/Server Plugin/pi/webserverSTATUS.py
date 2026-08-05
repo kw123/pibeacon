@@ -49,7 +49,7 @@ class GetHandler(BaseHTTPRequestHandler):
 			data = f.read()
 			f.close()
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return 
 		if len(data) < 2: 
 			U.logger.log(40, "data read {}".format(data))
@@ -84,7 +84,7 @@ try:
 	port		= int(sys.argv[2])
 	dataFile	= sys.argv[3]
 except: 
-	U.logger.log(30,"Starting web server not working, no ip port # given, command:{}".format(sys.argv))
+	U.logger.log(20,"Starting web server not working, no ip port # given, command:{}".format(sys.argv))
 	exit()
 U.logger.log(20,"Starting web server with IP#:{}:{}  dataFile file:{}".format(ipNumber, port, dataFile))
 
@@ -95,5 +95,5 @@ time.sleep(0.5)
 
 
 server = HTTPServer(('', port), GetHandler)
-U.logger.log(30,"Starting web server, access at {}:{}".format(ipNumber,port))
+U.logger.log(20,"Starting web server, access at {}:{}".format(ipNumber,port))
 server.serve_forever()

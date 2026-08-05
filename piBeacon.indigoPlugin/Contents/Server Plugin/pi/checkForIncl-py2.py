@@ -2,7 +2,22 @@
 # -*- coding: utf-8 -*-
 import os, time, subprocess, logging, sys
 
-logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+def _fixLogPerm(_fn):		# a sudo-started helper CREATES this file as root; a later program running
+	try:					# as pi then cannot append and python logging swallows the error silently
+		if not os.path.exists(_fn):
+			_f = open(_fn, "a")
+			_f.close()
+		os.chmod(_fn, 0o666)
+		import pwd, grp
+		os.chown(_fn, pwd.getpwnam("pi").pw_uid, grp.getgrnam("pi").gr_gid)
+	except Exception:	pass
+
+_fixLogPerm("/var/log/pibeacon")
+logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d %(message)s', datefmt='%d-%H:%M:%S')
+class _TenthFmt(logging.Formatter):	# timestamps with tenths of a second, same as piBeaconUtils.setLogging
+	def formatTime(self, record, datefmt=None):
+		return "{}.{}".format(time.strftime(datefmt or '%d-%H:%M:%S', time.localtime(record.created)), int(record.msecs/100.))
+for _h in logging.getLogger().handlers: _h.setFormatter(_TenthFmt('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d %(message)s', datefmt='%d-%H:%M:%S'))
 logger = logging.getLogger(__name__)
 
 
@@ -15,9 +30,9 @@ def readPopen(cmd):
 		    tuple: (stdout, stderr) decoded utf-8 strings, or None on exception
 		"""
 		try:
-			logger.log(30,"doing:  {}".format(cmd) )
+			logger.log(20,"doing:  {}".format(cmd) )
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
-			logger.log(30,"ret: {} {}".format(ret, err ) )
+			logger.log(20,"ret: {} {}".format(ret, err ) )
 			return ret.decode('utf_8'), err.decode('utf_8')
 		except Exception as e:
 			logger.log(20,"", exc_info=True)
@@ -47,6 +62,64 @@ def checkOsVersionis3():
 	return sys.version[0] == "3"
 
 
+#################################
+NOT_AVAILABLE_FILE = "/home/pi/pibeacon/aptNotAvailable.txt"
+
+def aptNotAvailable():
+	"""Packages this OS release simply does not have - one name per line, remembered across runs."""
+	try:
+		f = open(NOT_AVAILABLE_FILE)
+		out = [x.strip() for x in f.read().split("\n") if x.strip() != ""]
+		f.close()
+		return out
+	except Exception:
+		return []
+
+
+def markAptNotAvailable(pkg):
+	"""Remembers that apt does not know this package on this OS, so it is never retried."""
+	try:
+		known = aptNotAvailable()
+		if pkg in known:	return
+		f = open(NOT_AVAILABLE_FILE, "a")
+		f.write("{}\n".format(pkg))
+		f.close()
+	except Exception:
+		pass
+
+
+def aptInstall(pkgs, extra="-y "):
+	"""apt-get install that does not fight a package the OS does not have.
+
+	"E: Unable to locate package X" is NOT a transient failure - the package is gone or renamed in
+	this release (libgpiod2 became libgpiod3 in trixie), so retrying it on every single start just
+	burns an apt run and fills the log with the same error forever. The name is written to
+	aptNotAvailable.txt and skipped from then on; delete that file to make it try again after an
+	OS upgrade.
+
+	Inputs:
+	    pkgs (str): one or more package names, space separated
+	    extra (str): extra apt options, default "-y "
+	Outputs:
+	    bool: True when apt ran and did not report a missing package
+	"""
+	wanted = [p for p in pkgs.split(" ") if p.strip() != ""]
+	known  = aptNotAvailable()
+	todo   = [p for p in wanted if p not in known]
+	if not todo:
+		logger.log(20, "skipping apt install of {} - not available on this OS (see {})".format(" ".join(wanted), NOT_AVAILABLE_FILE))
+		return False
+	ret = readPopen("sudo apt-get install {}{}".format(extra, " ".join(todo)))
+	out = "{} {}".format(ret[0], ret[1]) if ret else ""
+	if out.find("Unable to locate package") > -1:
+		for p in todo:
+			if out.find("Unable to locate package {}".format(p)) > -1:
+				markAptNotAvailable(p)
+				logger.log(20, "apt does not know '{}' on this OS - marked, will not be retried".format(p))
+		return False
+	return True
+
+
 def execInstall():
 
 	"""Performs the Python 2 dependency-install workflow: exits early if running Python 3 or a newer OS, waits for any running apt-get, then checks for and installs required packages (smbus2, hcidump, pigpio, RPi.GPIO, pexpect, expect), fixes broken apt packages, and writes a completion marker file.
@@ -57,13 +130,13 @@ def execInstall():
 	    None: installs system/python packages via apt/pip, logs progress, and writes the includepy2.done marker
 	"""
 	if checkOsVersionis3: 
-		logger.log(30,"python2 not installed stopping checking for include py2 "  )
-		readPopen('echo "done" > "/home/pi/pibeacon/includepy2.done"')
+		logger.log(20,"python2 not installed stopping checking for include py2 "  )
+		open("/home/pi/pibeacon/includepy2.done", "w").write("done")
 		exit()
 
 	if checkIfPy3():
-		logger.log(30,"must use py3 due to opsys version < 10 "  )
-		readPopen('echo "done" > "/home/pi/pibeacon/includepy2.done"')
+		logger.log(20,"must use py3 due to opsys version < 10 "  )
+		open("/home/pi/pibeacon/includepy2.done", "w").write("done")
 		exit()
 
 
@@ -77,7 +150,7 @@ def execInstall():
 
 	if True:
 		logger.log(20,"check if apt install  is ok"  )
-		ret = readPopen("sudo apt --fix-broken install  -y &")
+		ret = readPopen("sudo apt-get --fix-broken install  -y &")
 
 
 	if False:
@@ -86,7 +159,7 @@ def execInstall():
 			import serial
 		except Exception as e:
 			logger.log(20,"", exc_info=True)
-			readPopen("sudo apt-get install python-serial")
+			aptInstall("python-serial")
 
 	if True:
 		logger.log(20,"check smbus2"  )
@@ -100,14 +173,14 @@ def execInstall():
 		logger.log(20,"check hcidump"  )
 		ret = readPopen("which hcidump")
 		if ret[0].find("/usr/bin/hcidump") == -1:
-			readPopen("sudo apt-get install -y bluez-hcidump")
+			aptInstall("bluez-hcidump")
 
 	if True:
 		logger.log(20,"check pigpio"  )
 		try:
 			import RPi.GPIO as GPIO
 		except:
-			ret = readPopen("sudo apt-get install -y pigpio python-pigpio ")
+			ret = aptInstall("pigpio python-pigpio")
 
 	if True:
 		logger.log(20,"check RPi.GPIO "  )
@@ -115,7 +188,7 @@ def execInstall():
 			import RPi.GPIO as GPIO
 		except Exception as e:
 			logger.log(20,"", exc_info=True)
-			ret = readPopen("sudo apt-get install python3-dev python3-rpi.gpio")
+			ret = aptInstall("python3-dev python3-rpi.gpio")
 
 	if True:
 		logger.log(20,"check pexpect"  )
@@ -137,15 +210,15 @@ def execInstall():
 		logger.log(20,"check expect"  )
 		ret = readPopen("which expect")
 		if ret[0].find("/usr/bin/expect") == -1:
-			readPopen("sudo apt-get install -y expect")
+			aptInstall("expect")
 
 
 	logger.log(20,"check if apt install  is ok"  )
-	ret = readPopen("sudo apt --fix-broken install  -y")
+	ret = readPopen("sudo apt-get --fix-broken install  -y")
 	logger.log(20,"check if apt autoremove  is ok"  )
-	ret = readPopen("sudo apt autoremove -y &")
+	ret = readPopen("sudo apt-get autoremove -y &")
 
-	readPopen('echo "done" > "/home/pi/pibeacon/includepy2.done"')
+	open("/home/pi/pibeacon/includepy2.done", "w").write("done")
 
 	logger.log(20,"finished" )
 

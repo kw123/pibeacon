@@ -53,7 +53,7 @@ def doActions():
 
 ### actions: [{1},{2},{3}]
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 
 #################################
@@ -82,12 +82,12 @@ def execMain():
 	
 	U.setLogging()
 	
-	U.logger.log(30, "starting action program")
+	U.logger.log(20, "starting action program")
 	readParams()
 	# check if everything is installed
 	
 	lastAliveFile	= time.time()
-	subprocess.call("echo "+str(lastAliveFile)+" > "+ G.homeDir+"temp/alive.action  &", shell=True)
+	U.doWriteSimpleFile(G.homeDir+"temp/alive.action", lastAliveFile)
 	
 	
 	
@@ -99,7 +99,7 @@ def execMain():
 			if loopCount%20 == 0 or tt-lastAliveFile > 100:	# update alive	every 10 seconds or faster
 				lastAliveFile = tt
 				#print "Updating alive.sensors"
-				subprocess.call("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive.action	&", shell=True )
+				U.doWriteSimpleFile(G.homeDir+"temp/alive.action", time.time())
 				readParams()
 	
 			if actions == []:
@@ -109,7 +109,7 @@ def execMain():
 	
 			time.sleep(0.1)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 
 

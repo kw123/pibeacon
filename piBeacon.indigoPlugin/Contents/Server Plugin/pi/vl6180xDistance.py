@@ -157,7 +157,7 @@ class vl6180x:
 			U.logger.log(self.debug ,"ToF sensor is ready.")
 			self.ready = True
 		else:
-			U.logger.log(30,"ToF sensor reset failure.")
+			U.logger.log(20,"ToF sensor reset failure.")
 			self.ready = False
 
 		# Required by datasheet
@@ -351,7 +351,7 @@ class vl6180x:
 			self.set_register(self.__VL6180X_SYSTEM_INTERRUPT_CLEAR, 0x07)
 			return distance
 		except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return -1
 
 	def get_ambient_light(self, lastGain):
@@ -384,7 +384,7 @@ class vl6180x:
 					newG = self.gainList[gL]
 					self.set_register(self.__VL6180X_SYSALS_INTEGRATION_PERIOD, iPeriod &0xff)
 					if newG not in self.ALS_GAIN_ACTUAL:
-						U.logger.log(30,"Invalid gain setting:{}  Setting to 20.  {}".format(newG, self.ALS_GAIN_ACTUAL))
+						U.logger.log(20,"Invalid gain setting:{}  Setting to 20.  {}".format(newG, self.ALS_GAIN_ACTUAL))
 					als_gain_actual = self.ALS_GAIN_ACTUAL.setdefault(newG, 20.)
 
 					reg = self.ALS_GAIN_REG.setdefault(newG, self.__ALS_GAIN_20)
@@ -454,7 +454,7 @@ class vl6180x:
 			#print " ret:",als_calculated,als_raw, lastGain
 			return als_calculated,  lastGain
 		except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return 0,0
 		
 	def get_register(self, register_address):
@@ -555,7 +555,7 @@ def readParams():
 		if "output"			 in inp:  output=				 (inp["output"])
 
 		if sensor not in sensors:
-			U.logger.log(30, "vl6180xDistance is not in parameters = not enabled, stopping vl6180xDistance.py" )
+			U.logger.log(20, "vl6180xDistance is not in parameters = not enabled, stopping vl6180xDistance.py" )
 			time.sleep(0.1)
 			U.killOldPgm(-1,G.program+".py")
 			sys.exit(0)
@@ -622,7 +622,7 @@ def readParams():
 
 
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -784,7 +784,7 @@ while True:
 				dist = getDistance()
 				if dist == "badSensor":
 					first=True
-					U.logger.log(30," bad sensor")
+					U.logger.log(20," bad sensor")
 					data["sensors"][sensor][devId]["distance"] = "badSensor"
 					U.sendURL(data)
 					lastDist[devId] =-100.
@@ -864,7 +864,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

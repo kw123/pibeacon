@@ -117,20 +117,20 @@ def readParams():
 			#print sensorChanged, sensorActive, distanceMax
 			if sensorChanged == 1:
 				if not sensorActive:
-					U.logger.log(30,"==== Start ranging =====")
+					U.logger.log(20,"==== Start ranging =====")
 					sensCl = VCNL40xx(address=0x13,maxCurrent=maxCurrent)
 			sensorActive = True
 			U.readDistanceSensor(devId, sensors, sensor)
 			
 			
 		if sensorChanged == -1:
-			U.logger.log(30, "==== stop  ranging =====")
+			U.logger.log(20, "==== stop  ranging =====")
 			exit()
 			return  True
 
 
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return  True
 
 
@@ -268,7 +268,7 @@ class VCNL40xx():
 			return   distance, luminance, data
 			#return self._device.readU16BE(VCNL40xx_AMBIENTDATA)
 		except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return "","",[]
 
 
@@ -305,8 +305,8 @@ def readSensor():
 			badSensor = 0
 			return "badSensor", ""
 	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "distance>>{}<<".format(distance))
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "distance>>{}<<".format(distance))
 	return "",""	 
 
 
@@ -397,7 +397,7 @@ while True:
 					continue
 
 				if dist == "badSensor":
-					U.logger.log(30," bad sensor")
+					U.logger.log(20," bad sensor")
 					data["sensors"][sensor][devId]["distance"]="badSensor"
 					U.sendURL(data)
 					lastDist[devId] =-100.
@@ -464,7 +464,7 @@ while True:
 		time.sleep(sensorRefreshSecs)
 		#print "end of loop", loopCount
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

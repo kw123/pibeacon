@@ -6,6 +6,7 @@ import subprocess
 import sys
 
 sys.path.append(os.getcwd())
+sys.path.append("/home/pi/pibeacon")		# callbeacon is usually started from /home/pi, not from the pibeacon dir
 try:
 	import	piBeaconGlobals as G
 	import	piBeaconUtils	as U
@@ -15,9 +16,70 @@ except:
 	homeDir		= "/home/pi/pibeacon/"
 	homeDir0	= "/home/pi/"
 
+	# BOOTSTRAP FALLBACK: callbeacon runs before/without a working package (that is its job), so it
+	# must never depend on piBeaconUtils. These are the few file helpers it uses, in plain stdlib.
+	import glob as _glob, shutil as _shutil
+	class _Ufallback(object):
+		@staticmethod
+		def makeDir(d):
+			try:
+				if not os.path.isdir(d): os.makedirs(d)
+			except Exception: pass
+		@staticmethod
+		def removeFile(f):
+			for ff in (_glob.glob(f) or [f]):
+				try:
+					if os.path.isdir(ff):	_shutil.rmtree(ff)
+					elif os.path.exists(ff):os.remove(ff)
+				except Exception: pass
+		@staticmethod
+		def doWriteSimpleFile(f, data):
+			try:
+				fh = open(f, "w"); fh.write("{}".format(data)); fh.close()
+				os.chmod(f, 0o666)
+			except Exception: pass
+		@staticmethod
+		def fixLogPermissions(files, owner="pi"):
+			for f in files:
+				try:
+					if not os.path.exists(f):
+						fh = open(f, "a"); fh.close()
+					os.chmod(f, 0o666)
+					import pwd, grp
+					os.chown(f, pwd.getpwnam(owner).pw_uid, grp.getgrnam(owner).gr_gid)
+				except Exception: pass
+		@staticmethod
+		def makeAccessible(path, recursive=True, owner="pi", verbose=False):
+			EXEC = (".py", ".sh", ".exp", ".bash", ".so", ".pyc")
+			todo = [path]
+			if recursive and os.path.isdir(path):
+				for base, dirs, names in os.walk(path):
+					todo += [os.path.join(base, x) for x in dirs + names]
+			for xx in todo:
+				try:
+					if os.path.isdir(xx) or xx.lower().endswith(EXEC) or os.path.basename(xx) in ("tf","tm","ct","py","py3"):
+						os.chmod(xx, 0o777)
+					else:
+						os.chmod(xx, 0o666)
+				except Exception: pass
+			try:
+				import pwd, grp
+				uid, gid = pwd.getpwnam(owner).pw_uid, grp.getgrnam(owner).gr_gid
+				for xx in todo:
+					try:	os.chown(xx, uid, gid)
+					except Exception: pass
+			except Exception: pass
+	U = _Ufallback()
+
 import logging
 
-logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+try:	U.fixLogPermissions(["/var/log/pibeacon"])		# else this sudo-run script owns the log as root
+except Exception:	pass
+logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d %(message)s', datefmt='%d-%H:%M:%S')
+class _TenthFmt(logging.Formatter):	# timestamps with tenths of a second, same as piBeaconUtils.setLogging
+	def formatTime(self, record, datefmt=None):
+		return "{}.{}".format(time.strftime(datefmt or '%d-%H:%M:%S', time.localtime(record.created)), int(record.msecs/100.))
+for _h in logging.getLogger().handlers: _h.setFormatter(_TenthFmt('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d %(message)s', datefmt='%d-%H:%M:%S'))
 logger = logging.getLogger(__name__)
 
 
@@ -80,7 +142,7 @@ def checkIfmustUsePy3():
 	return False
 
 #################################
-logger.log(30," -1-  starting callbeacon "  )
+logger.log(20," -1-  starting callbeacon "  )
 
 simpleCall("/usr/bin/sudo /usr/bin/systemctl daemon-reload")
 
@@ -91,41 +153,42 @@ else:					usePython3 = ""
 if usePython3 == "":	simpleCall("/usr/bin/sudo /usr/bin/python {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir))
 else:					simpleCall("/usr/bin/sudo /usr/bin/python3 -E {}doGPIOatStartup.py > /dev/null 2>&1  & ".format(homeDir))
 
-logger.log(30," -2-  callbeacon after doGPIOatStartup "  )
+logger.log(20," -2-  callbeacon after doGPIOatStartup "  )
 
 
 # make new directories if they do not exist 
-subprocess.call("mkdir {} > 					/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("mkdir {}soundfiles > 		    /dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("mkdir {}fonts > 				/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("mkdir {}displayfiles > 		/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("mkdir {}temp > 				/dev/null 2>&1 ".format(homeDir), shell=True)
-## set permissions
-subprocess.call("chmod +666 -R {} > 			/dev/null 2>&1 ".format(homeDir), shell=True)
-subprocess.call("chmod +111 -R {}*.py > 		/dev/null 2>&1 ".format(homeDir), shell=True)
+U.makeDir("{}".format(homeDir))
+U.makeDir("{}soundfiles".format(homeDir))
+U.makeDir("{}fonts".format(homeDir))
+U.makeDir("{}displayfiles".format(homeDir))
+U.makeDir("{}temp".format(homeDir))
+## set permissions: scripts executable, everything else read/write, directories traversable,
+## owner pi (never root). Replaces four "chmod +666/+111/+777" lines plus the chown - those
+## chmods were INVALID modes (digits are not allowed after "+") and silently did nothing.
+# recursive, but ONLY over the pibeacon directory - never /home/pi and never system paths.
+# The earlier minutes-long run was not the walk itself: isScript() opened every single file to
+# look for a shebang, and setOwner walked the whole tree a second time. Both fixed; the maxSecs
+# budget in makeAccessible stays as a net so a big tree can never hold up the boot again.
+U.makeAccessible(homeDir, recursive=True, owner="pi")
 
-subprocess.call("chmod +777 -R {}soundfiles {}fonts {}displayfiles {}fonts  >   /dev/null 2>&1 ".format(homeDir, homeDir, homeDir, homeDir), shell=True)
-subprocess.call("chmod +777  {}tm {}tf {}py {}ct {}py3  > 		/dev/null 2>&1 ".format(homeDir, homeDir, homeDir, homeDir, homeDir), shell=True)
-subprocess.call("chown -R  pi  {} ".format(homeDir), shell=True)
+logger.log(20," -3-  callbeacon after chmod "  )
 
-logger.log(30," -3-  callbeacon after chmod "  )
-
-subprocess.call("rm {}*.pyc > 					/dev/null 2>&1 ".format(homeDir), shell=True)
+U.removeFile("{}*.pyc".format(homeDir))
 
 
-subprocess.call("rm {}pygame.active".format(homeDir), shell=True)
+U.removeFile("{}pygame.active".format(homeDir))
 
 # remember boot time / or better when did master.py start first
-subprocess.call("echo {:.0f} >{}masterStartAfterboot".format(time.time(), homeDir), shell=True)
+U.doWriteSimpleFile("{}masterStartAfterboot".format(homeDir), "{:.0f}".format(time.time()))
 
-subprocess.call("rm {}restartCount > 			/dev/null 2>&1 ".format(homeDir), shell=True)
+U.removeFile("{}restartCount".format(homeDir))
 #subprocess.call("rm  /var/log/piBeacon.log >	/dev/null 2>&1 ")
 
 
 # call main program
 cmd1 = "cd {}; nohup /bin/bash master.sh  {} & ".format(homeDir, usePython3)
 
-logger.log(30," -4-  callbeacon {}".format(cmd1) )
+logger.log(20," -4-  callbeacon {}".format(cmd1) )
 subprocess.call(cmd1, shell=True)
 
 
@@ -136,16 +199,19 @@ delList =[
 		"beacon_minSignalCutoff", "beacon_onlyTheseMAC", "beacon_signalDelta",  "rejects.*", 
 		"logfile", "logfile-1", "call-log",  "errlog", "logfile", "master.log", 
 		"alive", "interface", "beaconloop",
-		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "getBeaconParameters.py", "beepBeacon.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py", 
+		"rdlidar.py","sensors.py", "iPhoneBLE.py", "getsensorvalues.py", "getBeaconParameters.py", "beepBeacon.py", "receiveGPIOcommands.py", "INPUTRotata*", "INPUTRotateSwitchGrey.py",
+		"setGPIO.py*",		# standalone predecessor of receiveCommands.setGPIO(), nothing launches it any more
+		"OUTPUTgpio.py*",	# read-back poller via the (long gone) wiringpi "gpio" tool; setGPIO() reports the state itself
+		"DHT copy.py*",		# finder duplicate of DHT.py, byte identical, never imported by anything
 		"moistureSensorAdafruit","checkAdfruitInclude.py","checkForInclude.py","checkForInclude-py3.py","checkForInclude-py2.py","neopixel.py"]
 for dd in delList:
-	subprocess.call("rm {}{} > /dev/null 2>&1 ".format(homeDir, dd), shell=True)
+	U.removeFile("{}{}".format(homeDir, dd))
 
 # remove old logfiles
-subprocess.call("rm  /var/log/pibeacon*.log  >/dev/null 2>&1", shell=True) # it is now ...../pibeacon no .log
-subprocess.call("rm -r {}logs                >/dev/null 2>&1".format(homeDir), shell=True)
+U.removeFile("/var/log/pibeacon*.log") # it is now ...../pibeacon no .log
+U.removeFile("{}logs".format(homeDir))
 
-logger.log(30," -5-  callbeacon finished"  )
+logger.log(20," -5-  callbeacon finished"  )
 
 
 exit()

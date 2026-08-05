@@ -492,11 +492,11 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 
-		U.logger.log(30, G.program+" reading new parameter file" )
+		U.logger.log(20, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -541,7 +541,7 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if ccs811sensor[devId] =="":
 					return
-			U.logger.log(30," new parameters read: i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+
+			U.logger.log(20," new parameters read: i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+
 					   ";  deltaX:{}".format(deltaX[devId])+";  sensorRefreshSecs:{}".format(sensorRefreshSecs) )
 				
 		deldevID={}		   
@@ -556,7 +556,7 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		
 
 
@@ -574,7 +574,7 @@ def startSensor(devId,i2cAddress):
 	global sensors,sensor
 	global startTime
 	global ccs811sensor
-	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
+	U.logger.log(20,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
 	startTime =time.time()
 
 
@@ -596,7 +596,7 @@ def startSensor(devId,i2cAddress):
 		except: pass
 				
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		ccs811sensor[devId]	  =""
 	time.sleep(.1)
 
@@ -723,7 +723,7 @@ def getValues(devId):
 			lastVOC	  = VOC
 			lastTemp  = TEMP
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		ccs811sensor[devId].start()
@@ -825,7 +825,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -874,7 +874,7 @@ while True:
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

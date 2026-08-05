@@ -159,7 +159,7 @@ class SCD30:
 		U.logger.log(10,"Received raw I2C response: " + self._pretty_hex(raw_response))
 
 		if len(raw_response) != 3 * num_response_words:
-			U.logger.log(30, "Wrong response length: {} expected:{}".format(len(raw_response),  3 * num_response_words))
+			U.logger.log(20, "Wrong response length: {} expected:{}".format(len(raw_response),  3 * num_response_words))
 
 		# Data is returned as a sequence of num_response_words 2-byte words
 		# (big-endian), each with a CRC-8 checksum:
@@ -172,7 +172,7 @@ class SCD30:
 			response_crc = word_with_crc[2]
 			computed_crc = self._crc8(word)
 			if (response_crc != computed_crc):
-				U.logger.log(30, "CRC verification for word {} failed: received {} computed {}".format(self._pretty_hex(word), self._pretty_hex(response_crc), self._pretty_hex(computed_crc)) )
+				U.logger.log(20, "CRC verification for word {} failed: received {} computed {}".format(self._pretty_hex(word), self._pretty_hex(response_crc), self._pretty_hex(computed_crc)) )
 				return None
 			response.append(word)
 
@@ -234,7 +234,7 @@ class SCD30:
 		interval = self._word_or_none(self._send_command(0x4600, 1))
 
 		if interval is None or not 2 <= interval <= 1800:
-			U.logger.log(30, "Failed to read measurement interval, received: {}".format(self._pretty_hex(interval)) )
+			U.logger.log(20, "Failed to read measurement interval, received: {}".format(self._pretty_hex(interval)) )
 
 		return interval
 
@@ -272,7 +272,7 @@ class SCD30:
 			data = self._send_command(0x0300, num_response_words=6)
 
 			if data is None or len(data) != 6:
-				U.logger.log(30, "Failed to read measurement, received: {}".format( self._pretty_hex(data)) )
+				U.logger.log(20, "Failed to read measurement, received: {}".format( self._pretty_hex(data)) )
 				return "","",""
 
 			co2_ppm = interpret_as_float((data[0] << 16) | data[1])
@@ -281,7 +281,7 @@ class SCD30:
 
 			return (co2_ppm, temp_celsius, rh_percent)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 
 
@@ -406,7 +406,7 @@ class SCD30:
 			#U.logger.log(20, u"in offset {} offset_ticks={} ".format(offset, offset_ticks))
 			return self._send_command(0x5403, 0, [offset_ticks])
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return 0 
 
 	def soft_reset(self):
@@ -437,7 +437,7 @@ class SENSORclass():
 			self.scd30.start_periodic_measurement()
 			time.sleep(2)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return 
 
 	def getData(self): 
@@ -456,7 +456,7 @@ class SENSORclass():
 				else: 
 					time.sleep(0.2)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 		return "","",""
 # ===========================================================================
@@ -498,7 +498,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
 			exit()
 			
 
@@ -564,8 +564,8 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "{}".format(sensors[sensor]))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 
 
@@ -630,7 +630,7 @@ def startSensor(devId, Co2Target="", reset=False):
 			sensorTemperatureOffset[devId]	= SENSOR[devId].scd30.get_temperature_offset()
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
 	U.muxTCA9548Areset()
@@ -672,7 +672,7 @@ def getValues(devId):
 		except: 
 			if badsensorCountCO2[devId] > 5: return  "badSensor"
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	if badsensorCountCO2[devId] > 5: return "badSensor"
 	return ""
 
@@ -841,7 +841,7 @@ def execSensor():
 			lastMeasurement = time.time()
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 
 

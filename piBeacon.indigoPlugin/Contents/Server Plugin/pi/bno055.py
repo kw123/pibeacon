@@ -13,21 +13,10 @@ import	piBeaconGlobals as G
 
 G.program = "bno055"
 
-try:
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
-	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
-	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
-	try:
-		import RPi.GPIO as GPIO
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setwarnings(False)
-		useGPIO = True
-	except: pass
+# the shared gpio layer decides the backend for this rpi - see U.gpioStart in piBeaconUtils.
+# Only the reset pin is driven here, once per reset, so the per-call cost of the layer is
+# irrelevant; the copy of the backend-detection dance that used to sit here is gone.
+U.gpioStart()
 
 
 
@@ -220,7 +209,7 @@ class BNO055():
 	def __init__(self, resetPin=None, i2cAddress=BNO055_ADDRESS_A, **kwargs):
 		# If reset pin is provided save it and a reference to provided GPIO
 		# bus (or the default system GPIO bus if none is provided).
-		"""Initializes a BNO055 sensor object: stores the I2C address and optional reset pin, drives the reset pin high (via GPIO or GPIOZERO) with a settling delay, opens the SMBus(1) I2C bus, and loads stored calibration from file.
+		"""Initializes a BNO055 sensor object: stores the I2C address and optional reset pin, drives the reset pin high (through the shared gpio layer) with a settling delay, opens the SMBus(1) I2C bus, and loads stored calibration from file.
 
 		Inputs:
 		    resetPin (int or None): Optional GPIO pin used to reset the chip
@@ -232,11 +221,10 @@ class BNO055():
 		self.i2cAddress = i2cAddress
 		self.resetPin = resetPin
 		if self.resetPin is not None:
-			if useGPIO:
-				GPIO.setup(self.resetPin, GPIO.OUT)
-				GPIO.output(self.resetPin, True)
-			else:
-				self.GPIOZERO.LED(self.resetPin, initial_value=True)
+			# through the shared layer - the gpiozero branch here was broken anyway: it called
+			# .LED(...) on the MODULE and threw the object away, and the reset below then called
+			# .off()/.on() on the module itself, so a reset never reached the pin
+			U.gpioOut(self.resetPin, "on")
 			# Wait a 650 milliseconds in case setting the reset high reset the chip.
 			time.sleep(0.65)
 		# Use I2C if no serial port is provided.
@@ -398,14 +386,7 @@ class BNO055():
 			# Use the hardware reset pin if provided.
 			# Go low for a short period, then high to signal a reset.
 			U.logger.log(10,'BEGIN: doing a hardware reset')
-			if useGPIO:
-				GPIO.output(self.resetPin, False)
-				time.sleep(0.01)  # 10ms
-				GPIO.output(self.resetPin, True)
-			else:
-				self.GPIOZERO.off()
-				time.sleep(0.01)  # 10ms
-				self.GPIOZERO.on()
+			U.gpioOut(self.resetPin, "pulseoff", secs=0.01)		# low for 10 ms, then high again
 		else:
 			# Else use the reset command.
 			U.logger.log(10,'BEGIN: doing a software reset')
@@ -784,7 +765,7 @@ def startBNO(devId, i2cAddress):
 	"""
 	global BNO055sensor
 	try:
-		U.logger.log(30,"==== Start BNO055 ===== @ i2c= {}".format(i2cAddress)+"	 devId={}".format(devId))
+		U.logger.log(20,"==== Start BNO055 ===== @ i2c= {}".format(i2cAddress)+"	 devId={}".format(devId))
 		if resetPin !=-1:
 			BNO055sensor[devId] = BNO055(i2cAddress=i2cAddress, resetPin=resetPin)
 		else:
@@ -800,8 +781,8 @@ def startBNO(devId, i2cAddress):
 		U.logger.log(10,'BEGIN: Self test result:	  0x{0:02X}'.format(self_test)+ " (0x0F is normal)")
 		# Print out an error if system status is in error mode.
 		if status == 0x01:
-			U.logger.log(30,'BEGIN: System error: {0}'.format(error))
-			U.logger.log(30,'BEGIN: See datasheet section 4.3.59 for the meaning.')
+			U.logger.log(20,'BEGIN: System error: {0}'.format(error))
+			U.logger.log(20,'BEGIN: See datasheet section 4.3.59 for the meaning.')
 
 		# Print BNO055 software revision and other diagnostic data.
 		sw, bl, accel, mag, gyro = BNO055sensor[devId].get_revision()
@@ -853,7 +834,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "BNO055 is not in parameters = not enabled, stopping ina219.py" )
+			U.logger.log(20, "BNO055 is not in parameters = not enabled, stopping ina219.py" )
 			exit()
 			
 				

@@ -46,7 +46,7 @@ try:
 		myPID = str(os.getpid())
 		U.killOldPgm(myPID,"myoutput.py")# kill  old instances of myself if they are still running
 
-		U.logger.log(30, "myoutput  received text :{}".format(sys.argv))
+		U.logger.log(20, "myoutput  received text :{}".format(sys.argv))
 
 		# rest is up to you  the text indgo has send is in sys.argv[1] [2] ....
 		if len(sys.argv) >1 :
@@ -59,11 +59,9 @@ try:
 
 				# if set gpoio high ..
 			elif "{}".format(text).find("gpio 21 high") > -1:
-				import RPi.GPIO as GPIO
-				GPIO.setmode(GPIO.BCM)
-				GPIO.setwarnings(False)
-				GPIO.setup(21, GPIO.OUT)
-				GPIO.output(21, True)
+				# the shared gpio layer picks whatever backend this rpi has (gpiozero or RPi.GPIO)
+				# and sets the pin up on first use - see U.gpioOut / U.gpioIn / U.gpioOnEdge
+				U.gpioOut(21, "on")
 
 
 except  Exception as e:

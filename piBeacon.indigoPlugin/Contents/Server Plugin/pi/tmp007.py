@@ -330,7 +330,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30,"{} is not in parameters = not enabled, stopping {}.py".format(G.program, G.program) )
+			U.logger.log(20,"{} is not in parameters = not enabled, stopping {}.py".format(G.program, G.program) )
 			exit()
 			
 				
@@ -360,12 +360,12 @@ def readParams():
 
 				
 			if devId not in tmp007sensor:
-				U.logger.log(30,"==== Start {} ===== @ i2c= {}".format(G.program, i2cAddress))
+				U.logger.log(20,"==== Start {} ===== @ i2c= {}".format(G.program, i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				tmp007sensor[devId] = TMP007(i2cAddress=i2cAdd)
 				tmp007sensor[devId].begin()
 				U.muxTCA9548Areset()
-				U.logger.log(30," started ")
+				U.logger.log(20," started ")
 				
 		deldevID={}		   
 		for devId in tmp007sensor:
@@ -378,7 +378,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -408,8 +408,8 @@ def getValues(devId):
 		return data
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30,"temp>>{}".format(temp)+"<<")
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20,"temp>>{}".format(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -489,7 +489,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["Current"]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					lastValue[devId] =-100.
 					continue
@@ -527,7 +527,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -54,8 +54,8 @@ def startMCP3008(devId):
                         spi1.open(0,1)
                     #print spiAdd, spi0,spi1    
         except  Exception as e:
-            U.logger.log(30,"", exc_info=True)
-            U.logger.log(30, "spi channel used: {}".format(spiAdd)+";    dev= {}".format(devId))
+            U.logger.log(20,"", exc_info=True)
+            U.logger.log(20, "spi channel used: {}".format(spiAdd)+";    dev= {}".format(devId))
 
 def getMCP3008(sensor, data):
     """Reads analog values from MCP3008 ADC channels via SPI for each configured device, converting raw 10-bit readings to millivolts (scaled by 3.3V); reads all 8 input pins for the base sensor or a single selected input for the '-1' variant, storing results in the data dict.
@@ -112,7 +112,7 @@ def getMCP3008(sensor, data):
                 data[sensor][devId]["INPUT_0"]  =v
                 if devId in badSensors: del badSensors[devId]
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
         data= incrementBadSensor(devId, sensor, data)
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data    
@@ -143,7 +143,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
     return data 
 
 
@@ -274,7 +274,7 @@ if enableSPIpinsAsGpio=="0" and "spiMCP3008-1" in sensors:
         startMCP3008(devId)
 
 if U.getIPNumber() > 0:
-    U.logger.log(30," getsensors no ip number  exiting ")
+    U.logger.log(20," getsensors no ip number  exiting ")
     time.sleep(10)
     exit()
 
@@ -352,7 +352,7 @@ while True:
                 #U.logger.log(10, u"sending url: {}".format(data))
                 U.sendURL({"sensors":data})
             except  Exception as e:
-                U.logger.log(30,"", exc_info=True)
+                U.logger.log(20,"", exc_info=True)
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -377,7 +377,7 @@ while True:
                 lastRead = tt
                 U.checkIfAliveNeedsToBeSend()
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
         time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

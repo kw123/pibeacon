@@ -191,7 +191,7 @@ class ADS1x15:
 			self.address 	= address
 			self.debug 		= debug
 		except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 
 	def readADC(self, channel=0, pga=6144, sps=250, singleOrDiff="single"):
 		"""Performs a single-shot ADC reading on the ADS1115: validates the channel, builds the configuration word from sample rate, PGA gain, and single/differential mux settings, writes it to the config register, waits for conversion, and reads back the result converted to millivolts.
@@ -214,7 +214,7 @@ class ADS1x15:
 			# With invalid channel return -1
 			if channel not in [0,1,2,3,"0-1","0-3","1-3","2-3"] :
 				if True or self.debug:
-					U.logger.log(30, "ADS1x15: Invalid channel specified: {}".format(channel))
+					U.logger.log(20, "ADS1x15: Invalid channel specified: {}".format(channel))
 				return -1
 			#U.logger.log(20, "ADS1x15: channel:{}, pga:{}, sps:{}, singleOrDiff:{}".format(channel, pga, sps, singleOrDiff))
 
@@ -295,11 +295,11 @@ def startSensor(devId,i2cADR):
 
 	try:
 		if devId not in SENSOR:
-			#U.logger.log(30, u"starting devId:{}".format(devId))
+			#U.logger.log(20, u"starting devId:{}".format(devId))
 			SENSOR[devId]=ADS1x15(address=i2cADR) 
 			return 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 #===========================================================================
@@ -320,7 +320,7 @@ def getValues():
 
 	values = {}
 	if sensor not in sensors:
-		U.logger.log(30, "error sensor:{} , sensors:{}".format(sensor, sensors))
+		U.logger.log(20, "error sensor:{} , sensors:{}".format(sensor, sensors))
 		return {}  
 	#U.logger.log(20, u"getValues i2cAddress {}".format(i2cAddress))
 	try:
@@ -338,7 +338,7 @@ def getValues():
 					return ""
 
 				values[devId] = {"INPUT":round(v,2)}
-				#U.logger.log(30, u"getValues    devId: {:14s},  v:{}, gain[devId]:{}, conversionFactor:{}".format(devId, values[devId], gain[devId], conversionFactor))
+				#U.logger.log(20, u"getValues    devId: {:14s},  v:{}, gain[devId]:{}, conversionFactor:{}".format(devId, values[devId], gain[devId], conversionFactor))
 				
 
 		#U.logger.log(20, u"getValues   v:{}".format( values))
@@ -346,7 +346,7 @@ def getValues():
 		return values
 	except Exception as e:
 		badSensor += 1
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return values
 
 # ===========================================================================
@@ -392,7 +392,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program, G.program) )
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(G.program, G.program) )
 			exit()
 			
 		try: sensorRefreshSecs	= float(G.sensorRefreshSecs)
@@ -434,9 +434,9 @@ def readParams():
 			except:	sps[devId] = 250
 
 
-			U.logger.log(30,"==== Start {} ===== @ i2c:{}; inputChannel:{};  deltaX:{}, gain:{}, sps:{}".format(G.program, i2cADDR, inputChannel[devId], deltaX[devId], gain[devId], sps[devId]) )
+			U.logger.log(20,"==== Start {} ===== @ i2c:{}; inputChannel:{};  deltaX:{}, gain:{}, sps:{}".format(G.program, i2cADDR, inputChannel[devId], deltaX[devId], gain[devId], sps[devId]) )
 			startSensor(devId, i2cADDR)
-		U.logger.log(30,    "==== Start {}... sendToIndigoEvery:{};minSendDelta:{};  sensorRefreshSecs:{},all i2c->devids:{}".format(G.program, sendToIndigoEvery, minSendDelta, sensorRefreshSecs, i2cAddress))
+		U.logger.log(20,    "==== Start {}... sendToIndigoEvery:{};minSendDelta:{};  sensorRefreshSecs:{},all i2c->devids:{}".format(G.program, sendToIndigoEvery, minSendDelta, sensorRefreshSecs, i2cAddress))
 				
 		deldevID={}		   
 		for devId in SENSOR:
@@ -451,7 +451,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 #################################
 #################################
@@ -509,7 +509,7 @@ def execADS1x15():
 	NSleep= int(sensorRefreshSecs)
 	if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
 		if U.getIPNumber() > 0:
-			U.logger.log(30,"no ip number working, giving up")
+			U.logger.log(20,"no ip number working, giving up")
 			time.sleep(10)
 
 	eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -541,7 +541,7 @@ def execADS1x15():
 						sensorWasBad = True
 						data["sensors"][sensor][devId]["INPUT"] = "badSensor"
 						if badSensor > 5: 
-							U.logger.log(30," bad sensor")
+							U.logger.log(20," bad sensor")
 							U.sendURL(data)
 						lastData[devId] =-100.
 						continue
@@ -575,7 +575,7 @@ def execADS1x15():
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 execADS1x15()
 try: 	G.sendThread["run"] = False; time.sleep(1)

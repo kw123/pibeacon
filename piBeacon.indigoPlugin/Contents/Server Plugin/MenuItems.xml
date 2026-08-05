@@ -347,6 +347,56 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 		<Name>-------------manage Beacon devices--------------------</Name>
 	</MenuItem>
 
+	<MenuItem id="qualifyDongle">
+		<Name>Qualify the BLE dongles of one RPI..</Name>
+		<ConfigUI>
+			<Field id="qdLabel0" type="label">
+				<Label>Measures what each bluetooth adapter of the selected RPI can really do and prints
+the report into the indigo log: legacy scan rate, BT5 extended (Ruuvi Air E1) delivery,
+advertising, stability (bursts/silences), sensitivity (rssi) - and which piBeacon roles
+the dongle qualifies for (scan / broadcast / BLEconnect / extListener).
+
+Nothing the dongle CLAIMS is trusted, only delivered packets count.</Label>
+			</Field>
+			<Field id="qdLabel1" type="label" fontColor="red">
+				<Label>beaconloop and BLEconnect are PAUSED while the test runs - no beacons are
+received for that time. Run it when a short gap does not matter.</Label>
+			</Field>
+			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select the rpi to test">
+				<List class="self" filter="blue" method="filterPiD" dynamicReload="true" />
+				<Label>Select rPi-server to test:</Label>
+			</Field>
+			<Field id="qdSecs" type="menu" defaultValue="10" tooltip="per measuring phase; legacy and extended are measured separately">
+				<List>
+					<Option value="5">5 seconds (quick look)</Option>
+					<Option value="10">10 seconds (default)</Option>
+					<Option value="20">20 seconds</Option>
+					<Option value="30">30 seconds (best for stability)</Option>
+				</List>
+				<Label>Measuring time per phase:</Label>
+			</Field>
+			<Field id="qdConnectMac" type="textfield" defaultValue="" tooltip="leave empty to skip the connect test">
+				<Label>Optional: MAC of a connectable tag for a connect test:</Label>
+			</Field>
+			<Field id="qdTries" type="menu" defaultValue="3" visibleBindingId="qdConnectMac" tooltip="one successful connect proves nothing">
+				<List>
+					<Option value="3">3 attempts</Option>
+					<Option value="5">5 attempts</Option>
+					<Option value="10">10 attempts</Option>
+				</List>
+				<Label>... number of connect attempts:</Label>
+			</Field>
+			<Field id="execQualifyDongleCALLBACK" type="button">
+				<Label>After selection click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>qualifyDongleCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" default="">
+				<Label>msg from Plugin:</Label>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
+
 	<MenuItem id="AcceptNewBeacons">
 		<Name>Accept/reject new Beacons..</Name>
 		<ConfigUI>
@@ -362,11 +412,11 @@ After you have added new beacon(s), switch off "accept any new beacon" and  "bea
 or your device folder might fill up quickly</Label>
 			</Field>
 
-	<Field id="acceptNewiBeaconsLabel1" type="label" >  
+	<Field id="acceptNewBeaconsMinSIgnalLabel1" type="label" >  
 		<Label>Accept/reject new beacons if any of:</Label>
 	</Field>
 
-       <Field    id="acceptNewiBeacons"   type="menu" defaultValue="999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
+       <Field    id="acceptNewBeaconsMinSIgnal"   type="menu" defaultValue="999" tooltip="if signal of new beacons less than xx , the rPis will ignore new beacons and will not send them to the plugin">
 		<Label>Accept any new iBeacons w signal GT:</Label>
 		<List>
 			<Option value="999"  >signal GT 999 dBm = no </Option>
@@ -396,7 +446,7 @@ or your device folder might fill up quickly</Label>
              <List class="self" filter="" method="filterBeaconTags_and_all" dynamicReload="false"/>
       </Field>
 
-	<Field id="acceptNewiBeaconsLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+	<Field id="acceptNewBeaconsMinSIgnalLabel2" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>Use allow new beacons of Type "x" or 
 Set signal level to -60 and place new beacon next to RPI and look for new beacon with high signal on that beacon
  </Label>
@@ -405,11 +455,11 @@ Set signal level to -60 and place new beacon next to RPI and look for new beacon
 		<Label>Accept new Beacon with THIS MAC #:</Label>
 		</Field>
 
-	<Field id="acceptNewiBeaconsLabel3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+	<Field id="acceptNewBeaconsMinSIgnalLabel3" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>Use for accepting single beacon with known mac</Label>
 	</Field>
 
-	<Field id="acceptNewiBeaconsLabel9" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+	<Field id="acceptNewBeaconsMinSIgnalLabel9" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
 		<Label>Some beacons send manufacturer name in the broadcast. Here you can select known names or enter any string in the field below
 Some manufactures (eg NUT) have beacons w different types but the same mfg name
 The mfg name is in the section type 09 of the BLE message 

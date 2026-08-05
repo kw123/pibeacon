@@ -56,7 +56,7 @@ def getMyprogram(sensor, data):
             else:
                 data= incrementBadSensor(devId,sensor,data)
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
     if sensor in data and data[sensor]=={}: del data[sensor]
     return data
 
@@ -84,7 +84,7 @@ def incrementBadSensor(devId,sensor,data,text="badSensor"):
             data[sensor][devId]["badSensor"] = badSensors[devId]["text"]
             del badSensors[devId]
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
     return data 
 
 
@@ -158,7 +158,7 @@ def checkIfAliveNeedsToBeSend():
         if time.time() - G.lastAliveSend> 330:  # do we have to send alive signal to plugin?
             U.sendURL(sendAlive=True )
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
     return
 
 
@@ -190,7 +190,7 @@ output              = {}
 readParams()
 
 if U.getIPNumber() > 0:
-    U.logger.log(30," myprogram no ip number  exiting ")
+    U.logger.log(20," myprogram no ip number  exiting ")
     time.sleep(10)
     exit()
 
@@ -268,7 +268,7 @@ while True:
                 #U.logger.log(10, u"sending url: {}".format(data))
                 U.sendURL({"sensors":data})
             except  Exception as e:
-                U.logger.log(30,"", exc_info=True)
+                U.logger.log(20,"", exc_info=True)
             time.sleep(0.05)
 
         quick = U.checkNowFile(G.program)                
@@ -293,7 +293,7 @@ while True:
                 lastRead = tt
                 checkIfAliveNeedsToBeSend()
     except  Exception as e:
-        U.logger.log(30,"", exc_info=True)
+        U.logger.log(20,"", exc_info=True)
         time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -25,9 +25,6 @@ G.program = "pmairquality"
 import serial 
 import struct
 
-import RPi.GPIO as GPIO
-GPIO.setwarnings(False)
-GPIO.setmode(GPIO.BCM)
 
 startBytes	= bytearray(b'\x42\x4d')
 checksum0	= sum(startBytes)
@@ -156,8 +153,8 @@ class thisSensorClass:
 			return acumValues
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, " bad read, .. len{}   receivedCharacters:{}".format(len(rawData), rawData))
+			U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, " bad read, .. len{}   receivedCharacters:{}".format(len(rawData), rawData))
 		return "badSensor"
 
 
@@ -205,7 +202,7 @@ def readParams():
 
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping BME680.py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping BME680.py" )
 			exit()
 			
 
@@ -283,8 +280,8 @@ def readParams():
 			exit()
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,"{}".format(sensors[sensor]) )
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"{}".format(sensors[sensor]) )
 		
 
 
@@ -301,7 +298,7 @@ def startSensor(devId):
 	global sensors,sensor
 	global startTime
 	global thisSensor, firstValue
-	U.logger.log(30,"==== Start {} =====  for devId:{}".format(G.program, devId))
+	U.logger.log(20,"==== Start {} =====  for devId:{}".format(G.program, devId))
 	startTime =time.time()
  
 	try:
@@ -309,7 +306,7 @@ def startSensor(devId):
 		thisSensor[devId]  = thisSensorClass(serialPort = sP)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		thisSensor[devId] =""
 	return
 
@@ -349,7 +346,7 @@ def getValues(devId):
 			badSensor = 0
 			return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 	badSensor+=1
 	if badSensor >3: return "badSensor"
@@ -373,12 +370,9 @@ def resetSensor(devId =""):
 			if pin > 26:  continue 
 			if pin < 2:	  continue	
 			if G.debug >1: U.logger.log(20, "resetting pmAirquality device")
-			GPIO.setup(pin, GPIO.OUT)
-			GPIO.output(pin, True)
+			U.gpioOut(pin, "on")
 			time.sleep(0.1)
-			GPIO.output(pin,False)
-			time.sleep(0.2)
-			GPIO.output(pin,True)
+			U.gpioOut(pin, "pulseoff", secs=0.2)		# low for 200 ms, then high again
 			time.sleep(0.5)
 	return 
 
@@ -458,7 +452,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId] = "badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 						resetSensor(devId=devId)
 					else:
@@ -476,7 +470,7 @@ while True:
 							deltaN= max(deltaN,abs(delta) / max (0.5,(current+lastValues2[devId][xx])/2.))
 							lastValues[devId][xx] = current
 						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"", exc_info=True)
 				else:
 					continue
 				if sensorWasBad or (   ( deltaN > deltaX[devId] ) or  (  tt - abs(G.sendToIndigoSecs) > G.lastAliveSend  ) or quick	) and  ( tt - G.lastAliveSend > minSendDelta ):
@@ -510,7 +504,7 @@ while True:
 				time.sleep(5.)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

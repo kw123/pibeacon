@@ -198,7 +198,7 @@ try:
 	regularOutputFile		= sys.argv[3]
 
 except: 
-	U.logger.log(30,"Starting web server not working, no ip port # given, command:{}".format(sys.argv))
+	U.logger.log(20,"Starting web server not working, no ip port # given, command:{}".format(sys.argv))
 	exit()
 
 getwebServerInputHTML(init=True)
@@ -215,5 +215,5 @@ time.sleep(0.5)
 
 
 server = HTTPServer(('', port), GetHandler)
-U.logger.log(30,"Starting server, access at {}:{}".format(ipNumber,port))
+U.logger.log(20,"Starting server, access at {}:{}".format(ipNumber,port))
 server.serve_forever()

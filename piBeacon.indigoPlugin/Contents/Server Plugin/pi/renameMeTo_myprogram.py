@@ -136,8 +136,8 @@ def getSHT21(i2c=0):
 			return t,h
 		except  Exception as e:
 				U.logger.log(20,"", exc_info=True)
-				U.logger.log(30, "return  value: t={}".format(t)+";  h={}".format(h)  )
-				U.logger.log(30, "i2c address used: {}".format(i2cAdd) )
+				U.logger.log(20, "return  value: t={}".format(t)+";  h={}".format(h)  )
+				U.logger.log(20, "i2c address used: {}".format(i2cAdd) )
 		return "",""
 
 
@@ -157,13 +157,13 @@ U.setLogging()
 
 
 readParams()		   # get parameters send from indigo
-U.logger.log(30,"input params: {}".format(sys.argv))
+U.logger.log(20,"input params: {}".format(sys.argv))
 
 try:
 	params = sys.argv[1]
 	params = json.loads(params)
 except  Exception as e :
-	U.logger.log(30,"", exc_info=True)
+	U.logger.log(20,"", exc_info=True)
 	params ={"devId":"","freeParameter":""}
 deviceID	  = params["devId"]
 freeParameter = params["freeParameter"]
@@ -178,7 +178,7 @@ h=33
 returnMessage = {"INPUT_0":t,"INPUT_1":h,"INPUT_2":55,"INPUT_3":10,"INPUT_9":"abc"}
 sys.stdout.write(json.dumps(returnMessage))
 
-# you find the logoutput in /var/log/myprogram.log, if U.logger.log(30,
+# you find the logoutput in /var/log/myprogram.log, if U.logger.log(20,
 U.logger.log(10, "returning message:"+ json.dumps(returnMessage))
 	
 sys.exit(0)

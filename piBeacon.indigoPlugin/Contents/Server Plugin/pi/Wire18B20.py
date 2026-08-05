@@ -23,22 +23,41 @@ import math
 
 import  sys, os, time, json, datetime,subprocess,copy
 
+# TIME CRITICAL - keeps its own GPIO handling on purpose: the 1-wire reset line has to be held for
+# a defined time, so no shared layer and no per-pin indirection.
+# useGPIO and gpioOK are ALWAYS defined. useGPIO used to be left unset when both imports failed,
+# and the program then died much later with "NameError: useGPIO" instead of naming what was
+# missing - which is exactly the pi5 case: RPi.GPIO does not run there and pigpio has no RP1
+# support. The pigpio factory is OPTIONAL now: without pigpiod, gpiozero keeps its OWN default
+# factory (lgpio on a pi5, rpigpio/native elsewhere) instead of the whole block falling through to
+# RPi.GPIO. Forcing PiGPIOFactory() was what made this unusable on newer hardware.
+# pigpiod is probed by USING it, not by scanning the process list - the old "ps -ef | grep" cost a
+# shell plus three processes at every start.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	#1/0 # use GPIO
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
 	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
 	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
+	try:
+		from gpiozero.pins.pigpio import PiGPIOFactory
+		try:
+			Device.pin_factory = PiGPIOFactory()
+		except Exception:					# pigpiod not up yet - start it and try once more
+			subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+			time.sleep(2)
+			Device.pin_factory = PiGPIOFactory()
+	except Exception:
+		pass								# no pigpio: gpiozero picks its own factory
+	gpioOK = True
+except Exception:
 	try:
 		import RPi.GPIO as GPIO
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
 		useGPIO = True
-	except: pass
+		gpioOK  = True
+	except Exception:
+		pass								# reported after U.setLogging(), no handlers yet here
 
 
 
@@ -116,7 +135,7 @@ def checkIfReset(needToReset):
 
 	U.logger.log(20,"reboot:   checking resetCounter:{}>{}? ".format(resetCounter,oneWireForceReboot))
 	if oneWireForceReboot > 0 and resetCounter > oneWireForceReboot:
-		U.logger.log(30,"doing hard reset ")
+		U.logger.log(20,"doing hard reset ")
 		U.sendRebootHTML("onewire_hanging",reboot=True, force=False, wait=2.)
 		
 	try:
@@ -910,6 +929,8 @@ def execWire():
 	enableTXpinsAsGpio  	= "0"
 	enableSPIpinsAsGpio 	= "0"
 	U.setLogging()
+
+	if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi (neither gpiozero nor RPi.GPIO) - the 1-wire reset line cannot be toggled; install rpi-lgpio on a pi5")
 
 	myPID	   = str(os.getpid())
 	U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running

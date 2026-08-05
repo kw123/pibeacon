@@ -46,13 +46,13 @@ def setupTempDir():
 	"""
 	try:
 		if	not os.path.isdir(G.homeDir+"temp"):
-			subprocess.call("mkdir  "+G.homeDir+"temp", shell=True)
+			U.makeDir(G.homeDir + "temp")
 		# check if already tempfs type, if not create 
 		if readPopen("df | grep tempfs ")[0].find(G.homeDir+"temp") == -1:
 			subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
-		subprocess.call("sudo rm "+G.homeDir+"temp/*", shell=True)
+		U.removeFile(G.homeDir + "temp/*")
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 
@@ -66,7 +66,7 @@ if __name__ == "__main__":
 	subprocess.call("chmod a+w -R "+G.homeDir+"*", shell=True)
 	subprocess.call("chown -R pi:pi "+G.homeDir+"*", shell=True)
 	try:	
-		subprocess.call("touch "+G.homeDir+"temp/touchFile", shell=True)
+		U.touchFile(G.homeDir + "temp/touchFile")
 		timeLastFile = os.path.getmtime(G.homeDir+"temp/touchFile") -1
 	except: 
 		timeLastFile = 0
@@ -80,7 +80,7 @@ if __name__ == "__main__":
 				
 		elif os.path.isdir(G.homeDir+"temp"):
 				doCopy = 2
-				subprocess.call("touch "+G.homeDir+"temp/touchFile", shell=True)
+				U.touchFile(G.homeDir + "temp/touchFile")
 
 		if not os.path.isfile(G.homeDir+"temp/parameters"):
 				doCopy = 3

@@ -114,7 +114,7 @@ def getValues():
 
 	values = {}
 	if sensor not in sensors:
-		U.logger.log(30, "error sensor:{} , sensors:{}".format(sensor, sensors))
+		U.logger.log(20, "error sensor:{} , sensors:{}".format(sensor, sensors))
 		return {}  
 	try:
 		for i2c in i2cAddress:
@@ -125,7 +125,7 @@ def getValues():
 		return values
 	except Exception as e:
 		badSensor += 1
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return values
 
 # ===========================================================================
@@ -167,7 +167,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 				
 		for devId in sensors[sensor]:
@@ -189,7 +189,7 @@ def readParams():
 
 
 			startSensor(devId, i2cADDR)
-		U.logger.log(30,	"==== Start {}... sendToIndigoEvery:{};minSendDelta:{};  sensorRefreshSecs:{},all i2c->devids:{}, detltaX:{}".format(G.program, sendToIndigoEvery, minSendDelta, sensorRefreshSecs, i2cAddress, deltaX))
+		U.logger.log(20,	"==== Start {}... sendToIndigoEvery:{};minSendDelta:{};  sensorRefreshSecs:{},all i2c->devids:{}, detltaX:{}".format(G.program, sendToIndigoEvery, minSendDelta, sensorRefreshSecs, i2cAddress, deltaX))
 				
 		deldevID={}		   
 		for devId in SENSOR:
@@ -204,7 +204,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 #################################
 #################################
@@ -257,7 +257,7 @@ def execMAX44009():
 	NSleep= int(sensorRefreshSecs)
 	if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
 		if U.getIPNumber() > 0:
-			U.logger.log(30,"no ip number working, giving up")
+			U.logger.log(20,"no ip number working, giving up")
 			time.sleep(10)
 
 	eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -289,7 +289,7 @@ def execMAX44009():
 						sensorWasBad = True
 						data["sensors"][sensor][devId]["illuminance"] = "badSensor"
 						if badSensor > 5: 
-							U.logger.log(30," bad sensor")
+							U.logger.log(20," bad sensor")
 							U.sendURL(data)
 						lastData[devId] =-100.
 						continue
@@ -323,7 +323,7 @@ def execMAX44009():
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 execMAX44009()
 try: 	G.sendThread["run"] = False; time.sleep(1)

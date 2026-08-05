@@ -19,10 +19,19 @@ import  piBeaconGlobals as G
 G.program = "vl503l0xDistance"
 import  displayDistance as DISP
 
-import RPi.GPIO as GPIO
-
-GPIO.setmode(GPIO.BCM)
-GPIO.setwarnings(False)
+# TIME CRITICAL - keeps its own GPIO handling on purpose (xShut has to be driven in step with the
+# i2c address assignment), so no shared layer and no per-pin indirection.
+# The import is guarded: it used to be bare, so on a box without RPi.GPIO - a pi5, where RPi.GPIO
+# does not run and rpi-lgpio is needed instead - the whole program died at import with a traceback
+# and no explanation. gpioOK says whether the xShut pin can be driven at all.
+gpioOK = False
+try:
+	import RPi.GPIO as GPIO
+	GPIO.setmode(GPIO.BCM)			# inside the guard - these used to run unguarded right after the
+	GPIO.setwarnings(False)			# import and would raise NameError once the import was protected
+	gpioOK = True
+except Exception:
+	pass							# reported after U.setLogging(), the logger has no handlers yet here
 
 import board
 import busio
@@ -933,12 +942,12 @@ def readParams():
 		if sensorUp == 1:
 				startSensor()
 		if sensorUp == -1:
-				U.logger.log(30, "==== stop  ranging =====")
+				U.logger.log(20, "==== stop  ranging =====")
 				sys.exit()
 				return False
 
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		return True
 
 #################################
@@ -989,7 +998,7 @@ def startSensor():
 		return 
 
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	U.restartMyself(reason="connection to sensor is hanging at startSensor 3 ", delay = 10,doPrint=True, doRestartCount=False)
 
 
@@ -1055,7 +1064,7 @@ def getDist(devId):
 			badSensor = 0
 			return "badSensor"
 	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 	return ""		
 
 
@@ -1102,6 +1111,8 @@ sensorActive				= False
 sendEvery					= 30.
 
 U.setLogging()
+
+if not gpioOK:	U.logger.log(20, "no RPi.GPIO on this rpi - the xShut pin cannot be driven (install rpi-lgpio on a pi5). Sensors without xShut still work")
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
@@ -1152,7 +1163,7 @@ while True:
 					break
 
 				if dist == "badSensor":
-					U.logger.log(30," bad sensor, redoing")
+					U.logger.log(20," bad sensor, redoing")
 					data["sensors"][sensor][devId]["distance"] = "badSensor"
 					U.sendURL(data)
 					lastDist[devId] = -100.
@@ -1223,12 +1234,12 @@ while True:
 			time.sleep(sensorRefreshSecs)
 		#print "end of loop", loopCount
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		aliveTimeStamp = time.time() +10
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass
-U.logger.log(30," exiting at end")
+U.logger.log(20," exiting at end")
 sys.exit(0)
 

@@ -356,7 +356,7 @@ class MPU9255:
 		try:
 			self.bus			= smbus.SMBus(self.busNumber)
 		except Exception as e:
-			U.logger.log(30,'couldn\'t open bus: {0}'.format(e))
+			U.logger.log(20,'couldn\'t open bus: {0}'.format(e))
 			return 
 			
 		self.address	 = MPU9255_DEFAULT_ADDRESS
@@ -444,11 +444,11 @@ def startSENSOR(devId, i2cAddress):
 	"""
 	global theSENSORdict
 	try:
-		U.logger.log(30,"==== Start mpu9255 ===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
+		U.logger.log(20,"==== Start mpu9255 ===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
 		theSENSORdict[devId] = MPU9255(i2cAddress=i2cAddress)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -484,7 +484,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "BNO055 is not in parameters = not enabled, stopping ina219.py" )
+			U.logger.log(20, "BNO055 is not in parameters = not enabled, stopping ina219.py" )
 			exit()
 			
 				
@@ -512,7 +512,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -539,7 +539,7 @@ def getValues(devId):
 			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -632,7 +632,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

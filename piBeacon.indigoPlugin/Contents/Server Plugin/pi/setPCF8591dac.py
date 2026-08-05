@@ -44,7 +44,7 @@ command = json.loads(sys.argv[1])
 i2cAddress = U.getI2cAddress(command, default ="")
 
 if i2cAddress=="":
-	U.logger.log(30, "setPCF8591dac bad command " + command + "  i2cAddress not included")
+	U.logger.log(20, "setPCF8591dac bad command " + command + "  i2cAddress not included")
 	exit(1)
 	
 U.killOldPgm(myPID,"setPCF8591dac.py", param1='"i2cAddress": "' + str(i2cAddress) + '"')# del old instances of myself if they are still running
@@ -60,7 +60,7 @@ if "startAtDateTime" in command:
 			U.logger.log(10, "delayStart delayed by: "+ str(delayStart))
 			time.sleep(delayStart)
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 bus = smbus.SMBus(1)
@@ -123,4 +123,4 @@ try:
 			
 
 except  Exception as e:
-	U.logger.log(30,"", exc_info=True)
+	U.logger.log(20,"", exc_info=True)

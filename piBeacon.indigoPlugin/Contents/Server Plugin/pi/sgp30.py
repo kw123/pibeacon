@@ -259,7 +259,7 @@ def readParams():
 
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 
@@ -299,7 +299,7 @@ def readParams():
 					return
 
 			if new: 
-				U.logger.log(30," new parameters read:  minSendDelta:{};  deltaX:{}".format(minSendDelta, deltaX[devId]) )
+				U.logger.log(20," new parameters read:  minSendDelta:{};  deltaX:{}".format(minSendDelta, deltaX[devId]) )
 				
 		deldevID={}		   
 		for devId in sensorClass:
@@ -313,7 +313,7 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		print(sensors[sensor])
 		
 
@@ -333,7 +333,7 @@ def startSensor(devId, lastPowerUp=0, init=0):
 	global startTime
 	global sensorClass
 	global threadDict
-	U.logger.log(30,"==== Start "+G.program+" ===== ")
+	U.logger.log(20,"==== Start "+G.program+" ===== ")
 	startTime =time.time()
 
 	if devId not in threadDict:
@@ -353,10 +353,10 @@ def startSensor(devId, lastPowerUp=0, init=0):
 
 	# dont do this!!! only at factory 
 		#testSensor = sensorClass[devId].testSensor()
-		#U.logger.log(30, "SGP30 sensortest   #{}".format(hex(testSensor) ) )
+		#U.logger.log(20, "SGP30 sensortest   #{}".format(hex(testSensor) ) )
 		#time.sleep(10)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		U.logger.log(20, "****  startup sensor did not work ****")
 		sensorClass[devId]  = ""
 		threadDict[devId]["state"] = "stop"
@@ -385,7 +385,7 @@ def startSensor2(devId, lastPowerUp=0, init=0):
 				threadDict[devId]["pause"] = True
 			delBaseLine()
 			sensorClass[devId].set_init_air_quality()
-			subprocess.call("echo {}> {}{}.lastInit".format(time.time(), G.homeDir, G.program), shell=True )
+			U.doWriteSimpleFile("{}{}.lastInit".format(G.homeDir, G.program), time.time())
 			time.sleep(12)
 		else:
 			try: 	lastReadSensor = U.readFloat("{}temp/{}.lastreadSensor".format(G.homeDir,G.program),default=0)
@@ -413,7 +413,7 @@ def startSensor2(devId, lastPowerUp=0, init=0):
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	time.sleep(.1)
 	return 
 
@@ -442,7 +442,7 @@ def warmUp(devId):
 		else: 		U.logger.log(20,     "****    warmup NOT finished: CO2= {}, VOC= {}".format(co2, voc) )
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		U.logger.log(20, "****    warmup NOT finished")
 		sensorClass[devId]	 = ""
 
@@ -465,7 +465,7 @@ def getBaseLine(devId):
 		if vocBase > 0 and co2Base > 0:
 			U.writeJson(G.homeDir+G.program+".baseline", {"co2Base":co2Base, "vocBase":vocBase} )
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		U.logger.log(20, "****    could not read baseline from device")
 	return 
 
@@ -502,7 +502,7 @@ def readBaseLine(devId):
 				U.logger.log(20, "**** baseline read from file:  NOT mature yet (co2Base  < 10)" )
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 #################################
@@ -514,7 +514,7 @@ def delBaseLine():
 	Outputs:
 	    None: removes the .baseline file from disk via subprocess
 	"""
-	subprocess.call("rm "+G.homeDir+G.program+".baseline > /dev/null 2>&1", shell=True)
+	U.removeFile(G.homeDir + G.program + ".baseline")
 	return 
 
 #################################
@@ -533,7 +533,7 @@ def setBaseLine(devId):
 		U.logger.log(20, "setting baseline to : CO2eq ={}, TVOC = {}".format(co2Base, vocBase) )
 		sensorClass[devId].set_baseline(co2Base, vocBase)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -630,7 +630,7 @@ def getValues(devId):
 							values	 = {"CO2": int(CO2/n), "VOC":int(VOC/n)}
 							badSensor = 0
 					except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 						badSensor+=1
 					if badSensor >3: values = "badSensor"
 
@@ -664,7 +664,7 @@ def getValues(devId):
 								deltaN = max(deltaN,delta) 
 								lastValues[devId][xx] = current
 							except: pass
-						subprocess.call("echo {:.0f} > {}temp/{}.lastreadSensor".format(time.time(), G.homeDir,G.program), shell=True)
+						U.doWriteSimpleFile("{}temp/{}.lastreadSensor".format(G.homeDir,G.program), "{:.0f}".format(time.time()))
 					else:
 						continue
 					if (  ( ( deltaN > deltaX[devId]  ) or  ( time.time() - abs(G.sendToIndigoSecs) > G.lastAliveSend ) or  quick   ) and  ( time.time() - G.lastAliveSend > minSendDelta ) ):
@@ -679,7 +679,7 @@ def getValues(devId):
 			loopCount +=1
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			badSensor +=1
 	sensorClass[devId] = ""
 	return 
@@ -767,7 +767,7 @@ while True:
 				lastRead = time.time()
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(2)

@@ -47,18 +47,29 @@ logfileName		= imageParams["logFile"]
 
 
 logLevel		  = True#  imageParams["logLevel"] in ["2","3"]
-logging.basicConfig(level=logging.DEBUG, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
+# level=INFO, not DEBUG: this sets the ROOT logger, which every third-party logger inherits - so
+# matplotlib/PIL DEBUG chatter ("Loaded backend Agg version v2.2.", findfont scores, ...) never
+# reaches the plugin log. Our OWN logger below sets its level explicitly and is therefore NOT
+# filtered by this - the script's own logger.setLevel() below decides what IT logs (INFO when
+# logLevel is on, WARNING when it is off).
+logging.basicConfig(level=logging.INFO, filename= logfileName,format='%(module)-23s L:%(lineno)3d Lv:%(levelno)s %(message)s', datefmt='%H:%M:%S')
 logger = logging.getLogger(__name__)
 
 #logLevel = True
 if  not logLevel:
-	logger.setLevel(logging.ERROR)
+	logger.setLevel(logging.WARNING)
 else:
-	logger.setLevel(logging.DEBUG)
+	logger.setLevel(logging.INFO)
 
 ## disable fontmanager logging output 
-logging.getLogger('matplotlib.font_manager').disabled = True
-logging.getLogger("PIL.PngImagePlugin").setLevel(logging.CRITICAL + 1)
+# silence the WHOLE matplotlib logger tree, not single sub-loggers. basicConfig above puts the ROOT
+# logger at DEBUG, so every matplotlib module propagates into the plugin log - e.g. "Loaded backend
+# Agg version v2.2." from matplotlib.pyplot, emitted when the backend is really loaded (at the first
+# figure, which is why it appears although pyplot is imported much earlier).
+# Setting 'pyplot' never worked - the logger is named "matplotlib.pyplot"; the PARENT "matplotlib"
+# covers pyplot, font_manager, backends, ticker and everything else in one line. Same for PIL.
+logging.getLogger("matplotlib").setLevel(logging.WARNING)
+logging.getLogger("PIL").setLevel(logging.WARNING)
 
 
 

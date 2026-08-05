@@ -954,7 +954,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
 			exit()
 			
 
@@ -1009,8 +1009,8 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "{}".format(sensors[sensor]))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 
 
@@ -1036,7 +1036,7 @@ def startSensor(devId):
 			SENSOR[devId]  = DFRobot_SGP40(bus = 1,relative_humidity = 50,temperature_c = 25)
 			SENSOR[devId].begin(10)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
 
@@ -1070,7 +1070,7 @@ def getValues(devId):
 				}
 		return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
 	return ""
@@ -1156,7 +1156,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -1200,7 +1200,7 @@ while True:
 		lastMeasurement = time.time()
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -479,7 +479,7 @@ class SENSORclass():
 			time.sleep(0.1)
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			try: del self.thisSensor 
 			except: pass
 		U.logger.log(20,"return  ")
@@ -724,7 +724,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
 			exit()
 			
 
@@ -795,8 +795,8 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "{}".format(sensors[sensor]))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 
 
@@ -879,7 +879,7 @@ def startSensor(devId, CO2Target="", reset=False):
 
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
 		time.sleep(4)
@@ -933,7 +933,7 @@ def getValues(devId):
 		except:
 			if badsensorCountCO2[devId] > 5: return  "badSensor"
 	except Exception as e:
-		U.logger.log(30,"end of getValues", exc_info=True)
+		U.logger.log(20,"end of getValues", exc_info=True)
 	if badsensorCountCO2[devId]  > 5: return "badSensor"
 	return ""
 
@@ -1123,7 +1123,7 @@ def execSensor():
 			lastMeasurement = time.time()
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 
 

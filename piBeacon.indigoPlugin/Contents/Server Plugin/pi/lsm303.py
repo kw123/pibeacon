@@ -227,11 +227,11 @@ def startSENSOR(devId, i2cAddress,magGain,accelerationGain,magFregRate):
 	"""
 	global theSENSORdict
 	try:
-		U.logger.log(30,"==== Start "+G.program+"	===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
+		U.logger.log(20,"==== Start "+G.program+"	===== @ i2c= {}".format(i2cAddress)+"  devId={}".format(devId))
 		theSENSORdict[devId] = THESENSORCLASS(magGain=magGain, accelerationGain=accelerationGain, magFregRate=magFregRate) 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -264,7 +264,7 @@ def readParams():
 		U.getGlobalParams(inp)
 		
 		if sensor not in sensors:
-			U.logger.log(30, G.program+"is not in parameters	= not enabled, stopping "+G.program )
+			U.logger.log(20, G.program+"is not in parameters	= not enabled, stopping "+G.program )
 			exit()
 			
 		for devId in sensors[sensor]:
@@ -286,7 +286,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -316,7 +316,7 @@ def getValues(devId):
 		#	U.logger.log(20, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return {"MAG":"bad"}
 
 #################################
@@ -411,7 +411,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"]	= False; time.sleep(1)
 except: pass

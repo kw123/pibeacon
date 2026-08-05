@@ -133,8 +133,8 @@ def applyIntensity(c):
 		#U.logger.log(20, u"applyIntensity c: {}; ret: {};   {};   {};   {};   {}".format(c, ret, intensity, multIntensity, lightMaxDimForDisplay, lightMinDimForDisplay))
 		return ret
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "c: {}; int: {}; intmult: {}".format(c, intensity, multIntensity ))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "c: {}; int: {}; intmult: {}".format(c, intensity, multIntensity ))
 		return ret
 
 
@@ -307,8 +307,8 @@ class draw():
 					self.PIXELS[max(0,min(self.maxY1,y))][x] = applyIntensity(pos[4:7])
 			return
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "pos {}".format(pos))
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "pos {}".format(pos))
 
 		
 	def sLine(self, pos):
@@ -324,11 +324,11 @@ class draw():
 			xEnd   = pos[1]
 			for x in range(max(0,min(self.maxX,xStart)),max(0,min(self.maxX,xEnd+1))):
 				self.PIXELS[0][x] = applyIntensity(pos[-3:])
-			#U.logger.log(30, u"draw line from {} to {}, w color:{}".format(xStart,xEnd, pos[-3:]))
+			#U.logger.log(20, u"draw line from {} to {}, w color:{}".format(xStart,xEnd, pos[-3:]))
 			return
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "pos {}".format(pos))
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "pos {}".format(pos))
 
 
 
@@ -343,8 +343,8 @@ class draw():
 		try:
 			self.PIXELS[max(0,min(self.maxY1,pos[0]))][max(0,min(self.maxX1,pos[1]))] = applyIntensity(pos[2:5])
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "pos {}".format(pos))
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "pos {}".format(pos))
 		return 
 
 	def pixelImage(self, pos, pixs):
@@ -384,7 +384,7 @@ class draw():
 				for x in range(len(pos[0])):
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))] = applyIntensity(pos[y][x])
 		else:		 
-			U.logger.log(30," error type:{} pos:{}".format(cType, pos) )
+			U.logger.log(20," error type:{} pos:{}".format(cType, pos) )
 		return
 		
 	def points(self, pos):
@@ -411,9 +411,9 @@ class draw():
 					x= pos[kk][1]
 					self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))] = applyIntensity(pos[kk][2:5])
 			else:		 
-				U.logger.log(30," error type:{} pos:{}".format(cType, pos) )
+				U.logger.log(20," error type:{} pos:{}".format(cType, pos) )
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 
 	def rotateCenter(self, phi=math.pi/2.):
@@ -504,7 +504,7 @@ class draw():
 			for y in range(0,self.maxY):
 					for x in range(0,self.maxX):
 						#if type(self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))][0]) !="int": 
-						#	 U.logger.log(30, u"error in show,  RGB not int") 
+						#	 U.logger.log(20, u"error in show,  RGB not int") 
 						#	 continue 
 						index = get_index_from_xy(x, y)
 						#print x,y,index , self.PIXELS[max(0,min(self.maxY1,y))][max(0,min(self.maxX1,x))]
@@ -513,9 +513,9 @@ class draw():
 							linearDATA[index] =	 self.PIXELS[y][x]
 			if rotate == 0:
 				if speedOfChange ==0:
-					#U.logger.log(30,"bf show LED_COUNT:{} ; linearDATA:{}".format(LED_COUNT, linearDATA) ) 
+					#U.logger.log(20,"bf show LED_COUNT:{} ; linearDATA:{}".format(LED_COUNT, linearDATA) ) 
 					for index in range(LED_COUNT):
-						#U.logger.log(30,"index:{} ; linearDATA:{}".format(index, linearDATA[index]) ) 
+						#U.logger.log(20,"index:{} ; linearDATA:{}".format(index, linearDATA[index]) ) 
 						doPix.setPixels(index, linearDATA[index] )
 					doPix.show() 
 				else: 
@@ -568,8 +568,8 @@ class draw():
 				
 				
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30," pixel len:{}".format(len(self.PIXELS))+"  {}".format(self.PIXELS)[0:100])
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20," pixel len:{}".format(len(self.PIXELS))+"  {}".format(self.PIXELS)[0:100])
 			
 	def clear(self,RGB):
 		"""Sets every LED on the strip to the given RGB color (after applying the global intensity) and pushes the result to the hardware, effectively clearing or filling the whole display.
@@ -692,20 +692,20 @@ def readParams():
 						try:	
 							lightSensorOnForDisplay = ddd["lightSensorOnForDisplay"]
 						except Exception as e:
-								U.logger.log(30,"", exc_info=True)
+								U.logger.log(20,"", exc_info=True)
 
 					if "lightSensorForDisplay-DevId-type" in ddd:
 						try:	
 							useLightSensorDevId =     ddd["lightSensorForDisplay-DevId-type"].split("-")[0]
 							useLightSensorType  =     ddd["lightSensorForDisplay-DevId-type"].split("-")[1]
 						except Exception as e:
-								U.logger.log(30,"", exc_info=True)
+								U.logger.log(20,"", exc_info=True)
 
 					if "lightSensorSlopeForDisplay" in ddd:
 						try:	
 							lightSensorSlopeForDisplay = max(0.01, min(300., float(ddd["lightSensorSlopeForDisplay"]) ) )
 						except Exception as e:
-								U.logger.log(30,"", exc_info=True)
+								U.logger.log(20,"", exc_info=True)
 					if "lightMinDimForDisplay" in ddd:
 						try:	
 							lightMinDimForDisplay = max(0.0, min(255., float(ddd["lightMinDimForDisplay"]) ) )
@@ -717,7 +717,7 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return	retCode
 					   
 # ------------------    ------------------ 
@@ -743,7 +743,7 @@ def readNewInput():
 				U.logger.log(20,"new input: {}".format(out))
 			return data
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			try: 	os.remove(G.homeDir+"temp/neopixel.inp")
 			except:	pass
 	return []
@@ -786,7 +786,7 @@ def saveLastCommands(data):
 		f.write(json.dumps(data))	
 		f.close()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 # ------------------    ------------------ 
 def readLastCommands():
@@ -804,7 +804,7 @@ def readLastCommands():
 			f.close()
 			return json.loads(xxx)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return []
 
 # ------------------    ------------------ 
@@ -875,7 +875,7 @@ def getLightSensorValue(force=False):
 		if rr == {}:
 			time.sleep(0.1)
 			rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
-		subprocess.call("sudo rm "+G.homeDir+"temp/lightSensor.dat >/dev/null 2>&1", shell=True)
+		U.removeFile(G.homeDir + "temp/lightSensor.dat")
 		if rr == {} or "time" not in rr: 							return False
 		if "sensors" not in rr: 									return False
 		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
@@ -915,7 +915,7 @@ def getLightSensorValue(force=False):
 		multIntensity =  intensityDevice * lightSensorValue
 		return True
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return False
 
 
@@ -951,7 +951,7 @@ def checkLightSensor():
 				#U.logger.log(20, " step read    light: lsv:{};  lsvR:{};  newlsv:{}; inties:{}; {}".format(lightSensorValue, lightSensorValueRaw, (lightSensorValueRaw*1 + lightSensorValue*3) / 4.,  intensityDevice,  multIntensity) )
 				return True
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	
 
 
@@ -970,7 +970,7 @@ def sendToIndigo(data, devId):
 	if data == []: return 
 	try: 	status = json.loads(data[0]).get("status","none")
 	except: 
-		#U.logger.log(30, "send data[0]:{}".format(data[0]))
+		#U.logger.log(20, "send data[0]:{}".format(data[0]))
 		status = "none"
 	#U.logger.log(20, "send data[0]:{}".format(data[0]))
 	data = {"outputs":{"neopixel":{devId:{"status":status}}}}
@@ -1052,7 +1052,7 @@ U.logger.log(20, "=========== (re) started neopixel3  ============{}".format(sys
 
 
 if devType	  == "": 
-	U.logger.log(30, "{} , no neopixel3 section in parameters file available".format(datetime.datetime.now()))
+	U.logger.log(20, "{} , no neopixel3 section in parameters file available".format(datetime.datetime.now()))
 	exit()
 
 MAP,linMAP	 = makeMAP(devType, OrderOfMatrix=OrderOfMatrix)
@@ -1132,13 +1132,13 @@ while True:
 						data = json.loads(nextLine)
 					except Exception as e:
 						if loop > -1:
-							U.logger.log(30,"", exc_info=True)
-							U.logger.log(30,"{}".format(nextLine)[0:100])
+							U.logger.log(20,"", exc_info=True)
+							U.logger.log(20,"{}".format(nextLine)[0:100])
 						data = nextLine
 					#print json.dumps(data,sort_keys=True, indent=2)
 				except Exception as e:
-					U.logger.log(30,"bad input {}".format(nextLine) )
-					U.logger.log(30,"", exc_info=True)
+					U.logger.log(20,"bad input {}".format(nextLine) )
+					U.logger.log(20,"", exc_info=True)
 					continue
 
 				restoreAfterBoot = False
@@ -1241,7 +1241,7 @@ while True:
 										reset = cmd["reset"]
 										if reset !=[]:
 											try:		image.resetImage(reset)
-											except:		U.logger.log(30, " reset error :{}".format(reset))
+											except:		U.logger.log(20, " reset error :{}".format(reset))
 
 
 									if loopCount%100000 ==0:
@@ -1408,7 +1408,7 @@ while True:
 											exit()
 										speed = 1
 										if len("{}".format(pos)) < 20: 
-											U.logger.log(30, "clock:  bad data, exiting")
+											U.logger.log(20, "clock:  bad data, exiting")
 											time.sleep(1)
 											exit()
 										if "speed" in pos:
@@ -1498,8 +1498,8 @@ while True:
 																ll = lin[ii][2:]
 																lin[ii] =  [0,ii,rgb[0]+ll[0],rgb[1]+ll[1],rgb[2]+ll[2]]
 												except Exception as e:
-													U.logger.log(30,"", exc_info=True)
-													U.logger.log(30, aa +"  {}".format(pos[aa]))
+													U.logger.log(20,"", exc_info=True)
+													U.logger.log(20, aa +"  {}".format(pos[aa]))
 										for ii in range(len(lin)):
 											lin[ii] =  [0,lin[ii][1], min(255,max(lin[ii][2],0)),min(255,max(lin[ii][3],0)),min(255,max(lin[ii][4],0)) ]
 											
@@ -1536,7 +1536,7 @@ while True:
 									if checkIfnewInput(): break
 								
 							except Exception as e:
-								U.logger.log(30,"", exc_info=True)
+								U.logger.log(20,"", exc_info=True)
 						if checkIfnewReboot(): 
 							image.resetImage([0,0,0])
 							image.show()
@@ -1564,7 +1564,7 @@ while True:
 
 			redolines = checkLightSensor()
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 				
 		if loop %20 ==0:
 			if readParams() == 1:
@@ -1575,10 +1575,10 @@ while True:
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		lines=[]
 
-U.logger.log(30, "exiting at end")
+U.logger.log(20, "exiting at end")
 
 	
 sys.exit(0)		   

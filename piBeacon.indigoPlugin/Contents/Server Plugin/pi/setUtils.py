@@ -35,10 +35,14 @@ def execAddingUtils():
 	try:
 		if True:
 			U.logger.log(20, "creating tf tm  py ct util commands")
-			subprocess.call("echo 'tail -F /var/log/pibeacon' > {}tf;chmod +x {}tf ".format(G.homeDir,G.homeDir), shell=True)
-			subprocess.call("echo 'tail -F {}temp/messageSend' > {}tm;chmod +x {}tm ".format(G.homeDir,G.homeDir,G.homeDir), shell=True)
-			subprocess.call("echo 'cat  {}parameters' > {}ct;chmod +x {}ct ".format(G.homeDir,G.homeDir,G.homeDir), shell=True)
-			subprocess.call("echo 'ps -ef | grep py' > {}py;chmod +x {}py".format(G.homeDir,G.homeDir), shell=True)
+			# four one-line helper scripts - write + chmod directly, no shell needed
+			for nn, content in [["tf", "tail -F /var/log/pibeacon"],
+								["tm", "tail -F {}temp/messageSend".format(G.homeDir)],
+								["ct", "cat  {}parameters".format(G.homeDir)],
+								["py", "ps -ef | grep py"]]:
+				U.doWriteSimpleFile("{}{}".format(G.homeDir, nn), content + "\n")
+				try:	os.chmod("{}{}".format(G.homeDir, nn), 0o755)
+				except Exception:	pass
 	
 		# add local dir to PATH
 		out = subprocess.Popen("cat {} ".format(bashFile), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode('utf_8')
@@ -49,7 +53,7 @@ def execAddingUtils():
 			subprocess.call(cmd, shell=True)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 

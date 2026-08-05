@@ -29,18 +29,15 @@ def killOldPgm(myPID,pgmToKill):
 		"""
 		global debug
 		try:
-			cmd= "ps -ef | grep "+pgmToKill+" | grep -v grep"
-			ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]
-			lines=ret.split("\n")
-			for line in lines:
-				if len(line) < 10: continue
-				line=line.split()
-				pid=int(line[1])
+			# /proc instead of "ps -ef | grep X | grep -v grep" - this also fixes a py3 bug on the
+			# way: communicate() returns BYTES, and the old ret.split("\n") on bytes raises there
+			for pid, cmdline in U.procList(pgmToKill):
+				if (" " + cmdline + " ").find(" grep ") > -1: continue
 				if pid == int(myPID): continue
-				U.logger.log(30, "killing "+pgmToKill)
+				U.logger.log(20, "killing "+pgmToKill)
 				subprocess.call("kill -9 "+str(pid), shell=True)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 def readParams():
 		"""Reads and JSON-parses the plugin's parameters file from the home directory and applies the parsed values via U.getGlobalParams; returns early if parsing fails.
@@ -74,7 +71,7 @@ try:
 	U.logger.log(10, cmdOut)
 	subprocess.call(cmdOut, shell=True)
 except  Exception as e:
-	U.logger.log(30,"", exc_info=True)
+	U.logger.log(20,"", exc_info=True)
 
 		
 sys.exit(0)		

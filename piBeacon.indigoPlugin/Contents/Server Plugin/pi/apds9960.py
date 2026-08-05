@@ -19,21 +19,41 @@ import math
 import io
 import fcntl # used to access I2C parameters like addresses
 
+# TIME CRITICAL - keeps its own GPIO handling on purpose: gesture interrupts arrive in bursts and
+# must not be missed, so no shared layer and no per-pin indirection.
+# useGPIO and gpioOK are ALWAYS defined. useGPIO used to be left unset when both imports failed,
+# and the program then died much later with "NameError: useGPIO" instead of naming what was
+# missing - which is exactly the pi5 case: RPi.GPIO does not run there and pigpio has no RP1
+# support. The pigpio factory is OPTIONAL now: without pigpiod, gpiozero keeps its OWN default
+# factory (lgpio on a pi5, rpigpio/native elsewhere) instead of the whole block falling through to
+# RPi.GPIO. Forcing PiGPIOFactory() was what made this unusable on newer hardware.
+# pigpiod is probed by USING it, not by scanning the process list - the old "ps -ef | grep" cost a
+# shell plus three processes at every start.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
 	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
 	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
+	try:
+		from gpiozero.pins.pigpio import PiGPIOFactory
+		try:
+			Device.pin_factory = PiGPIOFactory()
+		except Exception:					# pigpiod not up yet - start it and try once more
+			subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+			time.sleep(2)
+			Device.pin_factory = PiGPIOFactory()
+	except Exception:
+		pass								# no pigpio: gpiozero picks its own factory
+	gpioOK = True
+except Exception:
 	try:
 		import RPi.GPIO as GPIO
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
 		useGPIO = True
-	except: pass
+		gpioOK  = True
+	except Exception:
+		pass								# reported after U.setLogging(), no handlers yet here
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -523,7 +543,7 @@ class APDS9960():
 				if( not self.WriteDataByte( self.APDS9960_GCONF4,out) ): return False
 				return True
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return False
 
 		""" 
@@ -628,7 +648,7 @@ class APDS9960():
 					time.sleep(self.FIFO_PAUSE_TIME)
 					return motion, nearFar,UPdown,LEFTright
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 			return motion, nearFar,UPdown,LEFTright
 			
 
@@ -909,8 +929,8 @@ class APDS9960():
 
 				U.logger.log(10,	"motion:"+ motion +";  nearFAR:"+nearFAR)  
 			except Exception as e:
-					U.logger.log(30,"", exc_info=True)
-					U.logger.log(30, "leftD:{}".format(leftD))
+					U.logger.log(20,"", exc_info=True)
+					U.logger.log(20, "leftD:{}".format(leftD))
 			return motion ,nearFAR, udDel, lrDel	   
 
 		def doPRINT(self,label,theList,nrec):
@@ -2137,7 +2157,7 @@ class APDS9960():
 				#print	u"WriteByte"
 				self.BUS.write_quick(self.address) 
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return False
 			return True
 		
@@ -2163,7 +2183,7 @@ class APDS9960():
 				self.BUS.write_byte_data(self.address,reg, val)
 				return True
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return False	   
 		
 
@@ -2192,7 +2212,7 @@ class APDS9960():
 					self.BUS.write_block_data(self.address,val[i])
 				return True
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return False	   
 
 		""""
@@ -2213,7 +2233,7 @@ class APDS9960():
 			try:
 				val = self.BUS.read_byte_data(self.address,reg)
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return False, 0
 			#print	u"ReadDataByte return",hex(reg), hex(val)
 			return True, val
@@ -2246,7 +2266,7 @@ class APDS9960():
 				#print "ReadDataBlock", i+1, val 
 				return lenOUT, val
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return -1, []
 
 
@@ -2269,7 +2289,7 @@ class APDS9960():
 				#print "ReadDataBlock",ret
 				return lenOUT, ret
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return -1, []
 
 
@@ -2305,7 +2325,7 @@ class APDS9960():
 				#print "ReadDataBlock", lenOut, val2
 				return lenOut, val2
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				return -1, []
 
 
@@ -2412,7 +2432,7 @@ def getinput(devid):
 		
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	sensorDev.clearGestureFIFO()
 	return data
 
@@ -2465,8 +2485,8 @@ def readParams():
 		if sensors =={}: return 
  
 		if sensor not in sensors:
-			U.logger.log(30, sensor+" is not in parameters = not enabled, stopping "+G.program+".py" )
-			U.logger.log(30, "{}".format(sensors) )
+			U.logger.log(20, sensor+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, "{}".format(sensors) )
 			exit()
 
 
@@ -2512,37 +2532,37 @@ def readParams():
 		if sensorUp == 1:
 				sensorDev= APDS9960(i2cAdd=i2cAddress)
 				sensorDev.init()
-				U.logger.log(30, "starting sensorDev")
-				U.logger.log(30,	 " starting sensorDev", "{}".format(sensorDev))
+				U.logger.log(20, "starting sensorDev")
+				U.logger.log(20,	 " starting sensorDev", "{}".format(sensorDev))
 
 				if refreshColor >=0:
 
 					if	sensorDev.enableLightSensor(False) :
-						U.logger.log(30,	 "enableLightSensor ok")
+						U.logger.log(20,	 "enableLightSensor ok")
 					else:
-						U.logger.log(30, "enableLightSensor bad exit ")
+						U.logger.log(20, "enableLightSensor bad exit ")
 						exit()
 					#Wait for initialization and calibration to finish
 					time.sleep(1)
 
 				if refreshProximity >=0:
 					if sensorDev.setProximityGain(1):
-						U.logger.log(30, "setProximityGain ok")
+						U.logger.log(20, "setProximityGain ok")
 					else:
-						U.logger.log(30, "setProximityGain bad exit")
+						U.logger.log(20, "setProximityGain bad exit")
 						exit()
 
 					if sensorDev.enableProximitySensor(False):
-						U.logger.log(30, "enableProximitySensor ok")
+						U.logger.log(20, "enableProximitySensor ok")
 					else:
-						U.logger.log(30, "enableProximitySensor bad exit")
+						U.logger.log(20, "enableProximitySensor bad exit")
 						exit()
 
 				if enableGesture:
 					if sensorDev.enableGestureSensor(True):
-						U.logger.log(30, "enableGestureSensor ok")
+						U.logger.log(20, "enableGestureSensor ok")
 					else:
-						U.logger.log(30, "enableGestureSensor bad exit")
+						U.logger.log(20, "enableGestureSensor bad exit")
 						exit()
 
 				
@@ -2565,7 +2585,7 @@ def readParams():
 									interruptGPIOAlreadySetup = interruptGPIO
 
 					except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 					
 
 		if sensorUp == -1:
@@ -2576,7 +2596,7 @@ def readParams():
 
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 #################################
 def doWeNeedToStartSensor(sensors,sensorsOld,selectedSensor):
@@ -2664,6 +2684,8 @@ i2cAddress			= 0x39
 sensorsOld			= {"x":0}
 myPID		= str(os.getpid())
 U.setLogging()
+
+if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi (neither gpiozero nor RPi.GPIO) - the gesture interrupt cannot be used; install rpi-lgpio on a pi5")
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
 
 
@@ -2673,7 +2695,7 @@ if U.getIPNumber() > 0:
 	time.sleep(10)
 	exit()
 
-subprocess.call("echo "+str(time.time())+" > "+ G.homeDir+"temp/alive."+sensor+" &", shell=True )
+U.doWriteSimpleFile(G.homeDir+"temp/alive."+sensor, time.time())
 
 lastData			= {}
 lastValues			= {}
@@ -2724,7 +2746,7 @@ while True:
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

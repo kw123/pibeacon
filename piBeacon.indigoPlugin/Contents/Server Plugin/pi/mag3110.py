@@ -43,7 +43,7 @@ class THESENSORCLASS():
 			try:
 				self.bus			= smbus.SMBus(self.busNumber)
 			except Exception as e:
-				U.logger.log(30,'couldn\'t open bus: {0}'.format(e))
+				U.logger.log(20,'couldn\'t open bus: {0}'.format(e))
 				return 
 			
 			self.enableCalibration	 = enableCalibration
@@ -67,7 +67,7 @@ class THESENSORCLASS():
 				self.calibrations= U.loadCalibration(self.calibrationFile)
 				U.magCalibrate(self, force = False,calibTime=5)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return
 
 
@@ -86,7 +86,7 @@ class THESENSORCLASS():
 			byte = self.bus.read_byte_data(self.address, 1)
 			U.logger.log(10,'Found compass at {0}'.format(self.address))
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return False
 
 		#warm up the compass
@@ -97,7 +97,7 @@ class THESENSORCLASS():
 		try:
 			self.bus.write_byte_data(self.address, register, data)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return False
 
 		# System operation
@@ -110,7 +110,7 @@ class THESENSORCLASS():
 		try:
 			self.bus.write_byte_data(self.address, register, data)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return False
 		return True
 
@@ -138,7 +138,7 @@ class THESENSORCLASS():
 			else:			temp += self.offsetTemp
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return [0,0,0,0],-1000
 
 		return [x,y,z],temp
@@ -190,7 +190,7 @@ def readParams():
 
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 				
 		for devId in sensors[sensor]:
@@ -202,7 +202,7 @@ def readParams():
 		theSENSORdict = U.cleanUpSensorlist( sensors[sensor], theSENSORdict)	   
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 #################################
 def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declination, magResolution,enableCalibration):
@@ -222,7 +222,7 @@ def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declina
 	"""
 	global theSENSORdict
 	try:
-		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
+		U.logger.log(20,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
 		if magOffset == [0,0,0]:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress,  magDivider= magDivider, enableCalibration=enableCalibration, declination=declination,magOffset=magOffset, offsetTemp =offsetTemp)
 			if enableCalibration:
@@ -230,7 +230,7 @@ def startTheSensor(devId, i2cAddress,offsetTemp , magOffset, magDivider, declina
 		else:
 			theSENSORdict[devId] = THESENSORCLASS(address=i2cAddress,  magDivider= magDivider, enableCalibration=enableCalibration, declination=declination, offsetTemp =offsetTemp)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -262,7 +262,7 @@ def getValues(devId):
 			U.logger.log(10, (xx).ljust(11)+" {}".format(data[xx]))
 		return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return {"MAG":"bad"}
 
 def fillWithItems(theList,theItems,digits,mult=1):
@@ -336,11 +336,11 @@ while True:
 		loopCount +=1
 		quick = U.checkNowFile(G.program)				 
 		if U.checkNewCalibration(G.program):
-			U.logger.log(30, "starting new calibration in 5 sec for 1 minute.. move sensor around")
+			U.logger.log(20, "starting new calibration in 5 sec for 1 minute.. move sensor around")
 			time.sleep(5)
 			for devId in theSENSORdict:
 				U.magCalibrate(theSENSORdict[devId], force = False,calibTime=30)
-			U.logger.log(30, "finished	new calibration")
+			U.logger.log(20, "finished	new calibration")
 			
 		U.echoLastAlive(G.program)
 
@@ -352,7 +352,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

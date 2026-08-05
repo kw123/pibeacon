@@ -366,7 +366,7 @@ class VEML6070:
 			self.set_integration_time(integrationTime&0x03)
 			self.disable()
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 	def set_integration_time(self, integrationTime):
 		"""Sets the sensor integration time (masked to 2 bits), writes the resulting command byte to the sensor over I2C, and sleeps briefly to let the sensor readjust; logs an error on failure.
@@ -382,7 +382,7 @@ class VEML6070:
 			# constant offset determined experimentally to allow sensor to readjust
 			time.sleep(0.2)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 	def get_integration_time(self):
 		"""Returns the currently stored integration time setting of the sensor.
@@ -568,7 +568,7 @@ class BME280:
 			self._device.write8(self.BME280_REGISTER_CONTROL, 0x3F)
 			self.t_fine = 0.0
 		except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 		
 
 	def _load_calibration(self):
@@ -1084,7 +1084,7 @@ class ADS1x15:
 			# any function that accepts a pga value must update this.
 			self.pga = 6144
 		except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 
 
 
@@ -3936,7 +3936,7 @@ def getADC121(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				data= incrementBadSensor(devId,sensor,data)
 	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
@@ -5101,17 +5101,17 @@ def doDisplay():
 			f=open(G.homeDir+"temp/display.inp",wmode); f.write(json.dumps(out)+"\n"); f.close()
 		except:
 			try:
-				U.logger.log(30,"retry to write to display")
+				U.logger.log(20,"retry to write to display")
 				time.sleep(0.1)
 				f=open(G.homeDir+"temp/display.inp","w"); f.write(json.dumps(out)+"\n"); f.close()
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				if "{}".format(e).find("No space left on device") >-1:
-					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
+					U.removeFile(G.homeDir + "temp/*")
 		return 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,"{}".format(sValues))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"{}".format(sValues))
 
 
 
@@ -5150,7 +5150,7 @@ def makeLightsensorFile(data):
 			out["time"] = time.time() 
 			U.writeJson(G.homeDir+"temp/lightSensor.dat", out, sort_keys=True, indent=2)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
    
 #################################
@@ -5201,7 +5201,7 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
 	if U.getIPNumber() > 0:
-		U.logger.log(30,"no ip number working, giving up")
+		U.logger.log(20,"no ip number working, giving up")
 		time.sleep(10)
 
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()

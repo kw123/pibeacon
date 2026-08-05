@@ -31,7 +31,7 @@ def setVoltage(bytes, persist=False):
 		else:
 			bus.write_i2c_block_data(i2cAddress, 0x40, bytes)
 	except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 ###########
 def readParams():
@@ -60,7 +60,7 @@ command = json.loads(sys.argv[1])
 i2cAddress = U.getI2cAddress(command, default ="")
 
 if i2cAddress=="":
-	U.logger.log(30, "setmcp4725 bad command " + command + "  i2cAddress not included")
+	U.logger.log(20, "setmcp4725 bad command " + command + "  i2cAddress not included")
 	exit(1)
 	
 if "startAtDateTime" in command:
@@ -90,7 +90,7 @@ if "cmd" in command:
 	if cmd =="disable":
 		exit()
 else:
-	U.logger.log(30, "setmcp4725	 no cmd given {}".format(command) )
+	U.logger.log(20, "setmcp4725	 no cmd given {}".format(command) )
 	exit()
 U.logger.log(10, "setmcp4725	cmd {}".format(cmd) )
 
@@ -98,7 +98,7 @@ if "values" in command:
 	values =  command["values"]
 if values =="":
 	exit()
-U.logger.log(30, "setmcp4725	 values {}".format(values) )
+U.logger.log(20, "setmcp4725	 values {}".format(values) )
 
 if "analogValue" in values:
 	analogValue = int(float(values["analogValue"])/3300 * 4096)
@@ -120,7 +120,7 @@ if cmd =="analogWrite":
 	try:
 		setVoltage(bytes,persist=False)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	exit()
 
 if cmd =="continuousUpDown":
@@ -133,7 +133,7 @@ if cmd =="continuousUpDown":
 			setVoltage([0,0],persist=False)
 			time.sleep(pulseDown)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	exit()
 	
 if cmd =="pulseUp":
@@ -142,7 +142,7 @@ if cmd =="pulseUp":
 		time.sleep(pulseUp)
 		setVoltage([0,0],persist=False)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	exit()
 	
 if cmd =="pulseDown":
@@ -151,10 +151,10 @@ if cmd =="pulseDown":
 		time.sleep(pulseDown)
 		setVoltage(bytes,persist=False)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	exit()
 	
-U.logger.log(30, "cmd not implemented: "+cmd)
+U.logger.log(20, "cmd not implemented: "+cmd)
 
 
 

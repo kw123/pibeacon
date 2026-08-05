@@ -27,12 +27,24 @@ import	piBeaconGlobals as G
 G.program = "neopixelClock"
 
 
+# TIME CRITICAL - keeps its own GPIO handling on purpose, so no shared layer and no per-pin
+# indirection.
+# The order used to be INVERTED against every other program here: RPi.GPIO was tried FIRST and
+# gpiozero was the fallback, and that fallback import was itself unguarded - so on a box with
+# neither (a pi5, where RPi.GPIO does not run) the program died at import with a bare traceback.
+# gpiozero first now, matching the rest, and useGPIO/gpioOK are ALWAYS defined.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	import	RPi.GPIO as GPIO
-	useGPIO = True
-except:
 	import gpiozero
-	useGPIO = False
+	gpioOK = True
+except Exception:
+	try:
+		import	RPi.GPIO as GPIO
+		useGPIO = True
+		gpioOK  = True
+	except Exception:
+		pass								# reported after U.setLogging(), no handlers yet here
 	
 
 version = 2.5
@@ -67,7 +79,7 @@ def getWifiInfo(longShort=0):
 			else:
 				wifiInfo = labels[2][longShort]
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return wifiInfo
 
 # ------------------    ------------------ 
@@ -112,7 +124,7 @@ def updatewebserverStatus():
 		U.writeJson(G.homeDir+"statusData."+ G.myPiNumber, xxx, sort_keys=True, indent=2 )
 		U.updateWebStatus(statusData)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 def removebracketsetc(data):
 	"""Formats the given data as a string and strips out brackets and spaces, building a cleaned local string. Note: the result is assigned locally but never returned.
@@ -298,7 +310,7 @@ def webServerInputExtraText():
 		U.logger.log(10, "web status update:{}".format(out) )
 		U.updateWebINPUT(out)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 #################################		 
 def readCommand():
@@ -324,7 +336,7 @@ def readCommand():
 		cmds = cmds.lower().replace(" ","").strip(";")
 		execCommands(cmds)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	
 	
 def execCommands(cmds):
@@ -541,7 +553,7 @@ def execCommands(cmds):
 			startNEOPIXEL(calledFrom="read command", force=True)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return restart
 	
 	
@@ -561,7 +573,7 @@ def toggleCircle(color, runFor ):
 		execCommands("circle:"+color+",0.3,"+str(runFor))
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	
 #################################		 
 def toggleSnake(color, runFor ):
@@ -578,7 +590,7 @@ def toggleSnake(color, runFor ):
 		execCommands("linea:"+color+",30,"+str(runFor))
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 #################################		 
 def toggleModes(tMode):
 	"""Cycles the clock's minutes, hours, or marks display mode to its next value (wrapping at the configured max), applies the new mode, saves parameters, and restarts the NeoPixel display. Returns early for unrecognized mode keys.
@@ -619,7 +631,7 @@ def toggleModes(tMode):
 
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 # ===========================================================================
 # read params
@@ -664,7 +676,7 @@ def readParams():
 		if "output"					in inp:	 output=			 (inp["output"])
 		#### G.debug = 2 
 		if "neopixelClock" not in output:
-			U.logger.log(30, "neopixel-clock	 is not in parameters = not enabled, stopping "+ G.program+".py" )
+			U.logger.log(20, "neopixel-clock	 is not in parameters = not enabled, stopping "+ G.program+".py" )
 			exit()
 
 		U.logger.log(20, "clockDict:{}".format(clockDict))
@@ -697,7 +709,7 @@ def readParams():
 						timeZone =				   (clockDict["timeZone"])
 						tznew  = int(timeZone.split(" ")[0])
 						if tznew != currTZ:
-							U.logger.log(30, "changing timezone from "+str(currTZ)+"  "+G.timeZones[currTZ+12]+" to "+str(tznew)+"  "+G.timeZones[tznew+12])
+							U.logger.log(20, "changing timezone from "+str(currTZ)+"  "+G.timeZones[currTZ+12]+" to "+str(tznew)+"  "+G.timeZones[tznew+12])
 							subprocess.call("sudo cp /usr/share/zoneinfo/"+G.timeZones[tznew+12]+" /etc/localtime", shell=True)
 							currTZ = tznew
 
@@ -723,7 +735,7 @@ def readParams():
 		return changed
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(10)
 		return 3
 
@@ -939,7 +951,7 @@ def startNEOPIXEL(setClock="", off=False, calledFrom="", force=False):
 				lastCommandSendToNeopixel = time.time() + 100
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 
@@ -1025,7 +1037,7 @@ def setupGPIOs():
 							
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 	return
 
@@ -1073,7 +1085,7 @@ def setExtraLEDoff():
 			clockDict["extraLED"] = ""
 			saveParameters()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return
 
 #################################
@@ -1173,7 +1185,7 @@ def getCurrentPatterns():
 			elif clockDict["marks"]["HH"]["marks"] == [0]:				marksLevel = 4
 			else:														marksLevel = 3
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 #################################
@@ -1206,7 +1218,7 @@ def setPatternTo(ticks="" ,marks="", save=True, restart=True, ExtraLED=False):
 		if restart:
 			startNEOPIXEL(calledFrom="setPatternTo", force=True)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		
 	return
 	
@@ -1232,7 +1244,7 @@ def setHHMarksTo(yy):
 			return  False
 		U.logger.log(20, "setHHMarksTo {}".format(xx))
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return True
 
 #################################
@@ -1260,7 +1272,7 @@ def setMMModeTo(yy):
 		U.logger.log(20, "setMMModeTo {}".format(xx))
 		getCurrentPatterns()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return True
 
 #################################
@@ -1287,8 +1299,8 @@ def setHHModeTo(yy):
 		U.logger.log(20, "setHHModeTo #{}, =={}".format(xx, clockDict["ticks"][zz] ))
 		getCurrentPatterns()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "ticksOptions {} ".format(ticksOptions))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "ticksOptions {} ".format(ticksOptions))
 	return True
 
 
@@ -1368,7 +1380,7 @@ def saveParameters():
 		f.write(json.dumps(clockDict, sort_keys=True, indent=2))
 		f.close()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return
 
 
@@ -1470,7 +1482,7 @@ def setLightfromSensor():
 
 					#print "lastTimeStampSensorFile, tt", lastTimeStampSensorFile, tt
 			except:
-				U.logger.log(30, "error reading light sensor")
+				U.logger.log(20, "error reading light sensor")
 				return
 
 		lightSensorValue = lightSensorValueREAD *(1./maxRange)* clockDict["lightSensorSlope"]
@@ -1517,13 +1529,13 @@ def setLightfromSensor():
 			try:
 				startNEOPIXEL(calledFrom="set light form sensor, CLS:{} restartstartNEOPIXEL:{}".format(CLS, restartstartNEOPIXEL), force=True)
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 		lightSensorValueLast = lightSensorValueREAD
 			
 		#print  "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockDict["clockLightSet"], LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor) 
 		U.logger.log(10, "setting lightSenVREAD lightSenV, clockLSetOW, maxRange, clockLightSet, LEDintF:"+str(int(lightSensorValueREAD))+"  "+str(int(lightSensorValue))+" "+str(clockLightSetOverWrite)+"  "+str(int(maxRange))+" "+clockDict["clockLightSet"]+"  "+str(LEDintensityFactor))
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return
 
 
@@ -1622,7 +1634,7 @@ def restorePattern():
 	Outputs:
 	    None: copies the backup pattern file over the active one and logs the action
 	"""
-	U.logger.log(30, "restoring pattern files ")
+	U.logger.log(20, "restoring pattern files ")
 	subprocess.call("cp "+G.homeDir+"neopixelClock.patterns-backup " +G.homeDir+"neopixelClock.patterns", shell=True) 
 	return 
 	
@@ -1815,13 +1827,15 @@ eth0IP						=""
 wifi0IP						=""
 U.setLogging()
 
+if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi (neither gpiozero nor RPi.GPIO) - the clock buttons cannot be read; install rpi-lgpio on a pi5")
+
 # check for corrupt parameters file 
 U.checkParametersFile(force = False)
 
 readLocalParams()
 
 if readParams() ==3:
-		U.logger.log(30," parameters not defined")
+		U.logger.log(20," parameters not defined")
 		U.checkParametersFile( force = True)
 		time.sleep(20)
 		U.restartMyself(param=" bad parameters read", reason="")
@@ -1891,7 +1905,7 @@ U.testNetwork()
 U.getIPNumber() 
 eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 
-U.logger.log(30,"adhocWifiStarted:{}; networkStatus:{}; ipOfRouter{}".format(adhocWifiStarted, G.networkStatus, G.ipOfRouter)) 
+U.logger.log(20,"adhocWifiStarted:{}; networkStatus:{}; ipOfRouter{}".format(adhocWifiStarted, G.networkStatus, G.ipOfRouter)) 
 
 
 
@@ -2196,10 +2210,10 @@ while True:
 
 			
 	except Exception as e:
-		U.logger.log(30,"except at end of loop", exc_info=True)
+		U.logger.log(20,"except at end of loop", exc_info=True)
 		time.sleep(10.)
 		if "{}".format(e).find("string indices must be integers") >-1:
-			U.logger.log(30,"clockDict: {}<<".format(clockDict) )
-			U.logger.log(30,"inp: {}<<".format(inp))
+			U.logger.log(20,"clockDict: {}<<".format(clockDict) )
+			U.logger.log(20,"inp: {}<<".format(inp))
 			U.restartMyself(reason=" string error")
 sys.exit(0)

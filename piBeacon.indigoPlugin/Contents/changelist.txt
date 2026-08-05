@@ -1,3 +1,783 @@
+==================================================
+RELEASE  v2022.191.248  @ 2026-08-03
+summary of everything that changed since v2022.191.171 - the per-version details follow below
+==================================================
+
+
+This is a MAJOR release.
+Many smaller bugs fixed, many functional additions, and now runs wo any command line tools to detect bluetooth beacons - all using python socket
+And it can read bluetooth 5 beacons - there is only one so far: 
+   the RUUUVI-Air:  it sends ut BLe4 and BLE5 information (much more granular data)
+
+
+IN SHORT
+ -  everything BLE runs in python now: scanning AND gatt. No hcidump / lescan / hcitool /
+    gatttool / pybluez needed on a python3.5+ rPi
+ -  ONE engine switch for all BLE work, plugin-wide and per rPi (was two separate settings that
+    could contradict each other)
+ -  BLE5 / extended advertising, ie RUUVI AIR E1 with the full data set (needs a BLE5 dongle)
+ -  BLE radios are assigned to scan / connect / broadcast / extended-listener automatically by
+    MEASURED quality - and each role can be pinned to a specific radio in the rpi device edit
+ -  new menu tool "Qualify the BLE dongles of one RPI.." - measures what each adapter really
+    delivers, nothing a dongle claims is trusted
+ -  one device state per radio (hci0 .. hci3) instead of five states that each named the radio
+    of one role
+ -  beep is reliable and roughly twice as fast; battery reads follow the tags' wake-up order;
+    single-dongle rPis can beep / read battery / drive switchbots now
+ -  device states are optional: ruuvi value families, and min/max vs changes+trend separately,
+    on every sensor
+ -  the daily average is TIME-weighted now (was a plain average of the readings)
+ -  device edit dialogs show rPi NAMES and GROUP NAMES, are sectioned, and 21 more device types
+    can join groups
+ -  the status column date is aligned by real pixel measurement and the column position is
+    configurable
+ -  about 25% fewer indigo state writes
+
+
+FUNCTIONAL CHANGES  (new things, or things you can now set)
+
+1.  BT5 EXTENDED ADVERTISING (BLE5) on the rPi - enables the Ruuvi Air E1 format with the FULL
+    data set (PM 1.0/2.5/4.0/10, CO2, VOC, NOx, temp/hum/pressure). Needs a BLE5-capable USB
+    dongle; pi onboard radios are "5.0"-branded but lack the feature. Many dongles report BLE5
+    and deliver nothing, so the adapter is probed by an actual delivery test, the verdict is
+    cached, and any failure falls back to legacy automatically instead of restart-looping.
+
+2.  PYTHON BLE ENGINE EVERYWHERE. Two new stdlib-only modules do what external tools used to do:
+    gattAttClient.py (GATT/ATT over LE L2CAP - beep, battery, switchbot, BLE sensor reads,
+    xiaomi time-set, iphone/watch presence) and hciRawSocket.py (raw HCI scanning without
+    pybluez). Both are the default. Important because gatttool and pybluez are gone or
+    deprecated on current OS versions. rPis with python < 3.5 fall back to the old tools
+    automatically.
+
+3.  ONE ENGINE CHOICE instead of two. Plugin config: "BLE engine on the rPis - scanning +
+    connecting" (python socket = default, or commandline tools). rPi device edit: "engine for
+    scanning and connecting on THIS rPi" with "use the plugin-config default (recommended)".
+    The two old prefs (rpiDataAcquistionmethod + BLEconnectmode) always meant the same
+    decision - python or command-line tools - and could be set contradictingly. They still
+    exist internally and the rPi-side parameters are unchanged; they are just derived from the
+    one choice now. Migration: an install without the new pref keeps command-line ONLY if BOTH
+    old prefs said so, everything else lands on python socket.
+
+4.  AUTOMATIC RADIO ROLE ASSIGNMENT, deterministic and stable across reboots, by measured
+    quality: scanning avoids the internal radio (worst receiver, shares the antenna with wifi),
+    connecting avoids clone dongles (they scan fine but fail LE connects), the iBeacon
+    broadcast rides along with the scanner, and a BLE5-capable dongle is reserved as the
+    extended listener when there is another radio to scan with. With fewer radios everything
+    runs legacy exactly as before.
+
+5.  ROLE PINNING per radio - new section "Pin a role to a specific BLE radio" in the rpi device
+    edit, one selector per radio the rPi actually reported. What may be picked follows the role
+    strategy, not free choice: a USB radio offers only the scanner variants it was MEASURED to
+    manage (BLE4 / BLE5 / BLE4+5), the internal radio offers only "BLEconnect + iphone" and only
+    when there is a dongle to take the receive job, and every radio (except the last one) can be
+    set to "ignore". Default everywhere is "let the RPi decide".
+
+6.  NEW MENU ITEM "Qualify the BLE dongles of one RPI.." - measures per adapter: legacy scan
+    rate, BT5 extended delivery, advertising, stability (bursts/silences), sensitivity (rssi),
+    and optionally a real connect test against a tag - then says which piBeacon roles the dongle
+    qualifies for (scan / broadcast / BLEconnect / extListener). Nothing a dongle CLAIMS is
+    trusted, only delivered packets count. The results feed a catalogue in the indigo
+    preferences directory that the role-pinning dialog reads. beaconloop and BLEconnect are
+    paused while it runs.
+
+7.  ONE DEVICE STATE PER RADIO: hci0 .. hci3 on the rpi device, eg
+        58:11:22:53:8C:D5/USB/0b05:190e/UP/BLE4+5/scan4+5
+    = mac / bus / usb-id / up-down / what it CAN do (measured) / what it IS doing
+    (scan4, scan4+5, scan5, connect, BC, beep, or "-"). This REPLACES hciInfo, hciInfo_beacons,
+    hciInfo_beep, hciInfo_BLEconnect and supportsBLE5 - five states that each named the radio of
+    one role, so answering "what is hci1 doing" meant reading all five and cross-referencing
+    macs. The mac comes first because it is fixed width: the four radios line up in the device
+    list.
+
+8.  SINGLE-DONGLE rPis support beep / battery / switchbot: BLEconnect shares the one radio with
+    beaconloop and pauses it only for the job. BLEconnect also runs as a pure gatt service when
+    no BLEconnect devices are configured.
+
+9.  iPHONE / WATCH PRESENCE without pybluez and without hcitool - a stdlib backend does the
+    classic page + rssi read.
+
+10. RUUVI DEVICE STATES OPTIONAL PER FAMILY in device edit (temperature, humidity, pressure,
+    CO2, VOC, illuminance, acceleration). Unchecking a family removes every state it owns
+    including min/max/average/change/trend. A RuuviTag with all families off drops from 82
+    states to 7. Everything defaults ON.
+
+11. MIN/MAX AND CHANGED-VALUES ARE SEPARATE OPTIONS, on every device that has them (64 device
+    types): "<state> - min/max/average" (12 states) and "<state> - changes + trend" (10 states)
+    are two checkboxes instead of one. The two trend menus hang off the changes checkbox, which
+    is what they configure. Both default ON.
+
+12. STATUS COLUMN alignment is measured, not guessed: the status word is padded to a pixel
+    budget using the real width of the 13pt system font, so the date part starts at the same
+    place on every device. New plugin config "Status column: width of status part in pixels"
+    (50 .. 150, default 80) moves the date column; changing it re-aligns EVERY existing device
+    at once instead of waiting for each device to change on its own. Without PyObjC/AppKit in
+    the plugin host the old per-word table is used and the setting has no effect (says so in
+    the log).
+
+13. DEVICE EDIT DIALOGS: rPi checkboxes are labelled with the rPi's indigo device NAME (ip as
+    fallback), group checkboxes with the group's CONFIGURED NAME, both right-aligned. Group
+    membership was added to 21 device types that never had it (all OUTPUT types, display,
+    sprinkler, neopixel/sundial, vl6180x, 3 BLE types) and group "Other5" is reachable at last.
+    342 section headers added and normalised to green "==== " headers. "state column" is called
+    "status column" everywhere.
+
+14. NEW STANDALONE rPi TOOLS (stdlib only): qualifyDongle.py (see 6), extScanTest.py (tests
+    every adapter for extended advertising), ruuviPrint.py (prints every ruuvi in range with
+    df3/df5/df6/E1 decoded).
+
+15. NEW DEBUG OPTION (17) "update state lastUpdateFromRPI" - that state is about a quarter of
+    all state writes, so it is off by default and the state then reads "off, to enable turn
+    debug on". The value is still tracked internally, fast-down logic is unaffected.
+
+16. INDIGO UPDATE LOAD down by roughly a quarter (item 15 plus TxPowerReceived only on a real
+    change).
+
+
+TECHNICAL CHANGES  (under the hood, nothing to set)
+
+17. SOCKET is the default acquisition method: the rPi reads the HCI stream from a raw socket,
+    no hcidump/lescan child processes, active scanning with scan responses (names/mfg_info).
+    "Detect new beacon" captures from the live scan stream, so it no longer resets the adapter
+    or blocks the main loop for 25 s.
+
+18. STRUCTURE-BASED BEACON IDENTIFICATION (advMatch) runs in SHADOW MODE: knownBeaconTags.json
+    carries an advMatch definition for 76 of 79 beacon types, matching on BLE AD sections
+    instead of hex string + position. Both methods run in parallel, the old string method still
+    decides, differences are logged as ADVMATCH-DIFF. After a clean burn-in the string method
+    can be retired. Backup: knownBeaconTags.json.bak-preAdvMatch
+
+19. SHELL CALLS REPLACED BY PYTHON in the rPi programs: rm / mkdir / cp / touch / chmod / chown /
+    "echo > file" went through subprocess with shell=True, swallowed their errors and could not
+    report what failed. There are helpers now (removeFile, copyFile, makeDir, touchFile,
+    setMode, setOwner, makeAccessible, writeFileAsRoot, runShellBatch, procList), simple files
+    are written atomically (tmp + rename) so a reader never sees a truncated file, and process
+    checks read /proc instead of parsing ps output.
+
+20. LOG FILE OWNERSHIP: a helper started with sudo CREATED /var/log/pibeacon as root, and every
+    later program running as the pi user could then not append to it - python logging swallows
+    that error silently, so the log just stopped. The permissions are fixed at startup by every
+    program that touches the log, and temp/ is made pi-owned after master (root) recreates it.
+
+21. APT NO LONGER FIGHTS PACKAGES THE OS DOES NOT HAVE: "E: Unable to locate package X" is not
+    a transient failure - the package is gone or renamed in that release (libgpiod2 became
+    libgpiod3 in trixie), and retrying it on every start burned an apt run and filled the log
+    with the same error forever. Such names are remembered in aptNotAvailable.txt and skipped;
+    delete that file to retry after an OS upgrade.
+
+22. rPi LOGGING: timestamps carry tenths of a second, the redundant "Lv:xx" column is gone, and
+    the rPi programs log at level 20 (they used to log routine messages at 30 = warning).
+
+23. PLOT SCRIPTS no longer flood the indigo log: basicConfig sets the ROOT logger, so every
+    matplotlib and PIL module propagated its DEBUG chatter into the plugin log ("Loaded backend
+    Agg version v2.2.", findfont scores). Silencing single sub-loggers never worked because the
+    logger is "matplotlib.pyplot", not "pyplot" - the PARENT logger covers the whole tree in one
+    line. Affects makeBeaconPositionPlots.py, makeCameraPlot.py, makeLidar360Plot.py.
+
+24. plugin.py: sorted into 13 labelled sections, ~900 lines of static tables moved to
+    piBeaconConstants.py, the rpi-selection and group-membership <Field> blocks are generated by
+    getDeviceConfigUiXml instead of being copy-pasted into every device type (Devices.xml shrank
+    by ~4,300 lines), 1804 -> 24 .format() calls are f-strings, cProfile support removed. Every
+    f-string conversion was verified against python 3.11 (what Indigo runs) as well as 3.13.
+    Property names are unchanged, nothing migrates.
+
+25. Cleanup pass over beaconloop.py and BLEconnect.py removed several hundred unused
+    declarations and dead variables; pi/*.py stay python-2 compatible.
+
+    program versions: plugin 2022.191.248, beaconloop v21.2, BLEconnect v12.0,
+                      gattAttClient v1.4, qualifyDongle v2.4
+
+
+FIXES
+
+26. CRASH on updated bookworm/newer kernels: kernels with the 2024 setsockopt validation require
+    a 16-byte HCI filter struct; the 14-byte filter every tool has sent for years (pybluez
+    included) is rejected. Also the crash-restart used /usr/bin/python, which does not exist on
+    py3-only systems, so a crashed beaconloop stayed dead there.
+
+27. SOCKET METHOD, years-old wrong opcode: the LE scan PARAMETERS (active scan) were sent to
+    SET_SCAN_ENABLE instead of SET_SCAN_PARAMETERS, so the controller stayed in its default
+    PASSIVE mode and never received scan responses - which is why the socket method missed
+    messages with names/mfg_info. Plus: quiet periods no longer restart the program, all
+    kernel-buffered packets are drained per read, scan re-enable re-sends the parameters (a
+    hciconfig reset reverts to passive defaults), and stack restarts no longer leak the socket.
+
+28. RESTART CASCADES on long-running rPis: a single junk-length frame aborted a whole message
+    set and triggered the restart ladder; the no-data clock was not reset after a stack restart;
+    the restart counter was per lifetime, so an isolated hiccup hours later escalated
+    immediately.
+
+29. DONGLE ROULETTE after an rPi reboot: with "let the RPi decide" the pinned adapter was
+    DISCARDED on every restart. The pin is only invalidated when an explicit UART/USB
+    restriction conflicts with it; the hci name is always resolved FROM the pinned mac (hci
+    numbers change between boots, the mac is the dongle identity).
+
+30. qualifyDongle LEFT THE RADIOS PAUSED: the tool kept running after printing its report
+    (piBeaconUtils' send thread is not a daemon, so python waited for it at shutdown) while the
+    caller's keep-alive thread refreshed the pause files every 5 s - defeating both failsafes.
+    Now: 600 s hard cap on the pause, a bounded wait that reads a FILE instead of a pipe (a pipe
+    stays open as long as any inherited fd lives), and the tool flushes its queue and exits.
+    Both pause files could also never expire, because an unreadable or half-written file fell
+    back to "now" and so always looked freshly refreshed - they fall back to the file's mtime
+    now.
+
+31. qualifyDongle CONNECT TEST measured nothing: it paged tags as BDADDR_LE_PUBLIC (0x01) while
+    beacon tags use static RANDOM addresses (0x02), so every attempt on every radio timed out
+    and read as broken hardware. The type is derived from the address now (can be forced with
+    addrType=public|random) and is printed in the report. The role verdict follows the
+    measurement, not the ACL MTU guess: 100% grants "connect" whatever the MTU says, 0%
+    withholds it whatever the MTU says.
+
+32. SWITCHBOT CONTACT phantom triggers (~2 per 20 minutes with nobody pressing anything):
+    type-4 frames have NO button counter - nibble 13 there is a 2-bit rotating OPEN indicator.
+    It was read as a full nibble, sent to indigo as "buttonCounter" and written over the REAL
+    counter from the type-3 frame, so every occurrence produced a wrong value and then the
+    correct one a second later = two state changes, two triggers. Type 3 is the only source now.
+
+33. DAILY AVERAGE was a plain sum/count of the readings, which is only correct when readings are
+    evenly spaced in time - and they are not, because a sensor reports on value-CHANGE or on the
+    idle timer, so a short hectic period outweighed a long calm one. Example with the shipped
+    defaults: 20 hours at 10 C then 4 hours at 20 C produced AveToday 17.5 C where the true
+    average is 11.7 C. AveToday/AveYesterday are TIME-WEIGHTED now; the accumulator travels with
+    changedValues.json and is rebuilt from the clock after a restart.
+
+34. TREND was written without checking whether the state exists. The KeyError was swallowed
+    silently - and that also skipped writing the value history back, so the whole
+    change-over-time calculation quietly stopped updating. Also, the changed-values loop tested
+    a property built from the FULL state name (eg "TemperatureChangeHours01_EnableMinMax"),
+    which never exists, so that check had always been a no-op.
+
+35. BEEP latency and reliability (roughly 12 s down to 4-8 s), mainly by keeping the LE scan
+    running during a connect - the kernel manages the scan around create-connection itself - and
+    by using shorter, re-issued connection windows. Connect failures are stage-tagged with the
+    adapter name. BATTERY READS follow the order tags actually WAKE UP instead of a blind queue
+    order, so sleeping tags no longer burn listen windows.
+
+36. piMAC reported the SCANNER's mac instead of the iBeacon TRANSMITTER's, breaking the rpi
+    device link and rpi-to-rpi online detection whenever the roles were split.
+
+37. REPEATED FULL PARAMETER REPROCESS on the rPi: a timestamp stamped on every parameters build
+    made any resend look new, forcing a rebuild of program/sensor lists every cycle. Fixed on
+    both sides - the plugin does not stamp it, and the rPi ignores that field when comparing.
+
+38. beacon_parameters GROWING WITHOUT LIMIT: after a parameter rename (acceptNewiBeacons ->
+    acceptNewBeaconsMinSIgnal) the "accept new beacons" default reverted to accept-ALL. The
+    default is OFF now. An already-bloated file still needs menu -> ignore beacons + reset
+    history to shrink.
+
+39. validateDeviceConfigUi_beacon indexed valuesDict["rPiEnable<n>"] directly for every pi, so
+    one missing key raised a KeyError and killed the whole validation.
+
+40. PM states were Integer, truncating the 0.1 ug/m3 resolution (1.2 became 1) - they are Real
+    now.
+
+41. COIN-CELL BATTERY PERCENT was far too low in the cold: coin cells sag about 12 mV/C below
+    room temperature and the whole voltage curve moves down, but only the empty point was being
+    corrected. Warm behaviour is unchanged.
+
+42. RUUVI AIR matched to the actual hardware: battery states removed (it is USB-C powered) and
+    Illuminance defaults OFF (Ruuvi dropped the light sensor). The checkbox remains.
+
+43. Illuminance on SHELLY devices now goes through the standard state writer, so its
+    min/max/average/change/trend states are finally filled instead of staying empty.
+
+44. i2c GHOST ADDRESSES: scanning while another program used the bus made a clock-stretching
+    device ack a whole address range. The bus is scanned twice and only addresses seen in both
+    passes are kept.
+
+45. BEACON NAMES with umlauts or other multi-byte UTF-8 characters were mangled.
+
+46. iPHONE PRESENCE: false "away" on multi-adapter rPis (the page went via the default adapter),
+    flapping on half-built connections, an absent phone counting as an adapter error and
+    restarting BLEconnect, and configured refresh times being ignored (phones were paged every
+    main-loop pass).
+
+47. The per-rPi verbose debug switch in the plugin config did nothing - the rPi read a different
+    key than the plugin sent.
+
+48. A stale gattAttClient.py from a partial file send is detected and reported at startup
+    instead of silently missing fixes.
+
+49. DISPLAY STOPPED ITSELF ON BOOT: the stop marker temp/display.stop was written
+    unconditionally, so it was lying around on a fresh boot and the display master started a
+    moment later read it and exited ("stop was requested"). It is written only when a display is
+    actually running, and removed once it has done its job.
+
+50. The read-only-filesystem check ran "echo x > x" and grepped the output, which left a file
+    literally named "x" in the working directory on every healthy boot. It writes a temp file
+    and looks at the errno now.
+
+51. ROUTINE LOG LINES that fired on every config save, every delayed rPi action and every device
+    start ("adding isMememberOfChangedValues") are behind their debug areas.
+
+
+NOTES / UPGRADE
+
+52. The switchbot Remote does NOT broadcast button presses - the advertisement payload is
+    immutable and presses only wake it to talk to its paired bot/curtain. Battery reading and
+    beep-to-locate work. Use a ShellyButton if button broadcasts are needed.
+53. A PLUGIN RELOAD is required for the state-type and state-list changes (PM states Integer ->
+    Real; rpi devices lose hciInfo* / supportsBLE5 and gain hci0 .. hci3).
+54. The MEANING of AveToday/AveYesterday changed (see 33) - triggers or charts tuned to the old
+    sample average will read differently on volatile sensors.
+55. The optional-states options (10, 11) all default ON, so existing devices are unchanged until
+    they are edited and saved.
+56. When the plugin bundle is replaced manually or via a sync tool instead of the Indigo
+    installer, reload the plugin afterwards.
+
+
+==================================================
+Added features / changes in added features / changes in v2022.191.221 ... 248 @ 2026-08-03
+
+IN SHORT
+ -  ONE switch decides the BLE engine (python / commandline) for scanning AND connecting,
+    plugin-wide and per rPi - it used to be two settings that could contradict each other
+ -  every BLE radio has its own device state hci0 .. hci3 now: mac / bus / usb-id / up-down /
+    what it CAN do / what it IS doing. Five old hciInfo* states are gone
+ -  roles can be PINNED to a specific radio in the rpi device edit, and a radio can be ignored
+ -  the status column is aligned by real pixel measurement, and where the date starts is a
+    setting now
+ -  the rPi programs do file operations in python instead of shelling out to rm/mkdir/cp/echo
+ -  /var/log/pibeacon could end up owned by root, after which logging silently stopped
+ -  apt no longer retries packages this OS release does not have, forever
+
+
+FUNCTIONAL CHANGES
+
+1.  ONE BLE ENGINE CHOICE instead of two. New plugin config field "BLE engine on the rPis -
+    scanning + connecting": python socket (default) or commandline tools. New rPi device field
+    "engine for scanning and connecting on THIS rPi", default "use the plugin-config default
+    (recommended)".
+    The two old prefs - rpiDataAcquistionmethod (hcidump / socket) and BLEconnectmode
+    (commandLine / attSocket) - always expressed the SAME decision, python or command-line
+    tools, and nothing stopped them being set contradictingly (socket scanning + gatttool
+    connects). They still exist internally and the parameters shipped to the rPi are byte-for-
+    byte what they were, they are just derived from the one choice now.
+    Migration: an install without the new pref keeps commandline ONLY if BOTH old prefs said so;
+    everything else lands on python socket. Old per-DEVICE props are honoured as a fallback when
+    the new per-rPi field is left on "use the plugin-config default", so no rPi silently flips.
+
+2.  ONE DEVICE STATE PER BLE RADIO: hci0, hci1, hci2, hci3 on the rpi device.
+
+        58:11:22:53:8C:D5/USB/0b05:190e/UP/BLE4+5/scan4+5
+
+    mac        the radio's BLE mac - FIRST because it is fixed width, so the states of all
+               radios line up under each other in the device list
+    bus        USB or UART (UART = the onboard radio)
+    usb-id     vendor:product of the dongle, "none" for onboard radios
+    up-down    UP or DOWN
+    capability what it CAN do, MEASURED not claimed: BLE4, BLE5 (extended only), BLE4+5
+    function   what it IS doing, "+"-joined: scan4 / scan4+5 / scan5 / connect / BC (the iBeacon
+               broadcast) / beep, or "-" when it holds no role
+    This REPLACES hciInfo, hciInfo_beacons, hciInfo_beep, hciInfo_BLEconnect and supportsBLE5 -
+    five states that each named the radio of ONE role, so answering "what is hci1 doing" meant
+    reading all five and cross-referencing macs. supportsBLE5 was a yes/no for the whole rPi;
+    with 3-4 dongles the useful fact is WHICH radio, not whether one of them can.
+    The states are sent only when they actually change. A plugin reload is needed for the new
+    state list.
+
+3.  ROLE PINNING per radio - new section "Pin a role to a specific BLE radio (default: the rpi
+    decides)" in the rpi device edit, with one selector per radio THAT rPi has actually reported
+    (built from its own hci0..hci3 states, so every pi shows exactly its own hardware).
+    What may be picked follows the role strategy, not free choice:
+    -  a USB radio is a RECEIVER and offers only the scanner variants it was MEASURED to manage:
+       "scanner BLE4", "scanner BLE5", "scanner BLE4 + BLE5". A BLE5-only dongle is never
+       offered "scanner BLE4"; "BLE4 + BLE5" appears only for a radio that earned it. An
+       unknown/older capability string offers everything rather than nothing.
+    -  the INTERNAL radio is never a scanner (its scanning fights wifi over the same antenna),
+       so the only thing worth pinning it to is "BLEconnect + iphone" - and that is offered only
+       when there is a dongle to take the receive job.
+    -  "ignore this radio" is offered last on every radio, but never on the only one.
+    A pin only wins if the radio it names is present and UP - a dongle can be unplugged or come
+    back as a different hciN - and a radio already holding another role is skipped, so two
+    contradicting pins cannot collapse two roles onto one radio. Whenever a pin cannot be
+    honoured the auto pick runs as before and says why in the log.
+    Ignored radios are removed from the adapter list once, right after enumeration, so every
+    role pick downstream simply never sees them. If ALL radios are set to ignore they are all
+    kept - an rPi without bluetooth is not a working setup.
+
+4.  RADIO CAPABILITY IS MEASURED AT STARTUP, cheaply, with one command and no scan:
+    -  BLE4: LE Set Scan Parameters is sent; the Barrot/UGREEN (33fa:0012) firmware is locked to
+       the extended command family and answers 0x0C "Command Disallowed", the ASUS/Realtek
+       (0b05:190e) accepts it and scans BLE4 happily. That single answer is what separates a
+       BLE5 dongle that can carry the whole receive job from one that can only listen to BLE5.
+    -  the usb id is read from THIS adapter's own sysfs path, walking up to the usb device that
+       carries idVendor/idProduct. lsusb is useless here: it lists devices in bus order with no
+       link to an hci number, and once reported two different dongles both as "33fa:0012
+       UGREEN".
+    A rate measurement is not done here - that is what qualifyDongle.py is for.
+
+5.  STATUS COLUMN ALIGNMENT IS MEASURED, and configurable. The status word is padded to a pixel
+    budget using the real width of each character in the 13pt system font (AppKit/PyObjC),
+    instead of a per-word ljust table, so the date part starts at the same place on every
+    device. New plugin config "Status column: width of status part in pixels" (50 .. 150,
+    default 80) moves the date column left or right.
+    Cocoa is touched only at import, at plugin start and when the config is saved - it measures
+    each printable character once and the runtime width function is pure python, so it is safe
+    from any thread. Without PyObjC in the plugin host the old per-word table is used, the
+    setting has no effect, and the log says so at startup.
+    Changing the setting re-aligns EVERY existing device at once: displayStatus is normally
+    written only when a device changes, so a switch untouched for weeks would otherwise keep the
+    old column for weeks. The pass also refreshes the uiValue of whatever state is actually on
+    screen (dev.displayStateId is not always displayStatus), because writing displayStatus alone
+    changes a state nobody looks at and the column does not move.
+
+6.  NEW DEBUG OPTION (17) "update state lastUpdateFromRPI". That one state is about a quarter of
+    all indigo state writes, so it is off by default and the state then reads "off, to enable
+    turn debug on". The value is still tracked internally, so the fast-down logic is unaffected.
+
+7.  THE "Debug...which RPI" LIST in the plugin config now uses the same rPi list as everything
+    else (filterPiD): pis that are ON and have an ip, plus a trailing "off" entry. filterPiC is
+    gone.
+
+8.  The do_cProfile field is removed from the plugin config, together with the cProfile
+    machinery behind it.
+
+
+TECHNICAL CHANGES
+
+9.  SHELL CALLS REPLACED BY PYTHON in the rPi programs. rm / mkdir / cp / touch / chmod / chown
+    and "echo > file" went through subprocess with shell=True: their errors went nowhere, a
+    failure could not be reported, and quoting/globbing bugs were silent. There are helpers now -
+    removeFile, copyFile, makeDir, touchFile, setMode, setOwner, makeAccessible,
+    writeFileAsRoot, doWriteSimpleFile, runShellBatch, procList - simple files are written
+    atomically (tmp + rename) so a reader never sees a truncated file, and process checks read
+    /proc instead of parsing ps output.
+
+10. LOG FILE OWNERSHIP: a helper started with sudo CREATED /var/log/pibeacon as root. Every
+    later program running as the pi user could then not append to it - and python logging
+    swallows that error silently, so the log simply stopped without a word. The permissions and
+    owner are fixed at startup by every program that touches the log, including the two
+    checkForIncl helpers and callbeacon, which are the ones usually started with sudo.
+
+11. temp/ IS MADE pi-OWNED after master recreates it. master runs as root, so temp/ and
+    everything the programs drop there (alive./.hci/.data files) came out as root-owned and no
+    pi-user program could update them.
+
+12. APT NO LONGER FIGHTS PACKAGES THE OS DOES NOT HAVE. "E: Unable to locate package X" is not
+    a transient failure - the package is gone or renamed in that release (libgpiod2 became
+    libgpiod3 in trixie) - but it was retried on every single start, burning an apt run and
+    filling the log with the same error forever. Such names are written to
+    /home/pi/pibeacon/aptNotAvailable.txt and skipped from then on; delete that file to make it
+    try again after an OS upgrade.
+
+13. THE TWO checkForIncl HELPERS now log like everything else on the rPi: timestamps with tenths
+    of a second, no "Lv:xx" column, and their routine messages at level 20 instead of 30.
+
+14. master ignores the plugin's per-build "configured" timestamp when it compares the parameters
+    it just received with the ones it has. The plugin stamps a fresh timestamp on every build, so
+    a cosmetic resend - nothing substantive changed - used to look new and forced a full
+    reprocess of the program and sensor lists.
+
+15. master no longer restarts itself when the hci definitions change: the two globals it watched
+    for that (BeaconUseHCINo, BLEconnectUseHCINo) are gone, because the radios are assigned by
+    beaconloop at runtime now and a restart cannot improve on that.
+
+
+BUG FIXES
+
+16. THE DISPLAY STOPPED ITSELF ON A FRESH BOOT. The stop marker temp/display.stop was written
+    unconditionally, so it was lying around when master started the display a moment later, the
+    display read it and exited with "stop was requested". The marker is meant to stop a RUNNING
+    display before it is killed, not to greet a new one: it is written only when a display is
+    actually running, and removed once it has done its job (killOldPgm.py writes it too, for
+    whatever display process it happens to kill).
+
+17. THE READ-ONLY-FILESYSTEM CHECK LEFT A FILE BEHIND. It ran "echo x > x" and grepped the
+    output for "Read-only file system", which on every healthy boot created a file literally
+    named "x" in the working directory. It writes a temp file and looks at the errno now, and
+    logs the exception when a write fails for some OTHER reason instead of reading that as
+    "read-only".
+
+18. THE PLOT SCRIPTS FLOODED THE INDIGO LOG. basicConfig sets the ROOT logger, which every
+    third-party logger inherits, so all matplotlib and PIL DEBUG chatter propagated into the
+    plugin log ("Loaded backend Agg version v2.2.", findfont scores, ...). Silencing single
+    sub-loggers never worked, because the logger is named "matplotlib.pyplot", not "pyplot" -
+    the PARENT logger "matplotlib" covers pyplot, font_manager, backends and ticker in one line,
+    same for "PIL". The root logger is at INFO now and the scripts' own loggers set their level
+    explicitly (INFO with logging on, WARNING with it off), so their own messages are unaffected.
+    Affects makeBeaconPositionPlots.py, makeCameraPlot.py and makeLidar360Plot.py.
+
+    program versions: beaconloop v21.2, BLEconnect v12.0, gattAttClient v1.4, qualifyDongle v2.4
+
+
+==================================================
+Added features / changes in added features / changes in v2022.191.186 ... 220 @ 2026-08-02
+
+IN SHORT
+ -  qualifyDongle no longer leaves beaconloop/BLEconnect paused - the radios always come back
+ -  qualifyDongle connect test actually connects now (tags are RANDOM addresses, were paged as public)
+ -  switchbot CONTACT: no more phantom button-counter triggers (~2 per 20 min, no button pressed)
+ -  device edit dialogs show the rPi NAME and the configured GROUP NAME instead of numbers
+ -  group membership available on 21 more device types, group "Other5" reachable at last
+ -  device dialogs are sectioned consistently (green "====" headers)
+ -  "state column" is called "status column" everywhere
+
+DETAILS
+
+ rPi / qualifyDongle
+ -  the tool kept running after it had printed its report: U.sendURL starts execSend as a NON-daemon
+    thread that loops forever, so python waits for it at interpreter shutdown. The caller
+    (receiveCommands) waits for the process, and its keep-alive thread refreshes temp/beaconloop.pause
+    and temp/BLEconnect.pause every 5 s - which defeats BOTH failsafes on purpose. Result: the radios
+    stayed handed over until someone killed master. Now: 600 s hard cap on the pause, the wait loop
+    is bounded and reads a FILE instead of a pipe (a pipe stays open as long as any inherited fd
+    lives - killSudos kills the sudo/sh wrappers, which only orphans the python child), and the tool
+    flushes its send queue and exits.
+ -  BLEconnect.pause could never expire: an unreadable/half-written file fell back to "now", so it
+    always looked freshly refreshed. beaconloop.pause had the mirror bug and expired a LIVE pause
+    after 55 s. Both now fall back to the file's mtime, and doWriteSimpleFile writes atomically
+    (tmp + rename) so a reader never sees a truncated file.
+ -  connect test: the peer address type was 0x01 = BDADDR_LE_PUBLIC while beacon tags use static
+    RANDOM addresses (0x02) - every attempt on every radio timed out and read as broken hardware.
+    The type is derived from the address now (top two bits 11 = static random), can be forced with
+    addrType=public|random, and is printed in the report.
+ -  role verdict: measurement beats the ACL MTU guess. 100% grants "connect" + "connect-PROVEN"
+    whatever the MTU, 0% withholds the role whatever the MTU, and the 401..1020 MTU band no longer
+    disappears without a note.
+ -  killSudos never kills qualifyDongle any more (killing the sudo wrapper only orphans the child).
+ -  the catalogue lives in the indigo preferences directory, fed by every rpi; the tool writes its
+    result to temp/qualifyDongle.json and receiveCommands forwards report + entries in ONE message.
+
+ SwitchBot contact sensor
+ -  type-4 frames have NO button counter - nibble 13 is a 2-bit rotating OPEN indicator. It was read
+    as a full nibble, sent to indigo as "buttonCounter" and stored over the REAL counter that the
+    type-3 frame maintains. Every occurrence wrote a wrong value and then the correct one a second
+    later = two state changes, two triggers, no button press. Type 3 is the only source now.
+
+ plugin / device dialogs
+ -  the rpi-selection and group-membership <Field> blocks are generated by getDeviceConfigUiXml
+    instead of being copy-pasted into every device type: Devices.xml shrank by ~4,300 lines.
+    Property names are unchanged, nothing migrates.
+ -  rpi checkboxes are labelled with the rPi's indigo device name (ip as fallback), group checkboxes
+    with the group's configured name; both right-aligned so the columns line up.
+ -  group membership added to 21 device types that never had it (all OUTPUT types, display,
+    sprinkler, neopixel/sundial, vl6180x, and 3 BLE types), and "Other5" now has a checkbox - the
+    code always looped over all 7 groups but the xml stopped at 6.
+ -  validateDeviceConfigUi_beacon indexed valuesDict["rPiEnable<n>"] directly for every pi; one
+    missing key raised KeyError and killed the whole validation. Uses .get now.
+ -  342 section headers added, all headers normalised to green "==== ", trailing "====" removed.
+ -  internal: plugin.py sorted into 13 labelled sections, ~900 lines of static tables moved to
+    piBeaconConstants.py, cProfile support removed, "import queue"/"import socketserver" (lowercase).
+
+==================================================
+Added features / changes in added features / changes in v2022.191.176 ... 185 @ 2026-07-27
+
+IN SHORT
+ -  BLE5 / extended advertising ie RUUVI AIR (requires BLE5 compatible dongle) 
+ -  socket data acquisition is the default ( HCIDUMP etc is being  deprecated)
+ -  BLE adapters are assigned to scan / connect / broadcast automatically, by quality
+ -  beep is reliable now and roughly twice as fast; battery reads follow the tags' wake-up order
+ -  ruuvi device states can be switched off per value family in device edit
+ -  about 25% fewer indigo state writes
+ -  min/max and changed-values/trend are separate on/off options now, on every sensor
+ -  the daily average is TIME-weighted now (was a plain average of the readings)
+
+
+DETAILS 
+
+NEW FUNCTIONS
+1.   BT5 EXTENDED ADVERTISING (BLE5) on the rpi - enables the Ruuvi Air E1 format with the
+    FULL data set (PM 1.0/2.5/4.0/10, CO2, VOC, NOx, temp/hum/pressure). Requires a
+    BLE5-capable USB dongle and 3 radios (one each for scan / connect / broadcast); with
+    fewer, or on pi onboard radios (they are "5.0"-branded but lack the feature),
+    everything runs legacy exactly as before. Many dongles report BLE5 but deliver
+    nothing, so the adapter is probed by an actual delivery test, the verdict is cached
+    and shown in the new rpi state "supportsBLE5", and any failure falls back to legacy
+    automatically instead of restart-looping.
+2.   NEW GATT ENGINE gattAttClient.py - a python-stdlib-only GATT/ATT client that REPLACES
+    gatttool for all jobs (beep, battery, switchbot, sensor reads, xiaomi time-set) and is
+    now the default. No gatttool process, no pexpect, no bluetoothd. Important because
+    gatttool is dropped from newer BlueZ builds. The tag database is unchanged, and rpis
+    with py < 3.5 or without the file fall back to gatttool automatically.
+3.   SINGLE-DONGLE rpis now support beep / battery / switchbot: BLEconnect shares the one
+    radio with beaconloop and pauses it only for the job. Previously these needed a second
+    adapter. BLEconnect also runs as a pure gatt service when no BLEconnect devices exist.
+4.   iPHONE / WATCH PRESENCE without pybluez and without hcitool (both gone or deprecated
+    on current OS versions) - a stdlib backend does the classic page + RSSI read.
+5.   RUUVI DEVICE STATES OPTIONAL PER FAMILY in device edit. Unchecking a family removes
+    every state it owns, including min/max/average/change/trend - 23 states per family for
+    Temperature/Humidity/Pressure/CO2/VOC/Illuminance, 6 for acceleration. A RuuviTag with
+    all families off drops from 82 states to 7. Everything defaults ON, so existing
+    devices are unchanged until edited and saved.
+6.   MIN/MAX AND CHANGED-VALUES ARE SEPARATE OPTIONS now, on EVERY device that has them
+    (64 device types). Per state there are two checkboxes instead of one:
+    "<state> - min/max/average"  = MinToday/MaxToday, Min/MaxYesterday, the four ..At
+                                   timestamps, AveToday/AveYesterday and the measurement
+                                   counts  (12 states)
+    "<state> - changes + trend"  = ChangeMinutes05/10/20, ChangeHours01/02/06/12/24/48
+                                   and the Trend arrows  (10 states)
+    Both default ON, so nothing changes until a device is edited and saved. The two trend
+    menus (time window, delta to trigger up/down) now hang off the changes checkbox, which
+    is what they actually configure. Switching a whole value family off switches both of
+    its sub-options off as well.
+7.   NEW standalone rpi tools (stdlib only): extScanTest.py tests every adapter for
+    extended advertising and prints a verdict per adapter; ruuviPrint.py prints every
+    ruuvi in range with df3/df5/df6/E1 decoded.
+
+
+CHANGES / IMPROVEMENTS
+8.   SOCKET is now the default data-acquisition method - the rpi reads the HCI stream from
+    a raw socket, with no hcidump/lescan child processes. "Detect new beacon" captures
+    from the live scan stream, so it no longer resets the adapter or blocks the main loop
+    for 25 secs. Per-rpi override unchanged.
+9.   AUTOMATIC RADIO ROLE ASSIGNMENT by quality, deterministic and stable across reboots:
+    scanning avoids the internal radio where possible (worst receiver, shares antenna with
+    wifi) and connecting avoids clone dongles (they scan fine but fail LE connects). On a
+    2-radio rpi this alone improves beacon range and tracking quality. The clone-dongle
+    warning is now raised only when a clone actually causes trouble, not on sight.
+10.  BEEP reliability and latency substantially improved (roughly 12s down to 4-8s), mainly
+    by keeping the LE scan running during a connect - the kernel manages the scan around
+    create-connection itself - and by using shorter, re-issued connection windows. Connect
+    failures are now stage-tagged with the adapter name so a bad adapter is identifiable.
+11. BATTERY READS follow the order tags actually WAKE UP instead of a blind queue order,
+    so sleeping tags no longer burn listen windows. Falls back to the old serial behaviour
+    whenever the newer path is unavailable.
+12. INDIGO UPDATE LOAD reduced by roughly a quarter: the very noisy lastUpdateFromRPI
+    state is now behind a debug option (the value is still tracked internally, so
+    fast-down logic is unaffected), and TxPowerReceived updates only on a real change.
+13. LOG / NOISE: rpi timestamps carry tenths of a second, the redundant "Lv:xx" column is
+    gone, unknown beacons are no longer parsed when acceptance is off, and sensors no
+    longer emit spurious "bad string" warnings.
+
+   program versions: beaconloop v14.5, BLEconnect v11.3, gattAttClient v1.4
+
+BUG FIXES
+14. CRASH on updated bookworm/newer kernels: kernels with the 2024 setsockopt validation
+    require a 16-byte HCI filter struct; the 14-byte filter every tool has sent for years
+    (pybluez included) is rejected. All filter calls now use 16 bytes - older kernels
+    accept these identically. Also, the crash-restart used /usr/bin/python, which does not
+    exist on py3-only systems, so a crashed beaconloop stayed dead there.
+15. RESTART CASCADES on long-running rpis: a single junk-length frame aborted a whole
+    message set and triggered the restart ladder; the no-data clock was not reset after a
+    stack restart, escalating straight to a program restart; and the restart counter was
+    per lifetime, so an isolated hiccup hours later escalated immediately.
+16. piMAC reported the SCANNER's mac instead of the iBeacon TRANSMITTER's, breaking the
+    rpi device link and rpi-to-rpi online detection whenever the roles were split.
+17. REPEATED FULL PARAMETER REPROCESS on the rpi: a timestamp stamped on every parameters
+    build made any resend look new, forcing a rebuild of program/sensor lists every cycle.
+18. beacon_parameters file growing without limit: after a parameter rename the "accept new
+    beacons" default reverted to accept-ALL. The default is now OFF. An already-bloated
+    file still needs menu -> ignore beacons + reset history to shrink.
+19. PM states were Integer, truncating the 0.1 ug/m3 resolution (1.2 became 1). They are
+    Real now - a plugin reload is required for the state-type change.
+20. COIN-CELL BATTERY PERCENT was far too low in the cold: coin cells sag about 12 mV/C
+    below room temperature and the whole voltage curve moves down, but only the empty
+    point was being corrected. Cold-but-healthy cells now read correctly; warm behaviour
+    is unchanged.
+21. RUUVI AIR matched to the actual hardware: battery states removed (it is USB-C powered)
+    and Illuminance defaults OFF (Ruuvi dropped the light sensor). The Illuminance
+    checkbox remains, so it can be switched on if a later revision delivers it; all real
+    light sensors are unaffected.
+22. Illuminance on Shelly devices now goes through the standard state writer, so its
+    min/max/average/change/trend states are finally filled instead of staying empty.
+23. i2c GHOST ADDRESSES: scanning while another program uses the bus made a
+    clock-stretching device ack a whole address range. The bus is scanned twice and only
+    addresses seen in both passes are kept.
+24. BEACON NAMES with umlauts or other multi-byte UTF-8 characters were mangled.
+25. iPHONE PRESENCE false "away" results fixed on multi-adapter rpis (the page went via
+    the default adapter), plus flapping on half-built connections, and an absent phone no
+    longer counts as an adapter error and restarts BLEconnect. Configured refresh times
+    now actually apply - phones had been paged every main-loop pass.
+26. The per-rpi verbose debug switch in the plugin config did nothing (the rpi read a
+    different key than the plugin sent).
+27. A stale gattAttClient.py from a partial file send is now detected and reported at
+    startup instead of silently missing fixes.
+28. DAILY AVERAGE was a plain sum/count of the readings, which is only correct when the
+    readings are evenly spaced in time - and they are not. A sensor reports on value-CHANGE
+    or on the idle timer, so while a value moves it reports up to 15x more often than while
+    it is quiet, and a short hectic period outweighed a long calm one. Example with the
+    shipped defaults: 20 hours at 10 C followed by 4 hours at 20 C produced an AveToday of
+    17.5 C where the true daily average is 11.7 C. AveToday/AveYesterday are TIME-WEIGHTED
+    now: every reading counts for as long as it was valid. The accumulator travels with the
+    change history (changedValues.json - saved on plugin stop and every hour), and after a
+    restart the weight is rebuilt from the clock so the average collected so far is kept
+    instead of being overwritten by the next reading. NOTE the meaning of the state has
+    changed: triggers or charts tuned to the old sample average will read differently on
+    volatile sensors.
+29. TREND state was written without checking whether it exists. A missing Trend raised a
+    KeyError that was swallowed silently - and that also skipped writing the value history
+    back, so the whole change-over-time calculation quietly stopped updating.
+30. the changed-values loop tested a property built from the FULL state name (eg
+    "TemperatureChangeHours01_EnableMinMax"), which never exists, so that check had always
+    been a no-op.
+31. routine log lines that fired on every config save, every delayed rpi action and every
+    device start ("adding isMememberOfChangedValues") are behind their debug areas now.
+
+NOTES
+32. The switchbot Remote does NOT broadcast button presses - the advertisement payload is
+    immutable and presses only wake it to talk to its paired bot/curtain. This matches
+    other implementations; no support is possible. Battery reading works. Use a
+    ShellyButton if button broadcasts are needed.
+33. Cleanup pass over beaconloop.py and BLEconnect.py removed several hundred unused
+    declarations and dead variables; no behaviour change.
+34. plugin.py modernised to py3 string formatting: 1804 -> 24 .format() calls are
+    f-strings now, and 250 dead commented-out format lines were deleted. Every conversion
+    was verified to render exactly what it did before, and the file is compiled against
+    python 3.11 (what Indigo runs) as well as 3.13 - 3.12 accepts f-strings that 3.11
+    rejects, so testing on the newer one alone would hide a break. The remaining 24 cannot
+    become f-strings: 14 take their template from a variable (one of them is the
+    user-editable unit format in the device config), 8 have a backslash in the argument and
+    2 a dict literal - both illegal inside an f-string before python 3.12.
+    pi/*.py were NOT touched; they must stay python-2 compatible.
+
+Added features / changes in added features / changes in v2022.191.175 @ 2026-07-13
+==================================================
+1.  "socket" acquisition method: fixed years-old wrong-opcode bug - the LE scan parameters
+    (ACTIVE scan) were sent to SET_SCAN_ENABLE instead of SET_SCAN_PARAMETERS, so the
+    controller stayed in its default PASSIVE scan mode and never received scan responses.
+    This was why the socket method missed messages with names/mfg_info (as noted in the
+    rpi device config label). Socket method now has full message parity with hcidump.
+2.  updated the acquisition-method help text in the rpi device config accordingly
+3.  FIXED dongle roulette after rpi reboot: with the default "let the RPi decide" setting the
+    pinned bluetooth adapter (BLE mac in beaconloop.hci) was DISCARDED on every restart, so
+    beaconloop sometimes picked a different dongle after a reboot. The pin is now only
+    invalidated when an explicit UART/USB restriction conflicts with the stored one.
+    Plus: enumeration retry if the pinned dongle is not visible yet, single-adapter device
+    number fix (was hardcoded 0), case-insensitive BLE mac match, hci name is now always
+    resolved FROM the pinned mac (the hci number can change between boots - the mac is the
+    dongle identity), and beaconloop now logs
+    the acquisition method + socket backend at startup
+4.  socket method: scan re-enable now re-sends the scan PARAMETERS (a hciconfig reset reverts
+    the controller to passive defaults - re-enabling alone would lose names/mfg_info again)
+
+Added features / changes in added features / changes in v2022.191.174 @ 2026-07-13
+==================================================
+1.  "socket" acquisition method: fixed hangs and packet loss
+    - a quiet period (recv timeout) no longer restarts the whole program; the normal
+      no-message watchdog ladder handles recovery (scan re-enable -> socket rebuild -> restart)
+    - getSocketData now drains all kernel-buffered packets per read (batching like hcidump);
+      before, the paced main loop read only ~1 packet per 0.05-0.15s and dropped the rest
+    - restartLESCAN now re-enables LE scanning on the open socket in socket mode (before: did
+      nothing) - the controller silently drops scan state e.g. after gatttool beep/battery
+      sessions on the same adapter; also called explicitly after each beep/battery wait
+    - recv timeout 12s -> 2s (faster hang detection, finer send cadence in quiet environments)
+    - stack restarts no longer leak the old socket fd (old socket closed before reopen)
+
+Added features / changes in added features / changes in v2022.191.173 @ 2026-07-13
+==================================================
+1.  "socket" data acquisition method now works on any python3 rpi WITHOUT pybluez:
+    new module pi/hciRawSocket.py (pure python3 stdlib, no extra libraries) is used
+    automatically when pybluez is not installed. python2 rpis keep using pybluez or hcidump.
+    -> on python3 rpis the deprecated hcitool-lescan/hcidump pipeline is no longer needed
+    for scanning: set the rpi device (or plugin config) to "socket"
+2.  fixed python3 crash in socket-method packet helpers (stringFromPacket/returnnumberpacket
+    iterated packet bytes python2-style) - the socket method never worked under python3 before
+3.  removed unused pi/doScan.py
+4.  per-rpi selection of the acquisition method stays as is (rpi device edit:
+    hcidump / hcidumpWithRestart / socket, or plugin config default)
+
+Added features / changes in added features / changes in v2022.191.172 @ 2026-07-13
+==================================================
+1.  NEW: structure-based beacon identification (advMatch) added in SHADOW MODE:
+    knownBeaconTags.json now has an "advMatch" definition for 76 of 79 beacon types -
+    matching on BLE AD sections (FF=manufacturer data, 16=service data, names) instead of
+    hex string + position. beaconloop.py runs BOTH methods in parallel; the old string
+    method still decides, differences are logged as "ADVMATCH-DIFF" (throttled).
+    After a burn-in period with no diffs the string method can be retired
+    (prerequisite for replacing hcitool/gatttool with modern BLE APIs).
+    3 entries stay legacy: rPI, myblueT, other. Backup: knownBeaconTags.json.bak-preAdvMatch
+2.  no behavior change for beacon detection - shadow mode only observes and logs
+
 Added features / changes in added features / changes in v2022.191.171 @ 2026-07-13
 ==================================================
 1.  harmless shell warnings on stderr (e.g. shell-init/getcwd after the plugin folder was replaced

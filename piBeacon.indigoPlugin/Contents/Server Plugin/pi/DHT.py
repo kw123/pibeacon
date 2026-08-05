@@ -129,7 +129,7 @@ def getDHTdata():
 			t,h = getDATAdht(sensors[sensor][devId]["gpioPin"],sensors[sensor][devId]["dhtType"], devId  )
 			dhtData[devId] = {"temp":t,"hum":h}
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return dhtData
 
 
@@ -167,7 +167,7 @@ def getDHT(dataI):
 				else:
 					dataI = incrementBadSensor(devId, data)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 	if sensor in dataI and data[sensor]== {}: del dataI[sensor]
 	return dataI
@@ -196,8 +196,8 @@ def incrementBadSensor(devId, dataI, theText="badSensor"):
 			dataI[sensor][devId]["badSensor"] = badSensors[devId]["text"]
 			del badSensors[devId]
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "theText{}".format(theText))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "theText{}".format(theText))
 	return dataI
 
 
@@ -249,7 +249,7 @@ def readParams():
 			sensorList+=sens.split("-")[0]+","
 
 		if sensorList.find("DHT") ==-1:
-			U.logger.log(30,"no {} sensor defined, exiting ".format(G.program ))
+			U.logger.log(20,"no {} sensor defined, exiting ".format(G.program ))
 			exit()
 		return rCode
 
@@ -288,7 +288,7 @@ U.setLogging()
 
 readParams()
 if U.getIPNumber() > 0:
-	U.logger.log(30," getsensors no ip number  exiting ")
+	U.logger.log(20," getsensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -299,10 +299,10 @@ U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are st
 NSleep= int(sensorRefreshSecs)
 if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
 	if U.getIPNumber() > 0:
-		U.logger.log(30," no ip number working, giving up")
+		U.logger.log(20," no ip number working, giving up")
 		time.sleep(10)
 
-U.logger.log(30,"starting sensor")
+U.logger.log(20,"starting sensor")
 
 
 eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -369,7 +369,7 @@ while True:
 				#U.logger.log(10, u"sending url: {}".format(data))
 				U.sendURL({"sensors":data})
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 			time.sleep(0.05)
 
 		quick = U.checkNowFile(G.program)				 
@@ -394,6 +394,6 @@ while True:
 				lastRead = tt
 				U.checkIfAliveNeedsToBeSend()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 sys.exit(0)

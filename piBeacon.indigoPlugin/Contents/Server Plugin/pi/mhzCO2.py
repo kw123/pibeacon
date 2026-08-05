@@ -18,8 +18,6 @@ import copy
 import smbus
 try:	import serial
 except:	pass
-try:	import RPi.GPIO as GPIO
-except:	pass
 
 
 sys.path.append(os.getcwd())
@@ -101,7 +99,7 @@ class mhz16_class_i2c:
 			time.sleep(0.1)
 			return
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		self.co2 = -1
  
 	def measure(self):
@@ -118,7 +116,7 @@ class mhz16_class_i2c:
 			self.parse(self.receive())
 			return
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		self.co2 = -1
  
 	def parse(self, response):
@@ -220,7 +218,7 @@ class mhz16_class_i2c:
 				
 			return buf
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return []
 
 class mhz_class_serial:
@@ -291,7 +289,7 @@ class mhz_class_serial:
 			self.parse(self.receive())
 			return
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		self.co2 = -1
 
 #################################		 
@@ -309,7 +307,7 @@ class mhz_class_serial:
 				self.send(self.amplification[str(r)])
 				return
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 #################################		 
 	def calibrate(self):
@@ -325,7 +323,7 @@ class mhz_class_serial:
 			self.parse(self.receive())
 			return
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		self.co2 = -1
 
 
@@ -374,7 +372,7 @@ class mhz_class_serial:
 		try: 
 			ll = len(response)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return 
 		if ll != 9: return
 		for i in range (0, 9):
@@ -432,7 +430,7 @@ def readParams():
 		if "sensors"			in inp: sensors =				(inp["sensors"])
 
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 
 
@@ -531,7 +529,7 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 
@@ -564,10 +562,7 @@ def startSensor(devId,i2cAddress):
 			try:import serial
 			except: pass
 			sP = U.getSerialDEV()
-			GPIO.setwarnings(False)
-			GPIO.setmode(GPIO.BCM)
-			GPIO.setup(calibrationPin, GPIO.OUT)
-			restartSensor()
+			restartSensor()					# the pin is set up by the shared gpio layer on first use
 		
 			mhz16sensor[devId]	= mhz_class_serial(serialPort = sP)
 			mhz16sensor[devId].setRange(range=3000)
@@ -576,7 +571,7 @@ def startSensor(devId,i2cAddress):
 			mhz16sensor[devId].start()
 						
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		mhz16sensor[devId] =""
 	time.sleep(.1)
 
@@ -595,12 +590,10 @@ def restartSensor():
 	"""
 	global mhz16sensor, calibrationPin
 	try: 
-		GPIO.output(calibrationPin, False)
-		time.sleep(7)
-		GPIO.output(calibrationPin, True)
+		U.gpioOut(calibrationPin, "pulseoff", secs=7)		# low for 7 s, then high again
 		time.sleep(0.1)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	time.sleep(.1)
 
 
@@ -637,7 +630,7 @@ def calibrateSensor(devId):
 		CO2offset[devId] = CO2normal[devId] - co2 
 		#print "calib co2, CO2offset, CO2normal: ", co2, CO2offset[devId], CO2normal[devId]
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	time.sleep(.1)
 
 
@@ -676,7 +669,7 @@ def getValues(devId,nMeasurements=5):
 			if co2 ==-1: 
 				ii -= addIfBad	# onetime only 
 				addIfBad = 0
-				U.logger.log(30, "bad data read ")
+				U.logger.log(20, "bad data read ")
 
 				continue
 			raw += co2
@@ -701,7 +694,7 @@ def getValues(devId,nMeasurements=5):
 		U.logger.log(10, "{}".format(ret)) 
 		badSensor = 0
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 		mhz16sensor[devId].start()
@@ -812,7 +805,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -881,7 +874,7 @@ while True:
 				lastRead = time.time()
 
 		if U.checkNewCalibration(G.program) or needCalibration :
-			U.logger.log(30, "set CO2 calibration")
+			U.logger.log(20, "set CO2 calibration")
 			if sensor in sensors:
 				for devId in sensors[sensor]:
 					calibrateSensor(devId)
@@ -896,7 +889,7 @@ while True:
 			subprocess.call("/usr/bin/python "+G.homeDir+G.program+".py &", shell=True)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

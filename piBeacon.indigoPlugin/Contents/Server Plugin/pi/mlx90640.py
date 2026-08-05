@@ -106,7 +106,7 @@ class MLX90640():
 			self.alphaCorrR3 = 1 + self.KsTo2*(self.CT3-0)
 			self.alphaCorrR4 = self.alphaCorrR3*(1+self.KsTo3*(self.CT4-self.CT3))
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		
 	def getRegs(self,reg,num):
 		"""Reads a block of bytes from an MLX90640 register over I2C by writing the 16-bit register address then reading num bytes via a combined i2c_rdwr transaction.
@@ -148,7 +148,7 @@ class MLX90640():
 		try:
 			ret = math.sqrt(math.sqrt(max(0.,num)))
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return ret 
 
 	def getTGC(self):
@@ -508,7 +508,7 @@ class MLX90640():
 			#print i,j, pixOs, ret
 			return ret
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return 0
 
 #===========================================================================
@@ -554,7 +554,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(sensor,sensor) )
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(sensor,sensor) )
 			exit()
 			
 
@@ -594,7 +594,7 @@ def readParams():
 					usbPort[devId] = U.findActiveUSB()
 				else: usbPort[devId] = test
 				if not U.checkIfusbSerialActive(usbPort[devId]):
-					U.logger.log(30, "{} is not active, return ".format(usbPort[devId]))
+					U.logger.log(20, "{} is not active, return ".format(usbPort[devId]))
 					usbPort[devId] =""
 					continue
 			if old != usbPort[devId]:
@@ -626,7 +626,7 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if sensorClass[devId] =="":
 					return
-			U.logger.log(30," new parameters read: i2cAddress:{}".format(i2cAddress) +"; minSendDelta:{}".format(minSendDelta)+
+			U.logger.log(20," new parameters read: i2cAddress:{}".format(i2cAddress) +"; minSendDelta:{}".format(minSendDelta)+
 					   ";  deltaX:{}".format(deltaX[devId])+";  sensorRefreshSecs:{}".format(sensorRefreshSecs) )
 				
 		deldevID={}		   
@@ -642,7 +642,7 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		
 
 
@@ -662,7 +662,7 @@ def startSensor(devId,i2cAddress):
 	global ser
 	global usbPort
 	try: 
-		U.logger.log(30,"==== Start {} ===== @ address use: {} ".format(sensor,i2cAddress))
+		U.logger.log(20,"==== Start {} ===== @ address use: {} ".format(sensor,i2cAddress))
 		startTime =time.time()
 
 		p =[]
@@ -702,15 +702,15 @@ def startSensor(devId,i2cAddress):
 
 		if int(i2cAdd) >0:
 				try:
-					U.logger.log(30, " i2cAdd {}".format(i2cAdd) )
+					U.logger.log(20, " i2cAdd {}".format(i2cAdd) )
 					sensorClass[devId]  =	  MLX90640(address=i2cAdd)
 				except Exception as e:
-					U.logger.log(30,"", exc_info=True)
+					U.logger.log(20,"", exc_info=True)
 					sensorClass[devId] =""
 				time.sleep(1)
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 #################################
@@ -768,7 +768,7 @@ def convertPixels(oldPix,pix,nx,ny):
 			ret["rawData"] =json.dumps(pix).replace(" ","")
 			return ret
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return ""
 
 
@@ -825,10 +825,10 @@ def getValues(devId):
 		##  [maxV, minV, aveV, uniformity, movement, movementabs]
 		oldPix[devId] = copy.deepcopy(rawData)
 
-		#U.logger.log(30, " pix {}".format( pix[devId]))
+		#U.logger.log(20, " pix {}".format( pix[devId]))
 		badSensor = 0
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	return val
@@ -928,7 +928,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -975,7 +975,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

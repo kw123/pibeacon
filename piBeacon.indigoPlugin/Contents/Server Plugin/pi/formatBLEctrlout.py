@@ -17,15 +17,15 @@ G.program = "execcommands"
 hci = sys.argv[1]
 
 MACs={}
-subprocess.Popen("sudo rm "+G.homeDir+"temp/lescan.data",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-subprocess.Popen("sudo rm "+G.homeDir+"temp/hcidump.data",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-subprocess.Popen("sudo rm "+G.homeDir+"temp/hcidump.temp",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-subprocess.Popen("sudo rm "+G.homeDir+"temp/bluetoothctl.data",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+U.removeFile(G.homeDir + "temp/lescan.data")
+U.removeFile(G.homeDir + "temp/hcidump.data")
+U.removeFile(G.homeDir + "temp/hcidump.temp")
+U.removeFile(G.homeDir + "temp/bluetoothctl.data")
+U.makeAccessible(G.homeDir+"temp", recursive=True, owner="pi")		# was "chmod +777" - an invalid mode that never applied
 starttime = time.time()
 time.sleep(1)
 time.sleep(10)
-subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+U.makeAccessible(G.homeDir+"temp", recursive=True, owner="pi")		# was "chmod +777" - an invalid mode that never applied
 time.sleep(10)
 
 
@@ -127,4 +127,4 @@ print( "{}".format(json.dumps(MACs, sort_keys=True, indent=2)))
 f= open(G.homeDir+"temp/BLEAnalysis.json","w")
 f.write(json.dumps(MACs, sort_keys=True, indent=2) )
 f.close()
-subprocess.Popen("sudo chmod +777 "+G.homeDir+"temp/*",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
+U.makeAccessible(G.homeDir+"temp", recursive=True, owner="pi")		# was "chmod +777" - an invalid mode that never applied

@@ -53,7 +53,7 @@ class bmp388():
 			self.par_p11 = 0
 			chip_id = self.bmp3_get_regs(0x00, 1)[0]
 			if (chip_id != 0x50):
-				U.logger.log(30, "chip errror")
+				U.logger.log(20, "chip errror")
 				sys.exit()
 				return
 
@@ -435,7 +435,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
 			exit()
 			
 
@@ -500,7 +500,7 @@ def readParams():
 
 	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
-		U.logger.log(30, "{}".format(sensors[sensor]))
+		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 
 
@@ -652,7 +652,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)

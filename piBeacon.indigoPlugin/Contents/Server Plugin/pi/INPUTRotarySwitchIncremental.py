@@ -219,7 +219,7 @@ def workQueue():
 				if threadDict["stopThread"]: return 
 			time.sleep(0.2)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return
 
 
@@ -240,25 +240,35 @@ def startGPIO(devId):
 	try:
 		pinsToDevid[INPUTS[devId]["pinA"]] = devId
 		pinsToDevid[INPUTS[devId]["pinB"]] = devId
-		U.logger.log(30, "pinsToDevid {}".format(pinsToDevid))
+		U.logger.log(20, "pinsToDevid {}".format(pinsToDevid))
 
 		if useWhichGPIO == "pig":
 			if PIGPIO == "":
+				# TIME CRITICAL - pigpio on purpose: this is a quadrature encoder, and pigpio
+				# timestamps the edges in the daemon, so a late python callback still yields the
+				# right order. gpiozero cannot do that, which is why this program does not use the
+				# shared gpio layer.
 				import pigpio
-				import threading 
+				import threading
 				try: import Queue
 				except: import queue as Queue
-				if not U.pgmStillRunning("pigpiod"): 	
-					U.logger.log(30, "starting pigpiod")
+				# master starts pigpiod in startPigpiod() before it launches any program, so this is
+				# only the safety net now. U.pigpiodRunning() is the CACHED probe - the uncached
+				# pgmStillRunning() that used to be here walks every /proc/<pid>/cmdline, 0.1-0.4 s
+				# on an older rpi, and it was called twice.
+				if not U.pigpiodRunning():
+					U.logger.log(20, "starting pigpiod")
 					subprocess.call("sudo pigpiod &", shell=True)
 					time.sleep(0.5)
-					if not U.pgmStillRunning("pigpiod"): 	
-						U.logger.log(30, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888")
+					if not U.pigpiodRunning(force=True):
+						U.logger.log(20, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888")
 						time.sleep(20)
 						U.restartMyself(reason="pigpiod not running")
 						exit(0)
 
 				PIGPIO = pigpio.pi()
+				if not PIGPIO.connected:
+					U.logger.log(20, "pigpiod is running but will not accept a connection - the encoder cannot be read (pigpio has no pi5/RP1 support)")
 				threadDict["queue"] = Queue.Queue()
 				threadDict["thread"] = threading.Thread(target=workQueue, name="workQueue" )
 				threadDict["thread"].start()
@@ -266,7 +276,7 @@ def startGPIO(devId):
 			if devId not in threadDict:
 				threadDict[devId] ={ "pinA":"",  "pinB":"" }
 
-			U.logger.log(30, "PIGPIO setup for devId"+str(devId)+"  "+ str(INPUTS[devId]))
+			U.logger.log(20, "PIGPIO setup for devId"+str(devId)+"  "+ str(INPUTS[devId]))
 			PIGPIO.set_mode( INPUTS[devId]["pinA"], pigpio.INPUT)
 			PIGPIO.set_pull_up_down( INPUTS[devId]["pinA"], pigpio.PUD_UP )
 			PIGPIO.set_mode( INPUTS[devId]["pinB"], pigpio.INPUT)
@@ -281,8 +291,8 @@ def startGPIO(devId):
 
 		return
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,"start {}  {} ".format(G.program, sensors))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"start {}  {} ".format(G.program, sensors))
 	return
 
 
@@ -353,7 +363,7 @@ def workEvent(pin, stateA=-1, stateB =-1, tt=-1):
 			executePinChange(devIDUsed, pin, stateA, stateB, tt)
 
 	except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 			return 
 
@@ -431,7 +441,7 @@ def executePinChange(devIDUsed, pin, stateA, stateB, tt):
 			IP["pinALastValue"] = stateA
 			IP["pinBLastValue"] = stateB
 	except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 	return 
 
 
@@ -542,7 +552,7 @@ def execMain():
 	#print "shortWait",shortWait	 
 	
 	if U.getIPNumber() > 0:
-		U.logger.log(30," sensors no ip number  exiting ")
+		U.logger.log(20," sensors no ip number  exiting ")
 		time.sleep(10)
 		stopProgram()
 	
@@ -593,7 +603,7 @@ def execMain():
 	
 			newData = False
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 	
 	stopProgram()

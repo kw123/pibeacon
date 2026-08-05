@@ -6,7 +6,18 @@
 
 import sys, os, time, json, datetime,subprocess,copy
 import math
-import RPi.GPIO as GPIO
+# TIME CRITICAL - keeps its own GPIO handling on purpose: this bit-bangs SPI, four pins toggled per
+# BIT (cs/clk/mosi out, miso in), so no shared layer and no per-pin indirection - a wrapper call per
+# toggle would roughly double the cost of every transfer.
+# There is no gpiozero path in this driver to fall back to, so the import is only GUARDED: it used
+# to be bare, and on a box without RPi.GPIO - a pi5, where rpi-lgpio is needed instead - the whole
+# program died at import with a traceback and no explanation.
+gpioOK = False
+try:
+	import RPi.GPIO as GPIO
+	gpioOK = True
+except Exception:
+	pass							# reported after U.setLogging(), no handlers yet here
 try:
 	import numpy
 	_numpy =True
@@ -309,7 +320,7 @@ class max31865(object):
 					#print ii, temp, temp_C_numpy, delta
 					if delta < 10: temp = temp_C_numpy
 				except Exception as e:
-					U.logger.log(30,"", exc_info=True)
+					U.logger.log(20,"", exc_info=True)
 		
 		if temp_C < 0:
 			temp = min(0,temp)
@@ -361,7 +372,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 				
@@ -424,9 +435,9 @@ def readParams():
 
 				
 			if devId not in max31865sensor:
-				U.logger.log(30,"==== Start "+G.program +";   devID: "+ str(devId)+";    R-at 0C: %d"%(resistorAt0C))
+				U.logger.log(20,"==== Start "+G.program +";   devID: "+ str(devId)+";    R-at 0C: %d"%(resistorAt0C))
 				max31865sensor[devId] = max31865(GPIOcsPin,GPIOmisoPin,GPIOmosiPin,GPIOclkPin,nWires,referenceResistor,resistorAt0C,hertz50_60)
-				U.logger.log(30," started "+ str(devId))
+				U.logger.log(20," started "+ str(devId))
 
 				
 		deldevID={}		   
@@ -440,7 +451,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -466,8 +477,8 @@ def getValues(devId):
 		return data
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "temp>>{}<<".format(temp))
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "temp>>{}<<".format(temp))
 		badSensor+=1
 	if badSensor >3: 
 		return "badSensor"
@@ -503,6 +514,8 @@ rawOld						= ""
 max31865sensor				={}
 deltaX						= {}
 U.setLogging()
+
+if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi - the RTD cannot be read (bit-banged SPI needs RPi.GPIO); install rpi-lgpio on a pi5")
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running
@@ -546,7 +559,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["current"]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					lastValue[devId] =-100.
 					continue
@@ -584,7 +597,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

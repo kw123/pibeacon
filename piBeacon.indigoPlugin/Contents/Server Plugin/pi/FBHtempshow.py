@@ -58,7 +58,7 @@ def readParams():
 		if "output"					in inp:	 output=			 (inp["output"])
 		#### G.debug = 2 
 		if False and G.program not in output:
-			U.logger.log(30," {} is not in parameters = not enabled, stopping" .format(G.program ))
+			U.logger.log(20," {} is not in parameters = not enabled, stopping" .format(G.program ))
 			exit()
 
 		try:
@@ -71,7 +71,7 @@ def readParams():
 		return changed
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(10)
 		return 3
 
@@ -233,7 +233,7 @@ def checkNewtempfile():
 	
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		lastOut = 0
 		time.sleep(3)
 	return 
@@ -270,7 +270,7 @@ def fbhexec():
 
 
 	if readParams() ==3:
-			U.logger.log(30," parameters not defined")
+			U.logger.log(20," parameters not defined")
 			U.checkParametersFile( force = True)
 			time.sleep(20)
 			U.restartMyself(param=" bad parameters read", reason="")
@@ -305,5 +305,5 @@ def fbhexec():
 
 
 fbhexec()
-U.logger.log(30,"end of loop", exc_info=True)
+U.logger.log(20,"end of loop", exc_info=True)
 sys.exit(0)

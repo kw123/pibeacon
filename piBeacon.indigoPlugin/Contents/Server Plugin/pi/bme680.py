@@ -504,7 +504,7 @@ class BME680(BME680Data):
 
 		self.chip_id = self._get_regs(CHIP_ID_ADDR, 1)
 		if self.chip_id != CHIP_ID:
-			U.logger.log(30,"BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id))
+			U.logger.log(20,"BME680 chip not found Invalid CHIP ID: 0x{0:02x}".format(self.chip_id))
 			raise ValueError 
 
 		self.soft_reset()
@@ -951,7 +951,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "BME680 is not in parameters = not enabled, stopping BME680.py" )
+			U.logger.log(20, "BME680 is not in parameters = not enabled, stopping BME680.py" )
 			exit()
 			
 
@@ -1062,8 +1062,8 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "{}".format(sensors[sensor]))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 #################################
 def initdevId(devId):
@@ -1140,7 +1140,7 @@ def startSensor(devId):
 			time.sleep(1)
 			BMEsensor[devId]  	= BME680(i2c_addr=i2cAdd)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			BMEsensor[devId] =""
 			U.muxTCA9548Areset()
 			return
@@ -1235,7 +1235,7 @@ def getValues(devId):
 				if SensorStatus == "calibrated": 
 					if  gasBaseLine[devId] >0: 
 						if calibrateSetting[devId].find("dynamic") > -1 and gas > gasBaseLine[devId]*(recalibrateIfGT[devId]/100.): #recalibrate over x %	 higher than previous calibration (=100% clean air) 
-							U.logger.log(30,"re-calibrating: due to shift high in baseline new value:{};  oldbaseLine: {}".format(gas, gasBaseLine[devId]) )
+							U.logger.log(20,"re-calibrating: due to shift high in baseline new value:{};  oldbaseLine: {}".format(gas, gasBaseLine[devId]) )
 							StateOfSensorCalibration[devId]	= "calibrating"
 							startSensor(devId)
 							return ""
@@ -1265,7 +1265,7 @@ def getValues(devId):
 			#U.logger.log(20,"BME680:{}".format(data))
 			return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	badSensor += 1
 	if badSensor > 3: return "badSensor"
 	return ""
@@ -1364,7 +1364,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -1417,7 +1417,7 @@ while True:
 		lastMeasurement = time.time()
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

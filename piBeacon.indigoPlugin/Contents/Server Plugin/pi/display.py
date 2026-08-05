@@ -27,22 +27,37 @@ import math
 import base64
 import io
 
+# TIME CRITICAL - keeps its own GPIO handling on purpose: dc and cs are toggled PER TRANSFER, not
+# once per operation, so this is the same shape as a bit-banged protocol. No shared layer.
+# RPi.GPIO FIRST, deliberately: a memory-mapped register write is ~1-2 us, while every gpiozero
+# toggle goes through the pin factory (a socket round trip on the pigpio factory) - at one or two
+# toggles per byte that is the difference between a display that redraws and one that crawls.
+# This is also what the program has ALWAYS used, though by accident: the probe that used to guard
+# the gpiozero branch was subprocess.Popen("ps -ef | grep pigpiod ...") WITHOUT shell=True, so it
+# tried to exec a file of that literal name, raised immediately, and the except branch ran every
+# single time. The gpiozero path below has therefore never executed on any rpi.
+# useGPIO and gpioOK are ALWAYS defined: useGPIO used to be left unset when both imports failed and
+# the program then died much later with "NameError: useGPIO" instead of naming what was missing.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	#1/0 # use GPIO
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep").communicate()[0].decode('utf-8').find("pigpiod") < 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
-	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
-	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
+	import RPi.GPIO as GPIO
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setwarnings(False)
+	useGPIO = True
+	gpioOK  = True
+except Exception:
 	try:
-		import RPi.GPIO as GPIO
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setwarnings(False)
-		useGPIO = True
-	except: pass
+		import gpiozero
+		from gpiozero import Device
+		try:
+			from gpiozero.pins.pigpio import PiGPIOFactory
+			Device.pin_factory = PiGPIOFactory()
+		except Exception:
+			pass			# no pigpiod: gpiozero picks its own factory
+		gpioOK = True
+	except Exception:
+		pass				# reported after U.setLogging(), no handlers yet here
 
 
 
@@ -52,6 +67,9 @@ import	piBeaconGlobals as G
 
 G.program = "display"
 U.setLogging()
+
+if not gpioOK:		U.logger.log(20, "no GPIO backend on this rpi (neither RPi.GPIO nor gpiozero) - a display on dc/rst/cs pins cannot be driven; install rpi-lgpio on a pi5")
+elif not useGPIO:	U.logger.log(20, "driving the display through gpiozero - RPi.GPIO was not available. dc/cs toggle per transfer, so expect a slower redraw")
 
 #
 _defaultDateStampFormat			   = "%Y-%m-%d %H:%M:%S"
@@ -308,7 +326,7 @@ class bigScreen:
 				U.doWriteSimpleFile(bootfileName, ddd)
 				time.sleep(0.01)
 				U.logger.log(20, "\n\nnew config.txt file written:\n"+U.doReadSimpleFile(bootfileName))
-				U.setRebootRequest("display.py fixed "+bootfileName)
+				U.setRebootRequest("display.py_fixed_"+bootfileName)	# underscores: spaces are squeezed out on the way into the indigo log
 			
 		try:
 			#print(" bf self\n")
@@ -322,7 +340,7 @@ class bigScreen:
 			#print(" modes: {}\n".format(self.sizeList))
 			pygameInitialized = True
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 
 
@@ -409,7 +427,7 @@ class bigScreen:
 						bigScreenSize = fullScreenSize
 						self.screen = self.pygame.display.set_mode(sizeList[0], self.pygame.FULLSCREEN)
 						U.logger.log(20, "Framebuffer 2.c size: {};  ignore overwrite x:{}; y:{}, use fullscreen  -  xterm not running".format(bigScreenSize, overwriteXmax, overwriteYmax) )
-					subprocess.call("echo fullScreen > "+G.homeDir+"pygame.active", shell=True) # after this we can not do startx, need to reboot first
+					U.doWriteSimpleFile(G.homeDir+"pygame.active", "fullScreen") # after this we can not do startx, need to reboot first
 
 			self.oldScreensize = fullScreenSize
 			U.logger.log(20, "got screen object" )
@@ -1881,7 +1899,7 @@ def readParams():
 		else:
 			runLoop = False
 		if not runLoop:
-			subprocess.call("rm "+G.homeDir+"temp/display.inp > /dev/null 2>&1", shell=True)
+			U.removeFile(G.homeDir + "temp/display.inp")
 			U.logger.log(20, "exiting display, output dev display not defined")
 			try: outputDev.delPy()
 			except: pass
@@ -2221,7 +2239,7 @@ def getLightSensorValue(force=False):
 		if rr == {}:
 			time.sleep(0.1)
 			rr, raw = U.readJson(G.homeDir+"temp/lightSensor.dat")
-		subprocess.call("sudo rm "+G.homeDir+"temp/lightSensor.dat", shell=True)
+		U.removeFile(G.homeDir + "temp/lightSensor.dat")
 		if rr == {} or "time" not in rr: 							return False
 		if "sensors" not in rr: 									return False
 		U.logger.log(10, "lightSensor useLightSensorDevId{}, useLightSensorType:{}  read: {} ".format(useLightSensorDevId, useLightSensorType, rr) )
@@ -2330,7 +2348,7 @@ def zoomit(inVar, calledfrom=""):
 			return   var
 
 	except Exception as e:
-		U.logger.log(30, "zoomit E var:>>{}<< type(var):{}, zoom:{}, calledfrom:{}<".format(str(inVar)[0:10], type(inVar), zoom, calledfrom) )
+		U.logger.log(20, "zoomit E var:>>{}<< type(var):{}, zoom:{}, calledfrom:{}<".format(str(inVar)[0:10], type(inVar), zoom, calledfrom) )
 	return inVar
 
 ######### main	########
@@ -3241,7 +3259,7 @@ while runLoop:
 						tt= time.time()
 						if tt - lastAlive > 29.:  
 							lastAlive =tt
-							subprocess.call("echo	 "+str(tt)+" > "+G.homeDir+"temp/alive.display", shell=True)
+							U.doWriteSimpleFile(G.homeDir+"temp/alive.display", tt)
 
 						if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 						if os.path.isfile(G.homeDir+"temp/display.inp"): break
@@ -3251,7 +3269,7 @@ while runLoop:
 							U.logger.log(20, "{}".format(cmd))
 						except: # hard delete logfiles
 							subprocess.call("sudo  chown -R pi:pi /var/log/*", shell=True)
-							subprocess.call("sudo echo "" >  /var/log/pibeacon.log", shell=True)
+							U.writeFileAsRoot("/var/log/pibeacon.log", "")
 
 				newRead = False
 				if os.path.isfile(G.homeDir+"temp/display.inp"): break
@@ -3293,7 +3311,11 @@ while runLoop:
 				xxx = f.read().strip("\n") 
 				f.close()
 				os.remove(G.homeDir+"temp/display.stop")
-				if time.time() - startTime  > 10:
+				# NO pid in the marker: there can be two display.py processes, and addressing it to
+				# one of them would leave the other running. The grace window below is what keeps a
+				# leftover marker from stopping a display that has only just started.
+				U.logger.log(20, "{} display.stop found, content >{}<, {:.1f}s after start".format(myPID, xxx, time.time()-startTime))
+				if time.time() - startTime  > 15:
 					if xxx == "stop":
 						try: 
 							outputDev.delPy()
@@ -3305,7 +3327,7 @@ while runLoop:
 						runLoop = False
 						break
 				else:
-					U.logger.log(20, "{} stop ignored within 5 secs  after start:{:.1f}".format(myPID, time.time()-startTime) ) 	
+					U.logger.log(20, "{} stop ignored, only {:.1f}s after start (grace window 15s)".format(myPID, time.time()-startTime) ) 	
 
 			newRead = True
 		except:	 

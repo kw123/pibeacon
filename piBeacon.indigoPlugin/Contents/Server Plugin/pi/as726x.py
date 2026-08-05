@@ -186,7 +186,7 @@ class Adafruit_AS726x(object):
 
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return
 
 
@@ -497,7 +497,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 				
@@ -558,7 +558,7 @@ def readParams():
 
 
 			if devId not in as726xsensor:
-				U.logger.log(30,"==== Start "+G.program+" ====== @ i2c= {}".format(i2cAddress) )
+				U.logger.log(20,"==== Start "+G.program+" ====== @ i2c= {}".format(i2cAddress) )
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				as726xsensor[devId] = Adafruit_AS726x(i2cAddress=i2cAdd)
 				as726xsensor[devId].set_Conversion_mode(as726xsensor[devId].MODE_2)
@@ -579,7 +579,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 def setLED(devId,value):
 	"""Controls the AS726x driver LED for a device: disables it when value is 0, otherwise sets the LED drive current to the given value and enables it, handling the I2C multiplexer around the access.
@@ -600,7 +600,7 @@ def setLED(devId,value):
 			as726xsensor[devId].enable_driver_led(True)
 		U.muxTCA9548Areset()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 
@@ -636,7 +636,7 @@ def getValues(devId):
 
 	except Exception as e:
 		if badSensor >-1 and badSensor < 5000: 
-			U.logger.log(30,"{}".format(data), exc_info=True)
+			U.logger.log(20,"{}".format(data), exc_info=True)
 						
 		badSensor+=1
 	if badSensor >3: 

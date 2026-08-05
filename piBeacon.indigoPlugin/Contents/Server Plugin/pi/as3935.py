@@ -18,21 +18,41 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
+# TIME CRITICAL - keeps its own GPIO handling on purpose: the lightning interrupt has to be caught
+# when it fires, so no shared layer and no per-pin indirection.
+# useGPIO and gpioOK are ALWAYS defined. useGPIO used to be left unset when both imports failed,
+# and the program then died much later with "NameError: useGPIO" instead of naming what was
+# missing - which is exactly the pi5 case: RPi.GPIO does not run there and pigpio has no RP1
+# support. The pigpio factory is OPTIONAL now: without pigpiod, gpiozero keeps its OWN default
+# factory (lgpio on a pi5, rpigpio/native elsewhere) instead of the whole block falling through to
+# RPi.GPIO. Forcing PiGPIOFactory() was what made this unusable on newer hardware.
+# pigpiod is probed by USING it, not by scanning the process list - the old "ps -ef | grep" cost a
+# shell plus three processes at every start.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
 	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
 	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
+	try:
+		from gpiozero.pins.pigpio import PiGPIOFactory
+		try:
+			Device.pin_factory = PiGPIOFactory()
+		except Exception:					# pigpiod not up yet - start it and try once more
+			subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+			time.sleep(2)
+			Device.pin_factory = PiGPIOFactory()
+	except Exception:
+		pass								# no pigpio: gpiozero picks its own factory
+	gpioOK = True
+except Exception:
 	try:
 		import RPi.GPIO as GPIO
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
 		useGPIO = True
-	except: pass
+		gpioOK  = True
+	except Exception:
+		pass								# reported after U.setLogging(), no handlers yet here
 
 
 G.program = "as3935"
@@ -70,7 +90,7 @@ class RPi_AS3935:
 			else:
 				raise Exception("Value of TUN_CAP must be between 0 and 15")
 
-		U.logger.log(30, "setting cap param to %d  =	 %d	 pF" %( tun_cap, tun_cap*8))
+		U.logger.log(20, "setting cap param to %d  =	 %d	 pF" %( tun_cap, tun_cap*8))
 		self.set_byte(0x3D, 0x96)
 		time.sleep(0.002)
 		registers = self.read_data()
@@ -131,7 +151,7 @@ class RPi_AS3935:
 		Actual voltage levels used in the sensor are located in Table 16
 		of the data sheet.
 		"""
-		U.logger.log(30, "setting noise floor to %d" %( max(noisefloor,self.minNoiseFloor))) 
+		U.logger.log(20, "setting noise floor to %d" %( max(noisefloor,self.minNoiseFloor))) 
 		if noisefloor <= self.minNoiseFloor: return self.minNoiseFloor
 		registers = self.read_data()
 		if registers ==[]: return 0
@@ -150,7 +170,7 @@ class RPi_AS3935:
 		if floor == -1: return -1
 		if floor > min_noise:
 			floor = floor - 1
-			U.logger.log(30,	 "lowering noise floor to %d"% floor) 
+			U.logger.log(20,	 "lowering noise floor to %d"% floor) 
 			self.set_noise_floor(floor)
 		return floor
 
@@ -163,7 +183,7 @@ class RPi_AS3935:
 		if floor ==-1: return -1
 		if floor < max_noise:
 			floor = floor + 1
-			U.logger.log(30, "raising noise floor to %d" % floor) 
+			U.logger.log(20, "raising noise floor to %d" % floor) 
 			self.set_noise_floor(floor)
 		return floor
 
@@ -184,7 +204,7 @@ class RPi_AS3935:
 		interrupt is raised.
 		Valid values are 1, 5, 9, and 16, any other raises an exception.
 		"""
-		U.logger.log(30, "set min strikes to	 %d" % min_strikes) 
+		U.logger.log(20, "set min strikes to	 %d" % min_strikes) 
 		ms = 0
 		if	 min_strikes == 1:	  ms = 0
 		elif min_strikes == 5:	  ms = 1
@@ -213,7 +233,7 @@ class RPi_AS3935:
 	def set_indoors(self, indoors):
 		"""Set whether or not the sensor should use an indoor configuration.
 		"""
-		U.logger.log(30, "setting indoor %d "% indoors) 
+		U.logger.log(20, "setting indoor %d "% indoors) 
 		registers = self.read_data()
 		if registers == []: return 
 
@@ -329,11 +349,11 @@ def readParams():
 		 
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 
-		U.logger.log(30, G.program+" reading new parameter file" )
+		U.logger.log(20, G.program+" reading new parameter file" )
 
 		if sensorRefreshSecs == 91:
 			try:
@@ -422,7 +442,7 @@ def readParams():
 				startSensor(devId )
 				if as3935sensor[devId] =="":
 					return
-				U.logger.log(30,"new parameters read: \n  i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+";"+
+				U.logger.log(20,"new parameters read: \n  i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+";"+
 						"  interruptGPIO:{}".format(interruptGPIO)+";  sensorRefreshSecs:{}".format(sensorRefreshSecs) +"\n"+
 						"  minStrikes:{}".format(minStrikes)		 +";  calibrationDynamic:{}".format(calibrationDynamic) +"  inside:"+str(inside)+";"+
 						"  tuneCapacitor:{}".format(tuneCapacitor)+ " = "+CapValue[tuneCapacitor]+"pF;"+
@@ -441,8 +461,8 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,"{}".format(sensors[sensor]) ) 
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"{}".format(sensors[sensor]) ) 
 		
 
 
@@ -462,7 +482,7 @@ def startSensor(devId):
 	global inside, minStrikes, tuneCapacitor, minNoiseFloor, interruptGPIO, noiseFlorSet,calibrationDynamic, noiseFloor, CapValue
 	global PIZEROGPIO
 	
-	U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
+	U.logger.log(20,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress))
 	startTime =time.time()
 
 	i2cAdd = U.muxTCA9548A(sensors[sensor][devId]) # switch mux on if requested and use the i2c address of the mix if enabled
@@ -479,7 +499,7 @@ def startSensor(devId):
 		else: badSensor = False
 						
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		data={"sensors":{sensor:{devId:{"eventType":"badsensor"}}}}
 		badSensor = True
 	if badSensor:
@@ -498,7 +518,7 @@ def startSensor(devId):
 		PIZEROGPIO[interruptGPIO].when_pressed  = handle_interrupt 
 
 
-	U.logger.log(30, "end of event setup" )
+	U.logger.log(20, "end of event setup" )
 	return 
 
 #################################
@@ -626,6 +646,8 @@ i2cAddress					=""
 reStartReq					= False
 
 U.setLogging()
+
+if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi (neither gpiozero nor RPi.GPIO) - the lightning interrupt cannot be used; install rpi-lgpio on a pi5")
 
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# kill old instances of myself if they are still running

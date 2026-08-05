@@ -32,23 +32,24 @@ def execKill(pgmtype):
 		killedpgms = ""
 		verbose = True
 		count = 0
-		cmd = "ps -ef | grep '"+pgmtype+"' | grep sudo | grep -v grep | grep -v killSudos"
-	
-		ret = subprocess.Popen(cmd, shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-		if verbose and len(ret) > 10: U.logger.log(20, "==grep cmd:{}, \nresult:{}< ".format(cmd, ret) )
-		lines = ret.split("\n")
-		del ret
+		# /proc instead of "ps -ef | grep X | grep sudo | grep -v grep | grep -v killSudos":
+		# no shell, no ps, no 4 greps - and matching the command line only, not the ps columns
+		# NEVER touch these: master runs killSudos every 10th loop, and killing the "sudo .." / "sh -c
+		# sudo .." wrapper of a long running tool does NOT kill its python child - it only orphans it,
+		# detaches it from the caller that is waiting for it, and leaves whatever the tool had claimed
+		# (radios, pause files) claimed. qualifyDongle runs for ~4 minutes, so it was hit every time.
+		neverKill = ["qualifyDongle.py"]
+		procs = [[pid, cmd] for pid, cmd in U.procList(pgmtype)
+					if cmd.find("sudo") > -1 and (" "+cmd+" ").find(" grep ") < 0 and cmd.find("killSudos") < 0
+					and not [1 for nn in neverKill if cmd.find(nn) > -1]]
+		if verbose and len(procs) > 0: U.logger.log(20, "==kill sudos: {} sudo process(es) matching {}".format(len(procs), pgmtype) )
 		xlist = ""
-		for line in lines:
-			if len(line) > 10: 
-				items = line.split()
-				pid = int(items[1])
-				if pid != myOwnPID: 
-		
-					if verbose: U.logger.log(20, "==kill sudos killing line:{}".format( " ".join(items[7:])) )
-					xlist += str(pid)+ " "
-					count += 1
-					killedpgms += " ".join(items[7:])+";"
+		for pid, cmdline in procs:
+			if pid == myOwnPID: continue
+			if verbose: U.logger.log(20, "==kill sudos killing cmd:{}".format(cmdline) )
+			xlist += str(pid)+ " "
+			count += 1
+			killedpgms += cmdline + ";"
 
 		if len(xlist) > 2:
 			if verbose:  U.logger.log(20, "== ext-kill /usr/bin/sudo kill -9 {} ".format(xlist) )
@@ -60,7 +61,7 @@ def execKill(pgmtype):
 	except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			U.doReboot(tt=3, text=str(e), force=True)
-		if verbose: U.logger.log(30,"", exc_info=True)
+		if verbose: U.logger.log(20,"", exc_info=True)
 
 
 execKill("python")

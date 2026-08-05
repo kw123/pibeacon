@@ -39,14 +39,152 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
+
+def gattviaBLEconnect():
+	"""Returns True if BLEconnect.py is alive on this rpi (alive file younger than 90 secs) -
+	then gatt jobs for beacon tags (beep / battery read) are routed to BLEconnect (usually on
+	the second BLE adapter -> no interruption of beaconloop scanning); otherwise beaconloop
+	handles them itself as before."""
+	try:
+		fn = G.homeDir+"temp/alive.BLEconnect"
+		if os.path.isfile(fn) and time.time() - os.path.getmtime(fn) < 90.: return True
+	except Exception:
+		pass
+	return False
+
 G.program = "receiveCommands"
 
 allowedCommands = ["up","down","pulseUp","pulseDown","continuousUpDown","analogWrite","disable","myoutput","omxplayer","display","newMessage","resetDevice","restartDevice",
 				"startCalibration","getBeaconParameters","beepBeacon","updateTimeAndZone","file","BLEreport","BLEAnalysis","trackMac"]
 
 externalGPIO = False
+getBeaconParametersLock = threading.Lock()	# command threads must not race on the getBeaconParameters merge-write
+
+# WHO OWNS A GPIO PIN RIGHT NOW. threadsActive is keyed by pin name, and stopExecCmd waits only
+# 0.07 s before deleting the entry while setupexecThreads immediately re-registers the SAME name
+# with state "running" - so an old thread sleeping in sleepForxSecs (0.05 s poll) can miss the stop
+# window, see its name "running" again and sleep on. When it finally woke it closed GPIOZERO[pin],
+# which by then belonged to the NEWER command: the output dropped with nothing in the log to
+# explain it. Every setGPIO call takes the next generation for its pin and only touches the
+# hardware object at the end if it still holds it.
+gpioGeneration	= 0
+gpioOwner		= {}	# pin -> generation of the call that currently drives it
+gpioOwnerLock	= threading.Lock()
+
+PIGPIOhandle	= None	# ONE shared pigpio client for the whole process, see getPigpio()
 
 mapCmds	= {"pu":"pulseUp","pd":"pulseDown","cup":"continuousUpDown","aw":"analogWrite"}
+####-------------------------------------------------------------------------####
+def claimGPIOpin(pin):
+	"""Takes ownership of a pin and returns the generation number that proves it.
+
+	Inputs:
+	    pin (int): the GPIO pin this call is about to drive
+	Outputs:
+	    int: the generation of THIS call - pass it to releaseGPIOpin()
+	"""
+	global gpioGeneration
+	with gpioOwnerLock:
+		gpioGeneration += 1
+		gpioOwner[pin] = gpioGeneration
+		return gpioGeneration
+
+
+def ownsGPIOpin(pin, myGen):
+	"""True while `myGen` is still the current owner of `pin`, and drops the claim when it is.
+
+	A missing entry counts as ours: nothing else has claimed the pin, so the cleanup is safe.
+
+	Inputs:
+	    pin (int): the GPIO pin
+	    myGen (int): what claimGPIOpin() returned
+	Outputs:
+	    bool: True when this call may close/reset the pin
+	"""
+	with gpioOwnerLock:
+		if gpioOwner.get(pin, myGen) != myGen:	return False
+		try:	del gpioOwner[pin]
+		except Exception:	pass
+		return True
+
+
+def gpioPinTakenOver(pin, myGen):
+	"""True as soon as a NEWER setGPIO call has claimed this pin.
+
+	This, not threadsActive, is the reliable "you are done" signal. stopExecCmd holds the stop flag
+	for only 0.07 s and then re-registers the SAME thread name as "running", while sleepForxSecs
+	looks every 0.05 s - a busy rpi can make a thread miss that 20 ms margin, and it then carries on
+	driving a pin somebody else owns: a 5 s pulseUp that was overridden by an "up" after 1 s would
+	still switch the pin OFF at second 5, leaving the newer command sitting in its hold loop
+	believing the output is on. A claim cannot be missed - it stays until the owner clears it.
+
+	Inputs:
+	    pin (int): the GPIO pin
+	    myGen (int): what claimGPIOpin() returned
+	Outputs:
+	    bool: True when this call must stop touching the pin
+	"""
+	with gpioOwnerLock:
+		return gpioOwner.get(pin, myGen) != myGen
+
+
+def sleepOwningPin(sleepTime, pin, myGen):
+	"""sleepForxSecs(), but it also gives up as soon as another command takes the pin over.
+
+	Every wait inside setGPIO that has hardware writes after it goes through here, so a command
+	that lost its pin stops at the next 0.05 s tick instead of finishing its sequence on top of
+	the new one.
+
+	Inputs:
+	    sleepTime (float): seconds to wait
+	    pin (int): the GPIO pin
+	    myGen (int): the generation that owns it
+	Outputs:
+	    bool: True when the wait was cut short - thread stopped, or pin taken over
+	"""
+	tDone = 0.
+	while tDone < sleepTime:
+		step = min(0.05, sleepTime - tDone)
+		if sleepForxSecs(step):				return True
+		tDone += step
+		if gpioPinTakenOver(pin, myGen):	return True
+	return False
+
+
+def getPigpio():
+	"""The process-wide pigpio client, created on demand and reused.
+
+	pigpio.pi() opens a socket to pigpiod AND starts a notification thread. It used to be called at
+	the TOP of setGPIO - so for up/down/pulse too, not only for analogWrite - and was never
+	stopped, so every gpio command leaked one socket and one thread until the rpi ran out of file
+	descriptors. One client is enough: pigpiod holds the pin and PWM state itself, the client only
+	sends commands, and the state survives the client going away. Recreated when the daemon was
+	restarted underneath us.
+
+	Inputs:
+	    None
+	Outputs:
+	    pigpio.pi instance, or None when pigpiod cannot be reached
+	"""
+	global PIGPIOhandle
+	try:
+		import pigpio
+		if PIGPIOhandle is not None:
+			try:
+				if PIGPIOhandle.connected:	return PIGPIOhandle
+			except Exception:	pass
+			try:	PIGPIOhandle.stop()			# dead handle: give its socket and thread back
+			except Exception:	pass
+			PIGPIOhandle = None
+		PIGPIOhandle = pigpio.pi()
+		if not PIGPIOhandle.connected:
+			try:	PIGPIOhandle.stop()
+			except Exception:	pass
+			PIGPIOhandle = None
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+		PIGPIOhandle = None
+	return PIGPIOhandle
 ####-------------------------------------------------------------------------####
 def readPopen(cmd):
 	"""Runs a shell command via subprocess.Popen, captures stdout and stderr, and returns them as decoded UTF-8 strings.
@@ -110,7 +248,11 @@ def OUTPUTi2cRelay(command):
 
 			pulseUp = float(command.get("pulseUp",1))
 			pulseDown = float(command.get("pulseDown",1))
-			nPulses = float(command.get("nPulses",1))
+			# int, not float: continuousUpDown feeds this to range(), which refuses a float. It only
+			# ever became an int inside the "values" block below, so a command without values threw
+			# TypeError into the catch-all and the relay never pulsed.
+			try:	nPulses = int(float(command.get("nPulses",1)))
+			except Exception:	nPulses = 1
 
 			if "values" in command:
 				values =  command.get("values",{})
@@ -120,7 +262,7 @@ def OUTPUTi2cRelay(command):
 						pulseDown = float(values.get("pulseDown",1))
 						nPulses = int(values.get("nPulses",1))
 					except Exception as e:
-						U.logger.log(30," error reading command values:{}".format(values))
+						U.logger.log(20," error reading command values:{}".format(values))
 		
 
 			inverseGPIO = False
@@ -189,7 +331,7 @@ def setGPIO(command):
 	Outputs:
 	    None: Configures and drives GPIO/PWM hardware, sends state updates, and logs
 	"""
-	global PWM, myPID, typeForPWM
+	global PWM, myPID
 	global threadsActive
 	global DEBUG
 	global GPIOZERO
@@ -204,22 +346,19 @@ def setGPIO(command):
 
 
 
-		if typeForPWM == "PIGPIO" and U.pgmStillRunning("pigpiod"):
-			import pigpio
-			PIGPIO 		= pigpio.pi()
-			pwmRange  	= PWM
-			pwmFreq   	= PWM
-			typeForPWM 	= "PIGPIO"
-		else:
-			typeForPWM 	= "GPIO"
+		# NOTHING about PWM is decided here any more - see the analogWrite branch below. This used
+		# to sit in the path of EVERY command, up/down/pulse included, and did two things it had no
+		# business doing per command: open a pigpio client (a socket + a thread, never closed), and
+		# probe /proc for pigpiod, which costs 0.1-0.4 s on an older rpi.
 		
 
 
-		if "cmd" in command:
-			cmd = command["cmd"]
-			if False and cmd not in allowedCommands:
-				U.logger.log(DEBUG, "setGPIO pid={}, bad command{}  allowed only: {}".format(myPID, command, allowedCommands)  )
-				exit(1)
+		# always bound: cmd is used in the log line further down, which sits OUTSIDE the try below,
+		# so a command without a "cmd" key used to throw NameError straight out of setGPIO
+		cmd = "{}".format(command.get("cmd",""))
+		if False and cmd not in allowedCommands:
+			U.logger.log(DEBUG, "setGPIO pid={}, bad command{}  allowed only: {}".format(myPID, command, allowedCommands)  )
+			exit(1)
 
 		if "pin" in command:
 			pin = int(command["pin"])
@@ -234,24 +373,32 @@ def setGPIO(command):
 			if sleepForxSecs(delayStart):
 				return 
 
+		# DEFAULTS FIRST, so every branch below has something to work with. They used to be set only
+		# inside the "values" block: a command without values left bits undefined (analogWrite then
+		# died with NameError) and nPulses a FLOAT, which range() refuses - both swallowed by the
+		# catch-all further down, so the command silently did nothing.
 		pulseUp = float(command.get("pulseUp",1))
 		pulseDown = float(command.get("pulseDown",1))
-		nPulses = float(command.get("nPulses",1))
-		disableGPIOafterPulse = command.get("disableGPIOafterPulse",True)
-		
+		try:	nPulses = int(float(command.get("nPulses",1)))
+		except Exception:	nPulses = 1
+		bits = 0		# analogWrite duty cycle in percent
+		# (there was a disableGPIOafterPulse option here: the key is never part of a command, so it
+		#  was always True, and the unconditional close at the end of this function made it a no-op
+		#  either way. The pin is released at the end, once, and only if we still own it.)
+
 		if "values" in command:
 			values =  command.get("values",{})
 			if values != {}:
 				try:
 					pulseUp = float(values.get("pulseUp",1))
 					pulseDown = float(values.get("pulseDown",1))
-					nPulses = int(values.get("nPulses",1))
+					nPulses = int(float(values.get("nPulses",1)))
 					bits = min(100,int(values.get("bits",-1)))
-					analogValue = min(100.,values.get("analogValue",-1))
+					analogValue = min(100.,float(values.get("analogValue",-1)))
 					if bits == -1: bits = analogValue
 					if bits == -1: bits = 0
 				except Exception as e:
-					U.logger.log(30," error reading command values:{}".format(values))
+					U.logger.log(20," error reading command values:{}".format(values))
 		
 		
 
@@ -265,6 +412,10 @@ def setGPIO(command):
 		if "devId" in command:
 			devId = str(command["devId"])
 		else: devId = "0"
+
+		# claim the pin HERE, not before the delayStart wait above: a command scheduled for tonight
+		# must not take the pin away from the one driving it right now.
+		myGen = claimGPIOpin(pin)
 
 		U.logger.log(DEBUG, "{:.2f} bf  GPIO.setup, cmd:{}, pin:{}, useGPIO:{}, command:{} ".format(time.time(), cmd, pin, useGPIO,  command) )
 		try:
@@ -293,7 +444,7 @@ def setGPIO(command):
 					if pin not in GPIOZERO:
 						GPIOZERO[pin] = gpiozero.LED(pin)
 					getattr(GPIOZERO[pin], ON)()
-					if sleepForxSecs(1000000000): 
+					if sleepOwningPin(1000000000, pin, myGen):
 						break
 		
 
@@ -307,7 +458,7 @@ def setGPIO(command):
 					if pin not in GPIOZERO:
 						GPIOZERO[pin] = gpiozero.LED(pin)
 					getattr(GPIOZERO[pin], OFF)()
-					if sleepForxSecs(1000000000): 
+					if sleepOwningPin(1000000000, pin, myGen):
 						break
 
 			elif cmd in ["analogWrite","analogwrite"]:
@@ -316,32 +467,56 @@ def setGPIO(command):
 				else:
 					value =   bits	 # duty cycle on xxx hz 
 				value = int(value)
-				U.logger.log(DEBUG, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, typeForPWM) )
-				if value > 0:
-					U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
-				else:
-					U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"low"}}}})
+				# decided HERE, where PWM is the point, and with a CACHED pigpiod probe (a daemon
+				# that runs stays running - U.pigpiodRunning remembers a positive answer).
+				# The verdict is a LOCAL: this used to write the global typeForPWM, so one moment
+				# with pigpiod down demoted the whole program to "GPIO" for every later command,
+				# until some later readParams() happened to restore it from the parameters file.
+				pwmRange   = PWM
+				pwmFreq    = PWM
+				usePWMtype = "PIGPIO" if (typeForPWM == "PIGPIO" and U.pigpiodRunning()) else "GPIO"
+				U.logger.log(DEBUG, "analogwrite pin = {};    duty cyle: {};  PWM={}; using {}".format(pin, value, PWM, usePWMtype) )
+				# same devId guard as every other branch - without it a command that carries no
+				# device id reported the state against devId "0", which matches no indigo device
+				if devId != "0":
+					if value > 0:
+						U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"high"}}}})
+					else:
+						U.sendURL({"outputs":{"OUTPUTgpio-1":{devId:{"actualGpioValue":"low"}}}})
 
-				if typeForPWM == "PIGPIO": 	
+				if usePWMtype == "PIGPIO":
 					#U.logger.log(DEBUG, "..  setting PIGPIO {}  {}  {}".format(pwmFreq, pwmRange,  value) )
-					PIGPIO.set_mode(pin, pigpio.OUTPUT)
-					PIGPIO.set_PWM_frequency(pin, pwmFreq)
-					PIGPIO.set_PWM_range(pin, pwmRange)
-					PIGPIO.set_PWM_dutycycle(pin, value)
+					import pigpio
+					PIGPIO = getPigpio()			# shared client, not a fresh connection per command
+					if PIGPIO is None:
+						U.logger.log(20, "analogWrite pin={}: pigpiod not reachable, PWM not set".format(pin) )
+					else:
+						PIGPIO.set_mode(pin, pigpio.OUTPUT)
+						PIGPIO.set_PWM_frequency(pin, pwmFreq)
+						PIGPIO.set_PWM_range(pin, pwmRange)
+						PIGPIO.set_PWM_dutycycle(pin, value)
 
 				else:
 					if useGPIO:
 						GPIO.setup(pin, GPIO.OUT)
-						p = GPIO.PWM(pin, PWM)	# 
+						p = GPIO.PWM(pin, PWM)	#
 						p.start(int(value))	 # start the PWM with  the proper duty cycle
-						if sleepForxSecs(1000000000): break
+						if sleepOwningPin(1000000000, pin, myGen):
+							# stop it before letting go. RPi.GPIO runs the PWM in its own thread and
+							# it lived on until the object happened to be garbage collected - so the
+							# next command's GPIO.output() on this pin fought a PWM that was still
+							# toggling it. Stopping here happens BEFORE the successor writes: it is
+							# started ~0.07 s after the stop flag, we react within 0.05 s.
+							try:	p.stop()
+							except Exception:	pass
+							break
 					else:
 						v = float(value) / 100.
 						#U.logger.log(DEBUG, "analogWrite action pin = {}  value:{}, v:{}".format(pin,  value, v) )
 						if pin not in GPIOZERO:
 							GPIOZERO[pin] = gpiozero.PWMLED(pin, frequency=1000)
 						GPIOZERO[pin].value = v
-						if sleepForxSecs(1000000000): 
+						if sleepOwningPin(1000000000, pin, myGen):
 							break
 
 			elif cmd in ["pulseUp","pulseup"]:
@@ -350,30 +525,41 @@ def setGPIO(command):
 					GPIO.setup(pin, GPIO.OUT)
 					GPIO.output(pin, up)
 				else:
+					# the ON call belongs OUTSIDE the "not in GPIOZERO" test - inside it, a pin whose
+					# object already existed was never switched on and the pulse silently did nothing
+					# but wait. Same shape as pulseDown below.
 					try:
 						if pin not in GPIOZERO:
 							GPIOZERO[pin] = gpiozero.LED(pin)
-							getattr(GPIOZERO[pin], ON)()
+						getattr(GPIOZERO[pin], ON)()
 					except:
 						time.sleep(0.1)
-						GPIOZERO[pin] = gpiozero.LED(pin)
+						if pin not in GPIOZERO:
+							GPIOZERO[pin] = gpiozero.LED(pin)
 						getattr(GPIOZERO[pin], ON)()
-						
 
 				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
-				if sleepForxSecs(pulseUp): break
-	
+				if sleepOwningPin(pulseUp, pin, myGen): break
+
 				if useGPIO:
 					GPIO.output(pin, down)
 				else:
+					# SWITCH THE EXISTING OBJECT OFF. This used to re-create gpiozero.LED(pin), which
+					# switches nothing off - it only worked because the old object still held the pin,
+					# so gpiozero raised GPIOPinInUse and the except branch did the real work, after a
+					# fixed 0.1 s wait on every single pulse. When the construction DID succeed it
+					# drove the pin low, which is the wrong level with inverseGPIO set, and left the
+					# old object open.
 					try:
-						GPIOZERO[pin] = gpiozero.LED(pin)
+						if pin not in GPIOZERO:
+							GPIOZERO[pin] = gpiozero.LED(pin)
+						getattr(GPIOZERO[pin], OFF)()
 					except:
 						time.sleep(0.1)
+						if pin not in GPIOZERO:
+							GPIOZERO[pin] = gpiozero.LED(pin)
 						getattr(GPIOZERO[pin], OFF)()
 
-					if disableGPIOafterPulse: GPIOZERO[pin].close()
-					
 				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
 
 			elif cmd in ["pulseDown","pulsedown"]: 
@@ -394,7 +580,7 @@ def setGPIO(command):
 		
 
 				if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
-				if sleepForxSecs(pulseDown): break
+				if sleepOwningPin(pulseDown, pin, myGen): break
 				U.logger.log(DEBUG-10, "pulseDown action pin = {} back up".format(pin) )
 				if useGPIO:
 					GPIO.output(pin, up)
@@ -415,26 +601,55 @@ def setGPIO(command):
 					else:
 						GPIOZERO[pin].on()
 					if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":on}}}})
-					if sleepForxSecs(pulseUp): pass
+					if sleepOwningPin(pulseUp, pin, myGen):
+						# this was "pass": a stop request during the UP half was ignored for the rest
+						# of that half, and worse, the loop then ran on. Leave, but put the output
+						# down first - on the RPi.GPIO path nothing resets the pin at the end, so an
+						# aborted cycle used to leave it energised until the next command. Unless
+						# another command owns the pin now: then it is ITS level, do not touch it.
+						if not gpioPinTakenOver(pin, myGen):
+							if useGPIO:	GPIO.output(pin, down)
+							else:		GPIOZERO[pin].off()
+							if devId != "0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
+						break
 					if useGPIO:
 						GPIO.output(pin, down)
 					else:
 						GPIOZERO[pin].off()
 					if devId !="0": U.sendURL({"outputs":{"OUTPUTgpio-1-ONoff":{devId:{"actualGpioValue":off}}}})
-					if sleepForxSecs(pulseDown): break
+					if sleepOwningPin(pulseDown, pin, myGen): break
 				U.logger.log(DEBUG, "continuousUpDown finished" )
 
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 	U.logger.log(DEBUG, "exit {}".format(command) )
 	U.removeOutPutFromFutureCommands(pin, devType)
-	if pin in GPIOZERO:
-		GPIOZERO[pin].close()
-		del GPIOZERO[pin]
 
-	return 
+	# HANDOVER GRACE - closing the pin object RELEASES the pin (gpiozero hands it back to the pin
+	# factory and the level goes with it). On a retrigger, the successor stops this thread ~0.05 s
+	# before it claims the pin itself, so closing right here opens a 20-50 ms hole in between: a
+	# pulseUp of 5 s re-triggered at second 3 dropped LOW for that long before going high again -
+	# invisible on an LED, a chatter on a relay. So wait a moment for a successor to announce
+	# itself. If one does, it inherits the still-open, still-driven object and the level never
+	# moves. If none comes - a plain stop, or a successor that is scheduled for later and claims
+	# the pin only when its delay expires - the pin is released exactly as before, 0.15 s later.
+	for _ in range(6):
+		if gpioPinTakenOver(pin, myGen):	break
+		time.sleep(0.025)
+
+	# release the pin ONLY if no newer command has taken it over - see the comment at gpioOwner.
+	# A stale thread closing GPIOZERO[pin] here is exactly how an output that had just been
+	# switched on dropped again a moment later.
+	if ownsGPIOpin(pin, myGen):
+		if pin in GPIOZERO:
+			GPIOZERO[pin].close()
+			del GPIOZERO[pin]
+	else:
+		U.logger.log(DEBUG, "setGPIO pin={}: generation {} is done, but a newer command owns the pin now - leaving its output alone".format(pin, myGen) )
+
+	return
 
 
 ### ----------------------------------------- ###
@@ -467,6 +682,135 @@ def sleepForxSecs(sleepTime):
 	return False
 
 ### ----------------------------------------- ###
+def runQualifyDongle(params):
+	"""Runs pi/qualifyDongle.py for the plugin menu and sends the report back to indigo.
+
+	Three things have to be true while it runs:
+	  - the radios must be FREE: beaconloop pauses on temp/beaconloop.pause (timestamp content,
+	    55 s failsafe - so it has to be REFRESHED, not written once), BLEconnect on
+	    temp/BLEconnect.pause. Neither program is killed, they resume by themselves.
+	  - master.py must not think anything is stuck: it judges by temp/alive.<pgm> and restarts a
+	    program whose timestamp is older than ~200 s. A paused beaconloop does not write its own,
+	    so this thread writes them for both while the test runs.
+	  - the report has to reach indigo: stdout of the tool is captured and sent as one string.
+
+	Inputs:
+	    params (str): "secs;connectMac;tries" as built by the plugin menu
+	Outputs:
+	    None
+	"""
+	pauseFiles = [G.homeDir+"temp/beaconloop.pause", G.homeDir+"temp/BLEconnect.pause"]
+	keepGoing  = [True]
+	# HARD CAP on how long the radios may stay handed over. The refresh below defeats BOTH failsafes
+	# (beaconloop 55 s, BLEconnect 120 s) by design, so as long as this thread runs the two programs
+	# are pinned - if the tool hangs, or its sudo/sh wrappers get killed under it (killSudos runs every
+	# 10 master loops) and the pipe read below never returns, nothing else would ever free the radios.
+	# 3 adapters x (2 measuring phases + 3 connect attempts) is ~4 min, so 10 min is generous.
+	maxRunSecs = 600.
+	tStart     = time.time()
+	th         = None
+
+	def keepAlive():
+		# refresh the pause files AND the alive files every few seconds for the whole run
+		while keepGoing[0]:
+			tt = time.time()
+			if tt - tStart > maxRunSecs:
+				U.logger.log(20, "qualifyDongle: {:.0f}s cap reached - releasing beaconloop/BLEconnect while the tool keeps running".format(maxRunSecs))
+				break
+			for ff in pauseFiles:
+				try:	U.doWriteSimpleFile(ff, "{}".format(tt))
+				except Exception:	pass
+			for pgm in ["beaconloop", "BLEconnect"]:
+				try:	U.doWriteSimpleFile("{}temp/alive.{}".format(G.homeDir, pgm), "{}".format(tt))
+				except Exception:	pass
+			time.sleep(5)
+		keepGoing[0] = False
+		for ff in pauseFiles:					# stop refreshing AND clear, so the radios come back now
+			try:
+				if os.path.isfile(ff):	os.remove(ff)
+			except Exception:	pass
+
+	try:
+		secs, mac, tries = "10", "", "3"
+		pp = "{}".format(params).split(";")
+		if len(pp) > 0 and pp[0].strip() != "":	secs  = pp[0].strip()
+		if len(pp) > 1:							mac   = pp[1].strip()
+		if len(pp) > 2 and pp[2].strip() != "":	tries = pp[2].strip()
+
+		U.logger.log(20, "qualifyDongle: pausing beaconloop/BLEconnect, {}s per phase{}".format(
+						secs, ", connect test to {} x{}".format(mac, tries) if mac else ""))
+		th = threading.Thread(target=keepAlive)
+		th.daemon = True
+		th.start()
+		time.sleep(3)			# let beaconloop/BLEconnect notice the pause and let go of the radios
+
+		# output goes to a FILE, not to a PIPE + communicate(): communicate() returns only when every
+		# writer of the pipe is gone, and the write end is inherited by the sudo/sh wrappers AND by
+		# every helper qualifyDongle spawns. killSudos (master, every 10th loop) kills the "sudo .."
+		# and "/bin/sh -c sudo .." wrappers - which does NOT kill the python child, it only orphans it -
+		# and a single surviving holder of that fd blocks communicate() forever, with the pause files
+		# being refreshed all the while. A file has no such coupling, and poll() below is bounded.
+		outFile  = G.homeDir+"temp/qualifyDongle.out"
+		jsonFile = G.homeDir+"temp/qualifyDongle.json"
+		for ff in [outFile, jsonFile]:				# old results must not be mistaken for this run
+			try:
+				if os.path.isfile(ff):	os.remove(ff)
+			except Exception:	pass
+		# -u: unbuffered. print() into a redirected file is block buffered (8 kB), so without it the
+		# whole report appears only when the tool exits - and "tail -f temp/qualifyDongle.out" shows
+		# nothing at all while the ~4 min run is in progress, exactly when you want to watch it.
+		# NO send=yes: the tool writes its result to the two files above and WE send both, in one
+		# message. It then needs no sendURL and no piBeaconUtils at all - which is what used to keep
+		# it alive after it was done (non-daemon send thread) and left the radios paused.
+		# catalogue=none: no per-rpi copy on the pi. The catalogue that counts is the plugin's, in the
+		# indigo preferences directory, fed by every rpi - we forward the structured result for it.
+		cmd = "sudo python3 -u {}qualifyDongle.py {} catalogue=none".format(G.homeDir, secs)
+		if mac != "":	cmd += " connect={} tries={}".format(mac, tries)
+		U.logger.log(20, "qualifyDongle: running: {} > {} 2>&1".format(cmd, outFile))
+		proc = subprocess.Popen("{} > {} 2>&1".format(cmd, outFile), shell=True)
+		while proc.poll() is None:			# no communicate(timeout=..), that is python3 only
+			if time.time() - tStart > maxRunSecs:
+				U.logger.log(20, "qualifyDongle: still running after {:.0f}s - giving up waiting, radios released".format(maxRunSecs))
+				break
+			time.sleep(1)
+
+		out = ""
+		try:	out = U.doReadSimpleFile(outFile)
+		except Exception:	pass
+		if not isinstance(out, str):	out = out.decode("utf-8", "replace")
+
+		entries = ""
+		try:
+			if os.path.isfile(jsonFile):	entries = U.doReadSimpleFile(jsonFile).strip()
+		except Exception:	pass
+
+		payload = {}
+		if out.strip() != "":		payload["dongleQualifyReport"] = out		# full text -> indigo log
+		if entries      != "":		payload["dongleQualify"]       = entries	# structured -> catalogue
+		if payload != {}:
+			# ONE message with both keys - the plugin handler logs the report and then merges the
+			# entries into its dongleCatalogue.json from the same varJson.
+			U.logger.log(20, "qualifyDongle: finished, sending {} chars of report{} back to indigo".format(
+							len(out), " + catalogue entries" if entries != "" else " (no structured result)"))
+			U.sendURL(data={"data": payload}, squeeze=False, wait=False)
+		else:
+			U.logger.log(20, "qualifyDongle: no output produced - nothing sent to indigo")
+	except Exception:
+		U.logger.log(20, "", exc_info=True)
+	finally:
+		keepGoing[0] = False
+		try:
+			if th is not None:	th.join(12)					# let the refresh thread stop BEFORE deleting, else it
+		except Exception:	pass			# re-creates the pause files right after the remove below
+		for ff in pauseFiles:
+			try:
+				if os.path.isfile(ff):	os.remove(ff)
+			except Exception:	pass
+		U.logger.log(20, "qualifyDongle: beaconloop/BLEconnect released")
+	return
+
+
+####################
 def execCMDS(nextItem):
 	"""Worker run by a thread that interprets a command dict and dispatches it to the appropriate action: running shell commands, writing files, signaling the beacon loop (beep, getBeaconParameters, updateTimeAndZone, BLEAnalysis, trackMac), or handing off to stepper-motor, display, and neopixel helper programs.
 
@@ -536,10 +880,10 @@ def execCMDS(nextItem):
 						f.write("{}".format(fc)) 
 						f.close()
 						if "touchFile" in nextItem and nextItem["touchFile"]:
-							subprocess.call("echo	 {} > {}temp/touchFile".format(time.time(), G.homeDir) , shell=True)
+							U.doWriteSimpleFile("{}temp/touchFile".format(G.homeDir), time.time())
 						subprocess.call("sudo chown -R  pi  "+G.homeDir, shell=True)
 					except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 				continue
 
 
@@ -549,12 +893,24 @@ def execCMDS(nextItem):
 					if sleepForxSecs(delayStart):
 						return 
 				try:
-						U.logger.log(DEBUG, "execcmd. getBeaconParameters, write: ={}".format(nextItem["device"]))
-						f = open(G.homeDir+"temp/beaconloop.getBeaconParameters","w")
-						f.write(nextItem["device"]) 
-						f.close()
+						gattTarget = "BLEconnect" if gattviaBLEconnect() else "beaconloop"
+						U.logger.log(DEBUG, "execcmd. getBeaconParameters -> {}, write: ={}".format(gattTarget, nextItem["device"]))
+						fn = G.homeDir+"temp/"+gattTarget+".getBeaconParameters"
+						# MERGE with a not-yet-consumed request instead of overwriting it (command
+						# threads can race; overwrite lost macs). A mac already listed stays as it
+						# is - the second request for the same mac is ignored, no double read.
+						with getBeaconParametersLock:
+							devs = json.loads(nextItem["device"])
+							if os.path.isfile(fn):
+								try:
+									old = json.load(open(fn))
+									for bMac in old: devs[bMac] = old[bMac]
+								except Exception: pass
+							f = open(fn,"w")
+							f.write(json.dumps(devs))
+							f.close()
 				except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 				continue
 
 
@@ -564,34 +920,51 @@ def execCMDS(nextItem):
 					if sleepForxSecs(delayStart):
 						return 
 				try:
-						U.logger.log(DEBUG, "execcmd. beep, write: ={}".format(str(nextItem["device"])[:20]))
-						f = open(G.homeDir+"temp/beaconloop.beep","a")
+						gattTarget = "BLEconnect" if gattviaBLEconnect() else "beaconloop"
+						U.logger.log(DEBUG, "execcmd. beep -> {}, write: ={}".format(gattTarget, str(nextItem["device"])[:20]))
+						f = open(G.homeDir+"temp/"+gattTarget+".beep","a")
 						f.write(nextItem["device"]+"\n") 
 						f.close()
 				except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 				continue
 
 
 			if cmd == "updateTimeAndZone":
 				try:
-						U.logger.log(DEBUG, "execcmd. updateTimeAndZone, write: ={}".format(str(nextItem["device"])[:20]))
-						f = open(G.homeDir+"temp/beaconloop.updateTimeAndZone","a")
+						gattTarget = "BLEconnect" if gattviaBLEconnect() else "beaconloop"
+						U.logger.log(DEBUG, "execcmd. updateTimeAndZone -> {}, write: ={}".format(gattTarget, str(nextItem["device"])[:20]))
+						f = open(G.homeDir+"temp/"+gattTarget+".updateTimeAndZone","a")
 						f.write(nextItem["device"]+"\n") 
 						f.close()
 				except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 				continue
+
+			if	cmd == "qualifyDongle":
+				# long running (3 phases x secs + resets): own thread, so the command socket is
+				# not blocked and the plugin gets its ack straight away
+				try:
+					# level 20 on purpose: this is a manual, rare action started from the plugin menu -
+					# if it does not arrive, the first question is whether the rpi saw it at all
+					U.logger.log(20, "execcmd. qualifyDongle RECEIVED, params:>{}<".format(nextItem.get("device", "")))
+					thQ = threading.Thread(target=runQualifyDongle, args=("{}".format(nextItem.get("device", "")),))
+					thQ.daemon = True
+					thQ.start()
+				except Exception:
+					U.logger.log(20, "", exc_info=True)
+				continue
+
 
 			if	cmd == "BLEAnalysis":
 					if "minRSSI" not in nextItem: minRSSI = "-61"
 					else:					  minRSSI = nextItem["minRSSI"]
-					subprocess.call("echo "+minRSSI+" > "+G.homeDir+"temp/beaconloop.BLEAnalysis", shell=True)
+					U.doWriteSimpleFile(G.homeDir+"temp/beaconloop.BLEAnalysis", minRSSI)
 					continue
 
 			if	cmd == "trackMac":
 					if "mac" in nextItem: 
-						subprocess.call("echo '"+nextItem["mac"]+"' > "+G.homeDir+"temp/beaconloop.trackmac", shell=True)
+						U.doWriteSimpleFile(G.homeDir+"temp/beaconloop.trackmac", nextItem["mac"])
 					else:
 						U.logger.log(DEBUG, "trackMac, no mac number supplied")
 					continue
@@ -613,7 +986,7 @@ def execCMDS(nextItem):
 						f.write(cmdOut+"\n")
 						f.close()
 					except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 				continue
 			
 			if device.lower()=="output-display":
@@ -630,7 +1003,7 @@ def execCMDS(nextItem):
 						f.write(cmdOut+"\n")
 						f.close()
 					except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 				continue
 
 
@@ -639,7 +1012,7 @@ def execCMDS(nextItem):
 				if "neopixel" not in output: continue
 				if usePython3:	py2orpy3 = "py3"
 				else:			py2orpy3 = "py2"
-				#U.logger.log(30,"usePython3:{}, py2orpy3:{}".format(usePython3,py2orpy3 ))
+				#U.logger.log(20,"usePython3:{}, py2orpy3:{}".format(usePython3,py2orpy3 ))
 
 				if cmdOut != "":
 					try:
@@ -660,7 +1033,7 @@ def execCMDS(nextItem):
 							f.write(cmdOut+"\n")
 							f.close()
 					except Exception as e:
-						U.logger.log(30,"", exc_info=True)
+						U.logger.log(20,"", exc_info=True)
 				continue
 
 
@@ -700,7 +1073,7 @@ def execCMDS(nextItem):
 						else:
 							list = [nextItem["device"]]
 						for pgm in list:
-							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".now", shell=True)
+							U.touchFile(G.homeDir + "temp/" + pgm + ".now")
 						continue
 
 
@@ -712,7 +1085,7 @@ def execCMDS(nextItem):
 						else:
 							list = [nextItem["device"]]
 						for pgm in list:
-							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".reset", shell=True)
+							U.touchFile(G.homeDir + "temp/" + pgm + ".reset")
 						continue
 
 
@@ -724,7 +1097,7 @@ def execCMDS(nextItem):
 						else:
 							list = [nextItem["device"]]
 						for pgm in list:
-							subprocess.call("touch "+G.homeDir+"temp/"+pgm+".restart", shell=True)
+							U.touchFile(G.homeDir + "temp/" + pgm + ".restart")
 						continue
 
 
@@ -737,17 +1110,17 @@ def execCMDS(nextItem):
 							list = [nextItem["device"]]
 						for xxx in list:
 							xxx = xxx.split(".")
-							#U.logger.log(30,"xxx= {}".format(xxx))
+							#U.logger.log(20,"xxx= {}".format(xxx))
 							if len(xxx) > 0:
 								fname  = '{}temp/{}.startCalibration'.format(G.homeDir, xxx[0])
 								out = '{{"value":{}}}'.format(  xxx[1])
-								U.logger.log(30," start calibration..  pgm:{}, data:{}".format(xxx[0], out))
+								U.logger.log(20," start calibration..  pgm:{}, data:{}".format(xxx[0], out))
 								f = open(fname,"w")
 								f.write(out)
 								f.close()
 							else:
-								U.logger.log(30," start calibration ..  for pgm:{}".format(xxx[0]))
-								subprocess.call("touch {}temp/{}.startCalibration".format( G.homeDir, xxx[0]), shell=True)
+								U.logger.log(20," start calibration ..  for pgm:{}".format(xxx[0]))
+								U.touchFile("{}temp/{}.startCalibration".format( G.homeDir, xxx[0]))
 						continue
 
 
@@ -772,7 +1145,7 @@ def execCMDS(nextItem):
 								except:pass
 
 						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"", exc_info=True)
 						continue
 
 			if device == "setPCF8591dac":
@@ -793,7 +1166,7 @@ def execCMDS(nextItem):
 								except:pass
 
 						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"", exc_info=True)
 						continue
 
 
@@ -803,7 +1176,7 @@ def execCMDS(nextItem):
 							pinI = int(nextItem["pin"])
 							pin = str(pinI)
 						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"", exc_info=True)
 							U.logger.log(DEBUG,"bad pin {}".format(nextItem))
 							continue
 
@@ -812,7 +1185,14 @@ def execCMDS(nextItem):
 						if "pu" 				in nextItem: nextItem["pulseup"] 			= nextItem["pu"]
 						if "pd" 				in nextItem: nextItem["pulsedown"]			= nextItem["pd"]
 						if "np" 				in nextItem: nextItem["npulses"] 			= nextItem["np"]
-						if "analogwrite" 		in nextItem: values["analogwrite"] 			= float(nextItem.get("analogwrite",1))
+						# "analogValue", NOT "analogwrite": setGPIO reads values["analogValue"] (or
+						# values["bits"]). Under the old name the duty cycle never arrived, both
+						# lookups fell through to their -1 default and the pin was driven with 0% -
+						# a short-form "aw=60" simply switched the output off.
+						if "analogwrite" 		in nextItem: values["analogValue"] 			= float(nextItem.get("analogwrite",1))
+						# NOTE values["continuousUpDown"] is not read anywhere - the number of pulses
+						# comes from "np"/"npulses" below. Left as it is: what a bare "cup=<n>" was
+						# once meant to set cannot be told from the code.
 						if "continuousupdown" 	in nextItem: values["continuousUpDown"] 	= float(nextItem.get("continuousupdown",1))
 						if "pulseup" 			in nextItem: values["pulseUp"] 				= float(nextItem.get("pulseup",1))
 						if "pulsedown" 			in nextItem: values["pulseDown"] 			= float(nextItem.get("pulsedown",1))
@@ -836,7 +1216,7 @@ def execCMDS(nextItem):
 							pinI = int(nextItem["pin"])
 							pin = str(pinI)
 						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"", exc_info=True)
 							U.logger.log(DEBUG,"bad pin {}".format(nextItem))
 							continue
 						#print "pin ok"
@@ -855,7 +1235,14 @@ def execCMDS(nextItem):
 						if "pu" 				in nextItem: nextItem["pulseup"] 			= nextItem["pu"]
 						if "pd" 				in nextItem: nextItem["pulsedown"]			= nextItem["pd"]
 						if "np" 				in nextItem: nextItem["npulses"] 			= nextItem["np"]
-						if "analogwrite" 		in nextItem: values["analogwrite"] 			= float(nextItem.get("analogwrite",1))
+						# "analogValue", NOT "analogwrite": setGPIO reads values["analogValue"] (or
+						# values["bits"]). Under the old name the duty cycle never arrived, both
+						# lookups fell through to their -1 default and the pin was driven with 0% -
+						# a short-form "aw=60" simply switched the output off.
+						if "analogwrite" 		in nextItem: values["analogValue"] 			= float(nextItem.get("analogwrite",1))
+						# NOTE values["continuousUpDown"] is not read anywhere - the number of pulses
+						# comes from "np"/"npulses" below. Left as it is: what a bare "cup=<n>" was
+						# once meant to set cannot be told from the code.
 						if "continuousupdown" 	in nextItem: values["continuousUpDown"] 	= float(nextItem.get("continuousupdown",1))
 						if "pulseup" 			in nextItem: values["pulseUp"] 				= float(nextItem.get("pulseup",1))
 						if "pulsedown" 			in nextItem: values["pulseDown"] 			= float(nextItem.get("pulsedown",1))
@@ -875,7 +1262,7 @@ def execCMDS(nextItem):
 							U.logger.log(10,"cmd= %s"%cmdOut)
 							subprocess.call(cmdOut, shell=True)
 						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"", exc_info=True)
 						continue
 
 			if device == "playSound":
@@ -891,7 +1278,7 @@ def execCMDS(nextItem):
 								U.logger.log(10,"cmd= %s"%cmdOut)
 								subprocess.call("/usr/bin/python playsound.py '"+cmdOut+"' &" , shell=True)
 						except Exception as e:
-							U.logger.log(30,"", exc_info=True)
+							U.logger.log(20,"", exc_info=True)
 						continue
 
 			U.logger.log(20,"bad device :{}-".format(device))
@@ -926,7 +1313,7 @@ def stopThreadsIfEnded(all=False):
 		for threadName in stopThreads:
 			stopExecCmd(threadName)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 				 
 ### ----------------------------------------- ###
@@ -944,7 +1331,7 @@ def execSimple(nextItem):
 	try: 
 		if nextItem["command"] != "general": return False
 	except:
-		U.logger.log(30,"nextItem >>{}<<".format(nextItem))
+		U.logger.log(20,"nextItem >>{}<<".format(nextItem))
 		return False
 	if "cmdLine" not in nextItem:		 return False
 	
@@ -978,7 +1365,7 @@ def execSimple(nextItem):
 			return True
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return False
 
 	### ----------------------------------------- ###
@@ -1014,7 +1401,7 @@ class MyTCPHandler(socketserver.BaseRequestHandler):
 		try:
 			commands = json.loads(data.strip("\n"))
 		except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				U.logger.log(20,"bad command: json failed {}".format(data))
 				return
 
@@ -1043,6 +1430,7 @@ def setupexecThreads(nextItem, source):
 	global lastOut
 	global counter
 	global DEBUG
+	global displayCounter
 	try:
 		if "command" not in nextItem: return False
 		counter += 1
@@ -1079,17 +1467,19 @@ def setupexecThreads(nextItem, source):
 					break
 				
 		#U.logger.log(20,"thread started: {}, command:{} ".format(threadName, out))
-		if changed != "":
-			U.logger.log(DEBUG,"{:.2f} thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:} changed:{:}".format(time.time(), source, counter, threadName, out[:ll], out[-ll:],  changed))
-		else:
-			U.logger.log(DEBUG,"thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:}".format(source,counter, threadName, out[:ll], out[-ll:]))
+		if displayCounter < 3:
+			displayCounter +=1
+			if changed != "":
+				U.logger.log(DEBUG,"{:.2f} thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:} changed:{:}".format(time.time(), source, counter, threadName, out[:ll], out[-ll:],  changed))
+			else:
+				U.logger.log(DEBUG,"thread from:{:}, #:{:3d} started, name={:}, command:{:} ... {:}".format(source,counter, threadName, out[:ll], out[-ll:]))
 		
 		lastOut = out
 
 		return True
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return False
 
 
@@ -1116,7 +1506,7 @@ def stopExecCmd(threadName):
 			time.sleep(0.07)
 			#U.logger.log(DEBUG, "stop finished after wait thread={}".format(threadName))
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	try: 	del threadsActive[threadName]
 	except: pass
 	return 
@@ -1157,7 +1547,7 @@ def getcurentCMDS():
 				try:
 					nextItem = execcommandsList[threadName]
 				except Exception as e:
-					U.logger.log(30,"", exc_info=True)
+					U.logger.log(20,"", exc_info=True)
 					continue
 				setupexecThreads(nextItem, "current")
 
@@ -1166,7 +1556,7 @@ def getcurentCMDS():
 			f.close()
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 
@@ -1192,7 +1582,7 @@ def setupReadTempDirThread():
 		return True
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return False
 
 ### ----------------------------------------- ###
@@ -1230,7 +1620,7 @@ def readTempDirThread():
 					U.logger.log(DEBUG, "readTempDirThread bad read:{}".format(rawRead))
 				U.logger.log(DEBUG, "from file:>>{}<<, type:{}".format(commandList, type(commandList)))
 	
-				subprocess.call("sudo rm  "+fName+" > /dev/null 2>&1 ", shell=True)
+				U.removeFile(fName)
 
 				if commandList != []:
 					for commands in commandList:
@@ -1248,7 +1638,7 @@ def readTempDirThread():
 	
 			#'[{"device": "OUTPUTgpio-1", "command": "up", "pin": "19"}]'
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 	U.logger.log(DEBUG, "readTempDirThread exit")
 
@@ -1286,7 +1676,7 @@ def readParams():
 		usePython3 =			inp.get("usePython3","") == "1"
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 ### ----------------------------------------- ###
@@ -1300,7 +1690,10 @@ if __name__ == "__main__":
 	global lastOut, counter
 	global DEBUG
 	global GPIOZERO
+	global displayCounter
 	
+	
+	displayCounter		= 0
 	GPIOZERO			= {}
 	DEBUG				= 10
 	counter				= 0
@@ -1354,8 +1747,8 @@ if __name__ == "__main__":
 
 	except Exception as e:
 		####  trying to kill the process thats blocking the port# 
-		#U.logger.log(30,"", exc_info=True)
-		U.logger.log(30, "getting  socket does not work, trying to reset port {}".format(PORT) )
+		#U.logger.log(20,"", exc_info=True)
+		U.logger.log(20, "getting  socket does not work, trying to reset port {}".format(PORT) )
 		ret = readPopen("sudo ss -apn | grep :{}".format(PORT))[0]
 		lines = ret.split("\n")
 		for line in lines:
@@ -1369,7 +1762,10 @@ if __name__ == "__main__":
 					if pid < 99: continue
 				except: continue
 
-				if len (subprocess.Popen("ps -ef | grep "+str(pid)+"| grep -v grep | grep master.py",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0]) >5:
+				# is THIS pid master.py? the old grep searched the pid as a STRING anywhere in the
+				# ps line, so it also hit rows where our pid was the PARENT pid, or part of a time
+				# field - asking /proc for the pid itself cannot be ambiguous
+				if len([1 for _pp, _cc in U.procList("master.py") if _pp == pid]) > 0:
 					restartMaster = True
 					# will need to restart the whole things
 				U.logger.log(DEBUG, "killing task with : pid= %d"% pid )

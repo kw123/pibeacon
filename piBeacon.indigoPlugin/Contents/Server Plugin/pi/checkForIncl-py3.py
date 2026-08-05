@@ -1,8 +1,24 @@
 #!/usr/bin/python3
 # -*- coding: utf-8 -*-
 import sys, os, time, subprocess, logging
+import shutil
 
-logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d Lv:%(levelno)s %(message)s', datefmt='%d-%H:%M:%S')
+def _fixLogPerm(_fn):		# a sudo-started helper CREATES this file as root; a later program running
+	try:					# as pi then cannot append and python logging swallows the error silently
+		if not os.path.exists(_fn):
+			_f = open(_fn, "a")
+			_f.close()
+		os.chmod(_fn, 0o666)
+		import pwd, grp
+		os.chown(_fn, pwd.getpwnam("pi").pw_uid, grp.getgrnam("pi").gr_gid)
+	except Exception:	pass
+
+_fixLogPerm("/var/log/pibeacon")
+logging.basicConfig(level=logging.INFO, filename= "/var/log/pibeacon",format='%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d %(message)s', datefmt='%d-%H:%M:%S')
+class _TenthFmt(logging.Formatter):	# timestamps with tenths of a second, same as piBeaconUtils.setLogging
+	def formatTime(self, record, datefmt=None):
+		return "{}.{}".format(time.strftime(datefmt or '%d-%H:%M:%S', time.localtime(record.created)), int(record.msecs/100.))
+for _h in logging.getLogger().handlers: _h.setFormatter(_TenthFmt('%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d %(message)s', datefmt='%d-%H:%M:%S'))
 logger = logging.getLogger(__name__)
 
 ####-------------------------------------------------------------------------####
@@ -16,11 +32,11 @@ def readPopen(cmd,doPrint= True):
 	    tuple: (stdout, stderr) decoded utf-8 strings, or None on exception
 	"""
 	try:
-		logger.log(30,"doing:  {}".format(cmd) )
+		logger.log(20,"doing:  {}".format(cmd) )
 		ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 		ret = ret.decode('utf_8')
 		err = err.decode('utf_8')
-		if doPrint: logger.log(30,"result: {} {}".format(ret, err ) )
+		if doPrint: logger.log(20,"result: {} {}".format(ret, err ) )
 		return ret, err
 	except Exception as e:
 		logger.log(20,"", exc_info=True)
@@ -86,6 +102,64 @@ def checkOsVersionis3():
 
 
 
+#################################
+NOT_AVAILABLE_FILE = "/home/pi/pibeacon/aptNotAvailable.txt"
+
+def aptNotAvailable():
+	"""Packages this OS release simply does not have - one name per line, remembered across runs."""
+	try:
+		f = open(NOT_AVAILABLE_FILE)
+		out = [x.strip() for x in f.read().split("\n") if x.strip() != ""]
+		f.close()
+		return out
+	except Exception:
+		return []
+
+
+def markAptNotAvailable(pkg):
+	"""Remembers that apt does not know this package on this OS, so it is never retried."""
+	try:
+		known = aptNotAvailable()
+		if pkg in known:	return
+		f = open(NOT_AVAILABLE_FILE, "a")
+		f.write("{}\n".format(pkg))
+		f.close()
+	except Exception:
+		pass
+
+
+def aptInstall(pkgs, extra="-y "):
+	"""apt-get install that does not fight a package the OS does not have.
+
+	"E: Unable to locate package X" is NOT a transient failure - the package is gone or renamed in
+	this release (libgpiod2 became libgpiod3 in trixie), so retrying it on every single start just
+	burns an apt run and fills the log with the same error forever. The name is written to
+	aptNotAvailable.txt and skipped from then on; delete that file to make it try again after an
+	OS upgrade.
+
+	Inputs:
+	    pkgs (str): one or more package names, space separated
+	    extra (str): extra apt options, default "-y "
+	Outputs:
+	    bool: True when apt ran and did not report a missing package
+	"""
+	wanted = [p for p in pkgs.split(" ") if p.strip() != ""]
+	known  = aptNotAvailable()
+	todo   = [p for p in wanted if p not in known]
+	if not todo:
+		logger.log(20, "skipping apt install of {} - not available on this OS (see {})".format(" ".join(wanted), NOT_AVAILABLE_FILE))
+		return False
+	ret = readPopen("sudo apt-get install {}{}".format(extra, " ".join(todo)))
+	out = "{} {}".format(ret[0], ret[1]) if ret else ""
+	if out.find("Unable to locate package") > -1:
+		for p in todo:
+			if out.find("Unable to locate package {}".format(p)) > -1:
+				markAptNotAvailable(p)
+				logger.log(20, "apt does not know '{}' on this OS - marked, will not be retried".format(p))
+		return False
+	return True
+
+
 def execInstall():
 
 	"""Installs and verifies all the apt packages and pip3 libraries required for the plugin's Python 3 sensor drivers (wiringPi/GPIO, hcidump, pigpio, pexpect, seesaw, neopixel, lidarlite, tmp117, dht, etc.), skipping those listed in notSupported, and writes a 'done' marker file when finished. Bails out early if the OS version is below 9.
@@ -95,12 +169,12 @@ def execInstall():
 	Outputs:
 	    None: Runs shell/apt/pip install commands, imports test modules, logs progress, and writes the includepy3.done marker file
 	"""
-	notSupported = ["DHT","GPIO"]
+	notSupported = ["GPIO"]			# "DHT" dropped: the legacy Adafruit_DHT install it disabled is gone
 	v = checkIfOSlt9() 
 
 	if v < 9:
 		logger.log(20,"finished, due to OS < 9, py 3 not completely installed" )
-		readPopen('echo "done" > "/home/pi/pibeacon/includepy3.done"')
+		open("/home/pi/pibeacon/includepy3.done", "w").write("done")
 		exit()
 
 	if v >11: 	usebreakOption = "--break-system-packages "
@@ -119,32 +193,86 @@ def execInstall():
 
 	if True:
 		logger.log(20,"check if apt install  is ok"  )
-		ret = readPopen("sudo apt --fix-broken install  -y")
-		ret = readPopen("sudo apt autoremove -y")
+		ret = readPopen("sudo apt-get --fix-broken install  -y")
+		ret = readPopen("sudo apt-get autoremove -y")
 
 
 	if "GPIO" not in notSupported:
 		ret = readPopen("gpio -v",doPrint=False)
 		if ret[0].find("version:") == -1:
-			readPopen("rm -R /tmp/wiringPi")
+			shutil.rmtree("/tmp/wiringPi", ignore_errors=True)		# no piBeaconUtils in this installer script
 			installGPIO = "cd /tmp; wget https://project-downloads.drogon.net/wiringpi-latest.deb; sudo dpkg -i wiringpi-latest.deb ; rm -R /tmp/wiringPi"
 			ret = readPopen(installGPIO)
 
 	if "GPIO" not in notSupported:
 		logger.log(20,"check RPi.GPIO "  )
+		# it has to WORK, not merely import. On a pi5 the classic RPi.GPIO installs happily and then
+		# raises - at import or at the first setmode ("Cannot determine SOC peripheral base
+		# address") - because the RP1 does not have the old peripheral layout. So the import is
+		# followed by an actual setmode, and the two failures are told apart:
+		#   ImportError    = not installed at all  -> install the classic one, as before
+		#   anything else  = installed but unusable -> this is the pi5/RP1 case, switch to rpi-lgpio,
+		#                    the drop-in replacement that provides the very same "RPi.GPIO" module
+		#                    name on top of lgpio.
+		# rpi-lgpio and RPi.GPIO CONFLICT - same module name - so the old one has to be removed
+		# first, and that is done ONLY after it has proven here that it does not run on this board.
+		gpioWorks	= False
+		gpioMissing	= False
 		try:
 			import RPi.GPIO as GPIO
-		except:
-			ret = readPopen("sudo apt-get install -y python3-dev python3-rpi.gpio")
+			GPIO.setmode(GPIO.BCM)
+			GPIO.setwarnings(False)
+			gpioWorks = True
+		except ImportError:
+			gpioMissing = True
+		except Exception as e:
+			logger.log(20,"RPi.GPIO is installed but does not run on this board: {}".format(e))
+
+		if gpioWorks:
+			logger.log(20,"RPi.GPIO ok")
+		elif gpioMissing:
+			logger.log(20,"RPi.GPIO missing, installing")
+			ret = aptInstall("python3-dev python3-rpi.gpio")
+		elif v < 12:
+			# a board that needs rpi-lgpio (pi5 / RP1) does not run an OS this old, so an unusable
+			# RPi.GPIO here means something else is broken. Do NOT start removing packages over it.
+			logger.log(20,"RPi.GPIO does not run and the OS (v{}) is older than a board that would need rpi-lgpio - not touching the installation, check the RPi.GPIO install by hand".format(v))
+		else:
+			# apt first: raspberry pi os ships python3-rpi-lgpio, and the package itself declares the
+			# conflict with python3-rpi.gpio, so apt does the swap properly. pip only as a fallback,
+			# and only then is the old package removed by hand - pip cannot resolve that conflict.
+			logger.log(20,"RPi.GPIO does not run on this board (pi5/RP1) - switching to rpi-lgpio, the drop-in replacement")
+			aptInstall("python3-lgpio")				# the backend rpi-lgpio sits on, and what gpiozero picks on a pi5
+			if aptInstall("python3-rpi-lgpio"):
+				logger.log(20,"python3-rpi-lgpio installed - verified on the next start of this check")
+			else:
+				logger.log(20,"python3-rpi-lgpio not available from apt, falling back to pip")
+				readPopen("sudo apt-get remove -y python3-rpi.gpio")
+				readPopen("sudo pip3 uninstall -y " + usebreakOption + " RPi.GPIO")
+				readPopen("sudo pip3 install "   + usebreakOption + " rpi-lgpio")
+				logger.log(20,"rpi-lgpio installed via pip - verified on the next start of this check")
 
 
-	if "libgpiod2" not in notSupported:
-		logger.log(20,"check libgpiod2"  )
-		aptList	 = readPopen("dpkg -s libgpiod2 | grep 'install ok installed'")[0]
-
-		if aptList.find("install ok installed") == -1:
-			logger.log(20,"sudo apt-get install libgpiod2"  )
-			readPopen("sudo apt-get install libgpiod2")
+	if "libgpiod" not in notSupported:
+		# the library was RENAMED: bookworm and older ship libgpiod2, trixie ships libgpiod3. Ask for
+		# the new name first and fall back to the old one, instead of hard-coding either - on trixie
+		# the old name is simply "Unable to locate package" and used to be retried on every start.
+		logger.log(20,"check libgpiod"  )
+		installed = ""
+		for pkg in ("libgpiod3", "libgpiod2"):
+			if readPopen("dpkg -s {} | grep 'install ok installed'".format(pkg), doPrint=False)[0].find("install ok installed") > -1:
+				installed = pkg
+				break
+		if installed != "":
+			logger.log(20,"{} already installed".format(installed))
+		else:
+			for pkg in ("libgpiod3", "libgpiod2"):
+				if aptInstall(pkg):
+					installed = pkg
+					logger.log(20,"{} installed".format(pkg))
+					break
+			if installed == "":
+				logger.log(20,"neither libgpiod3 nor libgpiod2 is available on this OS - gpio sensors that need it will not work")
 
 
 	if "hcidump" not in notSupported:
@@ -152,13 +280,13 @@ def execInstall():
 		ret = readPopen("which hcidump")
 		if ret[0].find("hcidump") == -1:
 			for ii in range(5):
-				readPopen("sudo apt-get install -y bluez-hcidump" )
+				aptInstall("bluez-hcidump")
 				ret = readPopen("which hcidump")
 				if ret[0].find("hcidump") == -1:
-					logger.log(30,"hcidump not properly installed, try again"  )
+					logger.log(20,"hcidump not properly installed, try again"  )
 					time.sleep(20)
 				else:
-					logger.log(30,"hcidump installed"  )
+					logger.log(20,"hcidump installed"  )
 					break
 
 
@@ -170,8 +298,7 @@ def execInstall():
 				time.sleep(0.5)
 			import pigpio
 		except:
-			logger.log(20,"sudo apt-get install -y pigpio python3-pigpio " )
-			ret = readPopen("sudo apt-get install -y pigpio python3-pigpio ")
+			ret = aptInstall("pigpio python3-pigpio")
 
 
 	if "pexpect" not in notSupported:
@@ -187,7 +314,7 @@ def execInstall():
 		logger.log(20,"check expect"  )
 		ret = readPopen("which expect")
 		if ret[0].find("/usr/bin/expect") == -1:
-			readPopen("sudo apt-get install -y expect")
+			aptInstall("expect")
 
 
 
@@ -237,22 +364,16 @@ def execInstall():
 			readPopen("sudo pip3 install  "+usebreakOption+ "   adafruit-circuitpython-dht")
 
 
-	if "DHT" not in notSupported:
-		logger.log(20,"check Adafruit_DHT"  )
-		try:
-			import Adafruit_DHT
-		except Exception as e:
-			logger.log(20,"sudo pip3 install  "+usebreakOption+ " Adafruit_DHT" )
-			readPopen("sudo pip3 install  "+usebreakOption+ " Adafruit_DHT") 
-
+	# (the legacy Adafruit_DHT install is gone: DHT.py uses adafruit_dht - the circuitpython one
+	#  installed just above - and nothing imports Adafruit_DHT any more)
 
 	if True:
 		logger.log(20,"check if apt install  is ok"  )
-		ret = readPopen("sudo apt --fix-broken install  -y") # wait until finsihed
+		ret = readPopen("sudo apt-get --fix-broken install  -y") # wait until finsihed
 		logger.log(20,"check if apt autoremove  is ok"  )
-		ret = readPopen("sudo apt autoremove -y &")
+		ret = readPopen("sudo apt-get autoremove -y &")
 
-	readPopen('echo "done" > "/home/pi/pibeacon/includepy3.done"')
+	open("/home/pi/pibeacon/includepy3.done", "w").write("done")
 
 	logger.log(20,"finished")
 

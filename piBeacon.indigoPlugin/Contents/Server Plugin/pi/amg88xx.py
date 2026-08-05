@@ -211,7 +211,7 @@ class AMG88xx_class(object):
 			self._fpsc.FPS = AMG88xx_FPS_10
 			self.bus.write_byte_data(self.i2c_addr,AMG88xx_FPSC, self._fpsc.get())
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return 
 
 	def readU16(self, reg, little_endian=True):
@@ -444,7 +444,7 @@ class AMG88xx_class(object):
 
 			return buf, maxV, minV, aveV, nVal, ambtemp, uniformity, movement, movementabs
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return ""
 
 		
@@ -518,7 +518,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "amg88xx is not in parameters = not enabled, stopping amg88xx.py" )
+			U.logger.log(20, "amg88xx is not in parameters = not enabled, stopping amg88xx.py" )
 			exit()
 			
 
@@ -567,7 +567,7 @@ def readParams():
 				startSensor(devId, i2cAddress)
 				if amg88xxsensor[devId] =="":
 					return
-			U.logger.log(30," new parameters read: i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+
+			U.logger.log(20," new parameters read: i2cAddress:{}".format(i2cAddress) +";	 minSendDelta:{}".format(minSendDelta)+
 					   ";  deltaX:{}".format(deltaX[devId])+";  sensorRefreshSecs:{}".format(sensorRefreshSecs) )
 				
 		deldevID={}		   
@@ -583,7 +583,7 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		
 
 
@@ -600,7 +600,7 @@ def startSensor(devId,i2cAddress):
 	global sensors,sensor
 	global startTime
 	global amg88xxsensor, oldPixels
-	U.logger.log(30,"==== Start amg88xx ===== @ i2c= {}".format(i2cAddress))
+	U.logger.log(20,"==== Start amg88xx ===== @ i2c= {}".format(i2cAddress))
 	startTime =time.time()
 
 
@@ -611,7 +611,7 @@ def startSensor(devId,i2cAddress):
 		amg88xxsensor[devId]  =	 AMG88xx_class(address=i2cAdd)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		amg88xxsensor[devId] =""
 	time.sleep(.1)
 
@@ -659,7 +659,7 @@ def getValues(devId):
 		U.logger.log(0, "{}".format(ret)) 
 		badSensor = 0
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		badSensor+=1
 		if badSensor >3: ret = "badSensor"
 	U.muxTCA9548Areset()
@@ -755,7 +755,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					else:
 						U.restartMyself(param="", reason="badsensor",doPrint=True)
@@ -802,7 +802,7 @@ while True:
 		if not quick:
 			time.sleep(loopSleep)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

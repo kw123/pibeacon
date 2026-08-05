@@ -81,10 +81,10 @@ def stopSensors(launchCmd):
 			# do your init here
 			U.killOldPgm(myPID, launchCmd)
 			## add any init code here for address # addr
-			U.logger.log(30, "stopping	{}".format(launchCmd) )
+			U.logger.log(20, "stopping	{}".format(launchCmd) )
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "launchCmd used: {}".format(launchCmd) )
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
@@ -101,10 +101,10 @@ def startSensors(launchCmd):
 			# do your init here
 			subprocess.call(launchCmd+" &", shell=True)
 			## add any init code here for address # addr
-			U.logger.log(30, "starting	{}".format(launchCmd) )
+			U.logger.log(20, "starting	{}".format(launchCmd) )
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "launchCmd used: {}".format(launchCmd) )
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "launchCmd used: {}".format(launchCmd) )
 # ===========================================================================
 # start	 launch cmd
 # ===========================================================================
@@ -124,8 +124,8 @@ def checkIfRunning(check):
 			else: 
 				return "not checked"
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "checking used: {}".format(check) )
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "checking used: {}".format(check) )
 
 
 # ===========================================================================
@@ -195,7 +195,7 @@ while True:	 # loop for ever
 				U.echoLastAlive(G.program)
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 
 		time.sleep(sensorRefreshSecs) # sleep the requested amount
 		readParams()  # check if we have new parameetrs

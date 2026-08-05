@@ -12,19 +12,40 @@ import  sys, os, time, json, datetime,subprocess,copy
 import math
 
 
+# TIME CRITICAL - keeps its own GPIO handling on purpose and prefers pigpio deliberately: the
+# distance IS the echo pulse width, measured by busy-waiting on the pin, so no shared layer and no
+# per-pin indirection. pigpio first because its readings are hardware timed; RPi.GPIO only as the
+# fallback, where the busy-wait is at the mercy of the scheduler.
+# useGPIO and gpioOK are ALWAYS defined. useGPIO used to be left unset when both imports failed,
+# and the program then died much later with "NameError: useGPIO" instead of naming what was
+# missing - which is exactly the pi5 case: pigpio has no RP1 support and RPi.GPIO does not run
+# there either (rpi-lgpio is needed).
+# pigpiod is probed by USING it, not by scanning the process list - the old "ps -ef | grep" cost a
+# shell plus three processes at every start.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	#1/0 # use GPIO
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
 	import pigpio
-	useGPIO = False
-except  Exception as e:
+	_test = pigpio.pi()
+	if not _test.connected:					# pigpiod not up yet - start it and try once more
+		try:	_test.stop()
+		except Exception:	pass
+		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+		time.sleep(2)
+		_test = pigpio.pi()
+	if not _test.connected:	raise Exception("pigpiod not reachable")
+	try:	_test.stop()					# only a probe - the real handle is opened where it is used
+	except Exception:	pass
+	gpioOK = True
+except Exception:
 	try:
 		import RPi.GPIO as GPIO
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
 		useGPIO = True
-	except: pass
+		gpioOK  = True
+	except Exception:
+		pass								# reported after U.setLogging(), no handlers yet here
 
 
 sys.path.append(os.getcwd())
@@ -76,7 +97,7 @@ def readParams():
    
  
 		if sensor not in sensors:
-			U.logger.log(30, "ultrasound is not in parameters = not enabled, stopping ultrasoundDistance.py" )
+			U.logger.log(20, "ultrasound is not in parameters = not enabled, stopping ultrasoundDistance.py" )
 			exit()
 			time.sleep(3000000)
 			
@@ -141,7 +162,7 @@ def readParams():
 
   
 	except  Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 def getzeroValue():
@@ -265,7 +286,7 @@ def getDistancePIGPIO(devId):
 		return ""
 
 	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 	return ""
  
 
@@ -378,7 +399,7 @@ def getDistance(devId):
 		return ""
 
 	except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 	return ""
  
  
@@ -416,7 +437,8 @@ def execMain():
 	sendEvery					= 55. # send at least every xx secs msg to indigo even if no trigger
 	U.setLogging()
 	
-	U.logger.log(20,"{} version:{} started with use GPIO:{}".format(G.program, version, useGPIO))
+	U.logger.log(20,"{} version:{} started with use GPIO:{}, backend:{}".format(G.program, version, useGPIO,
+					"RPi.GPIO (software timed - echo width is at the mercy of the scheduler)" if useGPIO else ("pigpio (hardware timed)" if gpioOK else "NONE - no distance can be measured, install rpi-lgpio on a pi5")))
 	
 	readParams()
 	
@@ -462,7 +484,7 @@ def execMain():
 					if dist == "badSensor":
 						badSensor = 0
 						first = True
-						#U.logger.log(30," bad sensor, sleeping for 2 secs")
+						#U.logger.log(20," bad sensor, sleeping for 2 secs")
 						data["sensors"][sensor][devId]["distance"]= "badSensor"
 						U.sendURL(data)
 						lastDist[devId] = -100.
@@ -528,7 +550,7 @@ def execMain():
 				if n > 800: break
 			#print "end of loop", loopCount
 		except  Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 	try: 	G.sendThread["run"] = False; time.sleep(1)
 	except: pass

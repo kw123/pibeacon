@@ -43,32 +43,35 @@ if verbose:
 
 try:
 
-		#print "killOldPgm ",pgmToKill,str(myPID)
-		cmd = "ps -ef | grep '{}' | grep -v grep | grep -v {}  | grep -v sudo".format(pgmToKill, myOwnPID  )
-		if param1 != "":
-			cmd = "{} | grep {}".format(cmd,param1)
-		if param2 != "":
-			cmd = "{} | grep {}".format(cmd,param2)
-		if verbose: U.logger.log(20, "== ext-kill== 2 kill command {}, {}".format(cmd, delList) )
+		# /proc instead of "ps -ef | grep X | grep -v grep | grep -v <pid> | grep -v sudo":
+		# no shell, no ps, no 4 greps - and the match is against the COMMAND LINE only, so a pid
+		# or user name in the ps columns can no longer produce a hit. Same exclusions as before:
+		# grep processes, our own pid, and the sudo wrapper of the process we are about to kill.
+		procs = U.procList(pgmToKill)
+		if verbose: U.logger.log(20, "== ext-kill== 2 looking for:{} {} {} (excl grep/sudo/own pid), candidates:{}, {}".format(pgmToKill, param1, param2, len(procs), delList) )
 
-		ret = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')
-		lines = ret.split("\n")
-		del ret
 		xlist = ""
-		for line in lines:
-			if len(line) < 10: continue
-			if line.find("display") >-1: 
+		for pid, cmd in procs:
+			if (" " + cmd + " ").find(" grep ") > -1:	continue
+			if cmd.find("sudo") > -1:					continue
+			if param1 != "" and cmd.find(param1) < 0:	continue
+			if param2 != "" and cmd.find(param2) < 0:	continue
+			if pid == int(myPID): 
+				if verbose: U.logger.log(20, "== ext-kill== 3 not killing pid={}, cmd:{}".format( pid, cmd) )
+				continue
+			if pid == int(myOwnPID): continue
+			# the stop marker belongs AFTER the pid checks: it asks a display to shut itself down
+			# before we kill it, so it must only be written for a process we are ACTUALLY killing.
+			# Written earlier it also hit the caller's own display (display.py kills its older
+			# instances and passes its own pid), which then read the marker and stopped itself
+			# ~15 s later - "exiting - stop was requested" right after a normal start.
+			if cmd.find("display") > -1:
+				U.logger.log(20, "== ext-kill== WRITING {}temp/display.stop for pid {} (cmd:{}), ts:{:.1f}".format(G.homeDir, pid, cmd, time.time()))
 				f=open(G.homeDir+"temp/display.stop","w")
 				f.write("stop")
 				f.close()
 				time.sleep(1)
-			items = line.split()
-			pid = int(items[1])
-			if pid == int(myPID): 
-				if verbose: U.logger.log(20, "== ext-kill== 3 not killing pid={}, line:{}".format( pid, line) )
-				continue
-			if pid == int(myOwnPID): continue
-			if verbose: U.logger.log(20, "== ext-kill== 3 killing {}  {}  {}, pid={}, line:{}".format( pgmToKill, param1, param2, pid,  line ) )
+			if verbose: U.logger.log(20, "== ext-kill== 3 killing {}  {}  {}, pid={}, cmd:{}".format( pgmToKill, param1, param2, pid,  cmd ) )
 			xlist += str(pid)+ " "
 			count += 1
 		if len(xlist) > 3:
@@ -78,4 +81,4 @@ try:
 except Exception as e:
 		if str(e).find("Too many open files") >-1:
 			U.doReboot(tt=3, text=str(e), force=True)
-		if verbose: U.logger.log(30,"", exc_info=True)
+		if verbose: U.logger.log(20,"", exc_info=True)

@@ -49,7 +49,7 @@ class THESENSORCLASS:
 			self.L3G4200SetCalibration()
 
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		return 
 
 	def L3G4200SetCalibration(self):
@@ -176,14 +176,14 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program )
 			exit()
 
 		for devId in sensors[sensor]:
 			U.getMAGReadParameters(sensors[sensor][devId],devId)
 
 			if devId not in theSENSORdict:
-				U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(G.i2cAddress))
+				U.logger.log(20,"==== Start "+G.program+" ===== @ i2c= {}".format(G.i2cAddress))
 				theSENSORdict[devId] = THESENSORCLASS(i2cAddress=G.i2cAddress)
 				
 		deldevID={}		   
@@ -225,7 +225,7 @@ def getValues(devId):
 			return data
 		except Exception as e:
 			if badSensor > 2 and badSensor < 5: 
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 			badSensor+=1
 	if badSensor >3: return "badSensor"
 	return{"GYR":{"x":"", "y":"", "z":""},"temp":"" }	

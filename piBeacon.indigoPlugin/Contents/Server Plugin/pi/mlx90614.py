@@ -482,10 +482,10 @@ def doDisplay():
 				f=open(G.homeDir+"temp/display.inp","a"); f.write(json.dumps(out)+"\n"); f.close()
 			except Exception as e:
 				if "{}".format(e).find("No space left on device") >-1:
-					subprocess.call("rm "+G.homeDir+"temp/* ", shell=True)
+					U.removeFile(G.homeDir + "temp/*")
 		return 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 # ===========================================================================
@@ -550,7 +550,7 @@ def incrementBadSensor(devId,sensor,data):
 			data[sensor][devId]["badSensor"]=True
 			badSensors[devId] =0
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return data 
 
 
@@ -592,13 +592,13 @@ def readParams():
 		if "tempUnits"			 in inp:  tempUnits=			  (inp["tempUnits"])
 
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program )
 			exit()
 			
 		sensorChanged = doWeNeedToStartSensor(sensors,sensorsOld,sensor)
 			
 		if sensorChanged == -1:
-			U.logger.log(30, "==== stop	"+G.program+ " sensorChanged==-1 =====")
+			U.logger.log(20, "==== stop	"+G.program+ " sensorChanged==-1 =====")
 			exit()
 
 		U.getGlobalParams(inp)
@@ -615,7 +615,7 @@ def readParams():
 			
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -785,7 +785,7 @@ def getMLX90614(sensor, data):
 				else:
 					data= incrementBadSensor(devId,sensor,data)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 		if sensor in data["sensors"] and data["sensors"][sensor]=={}: del data["sensors"][sensor]
 		U.muxTCA9548Areset()
 		return data
@@ -864,7 +864,7 @@ while True:
 				if sensor not in data["sensors"]:
 					if tt-lastMsgBad < 20: continue
 					lastMsgBad = tt
-					U.logger.log(30," bad sensor")
+					U.logger.log(20," bad sensor")
 					data["sensors"]={sensor:{devId:{"temp":"badSensor"}}}
 					U.sendURL(data)
 					lastValue[devId] ={}
@@ -897,7 +897,7 @@ while True:
 		time.sleep(0.3)
 		#print "end of loop", loopCount
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try:	G.sendThread["run"] = False; time.sleep(1)
 except:	pass

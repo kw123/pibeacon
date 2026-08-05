@@ -8,11 +8,13 @@
 
 import serial
 import re
-import RPi.GPIO as GPIO
 import os
 import sys
 import time
 import datetime
+
+sys.path.append(os.getcwd())
+import	piBeaconUtils	as U		# for the shared gpio layer - see U.gpioStart / gpioOnEdge / gpioIn
 
 class UPS2:
 	def __init__(self, port):
@@ -101,10 +103,12 @@ def setupShutdownSignalFromUPS(bcm_io):
 	    None: sets up the GPIO pin and event detection; updates global shutdownSignalFromUPSPin
 	"""
 	global shutdownSignalFromUPSPin
-	if bcm_io < 1: return 
+	if bcm_io < 1: return
 	shutdownSignalFromUPSPin = bcm_io
-	GPIO.setup(shutdownSignalFromUPSPin, GPIO.IN, pull_up_down=GPIO.PUD_DOWN)
-	GPIO.add_event_detect(shutdownSignalFromUPSPin, GPIO.FALLING, callback= shutdownSignalFromUPS, bouncetime=1000)
+	# through the shared gpio layer: it picks the backend this rpi has and hands the callback the
+	# PIN NUMBER whichever one it is. A UPS signal debounced by a full second is nowhere near
+	# time critical, so the layer's per-call cost does not matter here.
+	U.gpioOnEdge(shutdownSignalFromUPSPin, shutdownSignalFromUPS, edge="falling", bounceMs=1000, pull="down")
 
 
 def shutdownSignalFromUPS(channel):
@@ -116,10 +120,10 @@ def shutdownSignalFromUPS(channel):
 	    None: prints low-battery/recovery status; no return value
 	"""
 	global shutdownSignalFromUPS_pin
-	if channel != shutdownSignalFromUPSPin: return 
+	if channel != shutdownSignalFromUPSPin: return
 	print("detect LOW bat capacity::: ")
 	time.sleep(1)
-	if GPIO.input(shutdownSignalFromUPSPin) !=0:
+	if U.gpioIn(shutdownSignalFromUPSPin, pull="down"):
 		print("detect LOW bat capacity::: system back up")
 		return
 	#U.doReboot(tt=10, text="shutdown by UPS signal battery capacity", cmd="sudo sync; wait 2; sudo shutdown now")
@@ -127,9 +131,8 @@ def shutdownSignalFromUPS(channel):
 
 
 if __name__ == "__main__":
-	GPIO.setwarnings(False)
-	GPIO.setmode(GPIO.BCM)
-	
+	U.gpioStart()
+
 	print("Testing UPS v2 ")
 	setupShutdownSignalFromUPS(5)
 

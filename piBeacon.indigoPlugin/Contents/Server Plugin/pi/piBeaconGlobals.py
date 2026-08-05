@@ -85,8 +85,6 @@ eth0PacketsOld		= ""
 packetsTime			= 0
 packetsTimeOld		= 0
 sundialActive		= ""
-BeaconUseHCINo		= "-1"
-BLEconnectUseHCINo	= "-1"
 last_masterStart	= ""
 wifiID				= ""
 sendThread			= {}
@@ -141,8 +139,7 @@ specialOutputList=[		"display",
 						"neopixel3",
 						"sundial",
 						"setStepperMotor",
-						"neopixelClock",
-						"OUTPUTgpio"]
+						"neopixelClock"]
 
 specialSensorList =[ 	"amg88xx",
 						"INPUTgpio",

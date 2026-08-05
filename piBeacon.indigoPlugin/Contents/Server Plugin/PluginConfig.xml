@@ -47,9 +47,10 @@
 			<Option value="off-off"	>disable devices/states - disable variables</Option>
 		</List>    
 	</Field>
-	<Field id="SQLLoggingEnableLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
+	<Field id="SQLLoggingEnableLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 		<Label>This is only for: dev/states = Pi_x_Time etc, variables: pi_IN_xx. This saves SQL logger cpu and disk-space. There is no (good) reason to write them to the SQL logger</Label>
 	</Field>
+
 
 	<Field id="infoLabelCountVariables" type="label" fontColor="green" >
 		<Label>== Variables populated with COUNTS of devices being home, present, online vs away, offline,..</Label>
@@ -433,11 +434,33 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 		</List>
 	</Field>
 
-	<Field    id="rpiDataAcquistionMethod"   type="menu"  tooltip="can be overwriten for each individual RPi in rpi device edit">
-		<Label>Use which method on RPIs for beacon scanning read:</Label>
+	<Field    id="bleEngineDefault"   type="menu"  defaultValue="pythonSocket"  tooltip="ONE engine choice for everything BLE on every rPi: beacon scanning AND gatt connects (beep/battery/switchbot/iphone). Can be overwritten per rPi in the rpi device edit">
+		<Label>BLE engine on the rPis - scanning + connecting:</Label>
 		<List>
-			<Option value="hcidump" > using hcidump and lescan, has more functions</Option>
-			<Option value="socket"  > using python socket reading (deprecating)</Option>
+			<Option value="pythonSocket">python socket (default)</Option>
+			<Option value="commandline" >commandline tools (hcidump/lescan + gatttool, legacy)</Option>
+		</List>
+	</Field>
+	<Field id="bleEngineDefaultLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+		<Label>One decision for ALL BLE work on the rPis - reading beacon messages and gatt
+(iphone presence, beep, battery reads, BLE sensors, switchbot):
+python socket: everything in python, no external tools. Fastest + most reliable; needs python 3.5+,
+older rPis fall back to gatttool automatically.
+command-line tools: hcidump/lescan for scanning, hcitool/gatttool for connects - only for troubleshooting
+or ancient python2 rPis. Override per rPi: rpi device edit.</Label>
+	</Field>
+	<Field id="displayPadTarget"   type="menu"  tooltip="pixel width reserved for the status word before the date-time in the Status column (needs PyObjC/AppKit). Bigger moves the date column to the right">
+		<Label>Status column: width of status part in pixels:</Label>
+		<List>
+			<Option value="50">50 (smaller)</Option>
+			<Option value="60">60</Option>
+			<Option value="70">70</Option>
+			<Option value="80">80 (default)</Option>
+			<Option value="90">90</Option>
+			<Option value="100">100</Option>
+			<Option value="110">110</Option>
+			<Option value="120">120</Option>
+			<Option value="150">150 (wider)</Option>
 		</List>
 	</Field>
 
@@ -869,7 +892,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
    
 	<Field id="debugRPI"   type = "menu"   >
 		<Label>Debug...which RPI:</Label>
-    	<List class="self" filter="" method="filterPiC" dynamicReload="false"/>
+    	<List class="self" filter="" method="filterPiD" dynamicReload="false"/>
 	</Field>
 
 	<Field id="debugRPILabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">  
@@ -896,6 +919,7 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 	<Field    id="debugCAR"            type="checkbox"         > <Label>     ... (13) CAR type devices:</Label>  </Field>
 	<Field    id="debugPlotPositions"  type="checkbox"         > <Label>     ..  (15) beacon position plots:</Label>  </Field>
 	<Field    id="debugBatteryLevel"   type="checkbox"         > <Label>     ..  (16) battery level for iBeacons:</Label>  </Field>
+	<Field    id="debuglastRPI"        type="checkbox"         > <Label>     ..  (17) update state lastUpdateFromRPI (NOISY: ~ 1/4 of all writes; off = state shows "off, to enable turn debug on"):</Label>  </Field>
 	<Field    id="debugSQLlogger"      type="checkbox"         > <Label>     ..  (17) SQLlogger:</Label>  </Field>
 	<Field    id="debugSQLSuppresslog" type="checkbox"         > <Label>     ..  (18) SQL-Suppress-logger:</Label>  </Field>
 	<Field    id="debugBeep"           type="checkbox"         > <Label>     ..  (19) beacon Beep:</Label>  </Field>
@@ -906,11 +930,6 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
 	<Field    id="debugSpecial"        type="checkbox"         > <Label>     ... (S)  special debug (only for development):</Label>  </Field>
 	<Field    id="debugall"            type="checkbox"         > <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 
-	<Field id="infoLabel227" type="label"> <Label>DETAILED cpu-time tracking;  set indigo variable "enableTimeTracking_piBeacon"</Label>  </Field>
-
-	<Field    id="do_cProfile" type="textfield"   readonly="yes"     > 
-		<Label>... enable or stop or  print intermediate results use on/off/print:</Label>  
-	</Field>
 	<Field    id="cycleVariables" type="checkbox"         > <Label>recycle pibeacon variables to save sql logger db space:</Label>  </Field>
 
 

@@ -54,7 +54,7 @@ def formatNumber(data, distanceUnits):
 				dist0 = ("%8.2f"%(dist)).replace(" ","")
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return dist1, dist, dist0, ud
 
 
@@ -81,7 +81,7 @@ def startDisplay(outputType):
 		if displayPyPgm == "neopixel": displayPyPgm+="3"
 		subprocess.call("{} {}{}.py &".format(pythonCMD, G.homeDir, displayPyPgm) , shell=True )
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return 
 
 #################################
@@ -377,15 +377,15 @@ def displayDistance(dist, sensor, sensors, output, distanceUnits):
 			#U.logger.log(20," written out")
 		except:
 			try:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 				time.sleep(0.1)
 				f=open(outName,"a"); f.write(json.dumps(out)+"\n"); f.close()
 			except Exception as e:
-				U.logger.log(30,"", exc_info=True)
-				subprocess.call("rm "+outName, shell=True)
+				U.logger.log(20,"", exc_info=True)
+				U.removeFile(outName)
 		return 
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 	return

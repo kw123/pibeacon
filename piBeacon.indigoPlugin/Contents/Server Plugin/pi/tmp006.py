@@ -101,7 +101,7 @@ class TMP006:
 		"""
 		if samplerate not in (CFG_1SAMPLE, CFG_2SAMPLE, CFG_4SAMPLE, CFG_8SAMPLE, CFG_16SAMPLE):
 			raise ValueError('Unexpected samplerate value! Must be one of: CFG_1SAMPLE, CFG_2SAMPLE, CFG_4SAMPLE, CFG_8SAMPLE, or CFG_16SAMPLE')
-		U.logger.log(30,'Using samplerate value: {0:04X}'.format(samplerate))
+		U.logger.log(20,'Using samplerate value: {0:04X}'.format(samplerate))
 		# Set configuration register to turn on chip, enable data ready output,
 		# and start sampling at the specified rate.
 		config = TMP006_CFG_MODEON | TMP006_CFG_DRDYEN | samplerate
@@ -113,8 +113,8 @@ class TMP006:
 		# Check manufacturer and device ID match expected values.
 		mid = self.readU16BE(TMP006_MANID)
 		did = self.readU16BE(TMP006_DEVID)
-		U.logger.log(30,'Read manufacturer ID: {0:04X}'.format(mid))
-		U.logger.log(30,'Read device ID: {0:04X}'.format(did))
+		U.logger.log(20,'Read manufacturer ID: {0:04X}'.format(mid))
+		U.logger.log(20,'Read device ID: {0:04X}'.format(did))
 		return mid == 0x5449 and did == 0x0067
 
 
@@ -155,7 +155,7 @@ class TMP006:
 			Tdie = self.readRawDieTemperature()
 			return Tdie * 0.03125
 		except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 		return ""
 		
 	def getdata(self):
@@ -205,7 +205,7 @@ class TMP006:
 			Tobj = math.sqrt(math.sqrt(math.pow(Tdie, 4.0) + (fVobj/S)))
 			return Tobj - 273.15
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			return ""
 
 
@@ -375,7 +375,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 				
@@ -405,12 +405,12 @@ def readParams():
 
 				
 			if devId not in tmp006sensor:
-				U.logger.log(30,"==== Start {} ===== @ i2c= {}".format(G.program, i2cAddress))
+				U.logger.log(20,"==== Start {} ===== @ i2c= {}".format(G.program, i2cAddress))
 				i2cAdd = U.muxTCA9548A(sensors[sensor][devId])
 				tmp006sensor[devId] = TMP006(i2cAddress=i2cAdd)
 				tmp006sensor[devId].begin()
 				U.muxTCA9548Areset()
-				U.logger.log(30," started ")
+				U.logger.log(20," started ")
 				
 		deldevID={}		   
 		for devId in tmp006sensor:
@@ -423,7 +423,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -452,8 +452,8 @@ def getValues(devId):
 		return data
 	except Exception as e:
 		if badSensor >2 and badSensor < 5: 
-			U.logger.log(30,"", exc_info=True)
-			U.logger.log(30, "temp>>{}".format(temp)+"<<")
+			U.logger.log(20,"", exc_info=True)
+			U.logger.log(20, "temp>>{}".format(temp)+"<<")
 		badSensor+=1
 	if badSensor >3: 
 		U.muxTCA9548Areset()
@@ -533,7 +533,7 @@ while True:
 					sensorWasBad = True
 					data["sensors"][sensor][devId]["Current"]="badSensor"
 					if badSensor < 5: 
-						U.logger.log(30," bad sensor")
+						U.logger.log(20," bad sensor")
 						U.sendURL(data)
 					lastValue[devId] =-100.
 					continue
@@ -571,7 +571,7 @@ while True:
 			time.sleep(loopSleep)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

@@ -35,21 +35,36 @@ sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
+# TIME CRITICAL - keeps its own GPIO handling on purpose (bit-banged serial read from the encoder, one toggle per bit), so no shared layer
+# and no per-pin indirection.
+# RPi.GPIO FIRST: a register write is ~1-2 us, a gpiozero toggle goes through the pin factory.
+# The pigpio factory is OPTIONAL: without pigpiod, gpiozero keeps its OWN default factory (lgpio on
+# a pi5, rpigpio/native elsewhere) instead of this whole branch failing over. Forcing
+# PiGPIOFactory() was what made this unusable on newer hardware.
+# Nothing starts pigpiod here any more - master does that in startPigpiod(), before it launches any
+# program, so the backend no longer depends on where a program sits in the start order.
+# useGPIO and gpioOK are ALWAYS defined: useGPIO used to be left unset when both imports failed and
+# the program then died much later with "NameError: useGPIO" instead of naming what was missing.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
-	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
-	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
+	import RPi.GPIO as GPIO
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setwarnings(False)
+	useGPIO = True
+	gpioOK  = True
+except Exception:
 	try:
-		import RPi.GPIO as GPIO
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setwarnings(False)
-		useGPIO = True
-	except: pass
+		import gpiozero
+		from gpiozero import Device
+		try:
+			from gpiozero.pins.pigpio import PiGPIOFactory
+			Device.pin_factory = PiGPIOFactory()
+		except Exception:
+			pass
+		gpioOK = True
+	except Exception:
+		pass				# reported after U.setLogging(), no handlers yet here
 
 
 G.program = "INPUTRotarySwitchAbsolute"
@@ -84,7 +99,7 @@ def readParams():
 		restart = False
 			
 		if G.program  not in sensors:
-			U.logger.log(30,"{} not in sensors, exit ".format(G.program))
+			U.logger.log(20,"{} not in sensors, exit ".format(G.program))
 			exit()
 
 
@@ -180,7 +195,7 @@ def getINPUTgpio(devId):
 			elif INPUTS[devId]["codeType"].find("bourns8Bit")>-1:	value = burnsTableToInt(value)
 
 	except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 	return {"INPUT":value}
 
 
@@ -335,8 +350,8 @@ def startGPIOzero(devId):
 				GPIOZERO[devId]["pinO"][n] = gpiozero.LED(INPUTS[devId]["pinO"][n], initial_value=True) 
 		return
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,"start {}  {}".format(G.program, sensors))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"start {}  {}".format(G.program, sensors))
 	return
 
 def startGPIO(devId):
@@ -358,8 +373,8 @@ def startGPIO(devId):
 				GPIO.output(INPUTS[devId]["pinO"][n], 1)
 		return
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,"start {}  {}".format(G.program, sensors))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"start {}  {}".format(G.program, sensors))
 	return
 
 
@@ -400,6 +415,8 @@ def execMain():
 	###################### constants #################
 	
 	U.setLogging()
+
+	if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi - the encoder cannot be read; install rpi-lgpio on a pi5")
 	
 	myPID		= str(os.getpid())
 	U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
@@ -417,7 +434,7 @@ def execMain():
 	
 
 	if U.getIPNumber() > 0:
-		U.logger.log(30," sensors no ip number  exiting ")
+		U.logger.log(20," sensors no ip number  exiting ")
 		time.sleep(10)
 		exit()
 	
@@ -458,7 +475,7 @@ def execMain():
 			loopCount+=1
 			time.sleep(shortWait)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 	
 	try: 	G.sendThread["run"] = False; time.sleep(1)

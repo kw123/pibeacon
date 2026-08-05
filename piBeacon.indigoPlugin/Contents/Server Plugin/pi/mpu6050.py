@@ -178,7 +178,7 @@ class THESENSORCLASS:
 		elif accel_range == self.ACCEL_RANGE_16G:
 			accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_16G
 		else:
-			U.logger.log(30,"Unkown range - accel_scale_modifier set to self.ACCEL_SCALE_MODIFIER_2G")
+			U.logger.log(20,"Unkown range - accel_scale_modifier set to self.ACCEL_SCALE_MODIFIER_2G")
 			accel_scale_modifier = self.ACCEL_SCALE_MODIFIER_2G
 
 		x = x / accel_scale_modifier
@@ -248,7 +248,7 @@ class THESENSORCLASS:
 		elif gyro_range == self.GYRO_RANGE_2000DEG:
 			gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_2000DEG
 		else:
-			U.logger.log(30,"Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
+			U.logger.log(20,"Unkown range - gyro_scale_modifier set to self.GYRO_SCALE_MODIFIER_250DEG")
 			gyro_scale_modifier = self.GYRO_SCALE_MODIFIER_250DEG
 
 		x = (x / gyro_scale_modifier)
@@ -296,7 +296,7 @@ def readParams():
 
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program )
 			exit()
 			
 		for devId in sensors[sensor]:
@@ -316,7 +316,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 #################################
 def startSENSOR(devId, i2cAddress):
@@ -330,10 +330,10 @@ def startSENSOR(devId, i2cAddress):
 	"""
 	global theSENSORdict
 	try:
-		U.logger.log(30,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
+		U.logger.log(20,"==== Start "+G.program+" ===== @ i2c= {}".format(i2cAddress)+"	devId={}".format(devId))
 		theSENSORdict[devId] = THESENSORCLASS(i2cAddress=i2cAddress)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 
@@ -357,7 +357,7 @@ def getValues(devId):
 			U.logger.log(10, (xx).ljust(7)+" {}".format(data[xx]))
 		return data
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 	return {"ACC":"bad"}
 
 def fillWithItems(theList,theItems,digits):
@@ -431,10 +431,10 @@ while True:
 		loopCount +=1
 		quick = U.checkNowFile(G.program)				 
 		if U.checkNewCalibration(G.program):
-			U.logger.log(30, "starting new calibration in 5 sec for 1 minute.. move sensor around")
+			U.logger.log(20, "starting new calibration in 5 sec for 1 minute.. move sensor around")
 			time.sleep(5)
 			theSENSORdict[devId].calibrate(force=True,calibTime=60)
-			U.logger.log(30, "finished	new calibration")
+			U.logger.log(20, "finished	new calibration")
 			
 		U.echoLastAlive(G.program)
 
@@ -446,7 +446,7 @@ while True:
 			time.sleep(G.sensorLoopWait)
 		
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 try: 	G.sendThread["run"] = False; time.sleep(1)
 except: pass

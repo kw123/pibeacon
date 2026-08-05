@@ -66,10 +66,10 @@ def startMySensors(parameter):
             # do your init here
 
             ## add any init code here for address # addr
-            U.logger.log(30, "starting my sensors {}".format(parameter) )
+            U.logger.log(20, "starting my sensors {}".format(parameter) )
         except  Exception as e:
             U.logger.log(20,"", exc_info=True)
-            U.logger.log(30, "channel used: {}".format(parameter) )
+            U.logger.log(20, "channel used: {}".format(parameter) )
 
 def getMySensors(parameter):
         """Template/example sensor read hook that returns a list of dummy data values (based on the current time) to be sent back to getsensorvalues; intended to be replaced with real sensor reading code.

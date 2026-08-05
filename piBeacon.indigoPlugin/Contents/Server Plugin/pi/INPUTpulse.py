@@ -12,22 +12,35 @@
 import	sys, os, subprocess, copy
 import	time,datetime
 import	json
-useGPIO = False
+# TIME CRITICAL - keeps its own GPIO handling on purpose: this COUNTS edges, and a missed one is a
+# permanently wrong reading. No shared layer, no per-pin indirection.
+# RPi.GPIO FIRST, deliberately - the opposite of the order this used to have. Its add_event_detect
+# runs the edge callback from the library's own thread on a memory-mapped register, while every
+# gpiozero edge goes through the pin factory, which on the pigpio factory means a socket round trip
+# per event; under a fast pulse train that is where counts get lost. gpiozero stays as the last
+# resort for a board where RPi.GPIO does not exist (on a pi5 the rpi-lgpio shim provides it).
+# useGPIO and gpioOK are ALWAYS defined: useGPIO used to be left unset when both imports failed and
+# the program then died much later with "NameError: useGPIO" instead of naming what was missing.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
-	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
-	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
+	import RPi.GPIO as GPIO
+	GPIO.setmode(GPIO.BCM)
+	GPIO.setwarnings(False)
+	useGPIO = True
+	gpioOK  = True
+except Exception:
 	try:
-		import RPi.GPIO as GPIO
-		GPIO.setmode(GPIO.BCM)
-		GPIO.setwarnings(False)
-		useGPIO = True
-	except: pass
+		import gpiozero
+		from gpiozero import Device
+		try:
+			from gpiozero.pins.pigpio import PiGPIOFactory
+			Device.pin_factory = PiGPIOFactory()
+		except Exception:
+			pass			# no pigpiod: gpiozero picks its own factory
+		gpioOK = True
+	except Exception:
+		pass				# reported after U.setLogging(), no handlers yet here
 
 sys.path.append(os.getcwd())
 import	piBeaconUtils	as U
@@ -294,7 +307,7 @@ def readParams():
 		#print coincidence
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 				
 
  
@@ -513,6 +526,8 @@ def execMain():
 
 	U.setLogging()
 
+	if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi (neither RPi.GPIO nor gpiozero) - pulses cannot be counted; install rpi-lgpio on a pi5")
+	elif not useGPIO:	U.logger.log(20, "counting pulses through gpiozero - RPi.GPIO was not available. Edge events go through the pin factory, fast pulse trains may lose counts")
 
 
 	myPID		= str(os.getpid())
@@ -522,7 +537,7 @@ def execMain():
 	sensors			  ={}
 	loopCount		  = 0
 
-	U.logger.log(30, "starting "+G.program+" program")
+	U.logger.log(20, "starting "+G.program+" program")
 
 	INPUTcount = U.readINPUTcount()
 	U.logger.log(20, " INPUTcount:{}".format(INPUTcount) )
@@ -536,7 +551,7 @@ def execMain():
 
 
 	if U.getIPNumber() > 0:
-		U.logger.log(30," sensors no ip number  exiting ")
+		U.logger.log(20," sensors no ip number  exiting ")
 		time.sleep(10)
 		exit()
 
@@ -606,7 +621,7 @@ def execMain():
 			loopCount+=1
 			time.sleep(shortWait)
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 
 execMain()

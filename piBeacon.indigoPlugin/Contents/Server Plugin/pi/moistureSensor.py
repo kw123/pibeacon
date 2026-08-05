@@ -47,7 +47,7 @@ class MoistureChirp:
 
 			time.sleep(1)
 		except Exception as e:
-			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 		return 
 
 	def getVersion(self): 
@@ -80,7 +80,7 @@ class MoistureChirp:
 						retData["temp"] =  ((ret & 0xFF) << 8) + (ret >> 8)
 						break 
 		except Exception as e:
-			U.logger.log(30, "in Line {} has error={} temp ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "in Line {} has error={} temp ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		try:
 			if moisture:
@@ -91,7 +91,7 @@ class MoistureChirp:
 						retData["moisture"] = ((ret & 0xFF) << 8) + (ret >> 8) 
 						break 
 		except Exception as e:
-			U.logger.log(30, "in Line {} has error={} moisture ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "in Line {} has error={} moisture ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		try:
 			if Illuminance:
@@ -108,7 +108,7 @@ class MoistureChirp:
 					time.sleep(1)
 				retData["Illuminance"] = il 
 		except Exception as e:
-			U.logger.log(30, "in Line {} has error={} Illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "in Line {} has error={} Illuminance ".format(sys.exc_info()[-1].tb_lineno, e))
 
 		return retData
 # ===========================================================================
@@ -152,7 +152,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
+			U.logger.log(20, "{} is not in parameters = not enabled, stopping {}.py".format(G.program,G.program) )
 			exit()
 			
 
@@ -194,7 +194,7 @@ def readParams():
 
 				
 			if devId not in SENSOR or  restart:
-				U.logger.log(30," new parameters read: i2cAddress:{}; minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}, sensorMode:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs, sensorMode[devId]) )
+				U.logger.log(20," new parameters read: i2cAddress:{}; minSendDelta:{};  deltaX:{}; sensorRefreshSecs:{}, sensorMode:{}".format(i2cAddress, minSendDelta, deltaX[devId], sensorRefreshSecs, sensorMode[devId]) )
 				startSensor(devId, i2cAddress)
 				if SENSOR[devId] =="":
 					return
@@ -211,8 +211,8 @@ def readParams():
 
 
 	except Exception as e:
-		U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
-		U.logger.log(30, "{}".format(sensors[sensor]))
+		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(20, "{}".format(sensors[sensor]))
 		
 
 
@@ -249,10 +249,10 @@ def startSensor(devId,i2cAddress):
 			elif sensorMode[devId].find("chirp") >-1:
 				SENSOR[devId] = MoistureChirp(address=i2cAddress)
 				v = SENSOR[devId].getVersion()
-				U.logger.log(30, "started chirp sensor, version={}".format(v) )
+				U.logger.log(20, "started chirp sensor, version={}".format(v) )
 	
 		except Exception as e:
-			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			SENSOR[devId] = ""
 			U.muxTCA9548Areset()
 			return
@@ -327,7 +327,7 @@ def getValues(devId):
 		badSensor = 0
 		return data
 	except Exception as e:
-		U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+		U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 	badSensor += 1
 	if badSensor > 5: return "badSensor"
 	return ""
@@ -415,7 +415,7 @@ def execMoistureSensor():
 						sensorWasBad = True
 						data["sensors"][sensor][devId]="badSensor"
 						if badSensor < 5: 
-							U.logger.log(30," bad sensor")
+							U.logger.log(20," bad sensor")
 							U.sendURL(data)
 						else:
 							U.restartMyself(param="", reason="badsensor",doPrint=True,python3=True)
@@ -458,7 +458,7 @@ def execMoistureSensor():
 			lastMeasurement = time.time()
 
 		except Exception as e:
-			U.logger.log(30, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
+			U.logger.log(20, "in Line {} has error={}".format(sys.exc_info()[-1].tb_lineno, e))
 			time.sleep(5.)
 
 

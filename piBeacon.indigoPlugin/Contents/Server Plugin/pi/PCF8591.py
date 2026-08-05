@@ -61,7 +61,7 @@ def getValues(devId):
 		#U.logger.log(20, u"devID {} v={}".format(devId, v))
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		data= ""
 		U.muxTCA9548Areset()
 	return data
@@ -84,7 +84,7 @@ def startSensor(devId):
 			SENSOR[devId]=smbus.SMBus(1)
 			U.muxTCA9548Areset()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		U.muxTCA9548Areset()
 	return 
 		
@@ -134,7 +134,7 @@ def readParams():
 		
  
 		if sensor not in sensors:
-			U.logger.log(30, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
+			U.logger.log(20, G.program+" is not in parameters = not enabled, stopping "+G.program+".py" )
 			exit()
 			
 		try: sensorRefreshSecs	= float(G.sensorRefreshSecs)
@@ -161,9 +161,9 @@ def readParams():
 			try:	input[devId] = (sensors[sensor][devId]["input"])
 			except:	input[devId] = "0"
 
-			U.logger.log(30,"==== Start "+G.program+" ===== @ i2c:{};inputC:{};  deltaX:{}".format(i2cAddress, input[devId], deltaX[devId]))
+			U.logger.log(20,"==== Start "+G.program+" ===== @ i2c:{};inputC:{};  deltaX:{}".format(i2cAddress, input[devId], deltaX[devId]))
 			startSensor(devId)
-		U.logger.log(30,"==== Start "+G.program+" ===== @ sendToIndigoEvery:{};minSendDelta:{};  sensorRefreshSecs:{}".format(sendToIndigoEvery, minSendDelta, sensorRefreshSecs))
+		U.logger.log(20,"==== Start "+G.program+" ===== @ sendToIndigoEvery:{};minSendDelta:{};  sensorRefreshSecs:{}".format(sendToIndigoEvery, minSendDelta, sensorRefreshSecs))
 				
 		deldevID={}		   
 		for devId in SENSOR:
@@ -176,7 +176,7 @@ def readParams():
 			pass
 
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 ###############################
 #################################
@@ -232,7 +232,7 @@ def execPCF():
 	NSleep= int(sensorRefreshSecs)
 	if G.networkType  in G.useNetwork and U.getNetwork() == "off": 
 		if U.getIPNumber() > 0:
-			U.logger.log(30,"no ip number working, giving up")
+			U.logger.log(20,"no ip number working, giving up")
 			time.sleep(10)
 
 	eth0IP, wifi0IP, G.eth0Enabled,G.wifiEnabled = U.getIPCONFIG()
@@ -262,7 +262,7 @@ def execPCF():
 						sensorWasBad = True
 						data["sensors"][sensor][devId]["INPUT"] = "badSensor"
 						if badSensor > 5: 
-							U.logger.log(30," bad sensor")
+							U.logger.log(20," bad sensor")
 							U.sendURL(data)
 						lastData[devId] =-100.
 						continue
@@ -296,7 +296,7 @@ def execPCF():
 			if not quick:
 				time.sleep(max (0,time.time() - lastMeasurement + sensorRefreshSecs) )
 		except Exception as e:
-			U.logger.log(30,"", exc_info=True)
+			U.logger.log(20,"", exc_info=True)
 			time.sleep(5.)
 execPCF()
 try: 	G.sendThread["run"] = False; time.sleep(1)

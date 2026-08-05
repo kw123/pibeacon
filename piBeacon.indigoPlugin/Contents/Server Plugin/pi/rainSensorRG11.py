@@ -12,7 +12,19 @@
 import	sys, os, subprocess, copy
 import	time,datetime
 import	json
-import	RPi.GPIO as GPIO  
+# TIME CRITICAL - keeps its own GPIO handling on purpose: this counts rain-bucket edges through
+# GPIO.add_event_detect, so it must not go through a shared layer.
+# The import is guarded: it used to be bare, so on a box without RPi.GPIO - a pi5, where RPi.GPIO
+# does not run and rpi-lgpio is needed instead - the whole program died at import with a traceback
+# and no explanation. gpioOK says whether pulses can be counted at all.
+gpioOK = False
+try:
+	import	RPi.GPIO as GPIO
+	GPIO.setmode(GPIO.BCM)			# inside the guard - this used to run unguarded further down and
+	GPIO.setwarnings(False)			# would raise NameError once the import was protected
+	gpioOK = True
+except Exception:
+	pass							# reported after U.setLogging(), the logger has no handlers yet here
 import  smbus
 
 sys.path.append(os.getcwd())
@@ -20,7 +32,6 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
 G.program = "rainSensorRG11"
-GPIO.setmode(GPIO.BCM)
 
 
 def readParams():
@@ -56,7 +67,7 @@ def readParams():
 
 
 		if sensor not in sensors:
-			U.logger.log(30,	"no "+ G.program+" sensor defined, exiting")
+			U.logger.log(20,	"no "+ G.program+" sensor defined, exiting")
 			exit()
 
 		sens= sensors[sensor]
@@ -77,7 +88,7 @@ def readParams():
 
 			if gpioIn != -1 and gpioIn != int(sss["gpioIn"]):
 				restart = True
-				U.logger.log(30,	"gpios channel changed, need to restart")
+				U.logger.log(20,	"gpios channel changed, need to restart")
 				U.restartMyself(param="", reason=" new gpioIn")
 				return 
 
@@ -141,7 +152,7 @@ def readParams():
 
 			
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 				
 
 def setupSensors():
@@ -153,16 +164,16 @@ def setupSensors():
 		Outputs:
 		    bool: True if both modules loaded, False on modprobe error
 		"""
-		U.logger.log(30, "starting setup GPIOs ")
+		U.logger.log(20, "starting setup GPIOs ")
 
 		ret=subprocess.Popen("modprobe w1-gpio" ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
+			U.logger.log(20, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		ret=subprocess.Popen("modprobe w1_therm",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
 		if len(ret[1]) > 0:
-			U.logger.log(30, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
+			U.logger.log(20, "starting GPIO: return error "+ ret[0]+"\n"+ret[1])
 			return False
 
 		return True
@@ -515,10 +526,10 @@ def checkIfRelayON():
 			if cyclePower:
 				if sensorMode == "checkIfIsRaining":
 					if time.time()- eventStartedList[nEvenstStarted-1] < maxONTime: return 
-					U.logger.log(30, "resetting device in \"check if raining mode\", signal relay is ON for > {}".format(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" )
+					U.logger.log(20, "resetting device in \"check if raining mode\", signal relay is ON for > {}".format(maxONTime)+"secs: %d"%( time.time()- eventStartedList[0])+"	to enable to detect new rain" )
 				else:
 					if time.time()- eventStartedList[nEvenstStarted-1] < 5: return 
-					U.logger.log(30, "hanging? resetting device, signal relay is on for > {}".format(maxONTime)+"secs: {}".format( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] )
+					U.logger.log(20, "hanging? resetting device, signal relay is on for > {}".format(maxONTime)+"secs: {}".format( time.time()- eventStartedList[0])+"	 current Status"+status["currentMode"] )
 					powerCyleRelay()
 				eventStartedList= [time.time()-(7+5*(nEvenstStarted-ii)) for ii in range(nEvenstStarted-1)]+[eventStartedList[nEvenstStarted-1]]
 			else:
@@ -532,7 +543,7 @@ def checkIfRelayON():
 					sendShortStatus(rainMsg["medSensitive"])
 					#eventStartedList = time.time()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 			
@@ -561,7 +572,7 @@ def checkIfMSGtoBeSend(force =False):
 		U.writeRainStatus(status)
 		lastCalcCheck = time.time()
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 
 
 def sendShortStatus(level):
@@ -820,6 +831,8 @@ newGPIOStatus			 = 0
 
 U.setLogging()
 
+if not gpioOK:	U.logger.log(20, "no RPi.GPIO on this rpi - rain pulses cannot be counted (install rpi-lgpio on a pi5)")
+
 myPID		= str(os.getpid())
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
 
@@ -830,11 +843,11 @@ if False:
 	for i in range(100):
 		if not setupSensors(): 
 			time.sleep(10)
-			if i%50==0: U.logger.log(30,"sensor libs not installed, need to wait until done")
+			if i%50==0: U.logger.log(20,"sensor libs not installed, need to wait until done")
 		else:
 			break	 
 if U.getIPNumber() > 0:
-	U.logger.log(30," sensors no ip number  exiting ")
+	U.logger.log(20," sensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -842,7 +855,7 @@ sensor			  = G.program
 sensors			  ={}
 loopCount		  = 0
 
-U.logger.log(30, "starting "+G.program+" program")
+U.logger.log(20, "starting "+G.program+" program")
 
 ret = U.readRainStatus()
 if ret != {}: status = ret
@@ -903,7 +916,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)

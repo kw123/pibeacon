@@ -64,18 +64,26 @@ def execUpdate():
 	U.logger.log(20, "starting w osV:{}".format(osV))
 	if not os.path.isfile("{}setStartupParams.done".format(homeDir)):
 		
-		actions = ["/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_behaviour B2",
-#				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_wait 1",
-				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_i2c 0",
-				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_leds 0",
-				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_boot_splash 1",
-				  "/usr/bin/sudo /usr/bin/raspi-config nonint do_expand_rootfs"]
-	
-		for action in actions:
-			U.logger.log(20, "doing:{}:".format(action))
-			ret = readPopen(action)
-			U.logger.log(20, "response:{}".format(ret))
-		readPopen("echo finished > {}setStartupParams.done".format(homeDir))
+		# one sudo/bash for the whole set instead of one per line: each of these forks a shell,
+		# sudo and the ~2000-line raspi-config script. The commands themselves are unchanged.
+		actions = [["do_boot_behaviour B2",	"/usr/bin/raspi-config nonint do_boot_behaviour B2"],
+#				   ["do_boot_wait 1",		"/usr/bin/raspi-config nonint do_boot_wait 1"],
+				   ["do_i2c 0",				"/usr/bin/raspi-config nonint do_i2c 0"],
+				   ["do_leds 0",			"/usr/bin/raspi-config nonint do_leds 0"],
+				   ["do_boot_splash 1",		"/usr/bin/raspi-config nonint do_boot_splash 1"],
+				   ["do_expand_rootfs",		"/usr/bin/raspi-config nonint do_expand_rootfs"]]
+
+		res = U.runShellBatch(actions)
+		for name, action in actions:
+			if name in res:
+				out, err, rc = res[name][0], res[name][1], res[name][2]
+				U.logger.log(20, "raspi-config {:22s} rc:{}  out:{}  err:{}".format(name, rc, out, err))
+			else:
+				# batch did not answer (no bash? mktemp failed?) - do this one the old way
+				U.logger.log(20, "doing:{}:".format(action))
+				ret = readPopen("/usr/bin/sudo " + action)
+				U.logger.log(20, "response:{}".format(ret))
+		U.doWriteSimpleFile("{}setStartupParams.done".format(homeDir), "finished")
 		U.logger.log(20, "finished w setting startup params, need to wait for other installs to finish")
 		time.sleep(30)
 		for ii in range(200):

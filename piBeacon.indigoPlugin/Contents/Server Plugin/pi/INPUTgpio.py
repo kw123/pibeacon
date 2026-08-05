@@ -14,21 +14,36 @@ import	sys, os, subprocess, copy
 import	time,datetime
 import	json
 useGPIO = False
+# TIME CRITICAL - keeps its own GPIO handling on purpose (reads input levels and arms edge callbacks itself), so no shared layer
+# and no per-pin indirection.
+# gpiozero first, as before - the reads here are not in a tight loop.
+# The pigpio factory is OPTIONAL: without pigpiod, gpiozero keeps its OWN default factory (lgpio on
+# a pi5, rpigpio/native elsewhere) instead of this whole branch failing over. Forcing
+# PiGPIOFactory() was what made this unusable on newer hardware.
+# Nothing starts pigpiod here any more - master does that in startPigpiod(), before it launches any
+# program, so the backend no longer depends on where a program sits in the start order.
+# useGPIO and gpioOK are ALWAYS defined: useGPIO used to be left unset when both imports failed and
+# the program then died much later with "NameError: useGPIO" instead of naming what was missing.
+useGPIO = False			# True = talk to RPi.GPIO directly
+gpioOK  = False
 try:
-	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
 	import gpiozero
-	from gpiozero.pins.pigpio import PiGPIOFactory
 	from gpiozero import Device
-	Device.pin_factory = PiGPIOFactory()
-	useGPIO = False
-except:
+	try:
+		from gpiozero.pins.pigpio import PiGPIOFactory
+		Device.pin_factory = PiGPIOFactory()
+	except Exception:
+		pass
+	gpioOK = True
+except Exception:
 	try:
 		import RPi.GPIO as GPIO
 		GPIO.setmode(GPIO.BCM)
 		GPIO.setwarnings(False)
 		useGPIO = True
-	except: pass
+		gpioOK  = True
+	except Exception:
+		pass				# reported after U.setLogging(), no handlers yet here
 
 
 sys.path.append(os.getcwd())
@@ -72,7 +87,7 @@ def readParams():
 			sList+=sensor
 			
 		if "INPUTgpio" not in sList:
-			U.logger.log(30,"INPUTgpio not in sensorlist") 
+			U.logger.log(20,"INPUTgpio not in sensorlist") 
 			exit()
 		else:
 			if oldSensors != {}: # this is {}  at startup.. dont do anything 
@@ -84,12 +99,12 @@ def readParams():
 						for devId in sensors[sensor]:
 							if devId  not in oldSensors[sensor]:
 								restart=True
-								U.logger.log(30, "new sensor def:{}".format( sensors[sensor][devId]["INPUTS"])	)
+								U.logger.log(20, "new sensor def:{}".format( sensors[sensor][devId]["INPUTS"])	)
 								break
 							if sensors[sensor][devId]["INPUTS"] != oldSensors[sensor][devId]["INPUTS"]:
 								restart=True
-								U.logger.log(30, "new sensor def:{}".format( sensors[sensor][devId]["INPUTS"])	 )
-								U.logger.log(30, "old sensor def:{}".format(oldSensors[sensor][devId]["INPUTS"]) )
+								U.logger.log(20, "new sensor def:{}".format( sensors[sensor][devId]["INPUTS"])	 )
+								U.logger.log(20, "old sensor def:{}".format(oldSensors[sensor][devId]["INPUTS"]) )
 								break
 					if restart: break
 				
@@ -170,7 +185,7 @@ def getINPUTgpio(all, sens):
 					INPUTlastvalue[str(gpioPIN)] = dd
 					#U.logger.log(20, u" d{}, new:{}".format(d, new))
 		except Exception as e:
-				U.logger.log(30,"", exc_info=True)
+				U.logger.log(20,"", exc_info=True)
 		return d,new
 
 
@@ -222,8 +237,8 @@ def startGPIO():
 							GPIOZERO[gpioPIN] = gpiozero.Button(gpioPIN, pull_up=None, active_state=True) 
 		return
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
-		U.logger.log(30,"startGPIO: {}".format(sensors))
+		U.logger.log(20,"", exc_info=True)
+		U.logger.log(20,"startGPIO: {}".format(sensors))
 	return
 
 
@@ -254,6 +269,8 @@ INPUTcount		  = {}
 myPID		= str(os.getpid())
 U.setLogging()
 
+if not gpioOK:	U.logger.log(20, "no GPIO backend on this rpi - input pins cannot be read; install rpi-lgpio on a pi5")
+
 U.killOldPgm(myPID,G.program+".py")# old old instances of myself if they are still running
 
 sensor			  = G.program
@@ -282,7 +299,7 @@ lastData		= {}
 #print "shortWait",shortWait	 
 
 if U.getIPNumber() > 0:
-	U.logger.log(30," sensors no ip number  exiting ")
+	U.logger.log(20," sensors no ip number  exiting ")
 	time.sleep(10)
 	exit()
 
@@ -342,7 +359,7 @@ while True:
 		loopCount+=1
 		time.sleep(shortWait)
 	except Exception as e:
-		U.logger.log(30,"", exc_info=True)
+		U.logger.log(20,"", exc_info=True)
 		time.sleep(5.)
 
 try: 	G.sendThread["run"] = False; time.sleep(1)
