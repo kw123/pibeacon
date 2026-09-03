@@ -2343,7 +2343,7 @@ def doSwitchBot():
 	# jData= {"mac":mac#,"onOff":"0/1","statusRequest":True}
 	if  switchbotQueue.empty(): 
 		switchbotActive	= ""
-		U.logger.log(20," empty:{}")
+		U.logger.log(20,"switchbot queue is empty, nothing to do")
 		return 
 
 	retryCount, jData = switchbotQueue.get()

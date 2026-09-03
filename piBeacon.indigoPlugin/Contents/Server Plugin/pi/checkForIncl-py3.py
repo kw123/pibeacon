@@ -169,7 +169,11 @@ def execInstall():
 	Outputs:
 	    None: Runs shell/apt/pip install commands, imports test modules, logs progress, and writes the includepy3.done marker file
 	"""
-	notSupported = ["GPIO"]			# "DHT" dropped: the legacy Adafruit_DHT install it disabled is gone
+	# "DHT" dropped: the legacy Adafruit_DHT install it disabled is gone.
+	# "GPIO" dropped, "wiringPi" put in its place: "GPIO" gated TWO blocks - the dead wiringPi
+	# download AND the RPi.GPIO/rpi-lgpio check - so switching off the first switched off the
+	# second. They have separate keys now and only wiringPi stays off.
+	notSupported = ["wiringPi"]
 	v = checkIfOSlt9() 
 
 	if v < 9:
@@ -197,7 +201,13 @@ def execInstall():
 		ret = readPopen("sudo apt-get autoremove -y")
 
 
-	if "GPIO" not in notSupported:
+	# gated on "wiringPi", NOT on "GPIO", which is what disabled it before. wiringPi was deprecated
+	# in 2019, is gone from raspberry pi os, and project-downloads.drogon.net no longer exists, so
+	# this can only fail - it stays switched off. It had to get its own key though: sharing "GPIO"
+	# with the block below meant the RPi.GPIO check was switched off as collateral and had not run
+	# for a long time. That went unnoticed because raspberry pi os preinstalls python3-rpi.gpio -
+	# which a Lite image does not, and which is the wrong package on a pi5.
+	if "wiringPi" not in notSupported:
 		ret = readPopen("gpio -v",doPrint=False)
 		if ret[0].find("version:") == -1:
 			shutil.rmtree("/tmp/wiringPi", ignore_errors=True)		# no piBeaconUtils in this installer script

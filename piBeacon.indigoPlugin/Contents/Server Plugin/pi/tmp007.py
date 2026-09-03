@@ -281,10 +281,6 @@ class TMP007:
 		endian byte order."""
 		return self.readS16(register, little_endian=True)
 
-	def readS16BE(self, register):
-		"""Read a signed 16-bit value from the specified register, in big
-		endian byte order."""
-		return self.readS16(register, little_endian=False)
 
 
 

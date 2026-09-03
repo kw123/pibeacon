@@ -4133,4 +4133,152 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 		<CallbackMethod>restartPluginCALLBACKaction</CallbackMethod>
     </Action>
 
+	<Action id="setIRacAll" deviceFilter="self.OUTPUTthermostatIRac">
+		<Name>IR-AC: set everything (mode, temperature, fan, louvers)</Name>
+		<CallbackMethod>setIRacAllCALLBACKaction</CallbackMethod>
+		<ConfigUI>
+			<Field id="labelAll" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>One action for a complete state - what a schedule or a trigger usually wants.
+The other IR-AC actions each change ONE setting and resend; this sets them all at
+once, which is closer to what a real remote press does.
+
+Every list follows the selected device's brand. Leave a field at "no change" to
+keep whatever the device already has.</Label>
+			</Field>
+			<Field id="acMode" type="menu" defaultValue="nochange">
+				<Label>mode:</Label>
+				<List class="self" method="filterIRacModeListPlus" dynamicReload="true"/>
+			</Field>
+			<Field id="acTemp" type="menu" defaultValue="nochange">
+				<Label>temperature:</Label>
+				<List class="self" method="filterIRacTempListPlus" dynamicReload="true"/>
+			</Field>
+			<Field id="acFanSpeed" type="menu" defaultValue="nochange">
+				<Label>fan speed:</Label>
+				<List class="self" method="filterIRacFanListPlus" dynamicReload="true"/>
+			</Field>
+			<Field id="acSwingV" type="menu" defaultValue="nochange">
+				<Label>vertical louver (up/down):</Label>
+				<List>
+					<Option value="nochange"  >no change</Option>
+					<Option value="last"      >leave as is</Option>
+					<Option value="auto"      >swing up and down</Option>
+					<Option value="up"        >fixed - up</Option>
+					<Option value="middleUp"  >fixed - middle up</Option>
+					<Option value="middle"    >fixed - middle</Option>
+					<Option value="middleDown">fixed - middle down</Option>
+					<Option value="down"      >fixed - down</Option>
+				</List>
+			</Field>
+			<Field id="acSwingH" type="menu" defaultValue="nochange">
+				<Label>horizontal louver (left/right):</Label>
+				<List>
+					<Option value="nochange" >no change</Option>
+					<Option value="off"      >leave as is</Option>
+					<Option value="auto"     >swing left and right</Option>
+					<Option value="maxLeft"  >fixed - far left (facing the ac)</Option>
+					<Option value="left"     >fixed - left (facing the ac)</Option>
+					<Option value="middle"   >fixed - middle</Option>
+					<Option value="right"    >fixed - right (facing the ac)</Option>
+					<Option value="maxRight" >fixed - far right (facing the ac)</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<Action id="setIRacFan" deviceFilter="self.OUTPUTthermostatIRac">
+		<Name>IR-AC: set fan speed</Name>
+		<CallbackMethod>setIRacFanCALLBACKaction</CallbackMethod>
+		<ConfigUI>
+			<Field id="labelFan" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>Indigo's own thermostat control only knows fan "auto" and "always on" - nothing
+in between. This sets the AC's real fan speed, and the list is the speeds the
+selected device's brand has: toshiba 1..5, gree silent/1/2/3/4 plus "full".
+
+On a gree, "full" is not a fan position at all - it is the remote's turbo button,
+so choosing it sends the top speed with turbo set. The gree fan field in the frame
+only holds two bits and saturates at 3; the real position rides in a later message
+of the sequence, which is why the speeds above 3 are reachable at all.
+
+The whole state is resent either way, because one IR frame carries mode,
+temperature and fan together.</Label>
+			</Field>
+			<Field id="acFanSpeed" type="menu" defaultValue="auto">
+				<Label>fan speed:</Label>
+				<List class="self" method="filterIRacFanList" dynamicReload="true"/>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<Action id="setIRacMode" deviceFilter="self.OUTPUTthermostatIRac">
+		<Name>IR-AC: set mode</Name>
+		<CallbackMethod>setIRacModeCALLBACKaction</CallbackMethod>
+		<ConfigUI>
+			<Field id="labelMode" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>The modes indigo's thermostat has are heat / cool / auto / off. An AC has more -
+dry and fan-only - and this sets those. The list is the modes the selected
+device's brand has.</Label>
+			</Field>
+			<Field id="acMode" type="menu" defaultValue="cool">
+				<Label>mode:</Label>
+				<List class="self" method="filterIRacModeList" dynamicReload="true"/>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<Action id="setIRacSwing" deviceFilter="self.OUTPUTthermostatIRac">
+		<Name>IR-AC: set louvers (swing)</Name>
+		<CallbackMethod>setIRacSwingCALLBACKaction</CallbackMethod>
+		<ConfigUI>
+			<Field id="labelSwing" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>Gree carries the louver positions inside every frame, so this is sent with the
+whole state. "leave as is" keeps whatever the unit is doing.
+Toshiba has no louver field - it uses separate swing/fix commands - so this
+action does nothing on a toshiba device.</Label>
+			</Field>
+			<Field id="acSwingV" type="menu" defaultValue="last">
+				<Label>vertical louver (up/down):</Label>
+				<List>
+					<Option value="last"      >leave as is</Option>
+					<Option value="auto"      >swing up and down</Option>
+					<Option value="up"        >fixed - up</Option>
+					<Option value="middleUp"  >fixed - middle up</Option>
+					<Option value="middle"    >fixed - middle</Option>
+					<Option value="middleDown">fixed - middle down</Option>
+					<Option value="down"      >fixed - down</Option>
+				</List>
+			</Field>
+			<Field id="acSwingH" type="menu" defaultValue="off">
+				<Label>horizontal louver (left/right):</Label>
+				<List>
+					<Option value="off"      >leave as is</Option>
+					<Option value="auto"     >swing left and right</Option>
+					<Option value="maxLeft"  >fixed - far left (facing the ac)</Option>
+					<Option value="left"     >fixed - left (facing the ac)</Option>
+					<Option value="middle"   >fixed - middle</Option>
+					<Option value="right"    >fixed - right (facing the ac)</Option>
+					<Option value="maxRight" >fixed - far right (facing the ac)</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+	</Action>
+
+	<Action id="setIRacOptions" deviceFilter="self.OUTPUTthermostatIRac">
+		<Name>IR-AC: set sleep / health / light</Name>
+		<CallbackMethod>setIRacOptionsCALLBACKaction</CallbackMethod>
+		<ConfigUI>
+			<Field id="labelOpts" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>The buttons that are single bits in a gree frame, sent with the whole state.
+Sleep also moves the fan on a real remote - it took the fan to 1 when switched on
+and back to auto when switched off - so expect the fan to follow.
+Toshiba has none of these; on a toshiba device this action does nothing.</Label>
+			</Field>
+			<Field id="acSleep"  type="checkbox" defaultValue="false"><Label>sleep</Label></Field>
+			<Field id="acHealth" type="checkbox" defaultValue="false"><Label>health / ioniser</Label></Field>
+			<Field id="acLight"  type="checkbox" defaultValue="true" ><Label>display light on the indoor unit</Label></Field>
+			<Field id="acTurbo"  type="checkbox" defaultValue="false"><Label>turbo</Label></Field>
+			<Field id="acXfan"   type="checkbox" defaultValue="false"><Label>xfan (dry the coil after stopping)</Label></Field>
+		</ConfigUI>
+	</Action>
+
 </Actions>

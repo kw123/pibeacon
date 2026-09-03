@@ -38,7 +38,9 @@ def execKill(pgmtype):
 		# sudo .." wrapper of a long running tool does NOT kill its python child - it only orphans it,
 		# detaches it from the caller that is waiting for it, and leaves whatever the tool had claimed
 		# (radios, pause files) claimed. qualifyDongle runs for ~4 minutes, so it was hit every time.
-		neverKill = ["qualifyDongle.py"]
+		# irRecord waits up to 60 s for a button press and its echo mode adds two 15 s pauses on
+		# top, so a hand started "sudo python3 irRecord.py" was in range too.
+		neverKill = ["qualifyDongle.py", "irRecord.py", "irReplay.py"]
 		procs = [[pid, cmd] for pid, cmd in U.procList(pgmtype)
 					if cmd.find("sudo") > -1 and (" "+cmd+" ").find(" grep ") < 0 and cmd.find("killSudos") < 0
 					and not [1 for nn in neverKill if cmd.find(nn) > -1]]

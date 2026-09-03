@@ -2671,7 +2671,10 @@ def execSensorLoop():
 	lastRestart						= time.time()
 	SENSOR							= {}
 	firstCmdReceived				= False
-	logLevel						= 1
+	# NO "logLevel = 1" here: logLevel is a dict, devId -> level, and it is initialised as one
+	# 40 lines up. This line used to overwrite it with a plain int, so every logLevel[devId] and
+	# maxLogLevel() failed with "'int' object is not iterable" until readParams() happened to run
+	# and repair the type.
 	cmdQueue						= queue.Queue()
 	unixCmdVoiceNo					= ["","","","","","","","","",""]
 	unixCmdAction					= ["","","","","","","","","",""]

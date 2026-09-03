@@ -1,14 +1,464 @@
+v2022.191.301  @ 2026-09-03
+   IR: irDemo walk trimmed to the sequence worth watching now - off, on, 20/21/23 C, the five fan
+       speeds, off. The louvers are dropped, they already work. It opens at 25 C so that the first
+       temperature step is a real change rather than a no-op.
+
+v2022.191.300  @ 2026-09-03
+   DOC: the ac BEEPS on every frame it accepts, which is a better oracle than the display and
+       splits the two failures that look the same from across the room - "beep but nothing
+       changed" is a field question, "no beep" is a reception one. irDemo says so before and after
+       the walk, and the README has it as its own section. Half of today would have been shorter
+       with that distinction in hand.
+
+v2022.191.299  @ 2026-09-03
+   IR: BYTE6FROMFAN back to True - the measured per-fan value is the right one. With the carrier
+       fixed the unit obeys power, temperature and the louvers, and its FAN does not move at all
+       while byte 6 is a constant, even though byte 0 steps 09/29/39 across the fan settings. So
+       byte 0's two bits are not what the unit reads for the fan; byte 6 of message 3 is, exactly
+       as the ten press capture showed. The .293 revert was chasing the carrier bug.
+   IR: irDemo walks four temperatures now (21, 20, 25, 18, 22) instead of one. "Temperature does
+       not change" turned out to be the walk changing it once and then carrying the same value -
+       thin test, not a fault.
+
+v2022.191.298  @ 2026-09-03
+   IR: THE REGRESSION - greeIR.CARRIERHZ was left at 30000 from the carrier hunt, and every caller
+       that does not pass a frequency was transmitting at 30 kHz. That includes receiveCommands,
+       so EVERY indigo IR-AC command has gone out at 30 kHz since .269 took the explicit carrier
+       out of the send path. The unit answers at 38 kHz. Default is 38000 now, matching toshibaIR.
+       This is why "irTest.sh c 38000 6" worked and irDemo did not: c passes the carrier, irDemo
+       relied on the default. Identical frames, different carrier.
+   NOTE the byte 6 revert in .293 therefore rests on nothing. c ALWAYS passed 38 kHz, so the
+       fan-dependent byte 6 was never actually tested at a carrier the unit listens to - the walk
+       that failed was failing on the carrier. BYTE6FROMFAN should be set True again and retested
+       now that the carrier is right; the measured per-fan value is probably correct.
+
+v2022.191.297  @ 2026-09-03
+   IR: irDemo opens by switching the unit OFF, so the next step is a transition that has to show.
+       It used to open with "power ON, cool 21, fan auto" - which an ac already in that state
+       obeys with no visible change, looking exactly like a step it ignored. The previous
+       "irTest.sh c" run leaves the unit on at 21 or 25 C, so this was easy to walk into. That is
+       also why c looks conclusive: it alternates 21/25 C, so every send must move the display.
+       The banner now says the run takes two minutes and warns about the no-op case.
+
+v2022.191.296  @ 2026-09-03
+   IR: irDemo starts with the louvers UNTOUCHED - swingV "last", swingH "off", byte 4 = 00 - so
+       its first step is byte for byte the command that is known to work. It had been setting both
+       louvers to "middle" (byte 4 = 44), which was the ONLY difference between the walk and that
+       command, and the walk got no reaction at all. A unit with no horizontal louver has no use
+       for swingH, so the louver steps now move swingV alone and a 12th step puts it back to
+       untouched. If the walk still does nothing at step 1, the frames are not the problem and
+       irDemo is not running.
+
+v2022.191.295  @ 2026-09-03
+   IR: CONFIRMED by testing both ways - the gree unit obeys message 3 carrying the fixed 0xD0 and
+       ignores everything when byte 6 follows the fan instead. That is the regression that made
+       it go silent, and BYTE6FROMFAN=False is the working setting.
+       It is NOT understood. The remote demonstrably sends 0x80 for fan auto - it is in the ten
+       press capture and greeIR rebuilds those frames byte for byte - so a unit that obeys its own
+       remote should obey 0x80 too. Both observations are solid and they disagree.
+       Known cost of the constant: byte 0's fan field saturates at 3, so with byte 6 fixed there
+       is nothing left to separate fan 2, 3 and 4 - they emit identical frames. Auto, silent and
+       fan 1 still differ, so four distinct fan settings instead of six.
+
+v2022.191.294  @ 2026-09-03
+   IR: irDemo.py and irScan.py wait 15 s before their first send, counting down, so they can be
+       started over ssh and watched at the ac however they are launched - the wait in irTest.sh
+       only helped when the run went through it. IRLEADIN=<seconds> overrides, IRLEADIN=0 skips,
+       and irTest.sh sets IRLEADIN=0 after its own countdown so a run through it does not wait
+       twice.
+
+v2022.191.293  @ 2026-09-03
+   IR: byte 6 of gree message 3 goes back to the fixed 0xD0 - the frame the unit was seen to obey
+       when "irTest.sh c 38000 6" worked. The measured, remote-accurate value (BYTE6BASE + the
+       fan index) is kept behind BYTE6FROMFAN, which is False for now: two things changed between
+       the working test and the silence - this, and the led rig was rebuilt - so they get moved
+       one at a time.
+       The self test still asserts every other byte of every recorded press; only message 3's
+       byte 6 and its checksum are exempted while the flag is False, and it says so.
+       NOTE the checksum covers byte 6's high nibble, so it moves with it: the .266 message 3 is
+       09 05 20 70 00 00 D0 50, not ...D0 00 as an earlier comparison here had it.
+
+v2022.191.292  @ 2026-09-03
+   IR: irTest.sh waits 15 s at the start, counting down, so a run can be kicked off over ssh and
+       watched at the ac in the other room. One call at the top, for the modes that transmit -
+       not for "a", which already waits for a button press, and not for an unknown argument,
+       which should print the usage straight away. LEADIN=<seconds> overrides it, LEADIN=0 starts
+       at once.
+   IR: greeIR.py - the working copy had been replaced by the 1 Sep file with today's version left
+       beside it as "greeIR copy.py". The two were CODE IDENTICAL, 380 executable lines each,
+       differing only in the three comment blocks added today, so nothing transmitted ever
+       changed. The documented one is active again and the stray copy is gone - it would have
+       been pushed to every rpi by the sftp "put *".
+
+v2022.191.291  @ 2026-09-03
+   IR: pi/irDemo.py - a scripted walk to WATCH the ac follow. on / cool 21 / 20 C / fan 1,2,3,4 /
+       auto / louver up, middle, down / off, ten seconds apart, ONE setting moving per step so a
+       step the unit does not follow names itself. Prints all four messages of every press.
+       "irTest.sh d" runs it; arguments are gpio, seconds, brand, duty. It goes through greeIR and
+       the led, not through indigo, so it tests the encoder, the sequence and the emitter - drive
+       the device from indigo and watch the same way to cover the rest.
+
+v2022.191.290  @ 2026-09-03
+   IR: cross-checked every gree field against the IRremoteESP8266 spreadsheet. It agrees with all
+       of ours and settles the one open question: byte 4 bit 7 is NOT USED - swingH is THREE bits
+       (byte4 4-6), not the nibble it looks like - so the bit that came back set on 3 presses of
+       10 carries nothing. Sending 0 is right and the variation was never a signal.
+       Three more namings taken from it: byte3's high nibble is their "unkown1", the packet
+       number, matching our INDEXES; the 3 footer bits are what they call the Marker, so our old
+       MARKER constant was misnamed twice over; byte2 bit 6, the one the health button moves on
+       this remote, they call ModelA. And byte 6 is unused in the first packet, which is exactly
+       why packet 7 is free to carry the real fan position there.
+       The whole map is now a comment block above checksum().
+
+v2022.191.289  @ 2026-09-03
+   IR: checked the published sources. IRremoteESP8266 issue #1724 - the library ESPHome and
+       Tasmota both use - reaches the SAME reading of gree byte 3 from a different remote: it is a
+       packet number, 0x5 on the first packet and 0x6 on the second, with later packets carrying
+       different content in bytes 4-6. That independently confirms the message-index model here.
+       It documents TWO packets and only for the timer button; four packets on every press,
+       stepping 5/6/7/A, is not in it or in anything else found. Recorded in greeIR.
+
+v2022.191.288  @ 2026-09-03
+   DOC: README gains "Adding a brand" - what can be derived from remote recordings (the encoder,
+       with the checksum as the strong check) and what cannot (whether a correct frame is
+       SUFFICIENT, the carrier, and fields that saturate and hide their real range). The gree
+       needed all three learned at the unit itself.
+
+v2022.191.287  @ 2026-09-03
+   gpio: the pin handover no longer logs at all on the normal path. One output told to go up,
+       then down, then up hands its own pin over every time and the generation counter steps with
+       it - none of which is worth reading, and printing it made routine traffic look like a
+       fault. It drops to level 10 when a device hands over to ITSELF, and speaks at level 20 only
+       when the new owner is a DIFFERENT indigo device (two devices on one pin, last one wins) or
+       an IR-ac send (which ends by driving the pin low, so the output cannot stay on). Those are
+       the two cases where an output really refuses to stay on and the reason is otherwise
+       invisible.
+
+v2022.191.286  @ 2026-09-03
+   gpio: "leaves the output alone" said nothing about what actually happens. The line now names
+       the action: the finishing generation does NOT close the pin, because closing releases the
+       gpio and the level goes with it - which would drop an output the new owner is holding.
+       That is the whole reason the generation counter exists.
+
+v2022.191.285  @ 2026-09-03
+   gpio: the pin handover line read like an error and usually is not one. Telling the same output
+       to go up while a previous thread still parks on that pin is ordinary traffic - the line
+       only records that the older thread left the output alone on its way out, which is what the
+       generation counter exists for. It says "handover" now, and the IR-ac caveat added in .281
+       is attached ONLY when the new owner really is an IR send, where it matters.
+
+v2022.191.284  @ 2026-09-03
+   IR: sendIRacState says so when the device is DISABLED in indigo. The menu and the IR-AC actions
+       go through the plugin, not through indigo's device routing, so a disabled IR-AC device
+       still transmits and the ac still obeys - while indigo shows it greyed out and its own
+       thermostat controls do nothing. That asymmetry was silent.
+   NOTE for the record: the IR-AC device needs NO entry in a pi's output table. receiveCommands
+       dispatches the IR path on the COMMAND ("irAC"), not on the device type, and takes the pin
+       from the command itself - OUTPUTthermostatIRac appears nowhere in receiveCommands.py. So
+       an empty entry, or none at all, in the pi parameters is correct and not a fault, and
+       moving the led to another gpio needs no cleanup on the pi.
+
+v2022.191.283  @ 2026-09-03
+   IR: the "Send an IR-AC command" menu had the same stale-object fault as the four actions - it
+       wrote acMode/acFanSpeed to the server and then sent the state from the local device object,
+       which still carried the previous values. It re-reads the device before sending now, so all
+       five paths that change a setting and resend are consistent.
+
+v2022.191.282  @ 2026-09-03
+   IR: the four IR-AC actions wrote the new setting to the server and then sent the state from
+       the LOCAL device object, which replacePluginPropsOnServer does not update - so the frame
+       went out with the props as they were BEFORE the change and the new fan / mode / louver /
+       option only took effect on the NEXT send. Each now re-reads the device before sending.
+   gpio: the claim label for setGPIO was the whole command dict, which made the handover line
+       unreadable. It is "setGPIO <cmd> dev:<id>" now.
+
+v2022.191.281  @ 2026-09-03
+   gpio: the pin handover message now NAMES the successor. "a newer command owns the pin now" is
+       correct behaviour - a finished thread must not yank an output that already belongs to
+       something else - but it left out the one thing worth knowing at that moment: which command
+       took it. Every claim is labelled (setGPIO <cmd>, irAC gree, irAC toshiba, irAC ledTest) and
+       the handover line prints the new generation and its label, plus the reminder that an IR-ac
+       send ENDS BY DRIVING THE PIN LOW, so an on/off output sharing that pin will not stay on.
+
+v2022.191.280  @ 2026-09-02
+   DOC: the IR driver drawing now shows all three connections to the rpi header - +5 V, GPIO 18
+       and GND - instead of leaving ground as a floating earth symbol. A fixed-width text version
+       of the same circuit sits beside it in the README, for reading in a terminal or an ssh
+       session where the svg is no use.
+
+v2022.191.279  @ 2026-09-01
+   DOC: the IR led driver as actually built - 560 ohm to the base, 2 ohm ballast, three IR940, a
+       green led + 4.7k across the same branch as a "it is sending" indicator, 15k pull-down at
+       the gpio line. Works across the room. Drawn in irLedCircuit.svg next to the
+       README, which now carries the picture and the numbers: 4.6 mA of base current at 560 ohm,
+       ~120 mA through the string at the hFE a small NPN has left there, and at that current the
+       IR forward voltage leaves only ~0.7 V of headroom so the 2 ohm takes a third of it.
+
+v2022.191.278  @ 2026-09-01
+   DOC: README explains why the 1.8 ohm at the collector earns its place. Three LEDs plus a
+       saturated transistor leave only ~1.2 V of headroom on 5 V, so 180 mV at 100 mA is 15 % of
+       it and 360 mV at 200 mA is 30 % - real negative feedback against runaway on a steep LED
+       curve. Also records that the working point is set by the BASE drive, not by that resistor:
+       1.8k from 3.3 V less the 10k pull-down is ~1.37 mA of base current, ~82 mA of collector
+       current at hFE 60, which is the 80 mA measured. The transistor runs in its active region.
+
+v2022.191.277  @ 2026-09-01
+   DOC: README's air conditioner section brought up to date - the gree fan is five speeds plus
+       auto with "full" being the turbo bit, the frame's fan field saturates at 3 so the real
+       position rides in a later message, one press is four messages and the unit acts on nothing
+       less, only message 5 carries the louvers, and the indigo mappings for fan always-on and
+       for auto (heatSetpoint/coolSetpoint sent as their midpoint). New "When an AC ignores
+       everything" section with the irTest.sh steps in the order that isolates fastest, and the
+       two rules that would have saved a session: put the unit in the opposite state before
+       replaying, and never conclude anything from a single success. The pi file list names
+       irRecord/irReplay/irScan/irTest.
+
+v2022.191.276  @ 2026-09-01
+   IR: indigo's AUTO hvac mode was sending the COOL setpoint and silently dropping the heat one.
+       Indigo's auto switches between heating and cooling by comparing the room to the heat
+       setpoint and the cool setpoint, which cannot happen here - the IR device is blind, nothing reports back, there
+       is no room temperature. The AC's own auto does that job with its own sensor, so the two
+       setpoints now collapse to their MIDPOINT, the centre of the band indigo was asked to hold,
+       and the log says so whenever the two differ by more than half a degree.
+
+v2022.191.275  @ 2026-09-01
+   IR: the "IR-AC: set fan speed" action and the "Send an IR-AC command" menu both build their
+       list from _GlobalIRacFans, so they already carry the new gree speeds - silent/1/2/3/4 and
+       "full" - and "full" resolves to top speed + turbo whichever path it arrives from. Their
+       help text still said "gree 1..3"; corrected, with a note on why speeds above 3 exist at
+       all when the frame's fan field only holds two bits.
+
+v2022.191.274  @ 2026-09-01
+   IR: indigo's thermostat fan is auto or always-on and nothing else, so "auto" is dropped from
+       the gree always-on list - it is the other indigo mode and needs no entry. The list is the
+       remote's real speeds silent/1/2/3/4/full, defaulting to 3.
+
+v2022.191.273  @ 2026-09-01
+   IR: indigo's thermostat knows only auto and always-on, so the gree "fan speed for always on"
+       list is the COARSE one now - auto / 1 / 3 / full - instead of all five speeds. "full"
+       means the top speed WITH the turbo bit, which is what the remote's full button actually
+       does. The plugin's own IR-AC menu and set-fan action still reach every speed, and carry
+       "full" as well.
+
+v2022.191.272  @ 2026-09-01
+   IR: the GREE FAN IS FIVE SPEEDS, not three. The remote cycles silent/1/2/3/4/full/auto, and
+       byte 0 only has two bits for it - it SATURATES at 3. The real position is the high nibble
+       of byte 6 in message 3, which counts 8,9,A,B,C,D right through the cycle while byte 0
+       sticks at 3 for the top three speeds. A full ten press cycle shows it, and "full" is not
+       a fan position at all: it is the turbo bit, and pressing it left byte 6 where it was.
+       FANS is now the remote's own labels {auto, silent, 1, 2, 3, 4}, byte 0 gets min(index,3),
+       and buildSequence/sendSequence take the fan because it CANNOT be recovered from a state
+       whose byte 0 has already saturated. The whole cycle is in the self test.
+       The old 24 recorded states were labelled with our names, which pinned down only the
+       saturating field: their 1/2/3 are the remote's silent/1/2, and they are relabelled.
+   IR: the device's gree fan list and the action/menu fan lists carry the five speeds.
+   NOTE unresolved: on 3 of 10 presses message 3 came back with byte 4 = 0x80 instead of 00, with
+       the checksum agreeing either way, and a fourth press at the same fan gave 00. Nothing
+       visible decides it, so message 3 is built with byte 4 = 0 - what 7 of the 10 showed. The
+       unit does not appear to check it; it obeyed a sequence whose byte 6 was wrong for its fan.
+
+v2022.191.271  @ 2026-09-01
+   IR: byte 6 of gree message 3 FOLLOWS THE FAN - it was hardcoded to 0xD0 from a single capture
+       and that is only right for fan 3. Five more presses show fan 3 -> D0 across a temperature
+       and a turbo change, fan auto -> 80 across a louver change. It is a lookup now, keyed by
+       the fan in byte0 bits 4-5; fan 1 and 2 are not measured yet and fall back to the auto
+       value. Not a fault the unit notices - it accepted a sequence carrying D0 for fan auto -
+       but the frames should match the remote.
+   IR: CONFIRMED over those five presses - messages 2 and 3 carry bytes 0-2 of the command and
+       nothing else, byte 4 (the louvers) stays in message 1 even when it is the thing that
+       changed, and the terminator 00 00 00 A8 00 00 00 20 never varies. All five presses are
+       now regression cases in greeIR's self test, which rebuilds every one of their four frames.
+
+v2022.191.270  @ 2026-09-01
+   IR: recording a SEQUENCE of presses now lists every message of each press with its index
+       nibble, not just message 1. A gree press is four messages and the question a sequence
+       recording is usually asked - how the later messages follow the command - was exactly what
+       reporting only the first one hid.
+
+v2022.191.269  @ 2026-09-01
+   IR: the carrier frequency machinery is removed again - it was built to chase a false lead and
+       the answer turned out to be the message sequence. Gone: the per brand carrier fields and
+       the CARRIER SWEEP button on the IR-AC device, _GlobalIRacCarriers, the sweep callback and
+       its worker, the echo carrier selector in the record menu, and the carrier parameter
+       through receiveCommands and irRecord. The duty cycle setting stays, it is a real one.
+       pi/irScan.py and irReplay's carrier argument stay as command line diagnostics: they are
+       where to start if a future unit really is built for 33 or 36 kHz.
+
+v2022.191.268  @ 2026-09-01
+   IR: CONFIRMED - the gree unit obeys greeIR's four message sequence at 38 kHz. Controlled
+       comparison, same encoder and same carrier and same harness, only the sequence differing:
+           irTest.sh c 38000 6 4   four identical repeats of one frame  -> ignored
+           irTest.sh c 38000 6     the four message sequence            -> works
+       So it was never the carrier and never the frame contents. A press is four messages -
+       state (index 5), two continuations (6, 7) and a terminator carrying no command (A) - and
+       this unit acts on nothing less. greeIR is v1.1 and its self test now rebuilds all four
+       from the recorded press on every run.
+       The earlier replay results were misleading in both directions: m 1..4 replayed a recorded
+       power-OFF into an ac that was already off, so a success would have been invisible, and a
+       replay carries the receiver's stretched marks (~700 us against the 620 the remote sends)
+       which the encoder does not.
+
+v2022.191.267  @ 2026-09-01
+   IR: "irTest.sh r <hz> <n>" replays the whole recorded press n times at ONE carrier. b and m
+       send the SAME waveform - b just sends it 11 times, once per frequency, where m sends it
+       once. m fails at every count and b works, so what b has is ATTEMPTS, not frequency
+       diversity, and that points at a marginal optical link rather than at the frame or the
+       carrier. r measures it: which attempt lands is the hit rate.
+   NOTE that doubt is WITHDRAWN, see .268 - the sequence is the answer.
+
+v2022.191.266  @ 2026-09-01
+   IR: greeIR sends the remote's FOUR MESSAGE SEQUENCE. One press is the state (message index 5),
+       two continuations carrying the command bytes only (6, 7) and a terminator carrying no
+       command at all (A) - told apart by byte3's high nibble, which is a message index and not
+       the fixed MARKER the name suggested. Every ground truth recording read 0x50 only because
+       every one of them was a first message.
+       Measured, and all four verify against checksum():
+           31 04 20 50 44 C0 00 F0 / 31 04 20 60 00 00 00 F0 /
+           31 04 20 70 00 00 D0 C0 / 00 00 00 A8 00 00 00 20
+       buildSequence() regenerates all four byte for byte from the state alone.
+       Ruled out first: one frame is ignored at every carrier from 26 to 40 kHz, four identical
+       repeats of it are ignored, and messages 1+2 alone are ignored. Only the whole press works.
+   IR: receiveCommands sends via sendSequence, and the log names all four messages.
+       "irTest.sh c <hz> <n>" now sends the sequence; pass a repeat count to get the old single
+       frame behaviour back for comparison.
+
+v2022.191.265  @ 2026-09-01
+   IR: the carrier was NOT the problem. A faithful replay of the remote's whole press drives the
+       gree unit anywhere from 26 to 40 kHz, 38 included, while a single greeIR frame drives it
+       at none of them. So the GREE carrier default goes back to 38000 - the 26 kHz reading in
+       .264 was two variables moving at once and is withdrawn. The field stays, because receivers
+       really are built for one frequency and a unit needing 33 or 36 cannot be reached at 38.
+   IR: what the unit was ignoring is the SEQUENCE - the remote sends four messages, we send one
+       frame twice. Two new discriminators: "irTest.sh c <hz> <n> <repeats>" sends one frame with
+       a settable repeat count (is it just more repeats?), and "irTest.sh m <hz> <count>" replays
+       only the first <count> RECORDED messages, so the sequence can be bisected with the real
+       frames and the encoder out of the picture.
+
+v2022.191.264  @ 2026-09-01
+   IR: the gree unit reacts, twice in a row, to a faithful replay of its remote's whole press at
+       26 kHz - where 38 kHz never worked once in a whole session. GREE carrier default is now
+       26000. Two things changed together though: the frequency AND sending all four messages
+       instead of our single frame twice, so which one mattered is not yet known.
+       "irTest.sh c 26000 10" separates them: it sends ONE greeIR frame at that carrier.
+
+v2022.191.263  @ 2026-09-01
+   IR: the gree remote sends FOUR messages per press and they are NOT identical. Two captures of
+       the same button, one strong and one deliberately weak, decode byte for byte the same:
+       31 04 20 50 44 C0 00 F0 / 31 04 20 60 00 00 00 F0 / 31 04 20 70 00 00 D0 C0 /
+       00 00 00 A8 00 00 00 20 - byte3's high nibble stepping 5,6,7,A. Reception errors do not
+       reproduce across signal levels, and all four messages are structurally perfect at 139
+       pulses each, so this is data. We have only ever sent message 1, twice.
+   IR: irReplay v1.3 replays a capture MESSAGE BY MESSAGE - splitting at the headers, one message
+       per wave, sleeping the gap the remote left after each. Until now a full press could not be
+       replayed at all: the first version split at a pulse count and put socket round trips
+       inside frames, and the fix after that reduced it to message 1. So "send exactly what the
+       remote sent" has never actually been tested.
+   IR: irTest.sh a saves the whole capture again, b replays all of it.
+
+v2022.191.262  @ 2026-09-01
+   IR: irTest.sh tests irScan.py with -s, not -f. A file can arrive EMPTY: sftp "put *" copies
+       whatever is on disk at that instant, so a push that lands while a file is being written
+       leaves a 0 byte copy - and python3 runs an empty file happily, exits 0 and prints nothing,
+       which is indistinguishable from a command that did nothing.
+
+v2022.191.261  @ 2026-09-01
+   IR: irTest.sh prints its usage for an unknown or missing argument instead of exiting silently,
+       and says so when irScan.py is not on the rpi yet. Without that, an OLD copy of the script
+       on a pi that has not had the files pushed looks exactly like a command that ran and did
+       nothing.
+
+v2022.191.260  @ 2026-09-01
+   IR: pi/irScan.py - walks the carrier in 1 kHz steps, 25..48 kHz by default, sending a real
+       command at each one 5 s apart. The temperature ALTERNATES 19/21 C, so every send that
+       reaches the unit changes its display and a working frequency cannot hide behind the state
+       already being right. Goes through greeIR/toshibaIR, never through a replay, so one message
+       is always one wave - the biggest is 5075 pulses at 48 kHz against the 5400 limit.
+       "irTest.sh s" runs it; arguments are first/last kHz, step, seconds, gpio, brand, duty.
+
+v2022.191.259  @ 2026-09-01
+   IR: irReplay v1.2 no longer splits a transmission across waves - it refuses. A capture holds
+       2-4 repeats, which is 12000-22000 pigpio pulses where ONE wave holds 5400, so the replay
+       was being sent as 3-5 waves with a socket round trip of milliseconds landing in the middle
+       of frames. Every carrier sweep run through irReplay was therefore testing a broken
+       transmission, in both directions - the one success and all the failures alike.
+   IR: irRecord prints "first message only" and irTest.sh replays that. The later repeats in a
+       capture are the corrupted ones anyway - a saturating receiver stretches marks and shrinks
+       spaces until the long spaces carrying the 1 bits are eaten.
+   IR: 56 kHz removed from every carrier list: one gree frame needs 5695 pulses at that frequency
+       and can never be sent as a single wave. 44 kHz replaces it. The encoders greeIR/toshibaIR
+       already refused to split, so plugin sends were never affected - only replays.
+   IR: irTest.sh c <hz> <n> - sends n frames at one carrier alternating 21/25 C, so the ac's
+       display counts the hits. One success proves nothing when the response is marginal.
+
+v2022.191.258  @ 2026-09-01
+   IR: the gree unit answered ONCE at 30 kHz and never at 38, which points at the carrier - the
+       one property an ir RECEIVER cannot report, since it demodulates it away, so every
+       recording and every loopback we made was blind to it. NOT yet a measurement: one success
+       in one pass says as little as the five misses beside it. A marginal response makes the
+       whole sweep unreliable in both directions, so nothing is ruled out until a frequency
+       repeats.
+   IR: the carrier is a property of the UNIT, so it is now one field per brand with its own
+       default - TOSHIBA 38 kHz, GREE 30 kHz - selectable from 25 to 56 kHz, and the send path
+       picks the one belonging to the brand being sent.
+   IR: CARRIER SWEEP steps finely across the low end (25/26/28/30/32/33/34/36/38/40/56) instead
+       of jumping 30 -> 33 -> 36. The first frequency that works is not necessarily the one with
+       the most margin at the far end of the room, so run it twice from further away.
+
+v2022.191.257  @ 2026-09-01
+   IR: pi/irTest.sh - the record / play back test as two commands.  "irTest.sh a" records a real
+       remote and saves the pulse list, "irTest.sh b" sends that same list back out on the led at
+       30/33/36/38/40/56 kHz, 8 s apart. No sudo: the tools reach the gpios through the pigpiod
+       socket, and killSudos kills anything holding "python" and "sudo".
+   IR: the plugin's own irRecord call lost its sudo for the same reason - an echo run lasts about
+       a minute and was being killed halfway, which orphaned the python child and left the pin
+       claimed while no report ever came back. irRecord.py and irReplay.py added to killSudos'
+       neverKill list as well, for hand started runs.
+   IR: irRecord.py takes -h and its usage block now lists all six positional arguments with their
+       defaults; the led gpio is range checked before pigpio sees it.
+
+v2022.191.256  @ 2026-09-01
+   IR: echo mode now pauses 15 s between the recording and the playback, and again before the
+       de-biased repeat. The pause is the test: record an ON command (the ac obeys the remote,
+       expected), press OFF on the remote during the pause, then our led replays the ON. Only
+       the led can bring the unit back, so switching on IS the result - no shielding needed and
+       no way to confuse it with the ac still obeying the button press. Countdown is printed,
+       the menu states the timing in advance because the report only arrives when the run ends.
+       Echo carrier frequency is selectable in the menu and passed through to irRecord.
+
+v2022.191.255  @ 2026-09-01
+   IR: irReplay v1.1 and irRecord echo take the carrier frequency as an argument. A replay
+       reproduces the ENVELOPE only - the carrier was demodulated away by the receiver that made
+       the recording and is generated fresh on playback - so replaying a real remote's capture
+       sends its timing with OUR carrier. Varying the frequency is the point of the argument.
+       greeIR: the inter-message gap is now measured from the end of the burst, so two repeats
+       sit 40 ms apart like the remote instead of the 56 ms the extra sleep produced.
+
+v2022.191.254  @ 2026-09-01
+   IR: CARRIER FREQUENCY is now settable per device and sweepable. The carrier is the one
+       property of a remote an ir RECEIVER cannot report - a TSOP demodulates it away and hands
+       over only the envelope - so a recording can match a real remote pulse for pulse and still
+       sit at the wrong frequency inside those marks, which an ac's narrow band receiver reads
+       fine at 20 cm and ignores across the room. New "carrier frequency" field on the IR-AC
+       device (30/33/36/38/40/56 kHz, 38 default), threaded through receiveCommands into both
+       encoders, and named in the send log. CARRIER SWEEP button walks all six 7 s apart, each
+       step asking for its own temperature, so the ac's display names the one that got through.
+   IR: echo mode instructions corrected - the recording press has to be SHIELDED from the ac or
+       the unit obeys the remote and the echo proves nothing.
+
+v2022.191.253  @ 2026-09-01
+   IR: ECHO MODE added to the remote recorder - "Record an IR remote (TSOP receiver).." can now
+       retransmit each recording straight back out on the ir led, raw and again with the
+       receiver's mark-stretching removed. This is the test for an ac that ignores a frame a
+       receiver reads perfectly: the unit's OWN remote goes back out through our emitter with
+       nothing decoded or rebuilt in between, so a reaction clears the emitter and the aim and
+       blames the frame we build, and no reaction clears the frame and blames the light.
+       irRecord.py v1.1 (gpio secs count ledGpio duty), receiveCommands runIrRecord passes the
+       two new parameters, MenuItems gets the echo checkbox, led gpio and carrier duty.
+
 ==================================================
-RELEASE  v2022.191.248  @ 2026-08-03
+RELEASE  v2022.191.252  @ 2026-08-31
 summary of everything that changed since v2022.191.171 - the per-version details follow below
 ==================================================
-
-
-This is a MAJOR release.
-Many smaller bugs fixed, many functional additions, and now runs wo any command line tools to detect bluetooth beacons - all using python socket
-And it can read bluetooth 5 beacons - there is only one so far: 
-   the RUUUVI-Air:  it sends ut BLe4 and BLE5 information (much more granular data)
-
 
 IN SHORT
  -  everything BLE runs in python now: scanning AND gatt. No hcidump / lescan / hcitool /
@@ -323,6 +773,141 @@ NOTES / UPGRADE
     they are edited and saved.
 56. When the plugin bundle is replaced manually or via a sync tool instead of the Indigo
     installer, reload the plugin afterwards.
+
+
+==================================================
+Added features / changes in added features / changes in v2022.191.252 @ 2026-08-31
+
+IN SHORT
+ -  GREE air conditioners are supported: greeIR.py, built from a real remote, not a datasheet
+ -  the IR device is brand independent now: OUTPUT-Thermostat-IR-AC with an "AC brand" setting
+ -  one menu item sends any AC command; three actions cover fan, mode, louvers and the buttons
+ -  irRecord names the protocol it heard and decodes toshiba AND gree
+
+DETAILS
+ -  DEVICE RENAMED: type id OUTPUTthermostatToshibaIR -> OUTPUTthermostatIRac, shown as
+    OUTPUT-Thermostat-IR-AC, wire command "toshibaIR" -> "irAC" (the rpi still answers the old
+    name). EXISTING TOSHIBA DEVICES MUST BE RECREATED - indigo keys them by the type id
+ -  greeIR.py: 8 byte state, sent LSB first as 32 bits + a 3 bit footer + ~20 ms + 32 bits,
+    header 9000/4500. Every field was measured off the remote with irRecord and the self test
+    rebuilds 24 recorded states byte for byte: power (its own bit, unlike toshiba where off is a
+    mode), fan auto/1/2/3, modes cool/dry/fan/heat, temperature = byte1 + 16, both louvers with
+    all their positions, swing-auto, sleep, health, light, and the checksum
+ -  gree oddities worth knowing, all measured: in DRY mode byte1 is the HUMIDITY setting, not a
+    temperature (the humidity button does nothing at all in cool mode); the sleep button also
+    drops the fan to 1; swing-auto and the "auto" louver position are INDEPENDENT bits even
+    though one press set both; byte2 bit 6 is HEALTH, which the reference calls ModelA
+ -  a "mode 6" appeared twice with a VALID checksum and was still wrong - gree's checksum is 4
+    bits, so one corrupted frame in sixteen passes. Clean captures only; the remote and the app
+    both show five modes
+ -  irRecord: detects and names TOSHIBA / GREE, decodes both, reads multi-block protocols, shows
+    msb and lsb, records a SEQUENCE of presses and diffs them, trims noise before the header, and
+    says when the repeats of one transmission disagree (a reception error, not the remote)
+ -  irReplay.py: sends a recorded pulse list back out unchanged
+ -  menu: "Send an IR-AC command.." - one item, an IR-AC device selector, and mode / fan /
+    temperature lists that follow that device's brand (toshiba 1..5 and 17..30 C, gree 1..3 and
+    16..30 C), plus louvers, sleep, health and light
+ -  actions: "IR-AC: set fan speed", "set mode", "set louvers (swing)", "set sleep / health /
+    light". Each stores the choice on the device and resends the COMPLETE state - one IR frame
+    carries mode, temperature and fan together, so there is no sending "just the fan"
+ -  menu section "manage sensor devices" renamed to "manage devices"; the IR items live there
+ -  sendToshibaIRState renamed sendIRacState - it builds either brand now
+
+
+==================================================
+Added features / changes in added features / changes in v2022.191.251 @ 2026-08-30
+
+IN SHORT
+ -  the toshiba IR command reached the AC for the first time: two wave_add_generic calls were
+    building ONE scrambled waveform instead of two frames
+ -  irRecord.py: record an IR remote with a TSOP/1838 receiver, decode it, print it to the log
+ -  irReplay.py: send a recorded pulse list back out - the tool that found the bug
+ -  message form (9 or 10 byte), byte-7 spare bit and carrier duty are device settings now
+
+DETAILS
+ -  ROOT CAUSE of an AC that ignored frames whose bytes were provably identical to its own
+    remote's: pigpio builds a waveform by ABSOLUTE TIME OFFSET - that is what lets one wave carry
+    independent signals for several gpios. A second wave_add_generic therefore does NOT continue
+    where the first ended, it starts again at time 0 and MERGES. The chunking added earlier that
+    day to stay under the 64 kB socket limit split the two-frame burst across two calls, so frame
+    2 was ORed on top of frame 1: carrier where the gaps belong, marks running together, spaces
+    gone. Every command sends two frames, so every command was scrambled - while every single
+    frame test came out clean, which is what made it so hard to see.
+    Now: ONE FRAME = ONE WAVE = ONE CALL (~3770 pulses = 45 kB, inside both limits), with the
+    inter-frame gap appended to the wave it follows so it stays DMA timed. sendFrame refuses a
+    pulse list too big for one call instead of splitting it.
+ -  measured on hardware afterwards: 3 leds at 80 mA reach an AC anywhere in the room, pointed at
+    it or away - reflections are enough. ONE led needs to be aimed, and then works at ~3 m
+ -  irRecord.py + menu item "Record an IR remote (TSOP receiver)..": waits for a button press,
+    decodes header/bit timings, frame count and bytes, checks both toshiba checksums and says
+    whether it is the protocol toshibaIR builds. Records a SEQUENCE of presses and diffs them, so
+    "which bits carry the temperature" is answered by pressing up/down/up/down
+ -  irReplay.py: transmits a recorded pulse list unchanged. Replaying a remote's own recording
+    through our led is what separated "the frame is wrong" from "the chain is wrong"
+ -  toshibaIR: message form selectable (9 byte / 10 byte), the byte-7 spare bit that a real
+    RAS-G2KVP remote sets (F2 0D 03 FC 01 10 01 80 90 vs the library's ..00 10) and the carrier
+    duty cycle, all as device settings
+ -  eco / hi power used to overwrite the checksum byte in the 9 byte message - they need the
+    10 byte form, and now force it
+ -  device edit: TEST LED (blinks the led for a phone camera) and TEST VARIANTS (tries all 8
+    protocol variants, on/off, so the AC itself says which one it answers)
+
+STATIC AUDIT of the whole plugin (uninitialised variables, format strings, xml wiring, duplicates)
+ -  piBeaconUtils getOsVersion was defined TWICE. The second definition silently won: it shelled
+    out to cat, did not cache, returned 0 instead of 8 when VERSION_ID was missing, and raised
+    IndexError on an unquoted VERSION_ID=13 (split('="')[1]). Removed; the surviving one reads
+    /etc/os-release directly instead of through cat
+ -  piBeaconUtils checkIfwebserverINPUTrunning was defined twice as well - the dead first copy
+    tested webserverSTATUS.py, ie the WRONG program. Removed
+ -  plugin startTcpipListening returned a local socS that was only ever bound INSIDE the retry
+    loop: a port that stayed busy for all 90 tries ended in NameError instead of the intended
+    "tcpip stack did not load" message. Initialised to None
+ -  get_raspi_config.py: print("... err={}",format(e)) - a COMMA where the dot belongs, so the
+    message printed the placeholder and the value side by side
+ -  BLEconnect.py: a log line with a {} placeholder and nothing to fill it
+ -  Devices.xml: OUTPUTi2cRelay and OUTPUTgpio-1-ONoff had enableBindingId="stateDone" on four
+    fields, but neither dialog has a stateDone field - pointed at piDone, which is what the
+    visibleBindingId on the very same fields uses
+ -  simplei2csensors / tmp006 / tmp007: readS16BE defined twice with an identical body, removed
+ -  checked and clean: every CallbackMethod and list method named in the xml exists in plugin.py,
+    all five xml files parse, no duplicate device/action/menu ids, no duplicate field ids inside a
+    dialog, no name used before its first assignment anywhere in plugin.py or the 104 pi programs
+
+
+==================================================
+Added features / changes in added features / changes in v2022.191.249 ... 250 @ 2026-08-29
+
+IN SHORT
+ -  the toshiba IR command never worked: pigpiod dropped the connection on every send
+ -  ... and the dead connection was then reused, so the NEXT gpio command died too
+ -  the rpi log says WHAT was sent now (mode/temp/fan/special/unit), not just the frame hex
+
+DETAILS
+ -  toshibaIR sendFrame: the whole burst went to pigpiod in ONE wave_add_generic call. At 38 kHz
+    one frame is ~3770 pulses and the default two frames ~7500, ie ~90 kB in one socket command -
+    but pigpiod accepts at most CMD_MAX_EXTENSION = 65536 bytes (5461 pulses) and answers an
+    oversized one by CLOSING THE CONNECTION. So every IR send failed with "ConnectionResetError
+    104" inside wave_add_generic, and nothing was ever transmitted.
+    FIRST FIX WAS WRONG, see v2022.191.251: splitting one wave over several wave_add_generic
+    calls does NOT append. One frame per wave is the answer
+ -  that closed connection is also where the "BrokenPipeError 32" in set_mode came from: the next
+    command reused the handle pigpiod had already hung up on
+ -  the "toshibaIR sent" log line now names the settings that were encoded, eg
+    "modeFanTemp: mode:cool temp:23 fan:auto special:none unit:a". The AC never answers and the
+    thread-start line truncates the command dict, so this was the one place where what indigo
+    asked for could still be seen - and it only showed the frame hex
+ -  receiveCommands getPigpio(): the shared pigpio client was handed out whenever its .connected
+    flag was True - but that flag only says what the CLIENT believes. When pigpiod hangs up (or is
+    restarted) the flag stays True while the command socket is dead, and the next call raises
+    BrokenPipeError deep inside pigpio, in a traceback that never mentions pigpiod. The handle is
+    now verified with a real round trip (get_pigpio_version) before it is used, and rebuilt when
+    that fails. Costs one local socket exchange per command. This affected analogWrite/PWM the
+    same way, not only IR.
+ -  ... and when the reconnect finds no daemon at all, pigpiod is started (as at program start)
+    and the connect retried once
+ -  toshiba IR send: pigpiod can still die between that check and the burst, so an IOError/OSError
+    from sendFrame now reconnects and sends once more instead of losing the command. The frame is
+    rebuilt inside sendFrame, so the retry is safe
 
 
 ==================================================

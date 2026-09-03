@@ -29,6 +29,7 @@ import threading
 import traceback
 import platform
 import base64
+import xml.etree.ElementTree as ET
 
 import socketserver
 import queue
@@ -60,12 +61,13 @@ from piBeaconConstants import (
 			_GlobalConst_emptyBeaconProps, _GlobalConst_emptyrPiProps, _GlobalConst_onOffImages,
 			_GlobalConst_fillMinMaxStates, _GlobalConst_optionalStateFamilies, _GlobalConst_stateCategoryToFamily,
 			_GlobalConst_emptyRPI, _GlobalConst_emptyRPISENSOR, _GlobalConst_allGPIOlist,
-			_GlobalConst_ICONLIST, _GlobalConst_beaconPlotSymbols, _GlobalConst_allowedCommands,
+			_GlobalConst_ICONLIST, _GlobalConst_beaconPlotSymbols,
 			_BLEsensorTypes, _BLEconnectSensorTypes, _GlobalConst_allowedSensors,
 			_GlobalConst_lightSensors, _GlobalConst_i2cSensors, _GlobalConst_allowedOUTPUT,
 			_GlobalConst_groupList, _GlobalConst_groupListDef, _defaultDateStampFormat,
 			_defaultDateStampFormatDay, _addingstates,
-			_stateListToDevTypes
+			_stateListToDevTypes, _GlobalConst_gpioFieldDirection, _GlobalConst_gpioReferenceFields,
+			_GlobalConst_gpioIgnoreBindingOn
 			)
 
 
@@ -140,6 +142,7 @@ class Plugin(indigo.PluginBase):
 		self.pluginShortName 			= "piBeacon"
 
 		self.quitNow					= ""
+		self.toshibaIRSweepRunning		= False		# the variant sweep runs in its own thread, one at a time
 	###############  common for all plugins ############
 		self.getInstallFolderPath		= indigo.server.getInstallFolderPath()+"/"
 		self.indigoPath					= indigo.server.getInstallFolderPath()+"/"
@@ -1488,6 +1491,12 @@ class Plugin(indigo.PluginBase):
 		for hci, upDown, bus, mac, usbId, cap in channels:
 			cap   = f"{cap}".upper()
 			opts  = [AUTO]
+			# bound for EVERY channel, not only the USB ones: the "capabilities not reported yet"
+			# hint at the bottom of the loop reads it, and python evaluates "not known3" before the
+			# "is this USB" half of that condition. An internal radio as the FIRST channel therefore
+			# threw UnboundLocalError and killed the whole rpi dialog; with a USB radio ahead of it
+			# the name was still bound from the previous pass, which is why it usually looked fine.
+			known3 = True
 			if f"{bus}".upper() == "USB":
 				# "BLE4+5" = both, "BLE5" = extended only (BLE4 scan cmds refused), "BLE4" = no extended.
 				# An unknown/older value offers everything rather than nothing - never leave a radio
@@ -1910,6 +1919,801 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
+
+
+	####-------------------------------------------------------------------------####
+	def actionControlThermostat(self, action, dev):
+		"""Indigo thermostat action callback for the Toshiba-AC-IR device: applies the requested mode / fan / setpoint change to the device states and then transmits the COMPLETE resulting state to the AC as one IR frame.
+
+		The Toshiba remote protocol has no deltas and no separate on/off - one frame carries hvac
+		mode, fan speed and setpoint together, and mode "off" is what switches the AC off. So every
+		action here ends in the same place: work out the full intended state, store it, send it.
+
+		IR is one way. Nothing is read back, so the device states are what the plugin BELIEVES the
+		AC is doing - correct until somebody picks up the hand remote.
+
+		Inputs:
+		    action (indigo.PluginAction): indigo thermostat action, thermostatAction plus actionValue
+		    dev (indigo.Device): the thermostat device the action is for
+		Outputs:
+		    None: updates device states and sends the IR command to the rPi
+		"""
+		try:
+			if dev.deviceTypeId != "OUTPUTthermostatIRac":
+				self.indiLOG.log(30, f"actionControlThermostat: device type {dev.deviceTypeId} of {dev.name} is not handled here")
+				return
+
+			act			= action.thermostatAction
+			hvacMode	= dev.hvacMode
+			fanMode		= dev.fanMode
+			setHeat		= dev.heatSetpoint
+			setCool		= dev.coolSetpoint
+
+			if	 act == indigo.kThermostatAction.SetHvacMode:
+				hvacMode = action.actionMode
+			elif act == indigo.kThermostatAction.SetFanMode:
+				fanMode = action.actionMode
+			elif act == indigo.kThermostatAction.SetHeatSetpoint:
+				setHeat = float(action.actionValue)
+			elif act == indigo.kThermostatAction.SetCoolSetpoint:
+				setCool = float(action.actionValue)
+			elif act == indigo.kThermostatAction.IncreaseHeatSetpoint:
+				setHeat = dev.heatSetpoint + float(action.actionValue)
+			elif act == indigo.kThermostatAction.DecreaseHeatSetpoint:
+				setHeat = dev.heatSetpoint - float(action.actionValue)
+			elif act == indigo.kThermostatAction.IncreaseCoolSetpoint:
+				setCool = dev.coolSetpoint + float(action.actionValue)
+			elif act == indigo.kThermostatAction.DecreaseCoolSetpoint:
+				setCool = dev.coolSetpoint - float(action.actionValue)
+			elif act in [indigo.kThermostatAction.RequestStatusAll, indigo.kThermostatAction.RequestMode,
+						indigo.kThermostatAction.RequestEquipmentState, indigo.kThermostatAction.RequestTemperatures,
+						indigo.kThermostatAction.RequestHumidities, indigo.kThermostatAction.RequestDeadbands,
+						indigo.kThermostatAction.RequestSetpoints]:
+				# there is nothing to ask: the AC has no IR transmitter, it only receives
+				self.indiLOG.log(10, f"actionControlThermostat: {dev.name} status request ignored - IR is one way, the AC cannot answer")
+				return
+			else:
+				self.indiLOG.log(10, f"actionControlThermostat: {dev.name} action {act} not supported by an IR remote")
+				return
+
+			self.sendIRacState(dev, hvacMode=hvacMode, fanMode=fanMode, setpointHeat=setHeat, setpointCool=setCool)
+
+		except Exception as e:
+			self.indiLOG.log(40, f"actionControlThermostat failed for {dev.name}: {e}", exc_info=True)
+
+
+	####-------------------------------------------------------------------------####
+	def sendIRacState(self, dev, hvacMode=None, fanMode=None, setpointHeat=None, setpointCool=None):
+		"""Builds the complete AC state - toshiba or gree, whichever the device is set to - from its config plus the wanted mode/fan/setpoint, sends it to the rPi as an "irAC" command, and writes the result into the device states.
+
+		TWO NAMES, both indigo's: the device ATTRIBUTES are dev.heatSetpoint / dev.coolSetpoint,
+		while the STATES written back are "setpointHeat" / "setpointCool". The arguments below
+		follow the state names and the reads follow the attribute names. Neither is a typo.
+
+		Inputs:
+		    dev (indigo.Device): the IR-ac device, any brand
+		    hvacMode (int or None): indigo kHvacMode value, defaults to the device's current mode
+		    fanMode (int or None): indigo kFanMode value, defaults to the device's current fan mode
+		    setpointHeat (float or None): wanted heatSetpoint, defaults to the device's current one
+		    setpointCool (float or None): wanted coolSetpoint, defaults to the device's current one
+		Outputs:
+		    bool: True when the command was handed to sendtoRPI, False when it could not be sent
+		"""
+		try:
+			# a DISABLED device still sends from the menu and the IR-AC actions, because those go
+			# through the plugin rather than through indigo's device routing - so the AC obeys
+			# while indigo shows the device greyed out and its own thermostat controls do nothing.
+			# Silent asymmetry, so say it once per send.
+			try:
+				if not dev.enabled:
+					self.indiLOG.log(30, f"sendIRacState: {dev.name} is DISABLED in indigo - the frame still goes out from here, but indigo's own thermostat controls will not reach it. Enable the device to use them")
+			except Exception:	pass
+
+			props = dev.pluginProps
+
+			if hvacMode		is None:	hvacMode		= dev.hvacMode
+			if fanMode		is None:	fanMode			= dev.fanMode
+			if setpointHeat	is None:	setpointHeat	= dev.heatSetpoint
+			if setpointCool	is None:	setpointCool	= dev.coolSetpoint
+
+			# ---- indigo hvac mode -> toshiba mode. indigo has no "dry", the AC has no "heat+cool
+			# at once": HeatCool is the AC's own auto mode, which is the closest thing there is.
+			modeMap = {
+					indigo.kHvacMode.Off:				"off",
+					indigo.kHvacMode.Heat:				"heat",
+					indigo.kHvacMode.Cool:				"cool",
+					indigo.kHvacMode.HeatCool:			"auto",
+					indigo.kHvacMode.ProgramHeat:		"heat",
+					indigo.kHvacMode.ProgramCool:		"cool",
+					indigo.kHvacMode.ProgramHeatCool:	"auto",
+					}
+			acModeToSend = modeMap.get(hvacMode, "auto")
+			brand		= f"{props.get('acBrand','toshiba')}"
+
+			# indigo knows only auto / always-on for the fan, and its thermostat has no name for
+			# "dry" or "fan only". The two IR-AC actions store a real AC mode / fan speed on the
+			# device, and those win over the indigo mapping - except for OFF, which must stay off.
+			acMode = f"{props.get('acMode','')}".strip()
+			if acMode != "" and acModeToSend != "off":
+				acModeToSend = acMode
+
+			# indigo's thermostat fan is auto or always-on and nothing else - no speeds. Auto maps
+			# straight to the AC's auto; always-on takes whatever speed the device is set to
+			fanWhenOn = f"{props.get('greeFanWhenOn','3')}" if brand == "gree" else f"{props.get('toshibaFanWhenOn','3')}"
+			if fanMode == indigo.kFanMode.Auto:	acFanToSend = "auto"
+			else:								acFanToSend = fanWhenOn
+			acFan = f"{props.get('acFanSpeed','')}".strip()
+			if acFan != "":						acFanToSend = acFan
+
+			# "full" is the remote's turbo button, not a fan position - the gree fan field tops
+			# out at "4" and turbo is a separate bit. It can arrive from either direction: the
+			# device's always-on speed, or the IR-AC set-fan action, and both land in
+			# acFanToSend by here, so one place converts it
+			acTurboToSend = 1 if props.get("greeTurbo", False) else 0
+			if brand == "gree" and acFanToSend == "full":
+				acFanToSend   = "4"
+				acTurboToSend = 1
+
+			# ONE setpoint on the AC, two in indigo - the heat setpoint and the cool setpoint.
+			# Heat mode takes the heat setpoint, cool takes the cool setpoint, and AUTO takes the
+			# MIDDLE of the two.
+			#
+			# Indigo's auto switches between heating and cooling itself, by comparing the room to
+			# the heat setpoint and the cool setpoint. It cannot do that here: this device is a
+			# blind IR transmitter, the AC never reports anything back, and there is no room
+			# temperature to compare with. The AC's own auto mode does exactly the same job with
+			# its own sensor, so the two setpoints have to collapse to the single target it
+			# accepts. The midpoint is the honest collapse - the centre of the band indigo was
+			# asked to hold. Taking the cool setpoint alone, which is what this did before,
+			# silently ignored the heat setpoint.
+			if acModeToSend == "heat":		wanted = float(setpointHeat)
+			elif acModeToSend == "auto":	wanted = (float(setpointHeat) + float(setpointCool)) / 2.
+			else:							wanted = float(setpointCool)
+			temperature = int(round(wanted))
+			if acModeToSend == "auto" and abs(float(setpointHeat) - float(setpointCool)) > 0.5:
+				self.indiLOG.log(20, f"sendIRacState: {dev.name} is in auto: the AC takes one setpoint, so heatSetpoint {setpointHeat} / coolSetpoint {setpointCool} is sent as {temperature} C and the unit decides heating or cooling with its own sensor")
+			loT = 16 if brand == "gree" else 17			# gree goes one degree lower
+			if temperature < loT or temperature > 30:
+				temperature = min(30, max(loT, temperature))
+				self.indiLOG.log(30, f"sendIRacState: {dev.name} setpoint {wanted} is outside the AC range {loT}..30 C, sending {temperature} instead")
+
+			try:	gpioPin = int(props.get("gpio", -1))
+			except Exception:	gpioPin = -1
+			if gpioPin < 0:
+				self.indiLOG.log(30, f"sendIRacState: {dev.name} has no gpio pin configured, nothing sent")
+				return False
+
+			piU = f"{props.get('piServerNumber','')}"
+			if piU == "":
+				self.indiLOG.log(30, f"sendIRacState: {dev.name} has no rPi configured, nothing sent")
+				return False
+
+			try:	repeats = max(1, int(props.get("toshibaRepeats", 2)))
+			except Exception:	repeats = 2
+			try:	gap = int(props.get("toshibaGap", 7400))
+			except Exception:	gap = 7400
+
+
+			cmd = {
+					"device":		"OUTPUTthermostatIRac",
+					"command":		"irAC",
+					"pin":			gpioPin,
+					"values": {
+								"brand":		f"{props.get('acBrand','toshiba')}",
+								"irCommand":	"modeFanTemp",
+								"mode":			acModeToSend,
+								"temperature":	temperature,
+								"fan":			acFanToSend,
+								"special":		f"{props.get('toshibaSpecial','none')}",
+								"unit":			f"{props.get('toshibaUnit','a')}",
+								"length":		f"{props.get('toshibaLength','normal')}",
+								"byte7":		f"{props.get('toshibaByte7','remote')}",
+								"duty":			f"{props.get('toshibaDuty','0.5')}",
+								"swingV":		f"{props.get('greeSwingV','last')}",
+								"swingH":		f"{props.get('greeSwingH','off')}",
+								"light":		f"{1 if props.get('greeLight', True) else 0}",
+								"health":		f"{1 if props.get('greeHealth', False) else 0}",
+								"sleep":		f"{1 if props.get('greeSleep', False) else 0}",
+								"swingAuto":	f"{1 if props.get('greeSwingAuto', False) else 0}",
+								"turbo":		f"{acTurboToSend}",
+								"xfan":			f"{1 if props.get('greeXfan', False) else 0}",
+								"repeats":		repeats,
+								"gap":			gap,
+								},
+					"restoreAfterBoot":	"0",
+					"startAtDateTime":	0,
+					"devId":			dev.id,
+					}
+
+			if self.decideMyLog("OutputDevice"): self.indiLOG.log(10, f"sendIRacState: {dev.name} -> pi#{piU}: {cmd}")
+
+			if self.presendtoRPI(piU, [cmd]) != 0:
+				self.indiLOG.log(30, f"sendIRacState: {dev.name} could not be sent to rPi#{piU} - AC not switched, states left unchanged")
+				return False
+
+			# only NOW write the states: they are the plugin's belief about the AC, and a command
+			# that never left the mac must not change that belief
+			if acModeToSend == "off":	statusText = "off"
+			else:						statusText = f"{acModeToSend} {temperature}C fan:{acFanToSend}"
+			special = f"{props.get('toshibaSpecial','none')}"
+			if special != "none":		statusText += f" {special}"
+
+			chList = [
+					{"key": "hvacOperationMode",	"value": hvacMode},
+					{"key": "hvacFanMode",			"value": fanMode},
+					{"key": "setpointHeat",			"value": float(setpointHeat)},
+					{"key": "setpointCool",			"value": float(setpointCool)},
+					{"key": "status",				"value": statusText},
+					{"key": "lastCommandTime",		"value": datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
+					]
+			self.execUpdateStatesList(dev, chList)
+			return True
+
+		except Exception as e:
+			self.indiLOG.log(40, f"sendIRacState failed for {dev.name}: {e}", exc_info=True)
+		return False
+
+
+	####-------------------------------------------------------------------------####
+	# The protocol variants a Toshiba AC might be listening for, and a DISTINCTIVE setting for
+	# each one so the unit itself tells you which landed. Watch the AC: whichever temperature
+	# appears on its display is the row that works - no scope, no capture, no guessing.
+	# The three axes are everything that can differ without knowing the model: the message form
+	# (9 or 10 bytes), the remote code (unit a or b) and the inter-frame gap (7400 or 4600 us).
+	_GlobalToshibaIRVariants = [
+			{"length":"normal", "unit":"a", "gap":7400, "mode":"cool", "temperature":17},
+			{"length":"long",   "unit":"a", "gap":7400, "mode":"heat", "temperature":25},
+			{"length":"normal", "unit":"a", "gap":4600, "mode":"cool", "temperature":20},
+			{"length":"long",   "unit":"a", "gap":4600, "mode":"heat", "temperature":28},
+			{"length":"normal", "unit":"b", "gap":7400, "mode":"cool", "temperature":18},
+			{"length":"long",   "unit":"b", "gap":7400, "mode":"heat", "temperature":26},
+			{"length":"normal", "unit":"b", "gap":4600, "mode":"cool", "temperature":22},
+			{"length":"long",   "unit":"b", "gap":4600, "mode":"heat", "temperature":30},
+			]
+
+	####-------------------------------------------------------------------------####
+	def buttonToshibaIRVariantsCALLBACK(self, valuesDict=None, typeId=None, devId=None):
+		"""Device-edit button: try every protocol variant in turn and let the AC say which one works.
+
+		Each step switches the AC ON at a temperature that belongs to that variant only, waits, then
+		switches it OFF again with the SAME variant. Watching the unit is the whole test: if it comes
+		on showing 25 C, the long message is what it wants; 17 C means the 9 byte form; nothing at all
+		means none of these eight and the protocol is outside this encoder.
+
+		Runs in its own thread - it takes about a minute - so the dialog stays usable. The device
+		states are deliberately NOT written: this is a test, and the plugin's idea of what the AC is
+		doing should not be rewritten by it.
+
+		Inputs:
+		    valuesDict (indigo.Dict): the open device dialog
+		    typeId (str): device type id (unused)
+		    devId (int): the device being edited
+		Outputs:
+		    indigo.Dict: valuesDict unchanged - the result goes to the indigo log and to the AC
+		"""
+		try:
+			if self.toshibaIRSweepRunning:
+				self.indiLOG.log(30, "toshibaIR variants: a sweep is already running, wait for it to finish")
+				return valuesDict
+
+			props = {}
+			try:	props = indigo.devices[int(devId)].pluginProps
+			except Exception:	pass
+			try:	gpioPin = int(valuesDict.get("gpio", props.get("gpio", -1)))
+			except Exception:	gpioPin = -1
+			piU = f"{valuesDict.get('piServerNumber', props.get('piServerNumber',''))}"
+			if gpioPin < 0 or piU == "":
+				self.indiLOG.log(30, "toshibaIR variants: pick the rPi and the gpio pin first")
+				return valuesDict
+
+			try:	special = f"{valuesDict.get('toshibaSpecial', props.get('toshibaSpecial','none'))}"
+			except Exception:	special = "none"
+			if special != "none":
+				# eco/hipower force the long message, which would make half the rows identical
+				self.indiLOG.log(20, "toshibaIR variants: ignoring the eco/hi-power setting for the test, it forces the long message")
+				special = "none"
+
+			self.toshibaIRSweepRunning = True
+			th = threading.Thread(name="toshibaIRVariantSweep", target=self.toshibaIRVariantSweep,
+									args=(piU, gpioPin, devId, special))
+			th.daemon = True
+			th.start()
+
+		except Exception as e:
+			self.toshibaIRSweepRunning = False
+			self.indiLOG.log(40, f"buttonToshibaIRVariantsCALLBACK failed: {e}", exc_info=True)
+		return valuesDict
+
+
+	####-------------------------------------------------------------------------####
+	def toshibaIRVariantSweep(self, piU, gpioPin, devId, special="none", onSecs=5., offSecs=3.):
+		"""The worker behind buttonToshibaIRVariantsCALLBACK - see there. Runs ~1 minute.
+
+		Inputs:
+		    piU (str): the rPi number
+		    gpioPin (int): gpio the IR led is on
+		    devId (int): indigo device id, passed through to the rpi
+		    special (str): eco/hipower, forced to "none" by the caller
+		    onSecs (float): how long the AC is left ON before the OFF frame
+		    offSecs (float): pause after the OFF frame, before the next variant
+		Outputs:
+		    None: sends the frames and logs every step
+		"""
+		try:
+			nn = len(self._GlobalToshibaIRVariants)
+			self.indiLOG.log(20, f"toshibaIR variants: starting - {nn} variants, about {int(nn*(onSecs+offSecs))} seconds. WATCH THE AC: the temperature it shows names the variant that works")
+			for ii in range(nn):
+				var = self._GlobalToshibaIRVariants[ii]
+				if not self.toshibaIRSweepRunning:				# plugin shutting down
+					self.indiLOG.log(20, "toshibaIR variants: stopped")
+					return
+				for what, mode in (("ON ", var["mode"]), ("OFF", "off")):
+					cmd = {
+							"device":		"OUTPUTthermostatIRac",
+							"command":		"irAC",
+							"pin":			gpioPin,
+							"values": {
+										"irCommand":	"modeFanTemp",
+										"mode":			mode,
+										"temperature":	var["temperature"],
+										"fan":			"auto",
+										"special":		special,
+										"unit":			var["unit"],
+										"length":		var["length"],
+										"repeats":		2,
+										"gap":			var["gap"],
+										},
+							"restoreAfterBoot":	"0",
+							"startAtDateTime":	0,
+							"devId":			devId,
+							}
+					self.indiLOG.log(20, f"toshibaIR variants: {ii+1}/{nn} {what}  {var['length']} message, unit {var['unit']}, gap {var['gap']} us  ->  {mode} {var['temperature']}C")
+					if self.presendtoRPI(piU, [cmd]) != 0:
+						self.indiLOG.log(30, f"toshibaIR variants: could not send to rPi#{piU} - is it online? stopping")
+						return
+					time.sleep(onSecs if what == "ON " else offSecs)
+
+			self.indiLOG.log(20, "toshibaIR variants: done. If the AC reacted, the step number in the log above names the message form, the unit code and the gap to set in the device dialog. If nothing happened at all, this AC uses a protocol this encoder does not have - capture its own remote next")
+
+		except Exception as e:
+			self.indiLOG.log(40, f"toshibaIRVariantSweep failed: {e}", exc_info=True)
+		finally:
+			self.toshibaIRSweepRunning = False
+
+
+	####-------------------------------------------------------------------------####
+	# what each brand can do. The action lists are built from this, so a device set to gree can
+	# never be told to use fan 5 or a toshiba-only mode.
+	_GlobalIRacFans = {
+			"toshiba":	[("auto","auto"), ("1","1 - lowest"), ("2","2"), ("3","3 - medium"), ("4","4"), ("5","5 - highest")],
+			# the remote's own labels: five speeds plus auto. "full" is not here - it is the
+			# turbo bit, a separate checkbox on the device
+			"gree":		[("auto","auto"), ("silent","silent"), ("1","1"), ("2","2"),
+						 ("3","3"), ("4","4 - highest"), ("full","full - top speed with turbo")],
+			}
+	_GlobalIRacModes = {
+			"toshiba":	[("auto","auto"), ("cool","cool"), ("dry","dry"), ("heat","heat"), ("off","off")],
+			"gree":		[("auto","auto"), ("cool","cool"), ("dry","dry"), ("fan","fan only"), ("heat","heat"), ("off","off")],
+			}
+
+	def _iracBrand(self, targetId, valuesDict=None):
+		"""The brand of the IR-ac device this list is for.
+
+		Two callers: an ACTION, which names the device in targetId, and the "Send an IR-AC
+		command" MENU, which names it in the dialog's acDevice field. The dialog wins when it has
+		one, so the mode/fan/temperature lists follow the device selector as it is changed.
+
+		Inputs:
+		    targetId (int): the device an action is aimed at
+		    valuesDict (dict or None): the open dialog, when there is one
+		Outputs:
+		    str: "toshiba" or "gree"
+		"""
+		devId = 0
+		try:
+			if valuesDict is not None and f"{valuesDict.get('acDevice','0')}" not in ("", "0"):
+				devId = int(valuesDict.get("acDevice", 0))
+		except Exception:	devId = 0
+		if devId == 0:
+			try:	devId = int(targetId)
+			except Exception:	return "toshiba"
+		try:	return f"{indigo.devices[devId].pluginProps.get('acBrand','toshiba')}"
+		except Exception:	return "toshiba"
+
+	####-------------------------------------------------------------------------####
+	def filterIRacDevices(self, filter="", valuesDict=None, typeId=None, targetId=0):
+		"""Every IR-AC device, for the two "send an AC command" menus.
+
+		Inputs:
+		    filter (str), valuesDict (dict), typeId (str), targetId (int): dialog context, unused
+		Outputs:
+		    list: [devId, name] pairs
+		"""
+		out = []
+		try:
+			for dev in indigo.devices.iter("self.OUTPUTthermostatIRac"):
+				brand = f"{dev.pluginProps.get('acBrand','toshiba')}"
+				out.append([f"{dev.id}", f"{dev.name}  ({brand})"])
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		if not out:	out = [["0", "no IR-AC device defined yet"]]
+		return out
+
+	####-------------------------------------------------------------------------####
+	def filterIRacTempList(self, filter="", valuesDict=None, typeId=None, targetId=0):
+		"""The setpoints a brand accepts - gree goes down to 16 C, toshiba to 17.
+
+		Inputs:
+		    filter (str): unused, the device decides
+		    valuesDict (dict): the dialog, for its acDevice selector
+		    typeId (str), targetId (int): dialog context
+		Outputs:
+		    list: [value, label] pairs
+		"""
+		lo = 16 if self._iracBrand(targetId, valuesDict) == "gree" else 17
+		return [[f"{t}", f"{t} C"] for t in range(lo, 31)]
+
+	####-------------------------------------------------------------------------####
+	def sendIRacFromMenu(self, valuesDict, brand=""):
+		"""Shared body of the two "send an AC command" menus: takes the dialog values, writes them
+		onto the chosen device and sends the complete state.
+
+		Sending straight from the menu without touching the device would leave indigo showing one
+		thing and the AC doing another, so the device is updated and its own send path used.
+
+		Inputs:
+		    valuesDict (dict): the menu dialog
+		    brand (str): "toshiba" or "gree", only to check the device matches
+		Outputs:
+		    dict: valuesDict with MSG set
+		"""
+		try:
+			try:	dev = indigo.devices[int(valuesDict.get("acDevice", "0"))]
+			except Exception:
+				valuesDict["MSG"] = "pick an IR-AC device first"
+				return valuesDict
+			brand = f"{dev.pluginProps.get('acBrand','toshiba')}"
+			props = dev.pluginProps
+			props["acMode"]		= f"{valuesDict.get('acMode','cool')}"
+			props["acFanSpeed"]	= f"{valuesDict.get('acFan','auto')}"
+			if brand == "gree":
+				props["greeHealth"]		= bool(valuesDict.get("acHealth", False))
+				props["greeSleep"]		= bool(valuesDict.get("acSleep", False))
+				props["greeLight"]		= bool(valuesDict.get("acLight", True))
+				props["greeSwingV"]		= f"{valuesDict.get('acSwingV','last')}"
+				props["greeSwingH"]		= f"{valuesDict.get('acSwingH','off')}"
+				props["greeSwingAuto"]	= (props["greeSwingV"] == "auto")
+			dev.replacePluginPropsOnServer(props)
+			# the local object still carries the pre-write props - see setIRacSwingCALLBACKaction
+			dev = indigo.devices[dev.id]
+
+			temp = float(valuesDict.get("acTemp", 22))
+			mode = f"{valuesDict.get('acMode','cool')}"
+			hv   = {"off":indigo.kHvacMode.Off, "heat":indigo.kHvacMode.Heat,
+					"cool":indigo.kHvacMode.Cool, "auto":indigo.kHvacMode.HeatCool}.get(mode, indigo.kHvacMode.Cool)
+			ok = self.sendIRacState(dev, hvacMode=hv, setpointHeat=temp, setpointCool=temp)
+			valuesDict["MSG"] = "sent to {} ({}): {} {:.0f}C fan {}{}".format(dev.name, brand, mode, temp,
+									valuesDict.get("acFan","auto"),
+									"" if ok else "  - FAILED, see the log")
+		except Exception as e:
+			self.indiLOG.log(40, f"sendIRacFromMenu failed: {e}", exc_info=True)
+			valuesDict["MSG"] = "error, see log"
+		return valuesDict
+
+	####-------------------------------------------------------------------------####
+	def sendIRacCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
+		"""Menu: send one complete frame through the selected IR-AC device, whatever its brand."""
+		return self.sendIRacFromMenu(valuesDict)
+
+	####-------------------------------------------------------------------------####
+	def irAcDeviceChosenCALLBACK(self, valuesDict=None, typeId=None, devId=None):
+		"""The device selector changed: the mode / fan / temperature lists reload from its brand,
+		and a value that the new brand does not have is reset instead of being left dangling.
+
+		Inputs:
+		    valuesDict (dict): the open dialog
+		    typeId (str), devId (int): dialog context, unused
+		Outputs:
+		    dict: valuesDict
+		"""
+		try:
+			brand = self._iracBrand(0, valuesDict)
+			fans  = [f[0] for f in self._GlobalIRacFans.get(brand, [])]
+			modes = [m[0] for m in self._GlobalIRacModes.get(brand, [])]
+			if f"{valuesDict.get('acFan','auto')}"  not in fans:	valuesDict["acFan"]  = "auto"
+			if f"{valuesDict.get('acMode','cool')}" not in modes:	valuesDict["acMode"] = "cool"
+			try:
+				lo = 16 if brand == "gree" else 17
+				if int(valuesDict.get("acTemp", 22)) < lo:	valuesDict["acTemp"] = f"{lo}"
+			except Exception:	pass
+			valuesDict["MSG"] = f"{brand} device selected"
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		return valuesDict
+
+	####-------------------------------------------------------------------------####
+	def filterIRacFanList(self, filter="", valuesDict=None, typeId=None, targetId=0):
+		"""Fan speeds of the brand this device is set to - toshiba five, gree five plus "full".
+
+		Inputs:
+		    filter (str), valuesDict (dict), typeId (str): indigo dialog context, unused
+		    targetId (int): the device the action is aimed at
+		Outputs:
+		    list: [value, label] pairs
+		"""
+		return [list(x) for x in self._GlobalIRacFans.get(self._iracBrand(targetId, valuesDict), self._GlobalIRacFans["toshiba"])]
+
+	####-------------------------------------------------------------------------####
+	def filterIRacFanListPlus(self, filter="", valuesDict=None, typeId=None, targetId=0):
+		"""The brand's fan list with a "no change" entry first - for the set-everything action.
+
+		Inputs:
+		    filter (str), valuesDict (dict), typeId (str): indigo dialog context, unused
+		    targetId (int): the device the action is aimed at
+		Outputs:
+		    list: [value, label] pairs
+		"""
+		return [["nochange", "no change"]] + self.filterIRacFanList(filter, valuesDict, typeId, targetId)
+
+	####-------------------------------------------------------------------------####
+	def filterIRacModeListPlus(self, filter="", valuesDict=None, typeId=None, targetId=0):
+		"""The brand's mode list with a "no change" entry first - see filterIRacFanListPlus."""
+		return [["nochange", "no change"]] + self.filterIRacModeList(filter, valuesDict, typeId, targetId)
+
+	####-------------------------------------------------------------------------####
+	def filterIRacTempListPlus(self, filter="", valuesDict=None, typeId=None, targetId=0):
+		"""The brand's temperature list with a "no change" entry first - see filterIRacFanListPlus."""
+		return [["nochange", "no change"]] + self.filterIRacTempList(filter, valuesDict, typeId, targetId)
+
+	####-------------------------------------------------------------------------####
+	def setIRacAllCALLBACKaction(self, action=None, dev=None):
+		"""Action: set mode, temperature, fan and both louvers in one go, then send.
+
+		The other IR-AC actions each move ONE setting and resend the whole state, which is right
+		for "make it quieter" but clumsy for a schedule that wants a complete state. This is the
+		one a trigger usually wants: it is a remote press, not a nudge.
+
+		Any field left at "no change" keeps what the device already has, so this can also be used
+		to set two things and leave the rest alone.
+
+		Inputs:
+		    action (indigo action): its props carry acMode / acTemp / acFanSpeed / acSwingV / acSwingH
+		    dev (indigo.Device): the IR-ac device
+		Outputs:
+		    None
+		"""
+		try:
+			brand = f"{dev.pluginProps.get('acBrand','toshiba')}"
+			props = dev.pluginProps
+			changed = []
+
+			mode = f"{action.props.get('acMode','nochange')}"
+			if mode != "nochange":
+				props["acMode"] = mode
+				changed.append(f"mode {mode}")
+
+			fan = f"{action.props.get('acFanSpeed','nochange')}"
+			if fan != "nochange":
+				props["acFanSpeed"] = fan
+				changed.append(f"fan {fan}")
+
+			if brand == "gree":
+				sv = f"{action.props.get('acSwingV','nochange')}"
+				if sv != "nochange":
+					props["greeSwingV"]    = sv
+					props["greeSwingAuto"] = (sv == "auto")
+					changed.append(f"louver V {sv}")
+				sh = f"{action.props.get('acSwingH','nochange')}"
+				if sh != "nochange":
+					props["greeSwingH"] = sh
+					changed.append(f"louver H {sh}")
+
+			dev.replacePluginPropsOnServer(props)
+			# the local object still carries the pre-write props - see setIRacSwingCALLBACKaction
+			dev = indigo.devices[dev.id]
+
+			# the temperature is not a prop but a setpoint, so it goes to sendIRacState directly
+			temp = f"{action.props.get('acTemp','nochange')}"
+			if temp != "nochange":
+				try:
+					t = float(temp)
+					changed.append(f"{t:.0f}C")
+					self.indiLOG.log(20, f"IR-ac: {dev.name} -> {', '.join(changed) if changed else 'no change'}")
+					self.sendIRacState(dev, setpointHeat=t, setpointCool=t)
+					return
+				except Exception:
+					self.indiLOG.log(30, f"IR-ac: {dev.name}: '{temp}' is not a temperature, sending the rest")
+
+			if not changed:
+				self.indiLOG.log(30, f"IR-ac: {dev.name}: every field is 'no change' - nothing to send")
+				return
+			self.indiLOG.log(20, f"IR-ac: {dev.name} -> {', '.join(changed)}")
+			self.sendIRacState(dev)
+		except Exception as e:
+			self.indiLOG.log(40, f"setIRacAllCALLBACKaction failed: {e}", exc_info=True)
+
+	####-------------------------------------------------------------------------####
+	def filterIRacModeList(self, filter="", valuesDict=None, typeId=None, targetId=0):
+		"""Modes of the brand this device is set to.
+
+		Inputs:
+		    filter (str), valuesDict (dict), typeId (str): indigo dialog context, unused
+		    targetId (int): the device the action is aimed at
+		Outputs:
+		    list: [value, label] pairs
+		"""
+		return [list(x) for x in self._GlobalIRacModes.get(self._iracBrand(targetId, valuesDict), self._GlobalIRacModes["toshiba"])]
+
+	####-------------------------------------------------------------------------####
+	def setIRacSwingCALLBACKaction(self, action=None, dev=None):
+		"""Action: set the louvers. Stored on the device and the complete state resent, because a
+		gree frame carries the louver positions inside it.
+
+		Inputs:
+		    action (indigo.PluginAction): carries acSwingV / acSwingH
+		    dev (indigo.Device): the IR-ac device
+		Outputs:
+		    None
+		"""
+		try:
+			brand = f"{dev.pluginProps.get('acBrand','toshiba')}"
+			if brand != "gree":
+				self.indiLOG.log(30, f"IR-ac: {dev.name} is {brand}, which has no louver field in its frame - nothing sent")
+				return
+			props = dev.pluginProps
+			props["greeSwingV"] = f"{action.props.get('acSwingV','last')}"
+			props["greeSwingH"] = f"{action.props.get('acSwingH','off')}"
+			# "swing up and down" is the auto position AND the swing-auto bit on a real remote
+			props["greeSwingAuto"] = (props["greeSwingV"] == "auto")
+			dev.replacePluginPropsOnServer(props)
+			# re-read: replacePluginPropsOnServer updates the SERVER, not this local object, so
+			# sending with the dev we still hold builds the frame from the props as they were
+			# BEFORE this change - the setting just made would only take effect on the next send
+			dev = indigo.devices[dev.id]
+			self.indiLOG.log(20, f"IR-ac: {dev.name} louvers -> V {props['greeSwingV']} / H {props['greeSwingH']}, resending the state")
+			self.sendIRacState(dev)
+		except Exception as e:
+			self.indiLOG.log(40, f"setIRacSwingCALLBACKaction failed: {e}", exc_info=True)
+
+	####-------------------------------------------------------------------------####
+	def setIRacOptionsCALLBACKaction(self, action=None, dev=None):
+		"""Action: the single-bit buttons - sleep, health, light, turbo, xfan.
+
+		Inputs:
+		    action (indigo.PluginAction): carries acSleep / acHealth / acLight / acTurbo / acXfan
+		    dev (indigo.Device): the IR-ac device
+		Outputs:
+		    None
+		"""
+		try:
+			brand = f"{dev.pluginProps.get('acBrand','toshiba')}"
+			if brand != "gree":
+				self.indiLOG.log(30, f"IR-ac: {dev.name} is {brand}, which has none of these bits - nothing sent")
+				return
+			props = dev.pluginProps
+			for propName, actName in (("greeSleep","acSleep"), ("greeHealth","acHealth"),
+										("greeLight","acLight"), ("greeTurbo","acTurbo"), ("greeXfan","acXfan")):
+				props[propName] = bool(action.props.get(actName, False))
+			dev.replacePluginPropsOnServer(props)
+			self.indiLOG.log(20, "IR-ac: {} sleep {} health {} light {} turbo {} xfan {}, resending the state".format(
+					dev.name, props["greeSleep"], props["greeHealth"], props["greeLight"],
+					props["greeTurbo"], props["greeXfan"]))
+			# see the note in setIRacSwingCALLBACKaction - the local dev is stale after the write
+			dev = indigo.devices[dev.id]
+			self.sendIRacState(dev)
+		except Exception as e:
+			self.indiLOG.log(40, f"setIRacOptionsCALLBACKaction failed: {e}", exc_info=True)
+
+	####-------------------------------------------------------------------------####
+	def setIRacFanCALLBACKaction(self, action=None, dev=None):
+		"""Action: set the AC's real fan speed, beyond indigo's auto/always-on.
+
+		The speed is stored on the device and the COMPLETE state is resent - one IR frame carries
+		mode, temperature and fan together, so there is no such thing as sending just the fan.
+
+		Inputs:
+		    action (indigo.PluginAction): carries acFanSpeed
+		    dev (indigo.Device): the IR-ac device
+		Outputs:
+		    None
+		"""
+		try:
+			speed = f"{action.props.get('acFanSpeed','auto')}"
+			props = dev.pluginProps
+			props["acFanSpeed"] = speed
+			dev.replacePluginPropsOnServer(props)
+			# re-read: replacePluginPropsOnServer updates the SERVER, not this local object, so
+			# sending with the dev we still hold builds the frame from the props as they were
+			# BEFORE this change - the setting just made would only take effect on the next send
+			dev = indigo.devices[dev.id]
+			self.indiLOG.log(20, f"IR-ac: {dev.name} fan speed -> {speed}, resending the state")
+			self.sendIRacState(dev)
+		except Exception as e:
+			self.indiLOG.log(40, f"setIRacFanCALLBACKaction failed: {e}", exc_info=True)
+
+	####-------------------------------------------------------------------------####
+	def setIRacModeCALLBACKaction(self, action=None, dev=None):
+		"""Action: set the AC mode, including the ones indigo's thermostat has no name for (dry,
+		fan-only). Stored on the device and the complete state resent.
+
+		Inputs:
+		    action (indigo.PluginAction): carries acMode
+		    dev (indigo.Device): the IR-ac device
+		Outputs:
+		    None
+		"""
+		try:
+			mode  = f"{action.props.get('acMode','cool')}"
+			props = dev.pluginProps
+			props["acMode"] = mode
+			dev.replacePluginPropsOnServer(props)
+			# re-read: replacePluginPropsOnServer updates the SERVER, not this local object, so
+			# sending with the dev we still hold builds the frame from the props as they were
+			# BEFORE this change - the setting just made would only take effect on the next send
+			dev = indigo.devices[dev.id]
+			self.indiLOG.log(20, f"IR-ac: {dev.name} mode -> {mode}, resending the state")
+			self.sendIRacState(dev)
+		except Exception as e:
+			self.indiLOG.log(40, f"setIRacModeCALLBACKaction failed: {e}", exc_info=True)
+
+	####-------------------------------------------------------------------------####
+	def buttonIRACledTestCALLBACK(self, valuesDict=None, typeId=None, devId=None):
+		"""Device-edit button: blink the IR led on/off in whole seconds, through the WHOLE chain.
+
+		A real command is a 0.17 s burst - invisible, and when the AC does not react there is nothing
+		to tell you whether the pin, the transistor, the led, the frame or the AC is at fault. This
+		sends a "test" command down the same road as a real one (socket -> receiveCommands -> pin
+		claim -> pigpio -> transistor -> led), but with the carrier held on for a second at a time.
+		940 nm is invisible to the eye and obvious to a phone camera: point one at the led and you
+		see it flash. Blinking = everything up to the led works, and only the AC end is left.
+
+		The gpio pin and the rPi are read from the DIALOG, not from the saved props, so the test can
+		be used to try a pin before saving the device.
+
+		Inputs:
+		    valuesDict (indigo.Dict): the open device dialog
+		    typeId (str): device type id (unused)
+		    devId (int): the device being edited
+		Outputs:
+		    indigo.Dict: valuesDict unchanged - the result goes to the indigo log
+		"""
+		try:
+			props = {}
+			try:	props = indigo.devices[int(devId)].pluginProps
+			except Exception:	pass
+
+			try:	gpioPin = int(valuesDict.get("gpio", props.get("gpio", -1)))
+			except Exception:	gpioPin = -1
+			piU = f"{valuesDict.get('piServerNumber', props.get('piServerNumber',''))}"
+
+			if gpioPin < 0:
+				self.indiLOG.log(30, "IR-ac led test: no gpio pin selected yet - pick the pin first")
+				return valuesDict
+			if piU == "":
+				self.indiLOG.log(30, "IR-ac led test: no rPi selected yet - pick the rPi first")
+				return valuesDict
+
+			cmd = {
+					"device":		"OUTPUTthermostatIRac",
+					"command":		"irAC",
+					"pin":			gpioPin,
+					"values": {
+								"irCommand":	"test",
+								"seconds":		1,
+								"cycles":		2,
+								},
+					"restoreAfterBoot":	"0",
+					"startAtDateTime":	0,
+					"devId":			devId,
+					}
+
+			self.indiLOG.log(20, f"IR-ac led test: gpio {gpioPin} on rPi#{piU} - 1s on / 1s off, twice. Point a phone camera at the led: 940 nm is invisible to the eye but not to the camera")
+			if self.presendtoRPI(piU, [cmd]) != 0:
+				self.indiLOG.log(30, f"IR-ac led test: could not be sent to rPi#{piU} - is it online?")
+
+		except Exception as e:
+			self.indiLOG.log(40, f"buttonIRACledTestCALLBACK failed: {e}", exc_info=True)
+		return valuesDict
 
 
 	####-------------------------------------------------------------------------####
@@ -3532,6 +4336,26 @@ class Plugin(indigo.PluginBase):
 				update = 1
 
 			newDefs = json.loads(valuesDict["deviceDefs"])
+
+			# A channel can carry a gpio and nothing else: confirmPiNumberBUTTONO seeds it with the
+			# pin, and the outType/initialValue only arrive when the SECOND confirm button is
+			# pressed. Saving in between used to die here with KeyError 'initialValue' - and the
+			# whole save was thrown away, INCLUDING the gpio the dialog had just picked, which is
+			# the one thing the user wanted stored. Fill in the neutral defaults instead: outType
+			# "0" = normal, initialValue "float" = anything but up/down, ie do not drive the pin at
+			# startup (see sendInitialValuesToOutput). Same backfill as fixConfig and the dialog.
+			repaired = False
+			for n in range(len(newDefs)):
+				if "gpio" not in newDefs[n]:		continue
+				if "outType" not in newDefs[n]:
+					newDefs[n]["outType"]		= "0"
+					repaired = True
+				if "initialValue" not in newDefs[n]:
+					newDefs[n]["initialValue"]	= "float"
+					repaired = True
+			if repaired:
+				valuesDict["deviceDefs"] = json.dumps(newDefs)
+				self.indiLOG.log(20, f"{dev.name}: gpio was set but output type / initial value were not - saved as normal / do-not-set-at-startup")
 
 			try:
 				if len(newDefs) != len(self.RPI[piU]["output"][typeId][f"{dev.id}"]):
@@ -5766,6 +6590,379 @@ class Plugin(indigo.PluginBase):
 		"""
 		self.printGroups()
 		return valuesDict
+
+
+	####-------------------------------------------------------------------------####
+	def printGPIOusageCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
+		"""Menu callback that prints the gpio pin usage report of all rPis to the log.
+
+		Inputs:
+		    valuesDict (dict or None): Menu values dictionary, passed through unchanged
+		    typeId (str or None): Menu/device type identifier (unused)
+		    devId (int or None): Device ID (unused)
+		Outputs:
+		    dict or None: The unchanged valuesDict
+		"""
+		self.printGPIOusage()
+		return valuesDict
+
+
+	####-------------------------------------------------------------------------####
+	def padOrCut(self, text, width):
+		"""Returns text at EXACTLY width characters, padded with blanks or cut with a trailing '..'.
+
+		f"{x:10s}" pads but does not cut, so one over-long value shifts every column to its right
+		by the overflow - which is what a plain 4 wide direction column did the moment a device had
+		two different directions ("in/out"). Cutting is marked, so a shortened value cannot be
+		misread as the whole one.
+
+		Inputs:
+		    text (str): the value to fit
+		    width (int): the column width
+		Outputs:
+		    str: exactly width characters
+		"""
+		text = f"{text}"
+		if len(text) <= width:	return f"{text:{width}s}"
+		if width <= 2:			return text[:width]
+		return text[:width-2] + ".."
+
+
+	####-------------------------------------------------------------------------####
+	def dropUnusedPinParams(self, theDict, props, typeId, devName=""):
+		"""Removes pin entries from a device's parameters dict when the dialog does not use that pin for this device's settings.
+
+		Only PIN fields are pruned, deliberately: they are the ones that mislead - a pin listed in
+		parameters.# reads as "this pin is wired to this device". Other props that a binding hides
+		are left alone, because an rpi program reading one without a default would break, and that
+		cannot be verified for every program in one go.
+
+		Inputs:
+		    theDict (dict): the parameters entry built for this device, changed in place
+		    props (dict): the device's pluginProps
+		    typeId (str): device type id, for the binding lookup
+		    devName (str): device name, for the log line only
+		Outputs:
+		    dict: theDict without the unused pin entries
+		"""
+		try:
+			if not isinstance(theDict, dict): return theDict
+			bindings = self.getFieldBindings(typeId)
+			if len(bindings) == 0: return theDict
+
+			for field in list(theDict):
+				lower = f"{field}".lower()
+				isPinField = ("gpio" in lower) or ("Pin" in f"{field}") or lower.startswith("pin")
+				if not isPinField: continue
+				if field not in bindings: continue			# no binding -> always used
+				if self.fieldIsLive(f"{field}", props, bindings): continue
+				del theDict[field]
+				if self.decideMyLog("OutputDevice"):
+					self.indiLOG.log(10, f"dropUnusedPinParams: {devName} ({typeId}): {field} not used with these settings, not written to parameters")
+		except Exception as e:
+			self.indiLOG.log(40, f"dropUnusedPinParams failed for {devName}: {e}", exc_info=True)
+		return theDict
+
+
+	####-------------------------------------------------------------------------####
+	def getFieldBindings(self, typeId):
+		"""Returns, per config field of one device type, the visible/enable binding that decides whether the field is live at all.
+
+		A field that indigo hides still KEEPS its value in the props: display's PIN_RST defaults to
+		26 and stays 26 for a devType that has no reset pin, because the dialog only shows the field
+		for ssd1351/st7735. Anything reading props alone therefore sees pins that no hardware uses.
+
+		Read from devicesTypeDict rather than from Devices.xml on disk - indigo has already parsed
+		the file, so this cannot drift from what the dialogs actually do, and it needs no path.
+
+		Inputs:
+		    typeId (str): device type id
+		Outputs:
+		    dict: {fieldId: [(bindingFieldId, [values that make it live], negate), ...]}
+		"""
+		if not hasattr(self, "fieldBindingsCache"): self.fieldBindingsCache = {}
+		if typeId in self.fieldBindingsCache: return self.fieldBindingsCache[typeId]
+
+		bindings = {}
+		try:
+			xml = self.devicesTypeDict[typeId]["ConfigUIRawXml"]
+			for field in ET.fromstring(xml).iter("Field"):
+				fieldId = field.get("id", "")
+				if fieldId == "": continue
+				# VISIBILITY only, never enableBinding: a greyed out field is still shown and still
+				# holds a value the device uses. display's PIN_RST is visible for "ssd1351,st7735"
+				# but enabled only for "ssd1351" - going by enable would have thrown away the reset
+				# pin of every st7735, which the field's own option list offers (GPIO23)
+				for bindIdAttr, bindValAttr in (("visibleBindingId", "visibleBindingValue"),):
+					bindId = field.get(bindIdAttr, "")
+					if bindId == "": continue
+					bindVal = f"{field.get(bindValAttr, '')}"
+					negate	= bindVal.startswith("!")
+					values	= [v.strip().lower() for v in bindVal.lstrip("!").split(",") if v.strip() != ""]
+					if len(values) == 0: continue
+					if fieldId not in bindings: bindings[fieldId] = []
+					bindings[fieldId].append((bindId, values, negate))
+		except Exception as e:
+			# no bindings known -> every field counts, ie exactly the old behaviour
+			if self.decideMyLog("DevMgmt"): self.indiLOG.log(10, f"getFieldBindings: no bindings for {typeId}: {e}")
+
+		self.fieldBindingsCache[typeId] = bindings
+		return bindings
+
+
+	####-------------------------------------------------------------------------####
+	def fieldIsLive(self, field, props, bindings):
+		"""True when a config field is actually in use, ie every visible/enable binding on it holds.
+
+		Inputs:
+		    field (str): the field/prop name
+		    props (dict): the device's pluginProps
+		    bindings (dict): what getFieldBindings returned for this device type
+		Outputs:
+		    bool: False only when a binding exists and does not hold
+		"""
+		try:
+			for bindId, values, negate in bindings.get(field, []):
+				# dialog bookkeeping / view toggles say nothing about the hardware
+				if bindId in _GlobalConst_gpioIgnoreBindingOn: continue
+				# binding prop not stored at all: it cannot be evaluated, and dropping a REAL pin
+				# is worse than reporting one pin too many - so the field counts
+				if bindId not in props: continue
+
+				current = f"{props.get(bindId, '')}".lower()
+				matches = current in values
+				if negate:	matches = not matches
+				if not matches: return False
+		except Exception:
+			pass
+		return True
+
+
+	####-------------------------------------------------------------------------####
+	def getGPIOpinsOfProps(self, props, typeId=""):
+		"""Collects every gpio pin number a device's props refer to, together with the prop name that holds it.
+
+		The pin fields are spread over ~90 differently named props (gpio, gpioTrigger, resetPin,
+		SDOPin, GPIOzone7, pin_CoilA1, oneWireGpios, ...), so they are recognised by NAME PATTERN
+		rather than by a hand kept list that would go stale with the next device type: a prop counts
+		when it says gpio/GPIO, or when it says Pin with a capital P, or starts with "pin". The
+		capital matters - it is what keeps "AirQuality0-100ToTextMapping" (which contains "pin"
+		inside "Mapping") out of the report.
+
+		On top of the plain props, the multi channel INPUT/OUTPUT devices keep their pins in the
+		deviceDefs json instead, so that is parsed too.
+
+		A field that the dialog hides for this device's settings is skipped: it still holds its
+		default in the props, but no hardware is on that pin. See getFieldBindings.
+
+		Inputs:
+		    props (dict): pluginProps of one device
+		    typeId (str): the device type id, needed to look up which fields are live
+		Outputs:
+		    list: (fieldName, pin) tuples, pin as int, only pins in the usable BCM range 2..27
+		"""
+		found = []
+		try:
+			bindings = self.getFieldBindings(typeId) if typeId != "" else {}
+			# props that MATCH the name pattern but are not pins: flags, times, commands, labels
+			notAPin = ["gpioinverseaction", "gpioontimeaction", "gpiocmdforaction", "gpiotypeafterboot",
+						"resetgpioclass", "usewhichgpio", "ignorepinvalue", "pinmappings",
+						"batteryminpinactivetimeforshutdown"]
+
+			for field in props:
+				lower = f"{field}".lower()
+				if lower.startswith("label") or lower.startswith("infolabel"):	continue
+				skip = False
+				for bad in notAPin:
+					if lower.startswith(bad):
+						skip = True
+						break
+				if skip: continue
+
+				# name pattern: ...gpio... / ...GPIO... / ...Pin... / pin...
+				isPinField = ("gpio" in lower and ("gpio" in f"{field}" or "GPIO" in f"{field}" or "Gpio" in f"{field}"))
+				if not isPinField:
+					isPinField = ("Pin" in f"{field}") or lower.startswith("pin")
+				if not isPinField: continue
+
+				# hidden/disabled by its binding -> the stored value is a leftover default, not a pin
+				if not self.fieldIsLive(f"{field}", props, bindings): continue
+
+				# a few fields hold several pins as a comma list (oneWireGpios)
+				for part in f"{props[field]}".replace(";", ",").split(","):
+					part = part.strip()
+					if part == "": continue
+					try:	pin = int(part)
+					except Exception:	continue
+					if pin < 2 or pin > 27: continue		# 0/1 are ID_SD/ID_SC, -1 and 0 mean "not set"
+					found.append((f"{field}", pin))
+
+			# multi channel INPUT/OUTPUT devices: pins live in the deviceDefs json
+			try:
+				plainGpio = -1
+				try:	plainGpio = int(props.get("gpio", -1))
+				except Exception:	plainGpio = -1
+
+				for n, entry in enumerate(json.loads(props.get("deviceDefs", "[]"))):
+					if not isinstance(entry, dict):	continue
+					if "gpio" not in entry:			continue
+					try:	pin = int(entry["gpio"])
+					except Exception:	continue
+					if pin < 2 or pin > 27: continue
+					# channel 0 is NOT a second user of the pin: confirmPiNumberBUTTONO copies
+					# deviceDefs[0]["gpio"] into the plain "gpio" prop, so the two always hold the
+					# same number. Reporting both made every single channel output device look like
+					# it collided with itself. Channels 1.. are independent and stay.
+					if n == 0 and pin == plainGpio: continue
+					if (f"deviceDefs#{n}", pin) not in found:
+						found.append((f"deviceDefs#{n}", pin))
+			except Exception:
+				pass
+
+		except Exception as e:
+			self.indiLOG.log(40, f"getGPIOpinsOfProps failed: {e}", exc_info=True)
+		return found
+
+
+	####-------------------------------------------------------------------------####
+	def printGPIOusage(self):
+		"""Builds and logs which gpio pin of which rPi is used by which device for what, and flags every pin that more than one device claims.
+
+		A double use is a real fault, not a style issue: two programs driving one pin means the
+		output flaps or an input reads the other device's signal, and nothing in the plugin or on
+		the rpi notices - the pin is simply claimed twice.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Logs the report via self.indiLOG
+		"""
+		try:
+			# perPi[piU][pin][devId] = {"name","typeId","direction","fields":[]}
+			# keyed by DEVICE, not by prop: one device that names the same pin in two props is ONE
+			# user of that pin, not a collision with itself
+			perPi		= {}
+			noPiDevs	= []
+
+			for dev in indigo.devices.iter(self.pluginId):
+				if not dev.enabled: continue
+				props	= dev.pluginProps
+				typeId	= dev.deviceTypeId
+
+				pins = self.getGPIOpinsOfProps(props, typeId)
+				if len(pins) == 0: continue
+
+				piU = f"{props.get('piServerNumber', props.get('RPINumber',''))}".strip()
+				if piU == "":
+					noPiDevs.append((dev.name, typeId, pins))
+					continue
+
+				# fallback: the device type only says what the device mostly does
+				if	 "INPUT" in typeId:		typeDirection = "in"
+				elif "OUTPUT" in typeId:	typeDirection = "out"
+				elif typeId in ["sprinkler", "neopixel", "neopixelClock", "display", "setStepperMotor", "sundial"]:
+					typeDirection = "out"
+				elif typeId.find("rPI") > -1:	typeDirection = "rpi"
+				else:							typeDirection = "?"
+
+				if piU not in perPi: perPi[piU] = {}
+				for field, pin in pins:
+					# the type is not always right for the single pin: an INPUTpulse device READS on
+					# gpioEcho but DRIVES gpioTrigger. Where the field name says it plainly, believe
+					# the field, not the type
+					direction = typeDirection
+					lower = f"{field}".lower()
+					for prefix, dirOfField in _GlobalConst_gpioFieldDirection.items():
+						if lower.startswith(prefix):
+							direction = dirOfField
+							break
+
+					# does this prop CLAIM the pin, or only point at a pin another device owns?
+					isReference = False
+					for prefix in _GlobalConst_gpioReferenceFields:
+						if lower.startswith(prefix):
+							isReference = True
+							break
+
+					if pin not in perPi[piU]:			perPi[piU][pin] = {}
+					if dev.id not in perPi[piU][pin]:	perPi[piU][pin][dev.id] = {"name": dev.name, "typeId": typeId, "directions": [], "fields": [], "owns": False}
+					if field not in perPi[piU][pin][dev.id]["fields"]:
+						perPi[piU][pin][dev.id]["fields"].append(field)
+					if direction not in perPi[piU][pin][dev.id]["directions"]:
+						perPi[piU][pin][dev.id]["directions"].append(direction)
+					if not isReference:
+						perPi[piU][pin][dev.id]["owns"] = True
+
+			out  = "\n============ GPIO pin usage of all rPis ==============================================="
+			out += "\n(pins 2..27 only; 'dir' comes from the prop name where that says it, else from the"
+			out += "\n device type, '?' means neither does. A sensor that only COMMANDS an output pin -"
+			out += "\n an indicator LED for a voice/gesture command - is marked '(drives it) ' and is not"
+			out += "\n a fault; only two devices OWNING one pin, or a write to a pin its owner reads, is)"
+
+			conflicts = []
+			for piU in sorted(perPi, key=lambda x: int(x) if x.isdigit() else 999):
+				piName = ""
+				try:
+					piDevId = self.RPI[piU]["piDevId"]
+					if piDevId != 0: piName = f" ({indigo.devices[int(piDevId)].name})"
+				except Exception:
+					piName = ""
+				out += f"\n\nrPi {piU}{piName}"
+				out += f"\n  {'pin':>4s}  {'dir':6s} {'device':42s} {'used as':40s} {'device type'}"
+				for pin in sorted(perPi[piU]):
+					users = perPi[piU][pin]
+					for devId in users:
+						user		= users[devId]
+						# "?" only means "the prop name did not say and the device type did not
+						# either" - once ANY prop of this device on this pin is known, the ? adds
+						# nothing and only made the column overflow
+						knownDirs	= [d for d in user["directions"] if d != "?"]
+						if len(knownDirs) == 0: knownDirs = ["?"]
+						out += f"\n  {pin:4d}  {self.padOrCut('/'.join(knownDirs), 6)} {self.padOrCut(user['name'], 42)} {self.padOrCut(','.join(user['fields']), 40)} {'' if user['owns'] else '(drives it) '}{user['typeId']}"
+
+					owners = [users[devId] for devId in users if users[devId]["owns"]]
+					refs   = [users[devId] for devId in users if not users[devId]["owns"]]
+
+					# a pin is only in trouble when TWO devices claim to own it, or when something
+					# writes to a pin its owner reads. Several sensors driving one output - the same
+					# indicator LED for several voice/gesture commands - is the intended setup
+					reason = ""
+					if len(owners) > 1:
+						reason = f"{len(owners)} devices own this pin"
+					elif len(owners) == 1 and len(refs) > 0 and "in" in owners[0]["directions"]:
+						reason = f"{len(refs)} device(s) drive a pin its owner READS"
+
+					if reason != "":
+						out += f"\n        *** DOUBLE USE of pin {pin}: {reason} (listed right above)"
+						conflicts.append((piU, piName, pin, [users[devId] for devId in users], reason))
+					elif len(refs) > 0:
+						if len(owners) == 1:
+							out += f"\n        (ok: {len(refs)} sensor(s) drive this one output - eg one indicator LED for several commands)"
+						else:
+							out += f"\n        note: {len(refs)} device(s) drive pin {pin}, but NO device owns it - output device deleted?"
+
+			if len(noPiDevs) > 0:
+				out += "\n\nDEVICES WITH GPIO PINS BUT NO rPi ASSIGNED (not checked for double use):"
+				for devName, typeId, pins in noPiDevs:
+					out += f"\n  {self.padOrCut(devName, 42)} {self.padOrCut(typeId, 30)} pins:{sorted(set(p for f, p in pins))}"
+
+			out += "\n\n---------------------------"
+			if len(conflicts) == 0:
+				out += "\nno pin is claimed by more than one device - OK"
+			else:
+				out += f"\n{len(conflicts)} PIN(S) WITH A REAL CONFLICT - two owners, or a write to a pin its owner reads:"
+				for piU, piName, pin, users, reason in conflicts:
+					out += f"\n  rPi {piU}{piName}  pin {pin}: {reason}"
+					for user in users:
+						out += f"\n        {self.padOrCut(user['name'], 42)} {self.padOrCut(','.join(user['fields']), 40)} {'' if user['owns'] else '(drives it) '}{user['typeId']}"
+			out += "\n ==========  GPIO pin usage END ================\n"
+
+			self.indiLOG.log(20, out)
+
+		except Exception as e:
+			self.indiLOG.log(40, f"printGPIOusage failed: {e}", exc_info=True)
+
+
 	####-------------------------------------------------------------------------####
 	def buttonPrintStatsCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		"""Menu callback that prints full TCP/IP statistics and update statistics to the log by calling self.printTCPIPstats(all='yes') and self.printUpdateStats().
@@ -6044,6 +7241,9 @@ class Plugin(indigo.PluginBase):
 					if "initialValue" not in xxx[n]:
 						xxx[n]["initialValue"] = "float"
 						update = True
+					if "outType" not in xxx[n]:		# backfilled for the same reason as initialValue,
+						xxx[n]["outType"] = "0"		# and read on the very next line
+						update = True
 					pinMappings += f"{n}" + ":" + xxx[n]["gpio"]+"," + xxx[n]["outType"]+"," + xxx[n]["initialValue"] + "|"
 			valuesDict["pinMappings"] = pinMappings
 			if update:
@@ -6054,8 +7254,8 @@ class Plugin(indigo.PluginBase):
 			if valuesDict["deviceDefs"] != "":
 				if "gpio" in xxx[inSi] and xxx[inSi]["gpio"] != "":
 					valuesDict["gpio"]			= xxx[inSi]["gpio"]
-					valuesDict["outType"]		= xxx[inSi]["outType"]
-					valuesDict["initialValue"]	= xxx[inSi]["initialValue"]
+					valuesDict["outType"]		= xxx[inSi].get("outType", "0")
+					valuesDict["initialValue"]	= xxx[inSi].get("initialValue", "float")
 
 			valuesDict["stateDone"] = True
 
@@ -10567,6 +11767,65 @@ class Plugin(indigo.PluginBase):
 		valuesDict["MSG"]	 			= f"send to rpi#:{valuesDict['piServerNumber']}, minRSSI:{valuesDict['minRSSI']}"
 		return valuesDict
 	####-------------------------------------------------------------------------####
+	def irRecordCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
+		"""Menu callback: ask one rpi to record an IR remote (pi/irRecord.py with a TSOP38238).
+
+		The rpi waits for a button press, decodes what it heard and sends the report back, which is
+		printed into the indigo log - header timings, bit timings, frame length, the bytes, and
+		whether they are the protocol toshibaIR builds. Parameters travel in typeId as
+		"gpio;waitSecs;count;ledGpio;duty", the one free string field the existing command path
+		carries.
+
+		With ECHO on, the rpi also retransmits each recording on the ir led. That is the test for
+		an AC that ignores a frame a receiver reads perfectly: the unit's own remote goes out
+		again through our emitter, so a reaction clears the emitter and blames the frame we build,
+		and no reaction clears the frame and blames the light.
+
+		Inputs:
+		    valuesDict (dict): dialog values: piServerNumber, irGpio, irWait, irCount, irEcho,
+		                       irEchoGpio, irEchoDuty
+		    typeId (str), devId (int): unused
+		Outputs:
+		    dict: valuesDict with MSG set
+		"""
+		try:
+			gpio  = "{}".format(valuesDict.get("irGpio", "24")).strip()
+			secs  = "{}".format(valuesDict.get("irWait", "15")).strip()
+			count = "{}".format(valuesDict.get("irCount", "1")).strip()
+			duty  = "{}".format(valuesDict.get("irEchoDuty", "0.5")).strip()
+			led   = "0"
+			if valuesDict.get("irEcho", False):
+				led = "{}".format(valuesDict.get("irEchoGpio", "18")).strip()
+			try:
+				if not (0 < int(gpio) < 28):	raise ValueError
+			except Exception:
+				valuesDict["MSG"] = "bad gpio number for the TSOP output"
+				return valuesDict
+			try:
+				if not (0 <= int(led) < 28):	raise ValueError
+			except Exception:
+				valuesDict["MSG"] = "bad gpio number for the IR led"
+				return valuesDict
+			if led != "0" and led == gpio:
+				valuesDict["MSG"] = "the IR led and the receiver cannot share gpio {}".format(gpio)
+				return valuesDict
+			valuesDict["cmd"]    = "irRecord"
+			valuesDict["typeId"] = "{};{};{};{};{}".format(gpio, secs, count, led, duty)
+			self.setPin(valuesDict)
+			if count == "1":
+				valuesDict["MSG"] = "sent to rpi#{}: listening on gpio {} for {}s - press ONE button on the remote now. Report follows in the log".format(
+									valuesDict.get("piServerNumber"), gpio, secs)
+			else:
+				valuesDict["MSG"] = "sent to rpi#{}: listening on gpio {}, {} presses, {}s each - press one, wait, press the next".format(
+									valuesDict.get("piServerNumber"), gpio, count, secs)
+			if led != "0":
+				valuesDict["MSG"] += "  --  ECHO on gpio {}: record an ON command, then you have 15s to press OFF on the remote before the led replays it".format(led)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+			valuesDict["MSG"] = "error, see log"
+		return valuesDict
+
+	####-------------------------------------------------------------------------####
 	def qualifyDongleCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		"""Menu callback: ask one rpi to qualify its bluetooth dongles (pi/qualifyDongle.py).
 
@@ -11725,6 +12984,9 @@ class Plugin(indigo.PluginBase):
 				# this fell into the GPIO section below, found no matching typeId, and cmd1 stayed
 				# "" so an EMPTY command was sent and the rpi did nothing
 				cmd1 = {"device": typeId, "command":cmd, "startAtDateTime": startAtDateTime}
+			elif cmd == "irRecord":
+				# same free-string channel, "gpio;waitSecs"
+				cmd1 = {"device": typeId, "command":cmd, "startAtDateTime": startAtDateTime}
 			else:
 				if typeId == "setMCP4725":
 					cmd1 = {"device": typeId, "command": cmd, "i2cAddress": i2cAddress, "values":{"analogValue":analogValue,"rampTime":rampTime,"pulseUp":pulseUp,"pulseDown": pulseDown,"nPulses":nPulses},"restoreAfterBoot": restoreAfterBoot, "startAtDateTime": startAtDateTime, "devId": devId}
@@ -12162,6 +13424,10 @@ class Plugin(indigo.PluginBase):
 			    tuple: (socServ, stackReady): the ThreadedTCPServer instance and a bool indicating the listener started
 			"""
 			self.socServ = None
+			socS		 = None		# the LOCAL is what gets returned - and it is only bound inside
+									# the retry loop below, so without this a port that stays busy
+									# for all 90 tries ended in NameError instead of the intended
+									# "tcpip stack did not load" report
 			stackReady	 = False
 			self.indiLOG.log(10,f" ..   starting tcpip socket listener, for RPI data, might take some time, using: ip#={myIpNumber} ;  port#= {indigoInputPORT}" )
 			tcpStart = time.time()
@@ -23280,6 +24546,15 @@ class Plugin(indigo.PluginBase):
 							for xxxx in ["scrollxy","scrollSpeed","showDateTime","scrollxy","flipDisplay","displayResolution"]:
 								out["output"][typeId][devIdoutS][0] = self.updateSensProps(out["output"][typeId][devIdoutS][0], propsOut, xxxx)
 
+						# a pin field the dialog hides for THIS device's settings still carries its
+						# default in the props (display PIN_RST stays 26 for a devType with no reset
+						# pin) and was written to parameters.# as if it were wired. Drop it: it is not
+						# a pin of this device
+						try:
+							out["output"][typeId][devIdoutS][0] = self.dropUnusedPinParams(out["output"][typeId][devIdoutS][0], propsOut, typeId, devOut.name)
+						except Exception as e:
+							self.indiLOG.log(30, f"creating parametersfile .. dropUnusedPinParams failed for {devOut.name}: {e}")
+
 						if out["output"][typeId][devIdoutS] == [{}]:
 							del out["output"][typeId][devIdoutS]
 					try:
@@ -26958,12 +28233,8 @@ configuration         - ==========  defined beacons ==============
 					self.sendGPIOCommand(ip, pi,typeId, cmd, soundFile=valuesDict["soundFile"])
 					return
 
-			if "cmd" == "":
+			if cmd == "":
 				self.indiLOG.log(10," setPIN bad parameter: cmd not set:")
-				return
-
-			if cmd not in _GlobalConst_allowedCommands:
-				self.indiLOG.log(20,f" setPIN bad parameter: cmd bad:{cmd}; allowed commands= {_GlobalConst_allowedCommands}")
 				return
 
 			if cmd in ["beepBeacon", "updateTimeAndZone","getBeaconParameters"]:
@@ -26980,7 +28251,7 @@ configuration         - ==========  defined beacons ==============
 				self.sendGPIOCommand(ip, pi, typeId, cmd)
 				return
 
-			if cmd in ["BLEAnalysis","trackMac","qualifyDongle"]:
+			if cmd in ["BLEAnalysis","trackMac","qualifyDongle","irRecord"]:
 				# "params:10;CC:48:72:06:40:52;3" says nothing about what actually happens on the rpi.
 				# For qualifyDongle show the command line receiveCommands will really run, built with
 				# the same defaults as there (secs 10, tries 3, no connect test without a mac).
@@ -27013,7 +28284,6 @@ configuration         - ==========  defined beacons ==============
 				try:
 					i2cAddress = props["i2cAddress"]
 					out = ""
-					# _GlobalConst_allowedCommands		=["up", "down", "pulseUp", "pulseDown", "continuousUpDown", "disable"]	# commands support for GPIO pins
 					if cmd == "analogWrite":
 						out = cmd
 					elif cmd == "pulseUp":
@@ -27134,7 +28404,6 @@ configuration         - ==========  defined beacons ==============
 
 				try:
 					out = ""
-					# _GlobalConst_allowedCommands		=["up", "down", "pulseUp", "pulseDown", "continuousUpDown", "disable"]	# commands support for GPIO pins
 					if cmd == "up" or cmd == "down":
 						out = cmd
 					elif cmd == "pulseUp":
@@ -27747,6 +29016,11 @@ configuration         - ==========  defined beacons ==============
 				# formats its tables with.
 				rep = "\n".join([ll for ll in "{}".format(varJson["data"]["dongleQualifyReport"]).split("\n") if ll.strip() != ""])
 				self.indiLOG.log(20, f"===== dongle qualification report from rpi#{piU} =====\n{rep}\n===== end of report from rpi#{piU} =====")
+
+			# the IR remote recording, same road: rpi -> data -> indigo log, one call, newlines kept
+			if "data" in varJson and "irRecordReport" in varJson["data"]:
+				rep = "\n".join([ll for ll in "{}".format(varJson["data"]["irRecordReport"]).split("\n") if ll.strip() != ""])
+				self.indiLOG.log(20, f"===== IR remote recording from rpi#{piU} =====\n{rep}\n===== end of recording from rpi#{piU} =====")
 
 			if "data" not in varJson or "dongleQualify" not in varJson["data"]:	return
 			entries = varJson["data"]["dongleQualify"]

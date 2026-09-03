@@ -417,10 +417,6 @@ _GlobalConst_beaconPlotSymbols = [
 
 
 
-_GlobalConst_allowedCommands = [
-	"up", "down", "pulseUp", "pulseDown", "continuousUpDown", "analogWrite", "disable", "newMessage", "resetDevice", "restartDevice",
-	"getBeaconParameters", "startCalibration", "BLEAnalysis", "trackMac", "rampUp", "rampDown", "rampUpDown", "beepBeacon", "updateTimeAndZone", "qualifyDongle"]	 # commands support for GPIO pins
-
 _BLEsensorTypes =["BLERuuviTag", "BLERuuviAir",
 				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03G", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG", "BLEiTrackButton", "BLEShellyButton","BLEShellyMotion","BLEShellyDoor",
 				"BLEaprilAccel", "BLEaprilTHL", "BLEThermopro", "BLETempspike",
@@ -498,7 +494,41 @@ _GlobalConst_i2cSensors	  = [
 	"l3g4200", "bno055", "mag3110", "mpu6050", "hmc5883L", "mpu9255", "lsm303", "vl6180xDistance", "vcnl4010Distance", "apds9960", "MAX44009"]
 
 _GlobalConst_allowedOUTPUT = [
-	"neopixel", "neopixel-dimmer", "neopixelClock", "OUTPUTswitchbotRelay", "OUTPUTswitchbotCurtain", "OUTPUTswitchbotCurtain3", "OUTPUTgpio-1-ONoff", "OUTPUTgpio-1", "OUTPUTi2cRelay", "OUTPUTgpio-4", "OUTPUTgpio-10", "OUTPUTgpio-26", "setMCP4725", "OUTPUTxWindows", "display", "setPCF8591dac", "setTEA5767", "sundial", "setStepperMotor", "FBHtempshow"]
+	"neopixel", "neopixel-dimmer", "neopixelClock", "OUTPUTswitchbotRelay", "OUTPUTswitchbotCurtain", "OUTPUTswitchbotCurtain3", "OUTPUTgpio-1-ONoff", "OUTPUTgpio-1", "OUTPUTi2cRelay", "OUTPUTgpio-4", "OUTPUTgpio-10", "OUTPUTgpio-26", "setMCP4725", "OUTPUTxWindows", "display", "setPCF8591dac", "setTEA5767", "sundial", "setStepperMotor", "FBHtempshow", "OUTPUTthermostatIRac"]
+
+# gpio pin usage report: prop-name prefix -> what the pin DOES, where the device type alone would
+# be wrong or unhelpful. An INPUTpulse device reads on gpioEcho but drives gpioTrigger, and a
+# DF2301Q voice sensor drives an output pin per recognised command. Prefix match, lower case,
+# first hit wins - anything not listed falls back to the device type.
+_GlobalConst_gpioFieldDirection = {
+	"gpiotrigger":				"out",
+	"gpioecho":					"in",
+	"onewiregpios":				"in/out",	# 1-wire is a bidirectional bus on one pin
+	"onewireresetgpio":			"out",		# Wire18B20.py sets it to GPIO.OUT and drives it
+	"gpioin":					"in",
+	"gpionumberforcmdaction":	"out",
+	"gpiocmdindicator":			"out",
+	"gpiozone":					"out",
+	"interruptgpio":			"in",
+	"pin_webadhoc":				"in",
+	"shutdowninputpin":			"in",
+	"shutdownsignalfromupspin":	"in",
+	"shutdownpinvoltsensor":	"in",
+	"shutdownpinoutput":		"out",
+	"shutdownpinvetooutput":	"out",
+	"shutdownpinenable":		"out",
+	}
+
+# props that only POINT AT an output pin somebody else owns, instead of claiming it. A DF2301Q or
+# FaceGesture sensor drives an indicator LED on a recognised command - several sensors sharing one
+# LED is the normal setup, not a collision. Only pins claimed by more than one OWNER are a fault.
+_GlobalConst_gpioReferenceFields = ["gpionumberforcmdaction", "gpiocmdindicator"]
+
+# binding fields that say nothing about the HARDWARE, so a pin field hidden behind them is still a
+# real pin: piDone/stateDone only mean "the dialog has not been confirmed yet", the others are
+# convenience toggles for how much of the dialog is shown. Bindings on anything else - devType,
+# typeOfUPS, mode, NumZones, resistorSensor ... - do describe the hardware and ARE honoured.
+_GlobalConst_gpioIgnoreBindingOn = ["piDone", "stateDone", "expertMode", "showSpecialParameters", "showBeaconOnMap"]
 
 _GlobalConst_groupList = ["Family", "Guests", "Other1", "Other2", "Other3", "Other4", "Other5"]
 _GlobalConst_groupListDef = ["BEACON","PI","BLEconnect","SENSOR"]

@@ -347,6 +347,7 @@ The indigo device, from where the MAC number was taken(new), is deleted</Label>
 		<Name>-------------manage Beacon devices--------------------</Name>
 	</MenuItem>
 
+
 	<MenuItem id="qualifyDongle">
 		<Name>Qualify the BLE dongles of one RPI..</Name>
 		<ConfigUI>
@@ -1124,6 +1125,12 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 				<CallbackMethod>printBeaconsIgnoredButton</CallbackMethod>
 			</Field>
 
+			<Field id="printGPIOusage" type="button" tooltip="lists every gpio pin used on every rPi - which device, in or out, what for - and flags pins that two devices claim">
+				<Label>Print GPIO pin usage of all rPis to logfile (checks for double used pins)</Label>
+				<Title>execute</Title>
+				<CallbackMethod>printGPIOusageCALLBACKmenu</CallbackMethod>
+			</Field>
+
 			<Field id="printDeviceDictLabel0" type="label">
 				<Label></Label>
 			</Field>
@@ -1235,7 +1242,175 @@ If specififc MAC specified: 10 messages or max 10 seconds, if mac =*: 33 message
 	</MenuItem>
 
 	<MenuItem id="d20">
-		<Name>-------------manage sensor   devices  ----------</Name>
+		<Name>-------------manage devices  ----------</Name>
+	</MenuItem>
+
+
+
+	<MenuItem id="sendIRac">
+		<Name>Send an IR-AC command..</Name>
+		<ConfigUI>
+			<Field id="irLabel0" type="label">
+				<Label>Sends one complete frame through the selected IR-AC device - the same path a
+thermostat change takes, without going through the thermostat controls. The lists
+below follow the device's own protocol: toshiba has five fan speeds and "off" is a
+mode, gree has three and a real power bit.</Label>
+			</Field>
+			<Field id="acDevice" type="menu" defaultValue="0" tooltip="its rpi, gpio and protocol settings are used - pick the device first, the lists below follow it">
+				<List class="self" filter="" method="filterIRacDevices" dynamicReload="true"/>
+				<Label>IR-AC device:</Label>
+				<CallbackMethod>irAcDeviceChosenCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="acMode" type="menu" defaultValue="cool">
+				<Label>mode:</Label>
+				<List class="self" method="filterIRacModeList" dynamicReload="true"/>
+			</Field>
+			<Field id="acTemp" type="menu" defaultValue="22">
+				<Label>temperature:</Label>
+				<List class="self" method="filterIRacTempList" dynamicReload="true"/>
+			</Field>
+			<Field id="acFan" type="menu" defaultValue="auto">
+				<Label>fan:</Label>
+				<List class="self" method="filterIRacFanList" dynamicReload="true"/>
+			</Field>
+			<Field id="acSwingV" type="menu" defaultValue="last" tooltip="gree only - toshiba uses separate swing/fix commands">
+				<Label>vertical louver:</Label>
+				<List>
+					<Option value="last"      >leave as is</Option>
+					<Option value="auto"      >swing up and down</Option>
+					<Option value="up"        >fixed - up</Option>
+					<Option value="middleUp"  >fixed - middle up</Option>
+					<Option value="middle"    >fixed - middle</Option>
+					<Option value="middleDown">fixed - middle down</Option>
+					<Option value="down"      >fixed - down</Option>
+				</List>
+			</Field>
+			<Field id="acSwingH" type="menu" defaultValue="off" tooltip="gree only">
+				<Label>horizontal louver:</Label>
+				<List>
+					<Option value="off"      >leave as is</Option>
+					<Option value="auto"     >swing left and right</Option>
+					<Option value="maxLeft"  >fixed - far left (facing the ac)</Option>
+					<Option value="left"     >fixed - left (facing the ac)</Option>
+					<Option value="middle"   >fixed - middle</Option>
+					<Option value="right"    >fixed - right (facing the ac)</Option>
+					<Option value="maxRight" >fixed - far right (facing the ac)</Option>
+				</List>
+			</Field>
+			<Field id="acSleep"  type="checkbox" defaultValue="false"><Label>sleep  (gree only)</Label></Field>
+			<Field id="acHealth" type="checkbox" defaultValue="false"><Label>health / ioniser  (gree only)</Label></Field>
+			<Field id="acLight"  type="checkbox" defaultValue="true" ><Label>display light on the indoor unit  (gree only)</Label></Field>
+			<Field id="labelDry" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>In DRY mode a gree frame uses the temperature field for the HUMIDITY setting -
+the same nibble, a different meaning. The value above is sent either way.</Label>
+			</Field>
+			<Field id="execSendIRac" type="button">
+				<Label>After selection click</Label>
+				<Title>SEND</Title>
+				<CallbackMethod>sendIRacCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" default="">
+				<Label>msg from Plugin:</Label>
+			</Field>
+		</ConfigUI>
+	</MenuItem>
+
+	<MenuItem id="irRecord">
+		<Name>Record an IR remote (TSOP receiver)..</Name>
+		<ConfigUI>
+			<Field id="irLabel0" type="label">
+				<Label>Reads what a real remote sends and prints it into the indigo log: header and bit
+timings, how many frames, the decoded bytes - and whether they are the protocol
+piBeacon's toshibaIR builds. The unit's own remote is the only authority on what
+an AC listens for, so this is what to do when a correctly built frame is ignored.</Label>
+			</Field>
+			<Field id="irLabel1" type="label" fontColor="green">
+				<Label>== wiring, TSOP38238 seen from the FRONT (domed side), legs down:
+      pin 1 OUT  -&gt; the gpio selected below        pin 2 GND -&gt; ground
+      pin 3 VS   -&gt; 3.3 V, through 100 ohm, and 4.7 uF from VS to ground
+The output idles HIGH and pulls LOW while it hears a 38 kHz burst.</Label>
+			</Field>
+			<Field id="piServerNumber" type="menu" defaultValue="0" tooltip="select the rpi the IR receiver is connected to - any rpi with a free gpio, bluetooth plays no part here">
+				<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="true" />
+				<Label>Select rPi-server:</Label>
+			</Field>
+			<Field id="irGpio" type="menu" defaultValue="24" tooltip="pick by the GPIOxx part of the label, NOT by the L/R number - that one is the header position">
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+				<Label>gpio# of the IR receiver output:</Label>
+			</Field>
+			<Field id="irGpioHint" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Read the GPIOxx part, not the leading L/R number - that is where the pin sits on
+the header, left or right column. GPIO10 is "L19 GPIO10", while "R10 GPIO15" is
+GPIO15 on header position 10, and that one is the reboot input.</Label>
+			</Field>
+			<Field id="irWait" type="menu" defaultValue="15" tooltip="how long the rpi waits for a button press">
+				<List>
+					<Option value="10">10 seconds</Option>
+					<Option value="15">15 seconds (default)</Option>
+					<Option value="30">30 seconds</Option>
+					<Option value="60">60 seconds</Option>
+				</List>
+				<Label>Wait for a button press for:</Label>
+			</Field>
+			<Field id="irCount" type="menu" defaultValue="1" tooltip="record a SEQUENCE: each press is decoded and compared with the one before, so the bytes that carry what you changed are named">
+				<List>
+					<Option value="1">1 press</Option>
+					<Option value="2">2 presses</Option>
+					<Option value="4">4 presses (eg up/down/up/down)</Option>
+					<Option value="6">6 presses</Option>
+				</List>
+				<Label>How many button presses:</Label>
+			</Field>
+			<Field id="irSep1" type="separator" />
+			<Field id="irEcho" type="checkbox" defaultValue="false" tooltip="records the remote and immediately sends that exact recording back out on the ir led">
+				<Label>ECHO the recording back out on the IR led:</Label>
+			</Field>
+			<Field id="irEchoGpio" type="menu" defaultValue="18" visibleBindingId="irEcho" visibleBindingValue="true" tooltip="the gpio the ir LED driver is on - the same one the IR-AC device sends on">
+				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
+				<Label>gpio# of the IR led:</Label>
+			</Field>
+			<Field id="irEchoLabel" type="label" fontColor="green" visibleBindingId="irEcho" visibleBindingValue="true">
+				<Label>== the test for an AC that ignores a frame the receiver reads perfectly
+Records the unit's OWN remote and retransmits that exact pulse list on the led -
+nothing decoded, nothing rebuilt in between.
+
+The report only reaches this log when the run is over, so here is the timing to
+follow. Aim the led at the AC, press EXECUTE, and then:
+   1  press an ON command on the remote, eg cool 21 C. The AC switches on -
+      that is expected, it heard the remote.
+   2  a 15 s pause starts. PRESS OFF ON THE REMOTE. The unit switches off.
+   3  the recording goes back out through our led, still asking for ON 21 C.
+   4  another 15 s pause - press OFF again if it came on - then the same
+      waveform once more with the receiver's mark-stretching taken back out.
+Only our led can turn that unit back on, so switching on IS the result:
+   it comes on -&gt; emitter, carrier and aim are all fine, so what we BUILD differs
+   it stays off -&gt; the frame was never the problem: the remote's own waveform out
+      of our led does nothing, so it is the carrier or the light itself</Label>
+			</Field>
+			<Field id="irEchoDuty" type="menu" defaultValue="0.5" visibleBindingId="irEcho" visibleBindingValue="true" tooltip="carrier duty for the retransmission - real remotes use about 1/3, 0.5 puts more average power in the led">
+				<List>
+					<Option value="0.33">1/3 - what most remotes send</Option>
+					<Option value="0.5">1/2 - default, more average power</Option>
+					<Option value="0.25">1/4</Option>
+				</List>
+				<Label>Carrier duty for the echo:</Label>
+			</Field>
+			<Field id="irSep2" type="separator" />
+			<Field id="irLabel2" type="label" fontSize="small" fontColor="darkgrey">
+				<Label>Press EXECUTE, then aim the remote at the receiver from 10-30 cm and press ONE
+button. Record the same button twice to check it is reproducible, and record
+several settings that differ in one thing each (20C / 21C / heat / fan) - that is
+what identifies which bits carry what.</Label>
+			</Field>
+			<Field id="execIrRecordCALLBACK" type="button">
+				<Label>After selection click</Label>
+				<Title>EXECUTE</Title>
+				<CallbackMethod>irRecordCALLBACKmenu</CallbackMethod>
+			</Field>
+			<Field id="MSG" type="textfield" default="">
+				<Label>msg from Plugin:</Label>
+			</Field>
+		</ConfigUI>
 	</MenuItem>
 	<MenuItem id="resetGPIOCount">
 		<Name>Reset counter of channel of GPIO/TOUCH/PULSE devices</Name>

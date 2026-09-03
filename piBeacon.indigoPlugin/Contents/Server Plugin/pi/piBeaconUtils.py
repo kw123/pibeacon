@@ -1491,8 +1491,14 @@ def getOsVersion():
 	global OSVersion
 	if OSVersion !=-1: return  OSVersion
 
+	# THE only getOsVersion. A second one further down used to override this one silently: it
+	# shelled out to cat, did not cache, returned 0 instead of 8 when VERSION_ID was missing, and
+	# raised IndexError on an unquoted VERSION_ID=13. Removed 2026-08-31.
 	OSVersion = 8
-	ret = (subprocess.Popen("/bin/cat /etc/os-release", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").split("\n")
+	try:
+		ret = open("/etc/os-release").read().strip("\n").split("\n")
+	except Exception:
+		return OSVersion
 	for line in ret:
 		try:
 			if line.find("VERSION_ID=") == 0:
@@ -2957,16 +2963,6 @@ def checkIfStartwebserverINPUT():
 	return testForFile("{}temp/webserverINPUT.start".format(G.homeDir))
 
 #################################
-def checkIfwebserverINPUTrunning():
-	"""Reports whether the INPUT webserver process is running by checking for a running webserverSTATUS.py process (note: it checks the STATUS script, not the INPUT script).
-
-	Inputs:
-	    None.
-	Outputs:
-	    bool: True if the matching process is running, else False
-	"""
-	if pgmStillRunning("/webserverSTATUS.py"): return True
-	return False
 
 #################################
 def checkIfStopwebserverINPUT():
@@ -4800,20 +4796,6 @@ def checkIfmustUsePy3():
 	return False
 
 #################################
-def getOsVersion():
-	"""Reads /etc/os-release via a shell cat command and parses out the numeric VERSION_ID value, returning it as an integer (or 0 if not found).
-
-	Inputs:
-	    None.
-	Outputs:
-	    int: OS version id parsed from VERSION_ID, or 0 if absent
-	"""
-	osInfo	 = readPopen("cat /etc/os-release")[0].strip("\n").split("\n")
-	for line in osInfo:
-		if line .find("VERSION_ID=") == 0:
-			return int( line.strip('"').split('="')[1] )
-	return 0 
-
 #################################
 _configuredRe = re.compile(r'"configured"\s*:\s*"[^"]*",?\s*')
 def stripConfigured(rawParams):
@@ -6450,6 +6432,57 @@ def removefromFile(string, file, nLines=1):
 	return 1
 
 #################################
+_ntpCtl = [""]			# cached "how to control ntp on this os", see ntpService()
+_ntpInstallTried = [False]	# installNTP() tries at most once per program run
+
+def ntpService():
+	"""How to start/stop the time daemon on THIS rpi - the answer differs by OS release.
+
+	Up to bookworm the package is "ntp" with an init script at /etc/init.d/ntp. On trixie it is
+	"ntpsec", which ships no /etc/init.d/ntp at all and is driven through systemd. Every call here
+	used to be hard-wired to /etc/init.d/ntp, so on trixie start/stop silently did nothing and
+	installNTP() - which tested for that same file - re-ran the apt install on EVERY pass, logging
+	"will be installed next time around" forever.
+
+	Inputs:
+	    None
+	Outputs:
+	    str: a command prefix taking start/stop/restart, or "" when no time daemon is installed
+	"""
+	if _ntpCtl[0] != "":	return _ntpCtl[0]
+	for initScript in ("/etc/init.d/ntp", "/etc/init.d/ntpsec"):
+		if os.path.isfile(initScript):
+			_ntpCtl[0] = "/usr/bin/sudo {} ".format(initScript)
+			return _ntpCtl[0]
+	for unit in ("ntpsec", "ntp"):
+		try:
+			ret = subprocess.Popen("/usr/bin/systemctl list-unit-files {}.service".format(unit),
+									shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf-8")
+			if ret.find(unit + ".service") > -1:
+				# systemctl wants "systemctl <verb> <unit>" - the verb goes in the MIDDLE, so the
+				# unit is remembered and ntpCmd() assembles the line
+				_ntpCtl[0] = "SYSTEMCTL:" + unit
+				return _ntpCtl[0]
+		except Exception:	pass
+	_ntpCtl[0] = "-"		# nothing installed, remembered so this is probed once
+	return _ntpCtl[0]
+
+
+def ntpCmd(verb):
+	"""The shell command that does `verb` (start/stop/restart) to the time daemon, or "".
+
+	Inputs:
+	    verb (str): start / stop / restart
+	Outputs:
+	    str: the command, or "" when there is no time daemon to talk to
+	"""
+	ctl = ntpService()
+	if ctl == "-":					return ""
+	if ctl.find("SYSTEMCTL:") == 0:	return "/usr/bin/sudo /usr/bin/systemctl {} {}".format(verb, ctl.split(":")[1])
+	return "{} {}".format(ctl, verb)
+
+
+#################################
 def startNTP(mode=""):
 	"""Starts the NTP daemon via init.d; in 'simple' mode it just starts the service, otherwise it stops, performs a one-shot ntpd time sync, and restarts it, then verifies status with testNTP.
 
@@ -6458,8 +6491,13 @@ def startNTP(mode=""):
 	Outputs:
 	    None: starts/restarts the NTP service and runs testNTP
 	"""
-	if mode == "simple": subprocess.call("/usr/bin/sudo /etc/init.d/ntp start ", shell=True)
-	else: subprocess.call("/usr/bin/sudo /etc/init.d/ntp stop ; /usr/bin/sudo ntpd -q -g ; /usr/bin/sudo /etc/init.d/ntp start ", shell=True)
+	startCmd = ntpCmd("start")
+	stopCmd  = ntpCmd("stop")
+	if startCmd == "":
+		logger.log(20, "cBY:{:<20} no ntp/ntpsec service on this rpi - not starting anything".format(G.program))
+		return
+	if mode == "simple": subprocess.call(startCmd, shell=True)
+	else: subprocess.call("{} ; /usr/bin/sudo ntpd -q -g ; {}".format(stopCmd, startCmd), shell=True)
 
 	testNTP()
 	return
@@ -6475,8 +6513,15 @@ def installNTP():
 	Outputs:
 	    None: triggers background apt-get install of ntp and logs the action
 	"""
-	if os.path.isfile("/etc/init.d/ntp"): return 
-	logger.log(20, "cBY:{:<20} started NTP install w >>/usr/bin/sudo apt-get -y install ntp &<<;  will be installed next time around")
+	# INSTALLED? the daemon binary is the honest test. /etc/init.d/ntp does not exist on trixie
+	# even with ntpsec installed and running, so testing for it re-installed on every single pass
+	if os.path.isfile("/usr/sbin/ntpd"):	return
+	if ntpService() != "-":					return		# a service exists, whatever the binary is called
+	# ONCE per program run: if the package is not there after an apt-get, it is not coming, and
+	# repeating it every pass only fills the log and hammers apt
+	if _ntpInstallTried[0]:					return
+	_ntpInstallTried[0] = True
+	logger.log(20, "cBY:{:<20} no ntpd found, installing: apt-get -y install ntp. If this rpi has no ntp package (trixie renamed it ntpsec) install that by hand".format(G.program))
 	subprocess.call("/usr/bin/sudo apt-get -y install ntp & ", shell=True)
 	time.sleep(30)
 	return
@@ -6584,7 +6629,8 @@ def stopNTP(mode=""):
 	Outputs:
 	    None: stops ntp service and sets G.ntpStatus
 	"""
-	subprocess.call("/usr/bin/sudo /etc/init.d/ntp stop &", shell=True)
+	stopCmd = ntpCmd("stop")
+	if stopCmd != "":	subprocess.call("{} &".format(stopCmd), shell=True)
 	if mode =="":
 		G.ntpStatus = "not started"
 	elif mode == "temp":

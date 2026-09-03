@@ -705,25 +705,8 @@ def setGPIO(command):
 		with gpioOwnerLock:
 			newGen  = gpioOwner.get(pin, "?")
 			newWhat = gpioOwnerWhat.get(pin, "")
-		# A handover is the NORMAL path and says nothing worth reading: one output told to go up,
-		# then down, then up again hands its own pin over every time, and the older thread simply
-		# does not close it (closing releases the gpio and the level would go with it). Logging
-		# that made routine traffic look like a fault.
-		#
-		# So: silent when the SAME device is handing over to itself. It only speaks when the new
-		# owner is a different device or an IR send - the cases where an output really can refuse
-		# to stay on, and where the reason is otherwise invisible.
-		newDev = ""
-		if "dev:" in newWhat:	newDev = newWhat.split("dev:")[-1].strip()
-		if newWhat.startswith("irAC"):
-			U.logger.log(20, "setGPIO pin={}: generation {} handed the pin to an IR-ac send (generation {}). An IR-ac send ENDS BY DRIVING THE PIN LOW, so this on/off output will NOT stay on while it shares pin {} with the IR led".format(
-								pin, myGen, newGen, pin) )
-		elif newDev and newDev != "{}".format(devId):
-			U.logger.log(20, "setGPIO pin={}: generation {} (dev {}) handed the pin to generation {} ({}) - two indigo devices are driving the same pin, the last one wins".format(
-								pin, myGen, devId, newGen, newWhat) )
-		else:
-			U.logger.log(10, "setGPIO pin={}: handover, generation {} -> {} ({}), same device, not closing the pin".format(
-								pin, myGen, newGen, newWhat if newWhat else "unnamed") )
+		U.logger.log(DEBUG, "setGPIO pin={}: generation {} is done, generation {} ({}) owns the pin now - leaving its output alone. An IR-ac send ENDS BY DRIVING THE PIN LOW, so an on/off output on the same pin does not stay on".format(
+							pin, myGen, newGen, newWhat if newWhat else "unnamed") )
 
 	return
 

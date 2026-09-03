@@ -281,7 +281,7 @@ def execRaspi(params):
 		else:				print(        "results written to "+pFile+"   finished")
 
 	except Exception as e:
-		print("error, call: python3 get_raspi_config.py logpath.   err={}",format(e))
+		print("error, call: python3 get_raspi_config.py logpath.   err={}".format(e))
 		exit()
 
 execRaspi(sys.argv)

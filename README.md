@@ -4,100 +4,10 @@ Indigo plugin that uses Raspberry Pis to track iBeacons / BLE devices and to rea
 sensors attached to the Pis. The Pis report to the Indigo server over the network; the plugin manages
 device states, triggers, and the sensor programs running on each Pi.
 
-- **Current version:** 2022.191.248 (2026-08-03) — release. Everything since .171 in short:
-  **all BLE work runs in python now**, scanning *and* GATT — no hcidump / lescan / hcitool /
-  gatttool / pybluez on a python 3.5+ rPi, via the new stdlib modules `gattAttClient.py` and
-  `hciRawSocket.py`. That choice is now **one switch instead of two**: plugin config *"BLE engine
-  on the rPis — scanning + connecting"* (python socket / commandline), overridable per rPi; the two
-  old prefs meant the same decision and could be set contradictingly. **BLE5 / extended
-  advertising** brings the Ruuvi Air E1 full data set (PM1/2.5/4/10, CO₂, VOC, NOx, T/H/P) on a
-  BLE5-capable dongle, delivery-tested rather than trusted. **Radios are assigned to
-  scan / connect / broadcast / extended-listener by measured quality**, and each role can be
-  **pinned per radio** in the rPi device edit — where a USB radio only offers the scanner variants
-  it was *measured* to manage, the internal radio is never a scanner, and any radio can be ignored.
-  The new menu item **"Qualify the BLE dongles of one RPI.."** does that measuring: scan rate, BT5
-  delivery, advertising, stability, sensitivity and a real connect test, feeding a dongle catalogue.
-  Each radio now has **its own device state `hci0`…`hci3`**
-  (`mac/bus/usb-id/UP/BLE4+5/scan4+5`), replacing `hciInfo`, `hciInfo_beacons`, `hciInfo_beep`,
-  `hciInfo_BLEconnect` and `supportsBLE5`. **Beep** is reliable and ~2× faster, battery reads follow
-  the tags' wake-up order, and **single-dongle rPis** can beep / read battery / drive switchbots.
-  **States are optional**: Ruuvi value families, and min/max vs changes+trend as two independent
-  checkboxes on 64 device types (a RuuviTag drops from 82 states to 7) — all default ON. **The
-  daily average is time-weighted.** Device dialogs are generated, show **rPi names** and **group
-  names**, gained group membership on 21 more types, and are uniformly sectioned. The **status
-  column** is aligned by real pixel measurement of the 13 pt system font, with a new config for
-  where the date column starts — and changing it re-aligns every existing device at once. Indigo
-  state writes are down ~25%. On the rPi side, shell calls (`rm`/`mkdir`/`cp`/`echo >`) were
-  replaced by python helpers with atomic writes, the `/var/log/pibeacon` root-ownership trap that
-  silently killed logging is fixed, apt no longer retries packages the OS does not have
-  (`libgpiod2` → `libgpiod3` on trixie), and the plot scripts no longer flood the log with
-  matplotlib/PIL chatter. See `Contents/changelist.txt` for the full list, including ~30 fixes.
-- Before that, .220 (2026-08-02) — **the dongle qualification tool works end to
-  end**, and the device-edit dialogs are generated instead of copy-pasted. qualifyDongle no longer
-  wedges the rPi: it used to hold beaconloop and BLEconnect paused indefinitely, because the tool
-  never exited (piBeaconUtils' send thread is not a daemon, so the process hung after printing its
-  report) while the caller kept refreshing the pause files. The pause now has a hard cap, the caller
-  waits with a timeout and reads a file instead of a pipe, and the tool exits after flushing. Its
-  **connect test was measuring nothing**: it paged tags as *public* addresses (0x01 is
-  BDADDR_LE_PUBLIC, random is 0x02), so every attempt on every radio timed out and looked like bad
-  hardware — 0% became 100% on all three radios once the address type was derived from the tag.
-  Role verdicts are reconciled now: a measured 100% grants "connect" whatever the ACL MTU says, a
-  measured 0% withholds it, and every MTU band explains itself. **SwitchBot contact sensors stopped
-  firing phantom triggers** — the type-4 frame has no button counter (nibble 13 there is a rotating
-  open indicator), but it was read as one, written to indigo and used to overwrite the real counter
-  from the type-3 frame; that produced two spurious state changes roughly every 20 minutes.
-  **Device dialogs:** the rpi-selection and group-membership blocks are built at runtime by
-  `getDeviceConfigUiXml`, so Devices.xml lost ~4,300 lines of duplicated `<Field>` markup, rpi
-  checkboxes now carry the **rPi name** and group checkboxes the **configured group name**, group
-  membership works on 21 more device types, and "Other5" is finally reachable. Section headers are
-  uniform (green, `====`) and denser; "state column" is called "status column" everywhere.
-  Internally `plugin.py` is sorted into 13 labelled sections, its ~900 lines of static tables moved
-  to `piBeaconConstants.py`, and the cProfile machinery is gone.
-- Before that, .185 (2026-07-28): **device states are optional now**: Ruuvi
-  sensors can switch whole value families off in device edit (temperature, humidity, pressure,
-  CO2, VOC, illuminance, acceleration), and on *every* sensor the min/max block and the
-  changed-values/trend block are two independent checkboxes — a RuuviTag drops from 82 states
-  to 7 with everything off. All default ON, so existing devices are untouched until edited.
-  **The daily average is time-weighted** now: readings are weighted by how long they were
-  valid instead of counting each equally, which was wrong because sensors report far more
-  often while a value is moving (a day of 20 h at 10 °C then 4 h at 20 °C reported 17.5 °C
-  instead of 11.7 °C). RuuviAir matched to its hardware: no battery states (it is USB-C
-  powered) and illuminance off by default (Ruuvi dropped the light sensor). Internally,
-  `plugin.py` moved to py3 f-strings.
-- Before that, .184 (2026-07-26): BLE5 live-verified end to end (dongle receives Ruuvi Air E1
-  incl. PM1/PM4/PM10; delivery-tested probe with persisted verdict, strict 3-radio role rule
-  scan/connect/broadcast, new rpi state "supportsBLE5", extScanTest.py tests all adapters in one
-  run); indigo update-load cut ~25% (lastUpdateFromRPI now debug-gated, TxPowerReceived on
-  delta>5 only); coin-cell battery% temperature-compensated correctly (whole voltage window
-  shifts with cold, not just the empty point); i2c_active ghost addresses fixed; socket comm
-  hardening (sendall + receiver typo).
-- Before that, .181–.183 (2026-07-24):
-  **single-dongle GATT root cause found and fixed** — the old pause pre-disabled the LE scan
-  behind the kernel's back, which made every create-connection on the onboard radio time out;
-  the pause now stops only the iBeacon advertising and the kernel manages the scan itself
-  around its connect ("keepScan"). Beeps land in ~3.5–8 s on a single onboard radio that
-  keeps scanning throughout (no pre-listen for the ATT engine — the kernel's pending
-  create-connection is the listener; two short pending windows re-roll a silently wedged
-  initiator; fast ENOSYS retries; rssi-tagged diagnostics; gatttool as automatic last-resort
-  fallback). Battery batches: any adv counts as "tag online" and beacon tracking continues
-  during every read. **Smart dongle auto-assignment** ("let the RPi decide"): the good
-  adapter goes to connects (beep/battery/iphone/switchbot), the other — even a known-bad
-  CSR clone — to scanning, with a problem-triggered warning when a clone struggles.
-  **attSocket is now the default gatt engine** (and "socket" the default scan method) on
-  every install — rPis that cannot run it (py < 3.5) fall back to gatttool automatically.
-  Also: no more parameter-file reprocess churn on the rPis (timestamp-only resends are
-  ignored); `acceptNewiBeacons` renamed to `acceptNewBeaconsMinSIgnal` with a safe OFF
-  default (stops the beacon_parameters file from flooding with drive-by beacons); rPi log
-  timestamps with tenths of a second and without the redundant Lv column.
-  Before that, .172–.180, the BLE modernization: **all GATT work runs without
-  gatttool/pybluez/hcitool on py3.5+ rPis** (opt-in "attSocket" mode) — stdlib ATT client
-  over LE L2CAP for beep/battery/time-set, BLE sensors and switchbot incl. curtain feedback;
-  iPhone/watch presence via classic-BT paging (stdlib sockets, `iphoneDebug` switch);
-  **"socket" as the default scan method** (full hcidump parity, new-kernel HCI-filter fix);
-  battery batches read in wake-up order; pixel-accurate device-list column alignment.
-  See `Contents/changelist.txt` for the full history.
+- **Current version:** 2022.191.252 (2026-08-31) — release
 - **Author:** Karl Wachs
 - **Forum / support:** http://forums.indigodomo.com/viewforum.php?f=164
+- **Change log:** see `Contents/changelist.txt`
 
 ## Setup
 
@@ -143,12 +53,109 @@ every command it spawns logs harmless `shell-init: getcwd` warnings until it is 
         +-- i2c / SPI / GPIO / 1-wire / serial -->  wired sensors & outputs
         |
         +-- BLE dongle(s) <~~~ BLE advertisements ~~~<  iBeacons, BLE sensors,
-                          ~~~> GATT connections    ~~~>  switchbot devices
+        |                 ~~~> GATT connections    ~~~>  switchbot devices
+        |
+        +-- IR led        ~~~> 38 kHz remote frames ~~>  air conditioners
+            IR receiver  <~~~ a real remote, to record it
 
    Beacon tracking: every Pi reports RSSI per beacon; the plugin combines the
    reports, estimates distance, sets the beacon device to up/down, tracks the
    "closest rPi", and drives the home/away group triggers.
 ```
+
+## BLE radios: how many, what they do, which ones to buy
+
+Everything BLE runs in python on the Pi — scanning *and* GATT — through the stdlib modules
+`hciRawSocket.py` and `gattAttClient.py`. No hcidump, lescan, hcitool, gatttool or pybluez is needed
+on a Pi with python ≥ 3.5. One plugin config switch covers it: *"BLE engine on the rPis — scanning +
+connecting"* (python socket / commandline), overridable per Pi in the rPi device edit. Pis that
+cannot run it (python < 3.5) fall back to the command-line tools automatically.
+
+### The four roles
+
+Each Pi splits its bluetooth adapters over four jobs:
+
+- **scan** — continuous LE scanning: iBeacons and all broadcast-only BLE sensors.
+- **broadcast** — the Pi's own iBeacon advertisement, roughly one every 8–10 s. This radio's MAC is
+  the Pi's identity (what other Pis hear, and what the plugin links the rPi device to).
+- **BLEconnect** — everything that needs a GATT connection: beep, battery reads, connect-type BLE
+  sensors, switchbot, and iPhone/watch presence paging.
+- **extListener** — BLE5 extended advertising only, e.g. the full Ruuvi Air E1 data set
+  (PM1/2.5/4/10, CO₂, VOC, NOx, T/H/P). Needs a BLE5-capable radio that holds no other role.
+
+Roles are assigned by *measured* quality, not by what a dongle claims. The internal (UART) radio is
+never used as a scanner — its scanning fights wifi — but it is the natural home for BLEconnect and
+for the broadcast.
+
+### What happens with 1, 2 or 3 radios
+
+- **One radio (internal only)** — it does everything. While a GATT job runs (beep, battery,
+  switchbot), the Pi pauses only its own iBeacon advertising; the LE scan keeps running, so beacon
+  reception continues and beeps land in ~3.5–8 s. No BLE5.
+- **Two radios** — scan and broadcast on the dongle, BLEconnect on the internal radio. No BLE5
+  listener: the second radio belongs to BLEconnect, and beep/battery/switchbot outrank E1 reception.
+  *Exception:* a BLE5-only dongle (one that refuses BLE4 scan commands with 0x0C, e.g. Barrot /
+  UGREEN 33fa:0012) can do nothing else, so it becomes the extended listener while scan, broadcast
+  and BLEconnect all stay on the internal radio.
+- **Three or more radios** — scan / BLEconnect / extListener each get their own, and the broadcast
+  rides along with the scanner (one advertisement per 8–10 s costs it nothing). If the scanner is
+  running in extended mode, the broadcast moves to a non-BLE5 radio instead: a legacy advertising
+  command locks a controller into the legacy command family and kills extended reception.
+- **Not supported:** a BLE5-only dongle with no internal radio — nothing can scan BLE4 and the Pi
+  receives no ordinary beacons at all. The Pi logs this and sends an error to Indigo.
+
+Every role can also be **pinned per radio** in the rPi device edit. A USB radio is only offered the
+scanner variants it was *measured* to manage ("scanner BLE4", "scanner BLE5", "scanner BLE4 + BLE5"),
+the internal radio is only offered BLEconnect, and any radio (except the last one) can be set to
+"ignore". A pin also lifts the "BLE5 needs three radios" rule — you have said which radio does it.
+
+Each radio has its own device state `hci0`…`hci3`, holding
+`mac / bus / usb-id / UP-DOWN / BLE4+5 / scan4+5`, so what the Pi found and what it decided is
+visible in Indigo.
+
+### Testing dongles: "Qualify the BLE dongles of one RPI.."
+
+The menu item runs `pi/qualifyDongle.py` on one Pi and prints the report into the Indigo log. It
+answers the deployment question — *which of the four roles can this adapter actually do* — and it
+trusts nothing the hardware claims; only delivered packets count. (LE feature bit 12 is set by
+dongles that deliver zero extended reports, and dongles that pass the extended test can be useless
+as scanners.) Phases: fingerprint (bus, OUI, ACL MTU, USB VID:PID, kernel), health after a reset,
+claimed BLE5 features, extended reception, legacy reception (including whether the commands were
+*accepted* at all), advertising, and an optional connect test against a real tag, repeated N times —
+one lucky connect proves nothing. Each measuring phase also profiles per-second buckets and the
+longest silence (an average hides a radio that delivers one burst and then stops) plus the RSSI
+distribution as a sensitivity proxy.
+
+beaconloop and BLEconnect are paused while the test runs, so no beacons are received for those
+seconds — run it when a short gap does not matter. Results are appended to a shared
+`dongleCatalogue.json` in the plugin's preferences folder, keyed by USB VID:PID, and they are what
+the per-radio pin menus offer.
+
+One thing the report says that does *not* depend on your surroundings: an **ACL MTU ≤ 400** marks a
+CSR8510 clone — scans fine, unreliable for connects.
+
+### Measured dongle types
+
+Compare dongles only against each other **on the same Pi in the same place**: how many packets a
+radio delivers depends entirely on how many BLE devices are talking around it, so the plugin judges
+a radio relative to what the other radios in that Pi hear, never against a number from someone
+else's house. What follows is therefore a ranking, not a specification.
+
+- **Pi internal, Broadcom (`B8:27:EB`)** — the fastest scanner of the lot, no BLE5. It is
+  deliberately kept for connects and broadcast anyway, because scanning on it fights wifi.
+- **Broadcom BCM20702A0 (`0a5c:21e8`)** — nearly as fast as the internal radio, no BLE5, connect
+  proven. An excellent BLE4-only scanner.
+- **Realtek ASUS USB-BT500 (`0b05:190e`), Realtek BT5.3 (`0bda:a729`), Realtek BT6.0 (`0bda:a760`)** —
+  clearly slower than the Broadcoms in BLE4, but they receive extended advertising well and connect
+  reliably. The all-rounders: BLE4 + BLE5 in one dongle, and the ones to buy for E1 reception.
+- **Barrot USB2.0-BT (`33fa:0010`)** — refuses BLE4 scan commands entirely, and is the strongest
+  extended receiver measured. Excellent extended listener, useless as a scanner.
+- **UGREEN BT6.0 (`33fa:0012`)** — also BLE4-deaf, and its extended reception is weak. Extended
+  listener and broadcast only.
+- **Mercusys MA530 (`2c4e:0115`)** — delivered nothing in either mode: broadcast only. Do not buy for
+  this job.
+- **CSR8510 clones** — scan acceptably but their ACL MTU gives them away; they get the scan or
+  broadcast role and are kept away from connects.
 
 ## Supported iBeacon types
 
@@ -156,7 +163,8 @@ Any tag that broadcasts standard **iBeacon / Eddystone** advertisements works. T
 `Contents/beaconTypes.txt` contains a detailed comparison (form factor, battery, beep support,
 battery-level reporting). Highlights:
 
-- **Musegear iTrack (EU)** — top pick: beep, battery reading, button press detectable; regular / mini / card
+- **iTrack** (sold in the EU by **Musegear**, its EU distributor) — top pick: beep, battery reading,
+  and a **button press that can trigger an Indigo action**; regular / mini / card
 - Rechargeable with beep + battery: Nonda Aiko, Nonda iHere, Smart Tracker
 - CR2032 with beep + battery: NutFind 3 / Nutale / Nut Pro, Vozni iTrack, SpotyPal, Rinex / Njoii iTrack
 - Beep, no battery reading: Innway Tag / Chip / Card, Cube, Orbit, Safedome (card)
@@ -168,6 +176,29 @@ battery-level reporting). Highlights:
 
 The plugin can auto-accept new beacons, beep beacons that support it, read battery levels, and
 track cars (dedicated *Car* device with per-car beacon assignment).
+
+## Position plot of the beacons
+
+Beyond "which Pi is closest", the plugin can draw the beacons onto a **map of your home** as a PNG
+that refreshes by itself — enable it in the plugin config ("Create png file of x,y,z positions of
+iBeacons") with an update interval of 30 s to 10 minutes, or only when a beacon has moved by a
+chosen number of distance units.
+
+How it works: each rPi device gets accurate x,y,z coordinates, each beacon its TX power, and the
+position is interpolated from the strongest and second-strongest Pi signal. Floors are handled with
+**z levels** — one number per floor (e.g. `0,5,10,15`), used again in the rPi device edit, and
+beacons on different floors are drawn with different hatching.
+
+- Drop a `background.png` (your floor plan) into the plugin's `plotPositions/` preferences folder or
+  into the output path you configure, and the beacons are drawn on top of it.
+- X/Y scale are given in your own distance units (e.g. 20 by 30 m), image size by the number of
+  y-dots; the output file location is configurable.
+- Per beacon, in the device edit: whether it appears at all, its symbol (text label, dot, small
+  circle, circle sized by the distance to the closest Pi, square), symbol colour, transparency, text
+  colour and a short nickname.
+- Options for showing the rPis themselves, showing or hiding expired beacons, symbol size, caption,
+  timestamp and a free title with position and rotation.
+- BLE-connect devices are plotted along with the beacons; expired ones switch to a distinct symbol.
 
 ## Supported BLE sensors (no pairing — data via broadcast or GATT)
 
@@ -224,6 +255,218 @@ as3935 lightning detector
 **Custom**: `mysensors.py` / `myprogram.py` device types run your own code on the Pi;
 `SPECIAL-launchpgm.py` starts/supervises any external program.
 
+## Sensor statistics: min/max, average, trend — and how to switch them off
+
+Every sensor value the plugin tracks (temperature, humidity, pressure, CO₂, VOC, illuminance,
+moisture, conductivity, rain rate, counts, generic INPUTs, …) can carry a set of derived states:
+
+- **min/max block** — `…MinToday` / `…MaxToday` with the time they happened (`…MinTodayAt` /
+  `…MaxTodayAt`), the same four for yesterday, plus `…AveToday` / `…AveYesterday` and
+  `…MeasurementsToday` / `…MeasurementsYesterday`. Everything rolls over at midnight.
+- **changes + trend block** — `…ChangeMinutes05/10/20` and `…ChangeHours01/02/06/12/24/48`, and the
+  `…Trend` derived from them.
+
+**Switching them on and off.** Both blocks are two *independent* checkboxes per value in the device
+edit, and whole value families (Temperature, Humidity, Pressure, CO₂, VOC, Illuminance,
+acceleration) can be switched off entirely — a value family that is off has no states at all, and
+its min/max and changes checkboxes are forced off with it. With everything off a RuuviTag drops from
+82 states to 7. Every option defaults to ON, so devices you never edit keep exactly the states they
+had. The exceptions are hardware-driven: the RuuviAir has no battery states (it is USB-C powered)
+and its illuminance defaults to off, because Ruuvi dropped the light sensor from that model.
+
+**The daily average is time-weighted.** A reading counts for *how long it was valid*, not for how
+often it arrived. This matters because sensors report on value-change **or** on an idle timer, so a
+fast-moving value reports far more often than a quiet one — a plain sum/count lets a short hectic
+period outweigh a long calm one. A day of 20 h at 10 °C followed by 4 h at 20 °C is now reported as
+**11.7 °C**, where counting each reading equally gave **17.5 °C**. The accumulator is persisted with
+the change history (saved hourly and on plugin stop), so a restart does not throw away the part of
+the day already measured.
+
+## Air conditioners over IR
+
+An **OUTPUT-Thermostat-IR-AC** device drives an air conditioner through an infrared LED on a Pi
+GPIO pin. It appears in Indigo as an ordinary thermostat — mode, setpoint and fan — and the
+protocol is a device setting, currently **Toshiba** (RAS series) and **Gree**.
+
+IR is one way: nothing is read back, so the device states are what the plugin *believes* the AC is
+doing. That stays true until somebody picks up the hand remote.
+
+### The hardware
+
+One GPIO pin, a transistor and an IR LED. Measured in a normal room: **three IR940 LEDs in series
+at ~120 mA reach the AC from anywhere in the room**, pointed at it or away — the reflections are
+enough, so the LED does not have to be aimed and needs no long cable. A single LED works too, but
+must point at the unit, and reaches about 3 m.
+
+![the IR LED driver](irLedCircuit.svg)
+
+```
+  +5V  o----+---------------------+
+            |                     |
+           ---                   ---
+           \ /    IR940  >>      \ /    green >
+           ---                   ---
+            |                     |
+           ---                   [#]    4.7k
+           \ /    IR940           |
+           ---                    |
+            |                     |
+           ---                    |
+           \ /    IR940           |
+           ---                    |
+            |                     |
+           [#]    2 ohm           |
+            |                     |
+            +---------------+-----+
+                            |
+                            |  collector
+                           |/
+GPIO18 o--+--[####]--------|   NPN
+          |  560           |\
+         [#]                v  emitter
+          |  15k            |
+  GND  o--+-----------------+
+```
+
+- gpio → **560 Ω** → NPN base, **15 kΩ** from the gpio line to ground
+- collector → **2 Ω** → 3 × IR940 → +5 V
+- a **green LED + 4.7 kΩ** across that same branch, so you can see it sending
+- the pull-down matters: a Pi pin is an *input* until a program drives it, and an open base lets
+  the transistor conduct on noise
+
+The base resistor sets the working point, not the ballast. 560 Ω from a 3.3 V pin gives ~4.6 mA of
+base current, and at the hFE a small NPN has left at this current (~25) that is the ~120 mA
+measured through the IR string. The transistor is running in its active region rather than
+saturated, which is what makes the current predictable from the base side.
+
+The 2 Ω looks pointless next to three LEDs and is not. At 120 mA the IR forward voltage has risen
+to about 1.35 V each, leaving roughly **0.7 V** of headroom on a 5 V rail — so the 240 mV the
+resistor takes is a third of what is left. Against an LED's steep I-V curve that is real negative
+feedback: it costs nothing at the working point and quietly limits what a hotter day or a
+higher-gain transistor could otherwise pull.
+
+The green LED is worth the two parts. It draws about 0.6 mA and turns "is the pin doing anything
+at all" into a glance — the eye cannot see 38 kHz inside a burst, but it sees a ~300 ms
+transmission perfectly well.
+
+The 38 kHz carrier is generated by pigpio's DMA waveforms, so its timing is unaffected by CPU load.
+
+### Recording a remote
+
+**Menu → "Record an IR remote (TSOP receiver).."** reads a real remote through a 38 kHz IR receiver
+(TSOP38238, CHQ1838 or similar) on any free GPIO, and prints to the Indigo log: the header and bit
+timings, the frames, the bytes in both bit orders, and — when it recognises the protocol — a plain
+reading of what the remote asked for. It records a **sequence** of presses and diffs them, so
+"which bits carry the temperature" is answered by pressing up/down/up/down.
+
+That is how the Gree support here was built: every field was measured off a real remote rather than
+taken from a datasheet, and `greeIR.py`'s self-test rebuilds two dozen recorded states byte for
+byte. Wiring is OUT → gpio, GND, and VS through **100 Ω** with **4.7 µF** to ground — a receiver
+without that filter reads supply ripple as signal.
+
+A receiver is blind to one thing, and it is worth knowing before spending an evening on it: it
+**demodulates the carrier away** and reports only the envelope. So a recording, a loopback and a
+pulse-by-pulse comparison against the remote can all agree perfectly while the frequency inside
+the marks is wrong. It was not the problem on either unit here — both answer across 26–40 kHz —
+so there is no carrier setting in the dialog, but if a future one ignores a frame that reads
+correctly, `pi/irScan.py` walks 25–48 kHz in 1 kHz steps sending a real command at each.
+
+### What each protocol carries
+
+Both send the **complete state** — there is no "just change the fan".
+
+Indigo's thermostat and an AC do not line up exactly, and two mappings are worth knowing. The
+**fan** in Indigo is only *auto* or *always on*, so the device carries a setting for what
+"always on" means (Gree default speed 3); the plugin's own action and menu reach every speed.
+And Indigo's **auto** mode normally switches between heating and cooling by comparing the room to
+`heatSetpoint` and `coolSetpoint` — it cannot do that here, because an IR device is
+blind and nothing reports back. The AC's own auto does the same job with its own sensor, so the
+two are sent as their **midpoint** and the unit decides.
+
+- **Toshiba**: 9 or 10 byte message, unit code a/b, five fan speeds, modes auto/cool/dry/heat, and
+  *off is a mode*. Setpoint 17–30 °C.
+- **Gree**: 8 byte state sent as two blocks, modes auto/cool/dry/fan/heat, a real **power bit**
+  (so "off" leaves the mode alone), both louvers with all their positions, sleep, health/ioniser,
+  display light, turbo and xfan. Setpoint 16–30 °C — and in **dry mode the temperature field is
+  the humidity setting instead**.
+
+  The fan is **five speeds** — silent, 1, 2, 3, 4 — plus auto, using the remote's own labels. The
+  fan field in the frame is only **two bits and saturates at 3**, so the real position rides in a
+  later message of the sequence; that is why speeds above 3 are reachable at all. The remote's
+  **full** is not a fan position: it is the turbo bit, so asking for "full" sends the top speed
+  with turbo set.
+
+  One press is **four messages**, ~40 ms apart, and the unit acts on nothing less. Repeating a
+  single frame does not work — not four times over, and not at any carrier from 26 to 40 kHz.
+  They are told apart by byte 3's high nibble, which is a *message index*: **5** carries the full
+  state, **6** and **7** carry the command bytes only, and **A** carries no command at all and
+  ends the transmission. Only message 5 carries the louvers, even when the louvers are what
+  changed. `buildSequence()` generates all four from the state, and the self-test rebuilds a full
+  ten-press cycle recorded from the remote — every frame of every step — on every run.
+
+  Worth knowing if you ever meet a similar unit: the frames were byte-perfect against the remote
+  from early on, and a receiver read our transmissions back cleanly. None of that says anything
+  about whether the AC will obey, because a receiver cannot see the carrier and a frame that is
+  correct in isolation can still be an incomplete *conversation*.
+
+### Controls
+
+- **Menu → "Send an IR-AC command.."** — pick a device and send a complete state. The mode, fan and
+  temperature lists follow that device's brand, so a Gree device is never offered a Toshiba speed.
+- **Actions**: set fan speed, set mode, set louvers, set sleep/health/light — for everything
+  Indigo's own thermostat control has no name for. Each stores the choice on the device and resends
+  the whole state.
+- **TEST LED** in the device dialog blinks the LED for a second at a time so you can see it in a
+  phone camera; **TEST VARIANTS** walks the Toshiba protocol variants, switching the AC on at a
+  different temperature for each, so the unit itself tells you which one it answers.
+
+### Adding a brand
+
+Two halves, and only one can be done at the desk.
+
+The **encoder** comes from recordings alone: press the remote through a TSOP, diff the presses to
+see which bits carry what, and let the checksum tell you a frame is a frame. `greeIR` was built
+that way and its output was provably identical to the remote's before the unit ever obeyed one.
+
+Whether a correct frame is **sufficient** cannot be learned that way. This Gree wants the whole
+four-message press and ignores a single frame however often it is repeated — nothing in a capture
+of one press hints at that. Nor can a capture tell you the carrier, which the receiver strips
+before you see it. And a field can lie: byte 0's fan saturates at 3, so ordinary captures suggest
+three speeds when the remote has five.
+
+So expect an evening of recordings for the encoder, then a session at the unit itself.
+
+### The beep is the oracle
+
+A Gree unit **beeps on every frame it accepts**, and that is worth more than the display, because
+it separates the two failures that look identical from across the room:
+
+- **beep, nothing changes** — the frame was received and applied. Whatever field you moved is not
+  the one the unit reads for that setting. This is how the fan turned out to live in a later
+  message rather than in byte 0.
+- **no beep** — not received at all: the carrier, the aim, or a malformed frame.
+
+Without it, "no reaction" covers both, and the two want opposite investigations.
+
+### When an AC ignores everything
+
+On the Pi, `irTest.sh` is the whole toolbox, and the order below is the order that isolates
+fastest — each step removes one explanation:
+
+```
+irTest.sh a              record a real remote press, save the pulse list
+irTest.sh b              replay it at every carrier, 8 s apart
+irTest.sh m <hz> <n>     replay only the first n messages of that press
+irTest.sh r <hz> <n>     replay the whole press n times at one carrier
+irTest.sh c <hz> <n>     send the ENCODER's frames, 21/25 °C alternating
+irTest.sh s              scan 25–48 kHz in 1 kHz steps
+```
+
+Put the unit in the *opposite* state with its own remote before replaying, so a success is
+visible and cannot be confused with the AC still obeying the button press it just heard. And
+never conclude anything from a single success: a marginal link produces one, and two of the
+false leads in this protocol's history came from exactly that.
+
 ## Outputs
 
 - **GPIO**: on/off pin, dimmer (PWM)
@@ -233,6 +476,7 @@ as3935 lightning detector
   xWindows output, distance display
 - **LEDs**: NeoPixel strips/matrices, NeoPixel dimmer, NeoPixel clock, sundial clock
 - **Motion**: stepper motors
+- **Air conditioners**: IR remote control of Toshiba and Gree units — see above
 - **Misc**: FM radio TEA5767, sprinkler controller, garage door, sound playback on the Pi,
   `myoutput.py` for custom output code
 
@@ -247,12 +491,14 @@ as3935 lightning detector
   set DAC value (MCP4725 / PCF8591), FM radio tuning, NeoPixel pixels, display text/graphs,
   extra display pages, stepper motor commands, send text to `myoutput.py`
 - **Beacons**: get battery level (one/all), beep a beacon (incl. the SwitchBot remote button)
+- **IR air conditioners**: set fan speed, set mode, set louvers, set sleep / health / light
 - **Device utilities**: set/get any device property, set any device state
 
 A parallel set of interactive **menu items** covers setup (create/config/replace Pis, fix IP or
 duplicate Pi numbers), beacon management (accept/ignore, replace, battery, beep, fast
 beacon→switchbot actions), diagnostics (track MACs, special logging, print configs,
-**qualify the BLE dongles of a Pi**), and output testing.
+**qualify the BLE dongles of a Pi**), output testing, and the two IR items above —
+**send an IR-AC command** and **record an IR remote**.
 
 ## Trigger events
 
@@ -272,6 +518,15 @@ beacon→switchbot actions), diagnostics (track MACs, special logging, print con
   - `BLEconnect.py` — GATT work: beep, battery, BLE sensors, switchbot, iPhone presence
   - `gattAttClient.py` / `hciRawSocket.py` — the python-stdlib GATT/ATT and raw-HCI backends
     (no gatttool, hcitool, hcidump or pybluez needed; python ≥ 3.5)
+  - `toshibaIR.py` / `greeIR.py` — the AC remote encoders, one per protocol. Each runs its own
+    self-test when executed directly, rebuilding states recorded from a real remote
+  - `irRecord.py` — reads a remote through a TSOP receiver and decodes it; can echo what it
+    recorded straight back out on the LED
+  - `irReplay.py` — sends a recorded pulse list, one message per waveform, keeping the gaps
+  - `irScan.py` — walks the carrier frequency, sending a real command at each step
+  - `irTest.sh` — the record / replay / scan steps as single commands
+  - `irRecord.py` — records and decodes a real IR remote; `irReplay.py` sends a recorded pulse
+    list back out unchanged
   - `qualifyDongle.py`, `extScanTest.py`, `ruuviPrint.py` — standalone diagnostic tools that can
     also be run by hand on a Pi
 - `Contents/changelist.txt` — version history
