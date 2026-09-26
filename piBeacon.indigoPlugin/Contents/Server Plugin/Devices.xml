@@ -993,6 +993,11 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 == But do NOT use a MAC number of another indigo RPI or beacon devic ==</Label>
 			</Field>
 
+		<Field id="printPropsSeparator" type="separator"></Field>
+		<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+			<Label>Debug:</Label>
+			<Description>print all properties of this device to the log after saving (resets itself)</Description>
+		</Field>
 	</ConfigUI>
 
 		<States>
@@ -1816,6 +1821,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>use if you have a slow connection iw wifi and large packages dont come through</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2266,6 +2276,11 @@ Or if you want to exclude a specific beacon that is stationary and want to see w
 				<Label>Must not be equal to an existing ACTIVE device. Use this to eg replace an iBeacon with a new one. Write MAC address of new beacon here. This will then ONLY replace the MAC number and keep history of THIS device. It will set the old MAC# to IGNORE
 You can use this also to create a new iBeacon device...BUT do NOT use a MAC number of an existing indigo beaacon device</Label>
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2493,6 +2508,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2591,6 +2611,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -2912,6 +2937,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3332,6 +3362,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3453,6 +3488,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3687,6 +3727,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3861,6 +3906,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4055,6 +4105,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4243,6 +4298,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4461,6 +4521,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4690,6 +4755,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4896,6 +4966,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5079,6 +5154,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5327,6 +5407,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5517,6 +5602,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5684,6 +5774,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5925,6 +6020,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6089,6 +6189,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6255,6 +6360,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6484,6 +6594,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6688,6 +6803,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6949,6 +7069,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7102,6 +7227,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7287,6 +7417,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7446,6 +7581,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7609,6 +7749,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7752,6 +7897,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -8008,6 +8158,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8124,6 +8279,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="onOffuiTrue"		type="textfield"	defaultValue="on">	<Label>show what string in status if on (empty = let indigo show the state):</Label>	</Field>
 			<Field id="onOffuiFalse"	type="textfield"	defaultValue="off">	<Label>show what string in status if off (empty = let indigo show the state):</Label>	</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8190,6 +8350,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="onOffuiTrue"		type="textfield"	defaultValue="on">	<Label>show what string in status if on (empty = let indigo show the state):</Label>	</Field>
 			<Field id="onOffuiFalse"	type="textfield"	defaultValue="off">	<Label>show what string in status if off (empty = let indigo show the state):</Label>	</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8303,6 +8468,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="onOffuiTrue"		type="textfield"	defaultValue="on">	<Label>show what string in status if on (empty = let indigo show the state):</Label>	</Field>
 			<Field id="onOffuiFalse"	type="textfield"	defaultValue="off">	<Label>show what string in status if off (empty = let indigo show the state):</Label>	</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8383,6 +8553,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="onOffuiTrue"		type="textfield"	defaultValue="on">	<Label>show what string in status if on:</Label>	</Field>
 			<Field id="onOffuiFalse"	type="textfield"	defaultValue="off">	<Label>show what string in status if off:</Label>	</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8501,6 +8676,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="onOffuiTrue"		type="textfield"	defaultValue="on">	<Label>show what string in status if on:</Label>	</Field>
 			<Field id="onOffuiFalse"	type="textfield"	defaultValue="off">	<Label>show what string in status if off:</Label>	</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8632,6 +8812,11 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -8804,6 +8989,11 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8951,6 +9141,11 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9049,6 +9244,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9255,6 +9455,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9438,6 +9643,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9660,6 +9870,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9780,6 +9995,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9944,6 +10164,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10107,6 +10332,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10268,6 +10498,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10411,6 +10646,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 - &lt; =  is wrong, use &lt;= (no space between the &lt; and = )
 </Label>
 			</Field>
+		<Field id="printPropsSeparator" type="separator"></Field>
+		<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+			<Label>Debug:</Label>
+			<Description>print all properties of this device to the log after saving (resets itself)</Description>
+		</Field>
 	</ConfigUI>
 	<States>
 
@@ -10605,6 +10845,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 	<States>
 	</States>
@@ -10751,6 +10996,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -10892,6 +11142,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -11037,6 +11292,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11183,6 +11443,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11358,6 +11623,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11534,6 +11804,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11709,6 +11984,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 	<States>
 	</States>
@@ -11885,6 +12165,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12083,6 +12368,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12259,6 +12549,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12435,6 +12730,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12651,6 +12951,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12984,6 +13289,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="GasResistance">
@@ -13180,6 +13490,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13375,6 +13690,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13568,6 +13888,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13751,6 +14076,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13889,6 +14219,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -14126,6 +14461,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -14372,6 +14712,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -14650,6 +14995,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -14827,6 +15177,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 - &lt; =  is wrong, use &lt;= (no space between the &lt; and = )
 </Label>
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -14839,6 +15194,509 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		</States>
 	</Device>
+
+	<Device type="sensor" id="BLEfindMyMember">     	<Name>BLE-Find My member (one tag / device)</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="findMyGroupDevId" type="textfield" defaultValue="0" hidden="yes"> </Field>
+			<Field id="findMySlot" type="textfield" defaultValue="" hidden="yes"> </Field>
+
+			<Field id="takeOverFrom" type="menu" defaultValue="0" tooltip="the tag came back as a different device - put it back on this one">
+				<Label>this tag is now on:</Label>
+				<List class="self" filter="" method="findMyOtherMembers" dynamicReload="false" />
+			</Field>
+			<Field id="labelTakeOver" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>A TAG THAT CAME BACK AS A NEW DEVICE: pick the device it landed on and save. Its
+states are copied onto THIS device and that one is DELETED. This device keeps its
+name, its slot and its created date. Leave it alone to change nothing.
+
+AFTER A BATTERY CHANGE THIS IS ALWAYS NEEDED, and it is not a fault. Replacing the
+cell reboots the tag: it comes back with a new key and a new mac, after a gap far
+longer than a rotation, and with its battery reading "full" where it read "low".
+Every test the rPi has for "same tag, new mac" is a test on exactly those things, so
+it refuses - and it SHOULD refuse, because the alternative is merging a tag that
+vanished with an unrelated one that appeared. Nothing can tell the difference from
+the air. You can, so you do it here.</Label>
+			</Field>
+			<Field id="takeOverSeparator" type="separator"></Field>
+
+
+			<Field id="rssiAt1m" type="textfield" defaultValue="-70">
+				<Label>signal of THIS tag at 1 metre (dBm):</Label>
+			</Field>
+			<Field id="labelRssiAt1m" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>The reference for the "distance" state: it is worked out from this and the
+strongest signal any rPi is hearing, with the same formula used for every beacon.
+
+MEASURE IT per tag if the number matters - put the tag exactly one metre from the
+rPi, switch the debug logging on and read the rssi off the summary. Every model
+transmits at a different level, and the receiving dongle has its own offset, so
+-70 is only a starting point.
+
+AND DO NOT EXPECT MUCH BELOW A METRE: the signal is flat there, so 3 cm and 1 m
+read the same and the calculated distance cannot tell them apart. Beyond that it
+is about 3 dB per metre. Treat it as near / mid / far, not as a measurement.
+
+0.5 IS THE FLOOR, and anything reading exactly it is "as close as this can tell",
+not half a metre. A distance state is never 0.
+
+999 (and -999 for a signal) means NEVER MEASURED - that rPi has not once heard this
+tag. It is stamped when the device is made and never written again, so these states
+otherwise only ever hold real readings.
+NOTHING IS BLANKED WHEN THE TAG GOES DOWN: signal, distance, indicator, mac, battery
+and apple types all keep the LAST measurement, and Pi_NN_Time says when it was taken.
+Whether the tag is here NOW is what "status" is for, and it is the only state that
+answers it.
+
+PER RPI, Pi_NN_State says what THAT rPi is saying about the tag right now:
+   up      in its member list - the signal and distance beside it are live
+   weak    it hears the tag but does not count it: below "signal to join" or still
+           short of the packet minimum. A threshold to adjust, not a tag that left
+   noData  that rPi is not reporting at all, so it is saying nothing about anything
+   down    it is reporting, and this tag is in nothing it sent
+A trigger for "not properly here on this rPi" is != "up" - that catches all three.</Label>
+			</Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="infoLabel" type="label">
+				<Label>One member of the Find My group counter - a tag, or any apple device that
+advertises like one. Created and filled by the group device; there is nothing to
+configure here.
+
+RENAME THIS DEVICE to whatever it is. The name is yours and nothing overwrites it.
+
+The device is tied to a SLOT on the rPi, not to a tag: Find My macs rotate every 15
+minutes and nothing in the frame is stable. If the slot changes hands this device
+describes something else, so check mac and lastMacChange before believing the name.
+distance is in metres from the rPi that hears the tag best, from its signal and the
+"signal at 1 metre" set above. With several rPis it is the distance from the NEAREST
+one, which is not a position - two rPis cannot be triangulated from one number.
+
+distanceIndicator is a different thing entirely: the tag's own idea of how far it is
+from ITS OWNER. "nearby" means it believes its owner's phone is with it, "separated"
+means it does not and is broadcasting the rotating key so any passing apple device can
+report where it is. "lenNN" is a payload length this plugin does not know. The two are
+independent - a separated tag can be lying on the desk beside the rPi.
+
+appleTypes lists every apple continuity type this mac sends and what they add up to:
+"12  tag", "07|12  airpods/case", "05|0C|10|12  phone/mac". A tag has nothing to say
+beyond find my, so a lone "12" is a real tag and anything more is airpods, a phone or
+a mac.
+
+status shows up / down with the time of the LAST MESSAGE, not of the last change: a
+stamp that has stopped moving means the rPi has stopped reporting, which nothing else
+on this device would show.
+
+lastStatusChange is when it last went up or down, and previousStatusChange is the one
+before that. A tag that dips down and is back seconds later overwrites the first on
+its way back, so without the second the dip leaves no trace at all.
+
+BATTERY IS TWO BITS. A Find My frame carries no percentage - four words is the whole
+resolution that exists - so "battery" holds the word (full / medium / low / critical)
+and indigo's own battery level renders it as 100 / 50 / 20 / 1 %, purely so the battery
+column, the low-battery warning and plots work. 100 is not a measurement of 100%, it
+is "full", the top of four.
+
+There is deliberately no "last battery replaced" here. That needs a device that is one
+physical thing for months, and this one is a SLOT - it changes hands when a mac rotates
+unmatched, and the housekeeping deletes it when it has been down too long. The battery appears on this device the first time a tag
+actually reports one, because indigo's default of 0 would read as a flat battery.</Label>
+			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+		</ConfigUI>
+		<States>
+		</States>
+	</Device>
+
+	<!-- CUSTOM AND NOT SENSOR: see the SupportsSensorValue comment below. A sensor device
+	     draws its sensor value or its on/off state in the state column and NOTHING ELSE;
+	     UiDisplayStateId only applies to a custom device type -->
+	<Device type="custom" id="BLEfindMyGroup">     	<Name>BLE-Find My group counter (AirTags)</Name>
+	<UiDisplayStateId>status</UiDisplayStateId>
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<!-- NO SENSOR VALUE, deliberately - and this device is type="custom" BECAUSE OF IT.
+			     The state column here shows "13/20 up", which is TEXT, while sensorValue is indigo's
+			     NUMERIC state: handing it that text as a uiValue used a number field as a text field
+			     with a meaningless number hidden behind it, and made the one real number on the
+			     device a duplicate of a count that already has its own state.
+			     DROPPING THE CLAIM IS ONLY HALF OF IT. A device claiming a sensor value has its
+			     column FORCED to sensorValue, the same way an on/off device has its forced to
+			     onOffState - but a SENSOR claiming neither draws NOTHING AT ALL, because
+			     UiDisplayStateId is a CUSTOM device type's feature and a sensor never looks at it.
+			     That is exactly what happened: displayStateId read "status", status and status.ui
+			     both had values, and the column was still empty. Hence type="custom" above.
+			     The counts are real Integer states - numberOfUp, numberOfMembers, numberOfActive,
+			     numberOfActiveRaw - and each is a better thing to plot than sensorValue was -->
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
+
+			<Field id="infoLabel" type="label">
+				<Label>Counts Apple Find My tags (AirTags and the like) that are in the house.
+
+A Find My tag ROTATES ITS BLE MAC - every 15 minutes near its owner, once a day when
+separated - so it cannot be followed as a normal beacon. Instead every Find My mac is
+a candidate, and a candidate whose smoothed signal is strong enough counts as a member.
+The count only changes after the new value has HELD for a while, so a tag swapping its
+mac (old one expires, new one appears) never shows up as a change.
+
+Other Find My devices - AirPods cases, an offline iPhone or Mac, third-party Find My
+tags - advertise the same way and are counted too. Calibrate to learn the baseline.
+
+ONE DEVICE, ANY NUMBER OF RPIS. Each rPi reports what it can hear, the areas overlap,
+and the counts are never added - the macs are combined instead, so a tag two rPis can
+both hear counts once. One member device per TAG, not per tag per rPi.</Label>
+			</Field>
+
+			<Field id="labelRPI"   type="label" fontColor="green">
+				<Label>==== Select the RPIs that should count, each needs a radio that is scanning
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ SEVERAL RPIS FEED THIS ONE DEVICE AND THE COUNTS ARE NOT ADDED: a tag heard by two
+ rPis is one tag. The same tag carries the same BLE mac on every rPi at the same
+ moment, so the house count is the UNION of the macs, and a tag heard by two or more
+ is reported separately in seenBy2Plus - a much better "really inside" than any single
+ signal level. An rPi that stops reporting drops out after twice its send interval.</Label>
+			</Field>
+
+			<Field id="RPI_ENABLE_BLOCK" type="label" hidden="true"> <Label> </Label> </Field>
+
+			<Field id="sec1" type="label" fontColor="green"> <Label>==== which tags count as "in the house"</Label> </Field>
+
+			<Field id="joinRssi" type="menu" defaultValue="-70" tooltip="smoothed rssi a tag must reach to be counted">
+				<Label>signal to be counted (join):</Label>
+				<List>
+					<Option value="-55">-55  very close only</Option>
+					<Option value="-60">-60</Option>
+					<Option value="-65">-65</Option>
+					<Option value="-70">-70  default</Option>
+					<Option value="-75">-75</Option>
+					<Option value="-80">-80 </Option>
+				</List>
+			</Field>
+			<Field id="leaveRssi" type="menu" defaultValue="-80" tooltip="must be weaker than the join level - the gap is the hysteresis that stops a tag flickering in and out">
+				<Label>signal to stop counting (leave):</Label>
+				<List>
+					<Option value="-75">-75</Option>
+					<Option value="-80">-80  default</Option>
+					<Option value="-85">-85</Option>
+					<Option value="-90">-90</Option>
+					<Option value="-95">-95  only when it stops being heard at all</Option>
+				</List>
+			</Field>
+			<Field id="labelRssi" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Leave must be weaker than join; the gap between them is what keeps a tag at the
+edge of range from flickering in and out. Calibrate: put a tag at the far corners
+inside, then at the property line, and pick a level in the gap between them.
+
+THE NUMBERS BELOW ARE NOT ABSOLUTE - they depend on the dongle. One rPi measured
+-62 dBm with a tag TOUCHING it and -80 at four metres, so on that hardware -55 or
+-60 mean "never counted, whatever you do". Measure yours before choosing: switch the
+debug logging on, walk a tag out, and read the levels off the summary.
+
+AND RSSI GOES FLAT UNDER ABOUT A METRE. Same rPi: 3 cm and 1 m read the same, then
+roughly 3 dB per further metre. So a threshold set in that flat region cannot tell
+close from very close - there is nothing to measure. Put the boundary out where the
+signal is still moving.</Label>
+			</Field>
+
+			<Field id="sec2" type="label" fontColor="green"> <Label>==== timing</Label> </Field>
+
+			<Field id="stableSecs" type="menu" defaultValue="60" tooltip="a new count must hold this long before it is reported - longer than a mac rotation takes">
+				<Label>count must hold for:</Label>
+				<List>
+					<Option value="30">30 seconds</Option>
+					<Option value="60">60 seconds  default</Option>
+					<Option value="120">2 minutes</Option>
+					<Option value="300">5 minutes</Option>
+				</List>
+			</Field>
+			<Field id="expireSecs" type="menu" defaultValue="10" tooltip="tags advertise every ~2 s, so a few missed packets is normal">
+				<Label>a mac is gone after:</Label>
+				<List>
+					<Option value="6">6 seconds</Option>
+					<Option value="10">10 seconds  default</Option>
+					<Option value="20">20 seconds</Option>
+					<Option value="30">30 seconds</Option>
+				</List>
+			</Field>
+			<Field id="sendEverySecs" type="menu" defaultValue="60" tooltip="a change is always sent at once; this is the periodic refresh in between">
+				<Label>send a refresh every:</Label>
+				<List>
+					<Option value="60">60 seconds  default</Option>
+					<Option value="120">2 minutes</Option>
+					<Option value="300">5 minutes</Option>
+					<Option value="600">10 minutes</Option>
+				</List>
+			</Field>
+			<Field id="findMyMaxSlots" type="menu" defaultValue="30" tooltip="how many member devices this group may ever have - the rPi hands out this many slot numbers">
+				<Label>most member devices:</Label>
+				<List>
+					<Option value="10">10</Option>
+					<Option value="20">20</Option>
+					<Option value="30">30  default</Option>
+					<Option value="40">40</Option>
+					<Option value="50">50</Option>
+					<Option value="60">60</Option>
+				</List>
+			</Field>
+			<Field id="labelFindMyMaxSlots" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>THE CAP DECIDES WHICH TAGS EXIST once it is reached - a mac arriving when every
+slot is taken gets no slot and no device, and a real tag looks exactly like noise at that
+moment. Measured here: twenty slots filled in ten hours, almost all of it nearby apple
+devices hovering on the join level rather than tags.
+So set it above what you expect to see, and use "delete member devices" to keep the list
+honest rather than a small number here. Raising it is not a fix for churn, only headroom.
+The rPi is told this number too and both sides clamp it to 60.</Label>
+			</Field>
+			<Field id="memberDownDelaySecs" type="menu" defaultValue="60" tooltip="how long a member device stays UP after the last rPi stopped hearing its tag - the same idea as a beacon's expirationTime">
+				<Label>a member stays up for:</Label>
+				<List>
+					<Option value="0">no delay - down as soon as it is not heard</Option>
+					<Option value="30">30 seconds</Option>
+					<Option value="60">60 seconds  default</Option>
+					<Option value="90">90 seconds</Option>
+					<Option value="120">2 minutes</Option>
+					<Option value="180">3 minutes</Option>
+					<Option value="300">5 minutes</Option>
+					<Option value="600">10 minutes</Option>
+				</List>
+			</Field>
+			<Field id="deleteDownMembersHours" type="menu" defaultValue="0" tooltip="delete a member device that has been down too long, freeing its slot">
+				<Label>delete member devices:</Label>
+				<List>
+					<Option value="0">never - keep them  default</Option>
+					<Option value="4pm">at 4pm, if down 4 hours or more (ie gone since this morning)</Option>
+					<Option value="10m">any time, once down 10 minutes</Option>
+					<Option value="30m">any time, once down 30 minutes</Option>
+					<Option value="1">any time, once down 1 hour</Option>
+					<Option value="2">any time, once down 2 hours</Option>
+					<Option value="3">any time, once down 3 hours</Option>
+					<Option value="4">any time, once down 4 hours</Option>
+					<Option value="5">any time, once down 5 hours</Option>
+					<Option value="6">any time, once down 6 hours</Option>
+				</List>
+			</Field>
+			<Field id="labelDeleteDownMembers" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>THE DEVICE IS DELETED, NOT EMPTIED - with the name you gave it, and anything
+pointing at it from a trigger, a control page or a plot. A tag that comes back gets a
+fresh device under the plain findmy_NN name, because nothing in a Find My frame can
+tell the plugin it is the same tag you had named.
+"AT 4PM" is a once-a-day tidy: 4 hours down at 4pm means it went before noon, so it
+has been missing for most of the day and is not just out at the shops. The "any time"
+settings act as soon as the hours are up, checked every few minutes.
+"down for" is measured from lastStatusChange, so a device that has never been dated is
+never deleted. Each deletion is logged by name, slot and last mac.
+THE MINUTE SETTINGS ARE FOR CLEARING UP AFTER A ROTATION THAT WAS NOT FOLLOWED, where
+a device is a headstone minutes old that nobody has named. They are SHORT: a tag that is
+genuinely out of range over lunch loses its device and its name at 10 minutes, and gets
+a plain findmy_NN when it returns. The pass runs every 5 minutes, so "10 minutes" acts
+somewhere between 10 and 15.
+Leave it on "never" unless slots filling with departed tags is actually a problem -
+a member device costs nothing to keep, and the name is the expensive part to lose.</Label>
+			</Field>
+
+			<Field id="moveHoldSecs" type="menu" defaultValue="20" tooltip="a different rPi must stay the strongest this long before the tag is said to have moved to it">
+				<Label>a move to another rPi counts after:</Label>
+				<List>
+					<Option value="0">no delay - believe every report</Option>
+					<Option value="5">5 seconds</Option>
+					<Option value="10">10 seconds</Option>
+					<Option value="20">20 seconds  default</Option>
+					<Option value="30">30 seconds</Option>
+					<Option value="60">60 seconds</Option>
+				</List>
+			</Field>
+			<Field id="labelMoveHold" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>THE RPIS DO NOT REPORT IN STEP. Each sends on its own schedule, so a tag missing
+from one rPi's last message only means it could not hear it WHEN IT SENT - not that it
+cannot hear it now. Without this the tag goes to whichever rPi reported most recently:
+a stationary tag near a boundary was measured flipping 2-5-2-5-2 in sixteen seconds and
+ending on the wrong one.
+So a different rPi has to stay strongest for this long before the move is believed.
+Flapping never gets there; a real move is reported this many seconds late, once.
+Only applies between two rPis - being heard for the first time, or losing the tag
+altogether, is not in doubt and is taken as it comes.</Label>
+			</Field>
+
+			<Field id="labelMemberDownDelay" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>ONE SETTING FOR EVERY MEMBER of this group, like the join/leave levels - not twenty
+to keep in step. A tag advertises every ~2 seconds, so a handful of lost packets is
+normal and the first report that does not mention it is not evidence that it has gone.
+While a member is being held its slot is not given away, and the device is left exactly
+as it was when last heard rather than half blanked.
+NOTE this delays the DEVICES, not the count: the tag count is settled on the Pi and is
+not touched here, so a setting much longer than "count must hold for" means the counter
+can drop before the member devices do.</Label>
+			</Field>
+
+			<Field id="labelTiming" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>A count CHANGE is sent immediately. After a restart nothing is sent for about a
+minute and a half, so a Pi coming back does not report an empty house before it
+has heard the tags.</Label>
+			</Field>
+
+			<Field id="sec3" type="label" fontColor="green"> <Label>==== advanced</Label> </Field>
+
+			<Field id="smoothN" type="menu" defaultValue="5" tooltip="the signal used is the median of the last N packets, which throws away single bad readings">
+				<Label>smooth the signal over:</Label>
+				<List>
+					<Option value="3">3 packets</Option>
+					<Option value="5">5 packets  default</Option>
+					<Option value="9">9 packets</Option>
+					<Option value="15">15 packets</Option>
+				</List>
+			</Field>
+			<Field id="minPackets" type="menu" defaultValue="3" tooltip="how many packets a new mac must produce before it can be counted">
+				<Label>packets before a mac can count:</Label>
+				<List>
+					<Option value="2">2</Option>
+					<Option value="3">3  default</Option>
+					<Option value="5">5</Option>
+				</List>
+			</Field>
+			<Field id="dropFromBeaconPipeline" type="checkbox" defaultValue="true" tooltip="strongly recommended - without it every rotated mac looks like a brand new beacon">
+				<Label>keep Find My frames out of the beacon list:</Label>
+			</Field>
+			<Field id="labelDrop" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Leave this on. A Find My tag invents a new mac every 15 minutes, and without this
+each one arrives as a new beacon - the beacon list fills with junk that will never
+be seen again.</Label>
+			</Field>
+
+			<Field id="findMyRssiStat" type="menu" defaultValue="strong" tooltip="how the signal of one mac is reduced to a number - see the note">
+				<Label>signal taken as:</Label>
+				<List>
+					<Option value="strong">strongest half  (default)</Option>
+					<Option value="median">median of all  (old)</Option>
+				</List>
+			</Field>
+			<Field id="labelRssiStat" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>A tag does not give one clean signal. An AirTag 24 cm from the rPi produced, on the
+same mac in the same second:  -68 then -24, -68 then -24, over and over. The weak
+copies arrive whatever the distance; the strong ones track it.
+
+"median of all" lands on whichever of the two is more frequent - it scored that tag
+at -82 while it sat next to the rPi and dropped it out of the members. "strongest
+half" takes the median of the stronger readings only, which is what "how close is
+this" means, while still ignoring a single freak reading.
+
+If you change this, RE-PICK join and leave: the numbers get stronger, typically by
+20-40 dB, so a join of -70 chosen under the old setting is now far too generous.</Label>
+			</Field>
+
+			<Field id="printMembersToLog" type="checkbox" defaultValue="false">
+				<Label>print members:</Label>
+				<Description>print every member device to the log as a table, one column per member (resets itself)</Description>
+			</Field>
+			<Field id="labelPrintMembers" type="label" visibleBindingId="printMembersToLog" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>One COLUMN per member device, one ROW per state, so the members can be read
+against each other - which slot is stale, which rPi hears what, which devices are
+still under their birth name and so are the next to be taken over by a new tag.
+The names are listed once above the table and the columns are headed by slot.
+
+Lines are kept under 285 characters: with more members than fit, the same rows are
+printed again as a further set of columns rather than wrapped. Two rows are marked
+"*" - they are worked out for the table and are not states.</Label>
+			</Field>
+			<Field id="findMyDebug" type="menu" defaultValue="0" tooltip="decoded find my logging on the rPi - the named fields, not raw hex">
+				<Label>debug logging on the rPi:</Label>
+				<List>
+					<Option value="0">off</Option>
+					<Option value="1">summary + the Find My frames</Option>
+					<Option value="2">also the apple frames that were rejected</Option>
+				</List>
+			</Field>
+			<Field id="labelFindMyDebug" type="label" visibleBindingId="findMyDebug" visibleBindingValue="1,2" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Goes to the normal rPi log at level 20, so it is readable without putting the whole
+pi into debug. "summary" prints the decoded picture each time a message goes out:
+the counts, then one line per member in SLOT order - matching the member devices -
+then everything else heard WITH THE REASON it is not a member, then any slot being
+held for a mac that has gone quiet.
+
+Level 1 adds one line per FIND MY frame - the ones that count - with the mac, signal,
+form, battery, the raw status byte, the hint byte and the apple types.
+
+Level 2 adds every OTHER apple frame the rpi looked at and rejected: ibeacons, an
+iphone sending nearby-info, a mac sending handoff, each with the apple types it
+carried. That is how to see what is on the air and why it is not being counted.
+
+The expensive part is the LOGGING, not the decoding: every tag advertises every ~2 s
+and a busy house puts out a few hundred apple frames a second. Switch it on to watch
+something, then switch it off. Narrow it with the filter below.
+
+The same thing can be set on the rPi without going through indigo:
+    echo 1 > /home/pi/pibeacon/temp/findmy.debug
+    rm       /home/pi/pibeacon/temp/findmy.debug     (back to this setting)
+The file wins while it exists, and takes effect within about 5 seconds.</Label>
+			</Field>
+			<Field id="findMyDebugMac" type="textfield" defaultValue="" visibleBindingId="findMyDebug" visibleBindingValue="1,2" tooltip="only log frames whose mac contains this text - leave empty for all">
+				<Label>only this mac (per-frame):</Label>
+			</Field>
+
+			<Field id="calibrationLog" type="checkbox" defaultValue="false" tooltip="writes temp/findMyGroup.csv on the rPi, capped at 200kB - for choosing the join/leave levels">
+				<Label>write a calibration log on the rPi:</Label>
+			</Field>
+			<Field id="labelCalib" type="label" visibleBindingId="calibrationLog" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>ONE file: /home/pi/pibeacon/temp/findMyGroup.csv, capped at 200kB with the
+OLDEST rows dropped - temp/ is a 2MB ram disk shared with findMyGroup.state, so it
+cannot be allowed to grow. master does not delete it when it empties temp/, but it
+is a ram disk: a REBOOT loses it. Copy it off before rebooting if it matters.
+Label a spot while
+measuring:   echo "tag at street" &gt; /home/pi/pibeacon/temp/findMyGroup.marker
+Then merge the files from several rPis with findmy_merge.py, in the plugin's
+Server Plugin folder - it runs on the Mac, it is not sent to the rPis.</Label>
+			</Field>
+
+			<Field id="sec4" type="label" fontColor="green"> <Label>==== one device per member</Label> </Field>
+
+			<Field id="createMemberDevices" type="checkbox" defaultValue="false" tooltip="a slot coming into use creates its own indigo device, findmy_NN">
+				<Label>create a device per member:</Label>
+			</Field>
+			<Field id="labelMemberDev" type="label" visibleBindingId="createMemberDevices" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Each slot that comes into use gets its own device, "findmy_NN", carrying mac, rssi,
+form, battery, the previous mac and when it changed. RENAME IT to whatever it is -
+the device name is the label, and it survives everything the plugin writes.
+
+They are created in the SAME FOLDER as this device, so they sit next to the counter
+they came from rather than in the plugin's own folder.
+
+Devices are never removed automatically. A slot falling empty blanks the states and
+turns the device off; the device stays, with previousMacs and lastMacChange showing what
+was last in it. Delete one yourself if you no longer want it.
+
+READ THIS BEFORE NAMING ONE: the device is tied to a SLOT, not to a tag. Find My macs
+rotate and nothing in the frame is stable, so if a slot changes hands the device now
+describes something else - under the name you gave it. previousMacs keeps the last 5
+macs this slot held, newest first, which is what tells a mac rotation apart from the
+slot changing hands. That is why mac and lastMacChange
+are on the device: check them before believing the name.</Label>
+			</Field>
+
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+		</ConfigUI>
+		<States>
+		</States>
+	</Device>
+
 
 	<Device type="sensor" id="mhzCO2">     	<Name>INPUT-CO2-MH-Zxx</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
@@ -15040,6 +15898,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 - =&lt;is wrong, use &lt;= 
 - &lt; =  is wrong, use &lt;= (no space between the &lt; and = )
 </Label>
+			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
 		</ConfigUI>
 
@@ -15297,6 +16160,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -15450,6 +16318,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -15572,6 +16445,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -15814,6 +16692,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -15880,6 +16763,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="format"     type="textfield"     defaultValue="%7.1f">		<Label>...format:</Label></Field>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="UV">
@@ -16046,6 +16934,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -16225,6 +17118,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -16404,6 +17302,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -16552,6 +17455,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -16679,6 +17587,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="UV">
@@ -16797,6 +17710,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="UVA">
@@ -17028,6 +17946,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -17258,6 +18181,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 	<States>
 	</States>
@@ -17520,6 +18448,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Movement">
@@ -18046,6 +18979,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Leaving_count">
@@ -18312,6 +19250,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="displayText" type="textfield" defaultValue="" visibleBindingId="displayEnable" visibleBindingValue="1"> <Label>Text to display on top of Number:</Label>	</Field>
 			<Field id="displayTextHelp" type="textfield" defaultValue="use ; to separate values" visibleBindingId="displayEnable" visibleBindingValue="1" readonly="Yes"> <Label>|</Label>	</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 
@@ -18479,6 +19422,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="format"     type="textfield"     defaultValue="%2d">			<Label>...format number (eg %5d):</Label></Field>
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="GYRx">
@@ -18659,6 +19607,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -18856,6 +19809,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -19033,6 +19991,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -19261,6 +20224,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -19454,6 +20422,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="ACCx">
@@ -19644,6 +20617,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="unit"       type="textfield"     defaultValue="[dps]">		<Label>...unit:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="ACCx">
@@ -19823,6 +20801,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="adc">
@@ -19993,6 +20976,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Current">
@@ -20187,6 +21175,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Current1">
@@ -20340,6 +21333,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -20514,6 +21512,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -20801,6 +21804,11 @@ use bit max value, not actual voltage for feedVolt </Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -21086,6 +22094,11 @@ use bit max value, not actual voltage for feedVolt </Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -21589,6 +22602,11 @@ recommened is a relay with transitor switch in front!</Label>
 				<Label>restart GPIO class every:</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -21945,6 +22963,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Log level on rpi for this sensor:</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -22191,6 +23214,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -22538,6 +23566,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 </Label>
 			</Field>
 
+				<Field id="printPropsSeparator" type="separator"></Field>
+				<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+					<Label>Debug:</Label>
+					<Description>print all properties of this device to the log after saving (resets itself)</Description>
+				</Field>
 			</ConfigUI>
 
 		<States>
@@ -22754,6 +23787,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="actionPulseBurst"         type="textfield"     defaultValue="" hidden="no" > <Label>action if BurstEvent:</Label></Field>
 			<Field id="actionPulseContinuous"    type="textfield"     defaultValue="" hidden="no" > <Label>action if contEvent:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -23146,6 +24184,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="actionPulseBurst"         type="textfield"     defaultValue="" hidden="no" > <Label>action if BurstEvent:</Label></Field>
 			<Field id="actionPulseContinuous"    type="textfield"     defaultValue="" hidden="no" > <Label>action if contEvent:</Label></Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -23407,6 +24450,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
 				</List>
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -23574,6 +24622,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -23760,6 +24813,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_00">
@@ -23987,6 +25045,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_00">
@@ -24293,6 +25356,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>you should not use delays !=0 for on AND off, that can create confusing results</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -24430,6 +25498,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="0" >NO </Option>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
 				</List>
+			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -24585,6 +25658,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="0" >NO </Option>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
 				</List>
+			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -24770,6 +25848,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="0" >NO </Option>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
 				</List>
+			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -25026,6 +26109,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
 				</List>
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -25160,6 +26248,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="0" >NO </Option>
 					<Option value="1" >YES send BC, must be enabled in config  </Option>
 				</List>
+			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -25485,6 +26578,11 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="measuredNumber">
@@ -25815,6 +26913,11 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -26189,6 +27292,11 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -26540,6 +27648,11 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 </Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="measuredNumber">
@@ -26881,6 +27994,11 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -27116,6 +28234,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="gesture"       >gesture</Option>
 				</List>
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="proximity">
@@ -27284,6 +28407,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="lightning"          >lightning</Option>
 				</List>
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -27396,6 +28524,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="mult"   type="textfield" defaultValue="1"         visibleBindingId="onOff"    visibleBindingValue="x">	<Label>multiply number by :</Label></Field>
 			<Field id="format" type="textfield" defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">	<Label>format number (eg %3.1f):</Label></Field>
 			<Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES"><Label> display = </Label>  </Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -27521,6 +28654,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="format" type="textfield" defaultValue=""          visibleBindingId="onOff"    visibleBindingValue="x">	<Label>format number (eg %3.1f):</Label></Field>
 			<Field id="infodispl" type="textfield" defaultValue="(v+off)*mult UNIT"  visibleBindingId="onOff"    visibleBindingValue="x" readonly="YES">
            								<Label> display = </Label>  </Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -27670,6 +28808,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="status"  >status</Option>
 				</List>
 			</Field>
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -27816,6 +28959,11 @@ For the read settings from the device to work you need to set up the device on t
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -27913,6 +29061,11 @@ This device will get its battery level from its brother device,
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -28011,6 +29164,11 @@ if any other Motion Mode is selected only fast and VERY slow is working
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -28129,6 +29287,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -28196,6 +29359,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -28266,6 +29434,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -28544,6 +29717,11 @@ above. Nothing at all means this AC speaks a protocol the plugin does not have.<
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 			<State id="status">
@@ -28657,6 +29835,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 
@@ -28920,6 +30103,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -28971,6 +30159,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -29011,6 +30204,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
  		</States>
@@ -29254,6 +30452,11 @@ AnyText%%d:deviceNameOrNumber:StateName%%AnyText   can be used</Label> </Field>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -29349,6 +30552,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -29578,6 +30786,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -29657,6 +30870,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 	</Device>
 
@@ -30115,6 +31333,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -30152,6 +31375,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -30223,6 +31451,11 @@ You can use up to 3 GPIO input pins to control the range of the motor
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
+	<Field id="printPropsSeparator" type="separator"></Field>
+	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+		<Label>Debug:</Label>
+		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -30340,6 +31573,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="stopped">
@@ -30472,6 +31710,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>select the icon pair you like to use for away/home:</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="engine">
@@ -30730,6 +31973,11 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>

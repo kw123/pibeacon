@@ -1186,11 +1186,17 @@ def execCMDS(nextItem):
 									U.logger.log(20, "execcmd. IR-ac gree: pigpiod not reachable after the reconnect - nothing sent")
 									continue
 								took = greeIR.sendSequence(handle, pin, state, fan="{}".format(vals.get("fan", "auto")), dutyCycle=duty)
+						# WITH the fan, like the send above. Without it buildSequence falls back to
+						# byte 0 for byte 6 of message 3 - and byte 0's fan field saturates at 3, so
+						# the log printed B0 for every speed from "2" up while the led sent 8+the real
+						# index. The one byte the fan work turned on, misreported in the one place
+						# anybody would go looking for it
+						greeMsgs = greeIR.buildSequence(state, fan="{}".format(vals.get("fan", "auto")))
 						U.logger.log(20, "execcmd. IR-ac GREE sent on gpio:{}  mode:{} temp:{} fan:{} power:{}  duty:{:.2f}  {} messages:{} in {:.3f}s".format(
 											pin, greeMode, vals.get("temperature", 22), vals.get("fan", "auto"),
 											"on" if greePower else "off", duty,
-											len(greeIR.buildSequence(state)),
-											" / ".join(greeIR.stateToHex(m) for m in greeIR.buildSequence(state)),
+											len(greeMsgs),
+											" / ".join(greeIR.stateToHex(m) for m in greeMsgs),
 											took))
 						continue
 

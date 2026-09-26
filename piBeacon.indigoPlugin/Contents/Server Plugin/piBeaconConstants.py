@@ -154,7 +154,7 @@ _sqlLoggerIgnoreStates = {"isBeaconDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,
 						, "isSensorDevice":			"displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange"}
 
 
-_debugAreas = ["Logic", "DevMgmt", "BeaconData", "SensorData", "OutputDevice", "UpdateRPI", "OfflineRPI", "BLE", "CAR", "all", "Socket", "StartSocket", "Special", "PlotPositions", "SocketRPI", "BatteryLevel", "SQLlogger", "SQLSuppresslog", "SensorIcon", "Beep", "UpdateTimeAndZone","GarageDoor","DelayedActions","UpdateIndigo","lastRPI"]
+_debugAreas = ["Logic", "DevMgmt", "BeaconData", "SensorData", "OutputDevice", "UpdateRPI", "OfflineRPI", "BLE", "CAR", "all", "Socket", "StartSocket", "Special", "PlotPositions", "SocketRPI", "BatteryLevel", "SQLlogger", "SQLSuppresslog", "SensorIcon", "Beep", "UpdateTimeAndZone","GarageDoor","DelayedActions","UpdateIndigo","lastRPI","FindMy"]
 _lastRPIoffText = "off, to enable turn debug on"		# shown in state lastUpdateFromRPI while its debug area is off
 
 
@@ -433,6 +433,7 @@ _BLEsensorTypes =["BLERuuviTag", "BLERuuviAir",
 _BLEconnectSensorTypes = ["BLEinkBirdPool01B","BLEXiaomiMiVegTrug","BLEXiaomiMiTempHumSquare"]
 
 _GlobalConst_allowedSensors = [
+	 "BLEfindMyGroup",														  # apple find my tags, counted as a group
 	 "ultrasoundDistance", "vl503l0xDistance", "vl503l1xDistance", "vl6180xDistance", "vcnl4010Distance", # dist / light
 	 "apds9960",															  # dist gesture
 	 "i2cTCS34725", "i2cTSL2561", "i2cVEML6070", "i2cVEML6030", "i2cVEML6040", "i2cVEML7700",		# light
@@ -722,6 +723,223 @@ _addingstates["accelerationXYZMaxDelta"]		= {"addTag":False, "States":{"accelera
 
 _addingstates["batteryVoltage"]					= {"addTag":False, "States":{"batteryVoltage":"Real"}}
 
+# Find My group counter. The states a BLEfindMyGroup device carries - see pi/findMyGroup.py.
+# HOW MANY ARE ACTIVE - find my devices whose mac was in the LAST MESSAGE from an rpi. Settled:
+# it only moves after the new value has held for stableSecs, so a tag rotating its mac is
+# invisible. numberOfActiveRaw is the same thing unsettled, the union of this instant.
+# NAMED "ACTIVE" AND NOT "COUNT" because the number beside it is membersUp, and "memberCount vs
+# membersUp" told nobody which was which. ACTIVE is transmitting right now; UP is present, which
+# includes a tag inside memberDownDelaySecs that has simply not been heard in the last report.
+# It is also the numberOf* family the breakdown already uses - airtags, airpods, other, total.
+# THE RPI SENDS THE SAME NAME. The message field and the indigo state used to be two different
+# words for one number, which is exactly the confusion this rename is for. They changed together,
+# so every rPi must be pushed with this version - an rPi still sending the old field names is not
+# understood at all. That is deliberate: a silent half-rename is worse than a loud mismatch
+_addingstates["numberOfActive"]					= {"addTag":False, "States":{"numberOfActive":"Integer"}}
+_addingstates["numberOfActiveRaw"]				= {"addTag":False, "States":{"numberOfActiveRaw":"Integer"}}
+# HOW MANY MEMBER DEVICES ARE UP, which is NOT numberOfActive and is bigger than it most of the
+# time. The two answer "present" with different evidence and both are right: active is the macs in
+# the LAST MESSAGE, while a member device stays up for memberDownDelaySecs after it stops being
+# heard, because one report that does not mention a tag is not evidence the tag has gone.
+# So "7 members, 13 up" means seven were in the last message and six more were heard inside the
+# delay. Without this state that difference has to be worked out from the member table every time
+_addingstates["numberOfUp"]						= {"addTag":False, "States":{"numberOfUp":"Integer"}}
+# and how many member devices EXIST, which the state column shows beside it as "12/16 up". The
+# total is the number people actually go and count - it is what says whether slots are filling up
+# with tags that have gone - and having it here means not counting rows in the device list to find it
+_addingstates["numberOfMembers"]				= {"addTag":False, "States":{"numberOfMembers":"Integer"}}
+_addingstates["numberOfWeak"]					= {"addTag":False, "States":{"numberOfWeak":"Integer"}}
+_addingstates["numberOfCandidates"]				= {"addTag":False, "States":{"numberOfCandidates":"Integer"}}
+_addingstates["strongestRSSI"]					= {"addTag":False, "States":{"strongestRSSI":"Integer"}}
+_addingstates["numberOfActivePrevious"]					= {"addTag":False, "States":{"numberOfActivePrevious":"Integer"}}
+_addingstates["numberOfActiveChanged"]				= {"addTag":False, "States":{"numberOfActiveChanged":"String"}}
+# with several rpis feeding one device: how many of the enabled rpis are currently reporting
+# ("2 of 3"), and how many tags more than one rpi can hear. A tag heard by two rpis is far better
+# evidence of "really inside" than any single signal level, which is why it gets its own state
+_addingstates["pisReporting"]					= {"addTag":False, "States":{"pisReporting":"String"}}
+_addingstates["seenBy2Plus"]					= {"addTag":False, "States":{"seenBy2Plus":"Integer"}}
+_addingstates["findMyTrigger"]					= {"addTag":False, "States":{"findMyTrigger":"String"}}
+# WHAT the members are, split by their apple continuity types AND BY UP/DOWN - two counters per
+# kind, not one. COUNTED OVER THE MEMBER DEVICES, each from its own appleTypes.
+# WHY TWO AND NOT ONE. A single numberOfAirtags had to answer both "how many airtags are HERE"
+# and "how many airtags does this group KNOW ABOUT", which are different numbers that differ by
+# exactly the ones that have gone quiet - so whichever it was counted over, it was the wrong
+# answer to the other question. Counted over the live union it read 0 airpods while two devices
+# in the list both said airpods, because airpods earpieces go back in their case and stop
+# advertising altogether; counted over all the devices it would say 2 while none was here.
+# Neither number is inferred now. Both are counted.
+# THE ARITHMETIC CLOSES ON STATES THAT ALREADY EXIST, which is why the split is worth the six
+# states: the three ...Up add up to numberOfUp, and all six add up to numberOfMembers. They are
+# tallied at the same three points in the member loop that decide up or down, so they are made
+# of that decision and cannot drift from it.
+# A DOWN MEMBER KEEPS ITS KIND: appleTypes stays on the device when it goes down, because it is
+# the record of what was there, and that is what the ...Down counters are counting.
+# "airtags" is the honest-but-shorter name for "sends find my and nothing else": that is an
+# airtag or any other find my accessory, and nothing in the frame can narrow it further - see
+# findMyAppleTypes(). "airpods" is the 07+12 pair a case sends with the lid open. "other" is
+# everything else, ie a mac that also does live-apple-device things, which a tag cannot
+_addingstates["numberOfAirtagsUp"]				= {"addTag":False, "States":{"numberOfAirtagsUp":"Integer"}}
+_addingstates["numberOfAirtagsDown"]			= {"addTag":False, "States":{"numberOfAirtagsDown":"Integer"}}
+_addingstates["numberOfAirpodsUp"]				= {"addTag":False, "States":{"numberOfAirpodsUp":"Integer"}}
+_addingstates["numberOfAirpodsDown"]			= {"addTag":False, "States":{"numberOfAirpodsDown":"Integer"}}
+_addingstates["numberOfOtherUp"]				= {"addTag":False, "States":{"numberOfOtherUp":"Integer"}}
+_addingstates["numberOfOtherDown"]				= {"addTag":False, "States":{"numberOfOtherDown":"Integer"}}
+# and all six added up, so the breakdown CHECKS ITSELF at a glance instead of in your head.
+# It equals numberOfMembers by construction - every device lands in exactly one of the six - and
+# that is the point: when it does not, something is wrong and it is visible without a calculator
+_addingstates["numberOfTotal"]					= {"addTag":False, "States":{"numberOfTotal":"Integer"}}
+# ONE DEVICE PER MEMBER, not one state per slot. The rpi hands out slot numbers 01..NN (sticky -
+# a mac keeps its slot while it stays a member) and the plugin gives each slot in use its own
+# indigo device, "findmy_NN", carrying the states below. The device NAME is the label, editable in
+# place, which is what 20 name fields in a dialog were standing in for.
+# WHAT THIS DOES NOT FIX: the device is bound to a SLOT, not to a tag. Find my macs rotate and
+# nothing in the frame is stable, so if a slot changes hands the device describes something else -
+# now under a name somebody chose, which is more misleading than a numbered state was. That is why
+# mac / previousMacs / lastMacChange sit ON the device: the drift has to be visible.
+_GlobalConst_findMyMemberStates = 60		# THE CEILING for member devices, mirrored by MAXSLOTS in
+											# pi/findMyGroup.py. The group device's "maxSlots" menu picks the number
+											# actually in use and is clamped to this on BOTH sides - they have to agree
+											# or the rpi hands out a slot no device exists for.
+											# NO STATES SCALE WITH IT: one DEVICE per member, not one state per slot,
+											# so this is a loop bound and nothing more
+_GlobalConst_findMyMacHistory   = 5			# macs kept in previousMacs, mirrored by MACHISTORY there
+_devtypesToStates["BLEfindMyMember"] = {
+		"mac":			"String",		# the rotating mac in this slot right now, blank when empty
+		"rssi":			"Integer",
+		"distance":		"Real",			# METRES (or whatever distanceUnits says) from the rPi that hears
+										# it best, from rssi and the device's own "rssi at 1 m" - the same
+										# calcDist() every beacon in this plugin uses
+		"distanceIndicator":"String",	# separated / nearby / lenNN - AN INDICATOR OF DISTANCE FROM THE
+										# OWNER, which is why it is not called distance. "nearby" = the tag
+										# believes its owner's phone is with it; "separated" = it does not,
+										# and is broadcasting the rotating key so any passing apple device
+										# can report where it is. Independent of the distance above: a
+										# separated tag can be on the desk next to the rPi
+		"battery":		"String",		# full / medium / low / critical - reverse engineered, not a spec.
+										# TWO BITS of the status byte is ALL the battery a find my frame
+										# carries, so these four words are the whole resolution there is.
+										# indigo's OWN batteryLevel renders the same two bits as 100/50/20/1%
+										# - it is NOT declared here and is not a plugin state at all: it
+										# comes from the SupportsBatteryLevel property, which the first real
+										# reading switches on. See findMyEnableBatteryLevel in plugin.py
+		"slot":			"String",		# "01".."50", the number the rpi assigned
+		"previousMacs":	"String",		# the macs this slot held before, NEWEST FIRST, at most
+										# _GlobalConst_findMyMacHistory of them: "D0:75:.., C7:8B:.."
+										# A find my mac rotates every 15 min, so the current mac says
+										# nothing about which tag this is - the trail of them is the
+										# only way to tell a rotation from a slot changing hands
+		"lastMacChange":"String",		# and when it went - "yyyy-mm-dd hh:mm:ss". NAMED FOR THE MAC on
+										# purpose: it is not "when did anything about this device
+										# change", it is the moment the slot's mac was replaced
+		"lastStatusChange":"String",	# and when it last went up or down. The state column shows the
+										# LATER of these two, so it reads "when did something happen
+										# here" rather than "when did a message arrive"
+		"appleTypes":	"String",		# every apple continuity type this mac sends, and what they add
+										# up to: "12  tag", "07|12  airpods/case", "05|0C|10|12
+										# phone/mac". A TAG SENDS ONLY FIND MY, so a single "12" is the
+										# mark of a real tag and anything more is airpods, a phone or a
+										# mac - which the word after the codes already says
+		"hintByte":		"String",		# THE LAST BYTE OF THE SEPARATED PAYLOAD, two hex digits - "8D" -
+										# or blank for a tag that has only ever sent the 2 byte nearby
+										# payload, which has no such byte. BLANK MEANS "NEVER SAID",
+										# not "said zero", which is why it is text and not a number.
+										# NO PUBLISHED MEANING beyond "0x00 on ios", and it is named for
+										# what it IS rather than what it might be on purpose - a label
+										# that turns out to be wrong is worse than no label.
+										# WHAT IT IS NOT, MEASURED 2026-09-25 AND SETTLED: it is not a
+										# pointer to another device's address. That theory came from
+										# two eyeballed coincidences - hint 8D beside a mac ending 8D,
+										# hint 96 beside a mac ending 96 - and the calibration log
+										# killed it in one pass: across 151 rows the hint matched the
+										# last byte of another mac present at the time 3 times, which
+										# is at or below chance for a byte and a dozen macs.
+										# WHAT IT IS: a 15 MINUTE EPOCH MARKER, and nothing to do with
+										# the key. Six true transitions on one rPi landed at 16:14:32,
+										# 16:15:03 (three independent macs at once) and 16:30:03 /
+										# 16:30:13 - a 15 minute boundary, synchronised across devices
+										# with nothing to do with each other.
+										# AND IT IS THE ONLY THING THAT MOVES. Two separated frames
+										# from one tag 19 minutes apart, across the 16:30 boundary,
+										# differ in EXACTLY ONE BYTE of 31: the hint, 83 -> 7B. Status,
+										# all 22 key bytes and the key-bits byte are byte-identical.
+										# So it is not key material and not derived from it - the key
+										# sat still while this moved
+										# THEREFORE USELESS AS A ROTATION MATCHER, and worse than
+										# useless: at an epoch boundary every hint changes, so matching
+										# on it would refuse exactly the rotations that happen there.
+										# Kept because it costs nothing and a marked epoch is the kind
+										# of thing that turns out to be handy - NOT because a use for
+										# it is expected. Nothing reads it
+		"movedRpi":		"String",		# when this tag last moved from one rPi to ANOTHER - ie when
+										# closestRPI went from one real rPi to a different real one. NOT written
+										# when it merely goes down and comes back on the same rPi, which is not a
+										# move - the same rule that governs closestRPILast
+		"tagIds":		"String",		# THE LINEAGE, "2-1043, 5-77" - this tag's id on each rPi that can
+										# hear it. The mac joins two rPis at one INSTANT; a tagId joins one rPi
+										# across TIME, because the rPi keeps it when the mac rotates. Both are
+										# needed to keep this device on the same physical tag - see
+										# matchRotation() in pi/findMyGroup.py
+		"previousStatusChange":"String",# THE ONE BEFORE IT. A member that goes down and comes back a few
+										# seconds later used to leave nothing behind: the return overwrote
+										# lastStatusChange and the dip was gone unless somebody happened to
+										# be watching. With both, "previous 19:52:48, last 19:52:51" says
+										# plainly that it flapped, and how long it was away
+		"previousTagIds":"String",		# the lineages this device held BEFORE, newest first, "; " between
+										# them. A LINEAGE CHANGE WITH NO MAC CHANGE is the signature of a
+										# wrong rotation match: the rPi handed this mac's lineage to a
+										# newcomer while this mac was still transmitting. It is over in
+										# seconds and left no trace at all, so it had to be watched live
+										# to be seen - which is not a way to debug anything
+		"lastTagIdChange":"String",		# and when the lineage last moved. Beside lastMacChange it says
+										# which of the two changed, which is the whole question
+		"lastSeen":		"String",		# when any rPi last reported this tag. NOT the same as lastStatusChange:
+										# that is when it changed, this is when it was last HEARD, and the
+										# difference is what the down-delay below is measured against
+		"created":		"String",		# when this slot first came into use and this device was made
+		}
+_addingstates["BLEfindMyMember"]				= {"addTag":False, "States":_devtypesToStates["BLEfindMyMember"]}
+
+# WHICH RPI HEARS THIS TAG, AND HOW WELL - the same states a beacon carries, with the same names
+# and, deliberately, the SAME TYPES: indigo's sql logger makes one column per state NAME across
+# every device type, so Pi_02_Distance being a Real here and a Real there is not a nicety, it is
+# the difference between logging and the "failures updating device history" that .53 caused
+# (see checkStateTypeCollisions). Same names also means a control page or a plot written for
+# beacons works on these devices unchanged.
+#   Pi_NN_Signal     the LAST rssi that rpi measured - never overwritten when it stops
+#   Pi_NN_Distance   metres from THAT rpi, from that rssi and the device's "rssi at 1 m"
+#   Pi_NN_Time       when that reading was taken
+#   Pi_NN_State      up / weak / down / noData - what that rpi is saying about this tag RIGHT
+#                    NOW, which is what says whether the three above are live or are the last
+#                    thing it heard. FOUR VALUES because "down" used to mean three things:
+#                      up      in that rpi's member list - the trio beside it is live
+#                      weak    it HEARS the tag and does not count it (below joinRssi, or short
+#                              of minPackets). A threshold to adjust, not a tag that has gone
+#                      noData  that rpi is not reporting at all. It says nothing about this tag
+#                              because it is saying nothing - not the same as "cannot hear it"
+#                      down    reporting, and this tag is in nothing it sent
+#                    A trigger for "not properly here" is != "up", which covers all three.
+#                    -999 / 999 are stamped once at birth and mean ONE thing for the life of
+#                    the device: that rpi has never heard this tag. Nothing overwrites a real
+#                    reading with them - the question "is it here now" has its own state
+# ALL of them are declared; getDeviceStateList drops the ones that do not apply - an rpi that is
+# switched off, and on a member device any rpi its GROUP does not have enabled. That is why
+# saving the group device rebuilds its members' state lists.
+_devtypesToStates["findMyPerRpi"] = {}
+for ii in range(_GlobalConst_numberOfiBeaconRPI):
+	kk = f"{ii:02d}"
+	_devtypesToStates["findMyPerRpi"]["Pi_"+kk+"_Signal"]	= "Integer"
+	_devtypesToStates["findMyPerRpi"]["Pi_"+kk+"_Distance"]	= "Real"
+	_devtypesToStates["findMyPerRpi"]["Pi_"+kk+"_Time"]		= "String"
+	_devtypesToStates["findMyPerRpi"]["Pi_"+kk+"_State"]	= "String"
+# and which of them is nearest now, with the one before it. The TEXT pair carries the rpi's
+# indigo device NAME: "2" is not something to read off a control page, "Pi_kitchen" is
+_devtypesToStates["findMyPerRpi"]["closestRPI"]			= "Integer"	# the rpi that heard it LAST -
+																			# not blanked when nobody does
+_devtypesToStates["findMyPerRpi"]["closestRPIText"]		= "String"
+_devtypesToStates["findMyPerRpi"]["closestRPILast"]		= "Integer"	# kept when the tag goes down -
+_devtypesToStates["findMyPerRpi"]["closestRPITextLast"]	= "String"	# "where was it last seen"
+_addingstates["findMyPerRpi"]					= {"addTag":False, "States":_devtypesToStates["findMyPerRpi"]}
+
 _addingstates["packetId"]						= {"addTag":False, "States":{"packetId":"Integer"}}
 _addingstates["currentEvent"]					= {"addTag":False, "States":{"currentEvent":"String"}}
 _addingstates["previousEvent"]					= {"addTag":False, "States":{"previousEvent":"String"}}
@@ -767,6 +985,17 @@ _addingstates["alarmBits"]						= {"addTag":False, "States":{"alarmBits":"String
 
 #which devtype has which state
 _stateListToDevTypes = {}
+for _fmState in (["numberOfMembers","numberOfUp","numberOfActive","numberOfActiveRaw",
+					"numberOfWeak","numberOfCandidates","strongestRSSI",
+					"numberOfActivePrevious","numberOfActiveChanged","findMyTrigger","pisReporting","seenBy2Plus",
+					"numberOfAirtagsUp","numberOfAirtagsDown",
+					"numberOfAirpodsUp","numberOfAirpodsDown",
+					"numberOfOtherUp","numberOfOtherDown","numberOfTotal",
+					]):
+	_stateListToDevTypes[_fmState]				= {"BLEfindMyGroup":1}
+
+_stateListToDevTypes["BLEfindMyMember"]			= {"BLEfindMyMember":1}
+_stateListToDevTypes["findMyPerRpi"]			= {"BLEfindMyMember":1}
 _stateListToDevTypes["packetId"]				= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["currentEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["previousEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}

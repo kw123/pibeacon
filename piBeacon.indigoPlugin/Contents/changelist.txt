@@ -1,3 +1,1323 @@
+v2022.193.0  @ 2026-09-26
+   FIND MY: rotation matching rebuilt around what the old mac does AFTER it disappears rather than
+       what is true at the instant it does - a claim is written down and confirmed 20 s later by
+       the old mac staying silent, a mac returning inside 2 min keeps its age and its accumulated
+       apple types, and a contested lineage goes to an EXACT apple-type match before signal is
+       consulted at all. Each of those replaced a test that read a changing property as a snapshot:
+       the old 3 s quiet test refused only CLEAN handovers (every refusal it ever logged was under
+       3 s), a candidate rebuilt after a 12 s reception gap measured 12 s newer than it was and
+       fell outside the 15 s window, and the separated/nearby indicator flaps mid mode-change so
+       two snapshots of ONE device disagreed - the measured result is an airpods case holding one
+       indigo device for nine hours of quarter-hour rotations, where it had been earning a new one
+       every fifteen minutes. The member slot count is now a group setting (10..60, default 30)
+       instead of a fixed 20, because twenty filled in ten hours and the next tag to arrive got no
+       slot and no device at all, and member devices can now be deleted after 10 or 30 minutes
+       down as well as the hours that were already there.
+
+v2022.192.59  @ 2026-09-23
+   THE 59 VERSIONS OF 22-23 SEPTEMBER ARE COMBINED INTO THIS ONE ENTRY. They were unreleased steps
+       of the same few pieces of work and a good many of them undid each other - a state added and
+       dropped again, a rename and its rename, a bug introduced in .46 and fixed in .50 - so what
+       follows is the NET result against v2022.192.0, not the path taken.
+       What was MEASURED along the way is kept, because that is the part that cost the time and
+       the part that would otherwise be re-derived. The blow-by-blow is gone on purpose.
+
+IN SHORT
+   - FIND MY: a new counter for apple find my tags, from imported package to a working feature -
+     a group device per house, a device per tag, several rPis merged by mac, distance in metres,
+     and a calibration log. The bulk of this entry.
+   - THE BLE5 LISTENER was forwarding ble4 advertisements that the ble4 radio had already heard,
+     at a level about 40 dB adrift. That polluted EVERY rssi-derived number on a multi-radio rPi,
+     not just find my - beacon distance, room assignment, presence thresholds all get better.
+   - GREE AND TOSHIBA IR-AC: the temperature could not be changed at all once the unit was in a
+     mode indigo has no name for.
+   - a "print this device's properties and states" checkbox in all 151 device dialogs.
+   - after a plugin restart or a program push to an rPi, nothing goes up-->down for 120 s.
+
+================================================================================
+FIND MY - WHAT IT COUNTS
+================================================================================
+   NEW: a counter for apple Find My tags - airtags and the like - that are in the house.
+       A find my tag ROTATES ITS BLE MAC, every ~15 min near its owner and daily when separated,
+       so it cannot be followed as a beacon. Every find my mac is a CANDIDATE; a candidate whose
+       smoothed signal is above joinRssi, with enough packets behind it, is a MEMBER; and the
+       count only moves after the new value has HELD for stableSecs - so a rotation, the old mac
+       expiring as the new one appears, never reaches indigo as a change.
+       pi side:  findMyGroup.py plus 4 hooks in beaconloop.py (import, setParams in readParams, a
+                 frame filter, a tick in the scan loop). All of it no-ops when the module or the
+                 parameters block is absent, so an rPi that does not get the file is unaffected.
+       tools:    findmy_scan.py on the rPi and findmy_merge.py on the mac, for choosing the rssi
+                 thresholds. Both are PYTHON3 ONLY, unlike the rest of pi/*.py - safe because
+                 beaconloop never imports them, and each says so in its header.
+   CHG: the frame prefilter is "FF4C00" - ANY apple frame - and is no longer narrowed to
+       "FF4C0012". A REAL HOUSE DISPROVED THE NARROW FORM: an airpods case sent types 07 and 12 in
+       the SAME frame, so find my is not always the first continuity message and "FF4C0012" would
+       have dropped that device without trace.
+
+================================================================================
+FIND MY - THE DEVICES
+================================================================================
+   NEW: TWO device types. ONE GROUP DEVICE for the house, and ONE DEVICE PER MEMBER - not 60
+       states on one device, and not one device per tag per rPi.
+       BLEfindMyGroup carries the summary only: memberCount (settled), memberCountRaw
+       (instantaneous), previousCount, lastCountChange, nearbyCount, candidates, strongestRSSI,
+       pisReporting, seenBy2Plus, findMyTrigger, status, created.
+       BLEfindMyMember is created on demand, "findmy_NN", INTO THE GROUP DEVICE'S OWN FOLDER, and
+       is never deleted automatically. RENAME IT - the device name is the label, and nothing the
+       plugin writes touches it, which is what twenty name fields in a dialog were standing in for.
+       Lookup is by PROPS (findMyGroupDevId + findMySlot), never by name.
+   WHAT A MEMBER DEVICE HOLDS: mac, previousMacs, lastMacChange, lastStatusChange, rssi, distance,
+       distanceIndicator, battery, appleTypes, slot, status, created - and, new below, one
+       signal / distance / time trio per rPi plus closestRPI and closestRPILast.
+   NEW: DISTANCE IN METRES. A field in the member's dialog, "signal of THIS tag at 1 metre (dBm)",
+       default -70, and state "distance" = calcDist(rssiAt1m, rssi) / distanceUnits - the same
+       formula and the same units preference every beacon in this plugin uses.
+       The reference is per DEVICE, not per group: every tag model transmits at a different level
+       and each dongle has its own offset, so one number for the house would be wrong for most of
+       them. The dialog says how to measure it and warns that below a metre the signal is flat -
+       3 cm and 1 m read the same - so the result is near / mid / far, not a measurement.
+   NEW: PER-RPI SIGNAL, DISTANCE AND TIME on a member device, one trio per rPi, with the same
+       state names and the same types a beacon carries - Pi_02_Signal, Pi_02_Distance,
+       Pi_02_Time. Same names so anything written for beacons works here unchanged; same TYPES
+       because indigo's sql logger makes one column per state NAME across every device type, and
+       that is not a nicety (see the collision below).
+       An rPi that is enabled but is NOT hearing this tag reads -999 / 999, which is the useful
+       half: "heard by rPi-2 only" is then visible on the device instead of having to be read out
+       of the group's debug block. _Time is only written when that rPi really did report, so it
+       stands still at the last time it did.
+       NOT HEARD IS 999, NEVER 0 - for the per-rPi distances and for "distance" itself, when the
+       slot empties, when one rPi stops hearing the tag, and as the value stamped on a new device.
+       0 means "lying on top of the rPi", the exact opposite of what is being said, and it is a
+       value a very close tag really can produce: calcDist floors at 0.01 m, which rounds to 0.0
+       at one decimal. Existing devices are corrected where the state lists are refreshed, and
+       ONLY where the SIGNAL half of the pair reads -999 - which was the thing that told a tag on
+       the rPi from a tag that is not there, before the floor below made it moot.
+   CHG: AND A REAL READING IS FLOORED AT 0.5, so no distance state can be 0 at all and the
+       ambiguity is gone rather than worked around. Nothing under the floor was a measurement
+       anyway: below about a metre the signal is FLAT - 3 cm and 1 m read the same - so down
+       there the formula is only running out of range, and it bottoms out at 0.01 m, which is
+       what was rounding to 0.0 in the first place.
+       So the three values a distance state can hold now each mean one thing: 0.5 "as close as
+       this can tell", 999 "not heard", and a number between them an actual estimate. The member
+       dialog says so. calcDist's own out-of-range sentinel (99999) is mapped to 999 too, instead
+       of being divided by the distance units into a different meaningless number.
+   NEW: closestRPI / closestRPIText and closestRPILast / closestRPITextLast, as on a beacon.
+       -1 means heard by nobody, which is what a slot that has gone down reads. The Text pair
+       carries the rPi's indigo device NAME, because "2" is not something to read off a control
+       page.
+       GOING DOWN DOES NOT WRITE THE Last PAIR - the same rule the BLEconnect path uses, and this
+       is why it is that rule: if -1 displaced the real rPi into closestRPILast, a tag that drops
+       out and comes back on the SAME rPi ends up with closestRPI and closestRPILast both naming
+       it, which says nothing at all. It was written the other way first and did exactly that.
+       Last means "the rPi it was nearest BEFORE this one", so only a move from one REAL rPi to a
+       DIFFERENT real one writes it - and with a single rPi it correctly stays -1 for ever.
+       Nothing is lost by this: where a tag was last heard is in Pi_NN_Time and in lastSeen.
+   NEW: member state "movedRpi" - WHEN the tag last moved from one rPi to another, stamped at
+       exactly the moment closestRPI goes from one real rPi to a DIFFERENT real one.
+       Deliberately not written for -1 -> rPi: coming back up, or being heard for the first time,
+       is not a move, and stamping it there would quietly turn this into "when was it last seen",
+       which lastSeen already answers. Same rule as closestRPILast, so the three read together -
+       "it was at <closestRPITextLast>, it is at <closestRPIText>, it moved at <movedRpi>".
+       And it says so in PLUGIN.LOG at the moment it happens:
+         findMyGroup findmy house: Karl keys (mac F2:29:8F:CC:34:8E) moved
+         rPi-2 (Pi_kitchen) rssi:-81 -> rPi-5 (Pi_garage) rssi:-68  at 2026-09-23 19:41:07
+       BOTH SIGNALS are on the line, because that is what says whether it was a real move or not:
+       -81 -> -68 is a tag that went somewhere, -70 -> -69 is two rPis arguing over one that did
+       not. A -999 carries the AGE of that rPi's last report with it - "-999 (its last report 2s
+       ago)" is an rPi that has really lost the tag, "-999 (its last report 50s ago)" is only a
+       report that predates the move, and the two mean opposite things.
+   FIX: A TAG DID NOT MOVE JUST BECAUSE THE RPIS REPORT OUT OF STEP. Each rPi sends on its own
+       schedule, so a mac missing from one rPi's last message means "it could not hear it WHEN IT
+       SENT", not "it cannot hear it" - and closestRPI was handed to whichever rPi happened to
+       report most recently, on one-sided information.
+       MEASURED, on a stationary tag sitting near the boundary between two rPis:
+         00:06:02  moved rPi-2 rssi:-999 -> rPi-5 rssi:-60
+         00:06:11  moved rPi-5 rssi:-999 -> rPi-2 rssi:-72
+         00:06:12  moved rPi-2 rssi:-72  -> rPi-5 rssi:-60
+         00:06:18  moved rPi-5 rssi:-999 -> rPi-2 rssi:-72
+       Four moves in sixteen seconds for a tag nobody touched, three of the four decided with the
+       other side at -999 purely because its report predated the moment - and it finished on the
+       wrong rPi. Nothing in the Find My path damped this; every single message could flip it,
+       unlike beacons, where findClosestRPI has always kept the current rPi unless the new one is
+       clearly better.
+       A challenger now has to STAY strongest for "a move to another rPi counts after:" (new on
+       the group device, default 20 s). Flapping never reaches it, because the candidate keeps
+       changing and the timer keeps restarting. Replayed against the four lines above: 4 moves
+       become 0 and it stays where it belongs; a genuine move with the new rPi holding is
+       committed once, 20 s late.
+       ONLY rPi -> rPi is damped. Being heard for the first time, and losing the tag altogether,
+       carry no such doubt and are taken as they come.
+       A dB margin alone would NOT have worked here and that is worth recording: when one side
+       reads -999 every comparison passes any margin. The doubt is about the age of the evidence,
+       not its size, so the fix has to be in time.
+       Level 10, not 20: indigo_log_handler sits at INFO, so 20 would copy every one of these
+       into the indigo event log, and a tag sitting near the boundary between two rPis can hand
+       back and forth all evening.
+       Devices already carrying the duplicate are corrected when their group's state lists are
+       refreshed, ie at plugin start and on every save of the group - the two being equal is
+       impossible under the rule above, so resetting it is always right.
+   THE STATES ARE CREATED DYNAMICALLY, for the rPis actually in use. A member device has no rPi of
+       its own - it is a tag, and which rPis can hear it is a property of its GROUP - so its
+       per-rPi states follow the GROUP's rPi checkboxes. Indigo rebuilds a device's state list
+       only when that device is told to, and it is never told that somebody else's dialog was
+       saved, so the rebuild is triggered in two places:
+         - after the group device is SAVED, as a delayed action. Delayed for the same reason the
+           property print is: indigo writes valuesDict back to the device only after validate
+           returns, and a rebuild reading the OLD flags would leave exactly the states just changed
+         - at PLUGIN START, in initConcurrentThread. deviceStartComm already rebuilds every state
+           list at "init", but it runs before self.RPI is necessarily loaded, and a member built
+           from an empty rPi table would carry no per-rPi states until the group was next saved
+   FIX: and the reason that had to be built rather than just used - THE PER-RPI FILTER IN
+       getDeviceStateList HAS NEVER RUN, for any device type. It tested stateBaseName, which is the
+       CATEGORY name ("rpiAndBeaconAndBLEconnect"), while the Pi_NN_ names are the states INSIDE
+       that category - so nothing ever started with "Pi_" and the test was never true.
+       CONSEQUENCE, AND IT REACHES BEYOND FIND MY: every beacon, rPi and BLEconnect device has
+       been carrying all 20 rPis' Signal/Distance/Time states whether those rPis exist or not -
+       60 states each, most of them permanently empty. Testing addToState instead makes the filter
+       do what its docstring has always claimed, so a switched-off rPi's trio now goes.
+       SAFETY: an EMPTY rPi table means the config has not been read yet, NOT that every rPi is
+       off - indigo can ask for a state list before readConfig has run. Filtering on that would
+       strip all 60 states off every beacon in the house, so when nothing is known, nothing is
+       removed.
+   NEW: six group states saying WHAT the members are, not just how many - three kinds, each
+       split up from down:
+         numberOfAirtagsUp / numberOfAirtagsDown   the mac sends find my and NOTHING else
+         numberOfAirpodsUp / numberOfAirpodsDown   the 07+12 pair a case sends with its lid open
+         numberOfOtherUp   / numberOfOtherDown     anything else, ie a mac that also does
+                                                   live-apple-device things
+       Counted over the MEMBER DEVICES, each from its own appleTypes. THE THREE ...Up ADD UP TO
+       numberOfUp AND ALL SIX ADD UP TO numberOfMembers, and neither is asserted: they are
+       tallied at the same three points in the member loop that decide up or down, so they are
+       made of that decision and cannot drift from it.
+       "airtags" is the short name, not a claim: find-my-only is an airtag or any other find my
+       accessory, and nothing in the frame narrows it further - findMyAppleTypes() says why.
+       Read from the CODES at the front of appleTypes, never the words after them: the words are
+       for a person and get reworded, the codes are the data.
+   NEW: optional housekeeping - "delete member devices:" on the group device, off by default,
+       with two shapes that answer different questions:
+         at 4pm, if down 4 hours or more   a once-a-day tidy. 4 hours down at 4pm means it went
+                                           before noon, so it has been missing for most of the
+                                           day rather than being out at the shops - the hour and
+                                           the threshold belong together, which is why they are
+                                           one option and not two knobs
+         any time, once down 1..6 hours    acts as soon as the hours are up
+       Checked every 5 minutes from the message path rather than on an hourly pass, so "once down
+       1 hour" means about that and not "some time in the next hour". Rate limited because it
+       walks every indigo device.
+       THE DEVICE IS DELETED, NOT EMPTIED, and the dialog says so: the name you gave it goes with
+       it, along with anything pointing at it from a trigger, a control page or a plot. A tag that
+       comes back gets a fresh findmy_NN, because nothing in a find my frame can tell the plugin
+       it is the same tag that used to have a name. That is why the default is never.
+       Two guards worth stating: only members found BY PROPS on that group device can be touched,
+       and a member that has never been dated is never deleted - lastStatusChange is the only
+       evidence of how long it has been down, and "no evidence" must not read as "long enough".
+       Every deletion is logged at 20 with the device name, slot, last mac and how long it had
+       been down. A device vanishing from the list without a line saying why would be alarming.
+   NEW: A DELAY BEFORE A MEMBER GOES DOWN - the same idea as a beacon's expirationTime, and for
+       the same reason: a tag advertises every ~2 s, so a handful of lost packets is normal and
+       the first report that does not mention it is not evidence that it has gone.
+       ONE SETTING ON THE GROUP, "a member stays up for:", used by every member - like the
+       join/leave levels. A tag has no dialog of its own worth keeping twenty copies of this in.
+       Default 60 s; "no delay" restores the old behaviour.
+       A held device is left EXACTLY as it was when last heard - states, uiValue and image -
+       rather than half blanked. "up, -68 dBm, 09-23 18:04:11" is the honest picture of a tag
+       that has missed a few packets; "up" with an empty signal is not.
+       AND ITS SLOT IS NOT GIVEN AWAY while it is held, which is the half that makes it mean
+       anything: handing the slot to a new mac would overwrite the device that is deliberately
+       still showing the old tag. The mac coming back takes its own slot again, because the slot
+       is decided from the device's own "mac" state and the hold does not blank that.
+       New member state "lastSeen" - when any rPi last reported this tag, which is what the delay
+       is measured against. A STATE and not a dict in memory, so a plugin restart does not hand
+       every member a fresh hold and keep long-gone tags showing as up. Existing devices have no
+       lastSeen until their state list is rebuilt at the next plugin start, and are simply not
+       held until then.
+       NOTE WHAT THIS DOES NOT TOUCH: the tag COUNT. That is settled on the Pi and taken as it
+       comes, deliberately - settling it twice is what caused "3 tags but 2 up and 2 down". So a
+       delay much longer than "count must hold for" means the counter can drop before the member
+       devices do. The dialog says so.
+   CHG: A MEMBER GOING DOWN NOW BLANKS NOTHING AT ALL - not the mac, battery or apple types, and
+       as of this version not the signal, distance or indicator either.
+       The earlier reasoning for still clearing those two - "they measure a signal that is no
+       longer arriving, so keeping them would be a lie" - does not survive contact with the
+       question actually asked when a tag goes: where was it, and how strong, when it went. A
+       last measurement with a time beside it is a RECORD. A row of -999 and 999 is not, and it
+       destroys the only copy of the answer.
+       ONE STATE SAYS UP OR DOWN, and that is status (with onOffState). Overwriting six
+       measurement states to repeat what status already says was never worth what it cost.
+       The same goes per rPi: an rPi that is not hearing the tag right now leaves its trio alone
+       instead of stamping -999/999 over it. Pi_NN_Time says when each reading was taken, which
+       distinguishes a current reading from an old one far better than every silent rPi reporting
+       the same sentinel.
+       SO -999 AND 999 NOW MEAN EXACTLY ONE THING for the life of a device: that rPi has NEVER
+       heard this tag. They are stamped once when the device is made - signals included now, they
+       were defaulting to 0, ie full strength - and never written again.
+   NEW: previousTagIds and lastTagIdChange on a member device - the lineage history, for the same
+       reason previousMacs exists for the mac. A LINEAGE CHANGE WITH NO MAC CHANGE is the
+       signature of a WRONG rotation match: the rPi gave this mac's lineage to a newcomer while
+       this mac was still transmitting. The repair overwrites the evidence a packet or two later,
+       so it could only be seen by watching live, which is not a way to debug anything.
+       Read with lastMacChange beside it, the pair says WHICH of the two moved - and that is the
+       whole question when two devices end up holding one lineage.
+   NEW: previousStatusChange on a member device - the up/down change BEFORE the last one.
+       A member that dips down and is back a few seconds later overwrote lastStatusChange on the
+       way back, so the dip left no trace at all unless somebody happened to be watching the log
+       as it happened. With both stamps it is stated rather than inferred: "previous 19:52:48,
+       last 19:52:51" is three seconds down, and "previous 19:52:51, last 20:05:12" is twelve
+       minutes up. Written ONLY on a real change, and only when there was something to inherit,
+       so it never becomes a second copy of the line beside it. It sits next to lastStatusChange
+       in the members table for the same reason.
+   NEW: Pi_NN_State, up / down per rPi - whether THAT rPi is hearing the tag right now.
+       This is what makes the above safe rather than ambiguous. The other three per-rPi states
+       hold the last measurement and are never blanked, so something has to say whether they are
+       live or historical, and a sentinel written over the reading was the wrong way to say it:
+       it answered "is it here" by destroying "where was it". Now the readings are the readings
+       and Pi_NN_State is the answer.
+       Reading a member device is then: Pi_02_State up, Pi_02_Signal -65, Pi_02_Time 00:57:44 -
+       heard by rPi-2 now, at -65. Or Pi_02_State down with the same signal and time - that is
+       what rPi-2 last heard, and when, and it is not hearing it now.
+   CHG: and it has FOUR values, not two, because "down" was covering three different situations
+       and two of them were misleading:
+         up      in that rPi's member list - the trio beside it is live
+         weak    it HEARS the tag and does not count it: below joinRssi, or short of minPackets.
+                 That is a threshold to adjust, not a tag that has gone, and the two were
+                 indistinguishable on this side because the rPi only ever sent its MEMBERS
+         noData  that rPi is not reporting at all. It said nothing about this tag because it is
+                 saying nothing about anything - reading "down" for an rPi that is unplugged
+                 claimed it could not hear the tag, which was simply wrong
+         down    reporting, and this tag is in nothing it sent
+       A trigger for "not properly here" is != "up", which catches all three.
+       "weak" NEEDED THE RPI TO SEND MORE: it now carries every mac it hears but does not count,
+       mac -> rssi, capped at MAXWEAK (40) strongest first - they have no slot and never will, so
+       they cannot travel in "members". An rPi on an older findMyGroup.py sends none and then
+       nothing is ever weak, which is exactly what this side knew before.
+       "noData" NEEDED NOTHING NEW: the plugin already knows which rPis are reporting, it just
+       was not saying so. The weak lookup uses the DEVICE'S OWN mac when the tag is not in the
+       union, which is the case that matters most - the tag has stopped counting, and whether an
+       rPi can still faintly hear it is exactly what one wants to know then.
+   CHG: closestRPI is no longer blanked either. It used to go to -1 the moment nobody could hear
+       the tag, which threw away "where was it last seen" in order to say something the
+       Pi_NN_State states and status now say properly. It holds the rPi that heard it LAST.
+       A side effect worth having: a tag that disappears and comes back on a DIFFERENT rPi is now
+       a real rPi-to-rPi move, so it is logged and stamped in movedRpi. Going through -1 hid
+       exactly those - the two halves each looked like "first acquisition", which is not a move.
+       -1 still has a meaning, just a narrower one: no rPi has EVER heard this device.
+   CHG: THE GROUP'S COUNTS ARE ONE FAMILY OF NAMES, ON BOTH SIDES. They had grown into three
+       vocabularies at once - memberCount, membersUp, nearbyCount, candidates, numberTotal - and
+       "memberCount versus membersUp" told nobody which was which. Every count is numberOf* now:
+         numberOfMembers          member devices that exist        (was membersTotal)
+         numberOfUp               of those, currently up           (was membersUp)
+         numberOfActive           macs in the LAST message, settled (was memberCount)
+         numberOfActiveRaw        the same, instantaneous          (was memberCountRaw)
+         numberOfActivePrevious   what active was before it moved  (was previousCount)
+         numberOfActiveChanged    when it last moved               (was lastCountChange)
+         numberOfWeak             heard and NOT counted            (was nearbyCount)
+         numberOfCandidates       every find my mac heard          (was candidates)
+         numberOfAirtagsUp / numberOfAirtagsDown / numberOfAirpodsUp / numberOfAirpodsDown
+         numberOfOtherUp / numberOfOtherDown / numberOfTotal
+       ACTIVE is transmitting right now; UP is present, which includes a tag inside
+       memberDownDelaySecs that simply was not in the last report. That pair is the distinction
+       that kept being asked about, and the words now carry it instead of a comment.
+       numberOfWeak IS ALSO A CORRECTION, not just a rename: "nearbyCount" never meant nearby. It
+       is len(active) - len(members), the macs an rpi hears and does not count, and it sat next to
+       distanceIndicator's "nearby" meaning something entirely different. It now matches the
+       "weak" value Pi_NN_State uses for the same thing on a member device.
+       THE WIRE FORMAT CHANGED WITH IT. The rpi's message fields carried the old names while the
+       states carried new ones, which is two vocabularies for one number in a different place.
+       Both sides renamed together, so EVERY RPI MUST BE PUSHED with this version - an rpi still
+       sending the old fields is not understood at all, which is deliberate: a loud mismatch is
+       better than a silent half-rename.
+       An existing group device loses the old states when its state list is rebuilt, so anything
+       pointed at memberCount, nearbyCount or candidates needs repointing.
+   NEW: membersUp on the group device, AND IT IS WHAT THE STATE COLUMN NOW SHOWS. The device kept
+       raising a question it could not answer: "7 members" beside thirteen member devices reading
+       up, both numbers right and the pair looking like neither was.
+       THEY ANSWER "PRESENT" WITH DIFFERENT EVIDENCE. memberCount is the macs in the LAST MESSAGE.
+       A member device stays up for memberDownDelaySecs after it stops being heard, because one
+       report that does not mention a tag is not evidence the tag has gone. With a 90 s delay and
+       a 60 s send interval, six tags heard 31 to 54 s ago are up and are not in the count - so
+       the two could never agree, and explaining that every time is not a design.
+       The number on the group now answers the same question its devices answer. numberOfActive
+       and numberOfActiveRaw are untouched and still mean exactly what they meant.
+       THE COLUMN READS "13/20 up" - up out of how many member devices EXIST. numberOfMembers is
+       the second number and is a state of its own: it is the one people go and count by hand in
+       the device list, and it is what says whether slots are filling with tags that have gone. On
+       one screen: how many are here, how many devices there are, and the gap between them.
+       AND THE GROUP NO LONGER CLAIMS A SENSOR VALUE AT ALL - it is a CUSTOM device type now, and
+       those two go together. "13/20 up" is text, and sensorValue is indigo's NUMERIC state:
+       handing it that as a uiValue used a number field as a text field with a meaningless number
+       hidden behind it, and made the device's one real number a duplicate of a count that already
+       had a state of its own.
+       DROPPING THE CLAIM WAS ONLY HALF OF IT, and the half that did nothing on its own. A device
+       supporting a sensor value has its state column FORCED to sensorValue, exactly as an on/off
+       device has its forced to onOffState - but a SENSOR supporting neither draws NOTHING AT ALL.
+       UiDisplayStateId is a CUSTOM device type's feature and a sensor device never looks at it.
+       Measured, not reasoned: with SupportsSensorValue false the server reported displayStateId
+       "status", status held "3/3 up" and status.ui held "3/3 up   09-24 23:52:09", and the column
+       was EMPTY. Hence type="custom", which is the type this device should always have been -
+       what it shows is a sentence, and it has no single measurement to be a sensor for.
+       NOTHING IS LOST BY IT: the counts are numberOfUp, numberOfMembers, numberOfActive and
+       numberOfActiveRaw, every one a real Integer and a better thing to plot or trigger on than
+       sensorValue was. Group devices made before this carry the old property and are corrected
+       once at startup, with a line in the log saying so - and that correction now tests what
+       indigo DRAWS rather than what the property says, so it retries until the column is right
+       instead of flipping the property once and trusting the rebuild that follows.
+       The stamp beside it is when the shown TEXT last changed, keyed on the text itself rather
+       than on either number in it, so it dates exactly the thing next to it whichever half moved
+       - a timestamp dating a different number is how this started.
+       AND THE DEVICE DUMP NOW PRINTS BOTH: "state column shows 'status' = '3/3 up  09-24 23:52'".
+       displayStateId is the state the server PICKED, displayStateValUi is the STRING the client
+       puts in the column. This whole evening was the two disagreeing with nothing printing the
+       second one, so a blank column now says in one line whose fault it is.
+   CHG: the group device says "6 members", not "6 tags". memberCount counts every find my device
+       in the house - airtags, an airpods case, a phone or a mac that is advertising - and calling
+       that "tags" collided head-on with the airtag counter, which counts only the real ones. On
+       a real device: "6 tags" in the state column beside 6 airtags and 1 airpods.
+       Three numbers, no two of which agreed. "member" matches the states it belongs with -
+       memberCount, memberCountRaw, memberDownDelaySecs - and leaves "tags" meaning tags.
+   FIX: A DOWN MEMBER KEEPS ITS KIND AND KEEPS ITS PLACE IN THE BREAKDOWN. The airtag / airpods
+       / other counters were taken over the LIVE UNION - the macs heard in the last report - so a
+       tag that stopped advertising left the breakdown entirely. Airpods earpieces do exactly
+       that, all the time: they go back in the case and go silent. The group then read 0 airpods
+       with two member devices sitting in the list both saying airpods, which is not a lag or a
+       rounding, it is just wrong.
+       COUNTED OVER THE MEMBER DEVICES NOW, each from its own appleTypes - which a member has
+       always kept when it goes down, because it is the record of what was there. Two down
+       airpods count as two.
+       AND SPLIT UP FROM DOWN RATHER THAN PICKED BETWEEN. One counter per kind had to answer both
+       "how many airtags are HERE" and "how many airtags does this group KNOW ABOUT". Those are
+       different numbers - they differ by exactly the ones that have gone quiet - so whichever
+       population it was counted over, it was the wrong answer to the other question. Counted
+       over the union it said 0 while two were sitting there; counted over every device it would
+       say 2 while none was here. Two counters per kind, and neither number is inferred.
+       IT ALSO REMOVES A PIECE OF MACHINERY. A union tally could never add up to a settled count,
+       so the breakdown had to be FROZEN whenever the raw and settled numbers differed and
+       re-taken when they agreed - a whole mechanism whose only job was to hide a mismatch
+       between two populations. There is no mismatch left to hide: the three ...Up add up to
+       numberOfUp and all six to numberOfMembers, on every pass, with nothing held back.
+   NEW: numberOfTotal - all six added up, so the breakdown CHECKS ITSELF at a glance rather than
+       in your head. It equals numberOfMembers by construction, every device landing in exactly
+       one of the six, and is written from the SAME walk the six come from - so if it ever
+       disagrees the disagreement is real and not an artefact of reading states a moment apart.
+   MEASURED: the four battery words are NOT a linear scale. Airpods taken straight off the
+       charger report "medium", which indigo shows as 50%. That is the second of four steps and
+       not half a battery - what the two bits actually mean is the device's business and nobody
+       has published it. So a "battery low" trigger belongs on a FALL from one word to the next,
+       never on the absolute number, and 50% on an airpods case is not a reason to go looking for
+       a charger. Confirmed live, with the battery chain working end to end: full, medium and low
+       have now all been seen reaching indigo's own battery column.
+   NEW: a member device is NAMED FOR WHAT IT IS, not just numbered:
+         findmy_NN_airpod-case    07+12, the pairing frame a case sends with its lid open
+         findmy_NN_phone-mac      it also sends nearby info (10) or handoff (0C) - live apple
+                                  device messages, which a tag cannot send
+         findmy_NN_other          find my plus something without a name of its own, AND a mac
+                                  nothing is known about yet
+         findmy_NN                12 and nothing else - the one label with NO suffix, because
+                                  that is an airtag OR any other find my accessory OR an
+                                  offline iphone. There is nothing true to add, and a confident
+                                  wrong name is worse than a dull right one
+   VALIDATED ON THE HOUSE: the take-over option, after a real battery change. The tag came back
+       as a new device and the rPi refused to match it - correctly. A battery swap reboots the
+       tag: new key, new mac, a gap far longer than any rotation, and the battery word going
+       "low" -> "full", which is itself one of matchRotation's six tests. Every signal that could
+       say "same tag" says the opposite, and merging on none of them would mean merging a tag
+       that vanished with an unrelated one that appeared. So the refusal is the design, the
+       manual migration is the remedy, and it copied the states across and deleted the newcomer
+       exactly as intended. The device dialog now says all of this where somebody with a fresh
+       CR2032 in their hand will actually read it.
+   FIX: A ROTATION NO LONGER GROWS A NEW INDIGO DEVICE. This is the one that made a handful of
+       tags into fifteen member devices.
+       The lineage claim - "a mac whose rPi lineage a device already owns IS that device's tag
+       under a new mac" - ran SECOND, after the pass that lets a slot keep its current mac, and
+       it skipped any slot already in use. But during a rotation the OLD mac is still in the
+       union: expireSecs keeps it for a few seconds after its last frame, and the summary that
+       carries the new mac usually carries the old one too. So the slot was always "in use", the
+       claim was always refused, and the newcomer always got a fresh slot and a fresh device.
+       MEASURED, one tag, one afternoon: lineage 5-4 walked slot 09 -> 10 -> 11, a new device
+       each time, each mac living almost exactly the 15 minutes of a rotation period - while the
+       rPi had matched every rotation correctly and kept the tagId throughout. Three devices,
+       two "previousTagIds: 5-4" headstones, one airtag. The rPi was right and this side threw
+       its answer away.
+       THE CLAIM NOW RUNS FIRST, before any slot is handed out, and a slot only keeps its own mac
+       when that mac still carries the slot's lineage. AND THE OUTGOING MAC GETS NO SLOT AT ALL:
+       it is the same physical tag on its way out, it expires within seconds, and giving it one
+       would recreate the duplicate device under the other half of the rotation.
+       Tested against four cases: both macs in the union (the bug), nothing rotated, a genuinely
+       new tag beside an unchanged one, and a rotation whose old mac had already gone.
+       VALIDATED ON THE HOUSE, 15 minutes after a clean start: four tags, four devices, and TWO
+       ROTATIONS ABSORBED - slot 01 EF:EB:B6:CD:BF:26 -> D0:F0:07:20:FD:93 at 16:45:04 and slot
+       03 C9:17:5A:79:F5:B1 -> F6:22:50:81:66:DD at 16:45:15. Both kept their slot, their device
+       and their tagIds; previousTagIds stayed empty on all four, so no lineage moved at all.
+       Under the old code those two rotations would have become slots 05 and 06 with two dead
+       devices behind them. The afternoon before the fix reached fifteen devices.
+   FIX: APPLE TYPES NOW ACCUMULATE ON THE DEVICE, not only on the mac - and a member device
+       stops flipping its name back and forth. Seen doing it, twice inside 73 seconds:
+         slot 08 renamed "findmy_08_airpod-case" -> "findmy_08",  from: 12  find my only
+         slot 08 renamed "findmy_08" -> "findmy_08_airpod-case",  from: 07|12  airpods/case
+       THE RPI COLLECTS TYPES OVER A MAC'S LIFE, for the good reason that a device does not put
+       them all in one advertisement. But a find my mac ROTATES EVERY 15 MINUTES, so on its own
+       that knowledge is destroyed at every rotation and relearned from nothing - 12 on the first
+       frame after the rotation, 07 a minute later - and anything downstream that believed the
+       current frame flapped in step with it.
+       A FRAME WITHOUT 07 IS NOT EVIDENCE AGAINST 07. The device now merges what it is told into
+       what it already knew, so a type seen once is known from then on.
+       FORGOTTEN ONLY WHEN THE SLOT CHANGES HANDS, and that is decided on the LINEAGE and not on
+       the mac: a rotation keeps at least one tagId - that is what a tagId is for - so only a
+       slot whose new tagIds share NOTHING with the old ones is a different physical tag, and
+       only then does the device start learning again from scratch.
+       IT IS NOT JUST THE NAME. The airtag/airpods/other breakdown was counted from the live
+       frame too, so those counts flipped in step with the names; they read the device's
+       accumulated types now, and only fall back to the live frame for a device that has none yet.
+       ONE PREFIX, "findmy_", for every one of them - the suffixed names spent a few minutes
+       spelled "find_my_NN_..." and that is gone; a device list with two spellings of the same
+       prefix sorts into two clumps and reads as two different things.
+       AND ONE TEST FOR "IS THIS STILL A NAME WE GAVE IT", where there were three. The other two
+       were literal lists of findmy_NN and its collision form, written before a member could be
+       born as findmy_NN_airpod-case - so the slot allocator would have called every suffixed
+       device "renamed by the user" and protected it from reuse, while the rename code went on
+       treating the same device as its own. They would have fought, quietly, over exactly the
+       devices this change creates. All three now call findMyMemberNameIsOurs(), which builds
+       the set from the suffix map itself and so cannot fall behind it again.
+       THE WORDS COME FROM findMyAppleTypes(), the same ones already in the appleTypes state, so
+       the name in the device list and the state on the device agree BY CONSTRUCTION rather than
+       by being kept in step. Not from findMyKind(), which has three buckets and would have
+       called a phone "other".
+       NAMED LATE AS WELL AS AT BIRTH, because apple types ACCUMULATE: a mac can join sending
+       only 12 and reveal the 07 frame a minute later, by which time the device already exists.
+       The rename happens on the next update.
+       AND NEVER OVER A NAME THE USER TOUCHED. The test is exact - the four strings the plugin
+       could itself have produced for that slot, nothing that merely resembles them - so the
+       moment a device is called "Karl's airpods" the plugin stops having an opinion about its
+       name for good. That is the same principle findMyMemberDevices() has always followed by
+       looking devices up on their PROPERTIES and never on their name.
+       A slot changing hands to a different kind of tag renames it again, which is correct - it
+       is a different physical thing - and every rename says so in the log with both names.
+   NEW: hintByte - a member state, and a field on the wire. It is the LAST BYTE of the 25 byte
+       separated payload, two hex digits, and blank for a tag that has only ever sent the 2 byte
+       nearby payload - which has no such byte, so blank means "never said" and not "said zero".
+       It has been parsed on the rPi for as long as find my has existed here and went no further
+       than the frame log and the calibration csv.
+       NO PUBLISHED MEANING beyond "0x00 on ios", and it is named for what it IS rather than for
+       what it might be: a label that turns out to be wrong is worse than no label.
+       WHAT IT IS, MEASURED THE SAME DAY THE COLUMN WAS ADDED - and it is NOT what started this.
+       The idea was that the hint holds the last byte of the address a tag rotated away from,
+       from two eyeballed coincidences: hint 8D beside a mac ending 8D, hint 96 beside a mac
+       ending 96. WRONG, and the calibration log said so in one pass: over 151 rows carrying a
+       hint, it matched the last byte of another mac present at the time 3 times - at or below
+       what coincidence produces for one byte against a dozen macs. Eyeballing a few rows will
+       always find the pair that matches; that is what the log is for.
+       IT IS A 15 MINUTE EPOCH MARKER, AND NOTHING TO DO WITH THE KEY. Every true transition - a
+       hint changing while the MAC stayed put - landed on a 15 minute boundary, synchronised
+       across unrelated devices: 16:14:32, three independent macs together at 16:15:03, then
+       16:30:03 and 16:30:13.
+       THE CLINCHER, straight out of the new raw_hex column: two separated frames from one tag
+       19 minutes apart, spanning the 16:30 boundary, differ in EXACTLY ONE BYTE of 31 - the
+       hint, 83 -> 7B. Status, all 22 key bytes and the key-bits byte are byte-identical. The
+       key sat still while the hint moved, so the hint is not key material and is not derived
+       from it. That comparison was only possible because the whole frame is now logged; a week
+       ago it would have taken new logging and another day of waiting.
+       SO IT CANNOT MATCH ROTATIONS, and matching on it would be actively harmful: at an epoch
+       boundary every hint changes, which is exactly when a rotation is most likely to happen.
+       It stays logged and displayed because it costs nothing, and NOTHING READS IT.
+       Written only when the rPi actually sends one, so an rPi on an older findMyGroup.py leaves
+       the state alone rather than blanking a byte that is already there.
+
+================================================================================
+THE CALIBRATION CSV
+================================================================================
+   NEW: raw_len and raw_hex, last on every row. raw_hex is the WHOLE advertisement of the most
+       recent frame from that mac - everything the other columns were decoded out of - and
+       raw_len is its length IN BYTES, before it, because the length is the thing you filter on:
+       25 is a separated payload and the only kind with a hint byte, 2 is nearby.
+       WHY IT CHANGES WHAT THE FILE IS FOR: until now a theory about a byte could only be tested
+       by adding logging and waiting for the tag to come round again. With the frame itself on
+       the row, a theory can be tested against rows already written. It is also what makes the
+       abbreviations below acceptable - nothing in them is the only record any more.
+       Last on the row because it is much the longest field, and a variable-width column in the
+       middle makes every row after it unreadable.
+   CHG: the "hci" column is GONE. It dates from when an rpi ran several ble dongles as equals;
+       the radios have had fixed roles for a long time - one scans, a ble5 dongle only listens -
+       and findMyGroup.py never had a per-frame hci to put in it anyway, so it wrote the column
+       EMPTY for its whole life. host already says which rpi. findmy_scan.py still knows its
+       radio from --hci and still says so in its startup line and its state file; it just stops
+       repeating it on every row of a file that is about one radio.
+   CHG: EVERY VARYING COLUMN IS NOW A FIXED WIDTH, so the file can be read by eye. It could not
+       be before: "nearby" sat under "separated" and "low" under "critical", so every column to
+       the right of them moved on every row.
+       THE THREE THAT DO NOT FIT ARE ABBREVIATED RATHER THAN WIDENED, which is only reasonable
+       because raw_hex now carries the frame they were decoded from:
+         distanceIndicator   sep / near / lNN
+         battery             full / med / low / crit
+         appleTypes          ONE LETTER PER TYPE in code order - a=05 airdrop, p=07 pairing,
+                             h=0C handoff, n=10 nearby info, f=12 find my. "ahnf" is a phone or
+                             a mac, "pf" an airpods case, "f" alone a tag. An unknown type adds
+                             "?", because a type nobody has a letter for is the one worth
+                             noticing. 4 characters against 11 for "05|0C|10|12".
+       COUNTS ARE ZERO PADDED, measurements are space padded: packets 3, age_s 4, raw_len 2 read
+       as one number where a leading space would read as a missing field. rssi_median and
+       rssi_smoothed are written -xx.y and never were whole - a median over an even number of
+       packets is a half and strongHalf averages, so "-59" on one row and "-62.5" on the next was
+       two widths AND two apparent precisions for one measurement. rssi_min and rssi_max stay
+       whole, because they are single measured packets.
+       PADDED, NEVER TRUNCATED: a width is a minimum. A marker longer than 8 or an age past 9999
+       pushes its own row out and leaves every other row lined up, which is the right way round.
+       NOT PADDED, and not needing to be: timestamp is a fixed 21, mac a fixed 17, and host is
+       constant within a file - one rpi writes one file.
+       findmy_scan.py got the identical treatment: one schema, not two.
+   CHG: THE MARKER IS WRITTEN ONCE, not on every row. It is an EVENT - "from here on the tag is
+       at the street door" - and it was being repeated on every row of the session, which is the
+       same sentence a thousand times in a file capped at 200 kB on a 2 MB tmpfs. A ten minute
+       calibration run at one position wrote the label several hundred times to say one thing.
+       WRITTEN WHERE IT CHANGES, AND RESTATED WITH EACH REPEATED HEADER BLOCK. The second half
+       matters as much as the first: these files are read by scrolling into the middle of one,
+       where a marker written once at the top is exactly as useless as a header written once at
+       the top - which is why the header is repeated in the first place. It also survives
+       trimCsv(), which drops the OLDEST rows: a marker written exactly once would eventually be
+       trimmed away and orphan every row after it.
+       "-" MEANS CLEARED, and is the one thing a blank cell cannot say. A blank means "same as
+       the row above" to anything forward-filling, so clearing the marker needs a mark of its own.
+       Only ever written on the row where the clearing happened.
+       findmy_merge.py FORWARD-FILLS it, per file - one file is one rpi's log, and carrying a
+       marker from the end of one into the start of another would label rows with a session they
+       were not part of. It also now strips every field it reads, because the fixed-width columns
+       put the padding INSIDE the value: "sep " and "kitchen " arrive with their spaces, and
+       comparing them raw silently matched nothing.
+       Measured on a round trip: a run that wrote the label on 10 of 10 rows now writes it on 4 -
+       two changes, one header restate, one clear - and the calibration table comes out identical.
+   NEW: BATTERY, as indigo's OWN battery level. A member device now carries indigo's batteryLevel,
+       which is what gives it the battery column in the device list, the low-battery warning and
+       dev.batteryLevel in a script - none of which a state holding the word "critical" can do.
+       It is NOT a declared state and is not in piBeaconConstants: it comes from the
+       SupportsBatteryLevel PROPERTY, exactly as every beacon in this plugin gets its battery.
+       A FIND MY FRAME CARRIES NO PERCENTAGE. The status byte has TWO BITS of battery and its
+       other six have no confirmed meaning, so full / medium / low / critical is the entire
+       resolution that exists. Those four are rendered 100 / 50 / 20 / 1 %: 100 does not mean the
+       tag measured 100%, it means "full", the top of four. The word itself stays in the
+       "battery" state, unchanged.
+       NO lastBatteryReplaced ON THESE DEVICES, deliberately. Switching SupportsBatteryLevel on
+       brings that state with it - setstatesCategoriesForDevtype adds it to anything with a
+       battery - and it is meaningless here: "when was this battery last replaced" needs a device
+       that is ONE PHYSICAL THING for months, and a member device is a SLOT. It changes hands
+       whenever a mac rotates without being matched, and the "delete members down too long"
+       housekeeping deletes it outright. A date on it would be a date for whatever happened to be
+       holding the slot when it was written. It is left off the state list rather than left
+       empty, so there is no blank column in the sql logger and no row in the members table.
+       THE FIRST VALUE IS QUEUED, NOT WRITTEN ON THE SPOT. replacePluginPropsOnServer returns
+       before indigo has rebuilt the device's state list, so writing batteryLevel straight after
+       it raced and lost - "device findmy_01 state key batteryLevel not defined", twice for every
+       device made. A sleep was the first attempt and was both unreliable and rude: this runs in
+       the message thread, and half a second per device is ten seconds when a houseful of tags
+       arrives at once. It goes through the delayed-action queue instead, which already skips
+       quietly if the state is still not there - and then the next ordinary update writes it.
+       THE SUPPORT APPEARS WITH THE FIRST READING, not when the device is made: indigo defaults
+       an integer state to 0, 0 is a flat battery everywhere it is shown, and there is no
+       "unknown" to stamp instead the way -999 and 999 cover it for a signal and a distance.
+       An unknown word later leaves the last percentage standing - the same rule every other
+       reading here follows.
+       Devices made by an earlier version are picked up at startup and seeded from the battery
+       WORD they already carry, which matters most for a tag that is DOWN: no message is coming
+       to fill it in.
+   CHG: the last _GlobalConst_findMyMacHistory (5) macs a slot has held are kept in previousMacs,
+       newest first, with lastMacChange for when it last moved. Never the same mac twice in a row:
+       a tag that drops out and comes back would otherwise fill the list with itself and push out
+       the rotations, which are the entries the history exists for.
+       The STATE IS THE STORE - indigo persists it already, so there is nothing else to keep in
+       step or reload at startup.
+       WHY IT IS WORTH KEEPING: the current mac says nothing about which tag a device is. The
+       trail of them is what separates "this tag rotated its mac" from "this slot now holds a
+       different tag" - the one question a named member device cannot answer on its own.
+   CHG: appleTypes is ONE String state carrying the codes and what they add up to - "12  tag",
+       "07|12  airpods/case", "05|0C|10|12  phone/mac". A tag sends only find my, so a lone "12"
+       is the mark of a real tag and the word after the codes says what anything longer is.
+       The per-code names live in _GlobalAppleContinuityTypes in plugin.py.
+   CHG: ADDRESSES AND NOTES. The group's address is "on Pi:2,5" and the member's is "findmy-03";
+       the NOTES on both are left empty.
+       The group had no mac to put in the address, so the pi list - the one fact worth showing
+       about it - had gone into the notes, and notes are the USER'S field. The member's address
+       used to carry the group's device id, which nothing needs and which filled the Address
+       column with a number that means nothing to a reader.
+       WHY NOT THE MAC, which every other BLE device here is addressed by: a find my mac rotates
+       every ~15 min, and changing an indigo address means replacePluginPropsOnServer - a server
+       round trip that can bounce the device's comms. Twenty devices rotating four times an hour
+       is real churn for something the "mac" state already shows live and for free. So the address
+       can be stable and uninformative, or informative and rotating, and it cannot be both.
+       Existing devices are corrected in place on the next update, and the old notes are cleared
+       ONLY when they still hold exactly what this plugin wrote - never a note somebody typed.
+   FIX: the member's state column showed the wrong moment. It took the LATER of lastStatusChange
+       and lastMacChange, so a mac rotating under a device that had not gone anywhere pushed the
+       stamp forward - and the column then read "up" beside a time it had not gone up at.
+       A ROTATION IS NOT AN UP/DOWN CHANGE. The column is "up since" / "down since" now: the
+       moment the status itself last changed, and nothing else. lastMacChange is still on the
+       device for anyone who wants it, and previousMacs still carries the trail.
+       Both places that build the string were changed together - the live path and
+       findMyMemberDisplay(), which repaints it after a config save. They have to produce the
+       identical string, which is why that rule lives in one method.
+   CHG: both device types show "status" in the indigo STATE COLUMN, with a timestamp of the LAST
+       CHANGE - "3 tags  09-23 14:22:31", "up  09-23 14:22:31". A clock ticking once a minute on
+       every device says nothing; "down  09-23 04:12:07" says when it went.
+       For a member, what counts as a change is going up/down OR the slot's mac being replaced
+       underneath it, whichever happened LATER. For the group it is lastCountChange.
+
+================================================================================
+FIND MY - SEVERAL RPIS FEED ONE GROUP DEVICE
+================================================================================
+   NEW: the single "select rPi-server doing the counting" menu is replaced by the same rPi
+       checkbox block every other BLE sensor has. Devices saved before this keep working -
+       piServerNumber is still read as a fallback.
+   THE COUNTS ARE NOT ADDED, and this is the whole point. Two rPis hear overlapping areas, so a
+       tag in the hall heard by both is ONE tag. The join key is the MAC - a find my mac is
+       identical on every rPi at the same instant - so the house count is the UNION of the macs.
+       Adding the per-rPi counts would have double-counted exactly the tags that matter most.
+       - a quiet rPi DROPS OUT of the union after 2x its send interval, so a dead rPi cannot hold
+         tags in the count forever. State pisReporting says "2 of 3"
+       - state seenBy2Plus: how many tags more than one rPi can hear. That is much better evidence
+         of "really inside" than any single rssi
+       - the STRONGEST rPi wins the readings for a tag: nearest radio, least marginal decode
+   FIX: OPENING AN AIRPODS CASE BROUGHT UNRELATED DEVICES BACK TO LIFE, including one for a tag
+       in another room. Taking the buds out puts THREE new find my macs on the air at once - case
+       and both buds, each with its own identity - and a new mac took the LOWEST free slot.
+       "Free" does not mean empty: a slot whose tag has gone still carries its member DEVICE, with
+       the name somebody gave it. So the three newcomers landed on the three lowest-numbered
+       departed tags and those devices came up describing airpods.
+       Lowest-first spends the slots people care about FIRST, which is exactly backwards. It now
+       hands out the least disruptive slot instead:
+         0  a slot with NO device on it - nothing to disturb at all
+         1  a device still under its birth name findmy_NN - nobody has claimed it
+         2  a device somebody RENAMED - taken only when nothing else is left
+       and inside each tier the one unheard LONGEST, since that is the likeliest to be really
+       gone. The slot number is only the final tiebreak - predictable numbering was the one thing
+       lowest-first was buying, and it still holds when the slots are otherwise equal.
+       "RENAMED" IS AN EXACT TEST, not a prefix, and the difference is not academic: "findmy_03-k2"
+       starts with "findmy_" and is very much a name somebody chose. It is compared against the
+       two names createFindMyMemberDevice can give a device and nothing else. Checked against a
+       real slot table - the first version got this wrong and would have treated every renamed
+       device here as unclaimed.
+       This does not make a slot permanent, and cannot: with every slot carrying a device the
+       longest-gone one is still taken over. It stops the CHEAP slots being spent last.
+   CHG: SLOTS ARE ASSIGNED IN THE PLUGIN, not on the rPi. They had to be: rPi-2's "01" and rPi-5's
+       "01" are different tags, so per-rPi slots collide the moment a second rPi is enabled. The
+       mac is the only thing that identifies a member across the house, so the slot is handed out
+       once, over the union - ONE MEMBER DEVICE PER TAG.
+       Sticky as before (a mac keeps its slot while it is there) and rebuilt from the member
+       devices themselves on every pass, so it survives a plugin restart with no stored state: the
+       device holding mac X IS slot X's device.
+       The rPi still keeps its own sticky slots and history for its own state file and log; the
+       plugin works out previousMacs / lastMacChange on its own side, because a per-rPi history
+       cannot see a shared slot change hands.
+   NEW: A TAG KEEPS ITS INDIGO DEVICE WHEN ITS MAC ROTATES. New per-member field "tagId" in the
+       rPi's message, and a new member state "tagIds" holding them as "2-1043, 5-77".
+       THE TWO KEYS DO DIFFERENT JOBS AND NEITHER REPLACES THE OTHER: the MAC joins two rPis at
+       one INSTANT - the same tag carries the same mac everywhere at the same moment - and the
+       TAGID joins one rPi across TIME, because the rPi keeps it when the mac changes. .46 was
+       right to stop using per-rPi slots as the house slot (rPi 2's "01" and rPi 5's "01" are
+       different tags) but it dropped the second job with them, and nothing replaced it: a
+       rotation has looked like a new tag ever since, with a new device to go with it.
+       ONLY THE RPI CAN SUPPLY IT. The plugin sees a summary every sendEverySecs, so a rotation
+       reaches it as "somewhere in the last minute one mac left and another arrived". The rPi sees
+       the old mac's last packet and the new one's first a fraction of a second apart, and that
+       resolution is the entire evidence.
+       matchRotation() in pi/findMyGroup.py INFERS, and refuses rather than guesses. Nothing in a
+       find my frame identifies a tag - the mac is key-derived and every other field is either the
+       same on all tags or undocumented - so a carry-over needs ALL of:
+         - the old mac stopped within ROTGAP (6 s) of the new one starting
+         - AND HAS BEEN SILENT ROTQUIET (3 s) SINCE. This is the one that matters: two tags side
+           by side at the same signal level were once read as one tag rotating, and the claim had
+           to be withdrawn. A tag that is still advertising has not rotated into anything
+         - the smoothed signal within 8 dB - it has not moved in that second
+         - battery and appleTypes identical. Neither identifies anything alone; together they
+           throw away most wrong candidates for free
+         - and EXACTLY ONE lineage fits. Two means we do not know, and a wrong carry-over silently
+           renames somebody's tag - worse than an extra device appearing
+       Tested against all of it: clean rotation, rotation beside a live tag at identical rssi, a
+       genuinely new tag, battery/appleTypes/signal mismatches, two lineages going quiet together,
+       and a rotation noticed only after the old mac had expired. 11 cases, all as intended.
+       ROTQUIET was 5 s first and refused the clean case: the new mac JOINS after minPackets
+       adverts, ~4 s, so at 5 s the real rotation landed on the wrong side of the test.
+       THE ID IS NEVER REUSED - a monotonic counter per rPi, not the 20-slot pool. Slot 03 an hour
+       from now is a different tag, and that doubt is the thing this exists to remove. It is
+       persisted in findMyGroup.state with the slot map, and the counter is never allowed to go
+       backwards over a restart: a reused id would read as a rotation of whatever last held it.
+       Plugin side: a mac that no device holds, but whose lineage a device already owns, keeps
+       that device and slot - previousMacs and lastMacChange record the handover as before. One
+       lineage to one mac and one mac to one lineage, so the rPi's refusal to guess is not undone
+       here. An rPi on an older findMyGroup.py sends no tagId and simply gets the old behaviour.
+       It also settles the down-delay's held slot: a rotated tag reclaims its OWN held slot
+       through its lineage, so the hold now keeps only genuinely unrelated macs out, which is what
+       it was for. NEEDS THE PI FILES PUSHED.
+   ACCEPTED LIMIT: a tag that leaves range entirely and comes back gets a new lineage, and that
+       correlation is lost. Nothing can recover it - the owner's own devices re-identify a tag by
+       deriving the address from the rolling key in their keychain, and find my uses key-derived
+       random static addresses precisely so that nobody without that key can. Everything above is
+       inference from continuity, not identification, and it is bounded by that on purpose.
+   FIX: "3 tags" while the member devices showed 2 up and 2 down, righting itself a minute later -
+       with only ONE rPi running, so none of the multi-rPi machinery was to blame. The count was
+       being SETTLED TWICE. The rPi settles its own count already, and settling it again here can
+       only add delay: this side cannot sample faster than messages arrive, so 60 s of hold became
+       120 s while the member devices, which have no such delay, showed the new picture throughout.
+       Now: ONE rPi reporting -> take its memberCount, lastCountChange and previousCount as they
+       come. TWO OR MORE -> settle the union here, because no rPi can see the house count.
+   FIX: and THAT settle could stick, which is worse than the delay it replaced. It only ever
+       committed a raw count that had held UNCHANGED for stableSecs, and it restarted its own
+       clock on every sample that differed - so where raw is never steady for a minute, which is
+       any house with macs rotating and members sitting either side of joinRssi, it could not
+       commit anything at all and memberCount froze at whatever it had last managed to hold.
+       Caught in the act: memberCount 6 against memberCountRaw 5 for 24 minutes, the state column
+       reading "6 tags" with five macs in the house, and no way back on its own.
+       IT NOW COMMITS WHAT WAS TRUE FOR MOST OF THE WINDOW, time-weighted. A rotation blip still
+       cannot win - one sample of "6" while the old mac expires is a second or two out of sixty,
+       which is the entire job stableSecs was added for - but an oscillation resolves to its
+       majority instead of stopping the clock, and the count can never be stuck for longer than
+       the window. TIME-weighted and not one vote per sample, because the rPis are not in step
+       and a "members" trigger fires whenever membership moves: samples are irregular by design,
+       and counting them equally would let three in five seconds outweigh a minute of quiet.
+       Checked against steady, blip, real change, the stuck case above, and a true 50/50
+       oscillation - which commits rather than freezing.
+   FIX: A LIVE TAG COULD HAVE ITS LINEAGE STOLEN AND NEVER GET ANOTHER, which is what was really
+       behind member devices multiplying. matchRotation() hands a lineage to what it believes is
+       the same tag under a new mac and clears it off the old one, so it cannot be held twice -
+       but the pool it chooses from includes LIVE candidates that have merely been quiet for
+       ROTQUIET, and at roughly one advertisement every 2 s that is a SINGLE MISSED PACKET. A mac
+       that had gone nowhere lost its lineage to a newcomer and carried on transmitting with none.
+       AND IT NEVER GOT ANOTHER ONE: the assignment runs only at JOIN and that mac had long since
+       joined. It reported no lineage for the rest of its life, so the plugin could not follow its
+       NEXT rotation and made a new indigo device for it every single time - which is the device
+       count climbing towards 20 that looked like a slot-allocation problem.
+       Caught twice within two minutes of a restart in a real house: tagId "2-8" on two member
+       devices at once, and "2-5" on two more, none of them having ever changed mac.
+       Now a member found without a lineage takes a FRESH one. Not the old one back - that has
+       moved on and must not be held twice, and undoing the match would put the duplicate back.
+       The trail really was broken, and a new lineage from that point is what is true.
+   FIX: THE APPLE-TYPES TEST REFUSED ROTATIONS IT SHOULD HAVE ALLOWED, and airpods most of all.
+       matchRotation required the old mac's types and the newcomer's to be EQUAL - but types
+       ACCUMULATE over a mac's life, so the test was biased against the very candidate it judged:
+       the old mac had collected its set over minutes of frames, the newcomer had minPackets of
+       them. An airpods case sends 07 and 12 and does not put both in every frame, so a new mac
+       that had so far only shown "12" was refused a lineage it plainly owned, and earned a new
+       indigo device every single rotation. Airpods sleep in the case and wake when taken out,
+       which is why they multiplied faster than anything else in the house.
+       SUBSET NOW, NOT EQUALITY: everything the newcomer has sent, the old mac sent too. A type
+       the old mac NEVER sent is a real difference and still refuses - so a tag cannot inherit a
+       phone's lineage, which is the whole reason the test is there. Checked against the eight
+       cases that matter, including "07|12 does not fit within 12" and an empty set either way.
+   FIX: A MAC IS NOW REMEMBERED AS OWNING ITS OWN LINEAGE FOR AN HOUR (OWNKEEP), separately from
+       the 2 minutes a DIFFERENT mac may inherit it within (GONEKEEP). The two were one number
+       and should never have been: the second is a guess and must stay short, the first is an
+       exact mac match with nothing to get wrong.
+       MEASURED: airpods earpieces stop advertising and come back ON THE SAME MAC every 3 to 4
+       minutes - four returns of one earpiece in twelve minutes, at 3.0, 4.0, 4.3 and 4.2 min,
+       every one of them past GONEKEEP. So each return found its own lineage already thrown away,
+       re-entered matchRotation as a mac nobody had ever seen, and competed for OTHER tags'
+       lineages. THAT is where the "could be any of .." refusals came from: not ambiguous tags,
+       amnesiac ones - and they were blocking the genuine rotations happening beside them.
+       A reclaim is logged as "ROT=", so it is visible next to the ROT/ROT?/ROTX lines.
+       OWNKEEP IS TWO DAYS, not an hour. A SEPARATED tag rotates only once a DAY, so anything
+       shorter guarantees amnesia for precisely the devices that rotate least - and an earpiece
+       left in its case overnight is the ordinary case, not the awkward one.
+       BOUNDED AT 500 MACS (OWNMAX), oldest dropped first, because a two day memory is not pruned
+       by time in any useful way: a house has nothing like 500 devices but the air outside it
+       does, and a dict with no ceiling is a leak with a long fuse.
+       WRITTEN TO THE STATE FILE, so two days of memory is not undone by one restart - compact
+       [tagId, last] pairs rather than named fields, about 20 kB at the cap, which the 2 MB tmpfs
+       carries easily beside the 200 kB csv. An older state file without it is read as before.
+   FIX: A ROTATION MATCH IGNORED THE DISTANCE INDICATOR, and that was the missing discriminator.
+       It is the TAG'S OWN STATEMENT about whether its owner is with it, and a mac rotation does
+       not change it - the owner walking away does. Two macs disagreeing about it at one instant
+       are therefore not one tag, and matchRotation was not looking.
+       Caught doing real damage: D3:3C (nearby) and FF:C5 (separated) were handed tagId 1 back
+       and forth TWICE IN SEVEN SECONDS, and every other test passed them both - same battery,
+       same types, both -59 dBm, both inside the gap. Two lookalike tags stealing each other's
+       identity, with no reason to prefer either.
+       A blank on either side is not a disagreement: an unknown payload length reads as "lenNN"
+       and an entry from an older state file has none, and neither of those is evidence.
+   NEW: ROTBACK (120 s) - a lineage that has just moved A -> B may not move B -> A within it.
+       A rotation is ONE WAY, so a reversal is two wrong matches rather than two right ones, and
+       it is the exact shape a pair of lookalike tags makes. A backstop for the indicator test
+       above: the indicator alone would have refused both of those matches, but nothing else in
+       the five tests could ever have noticed the loop.
+   CHG: ROTGAP 6 s -> 15 s, MEASURED rather than guessed. With the refusal logging on, ten
+       minutes in a real house produced 23 rotations refused on the gap alone, with gaps of 6.2
+       to 13.3 s - and the next candidate up was 55.7 s, an unrelated mac. The whole band from
+       13.3 to 55.7 was EMPTY, so the new threshold sits in open space instead of on a judgement.
+       The gap is not the tag's doing: the rPi does not hear every packet, so the old mac's last
+       HEARD frame is already seconds before it really stopped and the new mac's first HEARD frame
+       is seconds after it really started. Both errors add, and 6 s could not absorb them.
+       ROTQUIET STAYS AT 3, and the same log says why: all 34 of its refusals were between 0.0
+       and 2.8 s, every one of them an old mac that had transmitted within the last three seconds
+       and had therefore gone nowhere. Those refusals are right, which is also why raising it to
+       5 earlier in this version was wrong.
+   NEW: every lineage decision is logged, and the refusals say WHY. ROT matched, ROT? refused as
+       ambiguous, ROTX nothing matched - all three prefixed "ROT" so one grep finds them:
+           grep "findMyGroup ROT" /var/log/pibeacon
+       ROTX names every candidate it turned down and which of the five tests failed, with the
+       numbers: "2F:19 gap 9.4s>6; C8:BF rssi -79vs-71". Five tests refuse a rotation and the
+       line used to say only that none fitted, which left ROTGAP/ROTQUIET/ROTRSSI to be tuned by
+       guesswork - and guessing at ROTQUIET once already cost an afternoon and a wrong value.
+       Level 20 when the rPi debug menu is 1, level 10 otherwise, the same deal logSummary makes:
+       a few lines an hour, and needing the whole pi in debug to see them meant nobody did.
+   FIX: A MAC THAT EXPIRED AND CAME BACK LOST ITS OWN LINEAGE - the third thing behind member
+       devices multiplying, and the most routine of them. expireSecs is 10 s and these tags go
+       half a minute without being heard all the time, so they expire constantly. On expiry the
+       mac leaves cands, its lineage leaves tagIdOf and is parked in goneTags. Coming back on the
+       SAME MAC it was therefore a mac nobody had ever seen: it went to matchRotation, which could
+       hand it somebody else's lineage while its own sat in goneTags unclaimed. Two member devices
+       both holding tagId "2-2" is what that looks like from indigo.
+       IT COULD NOT RECLAIM ITS OWN THROUGH matchRotation EITHER, and that is a certainty rather
+       than a near miss: its own goneTags entry is at least expireSecs old by definition and
+       ROTGAP is 6 s, so the one lineage guaranteed to be right is the one entry the gap test
+       always threw away. It is taken directly now - no guessing, it is the same mac.
+       matchRotation also skips a mac's own goneTags entry now. It already skipped its own entry
+       in cands; the goneTags half of the same pool had no such test.
+   FIX: (plugin) tagIds is written even when EMPTY, while the mac is in the union. It used to be
+       left alone when the rPi sent no lineage, so a device went on showing one it no longer had -
+       and findMyAssignSlots matches rotations against exactly that state, so a stale lineage
+       could claim a rotation belonging to another slot and hand a device to the wrong tag.
+       A device that is DOWN still keeps its last lineage: that is what lets a rotation reclaim
+       the slot it is being held on, and it is only stale once the mac is heard again saying so.
+   NEW: (pi) a "members" send trigger - the rPi reports when WHICH macs are members changes, not
+       only when HOW MANY changes. A tag rotating its mac swaps one member for another and leaves
+       the count untouched. Harmless with one rPi; WRONG with several, because the plugin merges
+       by mac and a stale mac beside a fresh one is two members for one tag. Held to MINSENDSECS.
+   FIX: rPis that are switched off, or have no ip, were showing in the rPi checkbox selector. The
+       hidden isRPIONnn fields default to true and the visible binding believes them, and
+       getDeviceConfigUiValues only set them for types in a hand-kept list the dialogs had drifted
+       away from. It now asks the dialog's own xml for the RPI_ENABLE_BLOCK marker.
+       FIVE device types were affected, not only the new one: BLEconnect,
+       BLEXiaomiMiTempHumSquare, BLEXiaomiMiVegTrug, BLEinkBirdPool01B, BLEfindMyGroup.
+       The menu-style selectors were never affected - filterPiD already skips offline rPis.
+   FIX: "is this a multi-rPi device" was decided by testing for rPiEnable0 ALONE, in SEVEN places.
+       buildRpiEnableFieldsXml emits every number, so rPiEnable0 ought to be there - but a device
+       saved by an older version, or whose props were written when fewer rPis existed, can carry
+       rPiEnable1.. with no rPiEnable0 at all. The test then called it single-rPi and every branch
+       downstream took the wrong path: no parameters sent to its rPis, no rPi list in the action
+       menus, the address rebuilt in the old "Pi-n" format, and in syncSensors no rPi picked up
+       its sensor at all. New isMultiRpiDevice(props) scans the whole range and is used at all
+       seven. Found on the find my line; the other six were the same latent bug, older.
+
+================================================================================
+FIND MY - FILES, LOGGING AND DEBUG
+================================================================================
+   THE STATE FILE: temp/findMyGroup.state, written on every send, INDENTED, with each member a
+       dict of named fields rather than a positional list. That file is read by a person far more
+       often than by the program - "cat temp/findMyGroup.state" is the first thing anybody does
+       when the count looks wrong - and one unbroken line of json answers nothing.
+       temp/ IS A TMPFS, so it does not survive a reboot. The same file is therefore copied to the
+       pibeacon directory every PERSISTSECS, and at startup restoreSlots() COPIES IT BACK
+       into temp/ when temp/ has none, so the file is there before the first send rather than up
+       to sendEverySecs later. master spares temp/findMyGroup.state when it empties temp/, so a
+       master or beaconloop restart keeps the current state.
+       One file, one format, two places - not two files with two formats and two loaders.
+       PERSISTSECS IS 200 s, down from 300: a few kB 432 times a day is nothing an SD card
+       notices, and it is what a reboot can lose that is worth shortening.
+   THE CALIBRATION CSV: /home/pi/pibeacon/temp/findMyGroup.csv - ONE file with a fixed name,
+       beside the state file, CAPPED AT 200 kB with the OLDEST rows dropped.
+       IT IS COPIED OUT TO THE PIBEACON DIRECTORY TOO, on the same PERSISTSECS tick as the state
+       file, and restored from there when temp/ comes up empty. It needs this more than the state
+       file does: the state file is rebuilt within seconds by the tags themselves, while the csv
+       is a TRAIL - a row that is not written again is gone, and a reboot took all of them.
+       ONLY WHEN IT HAS CHANGED, by size and mtime. The csv runs to 200 kB, so copying it on
+       every tick would be ~80 MB a day onto a card that has to last, nearly all of it rewriting
+       bytes that had not moved. With the calibration log off nothing is written to it, so
+       nothing is copied and it costs nothing at all.
+       THE RESTORE HAPPENS BEFORE ANYTHING CAN APPEND, and that ordering is the whole safety of
+       it: a freshly empty temp file copied out over the full one in the pibeacon directory would
+       finish the job the reboot started. A csv that IS already in temp/ is the live one and is
+       ahead of the copy, so it is never overwritten by it.
+       It was a file per day in /var/log, cleaned up by age. Everything about that is gone and
+       each part of it for its own reason:
+       - /var/log meant creating a new name in a root-owned directory, which needed the
+         writeFileAsRoot + makeOwnFileWritable dance on the first write of each day. temp/ belongs
+         to the pi user, so it is now a plain append
+       - a file per day meant a name to work out before reading one. "cat temp/findMyGroup.csv"
+         needs nothing looked up
+       - an age-based cleanup answers the wrong question. temp/ is a 2 MB TMPFS shared with
+         findMyGroup.state, so what matters is that this cannot grow into that - not how old its
+         rows are. A size cap needs no schedule and leaves nothing to sweep up
+       The newest rows survive a trim and the oldest go: this is a rolling record of what is on
+       the air now. Cut on LINE boundaries, never mid-row, and the column header is put back at
+       the top so a trimmed file still starts by saying what its columns are.
+       master is told NOT to delete it when it empties temp/ - it is in the keep list beside
+       findMyGroup.state. BUT temp/ IS A RAM DISK: a reboot loses it. Copy it off first if it
+       matters. The dialog says so.
+       Verified by running 2500 write cycles through it: 10 trims, the file peaked at 204783
+       bytes against the 204800 cap and never crossed it, the header stayed on line 1, and every
+       line had an identical column count - ie no row was ever cut in half.
+       "keepLogDays" is gone from the parameters, the rPi and the plugin's block: it configured
+       the age cleanup that no longer exists, and a setting that does nothing is worse than none.
+       The COLUMN HEADER is repeated every 10 minutes, in front of real rows only, because a file
+       that runs for a day is read by scrolling into the middle of it where a header on line 1 is
+       no use. NOTE for anything parsing these: the repeated header is a DATA ROW to a csv reader,
+       skip lines starting with "timestamp,". The epoch column is gone and "timestamp" carries
+       TENTHS instead - "2026-09-23T15:57:12.6".
+       findmy_scan.py writes the identical schema, field for field, so the two writers cannot
+       drift apart. findmy_merge.py - which DOES read these files, and was already broken - reads
+       the timestamp with or without tenths and skips the header rows. It lives in
+       Contents/Server Plugin/ - not pi/, because it runs on the mac and is not sent to the rPis,
+       and not loose in Contents/, because that holds no other .py and a lone one there reads as
+       a misplaced file. It sits with the plugin's other mac-side tools instead.
+   DEBUG, THREE WAYS:
+       - on the group device: off / summary on every send / summary + one line per find my frame
+       - on the rPi, with no indigo at all: echo 1 > /home/pi/pibeacon/temp/findmy.debug. The FILE
+         WINS while it exists; deleting it hands control back to the dialog. Checked every 5 s
+       - in the plugin config: debug area "FindMy", to PLUGIN.LOG. Three blocks per message -
+         RECEIVED (what one rPi sent), PROCESSED (the union, which rPi is stale, why memberCount
+         is what it is) and MEMBER DEVICES (the slot-by-mac assignment). Between them they answer
+         the questions this feature raises: why the count does not match the devices, which rPi is
+         contributing what, is an rPi silently stale, and why a named device changed identity
+   CHG: the rPi's per-frame debug line is COLUMNS, every field fixed width:
+findMyGroup frame sl:01 C0:F8:D7:6F:D5:D6  rssi: -68  dist:separated  status:D0=11|010000 batt:critical  hint:8D  types:07|12        pkt#5
+       The status byte is printed as hex, then the two bits that ARE established (battery) split
+       by "|" from the six that are NOT. Those six have no confirmed meaning in any published work
+       on offline finding, so they are printed raw rather than given invented labels - the same
+       treatment as the hint byte, and for the same reason: this is logged to be correlated
+       against devices whose identity is known, and a label that later turns out to be wrong is
+       worse than no label. "sl:--" means the mac holds no slot, which is normal for most of what
+       goes past.
+   CHG: the count-change line and "slot NN came into use" are at level 10, ie PLUGIN.LOG ONLY.
+       indigo_log_handler sits at INFO, so at 20 every count change was also going into the indigo
+       event log - a tag drifting in and out of range all evening should not be writing there.
+       THE ONLY findMy line left at 20: "rPi-x is still running the older findMyGroup.py". It is
+       actionable, it means that rPi is not being counted, and it is printed once per device.
+
+================================================================================
+WHAT WAS MEASURED - NOT WORTH RE-DERIVING
+================================================================================
+   WHAT TURNS UP IN THE COUNT, settled by experiment and written into pi/findMyGroup.py:
+         airtags and find my accessories   YES - one a few cm from the rPi reads about -32 dBm
+         airpods                           YES - a case sent types 07 and 12 in ONE frame
+         iphones and macs                  NO  - however close they sit. STILL TRUE, see below
+       Two iphones 5 cm from the rPi, online and then with wifi and cell off, never produced a
+       find my frame. An iphone does not broadcast offline-finding at all: the find my network
+       carries LOST and OFFLINE devices, and a phone with a network of its own reports over the
+       internet instead.
+   A CLAIM THAT AN IPHONE 18 WAS BEING COUNTED WAS MADE HERE TODAY AND IS WITHDRAWN, together
+       with both rules drawn from it. It is written up rather than deleted because the same
+       mistake was made twice in an hour and the shape of it is worth keeping.
+       The member FA:CF:35:CC:93:A9 was taken for the phone because it moved rPi-5 -> rPi-2 while
+       the phone was carried that way. IT IS NOT THE PHONE: it is back on rPi-5 with the phone
+       far away. That one apparent move is almost certainly one of the out-of-sync artefacts
+       fixed in this same version - ie the evidence was produced by the very bug being debugged
+       at the time, which is the trap worth remembering. A device that APPEARS to move is not
+       evidence of anything while the move detection is itself under repair.
+       So the original entry stands unchanged: iphones have not been observed in the count.
+       WITHDRAWN WITH IT: "a mac that does not rotate tells a phone from a tag". Wrong twice over
+       - the device is not a phone, and a SEPARATED device rotates about once a DAY, not every
+       15 minutes. That is written at the top of this very file, "every ~15 min near its owner
+       and daily when separated", so half an hour on one mac is what a separated device of any
+       kind does, tag included. It distinguishes nothing.
+       WHAT THE DEVICE ACTUALLY IS, from the calibration csv: a separated find my accessory
+       sitting near rPi-5 - "separated" on every row, ~1 advertisement every 2 s (4-6 per 10 s
+       interval), rssi pinned at -59 with the odd -62 so it is not moving, status 0x90 (battery
+       bits 10 = low), hint 0x42 present as a separated payload should have. Entirely ordinary.
+   CHG: appleTypes no longer calls a lone "12" a TAG. It says "find my only", which is all that is
+       known: the mac sends find my and nothing else, which is what was observed - "tag" was an
+       inference presented as a fact, and it is the inference that changed, not the evidence.
+       It could never have identified one anyway, and this file already said why - a live apple device
+       sends nearby-info / handoff / airdrop from a RESOLVABLE PRIVATE address (40-7F) while find
+       my uses a key-derived RANDOM STATIC one (C0-FF), so the two never share a mac and the types
+       collected under a find my mac are only ever "12". The label contradicted the paragraph
+       explaining why it could not work.
+       Anything MORE than 12 still means what it said: the mac also does live-apple-device things,
+       which a tag cannot.
+   appleTypes CANNOT SEPARATE A PHONE FROM A TAG, and nothing should be built on it. Live apple
+       devices advertise nearby-info (0x10), handoff (0x0C) and airplay (0x09/0x16) from
+       RESOLVABLE PRIVATE addresses, first octet 40-7F; find my uses a key-derived RANDOM STATIC
+       address, C0-FF. Different messages, different address space. The state stays - it is free,
+       it is evidence, and it is the thing that showed the idea was wrong.
+       Because of this, the whole BLEconnect "account for known apple devices" machinery was
+       REMOVED: it subtracted phones that were never in the number. Dead machinery that implies a
+       relationship is worse than no machinery.
+   WHAT RSSI CAN AND CANNOT TELL YOU, measured on one rPi and written into the device dialog:
+         - FLAT UNDER ABOUT A METRE. 3 cm and 1 m read the same, so no threshold in that region
+           can separate "on the desk" from "in the room" - there is nothing there to measure
+         - beyond that, roughly 3 dB per further metre
+         - THE ABSOLUTE NUMBERS BELONG TO THE DONGLE: -62 touching the rPi, -89 at four metres on
+           the radio measured here. joinRssi -55 or -60 would mean "never counted" on that
+           hardware while looking like a perfectly reasonable choice in the menu
+       The menus as shipped are join -55..-80 and leave -75..-95: a deliberately narrow join and a
+       permissive leave, which is the right way round - join decides what counts as "in", leave
+       only has to avoid dropping a tag over a weak patch. CONSEQUENCE: nothing weaker than -80
+       can ever join on this hardware, whatever leave is set to.
+   MAC ROTATION IS NOT FAST. A "6 minute rotation" was recorded and is WITHDRAWN: the two macs
+       were two airtags sitting beside the rPi, not one tag rotating. One of them held its mac for
+       190+ packets over six minutes and through being carried across the room. Rotation is the
+       usual ~15 minutes near the owner, so slot churn is much less of a problem than feared.
+   THE 25% CPU IS NOT THE FIND MY PREFILTER, settled by experiment: the whole counter was disabled
+       and the cpu did not move. 25% is what beaconloop costs on that rPi. parseFindMy on a frame
+       that turns out not to be find my takes 0.53 us - about 0.1 ms per second at the frame rate
+       this house produces, which cannot be 25% of anything. A hex-only pre-scan was written,
+       measured at 1.1x, and DELETED: a second decoder to keep in step with the first, for a tenth
+       of a microsecond, is a bad trade.
+       Three versions were spent adjusting the thing that had been blamed first. The measurement
+       that ended it took one checkbox. MEASURE FIRST - recorded in pi/beaconloop.py beside the
+       filter, with an instruction not to narrow it again to save cpu.
+
+================================================================================
+THE BLE5 LISTENER - AND EVERY RSSI ON A MULTI-RADIO RPI
+================================================================================
+   FIX: THE BLE5 LISTENER NO LONGER FORWARDS BLE4 ADVERTISEMENTS when a scan radio is running.
+       A ble5 controller in extended mode receives legacy ble4 adverts as well, so every ble4
+       device was being heard TWICE - once by the ble4 scan radio, once by the ble5 listener - and
+       the two do not agree. Measured on an airtag 24 cm from the rPi, same mac, same second: the
+       scan radio read -24 while the listener read a near-constant -68.
+       THE WINDOW WAS BIMODAL, and a median lands on whichever mode sent more packets. It scored a
+       tag at -82 while it sat next to the rPi, put it under joinRssi and dropped it out of the
+       members - which is where the whole investigation started.
+       extAdvToLegacyHex now takes dropLegacy, set from Event_Type bit 4 ("legacy advertising PDUs
+       used"), and the listener passes it whenever hciRoles has a scan radio that is not itself.
+       The MAIN scan radio in extended mode does NOT drop them: there it is the only receiver, and
+       dropping legacy would lose every ble4 device on the air. Two call sites, different answers.
+       The 60 s extListener heartbeat reports how many legacy reports were dropped.
+       NOTE THE SCOPE: this polluted every rssi-derived number on a multi-radio rPi - beacon
+       distance, room assignment, presence thresholds. Those all get better here.
+       hciRoles is used to find the scan radio, NOT useHCIForBeacon: that one is a local of the
+       scan setup with no module-level binding, so reading it from the listener thread would have
+       raised NameError. Caught before it shipped, noted so it is not "simplified" back.
+   WHY THE SURVIVING NUMBERS LOOKED WORSE AT FIRST, and are not: with the drop active an airtag
+       moved from 4 m to 3 cm read -62 to -68, while the dropped stream had read -24 at 24 cm. The
+       missing number was the PACKET RATE - the surviving stream arrives every 3-5 s, the tag's
+       real advertising interval, while the dropped one arrived every ~12 s, one advert in four.
+       The -24 readings were not a better measurement; they were a quarter of the adverts on a
+       scale about 40 dB adrift. What is left is one radio, a regular cadence, and a value that
+       tracks distance: -89 at 4 m, -62 at 3 cm. That is calibratable. The mixture never was.
+   CHG: an ESCAPE HATCH, because the drop may have kept the wrong radio on some hardware:
+           touch /home/pi/pibeacon/temp/extListener.keepLegacy    -> keep both radios' copies
+           rm    /home/pi/pibeacon/temp/extListener.keepLegacy    -> drop them (the default)
+       Checked every 5 s and logged when it changes, so an A/B is two commands and no restart.
+   CHG: (find my) the signal statistic is the median of the STRONGER HALF of the window, not the
+       plain median. The weak copies are attenuated versions of the same transmission, so the
+       strong ones are what "how close is this" means; taking the median of that half rather than
+       the single maximum keeps one freak reading from deciding. ONE place decides it - smoothed()
+       - used by join/leave, the state file, the summary and the csv. "signal taken as" on the
+       device, or "rssiStat" in the parameters, switches back to "median".
+       This is the statistical workaround; the listener fix above is the real cure. It stays,
+       because it is still right for one radio hearing a device over two advertising channels, and
+       it is what protects a single-radio rPi.
+
+================================================================================
+GREE AND TOSHIBA IR-AC
+================================================================================
+   FIX: the temperature could not be changed once the unit was in a mode indigo has no name for,
+       or in a mode set by the IR-AC action. The ac beeped for every command - it beeps for any
+       frame it accepts, changed or not - and kept the temperature it had.
+       The ac has ONE setpoint, indigo has two, and WHICH of the two indigo lets you move follows
+       indigo's own hvacOperationMode. The IR-AC "set mode" action stored the real ac mode in a
+       prop that WINS over indigo's mode but never updated indigo's - so indigo could be showing
+       "cool", and moving its cool setpoint, while the unit was heating and the frame was built
+       from the HEAT setpoint, which nothing had touched. Same frame every press.
+       Three parts: the mode indigo shows now follows the mode the ac was put in; indigo's OWN
+       mode control now reaches the ac instead of being overridden back by the prop; and whichever
+       setpoint the user moved is written to the one the frame is built from. Auto is untouched -
+       it sends the midpoint, so both already count there.
+       One resolver, _iracAcMode(), now answers "what mode is the ac in" for both the send path
+       and the thermostat action, instead of the two disagreeing.
+   FIX: pi/receiveCommands.py, the gree log line - it rebuilt the four messages WITHOUT the fan to
+       print them, and buildSequence then falls back to byte 0 for byte 6 of message 3. Byte 0's
+       fan field saturates at 3, so the log showed B0 for every speed from "2" upwards while the
+       led actually sent 8 + the real fan index. The transmission was always right; the one byte
+       the whole fan investigation turned on was misreported in the one place anybody would look.
+
+================================================================================
+ACROSS THE PLUGIN
+================================================================================
+   NEW: after a PLUGIN RESTART or a PROGRAM PUSH to an rPi, nothing goes up-->down for 120 s.
+       An rPi that has just had files copied to it and master restarted needs time to come back
+       and report; without the wait every beacon and sensor on it goes down and straight back up,
+       which is noise in the log and fires triggers on a non-event.
+       The suppression already existed (setCurrentlyBooting) and is used by four paths -
+       checkRPIStatus, BeaconsCheckPeriod, BLEconnectCheckPeriod and checkForFastDown. Three
+       things were missing:
+        - it was set to 40-50 s at the end of a plugin restart, and to nothing at all on a push
+          that did not go through a dialog button. Both are 120 s now, and the push case is set
+          at the one choke point every push really passes through. PARAMETER-only pushes are not
+          counted: they are re-read in place, nothing restarts
+        - setCurrentlyBooting SET the deadline, so a later caller asking for less CUT an existing
+          longer window - a restart asking for 120 s then losing it to a beep's 20 s. It now never
+          SHORTENS a suppression that is already running
+        - two down paths did not honour it at all: a fast-down queued BEFORE the restart still
+          fired inside the window, and a find my member went down because the FIRST message after
+          a restart carries one rPi's macs and every tag the others were holding looks gone. Both
+          now check, and both leave the device alone until the window closes
+   NEW: every device dialog gets a "print all properties and states of this device to the log
+       after saving" checkbox (151 dialogs). Check it, save, and the full property set AND state
+       set of that device is logged, sorted, one per line, including indigo's own "<state>_ui"
+       entries - and it marks WHICH state the indigo State column is actually drawing:
+           -- states (10), state column shows 'onOffState' (ie its .ui value if there is one):
+              onOffState    = True                      <<< state column
+              onOffState.ui = up         09-23 14:22:31 <<< state column
+              status.ui     = up         09-23 14:22:31
+       FIXED HERE: the marker looked for "<state>_ui" and indigo's states dict holds "<state>.ui",
+       so it never marked the uiValue row - the one row it exists to point at. Both spellings are
+       accepted now.
+       It resets itself, so it never has to be switched off. WHY IT IS A DELAYED ACTION and not a
+       print inside validateDeviceConfigUi: indigo writes valuesDict back to the device only AFTER
+       the validate call returns, so printing there would show the props as they were BEFORE the
+       save. The checkbox is cleared in valuesDict and ONLY on the success path, so a dialog that
+       fails validation keeps it ticked and still prints when the field is fixed.
+       NOT COVERED: the 15 device types with no ConfigUI block at all (DHT11, DHTxx, mhz-I2C,
+       mhz-SERIAL, OUTPUTgpio-4/10/26, i2cADS1x15, i2cPCF8591, rdlidar, BLEminewE8, ..) - they
+       have no dialog to put a checkbox in.
+   NEW: "this tag is now on:" in the MEMBER dialog - putting a tag back on the device it belongs
+       to when the automatic match failed. A mac rotated, the rPi could not prove the new mac was
+       the same tag, and it turned up as a fresh findmy_NN beside the device somebody had named
+       and built triggers on. Open the device you want to KEEP, pick the one it landed on, save:
+       its states are copied onto this device and that other device is DELETED.
+       IT IS THE FIRST FIELD IN THE DIALOG. It went in at the bottom first, under the "signal at
+       1 metre" explanation and the "One member of the Find My group counter" text - two screens
+       of grey - and was simply not found. A thing somebody goes LOOKING for belongs at the top;
+       explanation belongs below the control it explains, and short. A dialog that tall can also
+       push a field off a smaller screen entirely.
+       WHICH DEVICE THE MENU IS ON IS DELIBERATE. It is on the one being kept, so the device that
+       disappears is never the one whose dialog was just saved - and the menu lists each candidate
+       with its mac, status and lastSeen, because the names are all findmy_NN until somebody
+       renames them and the mac is the only way to tell them apart.
+       Not copied: slot and created, which describe the DEVICE and not the tag. It keeps its own
+       name, slot number and birthday; mac, previousMacs, lineage, signal, distance, battery and
+       every per-rPi state move across. The .ui values travel WITH their state, so the indigo
+       State column is right at once - which matters when the tag is down and no update is coming.
+       NOTHING ELSE HAS TO BE TOLD: findMyAssignSlots rebuilds the slot map from the devices' own
+       mac states every pass, so the next message finds the tag on the kept device and gives it
+       that slot. The emptied slot number returns to the free pool by itself.
+       Same group only, both must be member devices, and never itself - checked rather than
+       trusted, because this deletes a device. It resets itself after the save.
+       THE PLUGIN CANNOT DO THIS BY ITSELF, which is the point. Nothing in a find my frame says
+       two macs are the same tag; the rPi matches rotations on timing and signal and refuses when
+       it is not certain. This is where a person says what the radio cannot.
+   NEW: the find my GROUP dialog gets a "print members" checkbox of its own, which prints every
+       member device as a table - ONE COLUMN PER MEMBER, one row per state:
+              slot               | 01                  | 02                  | 03
+              -------------------+---------------------+---------------------+--------------------
+              * unheard for      | 31s                 | 3.0h                | 4.5h
+              * name claimed     | no                  | yes                 | no
+              status             | up                  | down                | down
+              mac                | D0:75:1A:2B:3C:01   | D0:75:1A:2B:3C:02   | D0:75:1A:2B:3C:03
+       TRANSPOSED ON PURPOSE, and that is why it exists alongside the per-device print above. One
+       device at a time answers "what does this one say"; a find my group asks "why is THAT one
+       different from the others" - which slot is stale, which rPi hears what, which devices are
+       still under their birth name and so are the next to be taken over by a new tag. That is a
+       comparison ACROSS devices and it only reads if the states line up in rows.
+       Every state ANY member has gets a row, so a state missing on one device shows as a BLANK
+       CELL rather than the row being dropped - members genuinely differ, and that is worth seeing.
+       The two rows marked "*" are worked out for the table and are not states: how long the tag
+       has been unheard, and whether the device is still under its birth name. They are exactly
+       what findMyAssignSlots ranks a free slot on.
+       ONE uiValue ROW, and only one: the one the State column actually draws, which for a member
+       device is onOffState.ui. The others only repeat rows already there - status.ui is given the
+       SAME padded string as onOffState.ui, and mac.ui was the mac again.
+   CHG: the member "mac" state no longer carries a uiValue. It was written as the mac itself, so
+       indigo kept a mac.ui that was a second copy of the state - a wasted column in the sql
+       logger and a duplicate line everywhere the states are listed. A uiValue is for when the
+       display differs from the value, and here it did not.
+       LINES STAY UNDER 285 CHARACTERS. With more members than fit, the same rows are printed
+       again as a FURTHER SET of columns rather than wrapped - a wrapped row is not a row. The
+       sets are EVEN - 13 members come out 7 and 6, not 11 and 2, because a set of 2 beside a set
+       of 11 reads as a fault rather than as a table continued. Column
+       width is the widest value in that column, capped at 19, which is what it takes to keep a
+       mac (17) and a datestamp (19) whole; longer values are cut with "..".
+       The names are listed once above the table and the columns are headed by SLOT: a column wide
+       enough for "airtag jacket pocket" is a column wide enough to push the table off the screen.
+       Delayed a second longer than the member state-list rebuild the same save triggers, so it
+       prints what the members have AFTER the rPi checkboxes were applied, not a moment before.
+   NEW: checkStateTypeCollisions() at startup - warns when any state name is declared with two
+       different types, naming the state and both categories. Silent when there are none, which is
+       the case now.
+       IT EXISTS BECAUSE IT HAPPENED: renaming the find my member's "form" state to "distance"
+       collided with "distance", a REAL on five distance sensors (ultrasound, vl53l0x/l1x,
+       vl6180x, vcnl4010) since long before. One state name, two types. Indigo's sql logger makes
+       one column per state and fixes its type when the device history table is created, so
+       whichever device was logged second could not be written - and the message names neither the
+       state nor the device: "One or more failures updating device history". The rename looked
+       local and was not: the state TABLES are global, the device types are not. Recovering needs
+       the device's history table thrown away, ie the device deleted and recreated.
+       That is also why the old find my "distance" indicator was renamed distanceIndicator rather
+       than left beside a state that really is metres: IT IS NOT A DISTANCE AND NEVER WAS - it is
+       the tag's own idea of how far it is from ITS OWNER. "nearby" on a tag lying next to the rPi
+       means the owner is in the house, and says nothing about the rPi at all.
+   FIX: (general, all device types) a FORCED state write whose VALUE IS UNCHANGED no longer stamps
+       lastSensorChange. Forcing is how a uiValue gets refreshed - the padded date column, or a
+       clock inside a display string - and the value is unchanged by definition in that case. It
+       was being recorded as a sensor change, which would have turned lastSensorChange into "time
+       of the last message" on every device whose display carries a clock. A forced write that
+       DOES change the value still counts as a change, as before.
+   FIX: a find my MEMBER device came back from its config dialog showing "on" in RED instead of
+       "up" in green. Saving a device rebuilds its state list, which resets every uiValue to the
+       raw state value, so applyOnOffDisplay() runs ~2 s later to paint it back - and it painted
+       the GENERIC on/off look, the defaults for a device whose dialog has no on/off wording and
+       no colour scheme. A member device has neither and should not need them: "up"/"down" and
+       green/grey are not its user's choice, they are what the device IS.
+       findMyMemberDisplay() is now shared between that path and updateFindMyMembers so the rule
+       lives in ONE place.
+   FIX: WHAT THE INDIGO STATE COLUMN ACTUALLY RENDERS, which cost two versions to find: INDIGO
+       DRAWS THE uiValue OF THE STATE IT DISPLAYS, and for a device that supports on/off that is
+       onOffState - NOT the state getDeviceDisplayStateId() names. So status_ui was being set
+       correctly and nothing was reading it. The padded string goes on both now.
+       A uiValue is ALSO invisible everywhere else - the state list, a trigger, a condition, a
+       control page. Text that has to be usable there must be a real STATE, which is why the apple
+       types ended up as one.
+   FIX: "readConfig RPI cleanup rpi: 15 del output devId:661307361 deldevreason:2" on EVERY plugin
+       start, for the same device, for ever - and the entry was never actually gone.
+       The cleanup deleted any output entry whose VALUE was empty. But "" is not corruption, it is
+       exactly what checkDevToPi() writes for an output device that needs no extra parameters, and
+       for OUTPUTgpio / OUTPUTi2cRelay the parameters file copies the whole dict straight over,
+       "" entries included - so those registrations work and deleting them was deleting live
+       devices out of an rPi's parameters.
+       It also could not stick: syncSensors -> checkDevToPi put the entry back with the same ""
+       within the same start, so all it produced was the message and a rewrite of RPIconf. The two
+       had opposite ideas of what "" means and fought about it once per start.
+       Only "the device is gone from indigo" drops an entry now. A device that is disabled, or no
+       longer points at this rPi, was never this loop's job - checkSensortoPi does that properly.
+   FIX: closestRPI and closestRPILast on a find my member device read 0 when they had never been
+       set, and 0 is a real rPi number - so a new device claimed rPi 0 was the closest, and the
+       first genuine reading then filed that 0 away as where the tag "was".
+       Indigo defaults an Integer state to 0 and there is no way to say "unset", so -1 has to be
+       written deliberately. New devices are stamped at birth; existing ones are corrected when
+       their group's state lists are refreshed - at plugin start and on every save of the group -
+       rather than on update, because a device whose rPi has gone quiet gets no updates at all and
+       would keep the 0 for ever.
+       ONLY when rPi "0" is not one of that group's rPis. If it is, 0 is a real answer and the
+       device is left to say so.
+   FIX: syncSensors raised KeyError on props["rPiEnable"+piU]. The branch is entered when
+       rPiEnable0 exists, but that does not mean every pi in _rpiBeaconList has an entry - a
+       device saved when fewer pis existed is missing the higher numbers. Uses .get now.
+   FIX: pi/beaconloop.py - the one log(30 left in the whole pi directory, in the findMyGroup
+       import hook. It came in with the imported package and was left alone at import time; rPi
+       programs log at 20. pi/*.py is back to zero log(30.
+
+==================================================
+RELEASE  v2022.192.0  @ 2026-09-03
+gree air conditioners, and what it took to make one obey
+==================================================
+
+IN SHORT
+   Gree AC support is complete and confirmed at the unit: power, mode, temperature, five fan
+   speeds and both louvers. A new action sets a whole state in one go. The IR tooling on the rpi
+   grew a recorder, a replayer, a carrier scanner and a scripted walk.
+
+THE PROTOCOL, measured from a real remote and confirmed against the unit
+   - one press is FOUR messages ~40 ms apart and the unit acts on nothing less. A single frame is
+     ignored however often it is repeated.
+   - byte 3's high nibble is a MESSAGE INDEX - 5 the full state, 6 and 7 the command bytes only,
+     A a terminator carrying no command. IRremoteESP8266 reads it the same way from a different
+     remote; four packets on every press is not documented anywhere found.
+   - the fan is FIVE speeds. byte 0's fan field is two bits and saturates at 3, so the real
+     position rides in byte 6 of message 3. Holding byte 6 constant stops the fan moving at all.
+   - "full" on the remote is the turbo bit, not a fan position.
+   - only message 5 carries the louvers, even when a louver is what changed.
+   - left and right are the VIEWER'S, verified at the unit.
+
+TWO BUGS THAT COST THE MOST TIME, both worth remembering
+   - greeIR.CARRIERHZ was left at 30000 from an experiment. Every caller that does not pass a
+     frequency used it, receiveCommands included, so the plugin transmitted at 30 kHz while the
+     frames stayed perfect. A module default that only SOME callers override.
+   - the four IR-AC actions wrote a setting to the server and then sent the state from the local
+     device object, which replacePluginPropsOnServer does not update - so the change landed one
+     send late. All five paths re-read the device now.
+
+TOOLING (pi/)
+   irRecord.py   record and decode a remote, with an echo mode that replays what it heard
+   irReplay.py   replay a capture, one message per waveform, keeping the gaps
+   irScan.py     walk the carrier 25-48 kHz sending a real command at each step
+   irDemo.py     scripted walks - basic, louver, louver2 - to watch the unit follow
+   irTest.sh     all of it as single commands, with a 15 s lead-in to reach the other room
+
 v2022.191.301  @ 2026-09-03
    IR: irDemo walk trimmed to the sequence worth watching now - off, on, 20/21/23 C, the five fan
        speeds, off. The louvers are dropped, they already work. It opens at 25 C so that the first

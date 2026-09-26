@@ -67,7 +67,8 @@ from piBeaconConstants import (
 			_GlobalConst_groupList, _GlobalConst_groupListDef, _defaultDateStampFormat,
 			_defaultDateStampFormatDay, _addingstates,
 			_stateListToDevTypes, _GlobalConst_gpioFieldDirection, _GlobalConst_gpioReferenceFields,
-			_GlobalConst_gpioIgnoreBindingOn
+			_GlobalConst_gpioIgnoreBindingOn, _GlobalConst_findMyMemberStates,
+			_GlobalConst_findMyMacHistory
 			)
 
 
@@ -270,6 +271,8 @@ class Plugin(indigo.PluginBase):
 			self.startTime = time.time()
 
 			self.getDebugLevels()
+
+			self.checkStateTypeCollisions()
 
 			self.setVariables()
 
@@ -541,7 +544,7 @@ class Plugin(indigo.PluginBase):
 							props["SupportsStatusRequest"] = True
 							upd = True
 
-					if False and "piServerNumber" in props and "rPiEnable0" in props:
+					if False and "piServerNumber" in props and self.isMultiRpiDevice(props):
 						del props["piServerNumber"]
 						upd = True
 
@@ -562,7 +565,7 @@ class Plugin(indigo.PluginBase):
 										upd = True
 										break
 
-					if "rPiEnable0" in props:
+					if self.isMultiRpiDevice(props):
 						testpiU  =[]
 						if "mac" in props:
 							newAddress = props["mac"]
@@ -893,6 +896,19 @@ class Plugin(indigo.PluginBase):
 
 			props = dev.pluginProps
 
+			# ---- ONE-OFF MIGRATION, ADDED v2022.192.18, DELETE IN THE NEXT VERSION ----
+			# Fills "created" on find my member devices that pre-date the state. Plugin start is
+			# the right place for it precisely once: every device passes through here, including
+			# ones whose rpi has gone quiet and will never send another update.
+			# From .18 on, createFindMyMemberDevice stamps every new device at birth, so once this
+			# has run there is nothing left for it to do - it is dead weight, and the next version
+			# takes it out. Nothing else depends on it.
+			if dev.deviceTypeId == "BLEfindMyMember":
+				try:
+					if f"{dev.states.get('created','')}".strip() == "":
+						dev.updateStateOnServer("created", datetime.datetime.now().strftime(_defaultDateStampFormat))
+				except Exception:	pass
+
 			if dev.deviceTypeId == "beacon":
 				typeOfBeacon = props["typeOfBeacon"]
 				beepable = False
@@ -1187,6 +1203,14 @@ class Plugin(indigo.PluginBase):
 			props = dev.pluginProps
 			theDictList[0]["refreshCallbackMethod"] = "deviceRefreshCallback"
 
+			# A MENU WITH A DYNAMIC LIST DOES NOT GET ITS defaultValue. Indigo works the defaults
+			# out before the list callback has run, so "takeOverFrom" opens BLANK instead of on
+			# its "leave everything as it is" entry - which reads as an empty or broken menu.
+			# Seeded here, where the dialog is being filled, so it lands on the safe entry
+			if typeId == "BLEfindMyMember":
+				if f"{theDictList[0].get('takeOverFrom','')}".strip() == "":
+					theDictList[0]["takeOverFrom"] = "0"
+
 			if typeId in ["beacon", "rPI", "rPI-Sensor"]:
 				if typeId != "rPI-Sensor":
 					if "address" in theDictList[0]: # 0= valuesDict,1 = errors dict
@@ -1270,7 +1294,18 @@ class Plugin(indigo.PluginBase):
 							if "useOnlyPrioTagMessageTypes" not in theDictList[0]: # only for new devices
 								theDictList[0]["useOnlyPrioTagMessageTypes"]  = "0"
 
-			if "isRPION08" in theDictList[0] or typeId in _BLEsensorTypes + _BLEsensorTypes:
+			# WHICH DIALOGS GET THE rPi CHECKBOXES: ask the dialog's own xml for the marker instead
+			# of keeping a list of device types here. A type MISSING from such a list never has its
+			# isRPIONnn flags set, and since those hidden fields default to "true" the visible
+			# binding then shows EVERY rpi in the selector - including the ones that are switched
+			# off or have no ip. BLEfindMyGroup was exactly that case the moment it got the block.
+			# The two old conditions stay as a fallback for a device whose props already carry the
+			# flags. ("_BLEsensorTypes + _BLEsensorTypes" was the same list added to itself.)
+			hasRpiBlock = False
+			try:	hasRpiBlock = f"{self.devicesTypeDict[typeId]['ConfigUIRawXml']}".find("RPI_ENABLE_BLOCK") > -1
+			except Exception:	pass
+
+			if hasRpiBlock or "isRPION08" in theDictList[0] or typeId in _BLEsensorTypes:
 				for piU in _rpiBeaconList:
 					piUstr = f"{int(piU):02d}"
 					if self.RPI[piU]["piOnOff"] == "1" and self.isValidIP(self.RPI[piU]["ipNumberPi"]) :
@@ -1345,6 +1380,29 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40,"", exc_info=True)
 		return xml
 	####-------------------------------------------------------------------------####
+	def isMultiRpiDevice(self, props):
+		"""True when a device is a MULTI-rpi one (rPiEnableN checkboxes), false for a single-rpi one (piServerNumber menu).
+
+		TESTS THE WHOLE RANGE, not just rPiEnable0. buildRpiEnableFieldsXml emits every number, so
+		rPiEnable0 ought to be present on any multi-rpi device - but "ought to" is not "is": a
+		device saved by an older version, or one whose props were written when fewer pis existed,
+		can carry rPiEnable1.. with no rPiEnable0 at all. A single test on 0 then calls it a
+		single-rpi device and every branch downstream picks the wrong path - no parameters sent, no
+		rpi list in the menus, the address rebuilt in the old format.
+
+		Inputs:
+		    props (dict or indigo.Dict): pluginProps, or a config dialog valuesDict
+		Outputs:
+		    bool: True if any rPiEnableN key exists
+		"""
+		try:
+			for nn in range(_GlobalConst_numberOfiBeaconRPI):
+				if f"rPiEnable{nn}" in props:	return True
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return False
+
+	####-------------------------------------------------------------------------####
 	def buildRpiEnableFieldsXml(self):
 		"""The <Field> lines that used to be repeated in every BLE device type in Devices.xml.
 
@@ -1354,7 +1412,7 @@ class Plugin(indigo.PluginBase):
 		migrate - the only difference is that the label now carries the rpi name.
 
 		ALWAYS emit the FULL range, never only the pis that currently exist. Visibility is done with
-		the isRPIONnn binding for a reason: "rPiEnable0" in valuesDict/props is what tells a
+		the isRPIONnn binding for a reason: an rPiEnableN key in valuesDict/props is what tells a
 		multi-rpi device from a single-rpi (piServerNumber) one in validateDeviceConfigUi_sensors,
 		deviceStartComm and filterRPIForSensorForRpiAction. Skipping absent pis here would make a
 		beacon look like a single-rpi device whenever rpi 0 happens to be off.
@@ -1949,22 +2007,35 @@ class Plugin(indigo.PluginBase):
 			setHeat		= dev.heatSetpoint
 			setCool		= dev.coolSetpoint
 
+			moved		= None		# the setpoint the user just changed, whichever of the two it was
+
 			if	 act == indigo.kThermostatAction.SetHvacMode:
 				hvacMode = action.actionMode
+				# indigo's OWN mode control has to reach the AC as well. acMode - what the IR-AC
+				# mode action stores, for the modes indigo cannot name - wins in _iracAcMode, so
+				# leaving it here would make picking a mode in indigo do nothing at all at the unit.
+				# off is not stored: it is a power bit, and the mode has to survive being switched off
+				newMode = self._GlobalIRacHvacToMode.get(hvacMode, "")
+				if newMode not in ("", "off") and f"{dev.pluginProps.get('acMode','')}".strip() != newMode:
+					props = dev.pluginProps
+					props["acMode"] = newMode
+					dev.replacePluginPropsOnServer(props)
+					# the local object still carries the pre-write props - see setIRacSwingCALLBACKaction
+					dev = indigo.devices[dev.id]
 			elif act == indigo.kThermostatAction.SetFanMode:
 				fanMode = action.actionMode
 			elif act == indigo.kThermostatAction.SetHeatSetpoint:
-				setHeat = float(action.actionValue)
+				setHeat = moved = float(action.actionValue)
 			elif act == indigo.kThermostatAction.SetCoolSetpoint:
-				setCool = float(action.actionValue)
+				setCool = moved = float(action.actionValue)
 			elif act == indigo.kThermostatAction.IncreaseHeatSetpoint:
-				setHeat = dev.heatSetpoint + float(action.actionValue)
+				setHeat = moved = dev.heatSetpoint + float(action.actionValue)
 			elif act == indigo.kThermostatAction.DecreaseHeatSetpoint:
-				setHeat = dev.heatSetpoint - float(action.actionValue)
+				setHeat = moved = dev.heatSetpoint - float(action.actionValue)
 			elif act == indigo.kThermostatAction.IncreaseCoolSetpoint:
-				setCool = dev.coolSetpoint + float(action.actionValue)
+				setCool = moved = dev.coolSetpoint + float(action.actionValue)
 			elif act == indigo.kThermostatAction.DecreaseCoolSetpoint:
-				setCool = dev.coolSetpoint - float(action.actionValue)
+				setCool = moved = dev.coolSetpoint - float(action.actionValue)
 			elif act in [indigo.kThermostatAction.RequestStatusAll, indigo.kThermostatAction.RequestMode,
 						indigo.kThermostatAction.RequestEquipmentState, indigo.kThermostatAction.RequestTemperatures,
 						indigo.kThermostatAction.RequestHumidities, indigo.kThermostatAction.RequestDeadbands,
@@ -1975,6 +2046,20 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.indiLOG.log(10, f"actionControlThermostat: {dev.name} action {act} not supported by an IR remote")
 				return
+
+			# ONE setpoint on the AC, TWO in indigo - and which of the two indigo's controls move is
+			# decided by indigo's own hvacOperationMode, not by the mode the AC is in. Those two part
+			# company the moment the IR-AC mode action is used: it stores the AC's mode in a prop that
+			# wins over indigo's, so indigo can be showing "cool" - and moving its COOL setpoint -
+			# while the unit is heating and sendIRacState reads the HEAT setpoint. The frame still
+			# goes out, the AC still beeps for it, and the temperature in it never changes.
+			# So whatever the user just moved is written to the setpoint that is actually sent.
+			# Auto is left alone: it sends the MIDPOINT of the two, so the one indigo moved counts
+			# there already.
+			if moved is not None:
+				acModeNow = self._iracAcMode(dev, hvacMode)
+				if	 acModeNow == "heat":	setHeat = moved
+				elif acModeNow != "auto":	setCool = moved
 
 			self.sendIRacState(dev, hvacMode=hvacMode, fanMode=fanMode, setpointHeat=setHeat, setpointCool=setCool)
 
@@ -2016,26 +2101,11 @@ class Plugin(indigo.PluginBase):
 			if setpointHeat	is None:	setpointHeat	= dev.heatSetpoint
 			if setpointCool	is None:	setpointCool	= dev.coolSetpoint
 
-			# ---- indigo hvac mode -> toshiba mode. indigo has no "dry", the AC has no "heat+cool
-			# at once": HeatCool is the AC's own auto mode, which is the closest thing there is.
-			modeMap = {
-					indigo.kHvacMode.Off:				"off",
-					indigo.kHvacMode.Heat:				"heat",
-					indigo.kHvacMode.Cool:				"cool",
-					indigo.kHvacMode.HeatCool:			"auto",
-					indigo.kHvacMode.ProgramHeat:		"heat",
-					indigo.kHvacMode.ProgramCool:		"cool",
-					indigo.kHvacMode.ProgramHeatCool:	"auto",
-					}
-			acModeToSend = modeMap.get(hvacMode, "auto")
+			# ---- the mode the AC is put in. indigo's hvac mode maps onto it, but the IR-AC mode
+			# action's "acMode" prop wins - except for OFF, which must stay off. All of that lives
+			# in _iracAcMode, because actionControlThermostat has to answer the same question
+			acModeToSend = self._iracAcMode(dev, hvacMode)
 			brand		= f"{props.get('acBrand','toshiba')}"
-
-			# indigo knows only auto / always-on for the fan, and its thermostat has no name for
-			# "dry" or "fan only". The two IR-AC actions store a real AC mode / fan speed on the
-			# device, and those win over the indigo mapping - except for OFF, which must stay off.
-			acMode = f"{props.get('acMode','')}".strip()
-			if acMode != "" and acModeToSend != "off":
-				acModeToSend = acMode
 
 			# indigo's thermostat fan is auto or always-on and nothing else - no speeds. Auto maps
 			# straight to the AC's auto; always-on takes whatever speed the device is set to
@@ -2295,7 +2365,49 @@ class Plugin(indigo.PluginBase):
 			"toshiba":	[("auto","auto"), ("cool","cool"), ("dry","dry"), ("heat","heat"), ("off","off")],
 			"gree":		[("auto","auto"), ("cool","cool"), ("dry","dry"), ("fan","fan only"), ("heat","heat"), ("off","off")],
 			}
+	# indigo's hvac mode -> the AC's mode name. indigo has no "dry" and no "fan only", and the AC
+	# has no "heat and cool at once": HeatCool is the AC's own auto mode, the closest thing there is
+	_GlobalIRacHvacToMode = {
+			indigo.kHvacMode.Off:				"off",
+			indigo.kHvacMode.Heat:				"heat",
+			indigo.kHvacMode.Cool:				"cool",
+			indigo.kHvacMode.HeatCool:			"auto",
+			indigo.kHvacMode.ProgramHeat:		"heat",
+			indigo.kHvacMode.ProgramCool:		"cool",
+			indigo.kHvacMode.ProgramHeatCool:	"auto",
+			}
+	# and back, for the modes indigo can name. dry and fan-only are deliberately absent: there is
+	# no indigo mode for them, and None means "leave indigo's mode where it is"
+	_GlobalIRacModeToHvac = {
+			"off":	indigo.kHvacMode.Off,
+			"heat":	indigo.kHvacMode.Heat,
+			"cool":	indigo.kHvacMode.Cool,
+			"auto":	indigo.kHvacMode.HeatCool,
+			}
 
+	####-------------------------------------------------------------------------####
+	def _iracAcMode(self, dev, hvacMode=None):
+		"""The mode the AC is actually in, which is NOT always the one indigo is showing.
+
+		indigo's thermostat knows off / heat / cool / heatCool and nothing else, so the IR-AC mode
+		action stores the AC's own mode - dry and fan-only among them - in the "acMode" prop, and
+		that prop WINS over indigo's hvacOperationMode. OFF is the exception: both brands switch
+		off with a power bit and the mode has to survive that, so an indigo mode of off is sent as
+		off while acMode keeps whatever it was.
+
+		Inputs:
+		    dev (indigo.Device): the IR-ac device
+		    hvacMode (int or None): the indigo mode to resolve, defaults to the device's current one
+		Outputs:
+		    str: off / auto / cool / dry / fan / heat
+		"""
+		if hvacMode is None:	hvacMode = dev.hvacMode
+		acModeToSend = self._GlobalIRacHvacToMode.get(hvacMode, "auto")
+		acMode = f"{dev.pluginProps.get('acMode','')}".strip()
+		if acMode != "" and acModeToSend != "off":	acModeToSend = acMode
+		return acModeToSend
+
+	####-------------------------------------------------------------------------####
 	def _iracBrand(self, targetId, valuesDict=None):
 		"""The brand of the IR-ac device this list is for.
 
@@ -2512,6 +2624,10 @@ class Plugin(indigo.PluginBase):
 			# the local object still carries the pre-write props - see setIRacSwingCALLBACKaction
 			dev = indigo.devices[dev.id]
 
+			# indigo must show the mode the AC is now in - see setIRacModeCALLBACKaction. None when
+			# the mode did not change, or is one indigo cannot name, and then indigo's mode stands
+			hv = self._GlobalIRacModeToHvac.get(mode, None) if mode != "nochange" else None
+
 			# the temperature is not a prop but a setpoint, so it goes to sendIRacState directly
 			temp = f"{action.props.get('acTemp','nochange')}"
 			if temp != "nochange":
@@ -2519,7 +2635,7 @@ class Plugin(indigo.PluginBase):
 					t = float(temp)
 					changed.append(f"{t:.0f}C")
 					self.indiLOG.log(20, f"IR-ac: {dev.name} -> {', '.join(changed) if changed else 'no change'}")
-					self.sendIRacState(dev, setpointHeat=t, setpointCool=t)
+					self.sendIRacState(dev, hvacMode=hv, setpointHeat=t, setpointCool=t)
 					return
 				except Exception:
 					self.indiLOG.log(30, f"IR-ac: {dev.name}: '{temp}' is not a temperature, sending the rest")
@@ -2528,7 +2644,7 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(30, f"IR-ac: {dev.name}: every field is 'no change' - nothing to send")
 				return
 			self.indiLOG.log(20, f"IR-ac: {dev.name} -> {', '.join(changed)}")
-			self.sendIRacState(dev)
+			self.sendIRacState(dev, hvacMode=hv)
 		except Exception as e:
 			self.indiLOG.log(40, f"setIRacAllCALLBACKaction failed: {e}", exc_info=True)
 
@@ -2652,7 +2768,11 @@ class Plugin(indigo.PluginBase):
 			# BEFORE this change - the setting just made would only take effect on the next send
 			dev = indigo.devices[dev.id]
 			self.indiLOG.log(20, f"IR-ac: {dev.name} mode -> {mode}, resending the state")
-			self.sendIRacState(dev)
+			# indigo must SHOW the mode the AC is now in: its own controls follow hvacOperationMode -
+			# which setpoint they move, what the device list says - and leaving it on the old mode is
+			# how "set mode heat" ends up moving the cool setpoint while the frame carries the heat
+			# one. dry and fan-only have no indigo mode at all, and None keeps the one it has
+			self.sendIRacState(dev, hvacMode=self._GlobalIRacModeToHvac.get(mode, None))
 		except Exception as e:
 			self.indiLOG.log(40, f"setIRacModeCALLBACKaction failed: {e}", exc_info=True)
 
@@ -2965,6 +3085,15 @@ class Plugin(indigo.PluginBase):
 			else:
 				removeStates = xx.strip(",").split(",")
 			stateAlreadyDone = {}
+
+			# A FIND MY MEMBER DEVICE has no rPi of its own - it is a tag, and which rPis can hear it
+			# is a property of its GROUP. So its per-rPi states follow the group's rPiEnable flags,
+			# which is why saving the group device rebuilds its members' state lists.
+			# None means "no group restriction", ie every device that is not a member device
+			enabledPis = None
+			if dev.deviceTypeId == "BLEfindMyMember":
+				enabledPis = self.findMyMemberPis(dev)
+
 			for stateBaseName in statesCategoriesForDevtype: #  eg (Temperature, Humidity, CO2, beacon ,......)
 				if stateBaseName in removeStates:
 					continue  # dynamically exclude states
@@ -2994,11 +3123,31 @@ class Plugin(indigo.PluginBase):
 							else:
 								if not props.get(stateBaseName+"_EnableMinMax", True):	continue
 
-						if stateBaseName.find("Pi_") == 0:
-							if stateBaseName.find("_Signal") == 5 or stateBaseName.find("_Distance") == 5 or stateBaseName.find("_Time") == 5:
-								piIDs = str(int(stateBaseName[3:5]))
-								if self.RPI[piIDs]["piOnOff"] == "0":
-									continue
+						# PER-RPI STATES, one trio per rPi: only the rPis that are actually in use get one.
+						# THE NAME TO TEST IS addToState. stateBaseName is the CATEGORY -
+						# "rpiAndBeaconAndBLEconnect" / "findMyPerRpi" - and the Pi_NN_ names are the states
+						# inside it, so nothing has ever started with "Pi_" and this filter never once ran:
+						# every beacon, rPi and BLEconnect device carried all 20 rPis' states whether those
+						# rPis existed or not. A switched-off rPi's trio now goes, here and on member devices.
+						if addToState.find("Pi_") == 0:
+							if (addToState.find("_Signal") == 5 or addToState.find("_Distance") == 5
+									or addToState.find("_Time") == 5 or addToState.find("_State") == 5):
+								# AN EMPTY RPI TABLE MEANS THE CONFIG HAS NOT BEEN READ YET, not that every rPi
+								# is switched off - indigo can ask for a state list before readConfig has run.
+								# Filtering on that would strip all 60 per-rPi states off every beacon in the
+								# house, so when nothing is known yet, nothing is removed. The pass in
+								# initConcurrentThread redoes the member devices once the table IS loaded
+								if getattr(self, "RPI", {}):
+									# an unreadable or unknown number means drop it: it would put a column in the
+									# device history for an rPi that does not exist
+									try:	piIDs = str(int(addToState[3:5]))
+									except Exception:	piIDs = ""
+									if piIDs == "" or piIDs not in self.RPI:
+										continue
+									if f"{self.RPI[piIDs]['piOnOff']}" == "0":
+										continue
+									if enabledPis is not None and piIDs not in enabledPis:
+										continue
 						if _addingstates[stateBaseName]["addTag"]:
 							xx = stateBaseName+addToState  # eg Temperature+MinYesterday
 						else:
@@ -3050,6 +3199,46 @@ class Plugin(indigo.PluginBase):
 			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 		return {}
 
+
+	####-------------------------------------------------------------------------####
+	def checkStateTypeCollisions(self):
+		"""Warns when one state NAME is declared with two different types across the state tables.
+
+		WHY THIS IS WORTH A STARTUP CHECK: indigo's sql logger creates one column per state in the
+		device history table and fixes its type when the table is made. Declaring the same name as
+		a String for one device type and a Real for another means whichever device is logged
+		second cannot be written, and all indigo says is "One or more failures updating device
+		history; see the debug log for details" - which names neither the state nor the device.
+		The device's history table then has to be thrown away to recover.
+		Happened once, for real: v2022.192.53 renamed the find my member's "form" state to
+		"distance", which had been a Real on five distance sensors since long before. The rename
+		looked local and was not, because the state TABLES are global while the device types are
+		not. Two minutes of reading would have caught it; this does it every start instead.
+
+		Inputs:
+		    None
+		Outputs:
+		    None: logs one line per collision, nothing at all when there are none
+		"""
+		try:
+			seen, bad = {}, []
+			for cat in _addingstates:
+				entry = _addingstates[cat]
+				# an addTag category builds its names as category+subname, so two of them cannot
+				# collide with each other even when the sub-names match
+				if entry.get("addTag", False):	continue
+				for name, sType in entry.get("States", {}).items():
+					sType = f"{sType}".lower()
+					if name in seen and seen[name][1] != sType:
+						bad.append(f"   state '{name}' is {seen[name][1]} in '{seen[name][0]}' but {sType} in '{cat}'")
+					else:
+						seen[name] = (cat, sType)
+			if bad:
+				self.indiLOG.log(20, "checkStateTypeCollisions: ONE STATE NAME, TWO TYPES - the sql logger "
+									"will fail on whichever device is logged second, and its device history "
+									"table will have to be dropped to recover:\n" + "\n".join(bad))
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def getDeviceDisplayStateId(self, dev):
@@ -3186,6 +3375,62 @@ class Plugin(indigo.PluginBase):
 			log_message +=  f"\n{extraText}"
 		self.indiLOG.log(level, log_message)
 
+	####-------------------------------------------------------------------------####
+	def printDevPropsToLog(self, dev):
+		"""Prints all plugin properties AND all states of a device to the log, sorted and one per line; triggered by the 'printPropsToLog' checkbox in any device config dialog. Long json-encoded values are printed as is, so they can be copied out of the log.
+
+		The states include indigo's own "<state>.ui" entries, which is usually the thing being
+		looked for: the STATE COLUMN shows the uiValue of whichever state indigo displays, so when
+		a column says the wrong thing the answer is in onOffState_ui / sensorValue_ui / status_ui,
+		not in the state itself. The display state indigo resolved is printed with them.
+
+		Inputs:
+		    dev (indigo.Device): The Indigo device whose properties and states to print
+		Outputs:
+		    None: writes to the log only
+		"""
+		try:
+			out = [f"properties and states of device:{dev.name} (id:{dev.id}, type:{dev.deviceTypeId}, address:{dev.address})"]
+
+			props = dict(dev.pluginProps)
+			out.append(f"  -- properties ({len(props)}):")
+			if len(props) == 0:
+				out.append("       .. none")
+			else:
+				width = max([len(f"{k}") for k in props])
+				for key in sorted(props, key = lambda x: f"{x}".lower()):
+					out.append(f"       {key:<{width}} = {props[key]}")
+
+			try:	states = dict(dev.states)
+			except Exception:	states = {}
+			try:	shown = f"{dev.displayStateId}"
+			except Exception:	shown = "?"
+			# WHAT INDIGO ACTUALLY DRAWS, not what it ought to draw. displayStateId is the state the
+			# server PICKED; displayStateValUi is the STRING the client puts in the state column. The
+			# two came apart once and cost an evening: a sensor device claiming neither
+			# SupportsSensorValue nor SupportsOnState reported displayStateId "status", had both
+			# status and status.ui filled in, and drew an EMPTY column - UiDisplayStateId is a custom
+			# device type's feature, and a sensor with neither capability has nothing to draw.
+			# Printing the drawn string says in one line whether a blank column is ours or indigo's
+			try:	drawn = f"{dev.displayStateValUi}"
+			except Exception:	drawn = "?"
+			out.append(f"  -- states ({len(states)}), state column shows '{shown}' = '{drawn}' (ie its .ui value if there is one):")
+			if len(states) == 0:
+				out.append("       .. none")
+			else:
+				width = max([len(f"{k}") for k in states])
+				for key in sorted(states, key = lambda x: f"{x}".lower()):
+					# ".ui" IS WHAT THE STATES DICT HOLDS - this read "_ui" and so never marked the
+					# uiValue row, which is the row it exists to point at. "_ui" kept as well:
+					# costs nothing and some states do carry that form
+					mark = " <<< state column" if key in [shown, f"{shown}.ui", f"{shown}_ui"] else ""
+					out.append(f"       {key:<{width}} = {states[key]}{mark}")
+
+			self.indiLOG.log(20, "\n".join(out))
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+
+
 	####=====================================================================####
 	####  CONFIG-UI VALIDATION
 	####  validateXxxConfigUi - called when a device/prefs dialog is saved
@@ -3316,6 +3561,12 @@ class Plugin(indigo.PluginBase):
 			elif typeId in ["FBHtempshow"]:
 													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_FBHtempshow(	valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
 
+			# a find my member device is filled by the PLUGIN from the group device's message, not
+			# by an rpi: it has no rPi of its own, no sensor entry and nothing to put in a
+			# parameters file. Deliberately NOT in _GlobalConst_allowedSensors for that reason, so
+			# it needs its own branch here or it lands in "bad dev type"
+			elif typeId == "BLEfindMyMember":		retCode = True
+
 
 			elif typeId in _GlobalConst_allowedSensors or typeId in _BLEsensorTypes or valuesDict.get("isBLElongConnectDevice",False):
 													retCode, valuesDict, errorDict = self.validateDeviceConfigUi_sensors(		valuesDict, errorDict, typeId, thisPi, piU, props, beacon, dev)
@@ -3330,6 +3581,38 @@ class Plugin(indigo.PluginBase):
 			self.saveConfig(only = "RPIconf", calledFrom="validateDeviceConfigUi")
 
 			if retCode:
+				# the point is to see the SAVED props, and indigo only writes valuesDict back to
+				# the device after we return - so it has to be a delayed action, not a print here.
+				# reset the checkbox in valuesDict (not on the device) so it is off when reopened,
+				# and only on the success path: a failed validation keeps it checked for the retry
+				if valuesDict.get("printPropsToLog", False):
+					valuesDict["printPropsToLog"] = False
+					self.delayedActions["data"].put({"actionTime":time.time()+1.5, "devId":devId, "updateItems":["printDevProps"]})
+
+				# THE MEMBER DEVICES' PER-RPI STATES COME FROM THIS DIALOG'S rPi CHECKBOXES, so they have
+				# to be rebuilt whenever it is saved. Delayed for the same reason as the print above:
+				# indigo writes valuesDict back to the device only after we return, and a rebuild that
+				# read the OLD flags would leave exactly the states the user just changed
+				if typeId == "BLEfindMyMember":
+					src = f"{valuesDict.get('takeOverFrom','0')}".strip()
+					if src not in ["", "0"]:
+						# reset in valuesDict, not on the device: this is an ACTION, not a setting,
+						# and leaving it set would take the tag over again on the next save of a
+						# device that no longer exists. Delayed for the same reason as the prints -
+						# indigo writes valuesDict back only after this call returns
+						valuesDict["takeOverFrom"] = "0"
+						self.delayedActions["data"].put({"actionTime":time.time()+1.5, "devId":devId,
+														"updateItems":[{"findMyTakeOver": src}]})
+
+				if typeId == "BLEfindMyGroup":
+					self.delayedActions["data"].put({"actionTime":time.time()+2., "devId":devId, "updateItems":["findMyMemberStates"]})
+					# AFTER the state lists above have been rebuilt, or the table would print the
+					# states the members had a moment ago - which is the one thing somebody who
+					# just changed the rPi checkboxes is looking at it to check
+					if valuesDict.get("printMembersToLog", False):
+						valuesDict["printMembersToLog"] = False
+						self.delayedActions["data"].put({"actionTime":time.time()+3., "devId":devId, "updateItems":["printFindMyMembers"]})
+
 				self.setGroupStatusNextCheck = -1
 				self.updateNeeded += " fixConfig "
 				return True, valuesDict
@@ -3786,7 +4069,7 @@ class Plugin(indigo.PluginBase):
 			errorText = ""
 			update = 0
 			pix =-1
-			if "rPiEnable0" not in valuesDict and "piServerNumber" in valuesDict:
+			if not self.isMultiRpiDevice(valuesDict) and "piServerNumber" in valuesDict:
 				try: 	pix = int(valuesDict["piServerNumber"])
 				except:
 					self.indiLOG.log(30,f" validateDeviceConfigUi_sensors {dev.name}  bad pi#  {valuesDict['piServerNumber']}")
@@ -3804,7 +4087,7 @@ class Plugin(indigo.PluginBase):
 				newAddress = "Pi-"
 				newDescription = ""
 
-			if "rPiEnable0" in valuesDict:
+			if self.isMultiRpiDevice(valuesDict):
 				newAddress = valuesDict.get("mac","").upper()
 				newDescription = "on Pi:"
 
@@ -3867,6 +4150,16 @@ class Plugin(indigo.PluginBase):
 
 			newDescription  = newDescription.strip(",")
 			newAddress  = newAddress.strip(",")
+
+			# THE FIND MY GROUP COUNTER HAS NO MAC to put in the address, so the address was left
+			# empty and "on Pi: 2,5" - the one fact worth showing about this device - went into the
+			# NOTES instead. Notes are the user's field; the plugin writing in it means anything
+			# written there is overwritten on the next save. Swap them: the pi list is the address,
+			# the notes are left alone (and cleared once, if they still hold what we put there)
+			if typeId == "BLEfindMyGroup":
+				newAddress, newDescription = newDescription, ""
+				if f"{valuesDict.get('description','')}".strip().lower().startswith("on pi"):
+					valuesDict["description"] = ""
 			for pix in 	activeOnRpi:
 				if doPrint: self.indiLOG.log(20,f"validateDeviceConfigUi_sensors 3 ====== dev:{dev.name},   piU:{pix}, typeId:{typeId}, input:{self.RPI[pix]['input']}, newDescription:{newDescription}, newAddress:{newAddress}")
 
@@ -5177,7 +5470,7 @@ class Plugin(indigo.PluginBase):
 		except: return xList
 
 		props = sensDev.pluginProps
-		if  "rPiEnable0" in props:
+		if  self.isMultiRpiDevice(props):
 			for nn in range(_GlobalConst_numberOfiBeaconRPI):
 				if props.get(f"rPiEnable{nn}", False):
 					xList.append((str(nn), f"rpi-{nn}" + (" - " + self.piName(str(nn)) if self.piName(str(nn)) else "")))
@@ -13597,8 +13890,19 @@ class Plugin(indigo.PluginBase):
 		self.checkForUpdates(datetime.datetime.now())
 
 		self.lastUpdateSend = time.time()  # used to send updates to all rPis if not done anyway every day
+		# FIND MY MEMBER DEVICES take their per-rPi states from their GROUP's rPi checkboxes.
+		# deviceStartComm already rebuilds every device's state list at "init", but it runs before
+		# self.RPI is necessarily complete - and a member device that was built from an empty RPI
+		# table would carry no per-rPi states at all until the group was next saved by hand.
+		# Here the table is loaded, so this is the pass that counts
+		try:
+			for devFM in indigo.devices.iter("self.BLEfindMyGroup"):
+				self.refreshFindMyMemberStates(devFM)
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+
 		self.pluginState	= "run"
-		self.setCurrentlyBooting(50, setBy="initConcurrentThread")
+		self.setCurrentlyBooting(self.noDownAfterRestartSecs, setBy="initConcurrentThread (plugin restart)")
 		self.applyOneTimeChanges()			# data migrations that run once, on the version that introduced them
 		self.writeJson(self.pluginVersion, fName=self.indigoPreferencesPluginDir + "currentVersion")
 
@@ -13973,6 +14277,13 @@ class Plugin(indigo.PluginBase):
 			if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,f"delayedActionsThread  check if execute fastDown, for dev:{dev.name}, mac:{mac}, fastDownTime:{fastDownTime:.1f}, dt-lastUp:{time.time() - self.beacons[mac]['lastUp']:.1f} > {delayF:.1f}: {time.time() - self.beacons[mac]['lastUp'] <= delayF:1}, lastRpiWithSignal:{lastRpiWithSignal}")
 			if self.beacons[mac]["status"]  == "up" and time.time() - self.beacons[mac]["lastUp"] < delayF: return
 
+			# queued BEFORE a plugin restart or a program push, firing inside the quiet window. Drop it:
+			# the rPi has not had its chance to report yet, and if the beacon really is gone
+			# BeaconsCheckPeriod marks it down as soon as the window closes.
+			if time.time() < self.currentlyBooting:
+				if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,f"delayedActionsThread  fastDown for {dev.name} dropped, no up-->down for another {self.currentlyBooting - time.time():.0f} secs")
+				return
+
 			self.addToStatesUpdateDict(dev.id,piSignal, -999)
 
 			if self.decideMyLog("DelayedActions"): self.indiLOG.log(10,"delayedActionsThread  check if execute fastDown  -- yes")
@@ -14160,6 +14471,22 @@ class Plugin(indigo.PluginBase):
 									if self.decideMyLog("DelayedActions"): self.indiLOG.log(msgLevel,"delayedActionsThread  OUTPUTswitchbotRelay-setParameters")
 									if dev.deviceTypeId in ["OUTPUTswitchbotRelay"]: ##,"OUTPUTswitchbotCurtain"]:
 										self.setSWITCHBOTBOTCALLBACKmenu({"outputDev":dev.id})
+
+								elif updateItem == "printDevProps":
+									self.printDevPropsToLog(dev)
+
+								elif updateItem == "printFindMyMembers":
+									# every member of this find my group, one column each
+									self.printFindMyMembersToLog(dev)
+
+								elif "findMyTakeOver" in updateItem:
+									# a person said "this tag belongs on THIS device": copy its states
+									# over and delete the one it landed on
+									self.findMyTakeOverDevice(dev, updateItem["findMyTakeOver"])
+
+								elif updateItem == "findMyMemberStates":
+									# the group device was saved: its members' per-rPi states follow its rPi checkboxes
+									self.refreshFindMyMemberStates(dev)
 
 								elif "applyOnOffDisplay" in updateItem:
 									# after a device-config save: the state-list rebuild wiped our uiValue
@@ -14538,6 +14865,8 @@ class Plugin(indigo.PluginBase):
 				self.SQLLoggingEnable ={"devices":False, "variables":False}
 
 			self.bootWaitTime				= 100
+			self.noDownAfterRestartSecs		= 120	# after a plugin restart, or a program push/master restart on an rPi:
+												# no device goes up-->down for this long, the rPi needs time to report in
 			self.setCurrentlyBooting(self.bootWaitTime + 25, setBy="setVariables")
 
 			self.lastcheckIfNewSSD  		= time.time() + 4*60 # 4 minues
@@ -15915,6 +16244,10 @@ class Plugin(indigo.PluginBase):
 						if "LEDcurrent" in data:
 							self.addToStatesUpdateDict(dev.id, "LEDcurrent", data["LEDcurrent"], decimalPlaces=1)
 
+					if sensor == "BLEfindMyGroup" :
+						self.updateFindMyGroup(dev, props, data, pi)
+						continue
+
 					if sensor == "DF2301Q" :
 						self.updateDF2301Q(dev, props, data, pi)
 						continue
@@ -17085,17 +17418,33 @@ class Plugin(indigo.PluginBase):
 			newDisplay  = ""
 			imgName     = self.imageForOnOff(onOffScheme, isOn)
 
+			# A FIND MY MEMBER HAS ITS OWN WORDING AND ITS OWN COLOURS, and no dialog to set them
+			# in. Without this the post-save refresh handed it the defaults - "on" instead of "up",
+			# and the "on=red,off=grey" scheme, so a device that was up and green came back on and
+			# RED and stayed that way until the next message from the rpi
+			if dev.deviceTypeId == "BLEfindMyMember":
+				txt, newDisplay = self.findMyMemberDisplay(dev)
+				onOffScheme     = "on=green,off=grey"
+				imgName         = self.imageForOnOff(onOffScheme, isOn)
+
 			if "onOffState" in dev.states:
 				dateStr = "{}".format(dev.states.get("lastStatusChange", ""))
 				if len(dateStr) < 10:	dateStr = datetime.datetime.now().strftime(_defaultDateStampFormat)
-				txt = self.getpropForonOffText(dev, props, {"onOff":isOn})
+				if txt == "":	txt = self.getpropForonOffText(dev, props, {"onOff":isOn})
 				# "" = system value: push WITHOUT a uiValue, which makes indigo render the state
 				# itself and drops any uiValue set earlier. forced, because the VALUE (True/False)
 				# does not change here - only what is shown for it.
-				newDisplay = self.padDisplay(txt, dateStr[5:]) if txt != "" else ""
+				# already built above for a find my member, from ITS stamps - do not rebuild it
+				# here from lastStatusChange alone, that drops the mac-change half of the rule
+				if newDisplay == "":
+					newDisplay = self.padDisplay(txt, dateStr[5:]) if txt != "" else ""
 				self.addToStatesUpdateDict(dev.id, "onOffState", dev.states["onOffState"], uiValue=newDisplay, force=True, image=imgName)
 				if "displayStatus" in dev.states and newDisplay != "":
 					self.addToStatesUpdateDict(dev.id, "displayStatus", newDisplay)
+				# "status" carries the same padded string on these devices and its uiValue was
+				# wiped by the same state-list rebuild
+				if dev.deviceTypeId == "BLEfindMyMember" and txt != "":
+					self.addToStatesUpdateDict(dev.id, "status", txt, uiValue=newDisplay, force=True)
 				self.executeUpdateStatesDict(calledFrom="applyOnOffDisplay")
 			elif imgName != "":
 				self.setStateImage(dev, onOffScheme, isOn)			# no onOffState to ride on
@@ -18987,6 +19336,1962 @@ class Plugin(indigo.PluginBase):
 		return
 
 	####-------------------------------------------------------------------------####
+	# apple's continuity advertisement types, as far as they are known. Only "12" (find my) comes
+	# from a tag; the rest are things a LIVE apple device does, which is why the COUNT separates
+	# them - see findMyAppleTypes()
+	# NOT HEARD AT ALL, in the same units as every other distance here. It must not be 0: 0 means
+	# "sitting on top of the rPi", which is the exact opposite of what is being said, and it is a
+	# value a very close tag can genuinely produce (calcDist floors at 0.01 m, which rounds to 0.0).
+	# The signal half of the pair already says -999 for the same thing
+	# how often the "delete members down too long" housekeeping is allowed to run. It walks
+	# every indigo device, so not on every message - but often enough that "once down 1 hour"
+	# means about that, not "some time in the next hour"
+	_GlobalConst_findMyDeleteCheckSecs = 300.
+
+	_GlobalConst_findMyNoDistance = 999.
+	# and the FLOOR under a real reading, so that 0 can only ever mean "never set". See
+	# findMyDistance() for why nothing under this was a measurement in the first place
+	_GlobalConst_findMyMinDistance = 0.5
+
+		# THE BATTERY WORD AS A PERCENTAGE, for indigo's own batteryLevel. A find my frame carries NO
+	# PERCENTAGE - the status byte has two bits of battery and nothing else, so these four words are
+	# the entire resolution that exists. The numbers are a rendering of them, not a measurement: 100
+	# does not mean the tag measured 100%, it means "full", the top of four. Nothing else reads
+	# them - lastBatteryReplaced is deliberately not carried by these devices, see
+	# setstatesCategoriesForDevtype - so they only have to be four numbers a person reads easily
+	# and a plot separates. "critical" is 1 and not 0 because 0 reads as "no reading" nearly
+	# everywhere a battery is shown, and this one is a reading: the tag said so.
+	# MEASURED, 2026-09-25, AND IT IS NOT A LINEAR SCALE: airpods taken straight off the charger
+	# report "medium", not "full". So 50 here does NOT mean half empty - it means the second of
+	# four steps, and on that device a full charge sits there. Do not build a "battery is getting
+	# low" trigger on 50 for airpods, and do not assume the four steps are 25% apart on anything
+	# else either: what the two bits mean is the device's business and nobody has published it.
+	# Treat a FALL from one word to the next as the signal, never the absolute number
+	_GlobalConst_findMyBatteryPct = {"full": 100, "medium": 50, "low": 20, "critical": 1}
+	# WHAT A MEMBER DEVICE IS CALLED, keyed on the SAME WORDS findMyAppleTypes() already puts in
+	# the appleTypes state - so the name in the device list and the state on the device say the
+	# same thing, in the same vocabulary, and neither can drift from the other.
+	# "find my only" MAPS TO NO SUFFIX AT ALL, and is the only label that does: that combination
+	# means an airtag OR any other find my accessory OR an offline iphone, so there is nothing
+	# true to add and the device keeps the plain findmy_NN.
+	# "" IS A MAC NOTHING IS KNOWN ABOUT YET - an rPi too old to send the field, or one that has
+	# not yet caught a frame carrying types - and it is named "other" like any other unidentified
+	# thing. It is not a permanent verdict: the rename in updateFindMyMembers corrects it as soon
+	# as the types arrive, which is usually within a minute. The lookup defaults to "other" too,
+	# so a label added to findMyAppleTypes() and forgotten here produces a dull name and not a
+	# crash or a wrong one
+	_GlobalConst_findMyNameSuffix = {"find my only": "", "airpods/case": "airpod-case",
+									"phone/mac": "phone-mac", "findmy+other": "other",
+									"no findmy": "other", "": "other"}
+
+	_GlobalAppleContinuityTypes = {
+			"05":"airdrop",				"07":"proximity pairing",	"08":"hey siri",
+			"09":"airplay target",		"0A":"magic switch",		"0B":"watch connection",
+			"0C":"handoff",				"0D":"tethering target",	"0E":"tethering source",
+			"0F":"nearby action",		"10":"nearby info",			"12":"find my",
+			"16":"airplay source",
+			}
+
+	####-------------------------------------------------------------------------####
+	def findMyMergeTypes(self, *typeStrs):
+		"""The UNION of several apple-type strings, as sorted codes: ("12", "07|12") -> "07|12".
+
+		A DEVICE DOES NOT PUT ALL ITS TYPES IN ONE ADVERTISEMENT - the rpi says so and accumulates
+		them over a mac's life for exactly that reason. But it accumulates them PER MAC, and a
+		find my mac rotates every 15 minutes, so every rotation threw the knowledge away and the
+		device relearned it from nothing: 12 on the first frame, 07 a minute later. Seen doing it,
+		twice in 73 seconds:
+		    slot 08 renamed "findmy_08_airpod-case" -> "findmy_08", from: 12  find my only
+		    slot 08 renamed "findmy_08" -> "findmy_08_airpod-case", from: 07|12  airpods/case
+		A FRAME WITHOUT 07 IS NOT EVIDENCE AGAINST 07. Nothing here is ever unlearned from silence,
+		only from the slot being handed to a different tag - see where this is called.
+		Takes either form, codes or the full "07|12  airpods/case", so a state value and a wire
+		value can be merged without either being unpacked first.
+
+		Inputs:
+		    *typeStrs (str): any number of type strings, "" included
+		Outputs:
+		    str: "05|0C|10|12", sorted, or "" when none of them said anything
+		"""
+		try:
+			codes = set()
+			for one in typeStrs:
+				for cc in f"{one}".split("  ")[0].upper().split("|"):
+					cc = cc.strip()
+					if cc != "":	codes.add(cc)
+			return "|".join(sorted(codes))
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return ""
+
+	####-------------------------------------------------------------------------####
+	def findMyAppleTypes(self, typesStr):
+		"""Turns the rpi's raw apple-type list ("07|12") into the codes plus what they add up to: "07|12  airpods/case".
+
+		A lone "12" means only "this mac sends find my and nothing else". IT DOES NOT MEAN "tag",
+		which is what this used to say: that was an inference dressed up as an observation.
+		Nothing here can identify the device, and the reason was already written down: a
+		live apple device sends nearby-info / handoff / airdrop from a RESOLVABLE PRIVATE address
+		(40-7F) while find my uses a key-derived RANDOM STATIC one (C0-FF). Different address space,
+		so the two never share a mac and the types collected under the find my mac are only ever
+		"12". The label said "tag" regardless, and was believed.
+		What the word still does honestly: anything MORE than 12 means the mac also does
+		live-apple-device things, which a tag cannot.
+
+		Inputs:
+		    typesStr (str): "12", "07|12", "05|0C|10|12" ... as the rpi sends it, or ""
+		Outputs:
+		    str: eg "07|12  airpods/case", or "" when there is nothing to say
+		"""
+		try:
+			codes = []
+			for cc in f"{typesStr}".upper().split("|"):
+				cc = cc.strip()
+				if cc != "" and cc not in codes:	codes.append(cc)
+			if len(codes) == 0:		return ""
+
+			# what the combination means, in as few characters as possible - this sits in a state
+			# list next to the codes, so spelling every type out ("proximity pairing + find my +
+			# nearby info + ...") made a line nobody reads. The per-code names are in
+			# _GlobalAppleContinuityTypes for anyone who wants them.
+			# "07" is proximity pairing, which airpods and their case send alongside find my while
+			# the lid is open - that is the pair seen in practice
+			# NOT "tag" - see the docstring. An iPhone broadcasting find my reads exactly this too,
+			# so the honest label is what was actually observed and nothing more
+			if   codes == ["12"]:						kind = "find my only"
+			elif "07" in codes and "12" in codes:		kind = "airpods/case"
+			elif "10" in codes or "0C" in codes:		kind = "phone/mac"
+			elif "12" in codes:							kind = "findmy+other"
+			else:										kind = "no findmy"
+
+			return "{}  {}".format("|".join(codes), kind)
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return ""
+
+	def findMyDeleteOldMembers(self):
+		"""Deletes find my member devices that have been DOWN longer than the group device allows.
+
+		Off unless the group's "delete member devices:" is set, and it has TWO shapes:
+		  "4pm"    a once-a-day tidy at 16:00, 4 hours or more down. 4 hours at 4pm means it went
+		           before noon, so it has been missing for most of the day rather than being out at
+		           the shops - the hour and the threshold belong together and are not separate knobs
+		  "1".."6" any time, as soon as it has been down that many hours
+		  "10m"    and "30m", the same but in MINUTES. These are for clearing up after a rotation
+		           that was not followed - a device minutes old that is already a headstone - and
+		           they are short enough to take a real tag's name with it if it is merely out of
+		           range, which is why the wording in the dialog says so plainly
+		Called from updateFindMyGroup, rate limited to once every DELETECHECKSECS, so the "any time"
+		settings act within minutes of the hours being up instead of waiting for an hourly pass.
+
+		THE DEVICE GOES, NOT ITS CONTENTS - with the name the user gave it and anything pointing at
+		it. A tag that comes back gets a fresh findmy_NN, because nothing in a find my frame can say
+		it is the same tag that had a name. That is why the default is never, and why every deletion
+		is logged by name and last mac: a device disappearing silently would be alarming.
+
+		A member that has NEVER been dated is never deleted. lastStatusChange is the only evidence
+		of how long it has been down, and "no evidence" must not read as "long enough".
+
+		Inputs:
+		    None
+		Outputs:
+		    None
+		"""
+		try:
+			for groupDev in indigo.devices.iter("self.BLEfindMyGroup"):
+				mode = f"{groupDev.pluginProps.get('deleteDownMembersHours', '0')}".strip().lower()
+				if mode in ["", "0"]:	continue
+				if mode == "4pm":
+					# the ONLY setting with a clock in it, and only this hour will do
+					if datetime.datetime.now().hour != 16:	continue
+					hours = 4.
+				elif mode.endswith("m"):
+					# MINUTES. Kept as hours from here on so there is still one threshold and one
+					# comparison - the suffix is a dialog convenience, not a second code path
+					try:	hours = float(mode[:-1]) / 60.
+					except Exception:	continue
+					if hours <= 0:	continue
+				else:
+					try:	hours = float(mode)
+					except Exception:	continue
+					if hours <= 0:	continue
+				# by PROPS, so only this group's members can ever be touched. Looked up ONCE - it
+				# walks every indigo device, and doing that per slot would walk it twenty times
+				members = self.findMyMemberDevices(groupDev)
+				for slot in sorted(members):
+					devM = members[slot]
+					if devM.states.get("onOffState", False):	continue		# still up
+					downSince = f"{devM.states.get('lastStatusChange','')}".strip()
+					if downSince == "":	continue								# never dated, never deleted
+					try:
+						downFor = (datetime.datetime.now() - datetime.datetime.strptime(downSince, _defaultDateStampFormat)).total_seconds()
+					except Exception:	continue
+					if downFor < hours * 3600.:	continue
+					# minutes below the hour, hours above it - "0h" was what {hours:.0f} made of
+					# the 10 minute setting, which is worse than useless in a deletion record
+					took = f"{downFor / 60.:.0f} min" if downFor < 3600. else f"{downFor / 3600.:.1f} hours"
+					self.indiLOG.log(20, f"findMyGroup {groupDev.name}: deleting member {devM.name} - slot {slot}, "
+										f"last mac {devM.states.get('mac','')}, down since {downSince} "
+										f"(down {took}, setting '{mode}')")
+					try:	indigo.device.delete(devM)
+					except Exception:	self.indiLOG.log(40, "", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return
+
+	####-------------------------------------------------------------------------####
+	def findMyKind(self, appleTypes):
+		"""Which bucket a member falls in - "airtag" / "airpods" / "other" - from its apple types.
+
+		Reads the CODES at the front of the appleTypes string ("07|12  airpods/case" -> 07|12), not
+		the words after them: the words are for a person and may be reworded, the codes are the data.
+
+		"airtag" means the mac sends FIND MY AND NOTHING ELSE. That is an airtag or any other find
+		my accessory, and nothing in the frame can narrow it further - the name is the short one,
+		not a claim. See findMyAppleTypes() for why no more can be got out of this.
+
+		Inputs:
+		    appleTypes (str): as the member carries it, eg "12  find my only"
+		Outputs:
+		    str: "airtag", "airpods" or "other"
+		"""
+		try:
+			codes = [c.strip() for c in f"{appleTypes}".split("  ")[0].strip().upper().split("|") if c.strip() != ""]
+			if codes == ["12"]:							return "airtag"
+			if "07" in codes and "12" in codes:		return "airpods"
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return "other"
+
+	####-------------------------------------------------------------------------####
+	def findMyMaxSlots(self, groupDev):
+		"""How many member slots this group hands out - the dialog's value, clamped to the ceiling.
+
+		THE CONSTANT IS THE CEILING, THE DIALOG PICKS THE WORKING NUMBER. Both sides must agree on
+		it: the rPi assigns the slot numbers and this side creates the devices for them, so a slot
+		the rPi invents that this side will not create is a tag with nowhere to go. It travels in the
+		parameters as "maxSlots" and the rPi clamps it against its own MAXSLOTS exactly as here.
+		CLAMPED RATHER THAN TRUSTED, in both directions: anything above the ceiling would promise
+		devices the other side will not make, and anything below 1 would silently count nothing.
+
+		Inputs:
+		    groupDev (indigo.Device): the group device
+		Outputs:
+		    int: slots in force, 1.._GlobalConst_findMyMemberStates
+		"""
+		try:
+			nn = int(float(f"{groupDev.pluginProps.get('findMyMaxSlots', 30)}".strip() or 30))
+			return max(1, min(_GlobalConst_findMyMemberStates, nn))
+		except Exception:
+			return min(30, _GlobalConst_findMyMemberStates)
+
+	def findMyMemberDevices(self, groupDev):
+		"""The member devices belonging to this group device, by slot.
+
+		Looked up by PROPS, never by name: the whole point of a device per member is that the name
+		belongs to the user, so a renamed "Karl's keys" must still be found as slot 03.
+
+		Inputs:
+		    groupDev (indigo.Device): the BLEfindMyGroup device
+		Outputs:
+		    dict: {"01": indigo.Device, ...}
+		"""
+		out = {}
+		try:
+			for devM in indigo.devices.iter("self.BLEfindMyMember"):
+				pM = devM.pluginProps
+				if f"{pM.get('findMyGroupDevId','0')}" != f"{groupDev.id}":	continue
+				slot = f"{pM.get('findMySlot','')}".strip()
+				if slot != "":	out[slot] = devM
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return out
+
+	def findMyBatteryPct(self, word):
+		"""The percentage for one find my battery word, or -1 when the frame did not say.
+
+		THE FRAME HAS TWO BITS OF BATTERY and no percentage at all - see
+		_GlobalConst_findMyBatteryPct for why these four numbers and not others.
+
+		Inputs:
+		    word (str): "full" / "medium" / "low" / "critical", or "" when no status byte decoded
+		Outputs:
+		    int: the percentage, or -1 for "not said". -1 AND NOT 0: 0 is a real and alarming
+		         battery level in every place indigo shows one, and must never stand in for unknown
+		"""
+		try:	return int(self._GlobalConst_findMyBatteryPct.get(f"{word}".strip().lower(), -1))
+		except Exception:	return -1
+
+	####-------------------------------------------------------------------------####
+	def findMyEnableBatteryLevel(self, devM, word):
+		"""Switches indigo's own battery support on for one member device and seeds the level.
+
+		batteryLevel IS NOT A PLUGIN STATE and is deliberately not declared in piBeaconConstants.
+		It is indigo's, and it appears on a device because that device's SupportsBatteryLevel
+		PROPERTY is true. The property is what buys the battery column in the device list, the low
+		battery warning and dev.batteryLevel - none of which a state holding the word "critical"
+		can give, however it is spelled. Every beacon in this plugin gets its battery the same way.
+
+		IT IS ONLY SWITCHED ON WITH A READING IN HAND. Turning it on first would create the state
+		at indigo's default of 0 - a flat battery, on a tag that is probably fine - and there is no
+		"unknown" to stamp instead, the way -999 and 999 cover it for a signal and a distance. So
+		the support and the first real percentage arrive together.
+
+		Inputs:
+		    devM (indigo.Device): the member device
+		    word (str): the battery word the tag reported, or what the device already has stored
+		Outputs:
+		    bool: True if the device has battery support, or has just been given it and the first
+		          value is queued - see the body for why the value cannot be written here
+		"""
+		try:
+			if "batteryLevel" in devM.states:	return True
+			pct = self.findMyBatteryPct(word)
+			if pct < 0:							return False
+			props = devM.pluginProps
+			props["SupportsBatteryLevel"] = True
+			devM.replacePluginPropsOnServer(props)
+			# AND THE FIRST VALUE GOES IN LATER, NOT HERE. replacePluginPropsOnServer RETURNS
+			# BEFORE INDIGO HAS REBUILT THE STATE LIST, so writing batteryLevel straight after it
+			# raced and lost - "device findmy_01 state key batteryLevel not defined", twice for
+			# every device made. Sleeping on it was the first attempt and was both unreliable and
+			# rude: this runs in the message thread, and half a second per device is ten seconds
+			# when a houseful of tags arrives at once, with every other device waiting.
+			# The delayed-action queue does exactly this job, off this thread, and already skips
+			# quietly when the state is still not there - in which case the next ordinary update
+			# writes it, because by then "batteryLevel" in devM.states is simply true
+			self.delayedActions["data"].put({"actionTime": time.time() + 3., "devId": devM.id,
+											"updateItems": [{"stateName": "batteryLevel", "value": pct}]})
+			# level 10 = plugin.log only. It happens once in a device's life, so it is worth a
+			# line, but it is not news for the indigo event log
+			self.indiLOG.log(10, f"findMyGroup {devM.name}: indigo battery support switched on - the tag reports \"{word}\", which is {pct}%, queued")
+			return True
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return False
+
+	####-------------------------------------------------------------------------####
+	def refreshFindMyMemberStates(self, groupDev):
+		"""Rebuilds the state lists of a find my group's MEMBER devices after the group was saved.
+
+		A member device has no rPi of its own - its Pi_NN_Signal/Distance/Time states come from the
+		GROUP's rPiEnable flags, so ticking or unticking an rPi there changes which states its
+		members should carry. Indigo rebuilds a device's state list only when that device is told
+		to, and it is never told that somebody ELSE's dialog was saved - so this is that telling.
+
+		Inputs:
+		    groupDev (indigo.Device): the BLEfindMyGroup device that was just saved
+		Outputs:
+		    None
+		"""
+		try:
+			# THE GROUP MUST NOT CLAIM A SENSOR VALUE - corrected here because this is the one
+			# place that runs once per group at startup. "13/20 up" is text and sensorValue is
+			# indigo's numeric state; a device that supports one has its state column forced to
+			# it, so dropping the claim is what lets the column show status. Group devices made
+			# before this carry the old property and have to be put right once.
+			# The counts live in membersUp / membersTotal / numberOfActive / numberOfActiveRaw, which
+			# are real Integers and better to plot than sensorValue ever was
+			try:
+				gp    = groupDev.pluginProps
+				drops = gp.get("SupportsSensorValue", False)
+				try:	shown = f"{groupDev.displayStateId}"
+				except Exception:	shown = ""
+				# TESTED ON THE DISPLAY STATE, NOT ON THE PROPERTY, and that is the whole fix.
+				# Dropping SupportsSensorValue is one-shot - once the property is false it never
+				# looks again - so when the rebuild that follows it did not take, the device was
+				# left pointing at a sensorValue that no longer exists and the state column went
+				# BLANK. Checking what indigo actually displays makes it retry every startup
+				# until it is right, and costs nothing once it is
+				if drops or shown != "status":
+					if drops:
+						gp["SupportsSensorValue"] = False
+					# said out loud as well: getDeviceDisplayStateId honours this before anything
+					# else, so there is no fallback chain left to go wrong
+					gp["displayState"] = "status"
+					groupDev.replacePluginPropsOnServer(gp)
+					groupDev = indigo.devices[groupDev.id]
+					groupDev.stateListOrDisplayStateIdChanged()
+					self.indiLOG.log(20, f"findMyGroup {groupDev.name}: state column was drawing '{shown or '?'}' - rebuilt to draw 'status', because what it shows is text and not a sensor value")
+			except Exception:
+				self.indiLOG.log(40, "", exc_info=True)
+
+			devs = self.findMyMemberDevices(groupDev)
+			if not devs:	return
+			for slot in sorted(devs):
+				try:	devs[slot].stateListOrDisplayStateIdChanged()
+				except Exception:	pass
+			pis = self.findMyGroupPis(groupDev)
+
+			# TWO THINGS TO CORRECT ON DEVICES MADE BY AN EARLIER VERSION. Done here and not on update
+			# because a device whose rPi has gone quiet gets no updates at all and would keep the
+			# wrong value for ever
+			zeroIsNotAnRpi = "0" not in pis
+			for slot in sorted(devs):
+				devM = indigo.devices[devs[slot].id]		# re-read: the state list was just rebuilt
+				try:
+					# 1. THE 0 THAT IS NOT AN rPi. indigo defaults an Integer state to 0, so a device
+					#    that predates closestRPI - or predates it being stamped at birth - reads "rPi 0"
+					#    when the truth is "never set". ONLY when rPi "0" is not one of this group's: if
+					#    it is, 0 is a real answer and the device is left to say so
+					if zeroIsNotAnRpi:
+						for st, txt in [("closestRPI", "closestRPIText"), ("closestRPILast", "closestRPITextLast")]:
+							if st not in devM.states:			continue
+							if int(devM.states[st]) != 0:		continue
+							devM.updateStateOnServer(st, -1)
+							if txt in devM.states:	devM.updateStateOnServer(txt, "")
+
+					# 2. THE DUPLICATE. Under the rule in updateFindMyMembers closestRPILast can never
+					#    equal closestRPI - a tag cannot move from rPi 2 to rPi 2 - so the two being the
+					#    same is a leftover from the first cut of this, which wrote the Last pair on the
+					#    way DOWN as well and so filed the live rPi away on every dropout
+					devM = indigo.devices[devM.id]			# re-read again: step 1 may have written
+					if "closestRPI" in devM.states and "closestRPILast" in devM.states:
+						if int(devM.states["closestRPILast"]) == int(devM.states["closestRPI"]) != -1:
+							devM.updateStateOnServer("closestRPILast", -1)
+							if "closestRPITextLast" in devM.states:	devM.updateStateOnServer("closestRPITextLast", "")
+
+					# 3. A DISTANCE OF 0, WHICH NOW ONLY EVER MEANS "NEVER SET" - findMyDistance() floors
+					#    a real reading at _GlobalConst_findMyMinDistance. The signal check stays for the
+					#    devices written BEFORE that floor existed, where a 0.0 really could be a tag a
+					#    few centimetres away; those correct themselves on their next update anyway
+					for st in devM.states:
+						if st == "distance":									sig = "rssi"
+						elif st.find("Pi_") == 0 and st.endswith("_Distance"):	sig = st[:-9] + "_Signal"
+						else:													continue
+						if float(devM.states[st]) != 0.:						continue
+						if sig in devM.states and int(devM.states[sig]) != -999:	continue
+						devM.updateStateOnServer(st, self._GlobalConst_findMyNoDistance, decimalPlaces=1)
+
+					# 4. INDIGO'S OWN BATTERY SUPPORT, for every member device made before this
+					#    version. The battery WORD is already on the device and is never blanked, so
+					#    the percentage is seeded from it HERE rather than waiting for a message -
+					#    which matters most for a tag that is DOWN, because no message is coming and
+					#    it would sit without a battery until it came back, possibly never
+					devM = indigo.devices[devM.id]
+					if "batteryLevel" not in devM.states:
+						self.findMyEnableBatteryLevel(devM, devM.states.get("battery", ""))
+				except Exception:	pass
+			# level 10 = plugin.log only: this happens on every save of the group device and is
+			# housekeeping, not news
+			self.indiLOG.log(10, f"findMyGroup {groupDev.name}: rebuilt the state list of {len(devs)} member device(s), per-rPi states for rPi(s): {','.join(pis) if pis else '(none enabled)'}")
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return
+
+	####-------------------------------------------------------------------------####
+	def findMyGroupPis(self, groupDev):
+		"""The rPi numbers a find my GROUP device is set to use, switched-off rPis removed.
+
+		Falls back to the single piServerNumber for a device saved before .46 gave this type the
+		rPi checkbox block, so an old group device keeps its one rPi instead of losing them all.
+
+		Inputs:
+		    groupDev (indigo.Device): the BLEfindMyGroup device
+		Outputs:
+		    list: ["2", "5"], lowest first
+		"""
+		out = []
+		try:
+			props = groupDev.pluginProps
+			if self.isMultiRpiDevice(props):
+				for piU in self.RPI:
+					if not props.get("rPiEnable" + piU, False):			continue
+					if f"{self.RPI[piU]['piOnOff']}" == "0":			continue
+					out.append(piU)
+			else:
+				piU = f"{props.get('piServerNumber','')}".strip()
+				if piU != "":	out.append(piU)
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return sorted(out, key=lambda x: int(x) if f"{x}".isdigit() else 99)
+
+	####-------------------------------------------------------------------------####
+	def findMyMemberPis(self, devM):
+		"""The rPi numbers a find my MEMBER device carries per-rPi states for.
+
+		A member has no rPi of its own - it is a tag, and which rPis can hear it is a property of
+		the GROUP. So this just asks the group, and returns [] when the group cannot be found,
+		which getDeviceStateList reads as "no per-rPi states yet" rather than "all of them".
+
+		Inputs:
+		    devM (indigo.Device): the BLEfindMyMember device
+		Outputs:
+		    list: ["2", "5"]
+		"""
+		try:
+			gid = int(f"{devM.pluginProps.get('findMyGroupDevId','0')}".strip() or 0)
+			if gid > 0:	return self.findMyGroupPis(indigo.devices[gid])
+		except Exception:	pass
+		return []
+
+	####-------------------------------------------------------------------------####
+	def findMyMemberDisplay(self, devM):
+		"""The state column text for a member device, rebuilt from its OWN states.
+
+		Exists because the display has to be produced twice from two different places: from the
+		live message in updateFindMyMembers, and from the stored states in applyOnOffDisplay after
+		a config save, where there is no message to work from. Two copies of the rule would drift.
+
+		Inputs:
+		    devM (indigo.Device): the BLEfindMyMember device
+		Outputs:
+		    tuple: (statusText, paddedDisplay) - "up" / "down" and "up    09-23 14:22:31"
+		"""
+		try:
+			statusText = f"{devM.states.get('status','')}".strip()
+			if statusText not in ["up", "down"]:	statusText = "up" if devM.states.get("onOffState", False) else "down"
+			# UP SINCE / DOWN SINCE - the time the STATUS last changed, and nothing else.
+			# It used to take the later of lastStatusChange and lastMacChange, so a mac rotation
+			# under a device that never went anywhere pushed the stamp forward and the column then
+			# read "up" next to a time it had not gone up at. A rotation is not an up/down change.
+			# lastMacChange is still on the device for anyone who wants it
+			lastStatus = f"{devM.states.get('lastStatusChange','')}".strip()
+			changedAt  = lastStatus
+			if changedAt == "":	changedAt = datetime.datetime.now().strftime(_defaultDateStampFormat)
+			return statusText, self.padDisplay(statusText, changedAt[5:])
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return "", ""
+
+	####-------------------------------------------------------------------------####
+	def findMyDistance(self, rssi1m, rssi):
+		"""How far the tag is from the rPi that measured this signal, in the plugin's distance units.
+
+		FLOORED AT _GlobalConst_findMyMinDistance so a real reading can never be 0. The formula
+		bottoms out at 0.01 m, which rounds to 0.0 at one decimal, and a 0.0 sitting in a distance
+		state cannot be told apart from "never set" - the one thing it must not be confused with.
+		Nothing under the floor was a measurement anyway: below about a metre the signal is FLAT,
+		3 cm and 1 m read the same, so down there the formula is just running out of range.
+
+		Inputs:
+		    rssi1m (float): this device's "signal of THIS tag at 1 metre" reference
+		    rssi (int): the signal that rPi is hearing
+		Outputs:
+		    float: the distance, or _GlobalConst_findMyNoDistance when it cannot be computed
+		"""
+		try:
+			d = self.calcDist(rssi1m, rssi)
+			# calcDist's own out-of-range sentinel - not a distance, and dividing it by the units
+			# would only turn it into a different meaningless number
+			if d >= 99999.:	return self._GlobalConst_findMyNoDistance
+			return round(max(d / self.distanceUnits, self._GlobalConst_findMyMinDistance), 1)
+		except Exception:
+			return self._GlobalConst_findMyNoDistance
+
+	####-------------------------------------------------------------------------####
+	def findMyOtherMembers(self, filter="", valuesDict=None, typeId=None, devId=None):
+		"""Indigo UI list callback: the OTHER member devices of this member's group.
+
+		Its own group only - taking a tag over from another group's device would move it across
+		counters and leave both wrong - and never itself.
+
+		Inputs:
+		    filter (str): unused
+		    valuesDict (dict or None): unused
+		    typeId (str or None): unused
+		    devId (int or None): the member device whose dialog is open
+		Outputs:
+		    list: [(id, name)], with a "nothing to do" entry first so the field has a safe default
+		"""
+		out = [("0", "- no, leave everything as it is -")]
+		try:
+			devM   = indigo.devices[int(devId)]
+			grpId  = f"{devM.pluginProps.get('findMyGroupDevId','')}".strip()
+			if grpId in ["", "0"]:	return out
+			for dev in indigo.devices.iter(self.pluginId):
+				if dev.deviceTypeId != "BLEfindMyMember":									continue
+				if dev.id == devM.id:														continue
+				if f"{dev.pluginProps.get('findMyGroupDevId','')}".strip() != grpId:		continue
+				# the mac and when it was last heard, because that is what tells one findmy_NN from
+				# another in a menu - the names are all the same until somebody renames them
+				out.append((f"{dev.id}", f"{dev.name}  [{dev.states.get('mac','')}  {dev.states.get('status','')} {dev.states.get('lastSeen','')}]"))
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		# behind the DevMgmt debug: one line every time a member dialog opens is noise once this
+		# works, but "was the callback called at all" is the first thing worth knowing if the menu
+		# ever looks empty again, and that is exactly what a debug flag is for
+		if self.decideMyLog("DevMgmt"):
+			self.indiLOG.log(10, f"findMyOtherMembers: dialog for devId:{devId} - offering {len(out) - 1} other member device(s)")
+		return out
+
+	####-------------------------------------------------------------------------####
+	def findMyTakeOverDevice(self, keepDev, fromId):
+		"""Moves a tag from the member device it landed on back onto the device it belongs to.
+
+		THE CASE THIS EXISTS FOR: a mac rotated, the lineage was not matched, and the tag turned up
+		as a new findmy_NN beside the device somebody had already named and built triggers on.
+		NOTHING IN A FIND MY FRAME CAN SAY THE TWO ARE THE SAME TAG - that is the whole difficulty
+		this plugin works around - so when the automatic match fails, a PERSON says it, here.
+
+		Copies every state the two devices share onto the kept one and then DELETES the other.
+		Nothing else has to be told: findMyAssignSlots rebuilds the slot map from the devices' own
+		mac states on every pass, so the next message finds the tag's mac on the kept device and
+		gives it that slot. The emptied slot number goes back into the free pool by itself.
+
+		NOT COPIED: slot and created, which describe the DEVICE and not the tag. The kept device
+		keeps its own slot number and its own birthday; everything that describes the tag moves.
+		The .ui values travel WITH their state rather than as states of their own, so the indigo
+		State column is right immediately - which matters when the tag is down and no update is
+		coming to repaint it.
+
+		Inputs:
+		    keepDev (indigo.Device): the member device to keep, whose dialog was just saved
+		    fromId (int or str): the member device the tag landed on. It is deleted
+		Outputs:
+		    None
+		"""
+		try:
+			try:	srcDev = indigo.devices[int(fromId)]
+			except Exception:
+				self.indiLOG.log(20, f"findMyGroup take over: device {fromId} no longer exists, nothing to take over")
+				return
+			if srcDev.id == keepDev.id:	return
+			# BOTH must be members of the SAME group. A menu is a menu, but this deletes a device,
+			# so what it was given is checked rather than trusted
+			if "BLEfindMyMember" not in [srcDev.deviceTypeId, keepDev.deviceTypeId] or srcDev.deviceTypeId != keepDev.deviceTypeId:
+				self.indiLOG.log(20, f"findMyGroup take over: {srcDev.name} and {keepDev.name} are not both find my member devices - nothing done")
+				return
+			if f"{srcDev.pluginProps.get('findMyGroupDevId','')}".strip() != f"{keepDev.pluginProps.get('findMyGroupDevId','')}".strip():
+				self.indiLOG.log(20, f"findMyGroup take over: {srcDev.name} and {keepDev.name} belong to different groups - nothing done")
+				return
+
+			wasMac  = f"{keepDev.states.get('mac','')}"
+			chList  = []
+			for st in srcDev.states:
+				if st in ["slot", "created"]:								continue
+				if f"{st}".endswith(".ui") or f"{st}".endswith("_ui"):		continue	# travels with its state
+				if st not in keepDev.states:								continue
+				item = {"key": st, "value": srcDev.states[st]}
+				for suf in [".ui", "_ui"]:
+					if (st + suf) in srcDev.states:
+						item["uiValue"] = f"{srcDev.states[st + suf]}"
+						break
+				chList.append(item)
+			if chList:	self.execUpdateStatesList(keepDev, chList)
+			try:
+				keepDev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn if srcDev.states.get("onOffState", False)
+												else indigo.kStateImageSel.SensorOff)
+			except Exception:	pass
+
+			# level 20: a device is being DELETED and another one now describes something else.
+			# That belongs in the indigo event log, not only in plugin.log
+			self.indiLOG.log(20, f"findMyGroup take over: {keepDev.name} (slot {keepDev.pluginProps.get('findMySlot','')}) "
+								f"now holds the tag that was on {srcDev.name} (slot {srcDev.pluginProps.get('findMySlot','')}) - "
+								f"mac {srcDev.states.get('mac','')}, tagIds {srcDev.states.get('tagIds','')}, "
+								f"was mac {wasMac}. {len(chList)} state(s) copied, {srcDev.name} deleted")
+			try:	indigo.device.delete(srcDev)
+			except Exception:	self.indiLOG.log(40, "", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return
+
+	####-------------------------------------------------------------------------####
+	def printFindMyMembersToLog(self, groupDev):
+		"""Prints every member device of one find my group as a table - ONE COLUMN PER MEMBER.
+
+		TRANSPOSED ON PURPOSE, and that is the whole point of having it as well as
+		printDevPropsToLog. One device at a time answers "what does this one say"; the question a
+		find my group actually raises is "why is THAT one different from the others" - which slot
+		is stale, which rPi hears what, which devices are still under their birth name and so are
+		the next to be taken over. That is a comparison ACROSS devices and it only reads if the
+		states line up in rows.
+
+		THE COLUMN HEADINGS ARE SLOT NUMBERS, with the names listed once above: a column wide
+		enough for "airtag jacket pocket" is a column wide enough to push the table off the screen,
+		and the name is needed once, not on every row.
+
+		Cells wider than their column are cut with "..". A column is only as wide as its own widest
+		value, up to COLMAX, so nothing is cut unless it is genuinely long.
+
+		LINES ARE KEPT TO LINEMAX CHARACTERS and the table is SPLIT INTO FURTHER SETS of columns
+		when the members do not fit - the same rows again, the next few members. Not wrapped: a
+		wrapped row stops being a row, and lining the states up in rows is the entire point.
+		The count is of the finished line, indent and separators included, so the number means
+		what it says on screen.
+
+		Inputs:
+		    groupDev (indigo.Device): the BLEfindMyGroup device
+		Outputs:
+		    None: writes to the log only
+		"""
+		# COLMAX IS 19 BECAUSE OF THE TWO THINGS THAT MUST NOT BE CUT: a mac is 17 characters and a
+		# datestamp is 19, and they are what the table is read for. Below 19 the timestamps start
+		# losing their seconds and the macs their last byte, which is the byte that differs.
+		# Above it nothing more is kept whole - only previousMacs is longer, and it is a LIST, so
+		# it is the one field that still says something cut short - and every extra character
+		# costs a whole member off the end of each set.
+		# A WIDER LINE IS NOT A REASON TO RAISE IT: the only field longer than 19 is previousMacs,
+		# five macs is about 90 characters, and a column that wide is not a table any more. There
+		# is no width that "fixes" that one field short of ruining the rest, so the extra line
+		# budget buys MEMBERS PER SET instead, which is what it is actually short of
+		COLMAX, LINEMAX, INDENT = 19, 285, 7
+		try:
+			devs = self.findMyMemberDevices(groupDev)
+			if not devs:
+				self.indiLOG.log(20, f"findMyGroup {groupDev.name}: has no member devices")
+				return
+			slots = sorted(devs)
+
+			# ---- WHICH STATES GET A ROW: every state ANY member has, not just the first one.
+			# They can genuinely differ - a member made before an rPi was enabled has no trio for
+			# it until its state list is rebuilt, and a member whose battery has never been heard
+			# has no batteryLevel at all. A state missing on one device shows as a blank cell,
+			# which is the thing worth seeing, rather than dropping the row
+			allStates = set()
+			for slot in slots:
+				try:	allStates |= set(devs[slot].states.keys())
+				except Exception:	pass
+			# the ones that answer the usual question first, in a reading order rather than
+			# alphabetically - "status, when it changed, what mac, since when" is a sentence,
+			# "appleTypes, battery, closestRPI" is a list of words
+			head = ["status", "onOffState", "lastStatusChange", "previousStatusChange", "lastSeen",
+					"mac", "previousMacs", "lastMacChange", "slot",
+					"tagIds", "previousTagIds", "lastTagIdChange", "movedRpi",
+					"battery", "batteryLevel", "rssi", "distance", "distanceIndicator", "appleTypes", "hintByte",
+					"closestRPI", "closestRPIText", "closestRPILast", "closestRPITextLast", "created"]
+			rows, done = [], set()
+			for name in head:
+				# a uiValue belongs WITH its state, not in an alphabetical clump of its own.
+				# INDIGO SPELLS IT ".ui" - "<state>_ui" is how it is described in a docstring or
+				# two but not what the states dict holds, so both are looked for here
+				for key in [name, name + ".ui", name + "_ui"]:
+					if key in allStates and key not in done:
+						rows.append(key)
+						done.add(key)
+			for key in sorted([k for k in allStates if f"{k}".find("Pi_") == 0 and k not in done]):
+				rows.append(key)
+				done.add(key)
+			for key in sorted([k for k in allStates if k not in done], key=lambda x: f"{x}".lower()):
+				rows.append(key)
+
+			# ---- TWO ROWS THAT ARE NOT STATES, marked with a leading * so they cannot be mistaken
+			# for one. Both are exactly what findMyAssignSlots ranks a free slot on, and "which
+			# device is the next to be taken over" is the question this print is most often opened
+			# for - working it out by hand from lastSeen and the device names is the tedious part
+			derived = {}
+			for slot in slots:
+				devM = devs[slot]
+				secs = self.findMySecsSinceSeen(devM)
+				if   secs > 8.e8:	txt = "never"
+				elif secs < 600.:	txt = f"{secs:.0f}s"
+				elif secs < 7200.:	txt = f"{secs / 60.:.0f}m"
+				else:				txt = f"{secs / 3600.:.1f}h"
+				derived.setdefault("* unheard for", {})[slot] = txt
+				# EXACTLY a birth name, never a prefix - "findmy_03-k2" starts with "findmy_" and
+				# is very much a name somebody chose. ONE TEST for all three places that ask this
+				# (here, findMyAssignSlots and the auto-rename), because a member is now born as
+				# findmy_NN_airpod-case or findmy_NN_phone-mac too: a list of two literals here
+				# would have called every one of those "claimed by the user" while the rename code
+				# went on treating them as its own, and the two would have fought
+				claimed = not self.findMyMemberNameIsOurs(devM, groupDev, slot)
+				derived.setdefault("* name claimed", {})[slot] = "yes" if claimed else "no"
+
+			# ONE uiValue ROW, AND ONLY ONE - the one the indigo State column actually draws. That
+			# is the uiValue that can be stale or wrong, so it is the one worth reading across
+			# members; the others only repeat what is already on the rows above:
+			#   mac.ui     was written as the mac itself, so it was its own row said twice
+			#   status.ui  is given the SAME padded string as onOffState.ui, so it was too
+			# A MEMBER DEVICE SUPPORTS ON/OFF, so the column is onOffState.ui and not the state
+			# getDeviceDisplayStateId names - the same thing updateFindMyMembers writes both for
+			keepUi = set()
+			for base in ["onOffState", self.getDeviceDisplayStateId(devs[slots[0]])]:
+				for suf in [".ui", "_ui"]:
+					if (base + suf) in allStates:	keepUi.add(base + suf)
+				if keepUi:	break		# on/off wins when it has one; the display state is the fallback
+			rows = [r for r in rows if not (f"{r}".endswith(".ui") or f"{r}".endswith("_ui")) or r in keepUi]
+
+			def cell(slot, key):
+				if key in derived:	return f"{derived[key].get(slot, '')}"
+				try:
+					if key not in devs[slot].states:	return ""
+					return f"{devs[slot].states[key]}"
+				except Exception:	return ""
+
+			allRows = list(derived) + rows
+			nameW   = max([len(f"{r}") for r in allRows])
+			colW    = {}
+			for slot in slots:
+				w = max([len(cell(slot, r)) for r in allRows] + [len(slot)])
+				colW[slot] = max(2, min(COLMAX, w))
+
+			out = [f"find my members of {groupDev.name} (id:{groupDev.id}): {len(slots)} device(s), "
+					f"rPi(s) {','.join(self.findMyGroupPis(groupDev)) or '(none enabled)'}",
+					"  columns, in slot order:"]
+			for slot in slots:
+				out.append(f"       {slot}  {devs[slot].name}  (id:{devs[slot].id})")
+			out.append(f"  * = worked out here, not a state. values longer than {COLMAX} are cut with '..'")
+			out.append(f"  one uiValue row only - {','.join(sorted(keepUi)) or '(none)'}, what the state column draws")
+			out.append(f"  lines are kept under {LINEMAX} characters - more members than fit are printed as further sets")
+
+			# ---- as many columns as fit LINEMAX, then the NEXT SET of members. Never wrapped.
+			# Counted the way the line is actually built - the indent, the state name, then " | "
+			# plus the column for each member - so LINEMAX is the width on screen and not an
+			# estimate of it. A single column too wide to fit still gets its own set rather than
+			# no set at all
+			def pack(cap):
+				blocks, block, width = [], [], INDENT + nameW
+				for slot in slots:
+					if block and (len(block) >= cap or width + 3 + colW[slot] > LINEMAX):
+						blocks.append(block)
+						block, width = [], INDENT + nameW
+					block.append(slot)
+					width += 3 + colW[slot]
+				if block:	blocks.append(block)
+				return blocks
+
+			# TWO PASSES, SO THE SETS COME OUT EVEN. Greedy alone puts 13 members into 11 and 2,
+			# and a set of 2 beside a set of 11 reads as though something went wrong rather than as
+			# a table continued. The first pass only counts how many sets are needed; the second
+			# spreads the members over that many. Kept only if it really did not need more sets -
+			# the columns are different widths, so an even split is not guaranteed to fit
+			blocks = pack(len(slots))
+			if len(blocks) > 1:
+				even = pack((len(slots) + len(blocks) - 1) // len(blocks))
+				if len(even) <= len(blocks):	blocks = even
+
+			for nn, bl in enumerate(blocks):
+				out.append("")
+				if len(blocks) > 1:
+					out.append(f"  -- set {nn + 1} of {len(blocks)}: slot(s) {','.join(bl)}")
+				out.append((f"       {'slot':<{nameW}} | " + " | ".join([f"{sl:<{colW[sl]}}" for sl in bl])).rstrip())
+				out.append(f"       {'-' * nameW}-+-" + "-+-".join(["-" * colW[sl] for sl in bl]))
+				for r in allRows:
+					cells = []
+					for sl in bl:
+						v = cell(sl, r)
+						if len(v) > colW[sl]:	v = v[:colW[sl] - 2] + ".."
+						cells.append(f"{v:<{colW[sl]}}")
+					out.append((f"       {r:<{nameW}} | " + " | ".join(cells)).rstrip())
+
+			self.indiLOG.log(20, "\n".join(out))
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return
+
+	####-------------------------------------------------------------------------####
+	def findMySecsSinceSeen(self, devM):
+		"""Seconds since any rPi last reported this member's tag, from its own lastSeen state.
+
+		A state and not a dict in memory, so a plugin restart does not hand every member a fresh
+		hold and keep tags that are long gone showing as up.
+
+		Inputs:
+		    devM (indigo.Device): the BLEfindMyMember device
+		Outputs:
+		    float: seconds, or a very large number when it has never been heard
+		"""
+		try:
+			lastSeen = f"{devM.states.get('lastSeen','')}".strip()
+			if lastSeen == "":	return 9.e9
+			return (datetime.datetime.now() - datetime.datetime.strptime(lastSeen, _defaultDateStampFormat)).total_seconds()
+		except Exception:
+			return 9.e9
+
+	####-------------------------------------------------------------------------####
+	def findMyAssignSlots(self, groupDev, macs, heldSlots=None, tagKeys=None):
+		"""Gives every mac in the union a slot number, STICKY: a mac keeps its slot while it is there.
+
+		With one rpi the slots came from the rpi. With several they cannot: rpi-2's "01" and rpi-5's
+		"01" are different tags, and the same tag carries the SAME mac on every rpi at the same
+		moment - so the mac is the only thing that identifies a member across the house, and the
+		slot has to be handed out here, once, over the union.
+
+		Rebuilt from the member devices themselves rather than kept in memory, so it survives a
+		plugin restart with no stored state: the device holding mac X IS slot X's device.
+
+		Inputs:
+		    groupDev (indigo.Device): the group device
+		    macs (set): the macs in the union right now
+		    heldSlots (set): slots whose member is inside its down-delay - not given to a new mac
+		    tagKeys (dict): {mac: set("2-1043", ...)} - the rPi lineages reporting each mac
+		Outputs:
+		    dict: {mac: "01", ...} - macs beyond the group's maxSlots get nothing
+		"""
+		byMac = {}
+		used  = set()
+		try:
+			devices = self.findMyMemberDevices(groupDev)
+
+			# THE MAC ROTATED, AND THE rPi SAID SO. A mac that is not on any device yet, but whose
+			# rPi lineage a device already owns, is that device's tag under a new mac - so it keeps
+			# its slot and its indigo device instead of turning up as a new one.
+			# THE TWO KEYS DO DIFFERENT JOBS and neither replaces the other: the mac joins two rPis
+			# at one INSTANT, the tagId joins one rPi across TIME. Only the rPi can supply the
+			# second - it sees the old mac's last packet and the new one's first a fraction of a
+			# second apart, where this side sees a summary once a minute.
+			# A lineage is taken by at most ONE mac, and a mac takes at most one lineage: the rPi
+			# already refuses to guess when two candidates fit, and this must not undo that.
+			#
+			# WORKED OUT BEFORE ANY SLOT IS HANDED OUT, and that is the whole fix for a tag that
+			# grew a new indigo device at EVERY rotation. This used to run second and skipped any
+			# slot already in use - and during a rotation the OLD mac is still in the union, because
+			# expireSecs keeps it for another few seconds after its last frame, so its slot was
+			# always "in use" and the newcomer was always refused it.
+			# Measured, one tag, one afternoon: lineage 5-4 walked slot 09 -> 10 -> 11, a fresh
+			# device each time, while the rPi had matched every rotation correctly and kept the
+			# tagId throughout. Three devices, three "previousTagIds: 5-4" headstones, one airtag.
+			# THE OUTGOING MAC GETS NO SLOT OF ITS OWN. It is the same physical tag on its way out
+			# and it expires within seconds; giving it a slot would put the new device back, just
+			# under the other half of the rotation
+			rotated, superseded = {}, set()
+			if tagKeys:
+				taken = set()
+				for slot in sorted(devices):
+					own = set(k.strip() for k in f"{devices[slot].states.get('tagIds','')}".split(",") if k.strip() != "")
+					if not own:		continue
+					hadMac = f"{devices[slot].states.get('mac','')}".strip().upper()
+					# NOTHING HAS MOVED while the slot's own mac still carries the slot's lineage -
+					# that is the ordinary case, every pass, for every tag that has not rotated
+					if hadMac in macs and (own & tagKeys.get(hadMac, set())):	continue
+					for mac in sorted(macs):
+						if mac == hadMac or mac in taken:		continue
+						if not (own & tagKeys.get(mac, set())):	continue
+						rotated[slot] = mac
+						taken.add(mac)
+						if hadMac != "":	superseded.add(hadMac)
+						self.indiLOG.log(10, f"findMyGroup {groupDev.name}: slot {slot} keeps its device - {devices[slot].name} rotated {hadMac or '(none)'} -> {mac} (lineage {','.join(sorted(own & tagKeys.get(mac, set())))})")
+						break
+
+			# A SLOT KEEPS ITS OWN MAC - unless its lineage has just moved to another one, which
+			# the pass above has already decided. Without that exception this would re-take the
+			# slot for the outgoing mac and the rotation would have nowhere to land
+			for slot, devM in devices.items():
+				if slot in rotated:	continue
+				mac = f"{devM.states.get('mac','')}".strip().upper()
+				if mac in macs and mac not in byMac:
+					byMac[mac] = slot
+					used.add(slot)
+
+			for slot, mac in rotated.items():
+				if mac in byMac:	continue		# already placed, nothing to do
+				byMac[mac] = slot
+				used.add(slot)
+
+			# A SLOT BEING HELD IS NOT FREE. Its mac has stopped being heard but the member device is
+			# still up on the down-delay, and handing the slot to a new mac would overwrite a device
+			# that is deliberately still showing the old tag - the hold would mean nothing.
+			# The mac coming back takes its own slot again, because that is decided above by the
+			# device's own "mac" state, which the hold does not blank
+			if heldSlots:	used |= set(heldSlots)
+
+			# WHICH FREE SLOT A NEW MAC GETS, AND IT IS NOT SIMPLY THE LOWEST ANY MORE.
+			# A "free" slot can still carry a member DEVICE - one whose tag has gone - and giving that
+			# slot away makes somebody's named device come back to life describing a different thing.
+			# Measured: opening an airpods case produces three new macs at once (case and both buds),
+			# they took slots 02, 03, 05 because those numbers were lowest, and three devices that had
+			# nothing to do with it - including one for a tag in another room - came up under them.
+			# Lowest-first spends the slots people care about first, which is exactly backwards.
+			# Least disruptive first instead:
+			#   0  a slot with NO device on it - nothing to disturb at all
+			#   1  a device still under its birth name findmy_NN - nobody has claimed it
+			#   2  a device somebody RENAMED - the expensive one, taken only when nothing else is left
+			# and inside each tier the one unheard LONGEST, which is the likeliest to be really gone.
+			# The slot number is the last tiebreak, so the numbering is still predictable when the
+			# slots are otherwise equal - which is the only thing lowest-first was ever buying
+			def slotRank(slot):
+				devM = devices.get(slot)
+				if devM is None:	return (0, 0., int(slot))
+				# EXACTLY a birth name, not a prefix: "findmy_03-k2" starts with "findmy_" and is
+				# very much a name somebody chose. The same one test the other two places use -
+				# see findMyMemberNameIsOurs(), which knows every name this plugin can produce.
+				# It matters here: an unclaimed findmy_NN_airpod-case must stay CHEAP to reuse,
+				# and a stale literal list would have made it tier 2 and protected a device
+				# nobody had ever named
+				tier = 1 if self.findMyMemberNameIsOurs(devM, groupDev, slot) else 2
+				return (tier, -self.findMySecsSinceSeen(devM), int(slot))
+
+			free = sorted([f"{nn:02d}" for nn in range(1, self.findMyMaxSlots(groupDev) + 1)
+								if f"{nn:02d}" not in used], key=slotRank)
+			for mac in sorted(macs):
+				if mac in byMac:	continue
+				# THE OUTGOING HALF OF A ROTATION NEVER GETS A SLOT. Its lineage has just been
+				# handed to the mac that replaced it, so a slot here would create exactly the
+				# duplicate device this whole pass exists to prevent - and it stops being heard
+				# within expireSecs anyway
+				if mac in superseded:	continue
+				if not free:		break
+				byMac[mac] = free.pop(0)
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return byMac
+
+	####-------------------------------------------------------------------------####
+	def updateFindMyMembers(self, groupDev, props, union, perPi=None, tagKeys=None, piAt=None, weakAt=None):
+		"""Creates and fills one indigo device per member of the union - one per TAG, not one per tag per rpi.
+
+		A slot COMING INTO USE creates its device; a slot falling empty turns the device off but
+		NEVER deletes it, and no longer blanks mac / battery / appleTypes either - those are the
+		record of what was there, which is what is wanted at exactly that moment.
+
+		Inputs:
+		    groupDev (indigo.Device): the group device
+		    props (dict): its plugin properties
+		    union (dict): {mac: {"rssi","distanceIndicator","battery","appleTypes","pis"}} across all rpis
+		    perPi (dict): {mac: {piU: {"rssi", "at"}}} - what EACH rpi is hearing, for the Pi_NN_ states
+		    tagKeys (dict): {mac: set("2-1043", ...)} - the rPi lineages, which survive a mac rotation
+		    piAt (dict): {piU: epoch} - when each rPi last reported anything, for the move damping
+		Outputs:
+		    tuple: (upNow, devTotal, kinds) - how many member devices are up, how many exist, and
+		           {"airtag":{"up":n,"down":n}, "airpods":{..}, "other":{..}} over ALL of them.
+		           The six add up to devTotal and the three "up" ones add up to upNow, because
+		           they are counted from the same decision rather than worked out again.
+		           None when member devices are switched off or this threw, which is NOT the
+		           same as a set of zeros
+		"""
+		try:
+			if not props.get("createMemberDevices", False):	return
+			existing = self.findMyMemberDevices(groupDev)
+			maxSlots = self.findMyMaxSlots(groupDev)
+
+			# DELAY BEFORE DOWN - the same idea as a beacon's expirationTime, and for the same reason:
+			# a tag advertises every ~2 s, so a handful of lost packets is normal and the first report
+			# that does not mention it is not evidence that it has gone.
+			# ONE SETTING ON THE GROUP for every member, like the join/leave levels - a tag has no
+			# dialog of its own worth keeping twenty copies of this in.
+			# Decided HERE, before the slots are handed out, because a held slot must not be given to
+			# a new mac - see findMyAssignSlots
+			try:	downDelay = float(f"{props.get('memberDownDelaySecs', 60)}".strip() or 60)
+			except Exception:	downDelay = 60.
+			heldSlots = set()
+			if downDelay > 0:
+				for slot in existing:
+					devH = existing[slot]
+					if not devH.states.get("onOffState", False):						continue
+					if f"{devH.states.get('mac','')}".strip().upper() in union:	continue
+					if self.findMySecsSinceSeen(devH) < downDelay:					heldSlots.add(slot)
+
+			byMac    = self.findMyAssignSlots(groupDev, set(union), heldSlots, tagKeys)
+			bySlot   = {slot: mac for mac, slot in byMac.items()}
+			now      = datetime.datetime.now().strftime(_defaultDateStampFormat)
+			# the rPis this group uses - the same list getDeviceStateList built the member devices'
+			# per-rPi states from, so the states written below are exactly the ones that exist
+			groupPis = self.findMyGroupPis(groupDev)
+			# how long a different rPi must stay strongest before the tag is said to have moved
+			try:	moveHold = float(f"{props.get('moveHoldSecs', 20)}".strip() or 20)
+			except Exception:	moveHold = 20.
+			if not hasattr(self, "findMyClosestPending"):	self.findMyClosestPending = {}
+
+			if self.decideMyLog("FindMy"):
+				out = [f"findMy {groupDev.name}: MEMBER DEVICES, slot by mac over the union"]
+				# ONE LINE PER SLOT. A held slot used to print TWICE - once here as "(empty) down" and
+				# again below as "HELD up" - which reads as a flat contradiction and is exactly the kind
+				# of thing that costs an hour when the log is read back later
+				for slot in sorted(set(list(bySlot) + list(existing))):
+					mac  = bySlot.get(slot, "")
+					devM = existing.get(slot)
+					who  = (f"{devM.name} (id:{devM.id}, was mac:{devM.states.get('mac','')})" if devM is not None else "no device yet, will be created")
+					if mac == "" and slot in heldSlots:
+						out.append(f"     slot {slot}  (empty, HELD)      up    -> {who}"
+									f"   not heard for {self.findMySecsSinceSeen(existing[slot]):.0f}s of {downDelay:.0f}s, slot not given away")
+					else:
+						out.append(f"     slot {slot}  {mac if mac else '(empty)':<18} "
+									f"{'up  ' if mac else 'down'}  -> {who}")
+				if len(byMac) < len(union):
+					out.append(f"     !! {len(union) - len(byMac)} mac(s) got NO slot - only {maxSlots} exist (maxSlots, ceiling {_GlobalConst_findMyMemberStates})")
+				self.indiLOG.log(10, "\n".join(out))
+
+			# HOW MANY DEVICES END UP UP, counted here rather than by re-reading them afterwards:
+			# the writes below have not necessarily landed yet, and this loop already knows
+			upNow, devTotal = 0, 0
+			kinds = {"airtag":  {"up": 0, "down": 0},
+					 "airpods": {"up": 0, "down": 0},
+					 "other":   {"up": 0, "down": 0}}
+			for nn in range(1, maxSlots + 1):
+				slot  = f"{nn:02d}"
+				mac   = bySlot.get(slot, "")
+				inUse = mac != ""
+				devM  = existing.get(slot)
+
+				if devM is None:
+					# only a slot IN USE brings a device into being - an empty one would just be
+					# clutter, and 17 blank rows was the thing this design avoided
+					if not inUse:	continue
+					# WHAT IT IS, at birth: an airpods case is named as one straight away rather
+					# than being called findmy_NN for the rest of its life. The types have had
+					# minPackets of frames to accumulate by the time a mac becomes a member, so
+					# this is usually already known - and when it is not, the rename below fixes it
+					devM = self.createFindMyMemberDevice(groupDev, slot, union.get(mac, {}).get("appleTypes", ""))
+					if devM is None:	continue
+				# COUNTED HERE, before the two branches below that leave a device exactly as it
+				# was: they skip the write, not the device, and it still exists either way
+				devTotal += 1
+
+				# AND WHAT KIND OF THING IT IS, read from the DEVICE and no longer from the live
+				# union. A tag that is not being heard at this instant is still the same kind of
+				# tag: airpods earpieces go back in their case and stop advertising altogether, so
+				# the union breakdown fell to 0 airpods while two devices sat in the list both
+				# saying airpods - a breakdown that disagreed with the very devices it breaks down.
+				# THE LIVE FRAME WINS WHILE THERE IS ONE: a slot that has just changed hands holds
+				# the new mac's types before the state write further down has landed, and a device
+				# created this pass has no appleTypes state yet at all.
+				# WORKED OUT HERE AND TALLIED LOWER DOWN, at each of the three places that decide
+				# up or down, so that every device lands in exactly one of the six buckets and the
+				# split can never disagree with upNow - it is made of the same decision
+				# THE DEVICE'S OWN ACCUMULATED TYPES FIRST, and the live frame only for a device
+				# that has none yet. The state is the fuller answer by construction - it is every
+				# type this device has ever been heard sending, while the union entry is only
+				# what the CURRENT mac has managed since it rotated - so preferring it stops the
+				# airtag/airpods counts flipping in step with the names
+				kind = self.findMyKind(devM.states.get("appleTypes", "")
+										or (union[mac].get("appleTypes", "") if inUse else ""))
+
+				# A PLUGIN RESTART OR A PROGRAM PUSH empties the per-rPi store, so the FIRST message to
+				# arrive afterwards carries one rPi's macs and nothing else - and every tag the other
+				# rPis were holding looks gone. Unlike the beacon paths this down does not come from a
+				# timeout, it comes from processing a message, so the currentlyBooting window has to be
+				# checked here too. A slot that is already up is left exactly as it is: the other rPis
+				# report inside the window, and a tag that really has left goes down when it closes.
+				# AND IT IS BOUNDED, which it was not. The window is re-armed by any number of
+				# callers - a program push, a beep, an rPi reporting a restart, a reboot - so one
+				# that keeps being re-armed held a member up FOR EVER: "a tag that really has left
+				# goes down when it closes" needs the window to actually close. Seen doing it: 13
+				# member devices, the group counting 5, and three of them reading up 151s, 303s and
+				# 362s after they were last heard, while the members that were ALREADY down went
+				# down normally - the tell, because this test only ever skips a device that is up.
+				# Past the down-delay AND the whole boot window put together, a tag is not waiting
+				# on a late report from an rPi that has just come back. It has gone.
+				if (not inUse and devM.states.get("onOffState", False) and time.time() < self.currentlyBooting
+						and self.findMySecsSinceSeen(devM) < downDelay + self.noDownAfterRestartSecs):
+					upNow += 1			# left exactly as it was, and it was up
+					kinds[kind]["up"] += 1
+					continue
+
+				# STILL INSIDE ITS DOWN-DELAY: left EXACTLY as it was when last heard - states, uiValue
+				# and image - rather than half blanked. A device reading "up, -68 dBm, 09-23 18:04:11"
+				# is the honest picture of a tag that has missed a few packets; one reading "up" with
+				# an empty signal is not.
+				# "not inUse" MATTERS: heldSlots was worked out before the slots were handed round, and
+				# a rotation claims its own held slot back through the lineage - that slot is in use
+				# again, under the new mac, and must be written rather than skipped
+				if not inUse and slot in heldSlots:
+					upNow += 1			# held up by the down-delay - this is the difference numberOfUp shows
+					kinds[kind]["up"] += 1
+					continue
+
+				chList = []
+				# THE DEVICE'S OWN "signal at 1 m" reference: every tag model transmits at a different
+				# level and each dongle has its own offset, so one number for the house would be wrong
+				# for most of them. Used for "distance" and for every Pi_NN_Distance below
+				try:	rssi1m = float(f"{devM.pluginProps.get('rssiAt1m','-70')}".strip() or -70)
+				except Exception:	rssi1m = -70.
+				oldMac = f"{devM.states.get('mac','')}".strip().upper()
+				if inUse:
+					dd = union[mac]
+					# NO uiValue: it was written as the mac itself, so indigo carried a mac.ui that
+					# was a second copy of the state - a wasted column in the sql logger and a
+					# duplicate row wherever the states are listed. A uiValue is for when the
+					# display differs from the value, and here it does not
+					chList.append({"key": "mac",     "value": mac})
+					chList.append({"key": "rssi",    "value": dd["rssi"]})
+					chList.append({"key": "distanceIndicator", "value": dd["distanceIndicator"]})
+					# METRES from the rPi that hears it BEST - calcDist() is what every beacon here
+					# uses. The per-rPi distances are below; this one is the nearest radio
+					chList.append({"key": "distance", "decimalPlaces": 1,
+									"value": self.findMyDistance(rssi1m, dd["rssi"])})
+					chList.append({"key": "battery", "value": dd["battery"]})
+					# INDIGO'S OWN batteryLevel, off the same two bits as the word above. Written
+					# ONLY when this frame said something: an unknown word leaves the last
+					# percentage standing, which is the rule every reading here follows - nothing
+					# overwrites a measurement with a placeholder. See findMyEnableBatteryLevel for
+					# why the support is switched on by the first reading rather than at birth
+					if "batteryLevel" in devM.states:
+						pct = self.findMyBatteryPct(dd["battery"])
+						if pct >= 0:	chList.append({"key": "batteryLevel", "value": pct})
+					else:
+						self.findMyEnableBatteryLevel(devM, dd["battery"])
+					# THE LINEAGE, WORKED OUT HERE because the apple types below need it - the
+					# block further down that writes tagIds reuses these three rather than
+					# recomputing them
+					keys   = sorted((tagKeys or {}).get(mac, set()))
+					newIds = ", ".join(keys)
+					oldIds = f"{devM.states.get('tagIds','')}".strip()
+					# A DIFFERENT PHYSICAL TAG TOOK THIS SLOT, which is the ONLY thing that may
+					# make the device forget what it has learned. A rotation keeps at least one
+					# tagId - that is what a tagId is for - so no overlap at all, with both sides
+					# actually saying something, means the slot changed hands rather than the mac
+					# changing under the same tag
+					newTag = (oldIds != "" and newIds != ""
+								and not (set(h.strip() for h in oldIds.split(",") if h.strip()) & set(keys)))
+
+					# APPLE TYPES ACCUMULATE ON THE DEVICE, not just on the mac. The rpi collects
+					# them over a MAC's life and a find my mac rotates every 15 minutes, so on its
+					# own that knowledge is lost at every rotation and relearned from scratch -
+					# which is what made a device flip between "airpod-case" and the plain name
+					# twice in 73 seconds. Merged here, so 07 seen once is 07 known from then on
+					typesNow = self.findMyMergeTypes("" if newTag else devM.states.get("appleTypes", ""),
+													dd["appleTypes"])
+					chList.append({"key": "appleTypes", "value": self.findMyAppleTypes(typesNow)})
+					# ONLY WHEN THE RPI ACTUALLY SAID ONE. "" arrives both from a tag that has never
+					# sent a separated frame and from an rPi too old to send the field at all, and
+					# in neither case is blanking a byte we already have an improvement on keeping it
+					if dd.get("hintByte", "") != "" and "hintByte" in devM.states:
+						chList.append({"key": "hintByte", "value": dd["hintByte"]})
+					# WHEN IT WAS LAST HEARD, which is what the down-delay is measured against. Written
+					# only while the tag really is in the union, so a held device keeps the moment it
+					# stopped being heard instead of ticking along beside a signal that is not arriving
+					chList.append({"key": "lastSeen", "value": now})
+					# the lineages currently reporting this tag, "2-1043, 5-77". Kept ON the device
+					# because that is what the next rotation is matched against, and it has to survive
+					# a plugin restart
+					# WRITTEN EVEN WHEN EMPTY, and that is the fix for a real mis-assignment. It
+					# used to be left alone when the rPi sent no lineage, so a device went on
+					# showing a tagIds it no longer had - and findMyAssignSlots matches rotations
+					# against exactly this state, so a stale lineage could claim a rotation that
+					# belonged to another slot and hand a device to the wrong tag.
+					# ONLY WHILE THE MAC IS IN THE UNION, which is what the enclosing branch means:
+					# a device that is DOWN keeps its last lineage, and it has to, because that is
+					# what lets a rotation reclaim the slot it is being held on
+					if newIds != oldIds:
+						# KEPT, because it is over in seconds. A lineage change with NO mac change
+						# is the signature of a wrong rotation match - the rPi gave this mac's
+						# lineage to a newcomer while this mac was still transmitting - and the
+						# repair overwrites the evidence a packet or two later. Without this it
+						# has to be caught live, which is not a way to debug anything.
+						# NEWEST FIRST, "; " between them because a tagIds value already contains
+						# ", ". Never the same lineage twice in a row, same rule as previousMacs
+						if oldIds != "" and "previousTagIds" in devM.states:
+							hist = [h.strip() for h in f"{devM.states.get('previousTagIds','')}".split(";") if h.strip() != ""]
+							if not hist or hist[0] != oldIds:	hist.insert(0, oldIds)
+							chList.append({"key": "previousTagIds", "value": "; ".join(hist[:_GlobalConst_findMyMacHistory])})
+						if "lastTagIdChange" in devM.states:
+							chList.append({"key": "lastTagIdChange", "value": now})
+					chList.append({"key": "tagIds", "value": newIds})
+					devM.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
+				else:
+					# NOTHING IS BLANKED WHEN A MEMBER GOES DOWN - not the mac, not the battery, not the
+					# apple types, and since this version not the signal, the distance or the indicator
+					# either. Every one of them is the LAST MEASUREMENT, and a last measurement with a
+					# time beside it is a record; a row of -999 and 999 is not.
+					# ONE STATE SAYS UP OR DOWN, and that is status (with onOffState). Overwriting the
+					# measurements to say it a second time only destroyed the answer to "where was it
+					# and how strong was it when it went", which is the question actually asked then.
+					# Pi_NN_Time says WHEN each reading was taken, so nothing here is mistaken for live
+					devM.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
+
+				chList.append({"key": "slot", "value": slot})
+
+				# THE ADDRESS COLUMN. "findmy-03" - the slot, which never moves, with a prefix so it
+				# says what it is among a device list of macs and Pi-n addresses. NOT the mac,
+				# tempting as that is with every other BLE device here addressed by one: a find my
+				# mac rotates every ~15 min, and changing an indigo address means
+				# replacePluginPropsOnServer - a server round trip that can bounce the device's
+				# comms. Twenty devices rotating four times an hour is real churn for something the
+				# "mac" state already shows, live and free.
+				# Corrected here rather than in a migration: it costs one props write per device
+				# the first time and matches for ever after
+				# ONLY the exact string this plugin used to write, never a note somebody typed
+				if f"{devM.description}".strip() == "Find My member":
+					try:
+						devM.description = ""
+						devM.replaceOnServer()
+					except Exception:	pass
+
+				wantAddr = f"findmy-{slot}"
+				if f"{devM.address}" != wantAddr:
+					try:
+						pM = devM.pluginProps
+						pM["address"] = wantAddr
+						devM.replacePluginPropsOnServer(pM)
+					except Exception:	pass
+				# "created" is NOT written here: a new device is stamped at birth in
+				# createFindMyMemberDevice, and the pre-existing ones are caught once by the
+				# migration in deviceStartComm. Filling it on every update as well would only give
+				# a third place to keep in step
+
+				# THE MAC ROTATED UNDER THIS SLOT. Worked out here now rather than read from the
+				# rpi's membersHistory: with several rpis the history is per rpi and the slots are
+				# not, so the only place that can see a slot change hands is this side
+				macChange = f"{devM.states.get('lastMacChange','')}".strip()
+				if inUse and oldMac != "" and oldMac != mac:
+					# NEWEST FIRST, at most _GlobalConst_findMyMacHistory. The state itself is the
+					# store - it is already persisted by indigo and survives a plugin restart, so
+					# there is nothing else to keep in step. The old mac is never recorded twice in
+					# a row: a tag that drops out and comes back would otherwise fill the list with
+					# itself and push out the rotations, which are the entries worth having
+					hist = [h.strip() for h in f"{devM.states.get('previousMacs','')}".split(",") if h.strip() != ""]
+					if not hist or hist[0] != oldMac:	hist.insert(0, oldMac)
+					chList.append({"key": "previousMacs", "value": ", ".join(hist[:_GlobalConst_findMyMacHistory])})
+					macChange = now
+					chList.append({"key": "lastMacChange", "value": macChange})
+
+				# WHICH RPI HEARS THIS TAG, AND HOW WELL - one trio per rPi the group uses, with the
+				# same names a beacon carries. An rPi that is enabled but not hearing this tag reads
+				# -999 / 0, which is the useful half: "heard by rPi-2 only" is then visible on the
+				# device instead of having to be read out of the group's debug block. _Time is only
+				# written when that rPi really did report it, so it stays as the last time it did.
+				# GUARDED ON devM.states: the group may have been saved a moment ago and this member's
+				# state list not rebuilt yet, and writing a state a device does not have is an error
+				heard = (perPi or {}).get(mac, {}) if inUse else {}
+				weakHere = (weakAt or {}).get(mac if inUse else oldMac, {})
+				bestPi, bestRssi, havePerPi = -1, -999, False
+				for piU in groupPis:
+					try:	piXX = f"Pi_{int(piU):02d}"
+					except Exception:	continue
+					if piXX + "_Signal" not in devM.states:	continue
+					havePerPi = True
+					hh = heard.get(piU)
+					# WHETHER THIS RPI HEARS IT NOW, said plainly instead of encoded in a sentinel.
+					# The other three hold the LAST measurement, so this is what says whether they are
+					# current - "up" and they are live, anything else and they are the last thing it
+					# heard. FOUR VALUES, because "down" used to mean three different things:
+					#   up      in this rPi's member list - the trio beside it is live
+					#   weak    it HEARS the tag and does not count it: below joinRssi, or short of
+					#           minPackets. A threshold to adjust, not a tag that has gone - and the
+					#           two were indistinguishable before the rPi started sending this
+					#   noData  the rPi itself is not reporting. It said nothing about this tag
+					#           because it is saying nothing at all, which is not the same as
+					#           "cannot hear it" - and reading "down" for a dead rPi was simply wrong
+					#   down    reporting, and this tag is not in anything it sent
+					# THE WEAK LOOKUP USES THE DEVICE'S OWN MAC when the tag is not in the union,
+					# which is the case that matters most: the tag has stopped counting, and whether
+					# an rPi can still faintly hear it is exactly what one wants to know then
+					if piXX + "_State" in devM.states:
+						if   hh is not None:							stPi = "up"
+						elif piAt is not None and piU not in piAt:		stPi = "noData"
+						elif piU in weakHere:							stPi = "weak"
+						else:											stPi = "down"
+						chList.append({"key": piXX + "_State", "value": stPi})
+					# NOT HEARING IT RIGHT NOW IS NOT A READING. The trio keeps what that rPi last
+					# measured, and Pi_NN_Time says when - which is what tells a current reading from an
+					# old one, and is far more use than every silent rPi reporting the same -999
+					if hh is None:	continue
+					chList.append({"key": piXX + "_Signal",   "value": int(hh["rssi"])})
+					chList.append({"key": piXX + "_Distance", "decimalPlaces": 1,
+									"value": self.findMyDistance(rssi1m, hh["rssi"])})
+					chList.append({"key": piXX + "_Time",
+									"value": datetime.datetime.fromtimestamp(hh["at"]).strftime(_defaultDateStampFormat)})
+					if hh["rssi"] > bestRssi:	bestPi, bestRssi = int(piU), hh["rssi"]
+
+				# CLOSEST RPI, and the one before it. Same rule the BLEconnect path uses, and the reason
+				# it is that rule: GOING DOWN MUST NOT WRITE THE Last PAIR. If -1 displaced the real rPi
+				# into closestRPILast, a tag that drops out and comes back on the SAME rPi ends up with
+				# closestRPI and closestRPILast both naming it - which says nothing at all.
+				# Last means "the rPi it was nearest BEFORE this one", so only a move from one REAL rPi
+				# to a DIFFERENT real one writes it, and with a single rPi it correctly stays -1 for ever.
+				# Where a tag was last heard is not lost by this: Pi_NN_Time and lastSeen both say so.
+				# Guarded on havePerPi because in the seconds between saving the group and its members
+				# being rebuilt there is nothing to pick a closest FROM, and -1 would read as "heard by
+				# nobody" while the tag is in fact up
+				if havePerPi and "closestRPI" in devM.states:
+					try:	wasClosest = int(devM.states.get("closestRPI", -1))
+					except Exception:	wasClosest = -1
+					# A DEVICE MADE BEFORE THESE STATES EXISTED READS 0, because that is what indigo
+					# defaults an Integer to - not because rPi 0 was ever the closest. Read it as "never
+					# set". ONLY when rPi "0" is not one of this group's: if it is, 0 is a real answer
+					if wasClosest == 0 and "0" not in groupPis:	wasClosest = -1
+
+					# OUT-OF-SYNC REPORTS MUST NOT MOVE A TAG. The rPis do not report in step, so a mac
+					# missing from rPi-5's last message means "rPi-5 could not hear it WHEN IT SENT",
+					# not "rPi-5 cannot hear it" - and without this the tag goes to whichever rPi
+					# happened to report most recently. MEASURED: a stationary tag near a boundary
+					# flipped 2->5->2->5->2 in 16 seconds, three of those four decisions taken with the
+					# other side reading -999 purely because its report predated the moment, and it
+					# finished on the wrong rPi.
+					# So a challenger has to STAY strongest for moveHoldSecs. Flapping never gets there,
+					# because the candidate keeps changing and the timer keeps restarting; a real move
+					# is committed that many seconds late and logs once instead of four times.
+					# ONLY rPi -> rPi is damped: a first acquisition, and losing the tag altogether,
+					# carry no such doubt and are taken as they come
+					pKey = f"{groupDev.id}-{slot}"
+					if moveHold > 0 and wasClosest != -1 and bestPi != -1 and bestPi != wasClosest:
+						pend = self.findMyClosestPending.get(pKey)
+						if pend is None or pend["pi"] != bestPi:
+							pend = {"pi": bestPi, "since": time.time()}
+							self.findMyClosestPending[pKey] = pend
+						held = time.time() - pend["since"]
+						if held < moveHold:
+							if self.decideMyLog("FindMy"):
+								self.indiLOG.log(10, f"findMy {devM.name}: rPi-{bestPi} strongest for {held:.0f}s of "
+													f"{moveHold:.0f}s - staying on rPi-{wasClosest} until it settles")
+							bestPi = wasClosest
+						else:
+							self.findMyClosestPending.pop(pKey, None)
+					else:
+						self.findMyClosestPending.pop(pKey, None)
+
+					# NOBODY HEARS IT: closestRPI is LEFT ALONE, holding the rPi that heard it last.
+					# It used to go to -1, which threw away "where was it last seen" to say something
+					# the Pi_NN_State states and status now say properly. A tag that comes back on a
+					# DIFFERENT rPi is then a real move and is logged as one, which -1 also hid
+					if bestPi != -1 and bestPi != wasClosest:
+						newTxt = self.getRPIdevName(f"{bestPi}")
+						if wasClosest != -1:
+							wasTxt = self.getRPIdevName(f"{wasClosest}")
+							chList.append({"key": "closestRPILast",     "value": wasClosest})
+							chList.append({"key": "closestRPITextLast", "value": wasTxt})
+							# IT ACTUALLY MOVED - one real rPi to a different real one. Deliberately
+							# not written for -1 -> rPi: coming back up, or being heard for the first
+							# time, is not a move, and stamping it there would turn this into "when
+							# was it last seen" - which lastSeen already says
+							chList.append({"key": "movedRpi", "value": now})
+							# level 10 = PLUGIN.LOG ONLY. indigo_log_handler sits at INFO, so 20 would
+							# copy every one of these into the indigo event log - and a tag near the
+							# boundary between two rPis can hand back and forth all evening
+							# BOTH SIGNALS, because that is what says whether this was a real move or a
+							# tag sitting on the boundary: -81 -> -68 is a move, -70 -> -69 is two rPis
+							# arguing over a tag that has not gone anywhere. -999 on the left means the
+							# old rPi cannot hear it at all any more, which is the clearest case of all
+							try:	oldRssi = int(heard.get(f"{wasClosest}", {}).get("rssi", -999))
+							except Exception:	oldRssi = -999
+							# HOW OLD that rPi's report is, because a -999 is only meaningful with it:
+							# "-999, last heard from 2s ago" is an rPi that really has lost the tag,
+							# "-999, last heard from 50s ago" is just a report that predates the move
+							age = ""
+							if oldRssi == -999:
+								try:	age = " (its last report {:.0f}s ago)".format(time.time() - (piAt or {})[f"{wasClosest}"])
+								except Exception:	age = " (it has not reported)"
+							self.indiLOG.log(10, f"findMyGroup {groupDev.name}: {devM.name} (mac {mac}) moved "
+												f"rPi-{wasClosest} ({wasTxt}) rssi:{oldRssi}{age} -> "
+												f"rPi-{bestPi} ({newTxt}) rssi:{bestRssi}  at {now}")
+						chList.append({"key": "closestRPI",     "value": bestPi})
+						chList.append({"key": "closestRPIText", "value": newTxt})
+
+				# WHAT THE STATE COLUMN ACTUALLY SHOWS: for a device that supports on/off indigo
+				# renders onOffState's uiValue (onOffState_ui), NOT the state getDeviceDisplayStateId
+				# names. So the padded string goes on BOTH - status for triggers and the state list,
+				# onOffState for the column. Same thing the beacon branch of executeUpdateStatesDict
+				# has always done.
+				statusText = "up" if inUse else "down"
+				if inUse:
+					upNow += 1
+					kinds[kind]["up"] += 1
+				else:
+					kinds[kind]["down"] += 1
+
+				# THE TIME IS THE TIME OF THE LAST CHANGE, not of this message. A clock ticking
+				# once a minute on every device says nothing; "down  09-23 04:12:07" says when it
+				# went. Two things count as a change here - going up/down, and the slot's mac being
+				# replaced underneath it - and the column shows whichever happened later.
+				# lastStatusChange is kept on the device because it has to survive a plugin restart
+				lastStatus = f"{devM.states.get('lastStatusChange','')}".strip()
+				if lastStatus == "" or statusText != f"{devM.states.get('status','')}".strip():
+					# WHAT lastStatusChange IS ABOUT TO STOP SAYING. A member that dips down and is
+					# back a few seconds later overwrote it on the way back, so the dip left no
+					# trace at all unless somebody was watching the log as it happened. Keeping the
+					# one before it makes a flap readable afterwards: "previous 19:52:48, last
+					# 19:52:51" is three seconds down, stated rather than inferred.
+					# ONLY ON A REAL CHANGE, and only when there was something there - otherwise it
+					# would just be a second copy of the line below it
+					if lastStatus != "" and "previousStatusChange" in devM.states:
+						chList.append({"key": "previousStatusChange", "value": lastStatus})
+					lastStatus = now
+				chList.append({"key": "lastStatusChange", "value": lastStatus})
+
+				# UP SINCE / DOWN SINCE: the moment the STATUS changed, not the moment anything about
+				# this device changed. A mac rotation is not an up/down change and must not move it -
+				# see findMyMemberDisplay(), which has to produce the identical string
+				display   = self.padDisplay(statusText, lastStatus[5:])
+				chList.append({"key": "status",     "value": statusText, "uiValue": display})
+				chList.append({"key": "onOffState", "value": inUse,      "uiValue": display})
+
+				self.execUpdateStatesList(devM, chList)
+
+				# APPLE TYPES ACCUMULATE, so a mac can become a member sending nothing but 12 and
+				# only reveal the 07 pairing frame a minute later - by which time the device is
+				# already called findmy_NN. This is the one chance to put that right.
+				# NEVER OVER A NAME THE USER TOUCHED: findMyMemberNameIsOurs() is exact, and the
+				# moment a device is called "Karl's airpods" this stops having an opinion. Done
+				# after the state write so a failed rename cannot cost the readings, and it is
+				# worth a line at level 20 because a device changing name in the list with no
+				# explanation is alarming
+				if inUse:
+					try:
+						want = self.findMyMemberAutoName(slot, typesNow)
+						if f"{devM.name}" != want and self.findMyMemberNameIsOurs(devM, groupDev, slot):
+							if want in indigo.devices:	want = f"{want}_{groupDev.id}"
+							if want not in indigo.devices:
+								wasName   = f"{devM.name}"
+								devM.name = want
+								devM.replaceOnServer()
+								self.indiLOG.log(20, f"findMyGroup {groupDev.name}: slot {slot} renamed \"{wasName}\" -> \"{want}\", from everything it has been heard sending: {self.findMyAppleTypes(typesNow)}. Rename it yourself and this stops")
+					except Exception:
+						self.indiLOG.log(40, "", exc_info=True)
+
+			return upNow, devTotal, kinds
+
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+
+	####-------------------------------------------------------------------------####
+	def findMyMemberAutoName(self, slot, appleTypes):
+		"""The name this plugin gives a member device by itself - and the ONLY names it may take back.
+
+		  findmy_NN_airpod-case     07+12, the pairing advertisement a case sends with its lid
+		                           open. Nothing else sends it, so this one is certain
+		  findmy_NN_phone-mac      it sends nearby info (10) or handoff (0C) as well - live apple
+		                           device messages, which a tag cannot send
+		  findmy_NN_other          find my plus something, but not a combination with a name
+		  findmy_NN                12-AND-NOTHING-ELSE, the one label with no suffix: that is an
+		                           airtag OR any other find my accessory OR an offline iphone,
+		                           so there is nothing true to add. A confident wrong name is
+		                           worse than a dull right one
+
+		NOT BUILT FROM findMyKind(), which has three buckets and would call a phone "other". The
+		words come from findMyAppleTypes() - the same ones already sitting in the appleTypes state
+		- so the device name and the state agree by construction rather than by being kept in step.
+
+		Inputs:
+		    slot (str): "01".."50"
+		    appleTypes (str): as the member carries it, eg "07|12  airpods/case", or just the
+		            codes "07|12" - the label is recomputed either way, so both work
+		Outputs:
+		    str: the auto name, without the group-id suffix a collision would add
+		"""
+		# A MAC NOTHING IS KNOWN ABOUT falls through as "other" - findMyAppleTypes("") returns "",
+		# which the map sends there on purpose. It is corrected by the rename in
+		# updateFindMyMembers the moment a frame carrying types turns up
+		codes  = f"{appleTypes}".split("  ")[0].strip()
+		label  = f"{self.findMyAppleTypes(codes)}".split("  ")[-1].strip()
+		suffix = self._GlobalConst_findMyNameSuffix.get(label, "other")
+		if suffix == "":	return f"findmy_{slot}"
+		return f"findmy_{slot}_{suffix}"
+
+
+	####-------------------------------------------------------------------------####
+	def findMyMemberNameIsOurs(self, devM, groupDev, slot):
+		"""True only while a member still carries a name THIS PLUGIN gave it.
+
+		THE NAME BELONGS TO THE USER the moment they change it - that is the whole reason
+		findMyMemberDevices() looks devices up by property and never by name, so that "Karl's
+		keys" is still slot 03. Renaming on their behalf would undo that in the one place it
+		cannot be undone, so every auto-rename asks this first and it is deliberately EXACT:
+		anything that is not one of the four strings this plugin could itself have produced is
+		the user's, including a name that merely looks like ours.
+
+		Inputs:
+		    devM (indigo.Device): the member device
+		    groupDev (indigo.Device): its group, for the collision suffix
+		    slot (str): "01".."50"
+		Outputs:
+		    bool
+		"""
+		try:
+			# BUILT FROM THE SUFFIX MAP ITSELF rather than from example type strings, so adding
+			# a kind can never leave this behind and quietly start refusing to rename devices
+			# the plugin does in fact own
+			ours = {f"findmy_{slot}"}		# the no-suffix form, for "find my only"
+			for suffix in set(self._GlobalConst_findMyNameSuffix.values()):
+				if suffix == "":	continue
+				ours.add(f"findmy_{slot}_{suffix}")
+				# LEGACY, and only worth carrying because devices made during .59's own testing
+				# have it: the suffixed names were briefly spelled "find_my_NN_..." before the
+				# prefix was made the same as the plain name's. Listing them here is what lets
+				# those devices be renamed to the current spelling instead of being mistaken for
+				# names a person chose and left alone for ever. Delete when none are left
+				ours.add(f"find_my_{slot}_{suffix}")
+			for nm in list(ours):
+				ours.add(f"{nm}_{groupDev.id}")		# the form a name collision produces
+			return f"{devM.name}" in ours
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return False
+
+
+	####-------------------------------------------------------------------------####
+	def createFindMyMemberDevice(self, groupDev, slot, appleTypes=""):
+		"""Makes the indigo device for one member slot. Auto named, and meant to be renamed.
+
+		Inputs:
+		    groupDev (indigo.Device): the group device it belongs to
+		    slot (str): "01".."50"
+		    appleTypes (str): what the mac is sending, so an airpods case can be named as one at
+		            birth rather than after the fact. Empty when nothing is known yet
+		Outputs:
+		    indigo.Device or None
+		"""
+		try:
+			name = self.findMyMemberAutoName(slot, appleTypes)
+			if name in indigo.devices:		# another group device already took the plain name
+				name = f"{name}_{groupDev.id}"
+
+			# SAME FOLDER AS THE GROUP DEVICE, not the plugin's own beacon folder: these belong
+			# next to the counter they came from, wherever that was put. folderId 0 is the device
+			# list root, which is a real answer - the group device sits there too - so it is used
+			# as it stands. Only an unreadable folder falls back to the plugin folder
+			try:	folderId = groupDev.folderId
+			except Exception:	folderId = self.piFolderId
+
+			devM = indigo.device.create(
+					protocol		= indigo.kProtocol.Plugin,
+					address			= f"findmy-{slot}",
+					name			= name,
+					description		= "",		# notes are the user's field, not ours
+					pluginId		= self.pluginId,
+					deviceTypeId	= "BLEfindMyMember",
+					folder			= folderId,
+					props			= {"findMyGroupDevId": f"{groupDev.id}", "findMySlot": slot,
+										"SupportsOnState": True, "SupportsSensorValue": False},
+					)
+			devM = indigo.devices[devM.id]
+			# stamped ONCE, here, and never written again - it dates the device, not the slot's
+			# current occupant. "this findmy_NN has existed since ..." is the thing that says
+			# whether a slot is long settled or appeared an hour ago, which matters when deciding
+			# how much to trust a name on it
+			devM.updateStateOnServer("created", datetime.datetime.now().strftime(_defaultDateStampFormat))
+			# -1 = "no rPi", and it has to be STAMPED: indigo defaults an Integer state to 0, and 0 is
+			# a perfectly real rPi number - a brand new device would claim rPi 0 is the closest, and
+			# the first real reading would then file that 0 away in closestRPILast as where it "was"
+			for st in ["closestRPI", "closestRPILast"]:
+				try:	devM.updateStateOnServer(st, -1)
+				except Exception:	pass
+			# NEVER MEASURED, stamped once at birth and never written again - indigo defaults a Real
+			# to 0 and an Integer to 0, which would read as "on top of the rPi at full strength".
+			# After this the states only ever hold real readings, so -999 / 999 means exactly one
+			# thing for the life of the device: that rPi has never heard this tag
+			for st in devM.states:
+				if st == "distance" or (st.find("Pi_") == 0 and st.endswith("_Distance")):
+					try:	devM.updateStateOnServer(st, self._GlobalConst_findMyNoDistance, decimalPlaces=1)
+					except Exception:	pass
+				elif st == "rssi" or (st.find("Pi_") == 0 and st.endswith("_Signal")):
+					try:	devM.updateStateOnServer(st, -999)
+					except Exception:	pass
+				elif st.find("Pi_") == 0 and st.endswith("_State"):
+					try:	devM.updateStateOnServer(st, "down")
+					except Exception:	pass
+			# level 10 = PLUGIN.LOG ONLY (indigo_log_handler sits at INFO). A slot coming into use
+			# is routine once the counter is running - macs rotate, slots change hands - so it is
+			# a record, not an announcement
+			self.indiLOG.log(10, f"findMyGroup {groupDev.name}: slot {slot} came into use, created device {devM.name} - rename it to whatever it is")
+			return indigo.devices[devM.id]
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return None
+
+	####-------------------------------------------------------------------------####
+	def updateFindMyGroup(self, dev, props, data, pi):
+		"""Writes the Find My group counter states - see pi/findMyGroup.py.
+
+		SEVERAL RPIS FEED ONE DEVICE. Each reports what IT can hear, the areas overlap, and the
+		counts must never be added: a tag in the hall heard by two rpis is one tag. The join key is
+		the MAC - a find my mac is identical on every rpi at the same instant - so the house count
+		is the UNION of the macs, computed here, and a mac in two rpis' lists is counted once and
+		noted in seenBy2Plus (a far better "really inside" than any single rssi).
+
+		Each rpi's last report is kept per rpi and one that has gone quiet DROPS OUT of the union
+		after twice its send interval, otherwise a dead rpi would hold tags in the count forever.
+
+		numberOfActive is the SETTLED count: it only moves after the new value has held for stableSecs,
+		so a tag rotating its mac (the old one expiring as the new one appears) never reaches indigo
+		as a change. With one rpi the rpi did this; with several the union has to be settled here,
+		because the union is only known on this side. numberOfActiveRaw is the instantaneous one.
+		THE RPI'S FIELD IS STILL CALLED memberCount - that is the wire format and is not renamed;
+		only the indigo states are, so an rpi that has not been updated is still understood.
+
+		Inputs:
+		    dev (indigo.Device): the BLEfindMyGroup device
+		    props (dict): its plugin properties
+		    data (dict): the message from one rpi
+		    pi (str): which rpi sent it
+		Outputs:
+		    None: updates states
+		"""
+		try:
+			members = data.get("members", {})
+			if isinstance(members, list):
+				# an rpi still running the older findMyGroup.py sends a plain LIST and assigns no
+				# slots. Without macs there is nothing to union with the other rpis, so this rpi
+				# cannot take part. Say so once: the pi files are on their way
+				if not hasattr(self, "findMyOldPiWarned"):	self.findMyOldPiWarned = {}
+				if not self.findMyOldPiWarned.get(dev.id, False):
+					self.findMyOldPiWarned[dev.id] = True
+					self.indiLOG.log(20, f"findMyGroup {dev.name}: rPi-{pi} is still running the older findMyGroup.py - it sends no macs, so it cannot be combined with the other rPis. Send the pgm files to the rPis")
+				members = {}
+
+			# ---- what THIS rpi is hearing, keyed by mac ----
+			# a member arrives as {"mac","rssi","distanceIndicator","battery","appleTypes"}. An rpi still on the
+			# older findMyGroup.py sends the same five as a positional LIST, so both are read here
+			# and a mixed set of rpis during an update works
+			macs = {}
+			if isinstance(members, dict):
+				for mm in members.values():
+					if   isinstance(mm, dict):					m = mm
+					elif isinstance(mm, list) and len(mm) > 3:	m = {"mac": mm[0], "rssi": mm[1], "distanceIndicator": mm[2],
+																	"battery": mm[3], "appleTypes": mm[4] if len(mm) > 4 else ""}
+					else:										continue
+					mac = f"{m.get('mac','')}".strip().upper()
+					if mac == "":	continue
+					try:	rssi = int(m.get("rssi", -999))
+					except Exception:	rssi = -999
+					# THE LINEAGE, and it is only meaningful WITH the rPi number: rPi 2's tagId 7 is not
+					# rPi 5's tagId 7. The rPi keeps a tagId across a mac rotation, which is the one
+					# thing this side cannot work out for itself - a summary every sendEverySecs cannot
+					# see that one mac stopped a fraction of a second before another started.
+					# An rPi on an older findMyGroup.py sends none, and then nothing is carried over -
+					# a rotation just looks like a new tag, exactly as it did before
+					tagKey = ""
+					if m.get("tagId") not in [None, ""]:
+						try:	tagKey = "{}-{}".format(pi, int(m["tagId"]))
+						except Exception:	tagKey = ""
+					macs[mac] = {"rssi": rssi, "distanceIndicator": f"{m.get('distanceIndicator','')}",
+								"battery": f"{m.get('battery','')}",
+								"tagKey": tagKey,
+								# the last byte of the separated payload, "8D", or "" from an rPi on an
+								# older findMyGroup.py - which sends no such field and then the state
+								# simply stays as whatever it last was
+								"hintByte": f"{m.get('hintByte','')}".strip().upper(),
+								"appleTypes": self.findMyAppleTypes(m.get("appleTypes", ""))}
+
+			if self.decideMyLog("FindMy"):
+				out = [f"findMy {dev.name}: RECEIVED from rPi-{pi}  trigger:{data.get('trigger','?')}  "
+						f"rpi says memberCount:{data.get('numberOfActive','?')} raw:{data.get('numberOfActiveRaw','?')} "
+						f"nearby:{data.get('numberOfWeak','?')} candidates:{data.get('numberOfCandidates','?')} "
+						f"strongest:{data.get('strongestRSSI','?')} lastCountChange:{data.get('numberOfActiveChanged','')}"]
+				if not macs:	out.append("     .. no members in this message")
+				for mac in sorted(macs, key=lambda m: -macs[m]["rssi"]):
+					d = macs[mac]
+					out.append(f"     {mac}  {d['rssi']:>5}  {d['distanceIndicator']:<10} {d['battery']:<7} {d['appleTypes']}")
+				# level 10, not 20: indigo_log_handler sits at INFO, so 20 would put every one of
+				# these blocks in the indigo event log as well. 10 goes to plugin.log only, the
+				# same as every other debug area in this plugin
+				self.indiLOG.log(10, "\n".join(out))
+
+			if not hasattr(self, "findMyPiData"):	self.findMyPiData = {}
+			store = self.findMyPiData.setdefault(dev.id, {})
+			# WHAT THIS RPI HEARS BUT DOES NOT COUNT, mac -> rssi. An rPi on an older findMyGroup.py
+			# sends none and then nothing is weak, which is exactly what this side knew before
+			weak = {}
+			try:
+				for mm, rs in (data.get("weak", {}) or {}).items():
+					try:	weak[f"{mm}".strip().upper()] = int(rs)
+					except Exception:	pass
+			except Exception:	pass
+			store[f"{pi}"] = {"at": time.time(), "macs": macs, "weak": weak,
+							"nearby": data.get("numberOfWeak", 0), "cand": data.get("numberOfCandidates", 0)}
+
+			# ---- the union, ignoring rpis that have gone quiet ----
+			staleAfter = max(120., 2. * float(f"{props.get('sendEverySecs', 60)}".strip() or 60))
+			union, seenBy, perPi, tagKeys, piAt, weakAt = {}, {}, {}, {}, {}, {}
+			reporting, nearby, cand = 0, 0, 0
+			for piU in sorted(store):
+				rec = store[piU]
+				if time.time() - rec["at"] > staleAfter:	continue
+				reporting += 1
+				piAt[piU] = rec["at"]		# when this rPi last said anything at all
+				# and which macs it hears too weakly to count. Kept per rPi like perPi, because
+				# "rPi-2 hears it faintly, rPi-5 not at all" is the whole point of saying it
+				for mm in rec.get("weak", {}):
+					weakAt.setdefault(mm, {})[piU] = rec["weak"][mm]
+				try:	nearby = max(nearby, int(rec["nearby"]))
+				except Exception:	pass
+				try:	cand = max(cand, int(rec["cand"]))
+				except Exception:	pass
+				for mac, dd in rec["macs"].items():
+					seenBy[mac] = seenBy.get(mac, 0) + 1
+					# kept PER RPI as well as merged, so a member device can show what each rpi hears
+					# rather than only the winner - which is what makes "it moved from the kitchen to
+					# the hall" visible at all
+					perPi.setdefault(mac, {})[piU] = {"rssi": dd["rssi"], "at": rec["at"]}
+					if dd.get("tagKey", ""):	tagKeys.setdefault(mac, set()).add(dd["tagKey"])
+					# the STRONGEST rpi wins the readings: it is the one nearest the tag, so its
+					# rssi and its battery byte are the least likely to be a marginal decode
+					if mac not in union or dd["rssi"] > union[mac]["rssi"]:	union[mac] = dd
+
+			enabled = 0
+			for piU in self.RPI:
+				if props.get("rPiEnable" + piU, False) and self.RPI[piU]["piDevId"] > 0:	enabled += 1
+			if enabled == 0:	enabled = len(store)		# single-rpi device on the old piServerNumber
+
+			# ---- the count ----
+			raw = len(union)
+			now = datetime.datetime.now().strftime(_defaultDateStampFormat)
+			if not hasattr(self, "findMyStable"):	self.findMyStable = {}
+			st = self.findMyStable.setdefault(dev.id, {"count": raw, "pending": raw, "since": time.time()})
+			before = st["count"]
+
+			if reporting <= 1 and "numberOfActive" in data:
+				# ONE RPI, SO THERE IS NOTHING TO MERGE - and it has already settled this count
+				# itself, on a timer that starts the moment the membership really changes and with
+				# a message sent the moment it settles. Settling it a SECOND time here can only add
+				# delay: this side cannot sample faster than messages arrive, so another stableSecs
+				# hold turns a 60s report into a 120s one - and the member devices show the new
+				# picture for that whole minute, which is the "3 tags but 2 up and 2 down" that .46
+				# introduced. The union only needs settling when there is actually a union
+				try:	st["count"] = int(data["numberOfActive"])
+				except Exception:	st["count"] = raw
+				st["pending"], st["since"] = raw, time.time()
+				ch = f"{data.get('numberOfActiveChanged','')}".replace("T", " ").strip()
+				if ch != "":	st["at"] = ch
+				try:	st["previous"] = int(data.get("numberOfActivePrevious", before))
+				except Exception:	st["previous"] = before
+				countPath = "taken from the rPi (single rPi, nothing to merge)"
+			else:
+				# SEVERAL RPIS: the union exists only on this side, so the hold has to be applied
+				# here - no rpi can see the house count to settle it
+				try:	stableSecs = float(f"{props.get('stableSecs', 60)}".strip() or 60)
+				except Exception:	stableSecs = 60.
+				# WHAT WAS TRUE FOR MOST OF THE LAST stableSecs, not "has raw been the same all
+				# that time". The old rule only committed a value that had held UNCHANGED for the
+				# whole window, and it restarted its own clock on every sample that differed - so
+				# with macs rotating and members sitting either side of joinRssi, where raw is
+				# never steady for a minute, it could never commit anything and the count froze at
+				# whatever it had last managed to hold. Seen doing exactly that: memberCount 6
+				# against memberCountRaw 5 for 24 minutes, the state column reading "6 tags" with
+				# five macs in the house and no way back.
+				# A ROTATION'S BLIP STILL CANNOT WIN, which is the whole job stableSecs was added
+				# for - one sample of "6" while the old mac expires is a second or two of a sixty
+				# second window. But an oscillation now resolves to its majority instead of
+				# stopping the clock, and the count cannot be stuck for longer than the window.
+				# TIME-WEIGHTED, not one vote per sample: messages arrive when the rPis send them,
+				# two rPis are not in step, and a "members" trigger fires whenever the membership
+				# moves - so samples are irregular by design and counting them equally would let a
+				# flurry of three in five seconds outweigh a minute of quiet.
+				hist = st.setdefault("hist", [])
+				hist.append((time.time(), raw))
+				# one sample OLDER than the window is kept on purpose: it is what says the window
+				# is covered rather than merely started, and it holds its value up to the boundary
+				while len(hist) > 2 and time.time() - hist[1][0] > stableSecs:	hist.pop(0)
+				while len(hist) > 500:	hist.pop(0)
+				st["pending"], st["since"] = raw, hist[0][0]
+				if time.time() - hist[0][0] >= stableSecs:
+					weight, seenAt = {}, {}
+					for ii in range(len(hist)):
+						tt, vv  = hist[ii]
+						until   = hist[ii + 1][0] if ii + 1 < len(hist) else time.time()
+						start   = max(tt, time.time() - stableSecs)
+						seenAt[vv] = max(seenAt.get(vv, 0.), tt)
+						if until > start:	weight[vv] = weight.get(vv, 0.) + (until - start)
+					# most seconds wins; a dead heat goes to whichever was seen most recently
+					best = max(weight, key=lambda vv: (weight[vv], seenAt[vv]))
+					if best != st["count"]:
+						st["previous"], st["count"] = st["count"], best
+						st["at"] = now
+					countPath = (f"union settled here: {best} held {weight[best]:.0f}s of the last "
+								f"{stableSecs:.0f}s ({len(hist)} samples, raw now {raw})")
+				else:
+					countPath = (f"union settling here: {len(hist)} sample(s) over "
+								f"{time.time() - hist[0][0]:.0f}s of {stableSecs:.0f}s")
+
+			count   = st["count"]
+			changed = count != before
+			self.addToStatesUpdateDict(dev.id, "numberOfActivePrevious", st.get("previous", before))
+			if st.get("at", "") != "":
+				self.addToStatesUpdateDict(dev.id, "numberOfActiveChanged", st["at"])
+
+			# ONE NAME EVERYWHERE, message field and indigo state alike. They used to differ - the
+			# rpi sent "memberCount" and people read a state called something else - which is two
+			# vocabularies for one number and exactly the confusion this rename was for.
+			# BOTH SIDES CHANGED TOGETHER, so every rPi must be pushed with this version: an rPi
+			# still sending the old field names will not be understood at all
+			self.addToStatesUpdateDict(dev.id, "numberOfActive",    count)
+			self.addToStatesUpdateDict(dev.id, "numberOfActiveRaw", raw)
+			self.addToStatesUpdateDict(dev.id, "numberOfWeak",      nearby)
+			self.addToStatesUpdateDict(dev.id, "numberOfCandidates", cand)
+			self.addToStatesUpdateDict(dev.id, "strongestRSSI",  max([d["rssi"] for d in union.values()]) if union else -999)
+			self.addToStatesUpdateDict(dev.id, "seenBy2Plus",    len([m for m in seenBy if seenBy[m] > 1]))
+			# THE AIRTAG/AIRPODS/OTHER BREAKDOWN IS NOT HERE ANY MORE - it is written below, from
+			# the member devices, because that is the population it is a breakdown of
+			self.addToStatesUpdateDict(dev.id, "pisReporting",   f"{reporting} of {enabled}")
+			if "trigger" in data:
+				self.addToStatesUpdateDict(dev.id, "findMyTrigger", f"{data['trigger']}")
+
+			if self.decideMyLog("FindMy"):
+				out = [f"findMy {dev.name}: PROCESSED  union:{raw} mac(s) from {reporting} of {enabled} rPi(s), "
+						f"seenBy2+:{len([m for m in seenBy if seenBy[m] > 1])}  ->  numberOfActive:{count}"
+						f"{' CHANGED from ' + f'{before}' if changed else ''}",
+						f"     count: {countPath}"]
+				for piU in sorted(store):
+					age = time.time() - store[piU]["at"]
+					out.append(f"     rPi-{piU:<3} {len(store[piU]['macs']):>2} mac(s), last heard {age:.0f}s ago"
+								+ ("   STALE, not in the union" if age > staleAfter else ""))
+				for mac in sorted(union, key=lambda m: -union[m]["rssi"]):
+					d = union[mac]
+					out.append(f"     {mac}  {d['rssi']:>5}  {d['distanceIndicator']:<10} {d['battery']:<7} {d['appleTypes']:<24} seenBy:{seenBy.get(mac,0)}")
+				self.indiLOG.log(10, "\n".join(out))
+
+			res = self.updateFindMyMembers(dev, props, union, perPi, tagKeys, piAt, weakAt)
+			# None when member devices are switched off, or when updateFindMyMembers threw - and a
+			# count that is not known must not be written as 0, which would read as "nothing is here"
+			upNow, devTotal, memberKinds = res if isinstance(res, tuple) and len(res) == 3 else (None, 0, None)
+			if upNow is not None:
+				self.addToStatesUpdateDict(dev.id, "numberOfUp",      upNow)
+				self.addToStatesUpdateDict(dev.id, "numberOfMembers", devTotal)
+
+			# WHAT THE MEMBERS ARE, COUNTED OVER THE MEMBERS AND SPLIT UP FROM DOWN. A member
+			# device that is DOWN keeps its appleTypes - it always has, they are the record of
+			# what was there - and it keeps its place in this breakdown too: two airpods shut in
+			# their case are still two airpods, and reading 0 beside two devices that both say
+			# airpods is simply wrong.
+			# TWO COUNTERS PER KIND RATHER THAN ONE, because one number had to answer two
+			# questions and could only ever answer one of them. "How many airtags are here" and
+			# "how many airtags does this group know about" are both worth asking, they differ by
+			# exactly the ones that have gone quiet, and a single numberOfAirtags meant picking
+			# which question to be wrong about. Now neither is inferred: both are counted.
+			# THE ARITHMETIC CLOSES ON STATES THAT ALREADY EXIST, which is the point of doing it
+			# this way - the three "Up" states add up to numberOfUp, all six add up to
+			# numberOfMembers, and none of that is asserted here: they are tallied at the same
+			# three places that decide up or down, so they cannot drift from it.
+			# numberOfTotal is the sum of all six and must therefore equal numberOfMembers. Kept
+			# as exactly that check - every device landing in exactly one bucket - and written
+			# from the one walk that produced them, so a disagreement is real
+			if memberKinds is not None:
+				for _kind, _name in (("airtag", "Airtags"), ("airpods", "Airpods"), ("other", "Other")):
+					self.addToStatesUpdateDict(dev.id, f"numberOf{_name}Up",   memberKinds[_kind]["up"])
+					self.addToStatesUpdateDict(dev.id, f"numberOf{_name}Down", memberKinds[_kind]["down"])
+				self.addToStatesUpdateDict(dev.id, "numberOfTotal",
+											sum(v["up"] + v["down"] for v in memberKinds.values()))
+
+			# housekeeping, off unless the device asks for it. Here rather than on an hourly pass so
+			# the "any time" settings act within minutes of the hours being up, and rate limited
+			# because this walks every indigo device
+			if time.time() - getattr(self, "findMyLastDeleteCheck", 0.) > self._GlobalConst_findMyDeleteCheckSecs:
+				self.findMyLastDeleteCheck = time.time()
+				self.findMyDeleteOldMembers()
+
+			# THE COLUMN DRAWS status, AND NOTHING ELSE. It used to draw sensorValue's uiValue,
+			# which meant indigo's NUMERIC state was carrying "7 members  09-24 22:11:16" as its
+			# display - a text field with a number hidden behind it. The group no longer claims a
+			# sensor value at all (see Devices.xml), which is what lets UiDisplayStateId=status
+			# apply: a device that supports one has its column forced to it, exactly as an on/off
+			# device has its forced to onOffState.
+			# force=True because executeUpdateStatesDict compares VALUES only: after a plugin
+			# restart the text can match the stored state while its uiValue is stale or empty, and
+			# without force that column would never be repainted
+			# "MEMBER", NOT "TAG". This number counts every find my device in the house - airtags,
+			# an airpods case, a phone or a mac that is advertising - and calling that "6 tags"
+			# collided head-on with the airtag counter, which counts only the real tags. Seen doing
+			# it: "6 tags" on the device beside 6 airtags and 1 airpods, three numbers that cannot
+			# all be right. This word matches the states it belongs with - numberOfActive,
+			# numberOfMembers, memberDownDelaySecs - and leaves "tags" to mean tags
+			# THE COLUMN SHOWS numberOfUp, NOT numberOfActive, and that is the fix for a question this
+			# device kept raising: "7 members" beside thirteen member devices reading up, both
+			# right and looking like neither was. numberOfActive is the macs in the LAST MESSAGE;
+			# a member device stays up for memberDownDelaySecs after it stops being heard, because
+			# one report that does not mention a tag is not evidence the tag has gone. The number
+			# on the device now answers the same question the devices answer, so they agree.
+			# numberOfActive and numberOfActiveRaw are untouched and still say what they always said.
+			# FALLING BACK TO count when membersUp is not known - member devices switched off, or
+			# updateFindMyMembers threw. A 0 there would read as "nothing is here"
+			shown      = upNow if upNow is not None else count
+			# "12/16 up" - how many member devices are up, out of how many exist. The second
+			# number is the one that otherwise has to be counted by hand in the device list, and
+			# it is what says whether slots are filling with tags that have gone. Falls back to
+			# "N members" only when the total is not known, which is member devices switched off
+			if upNow is not None and devTotal > 0:
+				statusText = "{}/{} up".format(shown, devTotal)
+			else:
+				statusText = "{} member{}".format(shown, "" if shown == 1 else "s")
+			# WHEN WHAT IS SHOWN LAST CHANGED, keyed on the text itself rather than on one of the
+			# numbers in it: the stamp then dates exactly the thing beside it, whichever half
+			# moved. A timestamp dating a different number is how this started
+			if statusText != st.get("upText", ""):
+				st["upText"], st["upAt"] = statusText, now
+			changedAt  = st.get("upAt", "") or st.get("at", "") or f"{dev.states.get('numberOfActiveChanged','')}".strip() or now
+			display    = self.padDisplay(statusText, changedAt[5:])
+			self.addToStatesUpdateDict(dev.id, "status",      statusText, force=True, uiValue=display)
+			dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn if shown > 0
+										else indigo.kStateImageSel.SensorOff)
+
+			if changed or data.get("trigger", "") == "startup":
+				# level 10 = PLUGIN.LOG ONLY. indigo_log_handler sits at INFO, so 20 put every count
+				# change in the indigo event log - a tag going in and out of range all evening
+				# should not be writing there
+				self.indiLOG.log(10, f"findMyGroup {dev.name}: {st.get('previous','?')} -> {count} members, union of {reporting} of {enabled} rPi(s), {len([m for m in seenBy if seenBy[m] > 1])} seen by 2+, last msg from rPi-{pi}")
+
+		except Exception as e:
+			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+
+	####-------------------------------------------------------------------------####
 	def updateDF2301Q(self, dev, props, data, pi):
 		"""Processes an incoming voice-command message from a DF2301Q sensor on a Raspberry Pi and updates the device's states. Maps the numeric command id to text via the device's commandList property, branches on command id ranges to set error, status-on, status-off, or active-command states, records last command history, and updates the sensor status image.
 		
@@ -19549,8 +21854,17 @@ class Plugin(indigo.PluginBase):
 							self.rePopulateStates = f"key:{key} not defined in {dev.name}" # try to re-do state list
 						elif key in dev.states:
 							upd = False
+							# A FORCED WRITE WHOSE VALUE IS UNCHANGED IS A DISPLAY REFRESH, NOT A
+							# CHANGE: the callers that force are re-aligning a uiValue - the padded
+							# date column, or a clock inside the display string. Letting that stamp
+							# lastSensorChange would turn it into "time of the last message", which
+							# is a different state with a different meaning, and the real one would
+							# be lost. A forced write that DOES change the value still counts.
+							forcedNoChange = False
 							if local[devId][key]["force"]:
 										upd = True
+										try:	forcedNoChange = f"{value}" == f"{dev.states[key]}"
+										except Exception:	pass
 							else:
 								if local[devId][key]["decimalPlaces"] != "": # decimal places present?
 									try:
@@ -19567,8 +21881,8 @@ class Plugin(indigo.PluginBase):
 								if devId not in changedOnly: changedOnly[devId] = {}
 								changedOnly[devId][key] = {"value":local[devId][key]["value"], "decimalPlaces":local[devId][key]["decimalPlaces"], "uiValue":local[devId][key]["uiValue"]}
 								if self.decideMyLog("UpdateIndigo"): 	self.indiLOG.log(10, f"executeUpdateStatesDict-adding to changedOnly devid:{devId}     key:{key}, value:{value}")
-								if key not in ["lastUpdateBatteryLevel","lastUpdateFromRPI", "lastMessageFromRpi"]: keeplastSensorChange = True
-								if not lastSensorChangePresent:
+								if not forcedNoChange and key not in ["lastUpdateBatteryLevel","lastUpdateFromRPI", "lastMessageFromRpi"]: keeplastSensorChange = True
+								if not lastSensorChangePresent and not forcedNoChange:
 									if "lastSensorChange" in dev.states and key not in ["lastUpdateBatteryLevel","lastUpdateFromRPI", "lastMessageFromRpi"] and  "lastSensorChange" not in changedOnly[devId]:
 										if self.decideMyLog("UpdateIndigo"): 	self.indiLOG.log(10, "executeUpdateStatesDict-lastSensorChange added")
 										nKeys +=1
@@ -20372,19 +22686,27 @@ class Plugin(indigo.PluginBase):
 
 			if self.findAnyTaskPi("piUpToDate"):
 					self.newIgnoreMAC = 0
+					# a PROGRAM push or a master restart stops that rPi reporting for a while - it has to copy the
+					# files, restart master and let beaconloop find its radios again. Without this every beacon and
+					# sensor on it goes down and comes straight back up, which is noise in the log and fires triggers.
+					# Parameter-only pushes are NOT counted: they are re-read in place, nothing restarts.
+					pushedPrograms = False
 					for piU in self.RPI:
 						initRPI = False
 						if "initSSH" in self.RPI[piU]["piUpToDate"]:
 							self.sshToRPI(piU, expFile="initSSH.exp")
 							initRPI = True
+							pushedPrograms = True
 
 						if "updateAllFilesFTP" in self.RPI[piU]["piUpToDate"]:
 							if initRPI: self.sleep(10) # give init some time to finish
 							self.sendFilesToPiFTP(piU, expFile="updateAllFilesFTP.exp")
+							pushedPrograms = True
 
 						if "updateAllAllFilesFTP" in self.RPI[piU]["piUpToDate"]:
 							if initRPI: self.sleep(10) # give init some time to finish
 							self.sendFilesToPiFTP(piU, expFile="updateAllAllFilesFTP.exp")
+							pushedPrograms = True
 
 						if "updateParamsFTP" in self.RPI[piU]["piUpToDate"]:
 							self.sendFilesToPiFTP(piU, expFile="updateParamsFTP.exp")
@@ -20395,12 +22717,16 @@ class Plugin(indigo.PluginBase):
 						if "restartmasterSSH" in self.RPI[piU]["piUpToDate"]:
 							if initRPI: self.sleep(10) # give init some time to finish
 							self.sshToRPI(piU, expFile="restartmasterSSH.exp")
+							pushedPrograms = True
 
 						if "upgradeSSH" in self.RPI[piU]["piUpToDate"]:
 							self.sshToRPI(piU, expFile="upgradeSSH.exp")
+							pushedPrograms = True
 
 						self.printpiUpToDate()
 
+					if pushedPrograms:
+						self.setCurrentlyBooting(self.noDownAfterRestartSecs, setBy="programs pushed / master restarted on rPi")
 
 					if self.findTaskPi("piUpToDate", "checkIfInstallOkSSH"):
 						for piU in self.RPI:
@@ -21853,15 +24179,24 @@ class Plugin(indigo.PluginBase):
 					for typeID in self.RPI[piU][IO]:
 						delDev = {}
 						for devId in self.RPI[piU][IO][typeID]:
+							# ONLY "the device is gone from indigo" is a reason to drop an entry here.
+							# AN EMPTY VALUE IS NOT: "" is exactly what checkDevToPi() writes when an output
+							# device needs no extra parameters, and for OUTPUTgpio / OUTPUTi2cRelay the
+							# parameters file copies the whole dict straight over, "" entries included - so
+							# those registrations work and deleting them was deleting live devices.
+							# It also never stuck: syncSensors -> checkDevToPi put the entry back with the
+							# same "" a moment later, so all this produced was one
+							#   "readConfig RPI cleanup rpi: 15 del output devId:..."
+							# per output device on EVERY plugin start, for ever, and a rewrite of RPIconf
+							# to go with it. A disabled device, or one that no longer points at this rPi,
+							# is checkSensortoPi's job and it does it properly
 							try:
-								xx=indigo.devices[int(devId)]
-								if self.RPI[piU][IO][typeID][devId] in [""]:
-									delDev[devId] = 2
+								indigo.devices[int(devId)]
 							except:	
 								delDev[devId] = 1
 
 						for devId in delDev:
-							self.indiLOG.log(20,f"readConfig RPI cleanup {piU} del {IO} devId:{devId} deldevreason:{delDev[devId]}, self.RPI[piU][IO][devId]:{self.RPI[piU][IO][typeID]}"  )
+							self.indiLOG.log(20,f"readConfig RPI cleanup rpi: {piU} del {IO} devId:{devId} deldevreason:{delDev[devId]}, {typeID}:{self.RPI[piU][IO][typeID]}"  )
 							del self.RPI[piU][IO][typeID][devId]
 
 
@@ -24364,6 +26699,43 @@ class Plugin(indigo.PluginBase):
 						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
 
 				out["sensorList"] = self.RPI[piU]["sensorList"]
+
+				# Find My group counter: a TOP LEVEL block, not a sensor entry, because beaconloop
+				# reads it in readParams() and not through the sensor list - see pi/findMyGroup.py.
+				# A missing or disabled block means off, and beaconloop then behaves exactly as it
+				# did before the module existed.
+				out["findMyGroup"] = {"enable":"0"}
+				fmFound = ""
+				for devFM in indigo.devices.iter("self.BLEfindMyGroup"):
+					if not devFM.enabled:												continue
+					pFM = devFM.pluginProps
+					# multi-rpi (rPiEnableN checkboxes) with a fallback to the old single
+					# piServerNumber menu, so a device saved before .46 keeps working untouched
+					if self.isMultiRpiDevice(pFM):
+						if not pFM.get("rPiEnable" + piU, False):						continue
+					elif f"{pFM.get('piServerNumber','')}" != piU:						continue
+					if fmFound != "":
+						self.indiLOG.log(20, f"makeParametersFile: rPi-{piU} has more than one Find My group device ({fmFound} and {devFM.name}) - one rPi can only count for one of them, using the first")
+						continue
+					fmFound = devFM.name
+					out["findMyGroup"] = {
+							"enable":					"1",
+							"devId":					f"{devFM.id}",
+							"joinRssi":					f"{pFM.get('joinRssi','-70')}",
+							"leaveRssi":				f"{pFM.get('leaveRssi','-80')}",
+							"expireSecs":				f"{pFM.get('expireSecs','10')}",
+							"stableSecs":				f"{pFM.get('stableSecs','60')}",
+							"smoothN":					f"{pFM.get('smoothN','5')}",
+							"minPackets":				f"{pFM.get('minPackets','3')}",
+							"maxSlots":					f"{pFM.get('findMyMaxSlots','30')}",
+							"sendEverySecs":			f"{pFM.get('sendEverySecs','60')}",
+							"dropFromBeaconPipeline":	f"{1 if pFM.get('dropFromBeaconPipeline', True) else 0}",
+							"calibrationLog":			f"{1 if pFM.get('calibrationLog', False) else 0}",
+							"rssiStat":					f"{pFM.get('findMyRssiStat','strong')}",
+							"debug":					f"{pFM.get('findMyDebug','0')}",
+							"debugMac":					f"{pFM.get('findMyDebugMac','')}",
+							"logEverySecs":				"10",
+							}
 
 				out["output"] = {}
 				for devOut in indigo.devices.iter("props.isOutputDevice"):
@@ -27785,7 +30157,8 @@ configuration         - ==========  defined beacons ==============
 
 	####-------------------------------------------------------------------------####
 	def setCurrentlyBooting(self, addTime, setBy=""):
-		"""Suppresses beacon up-to-down status checking for a number of seconds by setting self.currentlyBooting to the current time plus addTime, logging which caller requested it; used to avoid false 'down' transitions during reboots.
+		"""Suppresses beacon up-to-down status checking for a number of seconds by pushing self.currentlyBooting out to the current time plus addTime, logging which caller requested it; used to avoid false 'down' transitions during reboots.
+		NEVER SHORTENS a suppression that is already running longer - see the comment in the body.
 		
 		Inputs:
 		    addTime (int): Number of seconds from now to suppress beacon down-checking
@@ -27793,12 +30166,24 @@ configuration         - ==========  defined beacons ==============
 		Outputs:
 		    None: Sets self.currentlyBooting and logs the request
 		"""
-		try:	self.currentlyBooting = time.time() + addTime
-		except: self.errorLog(f"setCurrentlyBooting:  setting BeaconsCheck,  bad number requested {addTime}, called from: {setBy}")
+		# NEVER SHORTEN a suppression that is already running. Every caller means "do not mark anything
+		# down for AT LEAST this long", and they overlap: a plugin restart asks for 120s and then the
+		# program push it triggers, or a beep, asked for 20-50s and cut the 120 back to that.
+		# getattr: the very first caller is setVariables, before self.currentlyBooting exists.
 		try:
-			self.indiLOG.log(10,f"setting BeaconsCheck to off (no up-->down) for {addTime:3d} secs requested by: {setBy}")
+			until = time.time() + addTime
+			if until < getattr(self, "currentlyBooting", 0.):
+				try:	self.indiLOG.log(10,f"setting BeaconsCheck: keeping the longer suppression already running ({self.currentlyBooting - time.time():.0f} secs left), not shortening it to {addTime:.0f} secs requested by: {setBy}")
+				except:	pass
+				return
+			self.currentlyBooting = until
 		except:
-			indigo.server.log(f"setting BeaconsCheck to off (no up-->down) for {addTime:3d} secs requested by: {setBy}")
+			self.errorLog(f"setCurrentlyBooting:  setting BeaconsCheck,  bad number requested {addTime}, called from: {setBy}")
+			return
+		try:
+			self.indiLOG.log(10,f"setting BeaconsCheck to off (no up-->down) for {addTime:.0f} secs requested by: {setBy}")
+		except:
+			indigo.server.log(f"setting BeaconsCheck to off (no up-->down) for {addTime:.0f} secs requested by: {setBy}")
 		return
 
 	####-------------------------------------------------------------------------####
@@ -28738,9 +31123,13 @@ configuration         - ==========  defined beacons ==============
 				devId  = dev.id
 				props  = dev.pluginProps
 				testpiU  = []
-				if "rPiEnable0" in props:
+				if self.isMultiRpiDevice(props):
+					# .get: a device being multi-rpi does NOT mean every pi in _rpiBeaconList has
+					# an entry. A device saved when fewer pis existed, or one that never had the
+					# higher numbers written, is missing them, and props["rPiEnable7"] then raises
+					# KeyError right here and takes syncSensors down with it
 					for piU in _rpiBeaconList:
-						if props["rPiEnable"+piU]:
+						if props.get("rPiEnable"+piU, False):
 							testpiU.append(piU)
 				elif "piServerNumber" in props:
 					try: 
@@ -29487,7 +31876,13 @@ configuration         - ==========  defined beacons ==============
 					if dev.deviceTypeId in _stateListToDevTypes[state]:
 						test += state+","
 
-			if dev.pluginProps.get("SupportsBatteryLevel",False):
+			# NOT FOR A FIND MY MEMBER, and that is not an oversight. It carries battery support so
+			# the tag's CURRENT level reaches the battery column, but "when was this battery last
+			# replaced" needs a device that is ONE PHYSICAL THING for months, and a member device
+			# is a SLOT: it changes hands whenever a mac rotates without being matched, and the
+			# "delete members down too long" housekeeping deletes it outright. A date on it would
+			# be a date for whatever happened to be holding the slot when it was written
+			if dev.pluginProps.get("SupportsBatteryLevel",False) and dev.deviceTypeId != "BLEfindMyMember":
 				test += "lastBatteryReplaced"
 			return test.strip(",").split(",")
 			

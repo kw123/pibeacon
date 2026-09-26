@@ -927,6 +927,7 @@ or ancient python2 rPis. Override per rPi: rpi device edit.</Label>
 	<Field    id="debugGarageDoor"     type="checkbox"         > <Label>     ..  (21) garage door:</Label>  </Field>
 	<Field    id="debugDelayedActions" type="checkbox"         > <Label>     ..  (22) delayed actions (for dev):</Label>  </Field>
 	<Field    id="debugSensorIcon"	   type="checkbox"         > <Label>     ... (24) set sensor icon color:</Label>  </Field>
+	<Field    id="debugFindMy"         type="checkbox"         > <Label>     ... (25) Find My counter: message received from each rPi, and what it was turned into:</Label>  </Field>
 	<Field    id="debugSpecial"        type="checkbox"         > <Label>     ... (S)  special debug (only for development):</Label>  </Field>
 	<Field    id="debugall"            type="checkbox"         > <Label>     ... (99) all of the above .. everything:</Label>  </Field>
 

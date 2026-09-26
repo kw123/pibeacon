@@ -2703,7 +2703,11 @@ def setupTempDir():
 			U.makeDir(G.homeDir + "temp")
 		if U.readPopen("df | grep tempfs ")[0].find(G.homeDir+"temp") == -1:
 			subprocess.call("mount -t tmpfs -o size=2m tmpfs "+G.homeDir+"temp", shell=True)
-		U.removeFile(G.homeDir + "temp/*")
+		# spared from the wipe: state that is expensive to rebuild and harmless to carry over -
+		# the find my slot map and its mac history. temp/ is a tmpfs so a REBOOT empties it
+		# whatever we do here, which is why findMyGroup also keeps a copy in the pibeacon dir;
+		# this keeps the FRESH one across a master restart rather than falling back to that copy
+		U.removeFile(G.homeDir + "temp/*", keep=["findMyGroup.state", "findMyGroup.csv"])
 		# temp/ is where every program drops its alive./.hci/.data files. master runs as root, so
 		# without this they end up "-rw-r--r-- root root" and no pi-user program can update them.
 		U.makeAccessible(G.homeDir + "temp", recursive=True, owner="pi")

@@ -55,6 +55,14 @@ import	piBeaconGlobals as G
 
 import  pexpect
 G.program = "beaconloop"
+
+# Find My group counter (AirTags etc. with rotating macs), switched on/off in parameters: "findMyGroup":{"enable":"1",..}
+try:
+	import findMyGroup
+	fmGroup = findMyGroup.FindMyGroup()
+except Exception as e:
+	fmGroup = None
+	fmGroupImportError = "{}".format(e)
 VERSION   = 21.2
 
 if sys.version[0] == "3": usePython3 = True
@@ -1582,6 +1590,8 @@ def readParams(init=False):
 				stopHCUIDUMPlistener()
 				sys.exit(3)
 			U.getGlobalParams(inp)
+			if fmGroup is not None:							fmGroup.setParams(inp)
+			elif isinstance(inp.get("findMyGroup"), dict) and inp["findMyGroup"].get("enable","0") == "1":	U.logger.log(20,"findMyGroup requested but findMyGroup.py not importable: {}".format(fmGroupImportError))
 
 			acceptNewMFGNameBeacons = ""
 			if "acceptNewBeaconsMinSIgnal"				in inp:	 acceptNewBeaconsMinSIgnal =		int(inp["acceptNewBeaconsMinSIgnal"])
@@ -9775,15 +9785,27 @@ def probeExtendedScan(sock):
 			"ACTIVE -> using extended scanning (receives Ruuvi Air E1 etc.)" if scanExtendedMode else "not supported by this adapter -> legacy scanning"))
 
 
-def extAdvToLegacyHex(pkt):
+def extAdvToLegacyHex(pkt, dropLegacy=False):
 	"""Converts one LE EXTENDED advertising report event (subevent 0x0D, BT5) into a list
 	of LEGACY-layout hex frames (043E LL 02 01 evtype addrtype mac datalen data rssi) so
 	the ENTIRE downstream pipeline (fillHCIdump, parsers, watchMAC, capture) works
 	unchanged. Only COMPLETE reports are forwarded; fragmented payloads (data_status
 	incomplete, only for >229-byte advs - Ruuvi Air E1 is 40 bytes) are dropped.
 
+	dropLegacy: skip reports that carry LEGACY advertising PDUs (Event_Type bit 4). The dedicated
+	BLE5 LISTENER passes this when a scan radio is also running, because a BLE5 controller in
+	extended mode receives legacy ble4 advertisements as well - so without it every ble4 device is
+	heard TWICE, once by each radio, and the two do not agree on rssi. Measured on an airtag 24 cm
+	away: the ble4 radio read -24 while the ble5 dongle read a near-constant -68 for the same mac
+	in the same second, and anything averaging that window landed on the wrong number.
+	The listener exists for advertisements the legacy radio CANNOT hear (extended/BT5 frames, Ruuvi
+	Air E1); legacy ones are not its job when another radio has them covered.
+	The MAIN scan radio in extended mode must NOT pass this - there it is the only receiver, and
+	dropping legacy would lose every ble4 device on the air.
+
 	Inputs:
 	    pkt (bytes): raw HCI event packet starting 04 3E .. 0D
+	    dropLegacy (bool): skip legacy-PDU reports - see above
 	Outputs:
 	    list: legacy-layout uppercased hex strings (may be empty)
 	"""
@@ -9802,6 +9824,9 @@ def extAdvToLegacyHex(pkt):
 			pos     += 24 + dataLen
 			if len(data) != dataLen:		continue
 			if (evt >> 5) & 0x03 != 0:		continue			# incomplete/truncated fragment
+			if dropLegacy and (evt & 0x0010):
+				extListenerCtl["nDropLegacy"] = extListenerCtl.get("nDropLegacy", 0) + 1
+				continue									# ble4 advert, and the ble4 radio has it
 			if   evt & 0x0008:				evtLegacy = 0x04	# scan response
 			elif evt & 0x0001:				evtLegacy = 0x00	# connectable ADV_IND
 			else:							evtLegacy = 0x03	# non-connectable
@@ -9821,7 +9846,8 @@ def extAdvToLegacyHex(pkt):
 #  into the main message stream via extListenerQueue (deque: single producer /
 #  single consumer, GIL-atomic append/popleft, no lock needed).
 extListenerQueue = collections.deque()
-extListenerCtl   = {"run": False, "hci": "", "thread": None, "nRx": 0}
+extListenerCtl   = {"run": False, "hci": "", "thread": None, "nRx": 0, "nDropLegacy": 0,
+                    "keepLegacy": False, "keepChecked": 0}
 
 def startExtListener(hci):
 	"""(Re)starts the extended-only listener thread on the given adapter; hci=="" stops it.
@@ -9999,6 +10025,7 @@ def execExtListener(hci):
 				wasDown    = False
 			lastRx        = time.time()
 			lastHeartbeat = time.time()
+			nDropAtLast   = extListenerCtl.get("nDropLegacy", 0)
 			nRxAtLast     = extListenerCtl["nRx"]
 			macsSeen      = set()
 			zeroStreak    = 0
@@ -10034,7 +10061,33 @@ def execExtListener(hci):
 					hdr = bytearray(pkt[:4])
 					if len(hdr) == 4 and hdr[1] == 0x3E and hdr[3] == 0x0D:
 						lastRx = time.time()
-						for msg in extAdvToLegacyHex(pkt):
+						# a scan radio is running -> it already hears every legacy advert, and
+						# hears it better. Only what IT cannot get is wanted from this radio.
+						# hciRoles is the module-level role map and is the only thing in scope here
+						# that knows: useHCIForBeacon is a LOCAL of the scan setup, not a global,
+						# so reading it from this thread would raise NameError
+						_scanHci = "{}".format(hciRoles.get("scan", {}).get("hci", ""))
+						_drop    = (_scanHci != "" and _scanHci != hci)
+						# ESCAPE HATCH. Measured on one rpi, dropping is the right default: the
+						# scan radio delivers an advert every 3-5 s (the tag's real interval) while
+						# the ble5 listener caught one in four and reported it on a scale ~40 dB
+						# adrift. Keeping both put between zero and two of those outliers in a
+						# 5-sample window, so the smoothed value moved with the luck of the draw.
+						# Other hardware may differ, and the absolute dBm certainly will, so the
+						# switch stays.
+						#     touch /home/pi/pibeacon/temp/extListener.keepLegacy   -> keep both
+						#     rm    /home/pi/pibeacon/temp/extListener.keepLegacy   -> drop (default)
+						# Checked every 5 s, so an A/B test is two commands and no restart.
+						if _drop and time.time() - extListenerCtl.get("keepChecked", 0) > 5:
+							extListenerCtl["keepChecked"] = time.time()
+							_keep = os.path.isfile(G.homeDir + "temp/extListener.keepLegacy")
+							if _keep != extListenerCtl.get("keepLegacy", False):
+								extListenerCtl["keepLegacy"] = _keep
+								U.logger.log(20, "extListener {}: legacy ble4 reports are now {} ({})".format(
+										hci, "KEPT" if _keep else "dropped",
+										"temp/extListener.keepLegacy exists" if _keep else "the scan radio has them"))
+						if extListenerCtl.get("keepLegacy", False):	_drop = False
+						for msg in extAdvToLegacyHex(pkt, dropLegacy=_drop):
 							extListenerQueue.append(msg)
 							try:
 								# legacy-layout hex: 043E LL 02 01 evt addrtype MAC(12 hex, reversed) ...
@@ -10046,7 +10099,9 @@ def execExtListener(hci):
 				# heartbeat every 60 s: prove the BLE5 radio is actually delivering
 				if time.time() - lastHeartbeat >= 60:
 					got = extListenerCtl["nRx"] - nRxAtLast
-					if _debugheartbeat: U.logger.log(20, "extListener {}: {} extended report(s)/min from {} mac(s): {}".format(hci, got, len(macsSeen), ",".join(sorted(macsSeen))))
+					dropped = extListenerCtl.get("nDropLegacy", 0) - nDropAtLast
+					if _debugheartbeat: U.logger.log(20, "extListener {}: {} extended report(s)/min from {} mac(s) ({} legacy ble4 report(s) dropped, the scan radio has those): {}".format(hci, got, len(macsSeen), dropped, ",".join(sorted(macsSeen))))
+					nDropAtLast = extListenerCtl.get("nDropLegacy", 0)
 					if got == 0:
 						zeroStreak += 1				# logged only - no self-restart, see the note above
 					else:
@@ -10312,6 +10367,23 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 			rssi, txPower, macplainReverse, macplain, mac  = getStdIbeacon(hexstr)
 
 			doPrint =  mac in findMAC
+
+			# Find My group: find my frames feed the group counter; with dropFromBeaconPipeline the
+			# rotating macs never reach new-beacon / parsePackage logic.
+			#
+			# "FF4C00" - ANY apple frame - and findMyGroup decides. NOT "FF4C0012", which demands
+			# that find my be the FIRST continuity message: measured in a real house, an airpods
+			# case sent 0x07 (proximity pairing) and 0x12 in ONE frame, so find my is not always
+			# first and that test would have dropped the device without trace.
+			# Cost of asking, MEASURED TWICE and settled: parseFindMy is 0.53 us on a frame that
+			# turns out not to be find my - about 0.1 ms per second at a few hundred apple frames
+			# a second. And the experiment that matters: beaconloop sitting at 25% cpu was blamed
+			# on this filter, the whole find my counter was then DISABLED, and the cpu did not
+			# move. 25% is what beaconloop costs here; it is not this, and it never was.
+			# Do not narrow this filter again to save cpu. It saves none, and the narrow form
+			# ("FF4C0012") loses airpods - see below.
+			if fmGroup is not None and fmGroup.enabled and hexstr.find("FF4C00", 14) > -1:
+				if fmGroup.feed(hexstr, mac, rssi) and fmGroup.dropFromBeaconPipeline: continue
 
 			if False and doPrint : #or mac in findMAC: 
 				U.logger.log(20,  "mac:{:}, hexstr:{:}".format(mac,  hexstr[12:]))
@@ -10832,6 +10904,11 @@ def execbeaconloop(test):
 
 					messageBad = loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt)
 					if messageBad: break
+
+					# Find My group: expire macs, stable count, send ("count" = now, "time" = batched with beacon msgs)
+					if fmGroup is not None and fmGroup.enabled:
+						fmPacket = fmGroup.tick()
+						if fmPacket is not None: checkIfDelaySend(fmPacket)
 	
 					#dtinner[4][6] = max(dtinner[6], tryDeltaTime( startofInnerLoop,oneDigit=True ))
 					doLoopCheck( sensor )

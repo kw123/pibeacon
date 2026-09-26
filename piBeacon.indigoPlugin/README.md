@@ -4,7 +4,7 @@ Indigo plugin that uses Raspberry Pis to track iBeacons / BLE devices and to rea
 sensors attached to the Pis. The Pis report to the Indigo server over the network; the plugin manages
 device states, triggers, and the sensor programs running on each Pi.
 
-- **Current version:** 2022.191.252 (2026-08-31) — release
+- **Current version:** 2022.193.0 (2026-09-26) — release
 - **Author:** Karl Wachs
 - **Forum / support:** http://forums.indigodomo.com/viewforum.php?f=164
 - **Change log:** see `Contents/changelist.txt`
@@ -176,6 +176,34 @@ battery-level reporting). Highlights:
 
 The plugin can auto-accept new beacons, beep beacons that support it, read battery levels, and
 track cars (dedicated *Car* device with per-car beacon assignment).
+
+## Apple Find My tags (AirTags, AirPods)
+
+Find My tags cannot be tracked as beacons: the mac address **rotates**, roughly every 15 minutes
+near its owner and far less often when separated, and nothing in the frame identifies the tag.
+The plugin follows them anyway, with one **group device** for the house and one device per tag.
+
+- **Group device** — how many tags are present, split into airtags / airpods / other and up / down,
+  which Pis are reporting, and how many macs are heard but too weak to count.
+- **One device per tag** — signal, distance in metres, battery, which Pi is closest, and the macs
+  and lineages it has held before. The name you give it survives the tag's mac rotating.
+- **Several Pis, one tag, one device** — a tag heard by two Pis is merged on its mac, and carrying
+  it from one Pi to another keeps the device and records the move.
+
+**Following a rotation** is inference, not identification, and the plugin refuses rather than
+guesses. When a new mac appears, the Pi notes which lineages it *could* continue and waits: only if
+the old mac then stays silent is the lineage handed over, so a tag that merely missed a packet
+cannot be robbed of its identity by a stranger. Where two macs could both be the continuation, the
+one whose apple types match exactly wins, and if they are still equal neither gets it.
+
+**Tuning** lives on the group device: the join/leave signal levels decide what counts as "in the
+house", and a calibration CSV can be written on the Pi (with the whole raw frame, for settling
+arguments about what a byte means) to choose them. Member devices can be capped in number and
+deleted automatically once they have been down long enough.
+
+**What it cannot do:** tell two identical tags apart when both rotate in the same instant at the
+same signal level, and name an AirPods case as one unless it is next to its owner — the frames
+simply do not carry it.
 
 ## Position plot of the beacons
 
@@ -391,10 +419,14 @@ two are sent as their **midpoint** and the unit decides.
   the humidity setting instead**.
 
   The fan is **five speeds** — silent, 1, 2, 3, 4 — plus auto, using the remote's own labels. The
-  fan field in the frame is only **two bits and saturates at 3**, so the real position rides in a
-  later message of the sequence; that is why speeds above 3 are reachable at all. The remote's
-  **full** is not a fan position: it is the turbo bit, so asking for "full" sends the top speed
-  with turbo set.
+  fan field in the frame is only **two bits and saturates at 3**, so the real position rides in
+  byte 6 of the third message; that is why speeds above 3 are reachable at all, and it is
+  confirmed at the unit — with byte 6 held constant the fan does not move at all, however byte 0
+  is set. The remote's **full** is not a fan position: it is the turbo bit, so asking for "full"
+  sends the top speed with turbo set.
+
+  Both louvers work, on both axes. **Left and right are the viewer's**: "far left" points the vane
+  left as seen by someone facing the unit, which is the unit's own right.
 
   One press is **four messages**, ~40 ms apart, and the unit acts on nothing less. Repeating a
   single frame does not work — not four times over, and not at any carrier from 26 to 40 kHz.
@@ -409,13 +441,21 @@ two are sent as their **midpoint** and the unit decides.
   about whether the AC will obey, because a receiver cannot see the carrier and a frame that is
   correct in isolation can still be an incomplete *conversation*.
 
+  And the carrier still bites even without a setting for it. `greeIR.CARRIERHZ` is the default
+  every caller that does not pass a frequency uses — the plugin's own send path included — so a
+  stale value there silently retunes everything while the frames stay perfect. Both encoders
+  default to **38 kHz**.
+
 ### Controls
 
 - **Menu → "Send an IR-AC command.."** — pick a device and send a complete state. The mode, fan and
   temperature lists follow that device's brand, so a Gree device is never offered a Toshiba speed.
-- **Actions**: set fan speed, set mode, set louvers, set sleep/health/light — for everything
-  Indigo's own thermostat control has no name for. Each stores the choice on the device and resends
-  the whole state.
+- **Action → "IR-AC: set everything"** — mode, temperature, fan and both louvers in one action,
+  every field defaulting to *no change*. This is the one a schedule or trigger usually wants: it
+  is a remote press rather than a nudge.
+- **Actions**: set fan speed, set mode, set louvers, set sleep/health/light — for changing one
+  thing at a time. Each stores the choice on the device and resends the whole state, because a
+  frame carries everything or nothing.
 - **TEST LED** in the device dialog blinks the LED for a second at a time so you can see it in a
   phone camera; **TEST VARIANTS** walks the Toshiba protocol variants, switching the AC on at a
   different temperature for each, so the unit itself tells you which one it answers.
@@ -460,7 +500,11 @@ irTest.sh m <hz> <n>     replay only the first n messages of that press
 irTest.sh r <hz> <n>     replay the whole press n times at one carrier
 irTest.sh c <hz> <n>     send the ENCODER's frames, 21/25 °C alternating
 irTest.sh s              scan 25–48 kHz in 1 kHz steps
+irTest.sh d              walk on/temp/fan/louvers/off and watch the unit follow
 ```
+
+Everything that transmits waits 15 s first, so a run can be started over ssh and watched in the
+other room (`LEADIN=0` to skip).
 
 Put the unit in the *opposite* state with its own remote before replaying, so a success is
 visible and cannot be confused with the AC still obeying the button press it just heard. And
@@ -524,7 +568,8 @@ beacon→switchbot actions), diagnostics (track MACs, special logging, print con
     recorded straight back out on the LED
   - `irReplay.py` — sends a recorded pulse list, one message per waveform, keeping the gaps
   - `irScan.py` — walks the carrier frequency, sending a real command at each step
-  - `irTest.sh` — the record / replay / scan steps as single commands
+  - `irDemo.py` — walks the unit through a scripted sequence so it can be watched following
+  - `irTest.sh` — the record / replay / scan / walk steps as single commands
   - `irRecord.py` — records and decodes a real IR remote; `irReplay.py` sends a recorded pulse
     list back out unchanged
   - `qualifyDongle.py`, `extScanTest.py`, `ruuviPrint.py` — standalone diagnostic tools that can

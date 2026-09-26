@@ -191,20 +191,24 @@ def setLogLevel():
 #  Where we may not own the file (system paths) the sudo command is used as a FALLBACK, so a
 #  program running as pi keeps working exactly as it did before.
 #################################
-def removeFile(fname, verbose=False):
+def removeFile(fname, verbose=False, keep=None):
 	"""rm - accepts a glob; missing files are not an error.
 
 	Inputs:
 	    fname (str): path or glob
 	    verbose (bool): log what could not be removed
+	    keep (list): basenames the glob must NOT delete, eg ["findMyGroup.state"] when wiping
+	                 temp/* - for state that has to outlive a master restart
 	Outputs:
 	    int: number of files removed
 	"""
 	n = 0
+	if keep is None: keep = []
 	try:
 		files = glob.glob(fname)
 		if not files:	files = [fname]
 		for ff in files:
+			if os.path.basename(ff) in keep:	continue
 			if not os.path.exists(ff):	continue
 			try:
 				if os.path.isdir(ff):	shutil.rmtree(ff)
