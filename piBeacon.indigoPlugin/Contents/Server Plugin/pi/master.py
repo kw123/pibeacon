@@ -3,6 +3,8 @@
 # by Karl Wachs
 # feb 5 2016
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 masterVersion			= 17.11
 ## changelog: 
 # 2020-04-05 added check for NTP
@@ -13,6 +15,7 @@ masterVersion			= 17.11
 
 
 import sys, os, subprocess, copy
+import threading
 import time,datetime
 import json
 import socket
@@ -759,7 +762,16 @@ def startPigpiod(waitSecs=3.):
 			U.logger.log(20, "pigpiod already running")
 			return True
 		U.logger.log(20, "starting pigpiod")
-		subprocess.call("sudo pigpiod &", shell=True)		# default sample rate, as receiveCommands used
+		# -s 10 INSTEAD OF THE DEFAULT 5. pigpiod samples every gpio on a fixed timer whether or
+		# not anything is listening, so it costs the same when nothing uses it - measured at a
+		# constant 11% of a core on an rpi with no gpio device in use at all. The sample rate is
+		# that timer: 10 us halves the wakeups and so roughly halves the cost.
+		# What it costs: gpio edge timestamps and PWM/servo steps are resolved to 10 us instead of
+		# 5 us. For what this plugin drives through pigpio - buttons, rotary encoders, touch pads,
+		# an ultrasound echo - 10 us is far finer than anything being measured; an encoder detent is
+		# milliseconds apart. Hardware PWM frequencies change with the sample rate, so if a
+		# neopixel or servo ever looks wrong, this line is the first thing to put back to 5.
+		subprocess.call(U.pigpiodStartCmd(), shell=True)
 		tEnd = time.time() + waitSecs
 		while time.time() < tEnd:
 			time.sleep(0.25)
@@ -1807,7 +1819,12 @@ def cycleWifi():
 		indigoServerOn, changed, connected = U.getIPNumberMaster(quiet=True)
 		if not connected:
 			#print "master:	 cycle wlan0"
-			subprocess.call("sudo /sbin/ifconfig wlan0 down; sudo /sbin/ifconfig wlan0 up", shell=True)
+			# was ifconfig only, on every os version. It WORKS today - net-tools is installed on
+			# this fleet and the call used the absolute /sbin path - but net-tools is no longer part
+			# of a default Debian install, so U.ifUpDown prefers "ip link set" and keeps ifconfig as
+			# the fallback. Forward-looking, not a fix for a current breakage
+			U.ifUpDown("wlan0", "down")
+			U.ifUpDown("wlan0", "up")
 			# cycle wlan
 	return
 
@@ -2173,6 +2190,11 @@ def checkFSCHECKfile():
 			if data.find("data may be corrupt") >-1: # not fixed, send msg to plugin 
 				dataSend = "dosfsck has error also after re-run: "+ "/--/".join((data.split("\n"))[0:10])
 
+			# underscores on BOTH sides: the plugin matches this marker literally, and an underscore
+			# survives whatever the transport does to spaces. It did not before - the text went out
+			# with squeeze on, arrived as "datamaybecorrupt", and the plugin never recognised it, so
+			# a failing sd card was reported by the rpi and then silently dropped.
+			dataSend = dataSend.replace(" ", "_")
 			U.logger.log(20, dataSend)
 			U.sendURL(sendAlive="alive",text=dataSend)
 
@@ -2246,6 +2268,54 @@ def checkPythonLibs():
 	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 	return 
+
+####################      #########################
+def checkBTfirmware():
+	"""Install the bluetooth PATCH RAM firmware shipped in pibeacon/firmware/, if a dongle here needs it.
+
+	A BCM20702 without its patch runs on ROM firmware and drops off the usb bus whenever it is reset.
+	Measured on two rpis: roughly one re-enumeration per qualifyDongle run, the radio coming back under
+	a NEW hci number every time, and in between every symptom of dead hardware - scan commands accepted
+	with status 0 and not a single report delivered, "adapter does not come up properly - unusable",
+	and roles landing on the wrong radio because the numbering had moved underneath them. With the
+	patch installed: 10 down/up cycles in a row, same hci number, UP RUNNING every time, zero
+	re-enumerations.
+
+	Runs BEFORE beaconloop is started, so the radio is patched before anything uses it, and it BLOCKS
+	on purpose - the usb re-probe takes a few seconds, but only on the ONE start where something is
+	actually installed. Afterwards installBTfirmware.py finds the file in place and returns at once
+	without touching a radio.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: logs what the installer did
+	"""
+	try:
+		# readPopen returns a TUPLE (stdout, stderr) - "{}".format() on it would log the tuple's repr,
+		# one unreadable line with literal \n in it instead of the installer's report.
+		res = U.readPopen("sudo /usr/bin/python3 -E {}installBTfirmware.py".format(G.homeDir))
+		out, err = res if (isinstance(res, tuple) and len(res) == 2) else ("", "")
+		toIndigo = []
+		for line in "{}\n{}".format(out, err).split("\n"):
+			line = line.rstrip()
+			if line.strip() == "":	continue
+			U.logger.log(20, "{}".format(line))
+			# "BTFIRMWARE:" is printed by the installer ONLY when something really happened - a patch
+			# installed and loaded, or a failure. A quiet start prints none, which is what keeps a
+			# level-30 line out of the indigo log on every boot of every rpi.
+			if line.strip().startswith("BTFIRMWARE:"):
+				toIndigo.append(line.strip()[len("BTFIRMWARE:"):].strip())
+		if toIndigo:
+			# -> indigo log at level 30 (the plugin logs a 'warning' payload as "pi#<n>: ..." at 30).
+			# This is a one-off per rpi and it changes how its radios behave, so it belongs in the
+			# plugin log and not only in a log file on the rpi that nobody reads.
+			U.sendURL(data={"data": {"warning": "bluetooth firmware: " + "; ".join(toIndigo)}},
+						squeeze=False, wait=False)
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	return
+
 
 ####################      #########################
 def checknetwork0():
@@ -2477,6 +2547,9 @@ def checkNetworkLoop(restartCLock, indigoServerOn, changed, connected ):
 	return restartCLock, indigoServerOn, changed, connected 
 
 ####################      #########################
+copyToTempThread = None		# the parameter-mirror thread - see startCopyToTempThread()
+
+
 def killOldPrograms():
 	"""Stops the display and builds a deduplicated list of all known piBeacon program/sensor/output script names, then kills any old running instances of those Python programs except the current process.
 
@@ -2652,7 +2725,9 @@ def checkIfSTDprogramsAreRunning(lastCheckAlive):
 				else:
 					checkIfPGMisRunning(pp+".py")
 
-		checkIfPGMisRunning("copyToTemp.py")
+		# NOT A PROCESS ANY MORE - it is a thread in here. Same place in the same check, so a
+		# thread that somehow ended is restarted exactly as the old process would have been
+		startCopyToTempThread()
 
 		if enableiBeacons != "0":
 			checkIfbeaconloopIsRunning()
@@ -2690,6 +2765,58 @@ def checkNTP():
 	return 
 
 ####################      #########################
+def copyToTempLoop():
+	"""Mirrors the parameter files into temp/ whenever they change - see U.copyParamsToTemp().
+
+	THIS USED TO BE copyToTemp.py, a separate root process that master launched at startup and
+	then watched with checkIfPGMisRunning() like any sensor program. It did one small thing in a
+	half-second loop and needed a process, a pid, a kill-the-old-one dance and a liveness check to
+	do it. As a thread inside master it needs none of those: it cannot be orphaned, it cannot be
+	started twice, and it dies with master instead of outliving it.
+	A DAEMON THREAD on purpose - there is no state to flush, so master must never wait for it on
+	the way out.
+	THE SLEEPS ARE THE OLD ONES. Half a second between looks is what makes a parameter change feel
+	immediate; ten seconds after a copy is the throttle that stops a burst of touches turning into
+	a burst of copies, and both were tuned in the standalone version against real use.
+	"""
+	timeLastFile = 0
+	try:
+		U.touchFile(G.homeDir + "temp/touchFile")
+		timeLastFile = os.path.getmtime(G.homeDir + "temp/touchFile") - 1
+	except Exception:
+		timeLastFile = 0
+	while True:
+		try:
+			timeLastFile, didCopy = U.copyParamsToTemp(timeLastFile)
+			if didCopy:	time.sleep(10)
+			time.sleep(0.5)
+		except Exception:
+			U.logger.log(20, "", exc_info=True)
+			time.sleep(5)
+
+
+####################      #########################
+def startCopyToTempThread():
+	"""Starts the parameter-mirror thread, or restarts it if it has somehow died.
+
+	CALLED FROM THE SAME TWO PLACES the process version was: once at startup, and from the
+	periodic "is everything still running" check, which is where checkIfPGMisRunning("copyToTemp.py")
+	used to sit. The loop catches its own exceptions so it should never end - this is the net under
+	that, and it costs one is-alive test per check.
+	"""
+	global copyToTempThread
+	try:
+		if copyToTempThread is not None and copyToTempThread.is_alive():	return
+		copyToTempThread = threading.Thread(target=copyToTempLoop, name="copyToTemp")
+		copyToTempThread.daemon = True
+		copyToTempThread.start()
+		U.logger.log(20, "started the copyToTemp thread - parameter files are mirrored into temp/ from in here now, there is no copyToTemp.py process any more")
+	except Exception:
+		U.logger.log(20, "", exc_info=True)
+	return
+
+
+####################      #########################
 def setupTempDir():
 	"""Ensures the home temp directory exists, mounts it as a 2 MB tmpfs RAM disk if not already mounted, and clears any existing files in it.
 
@@ -2707,7 +2834,7 @@ def setupTempDir():
 		# the find my slot map and its mac history. temp/ is a tmpfs so a REBOOT empties it
 		# whatever we do here, which is why findMyGroup also keeps a copy in the pibeacon dir;
 		# this keeps the FRESH one across a master restart rather than falling back to that copy
-		U.removeFile(G.homeDir + "temp/*", keep=["findMyGroup.state", "findMyGroup.csv"])
+		U.removeFile(G.homeDir + "temp/*", keep=["findMyGroup.state"])
 		# temp/ is where every program drops its alive./.hci/.data files. master runs as root, so
 		# without this they end up "-rw-r--r-- root root" and no pi-user program can update them.
 		U.makeAccessible(G.homeDir + "temp", recursive=True, owner="pi")
@@ -2789,6 +2916,140 @@ def checkIfWOLsendToIndigoServer():
 	except Exception as e:
 		U.logger.log(20,"", exc_info=True)
 	return 
+
+####################      #########################
+def enableSudoNoPassword():
+	"""Gives the pibeacon user passwordless sudo, so the programs' own "sudo ..." calls cannot hang.
+
+	WHY IT IS NEEDED: nearly every pi program shells out to sudo somewhere - hciconfig, mount,
+	hwclock, i2c, kill. Raspberry Pi OS used to ship passwordless sudo for the pi user and newer
+	images do not always, and a renamed user never has it. When it is missing those calls sit
+	waiting for a password that nothing is ever going to type, on a machine with no terminal
+	attached, and the program looks hung rather than broken.
+	RUN AT MASTER STARTUP, which is what "when new programs are pushed" amounts to: a push
+	restarts master. Doing it here rather than from the mac also means it needs no second ssh
+	session and no password on the wire.
+	THROUGH raspi-config WHERE THERE IS ONE - its do_sudo_pass owns this, names the file after the
+	real user and clears the legacy and cloud-init ones too. Writing sudoers by hand is the
+	fallback for an older raspi-config that has no such function.
+	MOST rPis WILL NEVER REACH THE WRITE. A stock Raspberry Pi OS image already ships
+	/etc/sudoers.d/010_pi-nopasswd, so the first thing this does is test whether passwordless sudo
+	already works and return if it does. What is left is the case it is actually for: a newer
+	image that dropped it, or a renamed user who never had it.
+
+	THREE THINGS THAT MUST BE RIGHT, because getting any of them wrong breaks sudo ENTIRELY and
+	the only way back is a keyboard and monitor on the rPi:
+	  1  VALIDATED BEFORE IT IS INSTALLED. The file is written to temp/ and put through
+	     "visudo -c" there; if visudo will not accept it, it is thrown away and nothing is
+	     touched. A malformed file in sudoers.d takes out every sudo on the machine, including
+	     the ones that would be used to repair it.
+	  2  ITS OWN FILE IN /etc/sudoers.d, never an edit of /etc/sudoers. A separate file can be
+	     deleted to undo this completely, and it cannot corrupt what was already there.
+	  3  root:root and mode 0440. sudo IGNORES a file in sudoers.d that is group- or
+	     world-writable, and complains about it on every call - so a sloppy mode here is both
+	     ineffective and noisy. "install" sets owner, group and mode in one step.
+	IDEMPOTENT AND QUIET: if the file already says exactly this, nothing is written and nothing is
+	logged, so a master restart does not produce a line about it every time.
+
+	WHAT IT GRANTS, stated plainly: the pibeacon user can run any command as root without being
+	asked for a password. That is the Raspberry Pi OS default for the pi user on a dedicated
+	appliance, and it is what this plugin has always assumed.
+	IT OVERRIDES raspi-config. That tool's "password required" setting IS the deletion of its own
+	file, /etc/sudoers.d/010_pi-nopasswd - confirmed by watching it go - so switching it on and
+	restarting master brings the permission back through OUR file and the setting looks as though
+	it did nothing. That is a real conflict and the reason the line above is logged EVERY time it
+	writes rather than once: somebody wondering why raspi-config will not stick has to be able to
+	find out from the log. Delete /etc/sudoers.d/020_pibeacon-nopasswd to revoke it for good.
+	"""
+	try:
+		# whoever invoked the sudo that master is running under, falling back to the owner of the
+		# pibeacon directory - a renamed user is the case this has to get right
+		user = os.environ.get("SUDO_USER", "")
+		if user in ["", "root"]:
+			try:	user = U.readPopen("stat -c '%U' " + G.homeDir)[0].strip()
+			except Exception:	user = ""
+		if user in ["", "root"]:
+			U.logger.log(20, "enableSudoNoPassword: cannot tell which user to grant it to, doing nothing")
+			return
+
+		# DOES IT ALREADY WORK? Raspberry Pi OS ships this on a stock image, so on most rPis it is
+		# already true and was never the plugin's doing, and without the check a stock image would
+		# end up with two files saying the same thing.
+		# ASK THE POLICY, NOT THE CACHE. The obvious test, "sudo -n true", answers a different
+		# question: would sudo ask me RIGHT NOW. sudo remembers a successful password for about
+		# fifteen minutes, so a probe run shortly after anything else used sudo reports passwordless
+		# when the rule is not there at all. Measured on a live rPi 2026-10-01: the rule was removed
+		# and sudo went on working until "sudo -k" dropped the timestamp.
+		# THIS IS raspi-config's OWN TEST, lifted from its get_sudo_pass: list the user's privileges
+		# and look for the rule itself. No timestamp is involved, and it finds the rule wherever it
+		# happens to be written - our file, raspi-config's, cloud-init's or /etc/sudoers
+		probe = "sudo -l -n -U " + user + " 2>/dev/null | grep -q '(ALL) NOPASSWD: ALL'"
+		if subprocess.call(probe, shell=True) == 0:
+			return
+
+		# RASPI-CONFIG OWNS THIS, so ask it rather than writing sudoers ourselves. do_sudo_pass is
+		# in every current raspi-config and does the job properly:
+		#    do_sudo_pass 1   writes /etc/sudoers.d/010_$USER-nopasswd   (admin password DISABLED)
+		#    do_sudo_pass 0   removes it                                 (admin password required)
+		# NOTE THE POLARITY, which is inverted from do_ssh and friends where 0 means enable: the
+		# thing being enabled here is the PASSWORD, so 1 is the permissive one. Read out of the
+		# script rather than assumed, because getting it backwards puts a password prompt in front
+		# of every sudo on a headless machine.
+		# IT DOES MORE THAN WE WOULD. The file is named for the ACTUAL user, so a renamed user is
+		# handled; it also clears the legacy 010_pi-nopasswd and the cloud-init 90-cloud-init-users
+		# that can grant the same thing from somewhere nobody thinks to look.
+		# USER IS SET EXPLICITLY because the script reads $USER to build that filename, and master
+		# runs as ROOT - left alone it would write 010_root-nopasswd, which grants root something
+		# it already has and leaves the pi user still asking for a password
+		rc = "/usr/bin/raspi-config"
+		if os.path.isfile(rc):
+			subprocess.call("USER=" + user + " " + rc + " nonint do_sudo_pass 1 > /dev/null 2>&1", shell=True)
+			# verified with the same policy test, for the same reason - this runs moments after a
+			# sudo of our own, which is exactly when a timestamp check would lie
+			if subprocess.call(probe, shell=True) == 0:
+				U.logger.log(20, ("enabled passwordless sudo for user {} via raspi-config (do_sudo_pass 1). NOTE: "
+								"setting 'password required' in raspi-config removes it again, and the next master "
+								"start puts it back - the pi programs call sudo constantly and hang without it").format(user))
+				return
+			U.logger.log(20, "raspi-config do_sudo_pass did not take for user {} - writing the sudoers file directly instead".format(user))
+
+		target = "/etc/sudoers.d/020_pibeacon-nopasswd"
+		want   = user + " ALL=(ALL) NOPASSWD: ALL\n"
+		if os.path.isfile(target):
+			try:
+				f = open(target, "r")
+				have = f.read()
+				f.close()
+			except Exception:
+				have = ""
+			if have == want:	return			# already exactly right - say nothing
+
+		tmp = G.homeDir + "temp/sudoers.new"
+		f = open(tmp, "w")
+		f.write(want)
+		f.close()
+		if subprocess.call("visudo -c -f " + tmp + " > /dev/null 2>&1", shell=True) != 0:
+			U.logger.log(20, "enableSudoNoPassword: visudo REFUSED the line for user {} - not installing it, sudo is untouched".format(user))
+			U.removeFile(tmp)
+			return
+		if subprocess.call("install -o root -g root -m 0440 " + tmp + " " + target, shell=True) != 0:
+			U.logger.log(20, "enableSudoNoPassword: could not install {} - is master running as root?".format(target))
+			U.removeFile(tmp)
+			return
+		U.removeFile(tmp)
+		# SAID EVERY TIME IT HAS TO WRITE IT, not once. raspi-config's "password required" setting
+		# is exactly the delete of ITS file, /etc/sudoers.d/010_pi-nopasswd - so turning that on
+		# and restarting master brings this file back and the setting looks like it did nothing.
+		# It is a deliberate override and it has to say so, or the next person to wonder why
+		# raspi-config will not stick has nothing to go on
+		U.logger.log(20, ("enabled passwordless sudo for user {} in {}. NOTE: if you set 'password required' "
+						"in raspi-config, that deletes /etc/sudoers.d/010_pi-nopasswd and this file puts the "
+						"permission straight back at the next master start - the pi programs call sudo "
+						"constantly and hang without it. Delete {} to revoke it for good").format(user, target, target))
+	except Exception:
+		U.logger.log(20, "", exc_info=True)
+	return
+
 
 ####################      #########################
 def setupUtilities():
@@ -3144,13 +3405,20 @@ def execMaster():
 		U.removeFile("{}nohup.out".format(G.homeDir))
 
 		U.logger.log(20, "=========START-1.. MASTER  bf kill old pgms")
+		# AFTER killOldPrograms, which kills any copyToTemp.py left running by a version that
+		# still had one - "copyToTemp" is in G.programFiles and must stay there for exactly that,
+		# or an upgrade would leave the old process mirroring the same files as the new thread
 		killOldPrograms()
-		subprocess.call("/usr/bin/sudo "+pyCommand+" -E "+G.homeDir+"copyToTemp.py &", shell=True)
+		startCopyToTempThread()
 
 		test = ""
 		if usePython3: test = "yes"
 		subprocess.call("nohup sudo /bin/bash {}master.sh {} > /dev/null 2>&1 ".format(G.homeDir, test), shell=True)
 		time.sleep(1)
+
+		# BEFORE the programs that shell out to sudo are started, and after setupTempDir has made
+		# temp/ - the candidate file is written and validated there
+		if not skipTests: enableSudoNoPassword()
 
 		if not skipTests: makeRaspiConfigFile()
 
@@ -3166,6 +3434,10 @@ def execMaster():
 		checkLogfiles()
 
 		if not skipTests: checkPythonLibs()
+
+		# BEFORE the bluetooth channel check and long before beaconloop is started: a dongle whose
+		# patch is missing has to be patched and re-probed while nothing is using it yet.
+		if not skipTests: checkBTfirmware()
 
 		U.logger.log(20, "=========START-2.. indigoServer @ IP:{}<< G.wifiType:>>{}<<".format(G.ipOfServer, G.wifiType) )
 

@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 # by Karl Wachs
 # feb 5 2016
 # version 0.7 
@@ -18,7 +20,10 @@ import base64
 try:
 	#1/0 # use GPIO
 	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+		# local import: piBeaconUtils is imported further down in this file, and this
+		# runs at import time - U does not exist yet here
+		import piBeaconUtils as _U
+		subprocess.call(_U.pigpiodStartCmd(sudoPath="/usr/bin/sudo", pigpiodPath="/usr/bin/pigpiod"), shell=True)
 		time.sleep(2)
 	import gpiozero
 	from gpiozero.pins.pigpio import PiGPIOFactory
@@ -215,7 +220,7 @@ def getPigpio():
 			# arrives before that (or after a pigpiod crash) would fail for no visible reason.
 			if not U.pigpiodRunning(force=True):
 				U.logger.log(20,"getPigpio: pigpiod is not running - starting it")
-				subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+				subprocess.call(U.pigpiodStartCmd(sudoPath="/usr/bin/sudo", pigpiodPath="/usr/bin/pigpiod"), shell=True)
 				time.sleep(2)
 				U.pigpiodRunning(force=True)
 				PIGPIOhandle = pigpio.pi()

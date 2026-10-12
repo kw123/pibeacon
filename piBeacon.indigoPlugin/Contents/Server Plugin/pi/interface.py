@@ -1,3 +1,5 @@
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import subprocess, shutil
 # plain shutil: this script does not import piBeaconUtils (it runs as a tiny root helper)
 shutil.copy2("/home/pi/pibeacon/interfaces", "/etc/network/interfaces")

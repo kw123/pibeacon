@@ -8,6 +8,8 @@
 ## lightning sensor 
 ####################
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import sys, os, time, json, datetime, subprocess, copy
 import smbus
 import time
@@ -38,7 +40,7 @@ try:
 		try:
 			Device.pin_factory = PiGPIOFactory()
 		except Exception:					# pigpiod not up yet - start it and try once more
-			subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+			subprocess.call(U.pigpiodStartCmd(sudoPath="/usr/bin/sudo", pigpiodPath="/usr/bin/pigpiod"), shell=True)
 			time.sleep(2)
 			Device.pin_factory = PiGPIOFactory()
 	except Exception:

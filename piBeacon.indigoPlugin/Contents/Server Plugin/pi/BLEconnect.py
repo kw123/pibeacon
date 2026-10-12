@@ -34,7 +34,7 @@ try:
 	attClientPresent = True
 except:
 	attClientPresent = False			# py2 or no AF_BLUETOOTH -> gatttool stays the gatt engine
-ATTCLIENT_MINVERSION = 1.4				# checked at startup: partial file sends left STALE gattAttClient.py on rpis 3x already
+ATTCLIENT_MINVERSION = 1.5				# checked at startup: partial file sends left STALE gattAttClient.py on rpis 3x already
  
 import struct
 import array
@@ -49,7 +49,7 @@ import	piBeaconUtils	as U
 import	piBeaconGlobals as G
 
 G.program = "BLEconnect"
-VERSION = 12.0
+VERSION = 12.8		# 12.2 the ATT engine honours the radio the CALLER passed (switchbot jobs go on useHCI2 again) + falls back to another radio on ANY failure to get a link, not only on ENOSYS
 iphoneDebug = False		# True: log every iphone/watch presence poll + the presenceDBG stage lines (page/ACL/Read-RSSI)
 ansi_escape =re.compile(r'(\x9B|\x1B\[)[0-?]*[ -\/]*[@-~]')
 
@@ -168,7 +168,7 @@ def startHCI():
 	    tuple: (useHCI, myBLEmac, BLEid, bus, useHCI2) on success; exits the process on failure
 	"""
 	global singleDongleMode
-	global useHCI, useHCI2
+	global useHCI, useHCI2, myBLEmac2, hciMacMap
 	## give other ble functions time to finish
 
 	defaultBus = "USB"
@@ -202,6 +202,14 @@ def startHCI():
 	#	 hciX default 
 
 	HCIs = U.whichHCI()
+	# name -> mac for EVERY radio on this rpi. A caller that asks for a radio by hci name (the
+	# switchbot jobs pass useHCI2) can then be bound to that radio's own mac: the ATT socket binds
+	# by mac, not by hci name, so without this map the name could only be dropped.
+	try:
+		hciMacMap = {}
+		for _hh in HCIs.get("hci", {}):
+			hciMacMap["{}".format(_hh)] = "{}".format(HCIs["hci"][_hh].get("BLEmac",""))
+	except Exception:	hciMacMap = {}
 	"""
 	{'hci': {
 	'hci0': {'bus': 'USB',  'BLEmac': '5C:F3:70:6D:D9:4A', 'numb': 0, 'upDown': 'UP'}, 
@@ -237,6 +245,21 @@ def startHCI():
 		# "BLE STACK is not UP", killing beep/battery/iphone. The ext-listener radio stays excluded:
 		# our connect commands knock its extended scan back into legacy mode.
 		masterHCI = hciBeaconloopUsed.get("BLEconnect", {}).get("hci", "")
+		masterMac = "{}".format(hciBeaconloopUsed.get("BLEconnect", {}).get("mac", ""))
+		# FOLLOW THE MAC, NOT THE hci NAME. hci numbering is not stable across a power cycle or a
+		# dongle swap - after one, a beaconloop.hci still naming "hci2" matched no radio, this test
+		# failed, and the local pick below landed on a radio the master had deliberately left out:
+		# one that cannot originate LE connections, so every switchbot command failed with a 40s
+		# create-connection timeout while the radio the master HAD chosen sat beside it scanning
+		# happily. The mac identifies a radio whatever it happens to be called today, which is the
+		# same reason beaconloop follows pinned macs rather than names.
+		if masterMac != "":
+			for _hh in HCIs["hci"]:
+				if "{}".format(HCIs["hci"][_hh].get("BLEmac","")).upper() == masterMac.upper():
+					if _hh != masterHCI:
+						U.logger.log(20,"BLE(long)connect: the master-assigned connect radio ({}) is now {} - hci numbering changed, following the mac".format(masterHCI if masterHCI else "?", _hh))
+					masterHCI = _hh
+					break
 		if masterHCI and masterHCI != doNotUseExtListener and masterHCI in HCIs["hci"] and HCIs["hci"][masterHCI].get("upDown","") == "UP":
 			useHCI   = masterHCI
 			myBLEmac = HCIs["hci"][useHCI]["BLEmac"]
@@ -271,9 +294,12 @@ def startHCI():
 					# and is handled two lines down, so it must not raise an indigo ERROR
 					useHCI2,  myBLEmac2, BLEid2, bus2 = U.selectHCI(hciPool, "", "", doNotUseHCI=doNotUseHCI, doNotUseHCI2=useHCI, quiet=True)
 					if BLEid2 >= 0:
-						U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"BLEconnect"}))
+						myBLEmac2 = "{}".format(myBLEmac2)			# the 2nd radio: switchbot/gatt jobs are sent on it
+						U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedHCI2":useHCI2, "myBLEmac2":myBLEmac2, "usedBus":bus,"pgm":"BLEconnect"}))
+						U.logger.log(20, "BLE(long)connect: connect radio {} ({}), second radio for switchbot/gatt jobs {} ({})".format(useHCI, myBLEmac, useHCI2, myBLEmac2))
 						return useHCI,  myBLEmac, BLEid, bus, useHCI2  
 
+				myBLEmac2 = "{}".format(myBLEmac)					# no spare radio: both jobs on the connect radio
 				U.writeFile("temp/BLEconnect.hci", json.dumps({"usedHCI":useHCI, "myBLEmac": myBLEmac, "usedBus":bus,"pgm":"BLEconnect"}))
 				U.logger.log(20, "BLE(long)connect: using mac:{};  useHCI: {}; bus: {}; mode: {} searching for MACs:\n{}".format(myBLEmac, useHCI, HCIs["hci"][useHCI]["bus"], BLEconnectMode , macList))
 				return 	useHCI,  myBLEmac, BLEid, bus, useHCI
@@ -389,8 +415,16 @@ def launchGATT(useHCI, thisMAC, timeoutGattool, timeoutConnect, retryConnect=5, 
 	if gattEngineIsATT():				# ATT engine: session = LE L2CAP socket, no gatttool process
 		sess = attSessions.get(thisMAC)
 		if sess is not None and sess.sock is not None: return "ok"
+		# HONOUR THE ADAPTER THE CALLER PASSED. The gatttool branch below always has: it puts
+		# useHCI into "gatttool -i <useHCI>". The ATT branch used to drop the argument and bind
+		# to the global myBLEmac (the CONNECT radio) instead - so every switchbot job, which is
+		# deliberately sent on the SECOND radio (useHCI2, picked with doNotUseHCI2=useHCI), was
+		# silently moved onto the connect radio when the engine changed. On an rpi whose connect
+		# radio cannot originate LE links that broke every switchbot command, while the same
+		# command on the radio the caller asked for connects in well under a second.
+		wantMac = "{}".format(hciMacMap.get("{}".format(useHCI), "") or myBLEmac)
 		for kk in range(max(1, int(nTries))):
-			if attConnect(thisMAC, random, connectTimeout=10. * max(1, int(retryConnect))):
+			if attConnect(thisMAC, random, connectTimeout=10. * max(1, int(retryConnect)), adapterMac=wantMac):
 				return "ok"
 		return ""
 
@@ -864,6 +898,13 @@ def beaconBeepPending():
 #################################
 attSessions = {}		# mac -> gattAttClient.GattSession (ATT gatt engine, replaces the gatttool pexpect session)
 myBLEmac    = ""		# our dongle's own BLE mac (set by execBLEconnect/startHCI; used to pin the ATT socket)
+myBLEmac2   = ""		# the SECOND radio's mac (useHCI2) - switchbot/gatt jobs are deliberately sent on it
+hciMacMap   = {}		# "hci1" -> "00:15:83:.." for every radio on this rpi; resolves a caller's hci name to a bind mac
+attGoodMac  = [""]		# an adapter that was PROVEN able to create LE connections - preferred after a fallback worked
+attBadMac   = {}		# mac -> 1 for an adapter that refused create-connection (ENOSYS); skipped first next time
+attFailMac  = {}		# mac -> consecutive failures to get ANY link; 2+ and a proven radio is used instead
+roleCheckLast = [0.]	# throttle for checkRoleChanged()
+GOODRADIOFILE = "temp/BLEconnect.goodRadio"	# survives a restart: see rememberGoodRadio()
 ENOSYS_RETRIES = 5		# ATT connect: retry an intermittent ENOSYS (adapter refuses create-connection) this many times, 1s apart
 knownBeaconTags = {}	# switchbot device-type definitions from temp/knownBeaconTags - MUST exist even when the file is missing (NameError killed readParams before)
 lastLoggedGattEngine = [""]	# log the engine decision once per change (list: no global decl needed)
@@ -877,7 +918,7 @@ def gattEngineIsATT():
 
 
 #################################
-def attConnect(mac, useRandom, connectTimeout=12.):
+def attConnect(mac, useRandom, connectTimeout=12., adapterMac=None):
 	"""Opens an ATT session to a beacon tag (LE L2CAP socket - the kernel creates the
 	connection, no gatttool process). Bound to our own dongle (myBLEmac). True/False.
 	The kernel keeps the create-connection pending for the WHOLE timeout - a long
@@ -889,23 +930,41 @@ def attConnect(mac, useRandom, connectTimeout=12.):
 	ETIMEDOUT) already consumed their window and are not immediately retried here."""
 	global counterFunctionNotImplemented
 	attClose(mac)
+	# WHICH RADIO. adapterMac=None keeps the historical behaviour (the connect radio); a caller
+	# that picked a radio passes its mac. A radio PROVEN to create connections after an earlier
+	# fallback is preferred over one that refused, so one bad dongle costs one job, not all of them.
+	useMac = "{}".format(myBLEmac if adapterMac is None else adapterMac)
+	# A RADIO THAT KEEPS FAILING IS NOT TRIED FIRST FOREVER. ENOSYS marks a radio bad outright, but
+	# the radio that caused all of this failed with plain create-connection TIMEOUTS - never marked,
+	# so every single job paid 40s on it before the fallback below rescued the job. After two
+	# consecutive no-link failures a radio PROVEN to work is used first instead.
+	if (attGoodMac[0] != "" and attGoodMac[0] != useMac and attGoodMac[0] not in attBadMac
+			and (useMac in attBadMac or attFailMac.get(useMac, 0) >= 2)):
+		U.logger.log(20,"{} ATT connect: {} has failed {}x in a row ({}) - going straight to {}, which is proven to work".format(
+						mac, useMac, attFailMac.get(useMac, 0), "refused create-connection" if useMac in attBadMac else "no link", attGoodMac[0]))
+		useMac = attGoodMac[0]
+	isENOSYS = False
 	try:
 		for attempt in range(ENOSYS_RETRIES):
 			t0   = time.time()
-			sess = gattAttClient.GattSession(mac, randomAddr=useRandom, adapterMac=myBLEmac, connectTimeout=connectTimeout)
+			sess = gattAttClient.GattSession(mac, randomAddr=useRandom, adapterMac=useMac, connectTimeout=connectTimeout)
 			if sess.connect():
 				attSessions[mac] = sess
 				counterFunctionNotImplemented = 0
-				U.logger.log(20,"{} ATT session connected after {:.1f}s (no gatttool){}".format(
-								mac, time.time()-t0, "" if attempt == 0 else " on ENOSYS-retry #{}".format(attempt)))
+				if attGoodMac[0] != useMac:	rememberGoodRadio(useMac)
+				attGoodMac[0]      = useMac				# proven: this radio CAN originate LE links
+				attFailMac[useMac] = 0
+				attBadMac.pop(useMac, None)
+				U.logger.log(20,"{} ATT session connected after {:.1f}s on {} (no gatttool){}".format(
+								mac, time.time()-t0, useMac, "" if attempt == 0 else " on ENOSYS-retry #{}".format(attempt)))
 				return True
 			isENOSYS = "ENOSYS" in sess.lastError
 			if isENOSYS: counterFunctionNotImplemented += 1
 			# SO_ERROR:ENOSYS/EIO right after a heard adv = the connect ADAPTER refused create-connection
 			# (busy/out-of-slots/weak controller - often the onboard Pi BT); "connect timeout" = never found;
 			# fast ETIMEDOUT = HCI 0x3E "Connection Failed to be Established" (tag found, link not held)
-			U.logger.log(20,"{} ATT connect failed after {:.1f}s of {:.0f}s on {} (mac {}): {} (wedgeCount:{}, attempt {}/{})".format(
-							mac, time.time()-t0, connectTimeout, useHCI, myBLEmac, sess.lastError, counterFunctionNotImplemented, attempt+1, ENOSYS_RETRIES))
+			U.logger.log(20,"{} ATT connect failed after {:.1f}s of {:.0f}s on mac {}: {} (wedgeCount:{}, attempt {}/{})".format(
+							mac, time.time()-t0, connectTimeout, useMac, sess.lastError, counterFunctionNotImplemented, attempt+1, ENOSYS_RETRIES))
 			if isENOSYS and attempt == 0:
 				# ENOSYS = the controller REFUSED create-connection, and the error alone never says
 				# why. The usual reason is the single LE initiator slot still being held by a
@@ -913,15 +972,129 @@ def attConnect(mac, useRandom, connectTimeout=12.):
 				# (not per attempt): a slow beep then tells whether something squats the slot,
 				# which is the one thing the blind 0.4s retry ladder cannot distinguish.
 				try:
-					con = readPopen("sudo hcitool -i {} con".format(useHCI))
-					U.logger.log(20,"{} ENOSYS diag - {} links: {}".format(mac, useHCI, "{}".format(con[0]).replace("\n","; ").strip()))
+					U.logger.log(20,"{} ENOSYS diag - {} links: {}".format(mac, useHCI, U.hciConnections(useHCI)))
 				except Exception:	pass
 			if not isENOSYS:
 				break						# timeout / ETIMEDOUT etc. won't benefit from an immediate retry
 			time.sleep(0.4)					# brief breather; live logs show the slot frees within well under a second
+
+		# ADAPTER FALLBACK - ON ANY FAILURE TO GET A LINK, not just ENOSYS. The first version gated
+		# this on ENOSYS because that is the controller refusing outright, and then a live rpi failed
+		# all day with ECONNREFUSED(111) (BlueZ's 40s HCI_CONNECT_TIMEOUT: create-connection never
+		# completed) and ECONNABORTED(103) on a dongle that cannot hear ANY advertisement - so the
+		# fallback never ran on the one case it was built for. A radio that cannot hear the target
+		# cannot connect to it, and that reads as a timeout, not as a refusal.
+		# A dongle this bad cannot be predicted from the controller either: it reports LE Create
+		# Connection as SUPPORTED in Read Local Supported Commands next to a radio that really does
+		# it, so only an attempt decides. Try the other radios and remember which one worked; the
+		# ext listener stays out, our connect commands knock its extended scan back to legacy.
+		# Only ENOSYS marks a radio BAD - a timeout may well be the peer's fault, not the radio's.
+		if True:
+			attFailMac[useMac] = attFailMac.get(useMac, 0) + 1
+			if isENOSYS:	attBadMac[useMac] = 1
+			extL = ""
+			try:
+				_roles, _raw = U.readJson("{}temp/beaconloop.hci".format(G.homeDir))
+				extL = "{}".format(_roles.get("extListener", {}).get("hci", ""))
+			except Exception:	pass
+			for altHCI in sorted(hciMacMap):
+				altMac = "{}".format(hciMacMap.get(altHCI, ""))
+				if altMac == "" or altMac == useMac or altMac in attBadMac:	continue
+				if altHCI == extL:											continue
+				# THE ALTERNATE GETS A RETRY TOO. It used to get exactly ONE attempt while the
+				# primary got ENOSYS_RETRIES, and ENOSYS is the one error that clears by itself: it
+				# usually means a stale LE link still holds the single initiator slot (the diag
+				# prints it: "links: LE <mac> handle:64 state:1 out"). Live, the fallback hit ENOSYS
+				# on the good radio, gave up, and the whole job failed - 0.4s later the same radio
+				# connected that same curtain in another job. One retry is all it needed.
+				t0   = time.time()
+				sess = None
+				for _try in range(2):
+					if _try > 0:	time.sleep(0.5)
+					sess = gattAttClient.GattSession(mac, randomAddr=useRandom, adapterMac=altMac, connectTimeout=min(connectTimeout, 20.))
+					if sess.connect():						break
+					if "ENOSYS" not in "{}".format(sess.lastError):	break	# a timeout will not clear in 0.5s
+				if sess is not None and sess.sock is not None:
+					attSessions[mac]              = sess
+					if attGoodMac[0] != altMac:	rememberGoodRadio(altMac)
+					attGoodMac[0]                 = altMac
+					attFailMac[altMac]            = 0
+					counterFunctionNotImplemented = 0
+					U.logger.log(30,"{} ATT connect: radio {} could not get a link ({}), {} ({}) made it in {:.1f}s - using that one from now on. To avoid this detour altogether pin the BLEconnect role to it: rPi device dialog -> 'Pin a role to a specific BLE radio'. The plugin menu item 'Qualify the BLE dongles of one RPI..' measures which radios can originate links at all.".format(
+									mac, useMac, "ENOSYS - refused outright" if isENOSYS else "could not reach the target", altMac, altHCI, time.time()-t0))
+					return True
+				U.logger.log(20,"{} ATT connect fallback on {} ({}) also failed: {} - if EVERY radio fails like this the target is simply not there".format(mac, altHCI, altMac, sess.lastError))
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
 	return False
+
+
+#################################
+def checkRoleChanged():
+	"""Restart when the master has moved the BLEconnect role to a DIFFERENT radio.
+
+	beaconloop restarts ITSELF when a role pin changes in the device dialog, but it only publishes
+	the new assignment - and BLEconnect reads beaconloop.hci once, at startup. So it kept using the
+	old radio indefinitely: live, the pins were flipped, beaconloop republished the connect role
+	onto the other dongle and restarted, while BLEconnect carried on with the previous one - which
+	made the whole change look as though it had not worked.
+	Never while a job is in flight: a switchbot command or a beep holds a session and the radio.
+	And only to a radio that is really present and UP, so a stale file cannot restart-loop us.
+	"""
+	try:
+		if time.time() - roleCheckLast[0] < 30:							return
+		roleCheckLast[0] = time.time()
+		if switchbotActive in ["active", "waiting", "waitingForPrio"]:	return
+		if attSessions != {}:											return
+		roles, raw = U.readJson("{}temp/beaconloop.hci".format(G.homeDir))
+		want = "{}".format(roles.get("BLEconnect", {}).get("mac", "")).strip().upper()
+		if want == "" or want == "{}".format(myBLEmac).strip().upper():	return
+		HCIs = U.whichHCI()
+		for hh in HCIs.get("hci", {}):
+			if ("{}".format(HCIs["hci"][hh].get("BLEmac","")).upper() == want
+					and "{}".format(HCIs["hci"][hh].get("upDown","")).upper() == "UP"):
+				U.logger.log(20,"the BLEconnect role moved from {} to {} ({}) - restarting to follow it".format(myBLEmac, want, hh))
+				# python3=usePython3 explicitly: the default is False, which would relaunch this
+				# program under python2 - there is no pybluez there any more and the ATT engine
+				# needs py3 sockets, so it would come back crippled.
+				U.restartMyself(reason="BLEconnect role moved to another radio", delay=2, python3=usePython3)
+				return
+		U.logger.log(20,"the BLEconnect role was moved to {}, but no radio with that mac is UP here - staying on {}".format(want, myBLEmac))
+	except Exception:	pass
+
+
+#################################
+def rememberGoodRadio(mac):
+	"""Write down the radio that was PROVEN able to originate LE links.
+
+	attGoodMac lived only in memory, so every restart re-learned it the hard way: the first job
+	after one spent a 40s create-connection timeout on the assigned radio before the fallback found
+	the working one - and a job whose retry budget was already spent reported "could not connect"
+	to indigo although the fix was one radio away (seen live, twice). One line in a file ends that.
+	"""
+	try:
+		if "{}".format(mac).strip() == "":	return
+		U.writeFile(GOODRADIOFILE, "{}".format(mac).strip().upper())
+	except Exception:	pass
+
+
+#################################
+def recallGoodRadio():
+	"""The radio a previous run proved able to connect, or "". Only ever a PREFERENCE applied after
+	the assigned radio has failed repeatedly - never an override of the role the master assigned."""
+	# plain open(), NOT U.readFile - there is no such helper in piBeaconUtils, only writeFile. The
+	# first version called it, the NameError was swallowed by the except below, and the memory this
+	# function exists to restore would have stayed empty for ever without a single complaint.
+	try:
+		fh  = open(G.homeDir + GOODRADIOFILE)
+		mac = "{}".format(fh.read()).strip().upper()
+		fh.close()
+		if len(mac) == 17 and mac.count(":") == 5:
+			attGoodMac[0] = mac
+			U.logger.log(20,"ATT connect: a previous run proved {} can originate LE links - it will be used if the assigned radio keeps failing".format(mac))
+			return mac
+	except Exception:	pass
+	return ""
 
 
 #################################
@@ -997,8 +1170,18 @@ def attExecGattCmd(mac, cc, timeout=5):
 					return False, []
 				return True, ["{:02x}".format(bb) for bb in bytearray(val)]
 		U.logger.log(20,"{} ATT engine: unsupported gatt cmd syntax: {}".format(mac, cc))
-	except Exception:
-		U.logger.log(20,"", exc_info=True)
+	except Exception as ee:
+		# A LINK THAT DROPS MID-COMMAND IS NORMAL, NOT A CRASH. A switchbot closes the connection
+		# as soon as it starts moving, and the pending write then raises ConnectionAbortedError /
+		# ConnectionResetError / BrokenPipeError from the socket. That was logged as a full
+		# traceback - six lines of stack for "the curtain did what it was told" - which buries the
+		# real errors around it. One line for those, the traceback kept for anything unexpected.
+		_eName = type(ee).__name__
+		if _eName in ("ConnectionAbortedError", "ConnectionResetError", "BrokenPipeError") or getattr(ee, "errno", 0) in (103, 104, 32):
+			U.logger.log(20,"{} ATT link dropped while sending {} ({}) - the device closed the connection, retrying with a fresh session".format(mac, cc, _eName))
+			attClose(mac)
+		else:
+			U.logger.log(20,"", exc_info=True)
 	return False, []
 
 
@@ -1176,7 +1359,7 @@ def beaconGattConnect(mac, useRandom, advJustSeen=False):
 			expCommands[mac] = ""
 			resumeBeaconloop()								# scan again before the 2nd round
 			if not round2:
-				readPopen("sudo /bin/hciconfig {} reset".format(useHCI))
+				U.hciDevCtl(useHCI, "reset")		# ioctl, /bin/hciconfig only as fallback
 				time.sleep(1.5)
 		# LAST RESORT: both patient ATT rounds timed out although the tag was heard with good
 		# rssi - on some radios (single-dongle onboard) the kernel L2CAP connect path starves
@@ -1185,8 +1368,7 @@ def beaconGattConnect(mac, useRandom, advJustSeen=False):
 		# on success is the proof that the kernel path - not RF/tag - is at fault.
 		if gattEngineIsATT() and os.path.isfile("/usr/bin/gatttool"):
 			try:
-				con = readPopen("sudo hcitool con")
-				U.logger.log(20,"{} diag before gatttool fallback - current links: {}".format(mac, "{}".format(con[0]).replace("\n","; ").strip()))
+				U.logger.log(20,"{} diag before gatttool fallback - current links: {}".format(mac, U.hciConnections(useHCI)))
 			except Exception: pass
 			pauseBeaconloopForGatt(keepScan=True)	# gatttool's proven environment: scan running, adv off
 			if launchGATT(useHCI, mac, 6, 20, retryConnect=2, random=useRandom, nTries=1, verbose=True) == "ok":
@@ -1203,7 +1385,7 @@ def beaconGattConnect(mac, useRandom, advJustSeen=False):
 	try:
 		expCommands[mac] = ""
 		attClose(mac)
-		readPopen("sudo /bin/hciconfig {} reset".format(useHCI))
+		U.hciDevCtl(useHCI, "reset")		# ioctl, /bin/hciconfig only as fallback
 		time.sleep(1.5)
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
@@ -1698,14 +1880,22 @@ def tryToConnectSocketStdlib(thisMAC, BLEtimeout, devId):
 				BLEsocketErrCount = 0
 				return {}
 			flag0ok	= struct.unpack("b", socdata[0:1])[0]
-			txPower	= struct.unpack("b", socdata[1:2])[0]	# legacy field name - actually the handle low byte, kept for compatibility
+			handleLo= struct.unpack("b", socdata[1:2])[0]	# byte 1 of the Read-RSSI answer IS the handle low byte
 			byte2	= struct.unpack("b", socdata[2:3])[0]
 			rssi	= struct.unpack("b", socdata[3:4])[0]
+			# THE REAL TRANSMIT POWER, when gattAttClient >= 1.5 supplies it as a 5th byte from an
+			# HCI Read Transmit Power Level command (what hcitool's "tpl" did). Before that this
+			# field was filled with handleLo, which is not a power at all - so on an older
+			# gattAttClient the value is left at its -999 "unknown" default rather than reported as
+			# a number that means nothing.
+			txPower	= struct.unpack("b", socdata[4:5])[0] if len(socdata) >= 5 else -999
 			retdata["flag0ok"]	= flag0ok
 			retdata["byte2"]	= byte2
-			if flag0ok == 0 and not (txPower == rssi and rssi == 0):
+			# the old guard used txPower here, when txPower WAS handleLo: an all-zero answer
+			# (handle 0 + rssi 0) is the "nothing really read" case, so it keeps testing handleLo
+			if flag0ok == 0 and not (handleLo == rssi and rssi == 0):
 				retdata["rssi"]		= rssi
-				retdata["txPower"]	= txPower
+				if txPower != -999:	retdata["txPower"] = txPower
 		except (IOError, OSError):
 			# real adapter-level error (away is handled via socdata None above)
 			for ii in range(30):
@@ -3141,15 +3331,14 @@ def hardresetHCI(hci):
 	    None: runs hciconfig/service shell commands to reset the adapter; logs
 	"""
 	try:
-		cmd = "sudo hciconfig {} down".format(hci)
-		ret = readPopen(cmd) # enable bluetooth
-		U.logger.log(20,"cmd:{} .. ret:{}".format(cmd, ret)  )
+		# down and up by ioctl; the bluetooth service restart in between still needs a shell.
+		# Each step is LOGGED WITH ITS RESULT now - these three used to log the output of a command
+		# whose exit status nobody looked at, so a failed down/up read exactly like a good one
+		U.logger.log(20,"hci {} down: {}".format(hci, U.hciDevCtl(hci, "down")))
 		cmd = "sudo invoke-rc.d bluetooth restart"
 		ret = readPopen(cmd) # enable bluetooth
 		U.logger.log(20,"cmd:{} .. ret:{}".format(cmd, ret)  )
-		cmd = "sudo hciconfig {} up".format(hci)
-		ret = readPopen(cmd) # enable bluetooth
-		U.logger.log(20,"cmd:{} .. ret:{}".format(cmd, ret) )
+		U.logger.log(20,"hci {} up: {}".format(hci, U.hciDevCtl(hci, "up")))
 	except Exception : 
 		U.logger.log(20,"", exc_info=True)
 	return 
@@ -3346,6 +3535,7 @@ def execBLEconnect():
 	##print eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled
 
 	useHCI, myBLEmac, BLEid, bus, useHCI2 = startHCI()
+	recallGoodRadio()			# a previous run may already know which radio can originate LE links
 	text = "{}-{}-{}".format(useHCI, bus, myBLEmac)
 	U.sendURL( data={"data":{"hciInfo_BLEconnect":text}}, squeeze=False, wait=False )
 
@@ -3356,6 +3546,12 @@ def execBLEconnect():
 	U.logger.log(20, "starting v:{} \n                            using HCI:{}/{}; mac#:{}; bus:{}; pid#:{}; eth0IP:{}; wifi0IP:{}; eth0Enabled:{}; wifiEnabled:{}".format(VERSION, useHCI, useHCI2, myBLEmac, bus, myPID, eth0IP, wifi0IP, eth0Enabled, wifiEnabled))
 	if attClientPresent and getattr(gattAttClient, "VERSION", 0.) < ATTCLIENT_MINVERSION:
 		U.logger.log(20, "gattAttClient.py on this rpi is v{} but BLEconnect v{} needs v{} - STALE FILE (partial send?): send ALL pgm files to this rpi!".format(getattr(gattAttClient, "VERSION", 0.), VERSION, ATTCLIENT_MINVERSION))
+	# same check for hciRawSocket, which now carries the adapter up/down/reset ioctls this program
+	# uses for BLE recovery. U.hciRawStale holds the complaint when the rpi has an older copy; it is
+	# reported here at startup as well as on first use, because recovery may not run for hours and a
+	# stale file should be visible before then
+	if "{}".format(getattr(U, "hciRawStale", "")) != "":
+		U.logger.log(20, U.hciRawStale)
 	while True:
 
 			tt = time.time()
@@ -3364,14 +3560,15 @@ def execBLEconnect():
 
 			if tt - lastRead > 8 :
 				readParams()
+				checkRoleChanged()		# the dialog may have moved the connect role to another radio
 				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
 				lastRead = tt
 				if not checkIfHCIup(useHCI):
 					U.logger.log(20, "requested a restart of BLE stack due to {} down ".format(useHCI))
 					#U.doWriteSimpleFile("{}temp/BLErestart".format(G.homeDir), "xx") # signal that we need to restart BLE
-					cmd = "sudo hciconfig {} down;sudo hciconfig {} up;".format(useHCI, useHCI)
-					readPopen(cmd) # enable bluetooth
-					U.logger.log(20,"cmd:{} ".format(cmd)  )
+					okDown = U.hciDevCtl(useHCI, "down")
+					okUp   = U.hciDevCtl(useHCI, "up")
+					U.logger.log(20,"{} bounced by ioctl: down:{}, up:{}".format(useHCI, okDown, okUp))
 					time.sleep(1)
 					restartCount += 1
 					if not checkIfHCIup(useHCI): # simple restart did not woek, lets do a master restart 

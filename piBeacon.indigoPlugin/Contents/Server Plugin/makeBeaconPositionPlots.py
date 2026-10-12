@@ -379,8 +379,9 @@ try:
 	except  Exception as e:
 			logger.log(40,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e) )
 
-	try:	pngSize = os.path.getsize((piPositionsDir+"beaconPositions.png").encode('utf8'))/1024.
-	except: pnGsize = 0
+	try:	pngSize = os.path.getsize(piPositionsDir+"beaconPositions.png")/1024.
+	except Exception: pngSize = 0	# was "pnGsize" - a typo, so a missing file left pngSize UNDEFINED
+									# and the log line below raised NameError instead
 	logger.log(20,"time used {:4.2f} --   saving plot;   file sizes: {:5.1f}[KB]".format(time.time()-tStart, pngSize ))
 	# 
 
@@ -391,8 +392,13 @@ try:
 			ppp = subprocess.Popen(cmd.encode('utf8'),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  ## creates a file with .xxx, wait for completion
 			try:	compSize = os.path.getsize((piPositionsDir+"beaconPositions.xxx").encode('utf8'))/1024.
 			except: compSize = 0
-			if os.path.isfile((piPositionsDir+"beaconPositions.png").encode('utf8')): os.remove((piPositionsDir+"beaconPositions.png").encode('utf8'))
-			os.rename((piPositionsDir+"beaconPositions.xxx").encode('utf8'),(piPositionsDir+"beaconPositions.png").encode('utf8') )
+			# the png used to be deleted BEFORE the .xxx was known to exist, so a pngquant that
+			# failed left no image at all (the outer try only logged it). pngquant writes the .xxx
+			# alongside the original, so the rename alone is enough and nothing is deleted first
+			if os.path.isfile(piPositionsDir+"beaconPositions.xxx"):
+				os.rename(piPositionsDir+"beaconPositions.xxx", piPositionsDir+"beaconPositions.png")
+			else:
+				logger.log(20,"pngquant produced no output - keeping the uncompressed png. stderr:{}".format(ppp[1]))
 			logger.log(20,"time used {:4.2f} --   file sizes: original file: {:5.1f};  compressed file: {:5.1f}[KB]".format((time.time()-tStart), pngSize,compSize) )
 	except  Exception as e:
 			logger.log(40,"Line {} has error={}" .format(sys.exc_info()[2].tb_lineno, e)  )

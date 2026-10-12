@@ -3,6 +3,8 @@
 ####################
 # fixed  2020-04-06:	 except Exception >>> as e<<< : was missing in several lines, only happens when error occures
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import sys, os, time, json, datetime,subprocess,copy
 import smbus
 import math

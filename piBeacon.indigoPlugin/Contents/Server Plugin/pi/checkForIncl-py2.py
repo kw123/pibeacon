@@ -1,5 +1,7 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 import os, time, subprocess, logging, sys
 
 def _fixLogPerm(_fn):		# a sudo-started helper CREATES this file as root; a later program running

@@ -23,6 +23,7 @@ from __future__ import division
 import sys, os, subprocess, copy
 import time,datetime
 import struct
+import binascii
 try:
 	import bluetooth._bluetooth as bluez
 	bluezPresent = True
@@ -63,7 +64,7 @@ try:
 except Exception as e:
 	fmGroup = None
 	fmGroupImportError = "{}".format(e)
-VERSION   = 21.2
+VERSION   = 22.3
 
 if sys.version[0] == "3": usePython3 = True
 else:					  usePython3 = False
@@ -73,7 +74,14 @@ try:	import codecs
 except:	pass
 
 
+# THE LISTENER'S REPORT COUNT, opt-in by file like temp/extListener.keepLegacy next to it:
+#     touch /home/pi/pibeacon/temp/extListener.heartbeat   -> one line per minute
+#     rm    /home/pi/pibeacon/temp/extListener.heartbeat   -> silent (default)
+# It was a hardcoded False, so "is the listener receiving anything at all" could not be
+# answered without editing the source - and that is the first question to ask when E1 does
+# not arrive. Checked on the same 5 s cadence as keepLegacy, so no restart is needed.
 _debugheartbeat = False
+_debugBLE5 = False
 
 iTrackDevTypes = {"0":"0","1":"","2":""   ,"3":"Finder-3","4":"Wallet-4",  "5":"",  "6":"Mini-6",  "7":"",  "8":"Rechargeable-8",   "9":"Glasses-9","A":"A","B":"B","C":"C","D":"D","E":"E","F":"F"}
 		# first step to drive with table, not ready yet
@@ -150,6 +158,30 @@ def hex2str(inString,logLevel=1):
 	return "00"
 	
 ####-------------------------------------------------------------------------####
+def hciDev(hci, what, startTime=None, level=20):
+	"""Brings an hci adapter up, down or resets it - by ioctl, with /bin/hciconfig as the fallback.
+
+	Thin wrapper over U.hciDevCtl so the 15 call sites in this file stay one line each and all log
+	the same way. hciconfig is deprecated upstream and already missing from some BlueZ builds, and
+	every one of those sites used to throw the shell output away, so a failed reset looked exactly
+	like a successful one - on the paths that run when BLE is already wedged.
+
+	Inputs:
+	    hci (str): adapter, eg "hci0"
+	    what (str): "up", "down" or "reset"
+	    startTime (float or None): when given, the elapsed time is logged as before
+	    level (int): log level
+	Outputs:
+	    bool: True when the adapter is in the wanted state
+	"""
+	ok = U.hciDevCtl(hci, what)
+	if not ok:
+		if startTime is None:	U.logger.log(level, "hci {} {}: {}".format(hci, what, "ok" if ok else "FAILED"))
+		else:					U.logger.log(level, "hci {} {}: {}, DT:{:.3f}".format(hci, what, "ok" if ok else "FAILED", tryDeltaTime(startTime)))
+	return ok
+
+
+#################################
 def readPopen(cmd):
 		"""Runs a shell command via subprocess.Popen and returns its decoded stdout and stderr as a tuple of UTF-8 strings, logging on exception.
 
@@ -352,6 +384,24 @@ def stringFromPacket(pkt):
 	Outputs:
 	    str: concatenated two-digit-per-byte hex string
 	"""
+	# C LOOP INSTEAD OF A PYTHON ONE, on both versions. This runs on EVERY packet - py-spy put it
+	# at ~8% of beaconloop, the largest single leaf left after the tag search was fixed - and the
+	# per-byte loop below was doing the worst possible amount of work per byte:
+	#   py3: an isinstance test, a "%02x" format and a string concat per byte
+	#   py2: all of that PLUS a struct.unpack call per byte, because iterating a py2 str yields
+	#        one-character strs, so the isinstance(c, int) test is false for every single byte
+	# bytes.hex() (py3) and binascii.hexlify (py2) do the whole conversion in C in one call.
+	# hexlify is the py2 answer specifically: it takes a str or a bytearray, returns a str, and
+	# needs no per-byte python at all. Both produce lowercase, exactly as "%02x" did, and both
+	# callers .upper() the result anyway.
+	# The loop is KEPT as the last fallback: pkt is whatever the socket handed us, and if it is
+	# ever something neither path accepts (a list of ints, a memoryview on an odd build) the old
+	# behaviour still applies rather than an exception reaching the read loop.
+	try:	return pkt.hex()					# py3 bytes / bytearray
+	except AttributeError:	pass				# py2 str has no .hex()
+	try:	return binascii.hexlify(pkt)		# py2 str / bytearray -> str; py3 would give bytes
+	except Exception:	pass
+
 	myString = ""
 	for c in pkt:
 		if not isinstance(c, int): c = struct.unpack("B",c)[0]	# py2: str byte, py3: already int
@@ -394,11 +444,18 @@ def packed_bdaddr_to_string(bdaddr_packed):
 	"""
 	return ':'.join('%02x'%i for i in struct.unpack("<BBBBBB", bdaddr_packed[::-1]))
 
+hciNeedsDownUp = {}		# hci -> True: this controller goes MUTE on HCIDEVRESET, start it with down+up instead
+MUTEONRESETFILE = "temp/hciMuteOnReset.json"	# the same, by MAC, across program restarts - see loadMuteOnReset()
 scanExtendedMode = False	# True = the scan adapter supports BT5 extended advertising (LE feature bit 12,
 							# probed at socket setup) -> extended scan commands are used and extended
 							# advertisements (Ruuvi Air E1 etc.) are received; frames are converted to the
 							# legacy report layout (extAdvToLegacyHex) so the whole pipeline stays unchanged
 extScanBlockedByAdv    = [False]	# single adapter: the iBeacon broadcast (LEGACY adv cmds) locks the controller
+extScanInconclusive    = [0]		# consecutive probes that heard NOTHING in either family - see probeExtendedScan
+extScanLastProbe       = [0.]		# when probeExtendedScan last ran - it is NOT free, see there
+ignoredRadios          = {}			# radios dropped by dropIgnoredRadios - still REPORTED, see hciStateStrings
+EXTSCAN_PROBE_EVERY    = 30.		# seconds; setupSOCKET calls the probe on every socket setup
+EXTSCAN_MAX_RETRY       = 5			# after this many, stop paying the ~8s scan gap per probe and settle for BLE4
 									# to the legacy command set -> extended scanning impossible on the same radio
 extScanZeroMsgRestarts = [0]		# consecutive zero-message stack restarts WITH extended scanning active
 extScanForceLegacy     = [False]	# 2x zero-message restarts = adapter misreports its BT5 support -> stay legacy
@@ -499,6 +556,7 @@ hciRoles = {"scan":{}, "broadcast":{}, "BLEconnect":{}}		# current radio-role as
 # the parameters file as {"hci0":"scanBLE45", "hci2":"bleconnect", ...}. Empty = the auto policy
 # decides everything, which is the default and the recommended setup.
 hciRolesPinned = {}
+hciRolesPinnedSeen = False		# the params file has been read at least once - only THEN is a change a real change
 lastHciStates  = {}		# last per-radio state strings SENT (hci0..hci3) - send only on change
 
 
@@ -652,9 +710,10 @@ def hardresetHCI(hci, startTime):
 	    None: Runs hciconfig/service shell commands and logs output
 	"""
 	try:
-		cmd = "sudo hciconfig {} down".format(hci)
-		ret = readPopen(cmd) # enable bluetooth
-		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
+		# a bluetooth service restart is a guaranteed multi-second blackout, and naming it beats
+		# letting findMyGroup infer a hole afterwards - see findMyGroup.noteFeedGap()
+		if fmGroup is not None and fmGroup.enabled:	fmGroup.noteFeedGap("hard reset of {}".format(hci))
+		hciDev(hci, "down", startTime)
 		#cmd = "sudo rmmod btusb"
 		#ret = subprocess.Popen(cmd, shell=True,stderr=subprocess.PIPE,stdout=subprocess.PIPE).communicate() # enable bluetooth
 		#U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)  )
@@ -664,16 +723,49 @@ def hardresetHCI(hci, startTime):
 		cmd = "sudo invoke-rc.d bluetooth restart"
 		ret = readPopen(cmd) # enable bluetooth
 		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
-		cmd = "sudo hciconfig {} up".format(hci)
-		ret = readPopen(cmd) # enable bluetooth
-		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime) ) )
+		hciDev(hci, "up", startTime)
 	except Exception : 
 		U.logger.log(20,"", exc_info=True)
 	return 
 
 #################################
+def rememberMuteOnReset(mac):
+	"""Record BY MAC that this controller goes mute on a reset.
+
+	hciNeedsDownUp is keyed by hci NAME and lives in memory, so a program restart lost it and the
+	rpi went silent for another restart cycle - about a minute of no beacons at all, every time,
+	which is exactly what was observed. The mac is what identifies the dongle: hci numbering
+	changes across a power cycle or a swap, as this very rpi demonstrated today.
+	"""
+	try:
+		if "{}".format(mac).strip() == "":	return
+		mac = "{}".format(mac).strip().upper()
+		old, raw = U.readJson(G.homeDir + MUTEONRESETFILE)
+		if not isinstance(old, list):	old = []
+		if mac in old:					return
+		old.append(mac)
+		U.writeFile(MUTEONRESETFILE, json.dumps(old))
+		U.logger.log(20,"noted that {} needs down+up instead of a reset - kept in {} so a restart does not have to re-learn it".format(mac, MUTEONRESETFILE))
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+
+
+def loadMuteOnReset(HCIs):
+	"""Map the remembered macs onto whatever hci names they carry right now."""
+	try:
+		macs, raw = U.readJson(G.homeDir + MUTEONRESETFILE)
+		if not isinstance(macs, list) or macs == []:	return
+		macs = ["{}".format(m).strip().upper() for m in macs]
+		for hci in HCIs.get("hci", {}):
+			mac = "{}".format(HCIs["hci"][hci].get("BLEmac","")).upper()
+			if mac in macs and not hciNeedsDownUp.get(hci, False):
+				hciNeedsDownUp[hci] = True
+				U.logger.log(20,"{} ({}) is known to go mute on a reset - it will be started with down+up".format(hci, mac))
+	except Exception:	pass
+
+
 def normalStartHCI(hci, startTime, logLevelStart):
-	"""Performs a normal startup of the given HCI interface by resetting it (retrying on RF-kill), listing hciconfig status, and bringing it up, retrying once if errors occur.
+	"""Performs a normal startup of the given HCI interface by resetting it (retrying on RF-kill), listing hciconfig status, and bringing it up, retrying once if errors occur. A radio flagged in hciNeedsDownUp is taken DOWN instead of reset, because a reset leaves it mute.
 
 	Inputs:
 	    hci (str): HCI interface name, e.g. 'hci0'
@@ -683,25 +775,39 @@ def normalStartHCI(hci, startTime, logLevelStart):
 	    None: Runs hciconfig shell commands and logs output
 	"""
 	try:
-		cmd = "sudo hciconfig "+hci+" reset"
-		ret =readPopen(cmd)
-		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
-		if ret[1].find("RF-kill") > -1 or ret[0].find("RF-kill") > -1:
+		# THE RETRIES USED TO BE DECIDED ON TEXT: "RF-kill" anywhere in the reset's output, and a
+		# non-empty stderr after the up. The ioctl has no text, it has a return value - and that is
+		# strictly better here, because it covers rfkill (the kernel answers ERFKILL, which
+		# hciDevCtl logs by name) AND every other reason the reset or the up did not take, which
+		# the string match silently let through.
+		# SOME CONTROLLERS GO MUTE ON A RESET. An ASUS USB-BT500 (Realtek 0b05:190e) that had been
+		# doing extended scanning accepted LE Set Scan Parameters and Scan Enable with status 0 after
+		# HCIDEVRESET and delivered ZERO reports - for ever, so the stack restarted every ~35 s and
+		# the rpi saw no beacons at all. down+up cleared it every time (298 reports from 42 devices
+		# in 8 s, measured, same commands). The no-message escalation does a down+up and then called
+		# THIS function, whose reset promptly re-muted the radio - so the flag it sets has to be
+		# honoured here too, or the two fight each other once per restart.
+		# Only radios that have actually shown the fault take this path: down+up costs a couple of
+		# seconds and a reset is the right default everywhere else.
+		if hciNeedsDownUp.get(hci, False):
+			# level 20, NOT logLevelStart: that is 10 whenever thisHCI is passed, which the restart
+			# path always does - so this line, the one proving the workaround is in effect, was
+			# invisible in the log exactly when it mattered.
+			U.logger.log(20,"{} went mute after a reset before - starting it with down+up instead".format(hci))
+			hciDev(hci, "down", startTime)
+			time.sleep(1.5)
+		elif not hciDev(hci, "reset", startTime):
 			time.sleep(0.2)
-			readPopen(cmd)
+			hciDev(hci, "reset")					# one retry - rfkill or a transient refusal
 			U.logger.log(logLevelStart,"resetting {} bluetooth".format(hci))
 
-		cmd = "hciconfig "
-		ret = readPopen(cmd) # test bluetooth
-		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+		# informational only: what the adapters look like at this point
+		ret = readPopen("hciconfig ")
+		U.logger.log(20,"hciconfig: {}, DT:{:.3f}".format(ret, tryDeltaTime(startTime)) )
 
-		cmd = "sudo hciconfig "+hci+" up"
-		ret = readPopen(cmd) # enable bluetooth
-		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
-		if ret[1] != "":
+		if not hciDev(hci, "up", startTime):
 			time.sleep(0.2)
-			ret = readPopen(cmd) # enable bluetooth
-			U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+			hciDev(hci, "up")						# one retry, as before
 	except Exception : 
 		U.logger.log(20,"", exc_info=True)
 	return 
@@ -709,7 +815,21 @@ def normalStartHCI(hci, startTime, logLevelStart):
 
 #################################
 def startHCIBroadCast(useHCIForBeacon, pi, startTime, logLevelStart):
-	"""Configures the HCI controller to broadcast an iBeacon advertisement by sending hcitool commands that set the beacon payload (UUID/major/minor/txpower), advertising parameters, and enable advertising; restarts LE scan if using hcidump mode.
+	"""Configures the HCI controller to broadcast an iBeacon advertisement: stops any running
+	advertising, sets the payload (UUID/major/minor/txpower), sets the advertising parameters and
+	enables advertising. Restarts LE scan if using hcidump mode.
+
+	BY SOCKET, not by hcitool. These four were the last hcitool commands that actually ran on a
+	socket-mode rpi, and they are plain HCI commands - exactly what bluez.hci_send_cmd sends. What
+	that buys, same as the hciconfig ioctls:
+	  - hcitool is deprecated upstream and already missing from some BlueZ builds; on such an image
+	    the iBeacon broadcast simply stopped working, with nothing in the log to say so, because
+	  - every one of the four was sent with a trailing "&" and its output logged but never TESTED.
+	    A command-complete status of 0x0C (Command Disallowed) read exactly like success. The status
+	    byte is now read and logged per command, and a non-zero one says which command failed.
+	No more "&" either: the shell backgrounding meant the next command could be sent before the
+	previous one had been processed, which is the likely reason the explicit "stop advertising
+	first" workaround below was ever needed.
 
 	Inputs:
 	    useHCIForBeacon (str): HCI interface to broadcast on, e.g. 'hci0'
@@ -717,54 +837,113 @@ def startHCIBroadCast(useHCIForBeacon, pi, startTime, logLevelStart):
 	    startTime (float): Start timestamp used for elapsed-time logging
 	    logLevelStart (int): Logging level for startup messages
 	Outputs:
-	    None: Runs hcitool advertising commands and logs output
+	    None: sets up and enables advertising, logs each command's HCI status
 	"""
+	# LE Set Advertising Data: 1 length byte + 31 data bytes.
+	#   1E                            significant length = 30
+	#   02 01 1A                      flags AD: LE general discoverable + BR/EDR not supported
+	#   1A FF 4C 00 02 15             manufacturer data, 26 bytes, Apple (0x004C), iBeacon type 2 len 21
+	#   <16 bytes uuid> <major 2> <minor 2> <measured power C5> <00 pad>
+	advData = bytearray([0x1E, 0x02, 0x01, 0x1A, 0x1A, 0xFF, 0x4C, 0x00, 0x02, 0x15]
+						+ [0x2f, 0x23, 0x44, 0x54, 0xcf, 0x6d, 0x4a, 0x0f, 0xad, 0xf2, 0xf4, 0x91, 0x1b, 0xa9, 0xff, 0xa6]
+						+ [0x00, 0x01]						# major
+						+ [0x00, int(pi) & 0xFF]			# minor = this rpi number
+						+ [0xC5, 0x00])						# measured power, pad
+	# LE Set Advertising Parameters, 15 bytes: min 0x3000 (7.68 s), max 0x4000 (10.24 s = the HCI
+	# cap), type 0x03 = ADV_NONCONN_IND, own/peer addr type 0, peer addr 0, channel map 0x07 (all
+	# three), filter policy 0. The broadcast is only an "rpi is up" indicator and an rssi source for
+	# distance, so ~6 msgs/min is plenty (was 0x1000/0x2000 = 2.5-5 s). Intervals are LITTLE ENDIAN.
+	advParams = bytearray([0x00, 0x30, 0x00, 0x40, 0x03, 0x00, 0x00,
+						   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x07, 0x00])
+
+	OCF_SET_ADV_DATA	= 0x0008
+	OCF_SET_ADV_PARAMS	= 0x0006
+	OCF_SET_ADV_ENABLE	= 0x000A
+
+	if bluezPresent:
+		sock = None
+		try:
+			devId = int("0" + "{}".format(useHCIForBeacon).replace("hci", ""))
+			sock  = bluez.hci_open_dev(devId)
+			# THE EVENT FILTER, WITHOUT WHICH NONE OF THIS WORKS. A raw HCI socket delivers nothing
+			# until its filter says what to pass, so advCmd below never saw a single
+			# command-complete: every one of the four commands reported status -1 ("no answer"),
+			# this function could not tell success from failure, and each attempt burned 4 x 1.2 s
+			# of timeout - 5.5 s - on an rpi where the broadcast shares the radio with the scanner.
+			# The cmdComplete helper further down this file has always set it; copying the socket
+			# setup without it was the mistake.
+			flt = bluez.hci_filter_new()
+			bluez.hci_filter_all_events(flt)
+			bluez.hci_filter_set_ptype(flt, bluez.HCI_EVENT_PKT)
+			sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, padHCIfilter(flt))
+			sock.settimeout(1.0)
+
+			def advCmd(name, ocf, params):
+				"""sends one LE command and waits for its command-complete; logs the status byte.
+				Returns the status (0 = success, -1 = no answer within the timeout)."""
+				try:
+					bluez.hci_send_cmd(sock, OGF_LE_CTL, ocf, bytes(params))
+					opcode = (OGF_LE_CTL << 10) | ocf
+					t0 = time.time()
+					while time.time() - t0 < 1.2:
+						try:	ev = bytearray(sock.recv(255))
+						except Exception:	break
+						if len(ev) >= 7 and ev[1] == 0x0E and (ev[4] | (ev[5] << 8)) == opcode:
+							st = ev[6]
+							if st != 0:	U.logger.log(20,"broadcast {} on {}: HCI status 0x{:02X}{}".format(name, useHCIForBeacon, st, " (Command Disallowed - advertising still enabled?)" if st == 0x0C else ""))
+							return st
+					U.logger.log(20,"broadcast {} on {}: no command-complete within 1.2 s".format(name, useHCIForBeacon))
+					return -1
+				except Exception:
+					U.logger.log(20,"", exc_info=True)
+					return -1
+
+			# stop a possibly still-running advertising first: setting adv params while advertising
+			# is enabled returns 0x0C Command Disallowed (seen on stack restarts when the broadcast
+			# from the previous round was still active)
+			advCmd("adv disable", OCF_SET_ADV_ENABLE, bytearray([0x00]))
+			advCmd("adv data",    OCF_SET_ADV_DATA,   advData)
+
+			if rpiDataAcquistionmethod.find("hcidump") == 0:
+				restartLESCAN(useHCIForBeacon, logLevelStart, force=True)
+
+			advCmd("adv params",  OCF_SET_ADV_PARAMS, advParams)
+			time.sleep(0.1)
+			st = advCmd("adv enable", OCF_SET_ADV_ENABLE, bytearray([0x01]))
+			time.sleep(0.1)
+			U.logger.log(20,"broadcast set up on {} by socket, minor={}, enable status:{}, DT:{:.3f}".format(useHCIForBeacon, int(pi), st, tryDeltaTime(startTime)))
+			return
+		except Exception:
+			U.logger.log(20,"", exc_info=True)
+		finally:
+			if sock is not None:
+				try:	sock.close()
+				except Exception:	pass
+
+	# no bluez backend (py2 without pybluez, or no AF_BLUETOOTH): the old hcitool path
 	try:
-		OGF						= " 0x08"
-		# stop a possibly still-running advertising first: setting adv params while
-		# advertising is enabled returns 0x0C Command Disallowed (seen on stack restarts
-		# when the broadcast from the previous round was still active)
+		OGF		= " 0x08"
 		readPopen("hcitool -i {} cmd 0x08 0x000a 00 &".format(useHCIForBeacon))
-		# setup broadcast message
-		OCF					= " 0x0008"
-		iBeaconPrefix		= " 1E 02 01 1A 1A FF 4C 00 02 15"
-		uuid				= " 2f 23 44 54 cf 6d 4a 0f ad f2 f4 91 1b a9 ff a6"
-		MAJ					= " 00 01"
-		MIN					= " 00 "+"%02x"%(int(pi))
-		txP					= " C5 00"
-		#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + OCF + iBeaconPrefix + uuid + MAJ + MIN + txP
-		cmd	 = "hcitool -i {} cmd{}{}{}{}{}{}{} &".format(useHCIForBeacon, OGF, OCF, iBeaconPrefix, uuid,  MAJ, MIN, txP)
-		ret = readPopen(cmd)
+		hexOf	= lambda bb: "".join(" {:02x}".format(x) for x in bytearray(bb))
+		cmd		= "hcitool -i {} cmd{} 0x0008{} &".format(useHCIForBeacon, OGF, hexOf(advData))
+		ret		= readPopen(cmd)
 		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
 
-
-		if 	rpiDataAcquistionmethod.find("hcidump" ) == 0:
+		if rpiDataAcquistionmethod.find("hcidump" ) == 0:
 			restartLESCAN(useHCIForBeacon, logLevelStart, force=True )
 
-		####################################set adv params		minInt	 maxInt		  nonconectable	 +??  <== THIS rpi to send beacons every 10 secs only 
-		#											   00 40=	0x4000* 0.625 msec = 16*4*256 = 10 secs	 bytes are reverse !! 
-		#											   00 10=	0x1000* 0.625 msec = 16*1*256 = 2.5 secs
-		#											   00 04=	0x0400* 0.625 msec =	4*256 = 0.625 secs
-		#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + " 0x0006"	  + " 00 10"+ " 00 20" +  " 03"			   +   " 00 00 00 00 00 00 00 00 07 00"
-		# adv interval min 0x3000 (7.68 s) max 0x4000 (10.24 s = the HCI cap) - the
-		# broadcast is only an "rpi is up" indicator + rssi source for distance,
-		# ~6 msgs/min is plenty (was 0x1000/0x2000 = 2.5-5 s)
-		cmd	 = "hcitool -i {} cmd{} 0x0006 00 30 00 40 03 00 00 00 00 00 00 00 00 07 00 &".format(useHCIForBeacon, OGF)
-		## maxInt= A0 00 ==	 100ms;	 40 06 == 1000ms; =0 19 = 4 =seconds  (0x30x00	==> 64*256*0.625 ms = 10.024secs  use little endian )
-		ret = readPopen(cmd)
+		cmd		= "hcitool -i {} cmd{} 0x0006{} &".format(useHCIForBeacon, OGF, hexOf(advParams))
+		ret		= readPopen(cmd)
 		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime))  )
-		####################################LE Set Advertise Enable
-		#cmd	 = "hcitool -i "+useHCIForBeacon+" cmd" + OGF + " 0x000a" + " 01"
 		time.sleep(0.1)
-		cmd	 = "hcitool -i {} cmd{} 0x000a 01 &".format(useHCIForBeacon, OGF)
-		ret = readPopen(cmd)
+		cmd		= "hcitool -i {} cmd{} 0x000a 01 &".format(useHCIForBeacon, OGF)
+		ret		= readPopen(cmd)
 		U.logger.log(20,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
 		time.sleep(0.1)
 
 	except Exception : 
 		U.logger.log(20,"", exc_info=True)
 	return 
-
 
 #################################
 def reuseHCI(hci, startTime, logLevelStart):
@@ -778,9 +957,7 @@ def reuseHCI(hci, startTime, logLevelStart):
 	    None: Runs hciconfig reset shell command and logs output
 	"""
 	try:
-				cmd = "sudo hciconfig "+hci+" reset"
-				ret = readPopen(cmd) # 
-				U.logger.log(logLevelStart,"cmd:{} .. ret:{}, DT:{:.3f}".format(cmd, ret, tryDeltaTime(startTime)) )
+				hciDev(hci, "reset", startTime, level=logLevelStart)
 	except Exception : 
 		U.logger.log(20,"", exc_info=True)
 	return 
@@ -906,6 +1083,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				thisHCI = ""
 
 		U.logger.log(20,"thisHCI:{}; HCIs available:{}".format(thisHCI, HCIs)  )
+		loadMuteOnReset(HCIs)			# radios known to need down+up - by mac, so renumbering does not matter
 		for hci in HCIs["hci"]:
 			if hci == "": continue
 			if thisHCI != "" and hci!=thisHCI: continue
@@ -998,17 +1176,44 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			# most from a busy radio). extAdv radios are never used here anyway - they are
 			# reserved for the E1 extended listener, and a legacy adv command would lock
 			# their controller into the legacy command family.
+			# THE DEFAULT, NOT YET A DECISION - so it is not logged here. The block below may move
+			# the broadcast to another radio, and logging both produced two contradictory
+			# "broadcast role ->" lines in one startup: "-> hci1 (with the scanner)" immediately
+			# followed by "broadcast:hci2". One roles line is logged at the end of the block, once
+			# everything is actually settled.
 			broadcastHCI = useHCIForBeacon
-			U.logger.log(20,"broadcast role -> {} (with the scanner; ~1 adv per 8-10 s), internal stays free for BLEconnect".format(broadcastHCI))
 			extScanBlockedByAdv[0] = False
 			connectPick = ""
-			try:	connectPick = "{}".format(U.selectHCI(HCIs["hci"], "-1", "USB", role="connect")[0])	# same deterministic pick BLEconnect makes
+			try:
+				# EXCLUDE THE RADIO THAT IS ACTUALLY SCANNING. This pick ran with NO exclusion and so
+				# happily returned the scan radio - live log: "BLEconnect role PINNED to hci2 (auto
+				# pick was hci1)" while hci1 was the one scanning. Connecting on the scan radio
+				# stalls the scan, and beaconloop then restarts its own stack over "no messages".
+				# selectHCI cannot work this out for itself: it re-derives a scan CANDIDATE from the
+				# radio list and never learns which radio this beaconloop actually took - least of
+				# all when a device-dialog pin overrode the auto pick.
+				_cp = U.selectHCI(HCIs["hci"], "-1", "USB", doNotUseHCI=useHCIForBeacon, role="connect", quiet=True)
+				if "{}".format(_cp[0]) in HCIs["hci"]:
+					connectPick = "{}".format(_cp[0])
+				else:
+					# nothing else is UP: sharing the scan radio IS the correct 1-radio behaviour and
+					# the beaconloop.pause handshake arbitrates it. Excluding it here would leave
+					# BLEconnect with no radio at all ("BLE STACK is not UP" - seen on pi#15).
+					connectPick = "{}".format(U.selectHCI(HCIs["hci"], "-1", "USB", role="connect")[0])
 			except Exception:	pass
 			_pinConn = pinnedRadio(("bleconnect",), HCIs["hci"], taken=(useHCIForBeacon,))
 			if _pinConn != "" and _pinConn != connectPick:
 				U.logger.log(20,"BLEconnect role PINNED to {} by the device dialog (auto pick was {})".format(_pinConn, connectPick if connectPick else "?"))
 				connectPick = _pinConn
-			if HCIs["hci"].get(useHCIForBeacon,{}).get("extAdv", False):
+			# A scanBLE4 PIN MEANS EXTENDED WILL NEVER BE TRIED, so there is nothing to clear off
+			# the scan radio. Without this test the broadcast was moved anyway and the log then
+			# read "radio roles: scan(EXTENDED):hci1" one line above "BLE4-only scanning on hci1 -
+			# pinned to scanner BLE4" - and the broadcast left the scan radio for no reason, which
+			# also contradicts the strategy above (the internal is meant to stay free for connect).
+			_pinScanMode = "{}".format(hciRolesPinned.get(useHCIForBeacon, ""))
+			_wantExt     = (HCIs["hci"].get(useHCIForBeacon,{}).get("extAdv", False)
+				and _pinScanMode != "scanBLE4" and not extScanForceLegacy[0])
+			if _wantExt:
 				upOthers = [h for h in HCIs["hci"] if h != useHCIForBeacon and HCIs["hci"][h].get("upDown","") == "UP"]
 				# The ONLY thing extended scanning needs is that the iBeacon BROADCAST moves OFF this
 				# radio - a legacy adv command locks the controller into the legacy command family and
@@ -1024,11 +1229,14 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				if _noExt:
 					_noExt.sort(key=lambda h: (0 if 0 < HCIs["hci"][h].get("aclMTU",0) <= 400 else (1 if "{}".format(HCIs["hci"][h].get("bus","")).upper() == "UART" else 2), "{}".format(HCIs["hci"][h].get("BLEmac",""))))
 					broadcastHCI = _noExt[0]
-					U.logger.log(20,"radio roles: scan(EXTENDED):{}  connect:{}  broadcast:{}".format(useHCIForBeacon, connectPick if connectPick else "?", broadcastHCI))
 				else:
 					extScanBlockedByAdv[0] = True
 					U.logger.log(20,"extended scanning NOT enabled: no non-BLE5 radio free to carry the iBeacon broadcast, it would have to stay on the scan radio {} and lock it into the legacy command family -> everything BLE4 as before".format(useHCIForBeacon))
 					reportBLE5("no - no radio free to take the broadcast off the BLE5 scan radio")
+			# ONE roles line, after everything is settled, saying which scan mode it actually is.
+			U.logger.log(20,"radio roles: scan({}):{}  connect:{}  broadcast:{}".format(
+				"EXTENDED" if (_wantExt and not extScanBlockedByAdv[0]) else "BLE4",
+				useHCIForBeacon, connectPick if connectPick else "?", broadcastHCI))
 			# the rpi's IDENTITY mac = the iBeacon TRANSMITTER (this is what other rpis hear
 			# for online detection and what the plugin links the rpi device to) - piMAC in
 			# every message uses this, NEVER the scanner's mac
@@ -1063,10 +1271,24 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				U.logger.log(20,"extended-listener role -> {} (mac {}) - BLE5-ONLY dongle on a 2-radio rpi: it cannot scan BLE4 and cannot connect, so BLE5 is the only thing it can contribute; scan/broadcast/BLEconnect stay on {}".format(
 								extListenerHCI, HCIs["hci"][extListenerHCI].get("BLEmac",""), _uart[0]))
 			elif len(_upRadios) < 3:
-				_extReasons.append("only {} radio(s) UP, BLE5 needs 3 - the 2nd one belongs to BLEconnect".format(len(_upRadios)))
+				# NAME THE IGNORED ONES. "only 2 radio(s) UP" sat directly above an hciconfig dump
+				# showing THREE radios UP and read like a contradiction: the third was UP and
+				# "ignore"-pinned, so beaconloop had dropped it before counting.
+				_ign = [h for h in sorted(hciRolesPinned) if "{}".format(hciRolesPinned[h]) == "ignore"]
+				_extReasons.append("only {} radio(s) usable, BLE5 needs 3 - the 2nd one belongs to BLEconnect{}".format(
+					len(_upRadios), " ({} pinned to ignore)".format(", ".join(_ign)) if _ign else ""))
 				reportBLE5("no - only {} radios, BLE5 needs 3 (BLEconnect gets the 2nd)".format(len(_upRadios)))
 			else:
-				for _eHH in HCIs["hci"]:
+				# BLE5-ONLY RADIOS FIRST. The candidates used to be taken in dict order, so on an rpi
+				# with two BLE5-capable radios the DUAL-MODE one (BLE5+BLE4, e.g. ASUS) could win the
+				# listener role and leave the BLE5-ONLY dongle (Barrot: BLE4 scan answers 0x0C) with
+				# nothing it can do - while the dual-mode radio was the only decent connect radio on
+				# the rpi, so connect fell back onto the scan radio and beaconloop then restarted its
+				# stack over "no messages". Give the listener job to the radio that can do NOTHING
+				# else and every other role keeps a radio that can actually perform it.
+				_extCands = ([h for h in HCIs["hci"] if h in _ble5Only] +
+							 [h for h in HCIs["hci"] if h not in _ble5Only])
+				for _eHH in _extCands:
 					if _eHH in (useHCIForBeacon, broadcastHCI, connectPick):
 						_extReasons.append("{}=busy({})".format(_eHH, "scan" if _eHH==useHCIForBeacon else "broadcast" if _eHH==broadcastHCI else "connect"))
 						continue
@@ -1254,7 +1476,7 @@ def restartLESCAN(hciUse, loglevel, force=False):
 					# if that also fails.
 					U.logger.log(20, "socket method: re-enable LE scan failed ({}) - bringing {} up and rebuilding socket".format(type(e).__name__, hciUse))
 					try:
-						readPopen("sudo /bin/hciconfig {} up".format(hciUse))
+						hciDev(hciUse, "up")
 						time.sleep(0.3)
 						try:
 							if currentBLESocket is not None: currentBLESocket.close()
@@ -1300,7 +1522,7 @@ def downHCI(hciUse):
 	    None: Runs hciconfig down and service restart shell commands
 	"""
 	try:
-		subprocess.Popen("sudo hciconfig {} down &".format(hciUse),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE) # enable bluetooth
+		hciDev(hciUse, "down")		# was backgrounded with "&"; the ioctl returns at once
 		time.sleep(0.2)
 		subprocess.Popen("sudo service bluetooth restart &",shell=True ,stdout=subprocess.PIPE,stderr=subprocess.PIPE)
 		time.sleep(0.2)
@@ -1370,7 +1592,12 @@ def stopHCUIDUMPlistener():
 	    None: Kills listener processes and clears the global process handle
 	"""
 	global ListenProcessFileHandle
-	if readFrom =="": return 
+	if readFrom =="": return
+	# THE FRAME STREAM STOPS HERE, whatever the caller wanted - a beep, a parameter read, a radio
+	# reset, a role change. findMyGroup must not read the silence that follows as tags leaving and
+	# hand their lineages to whatever turns up next: see findMyGroup.noteFeedGap(). Hooked in the one
+	# place every caller goes through, because they all have the same effect on the stream
+	if fmGroup is not None and fmGroup.enabled:	fmGroup.noteFeedGap("beaconloop stopped the hcidump listener")
 	try:
 		U.logger.log(20, "stopping hcidump --raw  and hcitool -i xxx lescan procs and handles")
 		U.killOldPgm(-1,"hcidump")
@@ -1601,10 +1828,19 @@ def readParams(init=False):
 			if "ignoreBeaconsIfRssiLessThan"	in inp:	 ignoreBeaconsIfRssiLessThan =	(inp["ignoreBeaconsIfRssiLessThan"])
 
 
-			global hciRolesPinned
+			global hciRolesPinned, hciRolesPinnedSeen
 			_pins = inp.get("hciRolesPinned", {}) if isinstance(inp.get("hciRolesPinned", {}), dict) else {}
 			if _pins != hciRolesPinned:
 				U.logger.log(20,"radio role pins from the device dialog: {}".format(_pins if _pins else "none - the rpi decides"))
+				# RADIO ROLES ARE ASSIGNED ONCE, AT STARTUP. A pin that arrives afterwards was stored
+				# and changed nothing until the next restart, so the dialog looked like it did nothing.
+				# Restart on a real change - but NOT on the first read, where "differs from {}" only
+				# means the parameters file has been read for the first time.
+				if hciRolesPinnedSeen:
+					hciRolesPinned     = _pins
+					hciRolesPinnedSeen = True
+					U.restartMyself(param="", reason="radio role pins changed", python3=usePython3)
+			hciRolesPinnedSeen = True
 			hciRolesPinned = _pins
 
 			if bluezPresent:
@@ -5310,11 +5546,6 @@ def doBLEiBSxx( mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 			fastSwitchBotPress = "on" if onOff else "off"
 			if verbose: U.logger.log(20, "mac:{}   HexStr[p:p+2]:{}, old01:{};  new01:{}, trig:{}".format(mac, HexStr[p:p+2], BLEsensorMACs[mac], onOff, trig ) )
 
-		elif  sensor == "BLEiBS03G": 	
-			if BLEsensorMACs[mac]["onOff"]  != onOff: trig += "switch/"
-			data[sensor][devId]["onOff"] = onOff
-			if BLEsensorMACs[mac]["onOff1"] != onOff1: trig += "switch1/"
-			data[sensor][devId]["onOff1"] = onOff1		# was data[...][devId][sensor]["onOff1"] - that sub-dict does not exist (see the init above), every iBS03G frame raised KeyError
 
 		elif  sensor == "BLEiBS03T": 	
 			p = sens1Pos # start of temp
@@ -6987,7 +7218,7 @@ def checkIFtrackMacIsRequested():
 	try:
 		if not os.path.isfile(G.homeDir+"temp/beaconloop.trackmac"): return False
 
-		f = open(G.homeDir+"  > temp/beaconloop.trackmac","r")
+		f = open(G.homeDir+"temp/beaconloop.trackmac","r")
 		xx = f.read().strip("\n")
 		f.close()
 		xx 					= xx.split("-")
@@ -7169,8 +7400,7 @@ def BLEAnalysisSocket(hci):
 		## now listen to BLE
 		BLEcollectStartTime = time.time()
 		U.logger.log(20, "starting  BLEAnalysis, rssi cutoff= {}[dBm]".format(BLEanalysisrssiCutoff))
-		U.logger.log(20, "sudo hciconfig {} reset".format(hci))
-		subprocess.Popen("sudo hciconfig "+hci+" reset", shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		hciDev(hci, "reset")
 		U.logger.log(20, "sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates ")
 		subprocess.Popen("sudo timeout -s SIGINT "+str(BLEanalysisdataCollectionTime)+"s hcitool -i "+hci+" lescan  --duplicates > "+G.homeDir+"temp/lescan.data &", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 		time.sleep(0.3)
@@ -7273,9 +7503,12 @@ def BLEAnalysis():
 		extraLists = {"TLM":[]} 
 		#extraLists = {"TLM":[],"iBeacon":[]}
 		MACs = {}
+		# mac -> {normalised line: its index in raw_data}. KEPT OUT OF MACs on purpose: those dicts
+		# are deep-copied and json.dumps'd into the BLEAnalysis files, and this is working state,
+		# not a result
+		seenPerMac = {}
 		collectionTime = tryDeltaTime( BLEcollectStartTime)
 		for line in xxx.split("\n"):
-			max_TX = -99
 			linesIn +=1
 			if len(line) < 60: 		 continue
 			if line.find(">") == -1: continue
@@ -7297,55 +7530,65 @@ def BLEAnalysis():
 				for mmm in bleServiceSections:
 					mm  = bleServiceSections[mmm]
 					MACs[mac][mm] = []
-			present = False
+				seenPerMac[mac] = {}
+			m   = MACs[mac]
+			pdm = parsedData.get(mac, {}).get("analyzed", {})
 
-			nMsgNumber = -1
-			for ll in MACs[mac]["raw_data"]:
-				nMsgNumber += 1
-				#print mac, "test   :>{}<".format(ll[0:-3])
-				if line[:-3].strip() in ll: # w/o RX
-					present = True
-					#print mac, "test   : duplicate"
-					break
+			# THE DUPLICATE TEST WAS A SCAN, AND IT REBUILT ITS KEY ON EVERY TURN OF IT.
+			# "line[:-3].strip()" does not change while we look through that mac's stored messages,
+			# and it was recomputed for each one - a slice and a strip per comparison - while the
+			# scan itself walked the whole list doing a SUBSTRING search on each entry.
+			# ONE DICT LOOKUP NOW, on the same normalised line, and on EQUALITY rather than
+			# containment - which is what "have I already seen this packet" actually means. The old
+			# test would also call a short message a duplicate of a longer one that happened to
+			# contain it; that was a false duplicate and it cannot happen any more
+			key        = line[:-3].strip()
+			seen       = seenPerMac[mac]
+			nMsgNumber = seen.get(key, -1)
+			present    = nMsgNumber >= 0
 			if not present:
-				#U.logger.log(20, "adding:>>{}<< ".format(line[:-3])) 
-				MACs[mac]["raw_data"].append( line )
-				MACs[mac]["nMessages"].append(0)
-				nMsgNumber = len(MACs[mac]["raw_data"]) - 1
+				m["raw_data"].append( line )
+				m["nMessages"].append(0)
+				nMsgNumber = len(m["raw_data"]) - 1
+				seen[key]  = nMsgNumber
 				linesDevices +=1
+				codes = pdm.get("code", {})
 				for code in bleServiceSections:
 					textF  = bleServiceSections[code]
 					try:
-						if code in parsedData[mac]["analyzed"]["code"]: 
-							MACs[mac][textF].append(parsedData[mac]["analyzed"]["code"][code])
-						else:										
-							MACs[mac][textF].append("")
+						if code in codes:	m[textF].append(codes[code])
+						else:				m[textF].append("")
 					except Exception :
 						U.logger.log(20,"", exc_info=True)
 						U.logger.log(20, "finished  hcidump: mac:{}, code:{}, text:{}, parsedData:{}   ".format(mac, code, textF, parsedData[mac]["analyzed"]["code"] ))
 
+				texts = pdm.get("text", {})
 				for ee in extraLists:
-					if ee in parsedData[mac]["analyzed"]["text"]:
-							MACs[mac][ee].append(parsedData[mac]["analyzed"]["text"][ee])
-					else:
-							MACs[mac][ee].append("")
+					if ee in texts:	m[ee].append(texts[ee])
+					else:			m[ee].append("")
 
-			MACs[mac]["nMessages"][nMsgNumber]+=1
-			if "TxPowerLevel" in parsedData[mac]["analyzed"]["text"]:
-				try:
-					tx = signedIntfrom8(parsedData[mac]["analyzed"]["text"]["TxPowerLevel"])
-					MACs[mac]["max_TX"] = max(MACs[mac]["max_TX"],tx )
-				except: pass
-			#print mac, "present:>{}<".format(line[2:-3])
-			try: 
-				if MACs[mac]["max_TX"]  == - 99:
-					max_TX 	= max(MACs[mac]["max_TX"],   signedIntfrom8(line[-5:-3]))
-			except: pass
-			rssi 	    = max(MACs[mac]["max_rssi"], signedIntfrom8(line[-2:]))
-				
-			MACs[mac]["MSG_in_10Secs"] +=1
-			MACs[mac]["max_rssi"] 		= rssi
-			MACs[mac]["max_TX"] 		= max_TX
+			m["nMessages"][nMsgNumber]+=1
+			# THE ADVERTISED TX POWER USED TO BE THROWN AWAY EVERY TIME. There was a LOCAL max_TX,
+			# reset to -99 at the top of each line, and the last statement here was
+			# "m['max_TX'] = max_TX" - unconditional. So: a message carrying a TxPowerLevel stored
+			# it correctly on the line above, the test below then asked whether the stored value
+			# was still -99 (it no longer was), the local was therefore never refreshed, and the
+			# final line wrote that untouched -99 straight back over the real figure.
+			# The result was exactly backwards: a beacon that ADVERTISES its tx power reported -99,
+			# and only beacons without one got a number, taken from the packet trailer.
+			# ACCUMULATED IN PLACE NOW, no local. The advertised value wins where there is one; the
+			# trailer byte is the fallback and, because of the -99 test, can never overwrite an
+			# advertised value picked up from an earlier message of the same mac
+			txts = pdm.get("text", {})
+			if "TxPowerLevel" in txts:
+				try:	m["max_TX"] = max(m["max_TX"], signedIntfrom8(txts["TxPowerLevel"]))
+				except Exception:	pass
+			elif m["max_TX"] == -99:
+				try:	m["max_TX"] = max(m["max_TX"], signedIntfrom8(line[-5:-3]))
+				except Exception:	pass
+
+			m["MSG_in_10Secs"] +=1
+			m["max_rssi"] 		= max(m["max_rssi"], signedIntfrom8(line[-2:]))
 		out+= "\nhcidump\n" 
 		out+= xxx
 		U.logger.log(20, "finished  hcidump:     lines -in: {:4d}, accepted: {:4d},  n-devices: {:4d}".format(linesIn,linesAccepted,linesDevices ))
@@ -7384,8 +7627,14 @@ def BLEAnalysis():
 				for msg in knownMACS[mac]["raw_data"]:
 					nmsg += 1
 					hexStr = msg.replace(" ","")[14:] # this starts w MAC # no spaces
-					macPos = hexStr[12:].find(mac.replace(":","")) #check if mac # present afetr mac #
-					RmacPos = hexStr[12:].find(hexStr[0:12])	  # check if reverse mac# repsent after mac 
+					# SLICED ONCE PER MESSAGE, NOT ONCE PER TAG. hexStr[12:-2] and mac.replace(":","")
+					# were both rebuilt inside the loop over knownBeaconTags below - 79 turns for
+					# every message of every mac in the capture
+					hexBody   = hexStr[12:-2]
+					macPlain  = mac.replace(":","")
+					hexTail   = hexStr[12:]
+					macPos = hexTail.find(macPlain) #check if mac # present afetr mac #
+					RmacPos = hexTail.find(hexStr[0:12])	  # check if reverse mac# repsent after mac 
 					#U.logger.log(20, "hexstr: {} ".format(hexStr)) 
 					knownMACS[mac]["n_of_MSG_Types"] = nmsg
 					knownMACS[mac]["possible_knownTag_options"].append('"name_here":{"battCmd": "off", "beepCmd": "off", "dBm": "-61","useOnlyThisTagToAcceptBeaconMsgDefault": 1, "pos": 12,"posDelta": 0,"tag":"'+hexStr[12:-3]+'"}')
@@ -7402,7 +7651,7 @@ def BLEAnalysis():
 					for tag in knownBeaconTags:
 						if tag == "other": continue
 						#U.logger.log(20, "tag: {} ".format(tag)) 
-						posFound, dPostest,  subtypeOfBeacon = testComplexTag(hexStr[12:-2], tag, mac, mac.replace(":",""), hexStr[0:12],"","", calledFrom="BLEAnalysis")
+						posFound, dPostest,  subtypeOfBeacon = testComplexTag(hexBody, tag, mac, macPlain, hexStr[0:12],"","", calledFrom="BLEAnalysis")
 						if posFound != -1:
 							knownMACS[mac]["typeOfBeacon"][-1] = tag
 							knownMACS[mac]["typeOfBeacon-msg#"][-1] = nmsg
@@ -7416,8 +7665,14 @@ def BLEAnalysis():
 				for msg in newMACs[mac]["raw_data"]:
 					nmsg += 1
 					hexStr = msg.replace(" ","")[14:] # this starts w MAC # no spaces
-					macPos = hexStr[12:].find(mac.replace(":","")) #check if mac # present afetr mac #
-					RmacPos = hexStr[12:].find(hexStr[0:12])	  # check if reverse mac# repsent after mac 
+					# SLICED ONCE PER MESSAGE, NOT ONCE PER TAG. hexStr[12:-2] and mac.replace(":","")
+					# were both rebuilt inside the loop over knownBeaconTags below - 79 turns for
+					# every message of every mac in the capture
+					hexBody   = hexStr[12:-2]
+					macPlain  = mac.replace(":","")
+					hexTail   = hexStr[12:]
+					macPos = hexTail.find(macPlain) #check if mac # present afetr mac #
+					RmacPos = hexTail.find(hexStr[0:12])	  # check if reverse mac# repsent after mac 
 					newMACs[mac]["possible_knownTag_options"].append('"name_here":{"battCmd": "off", "beepCmd": "off", "dBm": "-61","useOnlyThisTagToAcceptBeaconMsgDefault": 1, "pos": 12,"posDelta": 0,"tag":"'+hexStr[12:-3]+'"}')
 					newMACs[mac]["typeOfBeacon"].append("")
 					newMACs[mac]["typeOfBeacon-msg#"].append(nmsg)
@@ -7435,7 +7690,7 @@ def BLEAnalysis():
 					newMACs[mac]["possible_knownTag_options"][-1]= " use: "+tag
 					for tag in knownBeaconTags:
 						if tag == "other": continue
-						posFound, dPostest, subtypeOfBeacon  = testComplexTag(hexStr[12:-2], tag, mac, mac.replace(":",""), hexStr[0:12], "", "", calledFrom="BLEAnalysis" )
+						posFound, dPostest, subtypeOfBeacon  = testComplexTag(hexBody, tag, mac, macPlain, hexStr[0:12], "", "", calledFrom="BLEAnalysis" )
 						if posFound != -1:
 							newMACs[mac]["typeOfBeacon"][-1] = tag
 							newMACs[mac]["typeOfBeacon-msg#"][-1] = nmsg
@@ -7524,8 +7779,7 @@ def updateTimeAndZone(hciUse):
 				expCommands = ""
 				stopHCUIDUMPlistener()
 				restart = True
-				cmd = "sudo /bin/hciconfig {} reset".format(hciUse)
-				ret = readPopen(cmd)
+				hciDev(hciUse, "reset")
 
 				#U.logger.log(20,"beepBeacon devices:{}".format(devices))
 				for mac in devices:
@@ -7706,13 +7960,13 @@ def beep(hciUse, resetBLE=False):
 					time2 = tryDeltaTime(timestart)
 					restart = 1
 					time3 = tryDeltaTime(timestart)
-					cmd = "sudo /bin/hciconfig {} reset".format(hciUse)
-					ret =  ["",""] # readPopen(cmd)
+					# THE RESET HERE IS DELIBERATELY DISABLED and stays disabled: the line read
+					# 'ret = ["",""] # readPopen(cmd)', so the adapter was never reset, and the
+					# "redo reset" test below it compared that empty placeholder and could never
+					# fire either. Turning it back on would be a behaviour change on the beep path,
+					# not a cleanup, so only the dead scaffolding is gone.
 					time4 = tryDeltaTime(timestart)
-					if ret[1] !="":
-						U.logger.log(20,"beepBeacon redo reset")
-						ret = readPopen(cmd)
-					U.logger.log(20,"beepBeacon reset:{}, exetime:{:.2f} {:.2f} {:.2f}".format(ret, time2,time3, time4))
+					U.logger.log(20,"beepBeacon reset: skipped (disabled here), exetime:{:.2f} {:.2f} {:.2f}".format(time2, time3, time4))
 
 				for mac in devices:
 					#U.logger.log(20,"beepBeacon mac:{}".format(mac))
@@ -7936,8 +8190,12 @@ def getBeaconParametersBatch(hciUse, resetBLE=True):
 			U.killOldPgm(-1,"lescan")
 			time.sleep(0.2)
 
-			cmd = "sudo /bin/hciconfig {} restart".format(hciUse)
-			ret = readPopen(cmd)
+			# "hciconfig <hci> restart" WAS NEVER A COMMAND: BlueZ's hciconfig takes up, down and
+			# reset, so this printed a usage message and did nothing - a recovery path that only
+			# looked like one. The output was never tested, which is why it survived. down+up is
+			# what the rest of this file does for a restart, and what was meant here.
+			hciDev(hciUse, "down")
+			hciDev(hciUse, "up")
 
 		timeoutSecs = 15
 		nTries = 3
@@ -8047,8 +8305,10 @@ def getBeaconParametersInteractive(hciUse, resetBLE=True):
 			stopHCUIDUMPlistener()
 			U.logger.log(20,"stopped hcitools...")
 
-			cmd = "sudo /bin/hciconfig {} restart".format(hciUse)
-			ret = readPopen(cmd)
+			# see the note at the other "restart" site: hciconfig has no such command, this did
+			# nothing at all. down+up is the restart that was intended.
+			hciDev(hciUse, "down")
+			hciDev(hciUse, "up")
 			U.logger.log(20,"restarted hcitools")
 
 		timeoutSecs = 15
@@ -8441,15 +8701,20 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 	try:
 		doPrint = mac.find("xxB8:7C:6F:1A:") > -1
 
+		# HOISTED OUT OF THE LOOP. "(mac == trackMac or trackMac == '*') and logCountTrackMac > 0"
+		# was written out at four points, three of them INSIDE the per-section loop, so a packet
+		# with eight sections evaluated it twenty-five times - two string compares and an int
+		# compare each - on a function that runs for every accepted advertisement. None of its
+		# three terms can change while we are inside one packet
+		trackThis   = (mac == trackMac or trackMac == "*") and logCountTrackMac > 0
 		totalLength = int(hexstring[0:2],16)
 
 		if totalLength < 6: return {}
 		parsedData[mac] = {"len": totalLength, "sections":[], "analyzed":{"code":{},"text":{}}, "posFound":-1, "dPos":100, "subtypeOfBeacon":"", "testTag":""}
-		sectionsData = []
 		analyzed = {"text":{},"code":{}}
 		startOfSection = 0
 		lenSection = 0
-		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+		if trackThis:
 				writeTrackMac("pars0   ","totalLength:{}; hexstring: {}; ".format(totalLength,  hexstring ), mac)
 
 		if doPrint:  U.logger.log(20," mac:{:}, parsedData:{}".format(mac, hexstring))
@@ -8473,11 +8738,14 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 				if doPrint:  U.logger.log(20," mac:{:}, startOfSection:{}, lenSection:{}, sectionCode:{}, section:{}".format(mac, startOfSection, lenSection, sectionCode, section))
 
 				# special cases: 08, 09, FF  16 overwrite hex strings 
-				if sectionCode in ["08","09"]: # names -> text (UTF-8)
+				if sectionCode in ("08","09"): # names -> text (UTF-8)
 					# decode the WHOLE name as UTF-8: multi-byte chars (umlauts etc.) span 2+ bytes,
 					# so the old byte-by-byte decode mangled e.g. 'oe' (C3 B6) into '~~' and falsely
 					# flagged a "bad string". Strip trailing null padding, then decode in one go.
-					xstr = section
+					# THE endswith LOOP STAYS. Counting the padding first and slicing once LOOKS
+					# cheaper and measured 21% SLOWER on a padded name: endswith is a C call and the
+					# slice it avoids is a short copy, while the replacement does Python-level
+					# slicing on every turn. Measured before believing it, and left alone.
 					s = section
 					while s.endswith("00"): s = s[:-2]
 					dd = hex2str(s, logLevel=0) if s else ""
@@ -8486,34 +8754,44 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 						# FF/16 sections by the sensor handler) - no text, no per-byte fallback, no log
 						dd = ""
 					elif dd == "00":	# non-sensor: whole-string UTF-8 decode failed -> per-byte fallback
-						dd = ""
+						# PER BYTE, BUT NOT A CODEC PER BYTE. This called hex2str for every byte of
+						# the name - a codecs.decode and a .decode each - to answer a question
+						# int(x,16) answers directly: a byte under 0x80 IS its own utf-8 character,
+						# and one at or above it is never valid utf-8 on its own, which is precisely
+						# what the old code was discovering the expensive way. Building a list and
+						# joining it once also drops the quadratic "dd += c" on a long name.
+						# IT WALKS THE FULL section AND NOT THE STRIPPED FORM, exactly as before, so
+						# trailing padding still comes out as "~"
+						out     = []
 						badChar = False
-						for kk in range(int(len(section)/2)):
-							x = section[kk*2:kk*2+2]
-							if x == "00":  dd += "~"
-							else:
-								c = hex2str(x, logLevel=0)
-								if c == "00":	dd += "~"; badChar = True
-								else:			dd += c
+						for kk in range(0, len(section) - 1, 2):
+							try:	v = int(section[kk:kk+2], 16)
+							except Exception:
+								out.append("~"); badChar = True; continue
+							if   v == 0:	out.append("~")
+							elif v < 0x80:	out.append(chr(v))
+							else:			out.append("~"); badChar = True
+						dd = "".join(out)
 						# a non-text name field (some beacons put binary in AD type 08/09) is normal noise -
 						# the '~' fallback is the best we can do; log only at debug level (rpi debug switch)
-						if badChar:  U.logger.log(10," mac:{:}, bad string: in:{}, out:{}".format(mac, xstr, dd))
-						
-					if  logData or ((mac == trackMac or trackMac =="*") and logCountTrackMac >0):
+						if badChar:  U.logger.log(10," mac:{:}, bad string: in:{}, out:{}".format(mac, section, dd))
+
+					if  logData or trackThis:
 						writeTrackMac("parsM   ","Name: section:{}, dd:{}, ll:{}".format( section, dd, int(len(section)/2) ), mac)
 
 					analyzed["text"]["mfg_info"] = dd
 					analyzed["text"][sectionName] = dd
 					analyzed["code"][sectionCode] = dd
 
-				elif sectionCode ==  "FF": # ManufacturerSpecificData
-					if section[0:8] =="4C00":
-						try:
-							uuidEnd = 8+2*16
-							iBeacon = section[8:uuidEnd] +"-"+str(int(section[uuidEnd:uuidEnd+4],16)) +"-"+str(int(section[uuidEnd+4:uuidEnd+4+4],16))
-							#analyzed["text"]["iBeacon"] = iBeacon
-						except:
-							continue
+				# NO "FF" BRANCH ANY MORE, and it was never doing anything. It tested
+				# section[0:8] == "4C00" - EIGHT hex characters against a FOUR character string,
+				# which cannot be equal - so the body never ran once. Fixing the slice would not
+				# have helped either: all it did was build an "iBeacon" string whose assignment
+				# into analyzed was commented out, and every reader of that value elsewhere in this
+				# file is commented out too. FF is the commonest section there is, so this was a
+				# slice and a compare on nearly every advertisement, for nothing.
+				# The section is still recorded under "FF" by the generic code above, exactly as it
+				# always was - nothing downstream loses anything
 
 				elif sectionCode == "16": #ServiceData-16-bitUUID
 					xxx = getTLMdata(mac, section, verbose=False)
@@ -8521,10 +8799,10 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 						analyzed["text"]["TLM"] = xxx
 
 
-				if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+				if  trackThis:
 						writeTrackMac("parsT   "," startOfSection:{:2d}, sectionCode:{},  sectionsData:{}".format( startOfSection, sectionCode, section), mac)
 
-		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+		if  trackThis:
 			writeTrackMac("parsE   "," lenTotal:{}, data:{}, hexstr:{}".format( totalLength, analyzed, hexstring), mac)
 
 		parsedData[mac]["analyzed"] = analyzed
@@ -8954,13 +9232,23 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 		tagOld				= ""
 
 		if mac not in parsedData:  return "reject", sendNow
-		if "analyzed" not in parsedData[mac]: return "reject", sendNow
-		#iBeacon  = parsedData[mac]["analyzed"]["text"].get("iBeacon","")
-		mfg_info = parsedData[mac]["analyzed"]["text"].get("mfg_info","")
+		pd = parsedData[mac]
+		if "analyzed" not in pd: return "reject", sendNow
+		# THE ADVERTISEMENT BODY, SLICED ONCE. hexstr[12:-2] was written out at four points, two of
+		# them INSIDE the loop over knownBeaconTags - so a packet that walked all 79 tags before
+		# finding its match copied the whole advertisement string 79 times to hand the same value
+		# to testComplexTag each turn.
+		# AND THE TRACK TEST, same as parsePackage: it appears eight times here, none of its terms
+		# can change inside one call
+		advBody   = hexstr[12:-2]
+		trackThis = (mac == trackMac or trackMac == "*") and logCountTrackMac > 0
+		#iBeacon  = txt.get("iBeacon","")
+		txt      = pd["analyzed"]["text"]
+		mfg_info = txt.get("mfg_info","")
 
-		if "TLM" in parsedData[mac]["analyzed"]["text"] and "batteryVoltage" in  parsedData[mac]["analyzed"]["text"]["TLM"]:
-			batteryVoltage = parsedData[mac]["analyzed"]["text"]["TLM"]["batteryVoltage"]
-			temp = parsedData[mac]["analyzed"]["text"]["TLM"]["temp"]
+		if "TLM" in txt and "batteryVoltage" in  txt["TLM"]:
+			batteryVoltage = txt["TLM"]["batteryVoltage"]
+			temp = txt["TLM"]["temp"]
 			TLMenabled = True
 		else:
 			TLMenabled = ""
@@ -8968,8 +9256,8 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 			temp = 20.
 			
 		doPrint = mac in findMAC 
-		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
-				writeTrackMac("parse   ", "parsedData {}".format(parsedData[mac]), mac)
+		if trackThis:
+				writeTrackMac("parse   ", "parsedData {}".format(pd), mac)
 
 		setEmptybeaconsThisReadCycle(mac)
 		if doPrint: U.logger.log(20,"{} pass1 tagFound:{}, tagOld:{}".format(mac, tagFound, tagOld) )
@@ -8986,7 +9274,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 			if doPrint: U.logger.log(20,"{} pass2 tagFound:{}, tagOld:{}".format(mac, tagFound, tagOld) )
 
 			if tagOld not in ["", "other"]:
-				if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+				if trackThis:
 					writeTrackMac("tag-1   ", "tag:{}, useOnlyIfTagged: {}".format(tagOld, useOnlyIfTagged), mac)
 
 				if  tagOld in knownBeaconTags:
@@ -8997,9 +9285,9 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 						if testAdvMatch(mac, tagOld, macplain, macplainReverse):
 							posFound, dPos, subtypeOfBeacon = 0, 0, ""
 						else:
-							posFound, dPos, subtypeOfBeacon = testComplexTag(hexstr[12:-2], tagOld, mac, macplain, macplainReverse, calledFrom="checkIfTagged-1")
+							posFound, dPos, subtypeOfBeacon = testComplexTag(advBody, tagOld, mac, macplain, macplainReverse, calledFrom="checkIfTagged-1")
 					else:
-						posFound, dPos, subtypeOfBeacon = testComplexTag(hexstr[12:-2], tagOld, mac, macplain, macplainReverse, calledFrom="checkIfTagged-1")
+						posFound, dPos, subtypeOfBeacon = testComplexTag(advBody, tagOld, mac, macplain, macplainReverse, calledFrom="checkIfTagged-1")
 					#if tagOld == "iBeacon" and iBeacon != "":
 					#	rejectThisMessage = tagOld
 
@@ -9014,12 +9302,12 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 					tagFound = "failed"
 
 			if tagFound == "found": 
-				parsedData[mac]["posFound"] = posFound
-				parsedData[mac]["dPos"] = dPos
-				parsedData[mac]["subtypeOfBeacon"] = subtypeOfBeacon
-				parsedData[mac]["testTag"] = tagOld
+				pd["posFound"] = posFound
+				pd["dPos"] = dPos
+				pd["subtypeOfBeacon"] = subtypeOfBeacon
+				pd["testTag"] = tagOld
 
-		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+		if  trackThis:
 			writeTrackMac("tag-5   ", "rejectThisMessage:{}, tagFound:{};".format(rejectThisMessage, tagFound),mac)
 
 		if doPrint: U.logger.log(20,"{} pass3 tagFound:{}, tagOld:{}".format(mac, tagFound, tagOld) )
@@ -9036,7 +9324,27 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 
 		testTag = ""
 		if doPrint:  U.logger.log(20,"{} testing  .. acceptNewMFGNameBeacons:{}, mfg_info:{}, acceptNewTagiBeacons:{}, tagOld:{}, existing:{},".format(mac, acceptNewMFGNameBeacons, mfg_info, acceptNewTagiBeacons, tagOld, existing) )
-		if (
+		# COLLAPSE THE 79-TAG SEARCH. The loop below asks every tag in knownBeaconTags whether it
+		# matches this advertisement, but its ONLY consumer is the acceptance test inside it:
+		#      acceptNewTagiBeacons == "all"  or  acceptNewTagiBeacons == testTag
+		#      or (existing and tagOld in ["", "other"])
+		# Not one of those terms can change inside the loop, so when they are all false the loop
+		# cannot accept whatever it finds: it walks up to 79 tags, calls testAdvMatch /
+		# testComplexTag on each, and throws every answer away.
+		# And that is the NORMAL operating case. Accept-new is off, every mac that gets this far is
+		# one we already configured, and a configured device whose own tag simply did not match THIS
+		# frame fell straight through to here - a SwitchBot sending its FF flavor instead of its
+		# service-data flavor, an Apple device whose find-my payload rotated, any multi-flavor
+		# advertiser. py-spy put testComplexTag (18%) + checkIfTagged (16%) + testAdvMatch (7%) at
+		# ~41% of beaconloop's cpu, and this is where almost all of it went.
+		# When accept-new IS on, or the device is still tagged "" / "other", the loop runs exactly as
+		# before - searching every tag is the whole point there. So this changes no outcome, only the
+		# work done to reach it.
+		searchCanAccept = (
+			   acceptNewTagiBeacons not in ["", "off"]
+			or (existing and tagOld in ["", "other"])
+			)
+		if searchCanAccept and (
 			(tagFound != "found") or 
 			(existing and tagOld in ["", "other"]) or  # check if we find a better tag than "other"
 			( not existing  and  (acceptNewTagiBeacons != "off"  or mfgTagged)   ) # if not existing try to find tag if enabled 
@@ -9045,27 +9353,31 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 			for testTag in knownBeaconTags:
 				#if doPrint:  U.logger.log(20,"{} testing  testTag:{}=={}, ".format(mac, testTag, knownBeaconTags.get(testTag,"")) )
 				#if testTag in ["other", tagOld, "iBeacon"]: 		continue
-				if testTag in ["other"]:							continue
-				if knownBeaconTags[testTag]["pos"] == -1: 			continue
+				if testTag == "other":								continue
+				# ONE LOOKUP PER TAG, NOT FOUR. knownBeaconTags[testTag] was indexed again for
+				# "pos", for "advMatch", for "subType" and for "posDelta" - four hash lookups per
+				# tag, on a loop that runs up to 79 times for every advertisement
+				kt = knownBeaconTags[testTag]
+				if kt["pos"] == -1: 								continue
 				# structure-based test first (see pass2); string method as fallback
-				if knownBeaconTags[testTag].get("advMatch") and not knownBeaconTags[testTag].get("subType"):
+				if kt.get("advMatch") and not kt.get("subType"):
 					if testAdvMatch(mac, testTag, macplain, macplainReverse):
 						posFound, dPos, subtypeOfBeacon = 0, 0, ""
 					else:
-						posFound, dPos, subtypeOfBeacon = testComplexTag(hexstr[12:-2], testTag, mac, macplain, macplainReverse, calledFrom="checkIfTagged-2")
+						posFound, dPos, subtypeOfBeacon = testComplexTag(advBody, testTag, mac, macplain, macplainReverse, calledFrom="checkIfTagged-2")
 				else:
-					posFound, dPos, subtypeOfBeacon = testComplexTag(hexstr[12:-2], testTag, mac, macplain, macplainReverse, calledFrom="checkIfTagged-2")
+					posFound, dPos, subtypeOfBeacon = testComplexTag(advBody, testTag, mac, macplain, macplainReverse, calledFrom="checkIfTagged-2")
 				if posFound == -1: 									continue
-				if abs(dPos) > knownBeaconTags[testTag]["posDelta"]:continue
+				if abs(dPos) > kt["posDelta"]:						continue
 				if doPrint:  U.logger.log(20,"{} 2 tagOld:{}, testing  testTag:{}, posFound:{}, check:{}".format(mac, tagOld, testTag, posFound, acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or tagOld in ["", "other"]) )
 				if acceptNewTagiBeacons == "all" or acceptNewTagiBeacons == testTag or (existing and tagOld in ["", "other"]):
 					typeOfBeacon 		= testTag
 					tagFound 			= "found"
 					rejectThisMessage 	= testTag
-					parsedData[mac]["posFound"] = posFound
-					parsedData[mac]["dPos"] = dPos
-					parsedData[mac]["subtypeOfBeacon"] = subtypeOfBeacon
-					parsedData[mac]["testTag"] = testTag
+					pd["posFound"] = posFound
+					pd["dPos"] = dPos
+					pd["subtypeOfBeacon"] = subtypeOfBeacon
+					pd["testTag"] = testTag
 					break
 				if tagFound == "found": break
 
@@ -9074,18 +9386,18 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 			typeOfBeacon = "other"
 			rejectThisMessage = "other"
 
-		if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+		if  trackThis:
 			writeTrackMac("tag-6   ", "  batteryLevel:{} tagFound: {}, rejectThisMessage: {}".format( batteryLevel, tagFound, rejectThisMessage) ,mac)
 
 		if mac == acceptNewBeaconMAC:
 			rejectThisMessage = "new"
-			if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+			if  trackThis:
 				writeTrackMac("tag-7   ", "accept THIS spec MAC #", mac)
 
 		if rejectThisMessage == "reject": # unknow beacon.. accept if RSSI > accept
 			if mac not in onlyTheseMAC:
 				if rssi > acceptNewBeaconsMinSIgnal: 
-					if  (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+					if  trackThis:
 						writeTrackMac("tag-8   ", "accept rssi > accept new  and !tagfound and not accept mfg name", mac)
 					#print " new beacon :", mac, rssi, acceptNewBeaconsMinSIgnal
 					rejectThisMessage = "new"
@@ -9100,7 +9412,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 			decodedDatas["batteryLevel"] = batteryFromBLEconnect.pop(mac).get("batteryLevel","")
 			U.logger.log(20,"mac:{} batteryLevel from BLEconnect: {}".format(mac, decodedDatas["batteryLevel"]))
 
-		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+		if trackThis:
 			writeTrackMac("tag-9   ", "batteryLevel>{}<".format(decodedDatas["batteryLevel"]) ,mac)
 
 		if decodedDatas["batteryLevel"] == "" and batteryVoltage != 0: 
@@ -9113,8 +9425,8 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 					batteryVoltAt0   = float(levels[2]) 
 			decodedDatas["batteryLevel"] = batLevelTempCorrection(batteryVoltage, temp, batteryVoltAt100=batteryVoltAt100, batteryVoltAt0=batteryVoltAt0)
 
-		#fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedDatas, parsedData[mac]["analyzed"]["text"])
-		fillbeaconsThisReadCycle(mac, rssi, txPower, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedDatas, parsedData[mac]["analyzed"]["text"])
+		#fillbeaconsThisReadCycle(mac, rssi, txPower, iBeacon, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedDatas, txt)
+		fillbeaconsThisReadCycle(mac, rssi, txPower, mfg_info, typeOfBeacon, subtypeOfBeacon, TLMenabled, decodedDatas, txt)
 
 		# Known devices are never rejected by the TAG analysis: identification
 		# exists to classify UNKNOWN macs.  A mac configured as a BLE sensor or
@@ -9129,7 +9441,7 @@ def checkIfTagged(mac, macplain, macplainReverse, hexstr, batteryLevel, rssi, tx
 		if rejectThisMessage != "reject" and mac in beaconsThisReadCycle: 
 			sendNow = fillHistory(mac)
 
-		if (mac == trackMac or trackMac =="*") and logCountTrackMac >0:
+		if trackThis:
 			writeTrackMac("tag-E   ", "beaconsThisReadCycle ..mfg_info: {}, rejectThisMessage:{},  batteryLevel>{}<".format(mfg_info, rejectThisMessage, batteryLevel) ,mac)
 		if doPrint:  U.logger.log(20, "mac:{}  after end of  decodedDatas:{}".format(mac, decodedDatas ))
 
@@ -9289,18 +9601,53 @@ def loopCheckBeepBattery():
 
 
 	resetBLE = False
+
+	# ADAPTIVE POLL, because this turned TEN TIMES A SECOND for ever and almost every turn found
+	# nothing to do. beep() and getBeaconParametersInteractive() each begin with an os.path.isfile
+	# on a marker that indigo writes perhaps twice a day, so that is twenty pointless stat calls a
+	# second from this loop alone. py-spy on a live rPi put this function at 19% of beaconloop's
+	# cpu and os.path.isfile at a further 7%, which is what sent us here.
+	# ANY WORK DROPS IT BACK TO FULL SPEED - a beep, a battery request, or beepBatteryBusy == 2
+	# from one in progress - so a command and everything following it is handled exactly as
+	# promptly as before. Only an IDLE loop slows down, and it ramps rather than jumping, so a
+	# burst of commands stays responsive between its parts.
+	# THE BUSY TEST IS "> 1", NOT "> 0", and the difference is the whole change working or not:
+	# beepBatteryBusy is NOT a work-in-progress flag. checkWhichHCIForBeep sets it to 1 on its
+	# fall-through path whenever beep has to SHARE the beacon radio, and to 0 only when it finds a
+	# free radio - so on a single-radio rpi it sits at 1 for ever. Only 2 means a beep or battery
+	# read is actually running, which is why the wait in the main loop tests "> 1" as well.
+	# Tested with "> 0" first: the first profile after this change showed the loop still at 10 Hz
+	# and this function unchanged at 4.1%, because 1 > 0 was true on every single turn.
+	# WHAT IT COSTS: worst-case latency on the FIRST command after an idle spell goes from a tenth
+	# of a second to half a second. That is a beep somebody asked for from indigo, and nobody can
+	# tell the difference. Everything after it is immediate again.
+	beepSleepBusy = 0.1
+	beepSleepIdle = 0.5
+	sleepFor      = beepSleepBusy
 	while threadCMD != "stop":
 		try:
+			# NO HANDSHAKE NEEDED HERE. An earlier version wrote temp/BLEconnect.pause around
+			# these two calls so BLEconnect would hand the radio over. It can never fire:
+			# receiveCommands routes every beep/battery job to BLEconnect whenever it is alive
+			# (gattviaBLEconnect), so the ONLY way we get here with work to do is a dead
+			# BLEconnect - and then there is nobody to pause. Two mutually exclusive conditions.
 			checkIfBeep = beep(useHCIForBeep, resetBLE = resetBLE)
 			checkIfBat =  getBeaconParametersInteractive(useHCIForBeep, resetBLE = checkIfBeep <2 and resetBLE)
 			if  ( checkIfBeep > 0 or checkIfBat) and  useHCIForBeep == useHCIForBeacon:
 				U.restartMyself(param="", reason="beep/bat", python3=usePython3)
 
-			time.sleep(0.1)
+			time.sleep(sleepFor)
 
 			checkWhichHCIForBeep()	
+			# read BEFORE the decay below, or the test is dead code: the decay drops a 2 set by
+			# beep()/getBeaconParametersInteractive() at the top of THIS turn back to 1, so by the
+			# time the sleep is chosen there is no 2 left to see
+			busyNow = beepBatteryBusy
 			if beepBatteryBusy >0: beepBatteryBusy = 1
 			checkExtListenerAlive()
+
+			if checkIfBeep > 0 or checkIfBat or busyNow > 1:	sleepFor = beepSleepBusy
+			else:													sleepFor = min(beepSleepIdle, sleepFor * 1.5)
 
 		except  Exception :
 			U.logger.log(20,"", exc_info=True)
@@ -9384,6 +9731,23 @@ def checkWhichHCIForBeep():
 			beepBatteryBusy = 1
 
 		hciCheckLastTime = time.time() + 50.
+		# NOTHING TO PICK WHILE BLEconnect IS ALIVE. receiveCommands routes every beep,
+		# battery and updateTimeAndZone job to BLEconnect whenever temp/alive.BLEconnect is
+		# younger than 90 s, and BLEconnect does them over its ATT socket. beaconloop's
+		# gatttool path - and so useHCIForBeep - is only the fallback for a dead BLEconnect.
+		# Choosing a radio for it and RESETTING that radio every 50 s is churn for a code path
+		# that is not running, and it is the whole reason this picker needs its "never touch
+		# the extended listener" exclusion: live-seen, that reset took the listener from 98
+		# reports/min to 0. Keep useHCIForBeep pointing somewhere sane for the fallback, but
+		# touch no hardware.
+		try:
+			_al = G.homeDir + "temp/alive.BLEconnect"
+			if os.path.isfile(_al) and time.time() - os.path.getmtime(_al) < 90.:
+				_cn = "{}".format(hciRoles.get("BLEconnect", {}).get("hci", ""))
+				useHCIForBeep = _cn if _cn != "" else useHCIForBeacon
+				return
+		except Exception:
+			pass
 		hciUsedByBLEconnect, raw  = U.readJson("{}temp/BLEconnect.hci".format(G.homeDir))
 		#hciUsedBybeep, raw  = U.readJson("{}temp/beaconbeep.hci".format(G.homeDir))  # not needed 
 		#{'hci': {'hci1': {'bus': 'USB', 'numb': 1, 'upDown': 'UP', 'BLEmac': '5C:F3:70:6D:D9:4A'}, 'hci0': {'bus': 'USB', 'numb': 0, 'upDown': 'UP', 'BLEmac': '5C:F3:70:6D:D9:4D'}, 'hci2': {'bus': 'UART', 'numb': 2, 'upDown': 'UP', 'BLEmac': 'B8:27:EB:F4:B0:82'}}, 'ret': ['hci1:\tType: Primary  Bus: USB\n\tBD Address: 5C:F3:70:6D:D9:4A  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:3527 acl:0 sco:0 events:212 errors:0\n\tTX bytes:6047 acl:0 sco:0 commands:212 errors:0\n\nhci0:\tType: Primary  Bus: USB\n\tBD Address: 5C:F3:70:6D:D9:4D  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:161825 acl:47 sco:0 events:5462 errors:0\n\tTX bytes:8170 acl:40 sco:0 commands:336 errors:0\n\nhci2:\tType: Primary  Bus: UART\n\tBD Address: B8:27:EB:F4:B0:82  ACL MTU: 1021:8  SCO MTU: 64:1\n\tUP RUNNING \n\tRX bytes:72804 acl:0 sco:0 events:4552 errors:0\n\tTX bytes:83050 acl:0 sco:0 commands:4552 errors:0\n\n', '']}	
@@ -9413,8 +9777,14 @@ def checkWhichHCIForBeep():
 				sendHciStates()
 
 			useHCIForBeep = hci
-			cmd = "sudo hciconfig "+useHCIForBeep+" reset &"
-			readPopen(cmd)
+			# DOWN+UP, NOT "reset" - the 5th place today with this bug. The comment above about never
+			# picking the extended listener ("the ext listener went 98 reports/min -> 0 exactly one
+			# 50 s check later and stayed dead") is this same mute-on-reset, worked around by
+			# exclusion instead of fixed. With a real reset that exclusion is belt and braces rather
+			# than load-bearing.
+			hciDev(useHCIForBeep, "down")
+			time.sleep(1.0)
+			hciDev(useHCIForBeep, "up")
 			U.writeFile("temp/beaconbeep.hci", json.dumps({"usedHCI":useHCIForBeep, "myBLEmac": HCIList[hci]["BLEmac"], "usedBus": HCIList[hci]["bus"],"pgm":"beaconbeep"}))
 			#U.logger.log(20,"useHCIForBeacon:reset {}".format(useHCIForBeep))
 			return 
@@ -9424,8 +9794,21 @@ def checkWhichHCIForBeep():
 		U.logger.log(20,"", exc_info=True)
 		U.logger.log(20," HCIs:{}".format(HCIs))
 
-	useHCIForBeep = useHCIForBeacon
-	U.writeFile("temp/beaconbeep.hci", json.dumps({"usedHCI":useHCIForBeep, "myBLEmac": HCIList[useHCIForBeacon]["BLEmac"], "usedBus": HCIList[useHCIForBeacon]["bus"]}))
+	# BEEP BELONGS WITH CONNECT, NOT WITH SCAN. Beeping a tag opens a GATT connection, so it IS
+	# a connect operation - and a connect on the SCAN radio stalls the scan, which is exactly
+	# why the BLEconnect picker excludes the scan radio ("connecting on the scan radio stalls
+	# the scan, and beaconloop then restarts its own stack over no messages"). The loop above
+	# only ever takes a radio with NO role at all; on a 2-radio rpi there is none, and this
+	# fall-through then chose the worst of the two available - the scanner. The connect radio
+	# is already doing connects and one more costs the scan nothing. Seen on rpi-garage-blue:
+	# hci1 (ASUS, scan4+5) carried beep as well while hci0 (internal, connect+BC) sat idle.
+	_hl  = HCIs.get("hci", {})
+	_beep = "{}".format(hciRoles.get("BLEconnect", {}).get("hci", ""))
+	if _beep == "" or _beep not in _hl or "{}".format(_hl[_beep].get("upDown","")).upper() != "UP":
+		_beep = useHCIForBeacon		# no connect radio either - the scan radio is all there is
+	useHCIForBeep = _beep
+	if _beep in _hl:
+		U.writeFile("temp/beaconbeep.hci", json.dumps({"usedHCI":useHCIForBeep, "myBLEmac": _hl[_beep]["BLEmac"], "usedBus": _hl[_beep]["bus"]}))
 	beepBatteryBusy = 1
 	return 
 
@@ -9496,6 +9879,8 @@ def dropIgnoredRadios(HCIsIn):
 		if not keep:
 			U.logger.log(20,"radio role pins: ALL radios are set to 'ignore' - keeping them, an rpi without bluetooth is not a working setup")
 			return HCIsIn
+		global ignoredRadios
+		ignoredRadios = dict((h, HCIsIn["hci"][h]) for h in drop)
 		for h in drop:
 			U.logger.log(20,"radio {} ({}) IGNORED - set to 'ignore' in the device dialog".format(h, HCIsIn["hci"][h].get("BLEmac","")))
 			del HCIsIn["hci"][h]
@@ -9564,7 +9949,22 @@ def hciStateStrings():
 	try:
 		for hciX in out:
 			hh = HCIs.get("hci", {}).get(hciX, {})
-			if not hh:	continue
+			if not hh:
+				# AN IGNORED RADIO MUST STILL BE REPORTED, or the pin that ignored it can never be
+				# undone. dropIgnoredRadios takes it out of HCIs so no role pick sees it - which is
+				# right - but its state string then stayed "" and the device dialog skips channels
+				# with an empty state, so the radio disappeared from the only UI that can un-ignore
+				# it. A one-way door, hit on rpi#2: three radios present (hci0/hci2/hci3), only two
+				# offered, and hci0 stuck on "ignore" with no way back. It is reported with function
+				# "ignored" so the state says plainly why it holds no role.
+				hh = ignoredRadios.get(hciX, {})
+				if not hh:	continue
+				_ext = hh.get("extAdv", False)
+				out[hciX] = "{}/{}/{}/{}/{}/{}".format(hh.get("BLEmac", "?"), hh.get("bus", "?"),
+					hh.get("usbId", "") or "none", hh.get("upDown", "?"),
+					"BLE4+5" if (_ext and hh.get("ble4", True)) else ("BLE5" if _ext else "BLE4"),
+					"ignored")
+				continue
 			ext  = hh.get("extAdv", False)
 			ble4 = hh.get("ble4", True)
 			cap  = "BLE4+5" if (ext and ble4) else ("BLE5" if ext else "BLE4")
@@ -9639,11 +10039,33 @@ def probeExtendedScan(sock):
 			reportBLE5("yes - dedicated BLE5 listener on {}".format(_lHci))
 			return
 	except Exception:	pass
+	# NOT FREE, AND NOT ONCE PER STARTUP. setupSOCKET calls this on every socket setup, and the
+	# main loop sets the socket up again every couple of seconds - measured on rpi#2: probes at
+	# 19:02:50, :52, :58, 19:03:00, :06, :08, :14, :16, :22. Every one of those runs disables
+	# the scan, re-asserts the event mask and parameters, re-enables it, and - through the
+	# cmdComplete helper, which reads the socket for up to 1.2 s per command looking for its
+	# command-complete - DISCARDS every advertising report it meets on the way. Five commands
+	# per probe, every two seconds, on the same socket the reader is trying to read: that is
+	# the scan being taken apart and put back together faster than it can deliver anything.
+	# The verdict itself is stable, so asking again every 30 s is plenty.
+	if extScanLastProbe[0] > 0. and (time.time() - extScanLastProbe[0]) < EXTSCAN_PROBE_EVERY:
+		return
+	extScanLastProbe[0] = time.time()
+	# BOTH OF THESE ARE LOG-ON-CHANGE. They are cached verdicts, so the sentence never
+	# differs - and this function is called on every socket setup, which printed the same
+	# line once a minute for the life of the program. The verdict is worth stating once,
+	# and extScanLastReported is the throttle the other verdicts in here already use.
 	if extScanBlockedByAdv[0]:
-		U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): blocked - not enough radios / broadcast shares this adapter (legacy adv cmds lock the command set) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
+		_msg = "blocked-{}".format(useHCIForBeacon)
+		if extScanLastReported[0] != _msg:
+			extScanLastReported[0] = _msg
+			if _debugBLE5: U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): blocked - not enough radios / broadcast shares this adapter (legacy adv cmds lock the command set) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
 		return
 	if extScanForceLegacy[0]:
-		U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): disabled earlier this session (see first probe result) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
+		_msg = "forcedLegacy-{}".format(useHCIForBeacon)
+		if extScanLastReported[0] != _msg:
+			extScanLastReported[0] = _msg
+			if _debugBLE5: U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): disabled earlier this session (see the delivery-test line above) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
 		return
 	supported = False
 	try:
@@ -9674,6 +10096,24 @@ def probeExtendedScan(sock):
 			#    run B: set-params 0x0C because a previous scan state was still active.
 			# So: clear the scan state, set the LE event mask OURSELVES, then require that
 			# actual 0x0D reports ARRIVE before extended mode is accepted.
+			# DOWN+UP BEFORE THE EXTENDED PHASE TOO. qualifyDongle resets before EVERY phase and
+			# that is exactly why it succeeds where this probe failed: on the same radio, in the
+			# same minute, qualifyDongle measured 22.2 extended reports/s from 53 macs while this
+			# probe measured 0 and wrote the dongle off. Clearing the scan state with commands is
+			# not enough, because the controller may already be LATCHED to the legacy command
+			# family - and on a radio new to this rpi it always is: ble4ScanSupported has no
+			# cached verdict for it yet, so it probes with legacy LE Set Scan Parameters moments
+			# earlier. Only an HCI reset clears the latch, and only down+up is a real reset here.
+			# ONLY WHEN WE ARE ACTUALLY GOING TO MEASURE. The trusted-verdict shortcut below exists
+			# precisely to avoid paying for a proof window, and taking the radio down for 1.5 s on
+			# every probe to then skip the test is the opposite of that - live on rpi-garage-blue
+			# it dropped the scan radio every 30 s. A latched controller only matters when the
+			# measurement is about to decide something.
+			if not loadExtScanVerdict():
+				hciDev(useHCIForBeacon, "down")
+				time.sleep(1.0)
+				hciDev(useHCIForBeacon, "up")
+				time.sleep(0.5)
 			cmdComplete(0x0042, struct.pack("<BBHH", 0x00, 0x00, 0x0000, 0x0000))		# clear a stuck EXTENDED scan state
 			# ... and the LEGACY one. By the time this probe runs the normal scan loop has already
 			# enabled legacy scanning on this very adapter, and the two command families are mutually
@@ -9691,7 +10131,7 @@ def probeExtendedScan(sock):
 				# later deletes the file, so the next start re-proves from scratch.
 				if loadExtScanVerdict():
 					scanExtendedMode = True
-					U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): ACTIVE (trusted verdict from previous run, same adapters - delivery test skipped)".format(useHCIForBeacon, myBLEmac))
+					#U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): ACTIVE (trusted verdict from previous run, same adapters - delivery test skipped)".format(useHCIForBeacon, myBLEmac))
 					reportBLE5("yes - active, delivery verified")
 					return
 				# 3. PROOF v3: compare EXTENDED vs LEGACY delivery rate on the same air.
@@ -9708,9 +10148,16 @@ def probeExtendedScan(sock):
 					if len(ev) > 4 and ev[1] == 0x3E and ev[3] == 0x0D:
 						nExt += 1
 						if len(ev) >= 14:	macsExt.add(bytes(ev[8:14]))	# ext report: mac at [8:14]
-				# -- reset -> legacy phase (fresh command family) --
-				subprocess.call("sudo hciconfig {} reset".format(useHCIForBeacon), shell=True)
-				time.sleep(0.4)
+				# -- DOWN+UP -> legacy phase (fresh command family) --
+				# NOT "reset": hciconfig reset leaves some controllers MUTE - every command accepted
+				# with status 0 and nothing delivered. That is what made this phase report "BLE4 mode
+				# 0 from 0 macs" on a radio that does 56/s, which then read as "NO BLE4 baseline" and
+				# let extended win a comparison that never happened. Same bug as the extended
+				# listener's and the same one qualifyDongle's resetHCI() was changed away from.
+				hciDev(useHCIForBeacon, "down")
+				time.sleep(1.0)
+				hciDev(useHCIForBeacon, "up")
+				time.sleep(0.5)
 				stLP, evLP = cmdComplete(OCF_LE_SET_SCAN_PARAMETERS, struct.pack("<BHHBB", 0x01, 0x0010, 0x0010, 0x00, 0x00))	# legacy params: active, 100% duty
 				stLE, evLE = cmdComplete(OCF_LE_SET_SCAN_ENABLE, struct.pack("<BB", 0x01, 0x00))								# legacy scan on
 				nLeg = 0
@@ -9724,17 +10171,75 @@ def probeExtendedScan(sock):
 						if len(ev) >= 13:	macsLeg.add(bytes(ev[7:13]))	# legacy report: mac at [7:13]
 				_uE, _uL  = len(macsExt), len(macsLeg)
 				_perMinE  = 60.0 * nExt / 4.0 / max(1, _uE)
-				_coverage = 100.0 * _uE / max(1, _uL)
-				U.logger.log(20,"BT5 extended advertising on {}: delivery test - BLE5 mode {} report(s) from {} macs, BLE4 mode {} from {} macs (per 4s) -> {:.0f}% of the macs, {:.0f} reports per mac per minute (legacy cmd status params:0x{:02X} enable:0x{:02X})".format(
-								useHCIForBeacon, nExt, _uE, nLeg, _uL, _coverage, _perMinE, stLP & 0xFF, stLE & 0xFF))
+				# NO max(1, _uL) IN A PERCENTAGE. With an empty legacy phase that divided 30 macs by 1
+				# and logged "3000% of the macs", which then sailed through the >=60% test as well.
+				# A missing baseline is not a good score - it is no score, and is reported as such.
+				_coverage = (100.0 * _uE / _uL) if _uL > 0 else 0.0
+				# A BLE5-ONLY RADIO *REJECTS* THE LEGACY COMMANDS (0x0C Command Disallowed) - proven on
+				# the Barrot and on the ASUS BT540. Legacy commands ACCEPTED (0x00) with zero reports is
+				# therefore NOT a BLE5-only radio, it is a failed measurement, and the old "_uL == 0"
+				# shortcut treated the two the same - letting an unverified extended mode win on a
+				# dongle whose legacy scan does 56/s.
+				_legRejected = (stLP & 0xFF) == 0x0C or (stLE & 0xFF) == 0x0C
+				_pinWantsExt = _pinMode in ("scanBLE45", "scanBLE5")
+				_cmpTxt = ("legacy REJECTED (0x0C) - BLE5-only firmware, nothing to compare" if _legRejected
+						else ("NO BLE4 baseline - the legacy phase delivered nothing" if _uL == 0
+						else "{:.0f}% of the macs".format(_coverage)))
+				if _debugBLE5: U.logger.log(20,"BT5 extended advertising on {}: delivery test - BLE5 mode {} report(s) from {} macs, BLE4 mode {} from {} macs (per 4s) -> {}, {:.0f} reports per mac per minute (legacy cmd status params:0x{:02X} enable:0x{:02X})".format(
+								useHCIForBeacon, nExt, _uE, nLeg, _uL, _cmpTxt, _perMinE, stLP & 0xFF, stLE & 0xFF))
 				# _uL == 0 means the BLE4 phase delivered nothing at all on this radio (BLE5-only
 				# firmware): there is nothing to compare against and no alternative either, so
 				# extended mode is simply the only way this radio can be used.
+				#
+				# BOTH PHASES EMPTY IS NOT A MEASUREMENT, and must not be cached as a verdict.
+				# Seen on rpi#2: "BLE5 mode 0 report(s) from 0 macs, BLE4 mode 0 from 0 macs,
+				# legacy cmd status params:0x00 enable:0x00" - every command accepted, nothing
+				# delivered in EITHER family, on a radio qualifyDongle had just measured at 56/s
+				# legacy and 24/s extended. The probe had run 9 s after a parameter reload while
+				# the stack was still being rebuilt. The old code then set extScanForceLegacy and
+				# saved a negative verdict, so every later probe short-circuited with "disabled
+				# earlier this session" and the rpi stayed on BLE4 for good - Ruuvi Air kept
+				# arriving as the compact format 06 and the full E1 data set never came.
+				# A legacy phase that heard NOTHING cannot tell us anything about extended, so
+				# cache nothing, persist nothing, and let the next cycle re-probe. Legacy params
+				# and enable are already active from the phase above, so the radio keeps working.
+				# RETRY IS BOUNDED. Caching nothing means the probe runs again every ~60 s, and each
+				# probe takes the scan down for ~8 s (4 s extended + reset + 4 s legacy). That is the
+				# right price for a startup race and the wrong one forever, so after a few tries
+				# settle for BLE4 the way the old code did immediately.
+				# ... and the same when only the LEGACY phase came back empty while its commands were
+				# ACCEPTED: there is then no baseline, so the comparative test cannot run at all. An
+				# explicit pin to "scanner BLE4 + BLE5" / "scanner BLE5" says the operator does not want
+				# a comparison - that overrules it, the same way a scanBLE4 pin returns outright above.
+				if (nExt == 0 and nLeg == 0) or (nLeg == 0 and not _legRejected and not _pinWantsExt):
+					extScanInconclusive[0] += 1
+					if extScanInconclusive[0] <= EXTSCAN_MAX_RETRY:
+						U.logger.log(20,"BT5 extended advertising on {}: delivery test INCONCLUSIVE ({} of {}) -"
+							" neither command family delivered a single report, so this says nothing about"
+							" extended advertising (a rebuild or reset was probably still settling). Staying"
+							" on BLE4 for now and re-probing next cycle - no verdict cached.".format(
+							useHCIForBeacon, extScanInconclusive[0], EXTSCAN_MAX_RETRY))
+						reportBLE5("not decided yet - delivery test saw no traffic at all, will retry")
+						return
+					extScanForceLegacy[0] = True
+					saveExtScanVerdict(False)
+					U.logger.log(20,"BT5 extended advertising on {}: delivery test heard nothing in either"
+						" command family {} times running - giving up on extended scanning for this session"
+						" rather than keep interrupting the scan to re-test.".format(
+						useHCIForBeacon, extScanInconclusive[0]))
+					reportBLE5("no - delivery test never saw any traffic")
+					return
 				if (nExt >= EXTSCAN_MIN_REPORTS and _perMinE >= EXTSCAN_MIN_PER_MIN
-						and (_uL == 0 or _coverage >= EXTSCAN_MIN_COVERAGE)):
-					# extended wins -> reset again and restore the full extended setup
-					subprocess.call("sudo hciconfig {} reset".format(useHCIForBeacon), shell=True)
-					time.sleep(0.4)
+						and (_pinWantsExt or _legRejected or _coverage >= EXTSCAN_MIN_COVERAGE)):
+					# extended wins -> DOWN+UP again and restore the full extended setup. This is the one
+					# that cost a whole evening on a COMBINED (scanBLE45) radio: a plain reset here left
+					# the controller mute and the extended scan was then armed on a radio that delivers
+					# nothing - so the rpi lost not just Ruuvi E1 but EVERY message, because in combined
+					# mode this radio is also the only legacy receiver.
+					hciDev(useHCIForBeacon, "down")
+					time.sleep(1.0)
+					hciDev(useHCIForBeacon, "up")
+					time.sleep(0.5)
 					cmdComplete(0x0001, struct.pack("<Q", 0x000FFFFF))										# LE event mask incl. bit12
 					cmdComplete(0x0041, struct.pack("<BBBBHH", 0x00, 0x00, 0x01, 0x01, 0x0010, 0x0010))		# ext params
 					cmdComplete(0x0042, struct.pack("<BBHH", 0x01, 0x00, 0x0000, 0x0000))					# ext scan on
@@ -9743,8 +10248,8 @@ def probeExtendedScan(sock):
 					# legacy wins - leave it RUNNING (params+enable already active)
 					extScanForceLegacy[0] = True
 					saveExtScanVerdict(False)
-					U.logger.log(20,"BT5 extended advertising on {}: delivery test FAILED - BLE5 mode reaches {} macs ({:.0f}% of the {} heard in BLE4 mode) at {:.0f} reports per mac per minute (need {:.0f}% and {:.0f}/min) -> BLE4 scanning".format(
-									useHCIForBeacon, _uE, _coverage, _uL, _perMinE, EXTSCAN_MIN_COVERAGE, EXTSCAN_MIN_PER_MIN))
+					U.logger.log(20,"BT5 extended advertising on {}: delivery test FAILED - BLE5 mode reaches {} macs ({}) at {:.0f} reports per mac per minute, against {} macs in BLE4 mode (need {:.0f}% and {:.0f}/min) -> BLE4 scanning".format(
+									useHCIForBeacon, _uE, _cmpTxt, _perMinE, _uL, EXTSCAN_MIN_COVERAGE, EXTSCAN_MIN_PER_MIN))
 					reportBLE5("no - BLE5 mode reaches only {} of {} macs".format(_uE, _uL))
 					return
 				if nRep > 0:
@@ -9753,14 +10258,15 @@ def probeExtendedScan(sock):
 					# killed scanning right after VERIFIED and nothing re-enabled it ->
 					# live log: VERIFIED every cycle, zero messages in between
 					scanExtendedMode = True
-					U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): VERIFIED - {} extended report(s) in the probe window (eventMask status:0x{:02X}) - scan stays ON".format(useHCIForBeacon, myBLEmac, nRep, stM & 0xFF))
+					extScanInconclusive[0] = 0
+					if _debugBLE5: U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): VERIFIED - {} extended report(s) in the probe window (eventMask status:0x{:02X}) - scan stays ON".format(useHCIForBeacon, myBLEmac, nRep, stM & 0xFF))
 					reportBLE5("yes - active, delivery verified")
 					saveExtScanVerdict(True)		# remember: same adapters -> no proof window next time
 				else:
 					cmdComplete(0x0042, struct.pack("<BBHH", 0x00, 0x00, 0x0000, 0x0000))	# off - the legacy flow enables its own scan
 					extScanForceLegacy[0] = True	# cache the verdict - no 2.5s probe window on every socket setup
 					saveExtScanVerdict(False)		# stale trust would mask a now-broken setup
-					U.logger.log(20,"BT5 extended advertising on {} (mac {}): scan enabled OK (eventMask status:0x{:02X}) but NO extended reports arrived within 2.5s - the controller does not deliver them -> legacy scanning".format(useHCIForBeacon, myBLEmac, stM & 0xFF))
+					if _debugBLE5: U.logger.log(20,"BT5 extended advertising on {} (mac {}): scan enabled OK (eventMask status:0x{:02X}) but NO extended reports arrived within 2.5s - the controller does not deliver them -> legacy scanning".format(useHCIForBeacon, myBLEmac, stM & 0xFF))
 					reportBLE5("no - adapter claims BLE5 but failed the delivery test")
 					return
 			else:
@@ -9945,10 +10451,19 @@ def execExtListener(hci):
 			# reports.  scanRateTest proved a reset before the ext commands works.
 			# >/dev/null: on a vanished adapter hciconfig prints "Can't get device info:
 			# No such device" to the console on every retry - the log line below says it once.
-			subprocess.call("sudo hciconfig {} reset > /dev/null 2>&1".format(hci), shell=True)
-			time.sleep(0.4)
-			subprocess.call("sudo hciconfig {} up > /dev/null 2>&1".format(hci), shell=True)
-			time.sleep(0.4)
+			# DOWN+UP, NOT "reset". hciconfig reset leaves some controllers MUTE - they accept
+			# every command with status 0 and deliver nothing - and the "up" that followed is a
+			# no-op because the device never went down. qualifyDongle's resetHCI() was changed
+			# away from plain reset for exactly this reason. Measured on rpi#2 with the TP-Link
+			# UB500 (2357:0604): after the listener's plain reset the radio delivered 0 reports
+			# of ANY kind - not even legacy ones - for as long as beaconloop ran, while the same
+			# probe on the same dongle after a DOWN+UP read 446 legacy and 29 extended reports
+			# from 2 macs in 12 s. hciNeedsDownUp / rememberMuteOnReset already encode this
+			# knowledge, but were only ever recorded for the SCAN radio, never for this one.
+			hciDev(hci, "down")
+			time.sleep(1.0)
+			hciDev(hci, "up")
+			time.sleep(0.5)
 			if not macIsPresent and extMac != "" and failInARow >= 6:
 				# ~30 s and our own mac has not shown up once: the dongle was swapped for a
 				# different one (new mac) or removed for good. Waiting the full 2 min helps
@@ -10043,6 +10558,14 @@ def execExtListener(hci):
 					U.logger.log(20, "extListener {}: socket closed by the system ({}) - radio removed? re-opening".format(hci, e))
 					wasDown = True
 					break
+				if extListenerCtl.get("rawLeft", 0) > 0:
+					extListenerCtl["rawLeft"] -= 1
+					if pkt is None:
+						U.logger.log(20, "extListener {} RAW: recv TIMEOUT - nothing at all on this socket ({} left)".format(hci, extListenerCtl["rawLeft"]))
+					else:
+						_h = "".join(["{:02X}".format(_b) for _b in bytearray(pkt)])
+						U.logger.log(20, "extListener {} RAW: {} bytes  evt=0x{} sub=0x{}  {} ({} left)".format(
+							hci, len(pkt), _h[2:4], _h[6:8], _h[:90], extListenerCtl["rawLeft"]))
 				if pkt is None:
 					# NO silence watchdog here on purpose. The ~50 s extended-listener dropouts
 					# that the old 20 s re-assert / 40 s hciconfig-reset ladder chased were NOT
@@ -10078,10 +10601,10 @@ def execExtListener(hci):
 						#     touch /home/pi/pibeacon/temp/extListener.keepLegacy   -> keep both
 						#     rm    /home/pi/pibeacon/temp/extListener.keepLegacy   -> drop (default)
 						# Checked every 5 s, so an A/B test is two commands and no restart.
-						if _drop and time.time() - extListenerCtl.get("keepChecked", 0) > 5:
+						if time.time() - extListenerCtl.get("keepChecked", 0) > 5:
 							extListenerCtl["keepChecked"] = time.time()
 							_keep = os.path.isfile(G.homeDir + "temp/extListener.keepLegacy")
-							if _keep != extListenerCtl.get("keepLegacy", False):
+							if _drop and _keep != extListenerCtl.get("keepLegacy", False):
 								extListenerCtl["keepLegacy"] = _keep
 								U.logger.log(20, "extListener {}: legacy ble4 reports are now {} ({})".format(
 										hci, "KEPT" if _keep else "dropped",
@@ -10096,14 +10619,66 @@ def execExtListener(hci):
 								macsSeen.add(":".join(_rev[i:i+2] for i in range(10, -2, -2)))
 							except Exception:	pass
 						extListenerCtl["nRx"] += 1
+				# THE FLAG IS READ HERE, NOT INSIDE THE 0x0D BRANCH. It was nested in there, so a
+				# listener receiving NOTHING never armed the one diagnostic that would have said so -
+				# the question "is this radio delivering at all" was unanswerable in exactly the case
+				# where it matters. At loop level it is reached on every pass, packet or timeout.
+				if time.time() - extListenerCtl.get("hbChecked", 0) > 5:
+					extListenerCtl["hbChecked"] = time.time()
+					extListenerCtl["heartbeat"] = os.path.isfile(G.homeDir + "temp/extListener.heartbeat")
+					# RAW RECEIVE LOG, opt-in:  touch temp/extListener.raw
+					# Logs what this radio hands us the MOMENT it arrives, before any filtering or
+					# conversion - the only way to tell "the socket receives nothing" apart from "the
+					# socket receives something we then throw away". The heartbeat says 0 reports/min;
+					# this says whether that is an empty socket or a discarded packet. Capped at 60
+					# lines per arming so it cannot flood; touch the file again to re-arm.
+					if os.path.isfile(G.homeDir + "temp/extListener.raw"):
+						if not extListenerCtl.get("rawArmed", False):
+							extListenerCtl["rawArmed"] = True
+							extListenerCtl["rawLeft"]  = 60
+							U.logger.log(20, "extListener {}: RAW receive log armed for the next 60 packet(s)/timeout(s)".format(hci))
+					else:
+						extListenerCtl["rawArmed"] = False
 				# heartbeat every 60 s: prove the BLE5 radio is actually delivering
 				if time.time() - lastHeartbeat >= 60:
 					got = extListenerCtl["nRx"] - nRxAtLast
 					dropped = extListenerCtl.get("nDropLegacy", 0) - nDropAtLast
-					if _debugheartbeat: U.logger.log(20, "extListener {}: {} extended report(s)/min from {} mac(s) ({} legacy ble4 report(s) dropped, the scan radio has those): {}".format(hci, got, len(macsSeen), dropped, ",".join(sorted(macsSeen))))
+					if extListenerCtl.get("heartbeat", False):
+						U.logger.log(20, "extListener {}: {} extended report(s)/min from {} mac(s) ({} legacy ble4 report(s) dropped, the scan radio has those): {}".format(hci, got, len(macsSeen), dropped, ",".join(sorted(macsSeen))))
 					nDropAtLast = extListenerCtl.get("nDropLegacy", 0)
 					if got == 0:
-						zeroStreak += 1				# logged only - no self-restart, see the note above
+						zeroStreak += 1
+						# RE-ARM THE SCAN - but do NOT reset the radio. This is the opposite mistake to the
+						# old 20 s/40 s ladder removed above: that one RESET the dongle on silence, which
+						# makes a Barrot deliver one burst and die. The real failure is subtler. This thread
+						# is idempotent on purpose (startExtListener returns early while it is alive), so
+						# when something ELSE resets this radio - startBlueTooth's periodic refresh does a
+						# down+up - the controller reverts to its defaults, where the LE EVENT MASK bit 12
+						# (extended advertising report) is OFF. The socket does not error, so this loop keeps
+						# reading a scan that is no longer running, forever. Measured on rpi#2: "0 extended
+						# report(s)/min from 0 mac(s)" every minute for as long as it ran, while a raw probe
+						# on the same radio read 161 reports incl. 14 Ruuvi E1 right after a reset.
+						# Re-sending mask+params+enable costs three commands a minute and cannot hurt: if the
+						# scan is already healthy they are a no-op, and if the air is simply quiet they change
+						# nothing either. Silence stays a legitimate state - we just stop assuming the scan
+						# we armed is still armed.
+						try:
+							bluez.hci_send_cmd(sock, OGF_LE_CTL, 0x0001, struct.pack("<Q", 0x000FFFFF))
+							time.sleep(0.05)
+							bluez.hci_send_cmd(sock, OGF_LE_CTL, 0x0042, struct.pack("<BBHH", 0x00, 0x00, 0x0000, 0x0000))
+							time.sleep(0.05)
+							bluez.hci_send_cmd(sock, OGF_LE_CTL, 0x0041, struct.pack("<BBBBHH", 0x00, 0x00, 0x01, 0x01, 0x0010, 0x0010))
+							time.sleep(0.05)
+							bluez.hci_send_cmd(sock, OGF_LE_CTL, 0x0042, struct.pack("<BBHH", 0x01, 0x00, 0x0000, 0x0000))
+							if zeroStreak == 1 or extListenerCtl.get("heartbeat", False):
+								U.logger.log(20, "extListener {}: silent minute #{} - re-armed the extended scan in"
+									" place (event mask + params + enable). A reset elsewhere clears LE event mask"
+									" bit 12 and this socket would never notice.".format(hci, zeroStreak))
+						except Exception as _e:
+							U.logger.log(20, "extListener {}: re-arm failed ({}) - letting the outer loop re-open the"
+								" radio".format(hci, _e))
+							wasDown = True
+							break
 					else:
 						zeroStreak = 0
 					lastHeartbeat = time.time()
@@ -10165,7 +10740,7 @@ def reopenScanSocket(err):
 			U.logger.log(20, "scan socket error ({}) - scan radio {} did NOT come back on {} within {} s (found:{}) - full restart re-selects the radio".format(err, scanMac, useHCIForBeacon, SCAN_REOPEN_WAIT, macHere if macHere not in ("", "0") else "nothing"))
 			return False
 		lastScanSocketReopen[0] = time.time()
-		readPopen("sudo /bin/hciconfig {} up".format(useHCIForBeacon))
+		hciDev(useHCIForBeacon, "up")
 		time.sleep(0.3)
 		try:
 			if currentBLESocket is not None: currentBLESocket.close()
@@ -10335,6 +10910,7 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 
 	messageBad  = False
 	nJunkFrames = 0
+	nJunkLens   = {}					# length -> count, so a silent drop can be SEEN. see below
 	for hexstr in Msgs:
 		try:
 			if tt - timeAtLoopStart	 > sendAfter: 
@@ -10349,12 +10925,19 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 			# re-enable -> empty string after the preamble strip, or an oversized fragment)
 			# are SKIPPED: a single one must not abort the set and fire the restart ladder;
 			# only a stream with nothing but junk is really broken
-			# legacy: max 31 bytes + preamble; extended advs (main scan OR the dedicated
-			# extended listener radio) are longer - use the big limit if EITHER delivers
-			# extended frames, else the oversized Ruuvi Air E1 (48-byte, ~126 hex) frames
-			# from the listener get dropped here as "junk-length"
-			if nCharThisMessage < 16 or nCharThisMessage > (510 if (scanExtendedMode or extListenerCtl.get("hci","")) else 110):
+			# ONE CEILING, NOT A MODE-DEPENDENT ONE. This used to be 110 chars unless
+			# scanExtendedMode or a listener was set, and a Ruuvi Air E1 frame measures 112
+			# after fillHCIdump strips the 14-char preamble: 7 preamble + 6 mac + 1 len + 48
+			# data + 1 rssi = 63 bytes = 126 hex, less 14. TWO CHARACTERS over the legacy
+			# limit. So whenever that flag was false for any reason - a probe still settling,
+			# a verdict not yet saved - every E1 frame was dropped HERE, silently, and this is
+			# the only drop in the whole pipeline that leaves no trace: no log, no trackmac
+			# line, nothing. A legacy advertisement can never exceed 110 chars anyway, so the
+			# narrow limit bought nothing and cost the entire extended path. 510 covers an
+			# extended advert with the full 229-byte data field.
+			if nCharThisMessage < 16 or nCharThisMessage > 510:
 				nJunkFrames += 1
+				nJunkLens[nCharThisMessage] = nJunkLens.get(nCharThisMessage, 0) + 1
 				if nJunkFrames > 20 and nMsgs == 0:	return True
 				continue
 	
@@ -10379,7 +10962,8 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 			# turns out not to be find my - about 0.1 ms per second at a few hundred apple frames
 			# a second. And the experiment that matters: beaconloop sitting at 25% cpu was blamed
 			# on this filter, the whole find my counter was then DISABLED, and the cpu did not
-			# move. 25% is what beaconloop costs here; it is not this, and it never was.
+			# move. The 25% was not this, and it never was: it was the discarded 79-tag search in
+			# checkIfTagged, and once that was guarded (see there) beaconloop settled at ~10%.
 			# Do not narrow this filter again to save cpu. It saves none, and the narrow form
 			# ("FF4C0012") loses airpods - see below.
 			if fmGroup is not None and fmGroup.enabled and hexstr.find("FF4C00", 14) > -1:
@@ -10493,6 +11077,17 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 			U.logger.log(20,"", exc_info=True)
 			continue
 
+	# SAY WHEN FRAMES WERE DROPPED FOR THEIR LENGTH - but NOT for the one that is expected.
+	# Every set contains a 0-char frame: the command-complete event of our own scan
+	# re-enable, which is empty once the 14-char preamble is stripped. Reporting that
+	# printed the same sentence every ~8 s and said nothing. What matters is a frame with
+	# REAL length being thrown away - an E1 at 112 chars was how this started - so the
+	# 0-char artifact is counted but never triggers the line, and is only shown alongside
+	# a length that does.
+	_junkReal = dict([(k, v) for k, v in nJunkLens.items() if k != 0])
+	if _junkReal:
+		U.logger.log(20,"{} frame(s) dropped for their length in this set (want 16..510 chars): {}".format(
+			nJunkFrames, ", ".join(["{} chars x{}".format(k, nJunkLens[k]) for k in sorted(nJunkLens)])))
 	return  False	
 
 
@@ -10538,6 +11133,7 @@ def execbeaconloop(test):
 	global beepBatteryBusy, startTimeOfBeaconloop
 	global ignoreBeaconsIfRssiLessThan
 	global parsedData
+	global scanExtendedMode
 	global beaconLastMessageTS
 	global beaconLastMessageSendTS
 	global outLast
@@ -10784,11 +11380,64 @@ def execbeaconloop(test):
 
 	U.echoText(G.restartLogfileName, "starting beaconloop")
 
+	# TEMPORARY PROFILING, off until asked for - see the block at the top of the loop
+	profiler     = None
+	profileUntil = 0.
+	profileCheck = 0.
+
 	try:
 		while True:
 			messageBad = False
 			loopCount += 1
 			tt = time.time()
+
+			# PROFILE THE READ LOOP ON DEMAND. Create temp/profile.start, optionally containing the
+			# number of seconds (default 60), and this profiles everything the loop does for that
+			# long, writes temp/profile.txt and stops. Nothing is left enabled afterwards.
+			#     echo 60 > /home/pi/pibeacon/temp/profile.start
+			#     ... wait ...  then read /home/pi/pibeacon/temp/profile.txt
+			# CHECKED EVERY TWO SECONDS, not every turn: this loop runs many times a second and an
+			# os.path.isfile on each of them is a cost paid for ever to enable something used twice
+			# a year. The marker is deleted as soon as it is seen, so it cannot re-arm itself.
+			# IT SEES THIS THREAD ONLY. cProfile is per-thread, and beaconloop runs others - the
+			# hci command thread among them. If the loop turns out to account for little of the
+			# cpu, that is itself the answer: the time is in another thread and py-spy, which
+			# samples all of them, is the tool for that
+			if tt - profileCheck > 2.:
+				profileCheck = tt
+				if profiler is None and os.path.isfile(G.homeDir+"temp/profile.start"):
+					try:
+						secs = 60.
+						try:
+							ff   = open(G.homeDir+"temp/profile.start","r")
+							secs = float(ff.read().strip() or 60)
+							ff.close()
+						except Exception:	secs = 60.
+						U.removeFile(G.homeDir+"temp/profile.start")
+						import cProfile
+						profiler     = cProfile.Profile()
+						profileUntil = tt + max(5., min(600., secs))
+						profiler.enable()
+						U.logger.log(20, "PROFILING the read loop for {:.0f} secs - result will be in temp/profile.txt".format(profileUntil - tt))
+					except Exception:
+						profiler = None
+						U.logger.log(20, "", exc_info=True)
+			if profiler is not None and tt > profileUntil:
+				try:
+					profiler.disable()
+					import pstats
+					ff = open(G.homeDir+"temp/profile.txt","w")
+					ff.write("beaconloop read loop, {:.0f} secs, {} turns\n".format(profileUntil - (profileCheck - 2.), loopCount))
+					ff.write("\n=== by TOTTIME - time spent IN the function itself, which is where the cpu is ===\n")
+					pstats.Stats(profiler, stream=ff).sort_stats("tottime").print_stats(40)
+					ff.write("\n\n=== by CUMTIME - including everything it calls ===\n")
+					pstats.Stats(profiler, stream=ff).sort_stats("cumulative").print_stats(40)
+					ff.close()
+					U.makeAccessible(G.homeDir+"temp/profile.txt", recursive=False, owner="pi")
+					U.logger.log(20, "PROFILING done - temp/profile.txt written")
+				except Exception:
+					U.logger.log(20, "", exc_info=True)
+				profiler = None
 			if tt - checkIPConnection > 600: # check once per 10 minutes
 				checkIPConnection = tt
 				eth0IP, wifi0IP, G.eth0Enabled, G.wifiEnabled = U.getIPCONFIG()
@@ -10966,7 +11615,15 @@ def execbeaconloop(test):
 				nEmptyMessagesInARow += 1
 
 				
-			if dt1 > 10 or nEmptyMessagesInARow > 9  or messageBad or  (dt1 > 10  and not checkIfBLEprogramIsRunning(useHCIForBeacon)):
+			# DO NOT JUDGE THE MESSAGE FLOW WHILE WE WERE BUSY DISMANTLING THE SCAN. A probe takes
+			# about 8 s - two 4 s measuring windows plus resets - and during it the reader cannot
+			# receive anything: the probe owns the socket and discards every advertising report it
+			# meets while waiting for its command-completes. The watchdog then fired on a clock
+			# that had been running throughout. Measured on rpi#2: extended was VERIFIED at
+			# 19:05:41.9 and condemned at 19:05:47.2 - 5.3 s to prove itself. Anything within 15 s
+			# of a probe is the probe, not the radio.
+			if (time.time() - extScanLastProbe[0]) > 15. and (
+				dt1 > 10 or nEmptyMessagesInARow > 9  or messageBad or  (dt1 > 10  and not checkIfBLEprogramIsRunning(useHCIForBeacon))):
 					cmd = "rfkill list"
 					blocked = readPopen(cmd)[0]
 					if blocked.find(" blocked: yes") ==-1:	blocked = ""
@@ -10975,6 +11632,53 @@ def execbeaconloop(test):
 					out =  "lastmsg {}s:bytes:{},{}; okdata: {}s:,bytes:{},{}; loopCount:{}; restartCount:{}, bleRestartCounter:{}, nEmptyMessagesInARow:{}, {} ".format( dt1, len(lastMessageRead), lastMessageRead,  dt2, len(lastMessageOK), lastMessageOK, loopCount, restartCount, bleRestartCounter, nEmptyMessagesInARow,  blocked)
 					U.logger.log(20, "time w/out any message: "+out)
 					if debugRestarts: U.echoText(G.restartLogfileName, out)
+					# NO BLE5 TRAFFIC IS NOT A FAULT, SO DO NOT RESTART FOR IT. Extended scanning can be
+					# running perfectly and still deliver nothing, because nothing on the air is sending
+					# extended advertisements. The old path restarted the whole stack for that, twice,
+					# before falling back - and on rpi#2 it simply looped: restart, re-prove extended,
+					# no messages, restart, for 25 minutes with the rpi reporting no beacons at all.
+					# Fall back to LEGACY on the FIRST empty cycle, re-arm the scan IN PLACE, and leave
+					# the program running. Legacy is what delivers the ordinary beacons, so data resumes
+					# immediately; extScanForceLegacy keeps the probe from turning extended back on, and
+					# saveExtScanVerdict(False) makes the next program start re-prove it from scratch.
+					if scanExtendedMode and not extScanForceLegacy[0]:
+						extScanZeroMsgRestarts[0] += 1
+						extScanForceLegacy[0] = True
+						scanExtendedMode      = False		# so the re-arm below uses the LEGACY command family
+						saveExtScanVerdict(False)
+						reportBLE5("no - extended scanning delivered no messages, fell back to BLE4")
+						# THE CONTROLLER MUST BE RESET BEFORE LEGACY COMMANDS WILL BE ACCEPTED. The two scan
+						# command families are mutually exclusive until an HCI reset - after extended commands
+						# the legacy ones answer 0x0C Command Disallowed, which probeExtendedScan documents
+						# and this fallback forgot. Arming legacy on a latched controller therefore did
+						# NOTHING: measured on rpi#2, the fallback fired at 19:02:42 and 41 s later there was
+						# still no data, because the legacy enable was refused. down+up rather than "reset":
+						# HCIDEVRESET leaves some controllers mute, this radio among them (see hciNeedsDownUp).
+						# reopenScanSocket then rebuilds the socket and arms the scan - and the probe it calls
+						# on the way returns straight away now that extScanForceLegacy is set.
+						try:
+							hciDev(useHCIForBeacon, "down")
+							time.sleep(1.0)
+							hciDev(useHCIForBeacon, "up")
+							time.sleep(0.5)
+						except Exception:
+							U.logger.log(20,"", exc_info=True)
+						try:
+							reopenScanSocket("extended scanning delivered nothing - switching this radio to legacy")
+						except Exception:
+							U.logger.log(20,"", exc_info=True)
+						# GIVE LEGACY A FAIR CHANCE. The watchdog fires on "no message for >10 s", and by the
+						# time we reach here that clock has ALREADY run out - so without restarting it the
+						# very next iteration restarts the stack anyway. Measured on rpi#2: fell back at
+						# 18:55:49.4, restarted at 18:55:51.6, 2.2 s later. Legacy has only just been armed
+						# and has had no chance to deliver anything, so its clock starts now.
+						lastMSGwithDataPlain  = time.time()
+						lastMSGwithDataPassed = time.time()
+						nEmptyMessagesInARow  = 0
+						U.logger.log(20,"no messages with extended scanning on {} - fell back to LEGACY scanning IN"
+							" PLACE, stack NOT restarted. Extended advs / Ruuvi E1 are not receivable on this"
+							" radio in this session; the next program start re-proves it.".format(useHCIForBeacon))
+						continue
 					if stackrestartcount < 5:
 						U.logger.log(20, "restarting stack  due to no messages {}  ".format(dt1) )
 						# SELF-HEALING: extended scanning active but NOTHING arrives = the adapter
@@ -10983,12 +11687,47 @@ def execbeaconloop(test):
 						# legacy scanning for this session instead of restart-looping forever
 						if scanExtendedMode:
 							extScanZeroMsgRestarts[0] += 1
+							# kept as the belt-and-braces path: the in-place fallback above handles the normal
+							# case and returns, so this only fires if extended was re-enabled some other way.
 							if extScanZeroMsgRestarts[0] >= 2 and not extScanForceLegacy[0]:
 								extScanForceLegacy[0] = True
 								U.logger.log(20,"extended scanning delivered NO messages {}x - adapter likely misreports its BT5 support; falling back to LEGACY scanning (extended advs / Ruuvi E1 not receivable on this radio)".format(extScanZeroMsgRestarts[0]))
 								reportBLE5("no - adapter claims BLE5 but went silent in operation")
 								saveExtScanVerdict(False)		# next program start must re-prove delivery
 						if rpiDataAcquistionmethod == "socket":
+							# ESCALATE FROM reset TO down+up. HCIDEVRESET is NOT enough on every
+							# controller. Measured on an ASUS USB-BT500 (Realtek 0b05:190e) that had
+							# been doing extended scanning: it then accepted LE Set Scan Parameters
+							# AND Scan Enable with status 0 and delivered NOTHING - through reset
+							# after reset, so the stack restarted every ~35 s indefinitely and the
+							# rpi reported no beacons at all. A full down+up brought it straight
+							# back: 298 reports from 42 devices in 8 s, same commands, same radio.
+							# Only this socket path was affected; the hcidump path already passed
+							# hardreset=True. One empty restart is enough to try the bigger hammer -
+							# the small one has demonstrably already failed by then.
+							# STRAIGHT TO down+up, from the FIRST fruitless restart. Waiting for a
+							# second one bought nothing: by the time we are here a reset has already
+							# demonstrably failed to produce a single message, and down+up is simply
+							# the stronger version of the same action. Waiting cost a full extra
+							# restart cycle - about a minute of an rpi reporting no beacons at all,
+							# every time, which is far worse than ~3s of down+up on a radio that did
+							# not need it. Together with the remembered mac, a radio with this fault
+							# is now started correctly from the outset and there is no wait at all.
+							if stackrestartcount >= 0:
+								# REMEMBER it, do not just work around it once: startBlueTooth below
+								# resets the radio on its way in, which put this controller straight
+								# back into the mute state - the flag makes normalStartHCI use
+								# down+up for this radio from now on.
+								hciNeedsDownUp[useHCIForBeacon] = True
+								rememberMuteOnReset(myBLEmac)		# survives a program restart
+								U.logger.log(20,"no messages after {} restart(s) - taking the scan radio {} DOWN and UP from now on (a reset alone does not clear every controller)".format(stackrestartcount, useHCIForBeacon))
+								try:
+									hciDev(useHCIForBeacon, "down")
+									time.sleep(1.5)
+									hciDev(useHCIForBeacon, "up")
+									time.sleep(2.0)
+								except Exception:
+									U.logger.log(20,"", exc_info=True)
 							sock, myBLEmac, retCode = startBlueTooth(G.myPiNumber, thisHCI=useHCIForBeacon, trymyBLEmac=myBLEmac) 
 							restartBLE = time.time()
 							maxLoopCount = 6000

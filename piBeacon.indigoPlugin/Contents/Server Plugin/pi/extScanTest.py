@@ -15,6 +15,8 @@ watchdog re-enables its own scan within ~15s if its live adapter was tested.
 NOTE: sends only LE scan/read commands after the reset - it does NOT touch advertising,
 so it cannot lock an adapter's legacy/extended command-set choice."""
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import sys, os, time, struct, subprocess
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 import hciRawSocket as hrs

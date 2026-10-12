@@ -22,7 +22,58 @@ if {$authKeyOrPassword == "assword"} {
 }
 expect "Last login:"
 sleep 3
-send "cd /home/pi/pibeacon;nohup sudo /usr/bin/python -E master.py &\r"
+
+# SUDO MAY WANT A PASSWORD, and on a fresh image it does. Nothing here used to answer it: the
+# command below was sent, sudo printed "[sudo] password for pi:" and waited, expect slept 2
+# seconds and closed the session. master never started, and the whole plugin looked dead on a
+# new SSD - with no error anywhere, because from this side the command had been "sent".
+# ANSWERED ONCE, HERE. "sudo -v" only refreshes the sudo timestamp, so the sudo below then runs
+# without asking. master's own enableSudoNoPassword() makes it permanent as soon as it is up, so
+# this branch is only ever needed for the FIRST start on a new image - which is precisely the
+# case that could not get there before.
+# THE MARKER IS SPLIT IN TWO so that the echo of the line we type cannot match it. Without that,
+# expect sees its own command coming back, decides it is done, and moves on before sudo has said
+# anything at all.
+# IT COSTS NOTHING WHERE SUDO IS ALREADY PASSWORDLESS: "sudo -v" returns silently, the marker
+# appears immediately and this falls straight through
+set timeout 15
+send "sudo -v; echo SUDO''DONE\r"
+expect {
+    "assword"  { send "$password\r" ; exp_continue }
+    "SUDODONE" { }
+    timeout    { }
+}
+
+# AND MAKE IT PERMANENT, because "sudo -v" above only refreshes the timestamp - good for about
+# fifteen minutes. That is enough to start master, and not enough for the programs master launches
+# later or for the next restart, which would ask again with nobody to answer.
+# raspi-config OWNS THIS SETTING:
+#     do_sudo_pass 1   disables the admin password, writing /etc/sudoers.d/010_$USER-nopasswd
+# The polarity is inverted from do_ssh and friends, where 0 enables - here the thing being enabled
+# is the PASSWORD, so 1 is the permissive one.
+# "sudo env USER=..." IS NOT DECORATION: sudo resets the environment, and that script builds the
+# filename from $USER. Without it root gets a file it does not need while the pi user goes on
+# being asked for a password - which looks exactly like success and is not.
+# FAILING QUIETLY IS FINE HERE. An older raspi-config has no such function, and master's own
+# enableSudoNoPassword() writes the file directly, visudo-validated, as soon as it is up - which
+# it now can be, because the lines above got it started
+send "sudo env USER=$userID /usr/bin/raspi-config nonint do_sudo_pass 1 2>/dev/null; echo RC''DONE\r"
+expect {
+    "assword" { send "$password\r" ; exp_continue }
+    "RCDONE"  { }
+    timeout   { }
+}
+
+# WHICHEVER PYTHON IS ACTUALLY THERE. This said /usr/bin/python, which does not exist on Bookworm
+# or later unless python-is-python3 happens to be installed - and when it is missing master simply
+# never starts, with the same silence as the sudo prompt above: the line is sent, the shell says
+# "command not found" into a session nobody reads, and the rPi looks dead.
+# python3 FIRST because every current image has it and no current image has python2. master.py is
+# py2/py3 compatible either way, and which interpreter the SENSOR programs use is not decided here
+# - master reads usePython3 from the parameters file and passes it to master.sh, which is the
+# watchdog that keeps master.py alive from then on.
+# \$ IS ESCAPED so Tcl leaves it for the remote shell rather than substituting an expect variable
+send "cd /home/pi/pibeacon;PY=\$(command -v python3 || command -v python);echo using \$PY;nohup sudo \$PY -E master.py &\r"
 sleep 2
 set timeout 1
 expect eof

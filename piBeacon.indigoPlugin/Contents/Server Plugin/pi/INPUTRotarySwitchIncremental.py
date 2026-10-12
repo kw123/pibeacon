@@ -26,6 +26,8 @@
 #   3 = if event pin not changed: add flipped pin event to sequence
 ##
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import	sys, os, subprocess, copy
 import	time,datetime
 import	json
@@ -258,7 +260,10 @@ def startGPIO(devId):
 				# on an older rpi, and it was called twice.
 				if not U.pigpiodRunning():
 					U.logger.log(20, "starting pigpiod")
-					subprocess.call("sudo pigpiod &", shell=True)
+					# -s 10 to match master's startPigpiod - otherwise whichever of the two wins
+					# the race decides the sample rate, and this safety net would quietly restore
+					# the default 5 us and its cpu cost
+					subprocess.call(U.pigpiodStartCmd(), shell=True)
 					time.sleep(0.5)
 					if not U.pigpiodRunning(force=True):
 						U.logger.log(20, " restarting myself as pigpiod not running, need to wait for timeout to release port 8888")

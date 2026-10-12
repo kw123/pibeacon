@@ -6,6 +6,8 @@
 # adopted to piBeacon environment
 # karlwachs@me.com
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import serial
 import re
 import os

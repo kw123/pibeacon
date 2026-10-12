@@ -7,7 +7,15 @@ set timeout [lindex $argv 4 ]
 
 
 set timeout $timeout
-if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} {spawn sftp -o ConnectTimeout=20 $userID@$ipNumber}
+# SSH ON BOTH BRANCHES, as the name of this file has always claimed. The else branch spawned
+# SFTP, which is why it got away with it for so long: mkdir, rm and exit happen to be valid sftp
+# commands as well as shell ones, so the directory setup below worked either way and nobody had
+# cause to look. What does NOT work in sftp is anything else - there is no shell, so sudo cannot
+# run at all - and that is what this script now has to do. restartmasterSSH.exp has always had
+# ssh on both branches; this now matches it.
+# argsCount > 5 only decides whether an ssh OPTION was passed in (the host-key check), not which
+# program to run, which is the distinction that was lost here
+if {$argsCount > 5} {spawn ssh [lindex $argv $argsCount-1 ] -o ConnectTimeout=20 $userID@$ipNumber} else {spawn ssh -o ConnectTimeout=20 $userID@$ipNumber}
  
 if {$authKeyOrPassword == "assword"} { 
     expect {
@@ -24,6 +32,43 @@ if {$authKeyOrPassword == "assword"} {
 
 expect "Last login:" { }
 sleep 1
+
+# PASSWORDLESS SUDO FIRST, BEFORE ANYTHING ELSE IS SENT. On a fresh SSD sudo wants a password, and
+# every later step needs root without being able to supply one: updateAllAllFilesFTP is an sftp
+# session with no shell at all, and restartmasterSSH ends with "sudo python master.py". That last
+# one used to be sent into a sudo prompt nobody answered - expect slept two seconds and closed the
+# session, master never started, and the rPi looked dead with no error anywhere, because from the
+# plugin's side the command had been sent successfully.
+# THIS SCRIPT RUNS FIRST in the action list ("initSSH", "updateAllAllFilesFTP", "restartmasterSSH")
+# and is the only one of the three with both a shell and the password, so it is where the
+# chicken-and-egg has to be broken.
+# "sudo -v" ONLY REFRESHES THE TIMESTAMP - good for about fifteen minutes, which would carry this
+# push and nothing after it - so do_sudo_pass makes it permanent:
+#     do_sudo_pass 1   disables the admin password, writing /etc/sudoers.d/010_$USER-nopasswd
+# The polarity is inverted from do_ssh and friends where 0 enables: the thing being enabled here
+# is the PASSWORD, so 1 is the permissive one.
+# "sudo env USER=..." IS NOT DECORATION. sudo resets the environment and that script builds the
+# filename from $USER; without it root gets a file it does not need while the pi user goes on
+# being asked - which looks exactly like success and is not.
+# THE MARKERS ARE SPLIT so expect cannot match the echo of the line just typed and move on before
+# sudo has said anything. Where sudo is already passwordless both steps fall straight through.
+# IF raspi-config IS TOO OLD to have do_sudo_pass this fails quietly, and master's own
+# enableSudoNoPassword() writes the sudoers file directly, visudo-validated, once it is up - which
+# it now can be
+set timeout 20
+send "sudo -v; echo SUDO''DONE\r"
+expect {
+    "assword"  { send "$password\r" ; exp_continue }
+    "SUDODONE" { }
+    timeout    { }
+}
+send "sudo env USER=$userID /usr/bin/raspi-config nonint do_sudo_pass 1 2>/dev/null; echo RC''DONE\r"
+expect {
+    "assword" { send "$password\r" ; exp_continue }
+    "RCDONE"  { }
+    timeout   { }
+}
+
 send "mkdir /home/pi/pibeacon \r"
 send  "rm /home/pi/pibeacon/soundfiles/* \r"
 send  "rm /home/pi/pibeacon/setStartupParams.done \r" 

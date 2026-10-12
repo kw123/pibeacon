@@ -8,6 +8,8 @@
 ##  do it in a timed manner not to load the system, is every 1 seconds then 30 senods break
 ##
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import  sys, os, time, json, datetime,subprocess,copy
 sys.path.append(os.getcwd())
 import  piBeaconUtils   as U

@@ -4,6 +4,8 @@
 # feb 5 2016
 # version 0.7 
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import subprocess
 import time
 import sys

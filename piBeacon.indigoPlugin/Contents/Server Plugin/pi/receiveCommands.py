@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 # by Karl Wachs
 # feb 5 2016
 # version 0.7 
@@ -18,7 +20,10 @@ import base64
 try:
 	#1/0 # use GPIO
 	if subprocess.Popen("/usr/bin/ps -ef | /usr/bin/grep pigpiod  | /usr/bin/grep -v grep",shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8').find("pigpiod")< 5:
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+		# local import: piBeaconUtils is imported further down in this file, and this
+		# runs at import time - U does not exist yet here
+		import piBeaconUtils as _U
+		subprocess.call(_U.pigpiodStartCmd(sudoPath="/usr/bin/sudo", pigpiodPath="/usr/bin/pigpiod"), shell=True)
 		time.sleep(2)
 	import gpiozero
 	from gpiozero.pins.pigpio import PiGPIOFactory
@@ -215,7 +220,7 @@ def getPigpio():
 			# arrives before that (or after a pigpiod crash) would fail for no visible reason.
 			if not U.pigpiodRunning(force=True):
 				U.logger.log(20,"getPigpio: pigpiod is not running - starting it")
-				subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+				subprocess.call(U.pigpiodStartCmd(sudoPath="/usr/bin/sudo", pigpiodPath="/usr/bin/pigpiod"), shell=True)
 				time.sleep(2)
 				U.pigpiodRunning(force=True)
 				PIGPIOhandle = pigpio.pi()
@@ -761,92 +766,124 @@ def sleepForxSecs(sleepTime):
 def runQualifyDongle(params):
 	"""Runs pi/qualifyDongle.py for the plugin menu and sends the report back to indigo.
 
-	Three things have to be true while it runs:
-	  - the radios must be FREE: beaconloop pauses on temp/beaconloop.pause (timestamp content,
-	    55 s failsafe - so it has to be REFRESHED, not written once), BLEconnect on
-	    temp/BLEconnect.pause. Neither program is killed, they resume by themselves.
-	  - master.py must not think anything is stuck: it judges by temp/alive.<pgm> and restarts a
-	    program whose timestamp is older than ~200 s. A paused beaconloop does not write its own,
-	    so this thread writes them for both while the test runs.
-	  - the report has to reach indigo: stdout of the tool is captured and sent as one string.
+	The radios have to be really FREE, and PAUSING is not enough. temp/beaconloop.pause stops the
+	main scan and the advertising, but NOT the extListener on a second radio - and a connect attempt
+	on a radio that is still scanning is refused by the controller with ENOSYS. Measured on two rpis:
+	the SAME dongle gives 0-30% while something is still scanning and 100% once everything is
+	stopped, so the old pause handshake produced "connect unreliable" verdicts for perfectly good
+	dongles. The radio users are therefore STOPPED, not paused:
+
+	    master.sh / startmaster.sh   the SUPERVISORS, and first - master.sh restarts master.py
+	                                 within 90 s, and master.py restarts everything else
+	    master.py                    also runs killSudos, which kills the "sudo .." wrapper of the
+	                                 measurement tool while it is still running
+	    beaconloop.py, BLEconnect.py the two programs that actually hold the radios
+
+	receiveCommands (this program) deliberately stays ALIVE: it runs the test, it sends the report
+	back to indigo, and while it still answers the plugin the rpi is not completely silent.
+
+	When the run is over master.sh is started again - it restarts master.py within ~2 s and master.py
+	brings beaconloop/BLEconnect and the rest back. That restart sits in a finally: if it were ever
+	skipped the rpi would stay down until the plugin notices it is silent, or someone reboots it.
 
 	Inputs:
 	    params (str): "secs;connectMac;tries" as built by the plugin menu
 	Outputs:
 	    None
 	"""
+	# OUTSIDE temp/: master.py EMPTIES that directory when it starts, so a master restart during the
+	# run (the plugin can trigger one over ssh) deletes the report while it is being written - that
+	# is exactly how a first test run lost its whole report. The structured result is written by the
+	# tool itself into temp/ and is read BELOW, before master is allowed back.
+	outFile    = "/home/pi/qualifyDongle.out"
+	jsonFile   = G.homeDir+"temp/qualifyDongle.json"
 	pauseFiles = [G.homeDir+"temp/beaconloop.pause", G.homeDir+"temp/BLEconnect.pause"]
-	keepGoing  = [True]
-	# HARD CAP on how long the radios may stay handed over. The refresh below defeats BOTH failsafes
-	# (beaconloop 55 s, BLEconnect 120 s) by design, so as long as this thread runs the two programs
-	# are pinned - if the tool hangs, or its sudo/sh wrappers get killed under it (killSudos runs every
-	# 10 master loops) and the pipe read below never returns, nothing else would ever free the radios.
-	# 3 adapters x (2 measuring phases + 3 connect attempts) is ~4 min, so 10 min is generous.
 	maxRunSecs = 600.
 	tStart     = time.time()
-	th         = None
 
-	def keepAlive():
-		# refresh the pause files AND the alive files every few seconds for the whole run
-		while keepGoing[0]:
-			tt = time.time()
-			if tt - tStart > maxRunSecs:
-				U.logger.log(20, "qualifyDongle: {:.0f}s cap reached - releasing beaconloop/BLEconnect while the tool keeps running".format(maxRunSecs))
-				break
-			for ff in pauseFiles:
-				try:	U.doWriteSimpleFile(ff, "{}".format(tt))
-				except Exception:	pass
-			for pgm in ["beaconloop", "BLEconnect"]:
-				try:	U.doWriteSimpleFile("{}temp/alive.{}".format(G.homeDir, pgm), "{}".format(tt))
-				except Exception:	pass
-			time.sleep(5)
-		keepGoing[0] = False
-		for ff in pauseFiles:					# stop refreshing AND clear, so the radios come back now
+	def stopRadioUsers():
+		# Supervisors first, or what we kill below is back before the next command. The [x] in every
+		# pattern keeps pkill from matching the "/bin/sh -c sudo pkill -f .." wrapper that carries the
+		# pattern in its OWN command line - without it the kill takes out its own shell.
+		for pat in ["mast[e]r.sh", "startmast[e]r.sh"]:
+			try:	subprocess.call("sudo pkill -f '{}'".format(pat), shell=True)
+			except Exception:	pass
+		time.sleep(1.0)
+		for pat in ["mast[e]r.py", "beaconlo[o]p.py", "BLEconne[c]t.py"]:
+			try:	subprocess.call("sudo pkill -9 -f '{}'".format(pat), shell=True)
+			except Exception:	pass
+		time.sleep(2.0)
+		# VERIFY. A kill that silently did nothing is the one failure that invalidates the whole run
+		# without looking like an error - the report then measures a radio that beaconloop is using.
+		left = ""
+		try:	left = subprocess.check_output("pgrep -af 'mast[e]r\\.py|beaconlo[o]p\\.py|BLEconne[c]t\\.py' || true", shell=True)
+		except Exception:	left = ""
+		if not isinstance(left, str):	left = left.decode("utf-8", "replace")
+		if left.strip() != "":
+			U.logger.log(30, "qualifyDongle: STILL RUNNING after the kill - the radios are NOT free, the"
+							" numbers below are not trustworthy:\n{}".format(left.strip()))
+		else:
+			U.logger.log(20, "qualifyDongle: master/beaconloop/BLEconnect stopped - radios are free")
+
+	def startMaster():
+		# a stale pause file would make the freshly started beaconloop pause for no reason
+		for ff in pauseFiles:
 			try:
 				if os.path.isfile(ff):	os.remove(ff)
 			except Exception:	pass
+		try:
+			subprocess.call("cd {}; nohup /bin/bash master.sh yes > /dev/null 2>&1 &".format(G.homeDir), shell=True)
+			U.logger.log(20, "qualifyDongle: master.sh restarted - it brings master.py back, which restarts beaconloop/BLEconnect")
+		except Exception:
+			U.logger.log(40, "qualifyDongle: COULD NOT restart master.sh - this rpi now needs"
+							" >>sudo python3 /home/pi/callbeacon.py &<< or a reboot", exc_info=True)
 
 	try:
-		secs, mac, tries = "10", "", "3"
+		secs, mac, tries, delay = "10", "", "3", "0"
 		pp = "{}".format(params).split(";")
 		if len(pp) > 0 and pp[0].strip() != "":	secs  = pp[0].strip()
 		if len(pp) > 1:							mac   = pp[1].strip()
 		if len(pp) > 2 and pp[2].strip() != "":	tries = pp[2].strip()
+		if len(pp) > 3 and pp[3].strip() != "":	delay = pp[3].strip()
 
-		U.logger.log(20, "qualifyDongle: pausing beaconloop/BLEconnect, {}s per phase{}".format(
+		# "all rpis" from the plugin menu does not start them together - every rpi STOPS its own
+		# master/beaconloop/BLEconnect for the run, so a simultaneous start would leave the whole
+		# fleet blind at the same moment. Each rpi is given its slot and waits it out HERE, before
+		# anything is stopped, so the gaps never overlap.
+		try:	dly = float(delay)
+		except Exception:	dly = 0.
+		if dly > 0:
+			U.logger.log(20, "qualifyDongle: waiting {:.0f}s for my turn - the plugin runs the rpis one"
+							" after the other so only one is blind at a time".format(dly))
+			time.sleep(min(dly, 7200.))
+			# the cap below measures the RUN, not the wait - without this a queued rpi would hit
+			# maxRunSecs the moment it finally started
+			tStart = time.time()
+
+		U.logger.log(20, "qualifyDongle: stopping master/beaconloop/BLEconnect, {}s per phase{}".format(
 						secs, ", connect test to {} x{}".format(mac, tries) if mac else ""))
-		th = threading.Thread(target=keepAlive)
-		th.daemon = True
-		th.start()
-		time.sleep(3)			# let beaconloop/BLEconnect notice the pause and let go of the radios
+		stopRadioUsers()
 
-		# output goes to a FILE, not to a PIPE + communicate(): communicate() returns only when every
-		# writer of the pipe is gone, and the write end is inherited by the sudo/sh wrappers AND by
-		# every helper qualifyDongle spawns. killSudos (master, every 10th loop) kills the "sudo .."
-		# and "/bin/sh -c sudo .." wrappers - which does NOT kill the python child, it only orphans it -
-		# and a single surviving holder of that fd blocks communicate() forever, with the pause files
-		# being refreshed all the while. A file has no such coupling, and poll() below is bounded.
-		outFile  = G.homeDir+"temp/qualifyDongle.out"
-		jsonFile = G.homeDir+"temp/qualifyDongle.json"
 		for ff in [outFile, jsonFile]:				# old results must not be mistaken for this run
 			try:
 				if os.path.isfile(ff):	os.remove(ff)
 			except Exception:	pass
+
 		# -u: unbuffered. print() into a redirected file is block buffered (8 kB), so without it the
-		# whole report appears only when the tool exits - and "tail -f temp/qualifyDongle.out" shows
-		# nothing at all while the ~4 min run is in progress, exactly when you want to watch it.
-		# NO send=yes: the tool writes its result to the two files above and WE send both, in one
-		# message. It then needs no sendURL and no piBeaconUtils at all - which is what used to keep
-		# it alive after it was done (non-daemon send thread) and left the radios paused.
-		# catalogue=none: no per-rpi copy on the pi. The catalogue that counts is the plugin's, in the
-		# indigo preferences directory, fed by every rpi - we forward the structured result for it.
-		cmd = "sudo python3 -u {}qualifyDongle.py {} catalogue=none".format(G.homeDir, secs)
+		# whole report appears only when the tool exits and "tail -f /home/pi/qualifyDongle.out"
+		# shows nothing at all during the ~4 min run, exactly when you want to watch it.
+		# catalogue=none: no per-rpi copy here - the catalogue that counts is the plugin's, in the
+		# indigo preferences directory, fed by every rpi. We forward the structured result for it.
+		# stop=no: WE stopped piBeacon above and WE restart it in the finally below. Without it the
+		# tool would restart master.sh when it finishes, master.py would wipe temp/ on startup, and
+		# temp/qualifyDongle.json would be gone before the lines below could read it.
+		cmd = "sudo python3 -u {}qualifyDongle.py {} catalogue=none stop=no".format(G.homeDir, secs)
 		if mac != "":	cmd += " connect={} tries={}".format(mac, tries)
 		U.logger.log(20, "qualifyDongle: running: {} > {} 2>&1".format(cmd, outFile))
 		proc = subprocess.Popen("{} > {} 2>&1".format(cmd, outFile), shell=True)
 		while proc.poll() is None:			# no communicate(timeout=..), that is python3 only
 			if time.time() - tStart > maxRunSecs:
-				U.logger.log(20, "qualifyDongle: still running after {:.0f}s - giving up waiting, radios released".format(maxRunSecs))
+				U.logger.log(20, "qualifyDongle: still running after {:.0f}s - giving up waiting".format(maxRunSecs))
 				break
 			time.sleep(1)
 
@@ -874,17 +911,9 @@ def runQualifyDongle(params):
 	except Exception:
 		U.logger.log(20, "", exc_info=True)
 	finally:
-		keepGoing[0] = False
-		try:
-			if th is not None:	th.join(12)					# let the refresh thread stop BEFORE deleting, else it
-		except Exception:	pass			# re-creates the pause files right after the remove below
-		for ff in pauseFiles:
-			try:
-				if os.path.isfile(ff):	os.remove(ff)
-			except Exception:	pass
-		U.logger.log(20, "qualifyDongle: beaconloop/BLEconnect released")
+		# ALWAYS - also on an exception, and also when the cap above gave up on a hung tool.
+		startMaster()
 	return
-
 
 ### ----------------------------------------- ###
 def runIrRecord(params):

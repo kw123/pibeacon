@@ -4,6 +4,8 @@
 
 ## ok for py3 but not for LED pixel board 
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import spidev
 import sys
 import os, subprocess, copy
@@ -326,7 +328,7 @@ class bigScreen:
 				U.doWriteSimpleFile(bootfileName, ddd)
 				time.sleep(0.01)
 				U.logger.log(20, "\n\nnew config.txt file written:\n"+U.doReadSimpleFile(bootfileName))
-				U.setRebootRequest("display.py_fixed_"+bootfileName)	# underscores: spaces are squeezed out on the way into the indigo log
+				U.setRebootRequest("display.py_fixed_"+bootfileName)	# underscores are historical: squeeze used to strip spaces
 			
 		try:
 			#print(" bf self\n")
@@ -471,15 +473,45 @@ class bigScreen:
 		return
 
 
-	def sendImage(self,idata):
-		"""Renders a PIL image onto the pygame screen by converting its raw bytes into a pygame surface, blitting it at the origin, and flipping the display buffer.
+	def sendImage(self,idata, box=None):
+		"""Renders a PIL image onto the pygame screen, either the whole frame or - with box - only that rectangle.
+
+		idata.tobytes() copies the ENTIRE framebuffer into a new bytes object, and flip() pushes the
+		whole screen, on every frame. Measured on a live rpi with py-spy: sendImage 1156 self
+		samples and tobytes a further 589, together 56% of this program's cpu, for a frame in which
+		only a clock hand had moved.
+		With box=(x0,y0,x1,y1) only that rectangle is converted, blitted and updated, so the cost
+		becomes proportional to the clock, not to the screen. Everything outside the box keeps the
+		pixels already on the pygame surface from the previous frame - which is correct precisely
+		because the caller only restored and redrew that box.
 
 		Inputs:
 		    idata (PIL.Image.Image): image whose bytes/size/mode are drawn to the screen
+		    box (tuple or None): (x0,y0,x1,y1) to update, or None for the whole frame
 		Outputs:
 		    None: blits the image and updates the pygame display
 		"""
 		global bigScreenSize
+		# A PARTIAL UPDATE IS ONLY VALID ON A SINGLE-BUFFERED SURFACE. set_mode is called with
+		# FULLSCREEN and no DOUBLEBUF, which gives a software surface where flip() is just a
+		# whole-screen update() - but what SDL actually hands back depends on the driver (fbcon
+		# here, no X), so this ASKS the surface instead of assuming. On a double-buffered surface
+		# the back buffer does not hold the previous frame, so updating one rectangle would leave
+		# garbage in the rest of the screen; that case takes the full-frame path below.
+		if box is not None:
+			try:
+				if self.screen.get_flags() & self.pygame.DOUBLEBUF:	box = None
+			except Exception:
+				box = None
+		if box is not None:
+			try:
+				part = idata.crop(box)
+				t	 = self.pygame.image.frombuffer(part.tobytes(), part.size, part.mode)
+				self.screen.blit(t, (box[0], box[1]))
+				self.pygame.display.update((box[0], box[1], box[2]-box[0], box[3]-box[1]))
+				return
+			except Exception as e:
+				U.logger.log(20,"", exc_info=True)		# fall through to the full-frame path
 		# Fill the screen with red (255, 0, 0)
 		t = self.pygame.image.frombuffer(idata.tobytes() , idata.size, idata.mode)
 #		 t = self.pygame.image.fromstring(idata.tobytes() , idata.size, idata.mode)
@@ -2217,6 +2249,101 @@ def onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti):
 		return True
 
 # ------------------    ------------------ 
+def cmdOffOnTimes(cmd):
+	"""Returns (offTime0, onTime, offTime1) for one display command, the blink/repeat cycle onDecision needs.
+
+	Factored out so the drawing loop and the background-cache fingerprint parse "offONTime" with
+	ONE piece of code. Two copies of this would be a silent-staleness bug waiting to happen: the
+	fingerprint would decide an item is unchanged while the loop draws it differently.
+
+	Inputs:
+	    cmd (dict): one display command
+	Outputs:
+	    tuple: (offTime0 int, onTime int, offTime1 int); the always-on values when absent or unparsable
+	"""
+	onTime	 = 9999999999999
+	offTime0 = 0
+	offTime1 = 0
+	if "offONTime" in cmd:
+		try:
+			offTime0 = int(float(cmd["offONTime"][0]))
+			onTime	 = int(float(cmd["offONTime"][1]))
+			offTime1 = int(float(cmd["offONTime"][2]))
+		except:
+			onTime	 = 9999999999999
+			offTime0 = 0
+			offTime1 = 0
+	return offTime0, onTime, offTime1
+
+
+# ------------------    ------------------ 
+def analogClockBox(margin=4):
+	"""Returns the analog clock's bounding box (x0,y0,x1,y1) clipped to the image, or None if it cannot be determined.
+
+	This is the region the clock can possibly paint: centre +- radius, plus half the box line width
+	and a small margin for line caps and antialiasing. It is deliberately the WHOLE DISC and not
+	the swept wedge of the hand - the hand moves, so over one tick the dirty area is a wedge, but
+	tracking that precisely buys nothing when the disc is already a small part of the screen and
+	gets a stale sliver of old hand wrong the moment the geometry is off by a pixel.
+
+	Inputs:
+	    margin (int): extra pixels around the disc, for line caps and antialiasing
+	Outputs:
+	    tuple or None: (x0,y0,x1,y1) clipped to the image, None when the params are not usable
+	"""
+	try:
+		R = analogClockParams["radius"]
+		C = analogClockParams["position"]
+		W = float(analogClockParams["box"]["width"])/2. + margin
+		x0 = int(max(0, C[0]-R[0]-W))
+		y0 = int(max(0, C[1]-R[1]-W))
+		x1 = int(min(xmax*maxPagesX, C[0]+R[0]+W+1))
+		y1 = int(min(ymax*maxPagesY, C[1]+R[1]+W+1))
+		if x1 <= x0 or y1 <= y0:	return None
+		return (x0, y0, x1, y1)
+	except Exception:
+		return None
+
+
+# ------------------    ------------------ 
+def displayBGfingerprint(cmdList, upto, startRepeatTime, tti):
+	"""Builds a cheap fingerprint of everything the cached background depends on, so a reused background is only reused while it is provably still correct.
+
+	A background keyed on "new input data" alone would be WRONG. The static part of a frame moves
+	on its own in three further ways, and each one is in here:
+	  - dateString items render datetime.now().strftime(...), so "%M" changes once a minute and
+	    "%S" once a second with no new input at all. Their RENDERED text is fingerprinted, which is
+	    what makes "%H:%M" rebuild once a minute instead of once a second.
+	  - every item is gated on onDecision(), so a blinking item appears and disappears on its own
+	    schedule. Its on/off decision is fingerprinted - pure arithmetic, no drawing.
+	  - the light sensor moves multIntensity/intensity, and the fill colours are computed from
+	    them, so a change in room light repaints everything.
+	Plus the geometry and device, because a resize or a device change invalidates the pixels
+	outright.
+
+	Nothing here draws anything: it is all dict lookups, one strftime per dateString item and the
+	arithmetic in onDecision.
+
+	Inputs:
+	    cmdList (list): the display command list
+	    upto (int): fingerprint only cmdList[:upto] - the part held in the background
+	    startRepeatTime (float): cycle reference time, as passed to onDecision
+	    tti (int): current time, as passed to onDecision
+	Outputs:
+	    list: the fingerprint, to be compared with != against the stored one
+	"""
+	parts = ["{}".format(x) for x in [multIntensity, intensity, xmax, ymax, maxPagesX, maxPagesY, devType, flipDisplay, scrollxy]]
+	for cmd in cmdList[:upto]:
+		cT = cmd.get("type","")
+		off0, onT, off1 = cmdOffOnTimes(cmd)
+		parts.append("{}".format(onDecision(cT, off0, onT, off1, startRepeatTime, tti)))
+		if cT == "dateString":
+			try:	parts.append(datetime.datetime.now().strftime(cmd.get("text","")))
+			except Exception:	parts.append("?strftime?")
+	return parts
+
+
+# ------------------    ------------------ 
 def getLightSensorValue(force=False):
 	"""Reads the latest ambient light sensor reading from temp/lightSensor.dat, normalizes it against the sensor's max range and configured slope, smooths it against the previous value, and updates the global display intensity multiplier; throttled and only acts when the light sensor display feature is enabled.
 
@@ -2388,6 +2515,15 @@ lightSensorOnForDisplay 	= False
 
 
 newRead						= True
+# cached display background, see "CACHED BACKGROUND" in the command loop
+displayBGimage				= None		# the snapshot, or None = must be rebuilt
+displayBGclockIdx			= None		# index of the first clock command = where the background ends
+displayBGcmds				= []		# the commands the snapshot was built from
+displayBGfinger				= []		# fingerprint of everything the snapshot depends on
+displayBGbuiltAt			= 0.		# for the forced 10 s rebuild
+displayDirtyBox				= None		# region sendImage may push instead of the whole frame
+displayDirtyLogged			= 0.		# rate limit for the clock-only-redraw diagnostic
+sendOnlyOnCmd				= None		# on a cached tick: only this cmd index sends the frame
 lastRead					= -999
 
 
@@ -2624,7 +2760,148 @@ while runLoop:
 				waited = False
 				checkLightSensor()
 				U.logger.log(10, "item:"+item )
-				for cmd in data["command"]:
+
+				# ===== CACHED BACKGROUND =====================================================
+				# The whole command list used to be replayed for every clock tick, so a frame in
+				# which only the SECOND HAND moved re-rendered every text item through PIL's font
+				# rasteriser, base64-decoded and re-parsed every embedded image, and redrew the
+				# clock face. py-spy on a live rpi, 60 s: text 33.9% (draw_text -> getmask2),
+				# sendImage 31.9%, base64+crop 10.6%, the clock itself only ~13%.
+				# So the background is snapshotted ONCE and copied per tick. Copying the whole
+				# frame is what erases the old hands - there is no blanking step and no stale-pixel
+				# bookkeeping. It must be a COPY OF THE BACKGROUND, never a fill with black: a
+				# black rectangle over the old hand would also erase the clock box, the ticks and
+				# anything drawn behind it. Measured on a 480x320 RGB frame: full copy 9.6 us,
+				# restoring just a 140x140 clock box 6.5 us - the region version saves 3 us and
+				# buys a bounding-box off-by-one that leaves a sliver of old hand behind, so the
+				# full copy it is. (For scale: imData.tobytes() in sendImage is 52 us.)
+				# THE SNAPSHOT IS TAKEN AT THE FIRST CLOCK COMMAND, not at the end of the list, so
+				# DRAW ORDER IS UNCHANGED: background = the items before the clock, replayed every
+				# tick = the clock and everything after it. Anything drawn after the clock stays as
+				# expensive as it was - correctness first - and the profile says what that costs.
+				# A list with NO clock command never snapshots and never caches, so every display
+				# that is not clock-driven behaves exactly as before.
+				cmdList		= data["command"]
+				startIdx	= 0
+				tti0		= int(time.time())
+				fpNow		= None
+				# NOT FOR lcd1602. Its text is not in imData at all - the text branch accumulates
+				# it into TextForLCD/TextPosForLCD and the driver writes those - so skipping the
+				# text commands would blank the LCD instead of saving anything.
+				bgEligible	= scrollPages <= 1 and devType.lower().find("lcd1602") == -1
+				if displayBGclockIdx is not None and bgEligible:
+					fpNow = displayBGfingerprint(cmdList, displayBGclockIdx, startRepeatTime, tti0)
+				if (	displayBGimage is not None
+					and displayBGclockIdx is not None
+					and bgEligible							# a scrolling frame has no static part
+					and not newRead							# new input data: rebuild
+					# the WHOLE list, not just the part before the clock: the commands after it
+					# are replayed every tick, and if one of their contents changes it may paint
+					# outside the difference box measured from the old content
+					and cmdList == displayBGcmds
+					and fpNow == displayBGfinger
+					# FORCED REBUILD every 10 s even when the fingerprint agrees. If a dependency
+					# has been missed the display self-heals within 10 s instead of staying wrong
+					# until the next input, and at one rebuild in ten ticks it costs about a tenth
+					# of the saving - cheap insurance on a program that runs for months.
+					and (time.time() - displayBGbuiltAt) < 10.
+					):
+					# REGION RESTORE WHEN IT IS SAFE, full copy otherwise. The full copy is not
+					# free on a large screen: on this rpi it measured 427 self samples, 13.8% of
+					# the program, because the frame is multi-megapixel - at 480x320 it would be
+					# ~10 us and not worth a thought. Restoring only the clock's bounding box makes
+					# the cost proportional to the clock instead of the screen, and lets sendImage
+					# push just that rectangle too.
+					# It is only valid when NOTHING ELSE is redrawn this tick, because only the box
+					# gets its background back: any command after the clock would be drawing over
+					# its own previous pixels outside the restored region. So it requires the clock
+					# to be the LAST command in the list. Also not with flipDisplay, which replaces
+					# imData with a transposed copy further down and so breaks both the persistent
+					# image and the box coordinates.
+					dirtyBox = None
+					whyNoDirty = ""
+					if	 cmdList[displayBGclockIdx].get("type","") != "analogClock":
+						whyNoDirty = "cached clock cmd is {}, not analogClock".format(cmdList[displayBGclockIdx].get("type",""))
+					elif flipDisplay == "1":
+						whyNoDirty = "flipDisplay is on - imData gets replaced by a transposed copy"
+					elif devType.lower().find("screen") == -1:
+						whyNoDirty = "devType {} is not a screen/pygame device".format(devType)
+					elif imData is None or imData.size != displayBGimage.size:
+						whyNoDirty = "imData size {} != background {}".format(None if imData is None else imData.size, displayBGimage.size)
+					else:
+						dirtyBox = analogClockBox()
+						if dirtyBox is None:
+							whyNoDirty = "analogClockBox() could not read the clock geometry"
+						elif displayBGclockIdx != len(cmdList)-1:
+							# NO UNION BOX. Differencing the previous frame against the background
+							# does bound the clock and the later commands exactly, and a harness
+							# confirmed a restore of that union is pixel-identical to a full redraw
+							# at all 60 second positions - but in a real layout the later commands
+							# sit far from the clock, so the single box that contains both came out
+							# at 77% of the frame and restoring it measured SLOWER than copying the
+							# whole thing (1.32 ms against 0.83 ms at 1920x1080). One rectangle is
+							# the wrong shape for two distant regions.
+							# The win here is not a tighter region, it is sending ONCE per tick
+							# instead of once per replayed command - see sendOnlyOnce below.
+							dirtyBox   = None
+							# NOT LOGGED. This is the normal steady state for any layout that draws
+							# something after the clock, not a fault to report, and the once-a-minute
+							# line would say the same thing forever.
+							whyNoDirty = ""
+					# SAY SO, ONCE A MINUTE - but only when something is off. The routine cases are
+					# silent now: a layout that draws after the clock, which is normal, and the
+					# cache working as intended. What is left are the gates that mean a display is
+					# configured in a way that forgoes the optimisation, which is worth seeing once.
+					if (time.time() - displayDirtyLogged) > 60.:
+						displayDirtyLogged = time.time()
+						if dirtyBox is None:
+							if whyNoDirty != "":	U.logger.log(20, "display: clock-only redraw NOT used, full frame instead: {}".format(whyNoDirty))
+						else:					U.logger.log(20, "display: clock-only redraw in use, box:{} of frame {}".format(dirtyBox, displayBGimage.size))
+					if dirtyBox is not None:
+						imData.paste(displayBGimage.crop(dirtyBox), (dirtyBox[0], dirtyBox[1]))
+					else:
+						imData	 = displayBGimage.copy()
+					draw	 = ImageDraw.Draw(imData)
+					startIdx = displayBGclockIdx
+					displayDirtyBox = dirtyBox
+					# SEND ONCE, NOT ONCE PER COMMAND. The send block lives INSIDE the command loop,
+					# so every command that does not say display:"wait" pushes the whole framebuffer
+					# - 6.2 MB through tobytes(), blit and flip at 1920x1080, measured at ~61 ms a
+					# time on this rpi. Before the background cache that was up to 37 sends per
+					# pass, which is why sendImage+tobytes was 56% of the program; with the cache it
+					# is still one per replayed command.
+					# On a CACHED tick that is pure waste: the tick exists to show one finished
+					# frame, so only the last replayed command needs to send. This is deliberately
+					# NOT done on a rebuild pass - a layout may show a sequence of images in turn,
+					# and the display:"wait" convention says the author controls that - so the
+					# progressive behaviour is left exactly as it was wherever it might be intended.
+					# the LAST COMMAND THAT ACTUALLY SENDS, not simply the last command: a final
+					# command carrying display:"wait" does not enter the send block at all, and
+					# picking it would mean the frame is never pushed to the screen.
+					sendOnlyOnCmd = None
+					for ii in range(len(cmdList)-1, startIdx-1, -1):
+						if cmdList[ii].get("display","") != "wait":
+							sendOnlyOnCmd = ii
+							break
+					# the send block is followed, at the same indent, by the alive-file heartbeat
+					# that master's watchdog uses to decide whether to restart this program, and by
+					# the display.inp / rebooting.now break checks. Skipping the send with continue
+					# skips those too for the one or two commands it skips - harmless, because the
+					# sending command and every later command still reach them, so the heartbeat
+					# still happens on every tick.
+					# npage counts the commands drawn so far and feeds the multi-page offsets
+					# dx = xmax*npage / dy = ymax*npage. Those only apply when scrollPages > 1,
+					# which is excluded above, but the count is carried forward anyway so the
+					# clock and the commands after it see the same value they would have seen.
+					npage	 = startIdx - 1
+				else:
+					displayBGimage		= None
+					displayBGclockIdx	= None
+					displayDirtyBox		= None		# a rebuild draws the whole frame -> send it all
+					sendOnlyOnCmd		= None		# and keeps the per-command sends it always had
+
+				for cmdIdx in range(startIdx, len(cmdList)):
+					cmd = cmdList[cmdIdx]
 					try:
 						if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 						
@@ -2662,18 +2939,7 @@ while runLoop:
 								
 
 
-						onTime	 = 9999999999999
-						offTime0 = 0
-						offTime1 = 0
-						if "offONTime" in cmd:
-							try:
-								offTime0 = int(float(cmd["offONTime"][0]))
-								onTime	 = int(float(cmd["offONTime"][1]))
-								offTime1 = int(float(cmd["offONTime"][2]))
-							except:
-								onTime	 = 9999999999999
-								offTime0 = 0
-								offTime1 = 0
+						offTime0, onTime, offTime1 = cmdOffOnTimes(cmd)
 						
 						
 						if reset!="" : 
@@ -2723,6 +2989,21 @@ while runLoop:
 						if cType == "NOP" :
 								U.logger.log(10, "skipping display .. NOP")
 								continue
+
+						# the background is everything BEFORE the first clock command: snapshot it
+						# here, while imData holds exactly that and the clock has not been drawn on
+						# it yet. Only on a rebuild pass - on a cached pass we started AT this index
+						if cType in ["analogClock", "digitalClock"] and displayBGimage is None and bgEligible:
+							try:
+								displayBGimage		= imData.copy()
+								displayBGclockIdx	= cmdIdx
+								displayBGcmds		= copy.deepcopy(cmdList)
+								displayBGfinger		= displayBGfingerprint(cmdList, cmdIdx, startRepeatTime, tti0)
+								displayBGbuiltAt	= time.time()
+							except Exception:
+								U.logger.log(20,"", exc_info=True)
+								displayBGimage		= None
+								displayBGclockIdx	= None
 
 						npage+=1
  
@@ -3009,7 +3290,13 @@ while runLoop:
 						elif cType == "analogClock" and onDecision(cType,offTime0,onTime,offTime1,startRepeatTime,tti)			  : ###########################################################################
 								if offTime0 ==0 and	 offTime1 ==0:	 secs = True
 								else:								 secs = False
-								if True or cmd != analogclockInitialized or newRead:
+								# "if True or ..." USED TO BE HERE and it drew the clock face TWICE
+								# a second: analogClockInit ends by calling analogClockShow itself,
+								# and analogClockShow is called again a few lines below. The guard
+								# was pointless while imData was rebuilt from scratch every pass -
+								# the face had to be redrawn anyway - but with the cached background
+								# it does its job again, so the "True or" is gone.
+								if cmd != analogclockInitialized or newRead or displayBGimage is None:
 									analogclockInitialized = copy.copy(cmd)
 									analogClockInit(inParms=cmd)
 									lastAnalog	   = int(time.time())
@@ -3042,6 +3329,10 @@ while runLoop:
 
 						if "display" not in cmd or cmd["display"] != "wait":  ###########################################################################
 
+							# on a cached tick, only the final replayed command sends - see
+							# sendOnlyOnCmd where the cache is taken
+							if sendOnlyOnCmd is not None and cmdIdx != sendOnlyOnCmd: continue
+
 							U.logger.log(10, "displaying  "+ cmd["type"]+ "  scrollxy:"+scrollxy+"  delay:"+str(scrollDelay))
 							
 							if flipDisplay == "1":
@@ -3050,7 +3341,10 @@ while runLoop:
 							if devType.lower().find("screen")>-1 :
 							
 								if scrollPages <=1: # single page no need to map anything		 
-									outputDev.sendImage(imData)
+									# only the clock's box when nothing else was redrawn - see the
+									# region restore above, which is what makes this correct
+									if displayDirtyBox is not None:	outputDev.sendImage(imData, box=displayDirtyBox)
+									else:							outputDev.sendImage(imData)
 									if os.path.isfile(G.homeDir+"temp/rebooting.now"): break
 									if scrollDelayBetweenPages >0: time.sleep(scrollDelayBetweenPages)
 

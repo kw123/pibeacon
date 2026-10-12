@@ -19,6 +19,8 @@
 
 # pip3 install pyserial
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import binascii
 import logging
 import serial

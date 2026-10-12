@@ -4,7 +4,7 @@ Indigo plugin that uses Raspberry Pis to track iBeacons / BLE devices and to rea
 sensors attached to the Pis. The Pis report to the Indigo server over the network; the plugin manages
 device states, triggers, and the sensor programs running on each Pi.
 
-- **Current version:** 2022.193.0 (2026-09-26) — release
+- **Current version:** 2022.194.16 (2026-10-05) — release
 - **Author:** Karl Wachs
 - **Forum / support:** http://forums.indigodomo.com/viewforum.php?f=164
 - **Change log:** see `Contents/changelist.txt`
@@ -65,11 +65,15 @@ every command it spawns logs harmless `shell-init: getcwd` warnings until it is 
 
 ## BLE radios: how many, what they do, which ones to buy
 
-Everything BLE runs in python on the Pi — scanning *and* GATT — through the stdlib modules
-`hciRawSocket.py` and `gattAttClient.py`. No hcidump, lescan, hcitool, gatttool or pybluez is needed
-on a Pi with python ≥ 3.5. One plugin config switch covers it: *"BLE engine on the rPis — scanning +
-connecting"* (python socket / commandline), overridable per Pi in the rPi device edit. Pis that
-cannot run it (python < 3.5) fall back to the command-line tools automatically.
+Everything BLE runs in python on the Pi — scanning, GATT *and* adapter control — through the stdlib
+modules `hciRawSocket.py` and `gattAttClient.py`: raw-HCI sockets for scanning and for commands like
+advertising setup, HCI ioctls for adapter up/down/reset, and ATT over L2CAP for GATT. No hcidump,
+lescan, hcitool, gatttool, hciconfig or pybluez is needed on a Pi with python ≥ 3.5, which matters
+because those tools are deprecated upstream and already missing from some BlueZ builds.
+
+One plugin config switch covers it: *"BLE engine on the rPis — scanning + connecting"* (python
+socket / commandline), overridable per Pi in the rPi device edit. Pis that cannot run it
+(python < 3.5) fall back to the command-line tools automatically.
 
 ### The four roles
 
@@ -551,6 +555,60 @@ beacon→switchbot actions), diagnostics (track MACs, special logging, print con
 - **someStatusHasChanged** — any beacon changed up/down
 - **someClosestrPiHasChanged** — any beacon's closest-Pi changed (room-level tracking)
 
+## Diagnostics in the plugin menu
+
+Under **"Print various info to logfile.."**:
+
+- **States of all rPis as a table** — one line per state name, one column per rPi, then the same
+  for the rPI-Sensor children. Side by side, because the question is usually "why is *this* rPi
+  different", and one device dump after another makes that a scrolling exercise. Lines stay under
+  300 characters; more rPis than fit are printed in further blocks. Timestamps lose the century
+  (`26-10-05 11:22:33`) so the minutes and seconds fit the column.
+- **Props of all rPis as a table** — the same layout for `pluginProps`. Deliberately a separate
+  report: props are what *you* set, states are what the rPi reported back, and the two disagreeing
+  is itself the thing worth seeing.
+- **GPIO pin usage of all rPis** — which device uses which pin, for what, and which pins two
+  devices both claim.
+
+Every program on an rPi logs its version at startup, with the versions of the shared modules it
+loaded — `version: display.py v1.0`, and on master also `[utils 1.1, hciRawSocket 1.1,
+gattAttClient 1.5]`. A partial file send therefore shows up as a version mismatch in the log
+instead of as unexplained behaviour hours later.
+
+### An rPi that stops answering: down, or hung?
+
+The two need opposite responses — a Pi that is down comes back by itself or needs power, while a
+*hung* one sits there indefinitely until something resets it. The case that prompted this: a reboot
+that does not complete because a program is still holding on, so `sudo reboot` never finishes. The
+kernel keeps answering ping while sshd is already gone.
+
+When ssh does not answer, the plugin pings, waits 30 s, re-tests ssh, and pings again, then logs one
+of three things:
+
+- **no ping, no ssh** — `IS DOWN ... powered off, crashed, or off the network`
+- **ping answers, ssh does not** — `IS HANGING, NEEDS A HARD RESET`
+- **ssh back within the 30 s** — it was still starting up, logged as information, not a fault
+
+That third case is why the ssh re-test is there: shortly after a boot an rPi looks exactly like a
+hung one. Two pings 30 s apart rather than one, so a single dropped packet is not reported as a dead
+rPi. At most one verdict per rPi per 10 minutes, and it runs in the background so nothing waits for
+it.
+
+### pigpiod gpio sample rate (per rPi, in the rPi device dialog)
+
+pigpiod samples every gpio on a fixed timer whether or not anything is listening, so on an rPi with
+no timing-critical gpio it is pure cost — measured at a constant 11% of one core. The setting
+defaults to **auto**: 5 µs only when that rPi has a device whose measurement or output waveform
+depends on the rate (pulse counting, ultrasound, a PWM-driven gpio output, IR), and the cheaper
+10 µs otherwise. "5 µs always" and "10 µs always" can be set per rPi.
+
+IR is the sharpest case and the reason auto exists: the 38 kHz carrier is built from 13 µs pulses,
+and pigpio rounds wave delays to multiples of the sample rate — at 10 µs the carrier lands anywhere
+between 25 and 50 kHz and the receiver rejects it, silently, since IR is one-way.
+
+A running pigpiod keeps the arguments it started with, so a changed rate takes effect on the next
+reboot of that rPi.
+
 ## Layout
 
 - `Contents/Server Plugin/plugin.py` — the Indigo server plugin
@@ -560,8 +618,9 @@ beacon→switchbot actions), diagnostics (track MACs, special logging, print con
   (`master.py` supervises; one program per sensor type)
   - `beaconloop.py` — BLE scanning, radio-role assignment, beacon decoding
   - `BLEconnect.py` — GATT work: beep, battery, BLE sensors, switchbot, iPhone presence
-  - `gattAttClient.py` / `hciRawSocket.py` — the python-stdlib GATT/ATT and raw-HCI backends
-    (no gatttool, hcitool, hcidump or pybluez needed; python ≥ 3.5)
+  - `gattAttClient.py` / `hciRawSocket.py` — the python-stdlib GATT/ATT and raw-HCI backends,
+    including the adapter up/down/reset ioctls (no gatttool, hcitool, hcidump, hciconfig or
+    pybluez needed; python ≥ 3.5)
   - `toshibaIR.py` / `greeIR.py` — the AC remote encoders, one per protocol. Each runs its own
     self-test when executed directly, rebuilding states recorded from a real remote
   - `irRecord.py` — reads a remote through a TSOP receiver and decodes it; can echo what it
@@ -570,8 +629,6 @@ beacon→switchbot actions), diagnostics (track MACs, special logging, print con
   - `irScan.py` — walks the carrier frequency, sending a real command at each step
   - `irDemo.py` — walks the unit through a scripted sequence so it can be watched following
   - `irTest.sh` — the record / replay / scan / walk steps as single commands
-  - `irRecord.py` — records and decodes a real IR remote; `irReplay.py` sends a recorded pulse
-    list back out unchanged
   - `qualifyDongle.py`, `extScanTest.py`, `ruuviPrint.py` — standalone diagnostic tools that can
     also be run by hand on a Pi
 - `Contents/changelist.txt` — version history

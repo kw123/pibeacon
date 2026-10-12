@@ -4,6 +4,8 @@
 #
 ## py3 prept
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import time
 import	sys, os, time, json, datetime,subprocess,copy
 import struct

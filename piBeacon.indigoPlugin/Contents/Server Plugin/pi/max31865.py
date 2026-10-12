@@ -4,6 +4,8 @@
 #
 #
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import sys, os, time, json, datetime,subprocess,copy
 import math
 # TIME CRITICAL - keeps its own GPIO handling on purpose: this bit-bangs SPI, four pins toggled per

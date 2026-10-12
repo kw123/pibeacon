@@ -13,6 +13,8 @@
 	
 	adopted by Karl Wachs
 """
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 version			= 1.2
 
 import sys

@@ -22,7 +22,7 @@ Incoming MTU exchange requests and indications are answered automatically.
 The default ATT_MTU of 23 is kept - the largest read used anywhere is 16 bytes.
 """
 
-VERSION = 1.4	# 1.0 ATT engine; 1.1 classic presence + source-adapter bind; 1.2 pending-connection guards; 1.3 py>=3.5 floor; 1.4 connect error stage-tagged (connect()/SO_ERROR + numeric errno)
+VERSION = 1.5	# 1.0 ATT engine; 1.1 classic presence + source-adapter bind; 1.2 pending-connection guards; 1.3 py>=3.5 floor; 1.4 connect error stage-tagged (connect()/SO_ERROR + numeric errno); 1.5 classic presence returns the REAL tx power as a 5th byte (HCI Read Transmit Power Level)
 
 import socket as _socket
 import struct, time, select, errno, fcntl
@@ -77,6 +77,45 @@ def _sockaddrL2(mac, bdaddrType, cid=ATT_CID, psm=0):
 
 
 #################################
+def _readTxPower(hciSock, handle, _log, timeout=2.):
+	"""HCI Read Transmit Power Level (OGF 0x03, OCF 0x002D) on an already-open raw HCI socket.
+
+	This is the command behind "hcitool tpl". Command params: connection handle (2, LE) + type
+	(1; 0x00 = current, 0x01 = maximum). Command-complete returns status (1), handle (2) and the
+	level as a SIGNED byte in dBm.
+
+	The socket is the one classicPresenceRSSI already has open with its all-events filter set, and
+	the ACL link is already up, so this costs one command round trip on an existing connection.
+
+	Inputs:
+	    hciSock (socket): raw HCI socket, bound and filtered, as Read-RSSI leaves it
+	    handle (int): the ACL connection handle
+	    _log (callable): the caller's stage logger
+	    timeout (float): seconds to wait for the command-complete
+	Outputs:
+	    int or None: transmit power in dBm (signed), or None when it cannot be read
+	"""
+	try:
+		opcode = (0x03 << 10) | 0x002D			# OGF host controller & baseband / OCF read tx power level
+		hciSock.send(struct.pack("<BHB", HCI_COMMAND_PKT, opcode, 3) + struct.pack("<HB", handle, 0x00))
+		end = time.time() + timeout
+		while time.time() < end:
+			try:	pkt = hciSock.recv(255)
+			except _socket.timeout:	break
+			except Exception:		break
+			if len(pkt) >= 10 and pkt[0] == HCI_EVENT_PKT and pkt[1] == 0x0E and (pkt[4] | (pkt[5] << 8)) == opcode:
+				if pkt[6] != 0:
+					_log("Read-TxPower: status 0x{:02x} - no reading".format(pkt[6]))
+					return None
+				txp = struct.unpack("b", pkt[9:10])[0]
+				_log("Read-TxPower: {} dBm".format(txp))
+				return txp
+		_log("Read-TxPower: no answer within {:.1f}s".format(timeout))
+	except Exception as e:
+		_log("Read-TxPower: {}".format(e))
+	return None
+
+
 def classicPresenceRSSI(peerMac, devId=0, connectTimeout=5., log=None, adapterMac=""):
 	"""Classic (BR/EDR) presence check for phones/watches - stdlib only, no pybluez
 	(gone on bookworm) and no hcitool (deprecated): an L2CAP connect to PSM 1 (SDP)
@@ -151,7 +190,17 @@ def classicPresenceRSSI(peerMac, devId=0, connectTimeout=5., log=None, adapterMa
 				_log("Read-RSSI answer: {}".format("".join("{:02x}".format(bb) for bb in bytearray(pkt[6:10]))))
 				if pkt[6] != 0:					# error status (e.g. 0x02 unknown handle): no usable reading
 					return b"" if pageAnswered else None
-				return pkt[6:10]				# status, handle lo, handle hi, rssi
+				# REAL TRANSMIT POWER, as a 5th byte. The 4 bytes above are the Read-RSSI
+				# command-complete payload, and byte 1 of it is the HANDLE low byte - BLEconnect has
+				# always called that field "txPower" but it never was one. hcitool's "tpl" read it
+				# with a second HCI command, so that is what is done here: the link and the raw HCI
+				# socket are already open, so it is one more command on the same socket.
+				# APPENDED rather than substituted, so the first 4 bytes keep the exact layout every
+				# existing caller unpacks; a caller that wants the real value reads byte 4 when the
+				# answer is 5 bytes long.
+				txp = _readTxPower(hciSock, handle, _log)
+				if txp is None: return pkt[6:10]
+				return bytes(bytearray(pkt[6:10]) + bytearray([txp & 0xFF]))
 		_log("Read-RSSI: NO answer within 3s ({} other events seen) -> seen, no reading".format(nEvents))
 		return b""								# link existed, answer got lost - phone is there, caller keeps previous state
 	finally:

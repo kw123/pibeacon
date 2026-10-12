@@ -25,7 +25,8 @@ if {$authKeyOrPassword == "assword"} {
 expect "Last login:" { }
 sleep 1
 send "cd /home/pi/pibeacon \r"
-send  "/usr/bin/sudo /usr/bin/python upgrade.py &\r"
+# SAME AS restartmasterSSH.exp - /usr/bin/python is not on a current image. See the note there
+send  "PY=\$(command -v python3 || command -v python);/usr/bin/sudo \$PY upgrade.py &\r"
 send  "exit\r"
 expect eof
 

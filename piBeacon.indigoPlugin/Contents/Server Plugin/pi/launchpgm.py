@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 # by Karl Wachs
 # march 1 2016
 # exampel program to get data and send it to indigo

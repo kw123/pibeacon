@@ -16,11 +16,7 @@ import json
 import matplotlib as mlp
 mlp.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
-import numpy as np
-import matplotlib.cm as cm
 import logging.handlers
-global logging, logger
 
 
 #################################
@@ -102,15 +98,29 @@ if True:
 	if	 imageType == "fixed":
 		norm = mlp.colors.Normalize(vmin=float(imageFileDynamic[0]),vmax=float(imageFileDynamic[1]))
 	elif imageType == "dynamicWindow":
-		ma = -999
-		mm = +999
-		for ii in range(len(data)):
-			ma = max(ma,max(data[ii]))
-			mm = min(mm,min(data[ii]))
+		# NO SENTINELS. This used to start from ma = -999 / mm = +999 and max/min against them, so
+		# the window silently clamped for any frame outside that range: a reading above 999 left ma
+		# at the real max but a reading BELOW -999 would have left mm at -999, and the centre - and
+		# with it the whole displayed contrast window - would have been computed from a number that
+		# is not in the data. Taking min/max of the data itself cannot be wrong at any scale, and
+		# says what it means.
+		# An EMPTY frame has no min or max, so it is caught rather than raising ValueError on max()
+		# of an empty sequence - which would have killed the script and produced no image.
+		rowsWithData = [row for row in data if len(row) > 0]
+		if len(rowsWithData) == 0:
+			logger.log(20, "no pixel data at all - falling back to a fully dynamic scale")
+			imageType = "dynamic"
+		else:
+			ma = max(max(row) for row in rowsWithData)
+			mm = min(min(row) for row in rowsWithData)
 		
-		vmid = (mm-ma) /2. +mm
-		norm = mlp.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
-		logger.log(20, "min:{:3.1f};  max:{:3.1f};  mid:{:3.1f}; lower:{:3.1f};   upper:{:3.1f}".format(mm, ma, vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
+			# (mm+ma)/2, NOT (mm-ma)/2+mm. The old form is mm - (ma-mm)/2, ie BELOW the minimum of
+			# the frame: for a frame spanning 18..34 it put the window centre at 10.0, so a +-5
+			# window was 5..15 and every pixel sat above it - the image saturated to one colour and
+			# the "dynamic window" setting did nothing but wash the picture out.
+			vmid = (mm+ma) /2.
+			norm = mlp.colors.Normalize(vmin=vmid - float(imageFileDynamic),vmax=vmid + float(imageFileDynamic))
+			logger.log(20, "min:{:3.1f};  max:{:3.1f};  mid:{:3.1f}; lower:{:3.1f};   upper:{:3.1f}".format(mm, ma, vmid, vmid - float(imageFileDynamic), vmid + float(imageFileDynamic) ))
 
 
 	cur_axes = plt.gca()
@@ -136,21 +146,34 @@ if True:
 
 
 ifname = imageOutfile+".png"
-plt.savefig((ifname).encode('utf8'),dpi=pltDpi,bbox_inches='tight')	  
-try:	pngSize = os.path.getsize((ifname).encode('utf8'))/1024.
-except: pnGsize = 0
+plt.savefig(ifname, dpi=pltDpi, bbox_inches='tight')	  
+try:	pngSize = os.path.getsize(ifname)/1024.
+except Exception: pngSize = 0		# was "pnGsize" - a typo, so a missing file left pngSize UNDEFINED
+									# and the log line below raised NameError instead
 
 # compress file
 logger.log(20, "file sizes: original file: {:5.1f}[KB]".format(pngSize) )
 if compress:
 	tt1= time.time()
-	cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+ifname+"'"
-	ppp = subprocess.Popen(cmd.encode('utf8'),shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()  ## creates a file with .xxx, wait for completion
-	try:	compSize = os.path.getsize((imageOutfile+".xxx").encode('utf8'))/1024.
-	except: compSize = 0
-	if os.path.isfile((ifname).encode('utf8')): os.remove((ifname).encode('utf8'))
-	os.rename((imageOutfile+".xxx").encode('utf8'),(imageOutfile+".png").encode('utf8') )
-	logger.log(20, "          compressed file: {:5.1f}[KB];  time used {:4.2f}".format(compSize, (time.time()-tt1)) )
+	# THE PLOT USED TO BE DESTROYED WHENEVER pngquant FAILED: the original .png was removed first
+	# and the .xxx renamed over it afterwards, unguarded - so if pngquant was missing, not
+	# executable or refused the image, the png was already gone, the rename raised, and this script
+	# has no try/except around it at all. Output lost, and the traceback was the only trace.
+	# pngquant --ext .xxx writes the compressed copy ALONGSIDE the original, so renaming it over the
+	# original is enough; nothing has to be deleted first. Same shape makeLidar360Plot already uses.
+	xxxName = imageOutfile+".xxx"
+	try:
+		if os.path.isfile(xxxName): os.remove(xxxName)		# a stale .xxx would be renamed over the new png
+		cmd = "'"+pluginDir+"pngquant' --force --ext .xxx '"+ifname+"'"
+		ppp = subprocess.Popen(cmd,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()
+		if os.path.isfile(xxxName):
+			compSize = os.path.getsize(xxxName)/1024.
+			os.rename(xxxName, ifname)						# replaces the original in one step
+			logger.log(20, "          compressed file: {:5.1f}[KB];  time used {:4.2f}".format(compSize, (time.time()-tt1)) )
+		else:
+			logger.log(20, "          pngquant produced no output - keeping the uncompressed png. stderr:{}".format(ppp[1]))
+	except Exception as e:
+		logger.log(20, "          compress failed ({}) - keeping the uncompressed png".format(e))
 
 logger.log(20,"time used {:4.2f} --   end  @ {}".format((time.time()-tStart), datetime.datetime.now())  )
 

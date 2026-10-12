@@ -29,6 +29,8 @@ The software is provided "as is"
 
 """
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import sys, time, struct, socket
 
 OGF_LE     = 0x08

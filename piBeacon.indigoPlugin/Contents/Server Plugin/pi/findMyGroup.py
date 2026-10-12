@@ -18,10 +18,11 @@ Switched on/off in the parameters file (key missing = off):
       "stableSecs":             "60",       # new count must hold xx secs before memberCount changes
       "smoothN":                "5",        # median over last N packets
       "minPackets":             "3",        # packets needed before a mac can join
-      "maxSlots":               "30",       # how many members may hold a slot (ceiling MAXSLOTS)
+      "maxSlots":               "15",       # how many members may hold a slot (ceiling MAXSLOTS)
+      "ambiguityWait":          "55",       # secs to keep re-judging a claim that only ambiguity refuses, 0 = off
       "sendEverySecs":          "60",       # periodic update (trigger "time", batched with beacon msgs)
       "dropFromBeaconPipeline": "1",        # "1": Find My frames are not processed as beacons (no new-beacon spam from rotating macs)
-      "calibrationLog":         "0",        # "1": write csv rows to temp/findMyGroup.csv (same columns as findmy_scan.py)
+      "calibrationLog":         "0",        # "1": write csv rows to findMyGroup.csv (same columns as findmy_scan.py)
       "debug":                  "0",        # "1": summary + the find my frames, "2": + the rejected apple ones
       "debugMac":               "",         # only log frames whose mac contains this
       "logEverySecs":           "10"
@@ -101,14 +102,18 @@ distances inside the flat zone at all.
 py2 / py3 compatible, no extra libraries.
 """
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import os
 import time
 import datetime
 import json
+import random
 
 import piBeaconUtils as U
 import piBeaconGlobals as G
 
+_findMyGroupDebug = False
 SENSOR_NAME = "BLEfindMyGroup"
 MAXSLOTS    = 60		# THE CEILING, not the setting - the group device's "maxSlots" picks the number
 						# actually in use and is clamped to this. Must match _GlobalConst_findMyMemberStates
@@ -131,9 +136,15 @@ PERSISTSECS  = 200.		# how often the state file and the calibration csv are also
 						# tmpfs to the pibeacon dir - see send(). 200 s is 432 writes a day of a file a few
 						# kB long, which an SD card does not notice, and it caps what a reboot can lose
 HEADEREVERY  = 600.		# how often the csv column header is repeated - see writeCalibrationRows()
-CSVMAXBYTES  = 200 * 1024	# the calibration csv is CAPPED, oldest rows dropped - see trimCsv().
-						# temp/ is a 2 MB tmpfs shared with the state file, so an uncapped log there would
-						# eventually fill it and take findMyGroup.state down with it
+CSVMAXBYTES  = 20 * 1024 * 1024	# the calibration csv is CAPPED, oldest rows dropped - see trimCsv().
+						# 20 MB is about 40 hours at a busy rPi's row rate, which is what this needed to be
+						# useful: the questions it answers - where to put join/leave, how long a mac lives,
+						# whether nearby and separated rotate on one clock - are all measured over hours,
+						# and the 200 kB it used to be held 25 minutes. See findmy_rotation.py.
+						# IT COULD ONLY BE 200 kB WHILE IT LIVED IN temp/, a 2 MB tmpfs shared with
+						# findMyGroup.state, where an uncapped log would eventually have taken the state
+						# file down with it. It does not live there any more - see csvFile in __init__ -
+						# so the cap is now only about not filling the card, and 20 MB does not
 # A TAG KEEPS ITS tagId ACROSS A MAC ROTATION - see matchRotation(). The mac is the only thing
 # that joins two rPis at one instant; the tagId is the only thing that joins one rPi across time,
 # and the plugin needs both to keep an indigo device on the same physical tag when the mac changes.
@@ -197,6 +208,22 @@ CARRYBACK    = 120.		# A MAC COMING BACK INSIDE THIS IS THE SAME MAC, and keeps 
 						# the gap was: the mac is the mac, and only "last" moves.
 						# 120 s, the same as GONEKEEP and for the same reason - beyond that a returning mac
 						# really has been away, and an age measured from before it went says nothing
+ROTAMBIG     = 55.		# DEFAULT for the group device's "wait out an ambiguous rotation" - 0 there turns
+						# this off and restores "refuse at ROTCONFIRM".
+						# AMBIGUITY IS NOT A VERDICT, IT IS A "NOT YET". When the only thing left refusing
+						# a claim is that two candidates still fit, the claim is kept and re-judged every
+						# tick until this, instead of minting a lineage at ROTCONFIRM and giving up.
+						# MEASURED, 12:30:24: a newcomer was left holding DC:ED and 19:4D, refused, and took
+						# a new tagId - and DC:ED was then claimed by its OWN exact successor 18 s later and
+						# committed at 12:31:03. Waiting would have left 19:4D alone and matched it. The
+						# evidence was not missing, it had not ARRIVED: one wave's newcomers surface over
+						# ~40 s as the rpi first hears each of them, while every claim judged itself at its
+						# own +20 s and could not see a rival that would turn up at +38.
+						# A candidate set only ever SHRINKS - a candidate speaks again, or somebody else's
+						# commit takes it - so waiting can turn two into one but never one into two.
+						# 55 AND NOT MORE: the mac is held out of members the whole time, and past
+						# memberDownDelaySecs (60, plugin side) the tag's existing device would blink down
+						# and come back. This stays under it with room to spare, and 39 s was enough above
 GONEKEEP     = 120.		# how long an expired lineage can still be inherited BY A DIFFERENT MAC
 OWNKEEP      = 2 * 86400.	# and how long a mac is remembered as owning ITS OWN lineage. FAR LONGER,
 						# and it can be: this one is only ever matched by the identical mac, so there is no
@@ -216,6 +243,121 @@ OWNKEEP      = 2 * 86400.	# and how long a mac is remembered as owning ITS OWN l
 OWNMAX       = 500		# most macs remembered that way. A house has nothing like this many, but the
 						# air outside it does - passing phones and neighbours' tags all get an entry - and a
 						# dict with no ceiling is a leak with a long fuse. Oldest goes first
+ROTBATCH     = 5.		# dBm. HOW MUCH BETTER THE WHOLE ANSWER HAS TO BE than the best answer that
+						# breaks one pair in it, before that pair is believed - see rotBatchSolve().
+						# TAGS ROTATE IN WAVES, not one at a time: measured 2026-09-27, EIGHT of the
+						# twelve macs on one rpi were born inside a single TEN SECOND window. Of the 28
+						# pairs in that wave, 8 shared a battery word and sat inside ROTRSSI of each
+						# other and 4 of those were inside ROTTIE, so the arbitrations came down to 1,
+						# 1 and 4 dBm.
+						# WHAT IS WRONG WITH THAT IS THE MARGIN, NOT A KNOWN WRONG ANSWER, and the
+						# distinction is worth keeping straight: that wave was in fact resolved
+						# CORRECTLY - the candidates it turned down were all still alive and came back
+						# or rotated later, so the two macs that took fresh tagIds really were new tags.
+						# The case for solving a wave as one problem is that 1 dBm is not evidence on a
+						# signal that wanders 4.8, and that the contested branch BURNS a lineage for
+						# claims that never contested it - both structural, neither yet observed doing
+						# damage. So this only ever ADDS a commit the pairwise path would have refused;
+						# it never overrides one the pairwise path makes.
+						# 5 dBm BECAUSE THAT IS THE NOISE: the smoothed signal of a mac that has not
+						# moved wanders a median of 4.8 dBm (range 1.5 to 8.0 over 12 macs on one rpi,
+						# same capture). A margin under that is deciding on noise; this is the smallest
+						# number that is not. It is bigger than ROTTIE on purpose - ROTTIE separates two
+						# claimants for ONE lineage, this asks whether a whole assignment is stable
+ROTGRID      = 900.		# seconds. THE ROTATION CLOCK. A find my mac is not replaced at an arbitrary
+						# moment - it changes on a 15 minute grid aligned to the unix epoch, IN BOTH MODES,
+						# which is what the key schedule behind these addresses would produce.
+						# MEASURED, NOT DOCUMENTED - 69 hours on two rpis, 155 usable mac lives. Births
+						# taken mod 900 clustered with a mean resultant length of 0.851 over 73 nearby macs
+						# at a phase of +12 s, and 0.908 over 14 that had been seen in both modes at +35 s.
+						# THE ROW THAT MAKES IT REAL IS 1800: a 1800 or 3600 second grid is also a 900
+						# second grid, so a high score at 900 alone proves nothing - but the same macs
+						# scored 0.137 at both 1800 and 3600, so the births land on the 900 lattice and on
+						# no multiple of it. See findmy_rotation.py, which is the tool that measured this.
+ROTGRIDNEAR  = 90.		# seconds either side of a boundary that count as ON it - about one standard
+						# deviation of the measured spread (81 s). A newcomer born in here is where a
+						# rotation is expected to appear and pays nothing.
+						# WIDE ENOUGH TO ABSORB THE PHASE, which is why no phase constant is needed: the
+						# observed lag was +2 to +35 s, comfortably inside this, so the boundary can be
+						# taken as the epoch multiple itself. It would still hold if another house measured
+						# a different lag, as long as it is under a minute and a half
+ROTGRIDFAR   = 250.		# and beyond this - about three deviations, ie the middle of a slot - the full
+						# penalty. Linear in between, so nothing turns on a hard edge
+ROTGRIDTIE   = 0.001	# what the clock is worth INSIDE THE WAVE SOLVE: a tie-break and nothing more.
+						# IT MUST NOT ENTER THE COST AT FULL WEIGHT, and the first cut of this did, which a
+						# test caught: rotBatchSolve() forces a pair when breaking it costs more than
+						# ROTBATCH extra, so anything added to the cost moves that margin - and a penalty on
+						# the newcomer that signal FAVOURED subtracts from the very margin that was about to
+						# force it. A pairing 6 dBm ahead, forced before, stopped being forced once a 3 point
+						# clock penalty ate into its lead. The clock made a correct answer less certain.
+						# At this weight it can only separate arrangements that cost EXACTLY the same, where
+						# the solver would otherwise pick by iteration order, and three thousandths of a dBm
+						# can never reach ROTBATCH. The real use is in the pairwise tie - see ROTGRIDPEN
+ROTGRIDPEN   = 3.		# dBm-equivalent. DELIBERATELY EQUAL TO ROTTIE, which is the whole design of
+						# this: ROTTIE is the margin inside which two claims are called indistinguishable
+						# by signal, so a penalty that cannot exceed it can BREAK A TIE and can never
+						# overturn a decision that signal already settled. It is far below ROTTYPEPEN and
+						# ROTMODEPEN too, so an apple-type mismatch still outranks it absolutely.
+						# ONLY IN THE WAVE SOLVE - see rotBatchSolve(). The pairwise path is untouched: this
+						# is a prior about WHEN a rotation happens, and it earns its place where several
+						# tags rotate together and the signal test has nothing left to separate them
+ROTTYPEPEN   = 100.		# the cost added to a pairing whose apple types are only a SUBSET rather than
+						# an exact match. Far beyond any dBm difference, so it cannot be traded against
+						# signal - the same rule the pairwise path uses, where exact beats subset
+						# outright and signal only ranks within one kind. See resolveRotClaims()
+ROTMODEPEN   = 200.		# and the cost of a MODE-SWITCH pairing - separated <-> nearby across the rotation,
+						# or 07 turning up with nearby. Above ROTTYPEPEN, so a subset match beats it just as
+						# an exact one beats a subset. See matchRotation(), where these stopped being refusals.
+						# MEASURED 2026-09-28 on one airpods set: separated D4:B9 (12 only) stopped at
+						# 10:19:02.6 and nearby CE:25 (07|12) started in the same tenth of a second; later
+						# separated CE:25 stopped at 10:41:32.0 and nearby E6:4F (07|12) started at 33.0,
+						# same -68, same battery. No lid was opened - 07 comes with being near the owner.
+						# Both old tests refused that second one, it minted a fresh lineage, and the set
+						# showed as TWO airpods for the length of the plugin's member down-delay
+BATCHMAXN    = 8		# most newcomers, and most lineages, in one batch solve. The search is a
+BATCHMAXM    = 12		# bitmask DP over the lineages, so it is 2^M * N and both have to be bounded.
+						# 8 x 12 is 400k cheap operations at the worst, and it is run once per pass
+						# over a set that is normally 3 or 4 macs. Beyond this the pairwise path runs
+						# as before and says so in the log - refusing to guess is the fallback, and a
+						# batch that big has no clean answer anyway
+FEEDTRUST    = 120.		# HOW LONG A SILENT FEED IS BELIEVED before the room really is called empty -
+						# see the expiry pass in tick(). A mac is expired after expireSecs without a
+						# packet, which is right when that mac stopped; but "last" only moves when a
+						# frame is DELIVERED, so a stall in the handoff expires EVERY mac at once while
+						# all of them are still in the room. Measured 2026-09-27: 23:F4 was absent from
+						# five consecutive summaries and came back with 62 packets in ONE row - the
+						# radio had heard it throughout - and 20:23:18 logged 11 s with nothing from
+						# anybody, one second past expireSecs for the whole house.
+						# IT HAS TO BE BOUNDED, and that is the whole reason for a number here rather
+						# than "trust it": a dongle that has genuinely died is also silent, and it must
+						# end up reporting an empty room rather than a full one for ever. 120 s, the
+						# same as GONEKEEP and for the same reason - past that, silence really has
+						# stopped being ambiguous
+FEEDMINMACS  = 2		# and it takes at least this many macs to make that inference at all. With ONE
+						# mac in range its silence and the feed's silence are the SAME event and there
+						# is nothing to tell apart, so holding it would just be a late count. From two
+						# up, all of them stopping in the same second is far more likely to be the one
+						# thing they share than a coincidence of departures
+GAPGRACE     = 60.		# AFTER THE FRAME STREAM ITSELF STOPPED - a beaconloop restart, or the handoff
+						# from it stalling - how long a mac that cannot be accounted for is PARKED rather
+						# than given a fresh lineage.
+						# WHY THIS IS NOT A ROTATION QUESTION AT ALL: every test in matchRotation() reads
+						# the recent past, and after a gap there is no recent past to read. The pool is
+						# cands + goneTags, both of which a restart empties, so a mac that rotated while we
+						# were not listening found NOTHING in range, was not put on rotPending, and minted a
+						# fresh lineage on the spot - no ROT~, no ROTCONFIRM, none of the machinery that
+						# exists to stop exactly that. The log line even said "none in range at all", which
+						# is true and completely misleading: nothing was in range because nothing was
+						# remembered.
+						# WHAT THE WAIT BUYS, and it is the whole of it: the tags that are STILL HERE come
+						# back on their own macs within seconds and take their lineages back through
+						# tagIdOf / ownTag, which also pops them out of goneTags. So the pool is worthless
+						# at the moment the feed resumes and correct a few seconds later. Parking until then
+						# costs the newcomer some latency and turns a guess into an answer.
+						# 60 AND NOT MORE, for ROTAMBIG's reason: the mac is held out of members the whole
+						# time, and memberDownDelaySecs is 60 on the plugin side. A tag that really is new
+						# appears one grace later, once, instead of a restart growing the group by a device
+						# for every tag that happened to rotate during it
 BATTERY     = {0: "full", 1: "medium", 2: "low", 3: "critical"}
 CSV_FIELDS  = ["timestamp", "host", "mac", "distanceIndicator", "status", "hintByte", "appleTypes", "battery", "packets",
                "rssi_median", "rssi_min", "rssi_max", "rssi_smoothed", "member", "age_s", "marker",
@@ -489,6 +631,61 @@ def strongHalf(values):
 	return median(vv[:max(1, len(vv) // 2)])
 
 
+def bestAssignment(cost, n, m, forbid=None):
+	"""The cheapest way to pair n newcomers with m lineages, at most one each - see rotBatchSolve().
+
+	MOST PAIRS FIRST, THEN CHEAPEST. A rotation wave conserves count: the macs that appeared are the
+	macs that left, so an answer that accounts for five of them beats one that accounts for four at
+	any price. Cost only ranks answers that explain the same number of tags.
+
+	A BITMASK DP AND NOT A PERMUTATION SEARCH, because the sets are not the same size and need not be:
+	eight newcomers can face six lineages, two of them really new. Walking the newcomers in order and
+	carrying "which lineages are spoken for" as a bit per lineage handles both, and it is 2^m * n
+	states rather than the m! a permutation search would need - at BATCHMAXN/BATCHMAXM that is the
+	difference between 400 thousand operations and forty million.
+
+	NOT HUNGARIAN, deliberately: this has to be read and trusted by whoever is looking at a wrong
+	rotation six months from now, and it is called on sets of three or four. An O(n^3) algorithm that
+	nobody in this house can check is a bad trade for microseconds nothing is waiting on.
+
+	Inputs:
+	    cost (dict): {(i, j): float} the cost of pairing newcomer i with lineage j. A pair that is
+	            not in here is not allowed at all - that is where every hard filter has already been
+	            applied, in matchRotation() and rotAlive()
+	    n (int): how many newcomers
+	    m (int): how many lineages
+	    forbid (tuple): one (i, j) to pretend is not allowed, for the stability test
+	Outputs:
+	    tuple: (pairs matched, total cost, {i: j}) - ({}, and 0 pairs, when nothing can be paired)
+	"""
+	# dp[mask] = (-pairs, cost, {i: j}) for the newcomers seen so far, "mask" = lineages taken.
+	# MINIMISED AS A TUPLE, so -pairs in front is what makes "most pairs" beat "cheapest"
+	dp = {0: (0, 0., {})}
+	for ii in range(n):
+		nxt = {}
+		for mask in dp:
+			negP, cc, pairs = dp[mask]
+			# this newcomer takes nothing - always allowed, and it is what lets a genuinely new tag
+			# fall out of the batch instead of being forced onto somebody's lineage
+			if mask not in nxt or (negP, cc) < nxt[mask][:2]:	nxt[mask] = (negP, cc, pairs)
+			for jj in range(m):
+				if mask & (1 << jj):					continue
+				if (ii, jj) not in cost:				continue
+				if forbid is not None and forbid == (ii, jj):	continue
+				mk = mask | (1 << jj)
+				cand = (negP - 1, cc + cost[(ii, jj)])
+				if mk not in nxt or cand < nxt[mk][:2]:
+					pp = dict(pairs); pp[ii] = jj
+					nxt[mk] = (cand[0], cand[1], pp)
+		dp = nxt
+	best = None
+	for mask in dp:
+		negP, cc, pairs = dp[mask]
+		if best is None or (negP, cc) < (best[0], best[1]):	best = (negP, cc, pairs)
+	if best is None:	return (0, 0., {})
+	return (-best[0], best[1], best[2])
+
+
 class FindMyGroup(object):
 
 	def __init__(self):
@@ -500,7 +697,8 @@ class FindMyGroup(object):
 		self.stableSecs             = 60.
 		self.smoothN                = 5
 		self.minPackets             = 3
-		self.maxSlots               = 30
+		self.maxSlots               = 15
+		self.rotAmbig               = ROTAMBIG
 		self.sendEverySecs          = 60.
 		self.dropFromBeaconPipeline = True
 		self.calibrationLog         = False
@@ -511,27 +709,35 @@ class FindMyGroup(object):
 		self.lastDebugCheck         = 0.
 		self.debugFiles             = [G.homeDir + "temp/findmy.debug", G.homeDir + "temp/findMyGroup.debug"]
 		self.logEverySecs           = 10.
-		# ONE file, fixed name, beside the state file. Not /var/log and not a file per day: it is
+		# ONE file, fixed name, in the pibeacon dir. Not /var/log and not a file per day: it is
 		# read with "cat" while standing next to the rPi, it is written by the pi user without
 		# any root dance, and it is size-capped rather than age-cleaned, so there is nothing to
-		# sweep up. master is told NOT to delete it when it empties temp/
-		self.csvFile                = G.homeDir + "temp/findMyGroup.csv"
+		# sweep up.
+		# WRITTEN STRAIGHT TO THE CARD, and no longer to temp/ with a copy out every PERSISTSECS.
+		# That arrangement was there to spare the card the 10 second appends, and it cost more
+		# than it saved: it copied the WHOLE file every time one row had been added to it, so a
+		# 200 kB log wrote 200 kB to the card 432 times a day - about 86 MB - to carry 12 MB of
+		# actual rows. Appending the rows where they belong writes those 12 MB and nothing else,
+		# which is SEVEN TIMES LESS card traffic, in more writes of much smaller size.
+		# AND IT IS WHAT MAKES A USEFUL CAP POSSIBLE. In temp/ the log was bounded by a 2 MB tmpfs
+		# it had to share with the state file; here it is bounded by the card, so 20 MB and 40
+		# hours of history costs nothing and the file survives a reboot by itself. The restore
+		# dance that used to put it back after one - restoreCsv(), persistCsvFile(), csvStamp() -
+		# is gone with the reason for it.
+		# THE COST, so it is on the record: appends go from 432 a day to 8640. The bytes are what
+		# wears a card rather than the syscalls, and they went DOWN - but if this ever needs to be
+		# gentler still, buffer the rows in memory and flush them on the PERSISTSECS tick. It is
+		# not done here because the file is read live during a calibration walk, and a log that is
+		# up to 200 s behind what the rPi is hearing is a different tool
+		self.csvFile                = G.homeDir + "findMyGroup.csv"
 		self.markerFile             = G.homeDir + "temp/findMyGroup.marker"
 		self.stateFile              = G.homeDir + "temp/findMyGroup.state"
 		# temp/ IS A TMPFS: writing there every send costs no SD wear but does not survive a
 		# reboot, so the same content goes to the pibeacon dir every PERSISTSECS and is read back
 		# when temp/ comes up empty. Losing 5 minutes of it is fine; losing the whole trail is not
 		self.persistFile            = G.homeDir + "findMyGroup.state"
-		# THE CALIBRATION LOG GOES OUT THE SAME WAY, and it needs it more than the state file does.
-		# The state file is rebuilt within seconds by the tags themselves; the csv is a TRAIL, and a
-		# row that is not written again is gone. A reboot empties the tmpfs and took the lot.
-		# Copied only when it has actually changed - see persistCsvFile()
-		self.persistCsv             = G.homeDir + "findMyGroup.csv"
 		self.reset()
 		self.restoreSlots()
-		# BEFORE ANYTHING CAN APPEND. A freshly empty temp file copied out over a full one would
-		# finish the job the reboot started
-		self.restoreCsv()
 
 	def reset(self, now=None):
 		if now is None: now = time.time()
@@ -546,8 +752,21 @@ class FindMyGroup(object):
 		self.lastSend       = now
 		self.lastLog        = now
 		self.lastPersist    = 0.
+		# THE FEED'S OWN LIVENESS, which is not the same question as any one mac's - see GAPGRACE.
+		# A mac's silence only means something if SOMEBODY ELSE was heard during it. One mac missing
+		# while eleven others report every sample is that mac; all twelve going quiet together is
+		# the stream, and carries no information about any tag at all. Measured 13:40:21-13:41:03:
+		# 23:F4 alone was absent for 52 s and came back with 62 packets in one row - the radio had
+		# heard it the whole time - while it sat in another mac's candidate list as "gone"
+		self.lastFrame      = 0.	# when a find my frame from ANY mac last arrived, 0 = none yet
+		self.feedGap        = 0.	# the measured length of the gap still inside GAPGRACE, 0 = none
+		# A (RE)START IS A FEED GAP and the largest one there is: everything before it went unheard
+		# by definition. Set here rather than waiting to measure one, because lastFrame is 0 and
+		# there is nothing to measure it against - the gap is known without being observed
+		self.feedGapUntil   = now + GAPGRACE
+		self.feedGapWhy     = "restart"		# what caused the gap in force - see gapWhy()
+		self.feedHeld       = False			# the expiry pass is holding a silent feed - see tick()
 		self.lastRotWhy     = []	# why matchRotation turned each candidate down - see logRot()
-		self.lastCsvCopy    = (0, 0.)		# size and mtime of the csv as it was last copied out
 		self.lastHeader     = 0.
 		self.marker         = ""
 		self.markerDue      = False		# the marker changed and has not been written to a row yet
@@ -574,6 +793,26 @@ class FindMyGroup(object):
 		# it ever joined, which has none. Kept CARRYBACK, so it is bounded by the macs heard in the
 		# last two minutes rather than by OWNMAX
 		self.macCarry       = {}
+		# WHICH NUMBERING THE tagIds BELONG TO, and it is not a process id - it identifies the COUNTER.
+		# nextTagId is only meaningful inside one run of it: if the state file cannot be read the
+		# counter restarts at 1 and starts handing out ids the plugin still remembers as OTHER tags,
+		# and a tagId is worth nothing the moment it can mean two things. The plugin cannot tell that
+		# from the counter alone - after one restart every id is small, so the next restart climbs
+		# past them within minutes and nothing looks wrong. So the numbering says who it is.
+		# MINTED HERE AND OVERWRITTEN BY restoreSlots() when there IS something to restore, which is
+		# exactly the rule wanted: a clean restart keeps its id along with its counter, and a lost
+		# state file gets a new one. reset() is also called when the group is switched on or off, and
+		# that restarts the counter too, so minting there is right rather than incidental
+		# RANDOM, NOT DERIVED FROM THE CLOCK AND THE PID. That was the first cut and a test caught it:
+		# two mints inside the same second from the same process produced the SAME id, so a restart
+		# that lands in one second - or a pid that repeats modulo the byte kept - would have looked
+		# like the same numbering and the stale lineages would have been trusted. The low 16 bits of
+		# the clock are kept in front because they make the ids read in order in a log, which is worth
+		# something when two rPis are being compared; the 24 random bits after them are what actually
+		# make it unique. Only a collision with the IMMEDIATELY PRECEDING id could mislead - a stress
+		# test of 2000 mints showed the birthday rate over 16 bits was visible, so it is 24: one in
+		# 16.7 million per restart, against a consequence of one wrong device
+		self.runId          = "{:04x}{:06x}".format(int(now) & 0xFFFF, random.randint(0, 0xFFFFFF))
 		self.nextTagId      = 1		# NEVER REUSED. A small reused pool - the slots - is ambiguous:
 									# slot 03 an hour from now is a different tag, and that is exactly the
 									# doubt this is meant to remove. Persisted in the state file
@@ -594,7 +833,13 @@ class FindMyGroup(object):
 		master only spares the name from its wipe, it does not restore it.
 		"""
 		try:
+			srcAt = 0.
 			if not os.path.isfile(self.stateFile) and os.path.isfile(self.persistFile):
+				# READ BEFORE THE COPY. The copy's own mtime says "a moment ago" and would claim every
+				# mac in it was a member just now - which after a reboot is precisely what it was not,
+				# and that timestamp is what dates the restored lineages below
+				try:	srcAt = os.path.getmtime(self.persistFile)
+				except Exception:	pass
 				U.copyFile(self.persistFile, self.stateFile)
 				U.makeOwnFileWritable(self.stateFile)
 				U.logger.log(20, "findMyGroup temp state file was gone (reboot?), restored from {}".format(self.persistFile))
@@ -607,6 +852,13 @@ class FindMyGroup(object):
 				old = U.readJson(self.persistFile)[0]
 				src = self.persistFile
 			if not isinstance(old, dict): return
+			# WHEN THE MACS IN THIS FILE WERE LAST KNOWN TO BE HERE. members carries no timestamp of
+			# its own - it is written from the live candidates - so the file's own mtime is the best
+			# statement there is, and it is what dates the lineages restored out of it
+			if srcAt <= 0.:
+				try:	srcAt = os.path.getmtime(src)
+				except Exception:	srcAt = time.time()
+			lineages = 0
 			mm = old.get("members", {})
 			if isinstance(mm, dict):
 				for slot in mm:
@@ -617,11 +869,29 @@ class FindMyGroup(object):
 						if   isinstance(mm[slot], dict):						self.slots[slot] = mm[slot].get("mac", "")
 						elif isinstance(mm[slot], list) and len(mm[slot]) > 0:	self.slots[slot] = mm[slot][0]
 						if self.slots.get(slot, "") == "":						self.slots.pop(slot, None)
-						# the lineage comes back with the mac: a tag still here re-joins on the SAME mac
+						# THE LINEAGE COMES BACK WITH THE MAC: a tag still here re-joins on the SAME mac
 						# within seconds, and the indigo device must not be told it is a different tag
-						# just because this program restarted
+						# just because this program restarted.
+						# INTO ownTag AND NOT tagIdOf. tagIdOf is the LIVE map: the only place an entry
+						# is written is at join, and the only place one is removed is the expiry pass in
+						# tick(), which walks self.cands. A mac restored from a FILE is not in cands, so
+						# an entry for one that never came back was never pruned at all - it sat there
+						# for the life of the process holding a lineage nothing could inherit, because
+						# matchRotation() pools cands + goneTags and never looks at tagIdOf. Worse than
+						# the bytes, it was unbounded IN TIME: a state file written a fortnight ago
+						# still handed its macs their lineages silently, straight past the two days
+						# ownTag deliberately allows and without the ROT= line that says it happened.
+						# NOTHING IS LOST BY MOVING IT - ownTag is the same statement, "this mac owns
+						# this lineage", matched by the identical mac only, and it already has OWNKEEP,
+						# the OWNMAX ceiling and the log line. The tag gets the same tagId, one branch
+						# later. And tagIdOf now means what it says: a mac that is here
 						if isinstance(mm[slot], dict) and mm[slot].get("tagId") is not None:
-							self.tagIdOf[mm[slot].get("mac", "")] = int(mm[slot]["tagId"])
+							oMac = mm[slot].get("mac", "")
+							if oMac != "":
+								tagId = int(mm[slot]["tagId"])
+								self.ownTag[oMac] = {"tagId": tagId, "last": srcAt}
+								lineages += 1
+								if tagId >= self.nextTagId:	self.nextTagId = tagId + 1
 					except Exception:	pass
 			hh = old.get("membersHistory", {})
 			if isinstance(hh, dict):
@@ -633,72 +903,43 @@ class FindMyGroup(object):
 
 			# NEVER BACKWARDS, and never below a lineage that is already out there: a reused tagId
 			# would look to the plugin like a rotation of whatever held it last
+			# THE NUMBERING COMES BACK WITH THE COUNTER, and the two belong together - see runId in
+			# reset(). Keeping it is what tells the plugin this is the SAME numbering it already knows,
+			# so nothing it has stored is thrown away by an ordinary restart.
+			# A STATE FILE FROM BEFORE THIS VERSION HAS NONE, and then the freshly minted one stands:
+			# the plugin sees a numbering it has not met and drops its stored lineages once, on the
+			# upgrade. One device per tag, once - the alternative is trusting ids whose provenance
+			# genuinely is unknown, which is the whole thing being fixed
+			rid = "{}".format(old.get("runId", "")).strip()
+			if rid != "":	self.runId = rid
 			try:	self.nextTagId = max(int(old.get("nextTagId", 1)), self.nextTagId)
 			except Exception:	pass
-			for mac in self.tagIdOf:
-				if self.tagIdOf[mac] >= self.nextTagId:	self.nextTagId = self.tagIdOf[mac] + 1
+			# the member lineages raise it as they are read, above - there is no pass over tagIdOf to
+			# do it in any more, because nothing restores into tagIdOf. Whichever is higher wins, so
+			# the order of the two does not matter
 
 			# the mac -> own lineage memory, so a restart does not make every sleeping device a
 			# stranger again. Silently skipped when an older state file has none
 			try:
 				for mm, vv in (old.get("ownTags", {}) or {}).items():
 					if not isinstance(vv, list) or len(vv) < 2:	continue
+					# DO NOT CLOBBER A MEMBER-DERIVED ENTRY read above. Its "last" is the file's mtime,
+					# when the mac was still counted; an ownTags entry records when a mac EXPIRED, which
+					# is necessarily earlier. The two cannot really describe the same mac at the same
+					# time - a member is not expired - but a hand-edited file can say anything, and the
+					# later of the two is the one that is true about when it was last here
+					if mm in self.ownTag and self.ownTag[mm]["last"] >= float(vv[1]):
+						if int(vv[0]) >= self.nextTagId:	self.nextTagId = int(vv[0]) + 1
+						continue
 					self.ownTag[mm] = {"tagId": int(vv[0]), "last": float(vv[1])}
 					if int(vv[0]) >= self.nextTagId:	self.nextTagId = int(vv[0]) + 1
 			except Exception:
 				U.logger.log(20, "", exc_info=True)
 
 			if len(self.slots) > 0 or len(self.slotHistory) > 0:
-				U.logger.log(20, "findMyGroup restored {} slot(s), {} tagId(s), {} remembered mac(s) and history for {} from {}".format(
-						len(self.slots), len(self.tagIdOf), len(self.ownTag), len(self.slotHistory), src))
-		except Exception:
-			U.logger.log(20, "", exc_info=True)
-
-	def restoreCsv(self):
-		"""Puts the calibration csv back from the pibeacon dir when temp/ has come up empty.
-
-		The same reason the state file is put back, and it matters more here: the state file is
-		rebuilt within seconds by the tags themselves, the csv is a trail that only exists because
-		it was written down. temp/ is a tmpfs, so a reboot took all of it.
-
-		ONLY WHEN THE TEMP FILE IS MISSING. A csv that is already there is the live one and is
-		ahead of the copy - overwriting it with the copy would throw away everything since the last
-		persist, which is the opposite of the point.
-		"""
-		try:
-			if os.path.isfile(self.csvFile):		return
-			if not os.path.isfile(self.persistCsv):	return
-			U.copyFile(self.persistCsv, self.csvFile)
-			U.makeOwnFileWritable(self.csvFile)
-			self.lastCsvCopy = self.csvStamp()
-			U.logger.log(20, "findMyGroup calibration csv was gone (reboot?), restored {} bytes from {}".format(
-					os.path.getsize(self.csvFile), self.persistCsv))
-		except Exception:
-			U.logger.log(20, "", exc_info=True)
-
-	def csvStamp(self):
-		"""(size, mtime) of the calibration csv, or (0, 0.) when there is not one."""
-		try:
-			st = os.stat(self.csvFile)
-			return (st.st_size, st.st_mtime)
-		except Exception:
-			return (0, 0.)
-
-	def persistCsvFile(self):
-		"""Copies the calibration csv out of the tmpfs to the pibeacon dir - ONLY WHEN IT CHANGED.
-
-		That check is the whole difference between this and a blind copy. The csv runs up to
-		CSVMAXBYTES, so copying it on every tick would be ~80 MB a day onto a card that has to last,
-		nearly all of it re-writing bytes that had not moved. With the calibration log switched off
-		nothing is ever written to it, so nothing is ever copied and this costs nothing at all.
-		"""
-		try:
-			stamp = self.csvStamp()
-			if stamp == (0, 0.):			return		# no csv - calibration log off, or nothing logged yet
-			if stamp == self.lastCsvCopy:	return		# not one byte added since the last copy
-			U.copyFile(self.csvFile, self.persistCsv)
-			U.makeOwnFileWritable(self.persistCsv)
-			self.lastCsvCopy = stamp
+				U.logger.log(20, "findMyGroup restored {} slot(s), {} member lineage(s), {} remembered mac(s) and history for {} from {}, last written {:.0f}s ago".format(
+						len(self.slots), lineages, len(self.ownTag), len(self.slotHistory), src,
+						max(0., time.time() - srcAt)))
 		except Exception:
 			U.logger.log(20, "", exc_info=True)
 
@@ -814,7 +1055,12 @@ class FindMyGroup(object):
 		# CLAMPED, NOT TRUSTED. The plugin clamps the same value against its own copy of the ceiling,
 		# so a dialog that grows past the constant cannot make this side hand out slots the other
 		# side will never create - see MAXSLOTS
-		self.maxSlots               = max(1, min(MAXSLOTS, num("maxSlots", 30, int)))
+		self.maxSlots               = max(1, min(MAXSLOTS, num("maxSlots", 15, int)))
+		# 0 TURNS IT OFF and the claim is refused the moment ROTCONFIRM is up, which is what this
+		# did before the wait existed. Never shorter than ROTCONFIRM when on - a wait that expires
+		# before the first judgement would be a setting that does nothing but look like it does
+		self.rotAmbig               = num("ambiguityWait", ROTAMBIG)
+		if self.rotAmbig > 0.:	self.rotAmbig = max(ROTCONFIRM, min(300., self.rotAmbig))
 		self.sendEverySecs          = max(10., num("sendEverySecs", 60.))
 		self.dropFromBeaconPipeline = str(pp.get("dropFromBeaconPipeline", "1")) in ["1", "true", "True", "on"]
 		self.calibrationLog         = str(pp.get("calibrationLog", "0")) in ["1", "true", "True", "on"]
@@ -826,13 +1072,29 @@ class FindMyGroup(object):
 		# wrong wherever a mac arrives at two very different signal levels, which is everywhere
 		self.rssiStat               = str(pp.get("rssiStat", "strong")).strip().lower()
 		self.debugParam             = num("debug", 0, int)
-		self.debug                  = self.debugParam		# checkDebugFile overrides it if the file is there
+		self.debug                  = self.debugParam	and _findMyGroupDebug	# checkDebugFile overrides it if the file is there
 		self.debugMac               = str(pp.get("debugMac", "")).strip().upper()
 		self.logEverySecs           = max(2., num("logEverySecs", 10.))
 
 		if self.enabled != wasEnabled:
 			self.reset()
-			U.logger.log(20, "findMyGroup {}: devId:{} join:{} leave:{} stable:{}s drop:{} calibrationLog:{}".format(
+			# AND READ THE STATE FILE BACK, because the reset above has just thrown away everything
+			# __init__ restored. THIS IS THE BUG THAT MADE "the state file is lost at every restart",
+			# and the file was never the problem - the RESTORE was being discarded. __init__ sets
+			# enabled False, resets, and restoreSlots() brings back nextTagId, the slot map, tagIdOf,
+			# ownTag and the runId; then beaconloop's first readParams() lands here, enabled goes
+			# False -> True, and the reset wiped the lot seconds later. restoreSlots() was never
+			# called again, so nextTagId was 1 on EVERY start, every lineage was re-minted, and each
+			# restart looked to indigo like a houseful of new devices. Measured on 2026-09-27: tagIds
+			# re-numbered at 15:51 and again at 19:13, previousTagIds in the 2-20..2-29 range sitting
+			# beside current ones of 2-1..2-9, and the same lineage id held by two devices at once.
+			# ONLY WHEN IT IS NOW ON. Going the other way the reset is the whole point - the feature
+			# was switched off, nothing should be left running - and there is nothing to come back to.
+			# SWITCHED OFF AND ON AGAIN ALSO RESTORES, and that is right rather than incidental: the
+			# indigo devices did not go anywhere while it was off, so their slots and lineages are
+			# still the truth and forgetting them would renumber the house for no reason
+			if self.enabled:	self.restoreSlots()
+			if self.debug: U.logger.log(20, "findMyGroup {}: devId:{} join:{} leave:{} stable:{}s drop:{} calibrationLog:{}".format(
 				"ON" if self.enabled else "OFF", self.devId, self.joinRssi, self.leaveRssi, self.stableSecs,
 				self.dropFromBeaconPipeline, self.calibrationLog))
 
@@ -856,7 +1118,7 @@ class FindMyGroup(object):
 			# maintain in step with this one, for that, is a bad trade.
 			if self.debug >= 2 and (self.debugMac == "" or self.debugMac in mac):
 				tt = appleTypesIn(adv)
-				U.logger.log(20, "findMyGroup seen  {}  rssi:{:>4}  apple types:{:<12} -> no find my (12) in it, ignored".format(
+				if self.debug: U.logger.log(20, "findMyGroup seen  {}  rssi:{:>4}  apple types:{:<12} -> no find my (12) in it, ignored".format(
 						mac, rssi, "|".join("{:02X}".format(t) for t in tt) or "none"))
 			return False
 		if now is None: now = time.time()
@@ -864,6 +1126,25 @@ class FindMyGroup(object):
 		return True
 
 	def update(self, mac, indicator, status, rssi, now, hint=None, types=None, raw=None):
+		# THE GAP IS MEASURED WHERE IT BECOMES VISIBLE, which is on the way back IN. tick() can only
+		# ever see "it is quiet right now", and from up there a room that has genuinely emptied looks
+		# exactly like a stalled feed - so a test there would either trust a dead radio forever or
+		# expire a live tag anyway. Here it is a length between two frames that both arrived, so a
+		# feed that never resumes never claims a gap, and nothing has to be believed on faith.
+		# AGAINST expireSecs, not some new number: a gap shorter than that could not have expired
+		# anybody, so it changed nothing and is not worth a word in the log
+		if self.lastFrame > 0. and now - self.lastFrame > self.expireSecs:
+			self.feedGap      = now - self.lastFrame
+			self.feedGapUntil = now + GAPGRACE
+			self.feedGapWhy   = "feed gap of {:.0f}s".format(self.feedGap)
+			# LEVEL 20 AND NOT logRot, which is the only line here that breaks that rule on purpose.
+			# The ROT lines are decisions and belong to whoever turned the debug menu on; this one is
+			# the rpi saying it stopped hearing anything at all, and it is the first thing anybody
+			# asking "why did a device appear" needs to see. Keeps the "ROT" prefix so the one grep
+			# in logRot() still catches it along with the decisions it explains
+			if self.debug: U.logger.log(20, "findMyGroup ROTG  no find my frame from ANY mac for {:.0f}s - a rotation across that cannot be inferred, newcomers parked {:.0f}s".format(
+					self.feedGap, GAPGRACE))
+		self.lastFrame = now
 		c = self.cands.get(mac)
 		if c is None:
 			c = {"first": now, "last": now, "rssi": [], "interval": [], "indicator": indicator, "inds": {}, "status": status,
@@ -878,11 +1159,11 @@ class FindMyGroup(object):
 				c["first"] = back.get("first", now)
 				if back.get("types"):	c["types"] = dict(back["types"])
 				if back.get("inds"):	c["inds"]  = dict(back["inds"])
-				U.logger.log(10, "findMyGroup BACK  {} after {:.0f}s, keeps age {:.0f}s and types {}".format(
+				if self.debug: U.logger.log(10, "findMyGroup BACK  {} after {:.0f}s, keeps age {:.0f}s and types {}".format(
 						mac, now - back.get("last", now), now - c["first"],
 						"|".join("{:02X}".format(t) for t in sorted(c["types"])) or "-"))
 			else:
-				U.logger.log(10, "findMyGroup NEW   {} dist:{} rssi:{}".format(mac, indicator, rssi))
+				if self.debug: U.logger.log(10, "findMyGroup NEW   {} dist:{} rssi:{}".format(mac, indicator, rssi))
 		c["last"]      = now
 		c["indicator"] = indicator
 		# AND EVERY INDICATOR IT HAS EVER SENT, for the same reason the apple types accumulate.
@@ -913,7 +1194,7 @@ class FindMyGroup(object):
 		if self.debug >= 1 and (self.debugMac == "" or self.debugMac in mac):
 			# EVERY COLUMN FIXED WIDTH - mac 17, dist 9, status 26 (statusBits pads the battery
 			# word inside it), hint 2, types 11. pkt# is last, where a long one costs nothing
-			U.logger.log(20, "findMyGroup frame sl:{:<2} {:<17}  rssi:{:>4}  dist:{:<9}  status:{}  hint:{:<2}  types:{:<11}  pkt#{}".format(
+			if self.debug: U.logger.log(20, "findMyGroup frame sl:{:<2} {:<17}  rssi:{:>4}  dist:{:<9}  status:{}  hint:{:<2}  types:{:<11}  pkt#{}".format(
 					self.slotOf(mac), mac, rssi, indicator,
 					self.statusBits(status),
 					"--" if c.get("hint") is None else "{:02X}".format(c["hint"]),
@@ -927,8 +1208,12 @@ class FindMyGroup(object):
 			# and it is still only a few seconds after the old mac fell silent
 			if c.get("tagId") is None and mac not in self.rotPending:
 				if mac in self.tagIdOf:
-					# same mac as before a restart, or a tag that dropped out and came back on its own
-					# mac - the lineage never ended
+					# A BACKSTOP SINCE 2026-09-27, not the restart path any more. It used to catch the
+					# mac that was a member when the state file was written; that now comes back through
+					# ownTag below, which dates it and logs ROT=. What is left for this to catch is a
+					# mac that is in cands with a lineage and reaches JOIN again without having expired
+					# - it cannot happen by any path here, and if it ever does, keeping the lineage is
+					# the right answer. Cheap to leave, and the alternative is minting a duplicate
 					c["tagId"] = self.tagIdOf[mac]
 				elif mac in self.ownTag:
 					# THE SAME MAC, BACK AFTER IT EXPIRED, and it keeps what it already owned.
@@ -996,7 +1281,7 @@ class FindMyGroup(object):
 			c["tagId"]        = self.nextTagId
 			self.nextTagId   += 1
 			self.tagIdOf[mac] = c["tagId"]
-			U.logger.log(20, "findMyGroup {} is still here but its lineage was given to a rotation - new tagId:{}".format(
+			if self.debug: U.logger.log(20, "findMyGroup {} is still here but its lineage was given to a rotation - new tagId:{}".format(
 					mac, c["tagId"]))
 
 	# ------------------------------------------------------------ periodic
@@ -1009,10 +1294,32 @@ class FindMyGroup(object):
 		self.lastTick = now
 		self.checkDebugFile(now)
 
-		for mac in list(self.cands):
+		# NOTHING AT ALL HAS BEEN HEARD, so nothing has been learned about any ONE tag - see
+		# FEEDTRUST. A mac's silence is evidence when OTHER macs are being heard through it; when
+		# every one of them stops in the same second, the one thing they share is the feed, and
+		# expiring them all says the house emptied when what actually happened is that the rpi
+		# stopped listening. The rotation side of this is already handled (see GAPGRACE) - this is
+		# the COUNT, which until now fell to zero and climbed back on every stall.
+		# HELD, NOT RESET: nothing is expired, so "last" and the member flags stay exactly as they
+		# were and the macs that come back need no re-joining. Anything that genuinely went while
+		# the feed was down expires on the first pass after it returns, one expireSecs later
+		quiet = (now - self.lastFrame) if self.lastFrame > 0. else 0.
+		hold  = (len(self.cands) >= FEEDMINMACS and self.expireSecs < quiet <= FEEDTRUST)
+		if hold and not self.feedHeld:
+			self.feedHeld = True
+			if self.debug: U.logger.log(20, "findMyGroup ROTH  nothing heard from ANY of {} macs for {:.0f}s - holding them rather than reporting an empty room, for up to {:.0f}s".format(
+					len(self.cands), quiet, FEEDTRUST))
+		elif self.feedHeld and not hold:
+			self.feedHeld = False
+			if quiet > FEEDTRUST:
+				if self.debug: U.logger.log(20, "findMyGroup ROTH! still nothing after {:.0f}s - the silence is no longer ambiguous, expiring normally. Check the radio".format(quiet))
+			else:
+				if self.debug: U.logger.log(20, "findMyGroup ROTH= feed is back after {:.0f}s - expiring normally again, nothing was lost".format(quiet))
+
+		for mac in ([] if hold else list(self.cands)):
 			c = self.cands[mac]
 			if now - c["last"] > self.expireSecs:
-				U.logger.log(10, "findMyGroup GONE  {} after {:.0f}s member:{} tagId:{}".format(
+				if self.debug: U.logger.log(10, "findMyGroup GONE  {} after {:.0f}s member:{} tagId:{}".format(
 						mac, c["last"] - c["first"], c["member"], c.get("tagId")))
 				# an expired lineage stays inheritable for GONEKEEP: the rotation may only be noticed
 				# when the new mac JOINS, which is minPackets of frames after it first appeared
@@ -1033,6 +1340,14 @@ class FindMyGroup(object):
 			if now - self.macCarry[oMac]["last"] > CARRYBACK:	del self.macCarry[oMac]
 		for oMac in list(self.goneTags):
 			if now - self.goneTags[oMac]["last"] > GONEKEEP:	del self.goneTags[oMac]
+		# THE INVARIANT, MADE SELF-HEALING RATHER THAN ASSUMED: every tagIdOf entry belongs to a mac
+		# that is HERE. It is written at join and removed by the expiry pass above, and those are the
+		# only two places - so the dict can only hold macs in cands. That was NOT true before
+		# 2026-09-27: restoreSlots() wrote entries for macs that had never been in cands, and nothing
+		# walked them, so one for a mac that never came back was immortal - see the comment there.
+		# One line, over at most maxSlots keys, so a future path that forgets cannot rebuild the leak
+		for oMac in [m for m in self.tagIdOf if m not in self.cands]:
+			del self.tagIdOf[oMac]
 		for oMac in list(self.ownTag):
 			if now - self.ownTag[oMac]["last"] > OWNKEEP:		del self.ownTag[oMac]
 		if len(self.ownTag) > OWNMAX:
@@ -1068,7 +1383,7 @@ class FindMyGroup(object):
 			trigger = "startup"						# first real count after warmup, sent at once
 		elif self.pending != self.stableCount and now - self.pendingSince >= self.stableSecs:
 			self.previousCount, self.stableCount, self.lastChange = self.stableCount, self.pending, now
-			U.logger.log(20, "findMyGroup memberCount {} -> {}".format(self.previousCount, self.stableCount))
+			if self.debug: U.logger.log(20, "findMyGroup memberCount {} -> {}".format(self.previousCount, self.stableCount))
 			trigger = "count"
 		elif self.lastMemberSet is not None and memberSet != self.lastMemberSet and now - self.lastSend >= MINSENDSECS:
 			# the membership changed while the count did not - a rotation, or one tag leaving as
@@ -1094,13 +1409,14 @@ class FindMyGroup(object):
 		# temp/findMyGroup.state" is the first thing anybody does when the count looks wrong, and
 		# one unbroken line of json is not an answer to anything
 		U.writeJson(self.stateFile, data, sort_keys=False, indent=2)
-		# and to the SD card every PERSISTSECS, so a reboot does not lose the slot map, the mac
-		# history or the calibration trail. Not every send: that would be ~1440 writes a day on a
-		# card that has to last, for a file that changes very little between two of them
+		# and to the SD card every PERSISTSECS, so a reboot does not lose the slot map or the mac
+		# history. Not every send: that would be ~1440 writes a day on a card that has to last, for
+		# a file that changes very little between two of them.
+		# THE CALIBRATION CSV IS NOT IN HERE ANY MORE. It is written straight to the card as its
+		# rows are produced - see csvFile in __init__ - so it has nothing to be copied out of
 		if now - self.lastPersist >= PERSISTSECS:
 			self.lastPersist = now
 			U.writeJson(self.persistFile, data, sort_keys=False, indent=2)
-			self.persistCsvFile()
 		if self.debug >= 1: self.logSummary(now, trigger)
 		if self.devId in ["", "0"]: return None
 		data["trigger"] = trigger
@@ -1108,6 +1424,12 @@ class FindMyGroup(object):
 
 	def logRot(self, txt):
 		"""One line about a lineage decision. ROT matched, ROT? refused as ambiguous, ROTX no match.
+
+		ROTP AND ROTG ARE THE FEED, not a decision - see GAPGRACE. ROTG says the frame stream stopped
+		and ROTP that a newcomer is parked because of it, and they carry the prefix so they turn up in
+		the grep beside the decisions they explain. ROTG is the one line here logged at 20 whatever
+		the debug menu says, because it is the answer to "why did a device appear" and needing debug
+		on to see it meant it was never seen.
 
 		ALL THREE START "ROT" ON PURPOSE, so one grep catches every decision and nothing else:
 
@@ -1127,7 +1449,7 @@ class FindMyGroup(object):
 		Outputs:
 		    None
 		"""
-		U.logger.log(20 if self.debug >= 1 else 10, "findMyGroup {}".format(txt))
+		if self.debug: U.logger.log(20 if self.debug >= 1 else 10, "findMyGroup {}".format(txt))
 
 	def logSummary(self, now, trigger):
 		"""The decoded picture at the moment a message goes out - the key fields, named, not hex.
@@ -1154,17 +1476,17 @@ class FindMyGroup(object):
 				if not c["rssi"]: continue
 				sm = self.smoothed(c)
 				if sm > strongest: strongest, strongestMac = sm, mac
-			U.logger.log(20, "findMyGroup ==== {}  trigger:{}  members:{} (raw {})  candidates:{}  nearby:{}  strongest:{} ({})  join:{:.0f} leave:{:.0f}".format(
+			if self.debug: U.logger.log(20, "findMyGroup ==== {}  trigger:{}  members:{} (raw {})  candidates:{}  nearby:{}  strongest:{} ({})  join:{:.0f} leave:{:.0f}".format(
 					datetime.datetime.fromtimestamp(now).strftime("%H:%M:%S"), trigger,
 					self.stableCount, self.rawCount, len(active), len(active) - len(members),
 					int(strongest) if rssis else -999, strongestMac, self.joinRssi, self.leaveRssi))
-			U.logger.log(20, "findMyGroup      sl mac                rssi  dist       battery   types      age   pkts")
+			if self.debug: U.logger.log(20, "findMyGroup      sl mac                rssi  dist       battery   types      age   pkts")
 
 			bySlot = {}
 			for slot in self.slots: bySlot[self.slots[slot]] = slot
 
 			def line(slot, mac, c, tail=""):
-				U.logger.log(20, "findMyGroup      {:<2} {:<17} {:>5}  {:<9}  {:<8}  {:<9} {:>5}s {:>5}{}".format(
+				if self.debug: U.logger.log(20, "findMyGroup      {:<2} {:<17} {:>5}  {:<9}  {:<8}  {:<9} {:>5}s {:>5}{}".format(
 						slot, mac,
 						int(self.smoothed(c)) if c["rssi"] else -999,
 						c["indicator"], self.battery(c["status"]) or "-",
@@ -1185,7 +1507,7 @@ class FindMyGroup(object):
 
 			for slot in sorted(self.slotHold.keys()):
 				mac, freedAt = self.slotHold[slot]
-				U.logger.log(20, "findMyGroup      {:<2} {:<17} HELD - gone {:.0f}s, slot kept {:.0f}s more".format(
+				if self.debug: U.logger.log(20, "findMyGroup      {:<2} {:<17} HELD - gone {:.0f}s, slot kept {:.0f}s more".format(
 						slot, mac, now - freedAt, max(0., SLOTHOLDSECS - (now - freedAt))))
 		except Exception:
 			U.logger.log(20, "", exc_info=True)
@@ -1261,11 +1583,69 @@ class FindMyGroup(object):
 			# so the counter never goes backwards over a restart and hands a NEW tag an id that an
 			# indigo device still remembers as something else
 			"nextTagId":       self.nextTagId,
+			# AND WHICH NUMBERING THOSE IDS BELONG TO - see runId in reset(). The counter alone cannot
+			# say: after one lost state file every id is small, so the next loss climbs past them and
+			# looks like ordinary progress. This changes only when the counter restarts, which is the
+			# one moment every id already out there stops meaning what it did
+			"runId":           self.runId,
 			# WHICH MAC OWNS WHICH LINEAGE, so two days of memory is not undone by one restart.
 			# Compact on purpose - [tagId, last] rather than named fields - because at OWNMAX this
 			# is the biggest thing in the file and it is written every send
 			"ownTags":         dict((m, [self.ownTag[m]["tagId"], int(self.ownTag[m]["last"])]) for m in self.ownTag),
 		}
+
+	def noteFeedGap(self, why, secs=0., now=None):
+		"""beaconloop says the frame stream stopped, for a reason only beaconloop can know.
+
+		WHAT THE lastFrame TEST CANNOT SEE, and this is the whole reason for a second way in: that
+		one measures a hole BETWEEN TWO FRAMES, so it needs the feed to come back before it can say
+		anything, and it cannot say why. A radio put back into scan role, an hci reset, a dongle
+		re-init, a role re-assert after a collision - the stream stops for as long as that takes, and
+		the only process that knows it is about to happen is the one doing it. Told rather than
+		inferred, the grace starts at the right moment instead of one expireSecs after the fact, and
+		the log names the cause instead of a length.
+
+		BOTH WAYS STAY: this one is exact but only covers what beaconloop thinks to report, and the
+		measured test is the backstop for every stall nobody anticipated - which is the kind that
+		costs an afternoon. They do not conflict, they extend whichever grace is longer.
+
+		SAFE BEFORE setParams: called during beaconloop's own start-up, when enable and the
+		thresholds have not been read yet. It touches nothing but the gap fields, and if the group
+		is switched off nothing ever reads them.
+
+		Inputs:
+		    why (str): what interrupted it, for the log - "beaconloop start", "hci0 reset", ...
+		    secs (float): how long it lasted if that is known, 0 when it is not
+		    now (float): epoch seconds, None for time.time()
+		Outputs:
+		    None
+		"""
+		try:
+			if now is None: now = time.time()
+			if secs > 0.:	self.feedGap = max(secs, self.feedGap if now < self.feedGapUntil else 0.)
+			self.feedGapWhy   = why if secs <= 0. else "{} ({:.0f}s)".format(why, secs)
+			# LONGER WINS. Two of these inside one grace, or one arriving while a measured gap is
+			# still in force, must not shorten the wait that is already running
+			self.feedGapUntil = max(self.feedGapUntil, now + GAPGRACE)
+			if self.debug: U.logger.log(20, "findMyGroup ROTG  {} - a rotation across that cannot be inferred, newcomers parked {:.0f}s".format(
+					self.feedGapWhy, self.feedGapUntil - now))
+		except Exception:
+			U.logger.log(20, "", exc_info=True)
+
+	def gapWhy(self):
+		"""The feed gap still in force, named for a log line or a refusal reason.
+
+		THE KINDS READ DIFFERENTLY ON PURPOSE. A measured one has a length, because two frames
+		arrived either side of it and that length IS the evidence. One beaconloop reported has a
+		cause, which is better than a length. A restart has neither - nothing was heard before it by
+		definition - and naming it beats saying "gap of 0s".
+
+		Inputs:
+		    none
+		Outputs:
+		    str: "feed gap of 52s", "hci0 reset (12s)", "restart"
+		"""
+		return self.feedGapWhy or "restart"
 
 	def matchRotation(self, mac, c, now):
 		"""The tagId of the lineage this mac is the continuation of, or None.
@@ -1284,6 +1664,9 @@ class FindMyGroup(object):
 		    mac's rather than equal to them - see the test itself for why equality was wrong.
 		    Neither identifies anything alone; together they
 		    throw away most wrong candidates for free
+		  - EXCEPT A SEPARATED -> NEARBY SWITCH, which rotates the mac and adds 07 on an airpods set.
+		    That is let through as a MODE match - see ROTMODEPEN - the weakest kind, taken only when
+		    the old mac stopped before the new one started and nothing ordinary survives the wait
 		  - and EXACTLY ONE lineage fits. Two candidates means we do not know, and a wrong carry-over
 		    silently renames somebody's tag, which is worse than an extra device appearing
 
@@ -1329,7 +1712,7 @@ class FindMyGroup(object):
 			# guess at a threshold cost an afternoon. It is worth more than it looks: it was these
 			# reasons, read back in bulk, that showed the quiet test only ever refused good matches.
 			# The list is carried on into the claim so a refusal ROTCONFIRM later still says why
-			hits, why = [], []
+			hits, why, modes = [], [], {}
 			for oMac, tagId, last, oRssi, oBatt, oTypes, oInds in pool:
 				tail = oMac[-5:]
 				if abs(first - last) > ROTGAP:
@@ -1354,8 +1737,18 @@ class FindMyGroup(object):
 				# SUBSET, NOT EQUALITY: everything the newcomer has sent, the old mac sent too. A
 				# type the old one NEVER sent is a real difference and still refuses the match, so
 				# a tag cannot inherit a phone's lineage - which is what this test is here for
-				if not set([t for t in types.split("|") if t]) <= set([t for t in oTypes.split("|") if t]):
-					why.append("{} types {} not within {}".format(tail, types or "-", oTypes or "-"));	continue
+				# EXCEPT 07 ARRIVING WITH NEARBY - see ROTMODEPEN. Separated, an airpods set sends 12 and
+				# nothing else; back near its owner it rotates and sends 07|12 in every frame. That is
+				# the one extra type a mode switch explains, so it is let through as a MODE match -
+				# weaker than any exact or subset match - and any other extra type still refuses
+				mode   = []
+				newSet = set([t for t in types.split("|") if t])
+				oldSet = set([t for t in oTypes.split("|") if t])
+				if not newSet <= oldSet:
+					if newSet - oldSet == set(["07"]) and "nearby" in inds:
+						mode.append("types {} from {}".format(types, oTypes or "-"))
+					else:
+						why.append("{} types {} not within {}".format(tail, types or "-", oTypes or "-"));	continue
 				# SEPARATED IS NOT NEARBY. The indicator is the TAG'S OWN STATEMENT about whether
 				# its owner is with it, and a mac rotation does not change it - the owner walking
 				# away does. So two macs disagreeing about it at one instant are not one tag, and
@@ -1371,16 +1764,38 @@ class FindMyGroup(object):
 				# twenty seconds later. Sharing NOTHING is the real disagreement, and that is still
 				# refused: the pair this was written for (D3:3C nearby, FF:C5 separated) never sent
 				# anything but its own kind, so their sets stay disjoint and they stay apart
+				# NO LONGER A REFUSAL, A MODE MATCH - see ROTMODEPEN. The premise above, that a rotation
+				# does not change the indicator, is wrong for separated -> nearby: coming back to its
+				# owner is itself what rotated the mac. What the pair this was written for really needed
+				# is now tested properly - both of them went on transmitting, so ROTCONFIRM throws out
+				# the candidate the moment it speaks again, and ROTBACK below still stops a hand-back.
+				# A mode match only wins as the SOLE survivor of the silence wait and loses to any
+				# ordinary match - see resolveRotClaims()
+				# ONE DIRECTION ONLY: separated -> nearby. The other way does not rotate - CE:25 went
+				# from nearby to separated at 10:41 on 2026-09-28 and kept its mac - so a separated
+				# newcomer after a nearby mac is still a different tag, and is still refused
 				if inds and oInds and not (inds & oInds):
-					why.append("{} {} shares nothing with {}".format(
-							tail, "|".join(sorted(inds)), "|".join(sorted(oInds))));				continue
+					if "nearby" in inds and "separated" in oInds:
+						mode.append("{} from {}".format("|".join(sorted(inds)), "|".join(sorted(oInds))))
+					else:
+						why.append("{} {} shares nothing with {}".format(
+								tail, "|".join(sorted(inds)), "|".join(sorted(oInds))));			continue
 				# AND IT MAY NOT GO STRAIGHT BACK. A lineage that has just moved A -> B cannot
 				# move B -> A moments later: a rotation is one way, so a reversal is two wrong
 				# matches rather than two right ones. The pair above did exactly that
 				wasFrom, wasTo, wasAt = self.rotLast.get(tagId, ("", "", 0.))
 				if wasFrom == mac and wasTo == oMac and now - wasAt < ROTBACK:
 					why.append("{} would hand {} straight back ({:.0f}s)".format(tail, tagId, now - wasAt));	continue
+				# A MODE MATCH MUST BE A SWITCH, not an overlap: the old mac cannot still be sending
+				# after its own successor started. Only asked of mode matches, which have nothing
+				# else going for them - at 10:41 on 2026-09-28 it is what separates the airpods'
+				# CE:25 (last 32.0, newcomer first 33.0) from F7:AA (last 36.2), which also went
+				# silent and would otherwise have left two survivors and no answer
+				if mode and last > first + ROTSPOKE:
+					why.append("{} still sending {:.1f}s after this one started, not a mode switch".format(
+							tail, last - first));										continue
 				hits.append((oMac, tagId, last, oRssi, oTypes))
+				if mode:	modes[oMac] = ", ".join(mode)
 			# kept on self rather than returned: the return value is the tagId and has one job
 			self.lastRotWhy = why
 
@@ -1393,11 +1808,38 @@ class FindMyGroup(object):
 			# later - see resolveRotClaims(), which is where ROT / ROT? / ROTX now come from.
 			# RETURNING None IS NOT "no match" ANY MORE: the caller tells the two apart by whether
 			# this mac is in self.rotPending, and must not mint a fresh tagId while it is
-			if not hits:		return None
-			self.rotPending[mac] = {"at": now, "rssi": rssi, "types": types, "why": list(why),
-									"cands": dict((h[0], (h[1], h[2], h[3], h[4])) for h in hits)}
+			# NOTHING FITTED MEANS TWO DIFFERENT THINGS - see GAPGRACE. Normally the pool was looked
+			# at and held no lineage this mac could be, which is a real answer. Inside the grace after
+			# a feed gap it means there was no pool to look at: a restart empties cands and goneTags,
+			# and a stall fills goneTags with macs that were never gone. Minting there was the entire
+			# cost of a gap - a tag that rotated while nobody was listening became a SECOND indigo
+			# device immediately, without passing through any of the confirmation this file exists
+			# for, and the log said "none in range at all" as though it had checked.
+			# PARKED ON THE MECHANISM A CLAIM ALREADY USES, not a new one: an entry on rotPending is
+			# held out of members by update(), is dropped with ROTD if the mac vanishes meanwhile, and
+			# is minted with its reasons by resolveRotClaims() when it falls due. The only thing that
+			# differs is that it names no candidates and falls due when the feed is evidence again
+			if not hits:
+				if now < self.feedGapUntil:
+					# THE REASON IS STORED, not looked up again when the claim settles: a second gap
+					# can happen during the grace, and the line that explains this decision has to
+					# name the gap that CAUSED it rather than whichever one is current a minute later
+					self.rotPending[mac] = {"at": now, "due": self.feedGapUntil, "rssi": rssi,
+									"types": types, "cands": {}, "gap": self.gapWhy(),
+									"why": list(why) + ["nothing to match against - {}".format(self.gapWhy())]}
+					if self.debug: self.logRot("ROTP  {} joined right after a {} - parked {:.0f}s, there is nothing to match it against yet".format(
+							mac, self.gapWhy(), self.feedGapUntil - now))
+				return None
+			# AND A REAL CLAIM MADE INSIDE THE GRACE WAITS FOR THE FEED TOO, not just ROTCONFIRM. The
+			# one thing the wait establishes is that the old mac STAYS silent, and silence measured
+			# across a gap is not silence - it is us not listening. Whichever of the two is later
+			self.rotPending[mac] = {"at": now, "due": max(now + ROTCONFIRM, self.feedGapUntil),
+									"rssi": rssi, "types": types, "why": list(why),
+									"cands": dict((h[0], (h[1], h[2], h[3], h[4])) for h in hits),
+									"modes": modes}
 			self.logRot("ROT~  {} waiting {:.0f}s on {} candidate(s): {}".format(
-					mac, ROTCONFIRM, len(hits), ",".join(sorted(h[0][-5:] for h in hits))))
+					mac, self.rotPending[mac]["due"] - now, len(hits),
+					",".join(sorted(h[0][-5:] + ("(mode)" if h[0] in modes else "") for h in hits))))
 			return None
 		except Exception:
 			U.logger.log(20, "", exc_info=True)
@@ -1452,6 +1894,150 @@ class FindMyGroup(object):
 			alive[oMac] = (tagId, oRssi, oTypes)
 		return alive, why
 
+	def gridOff(self, mac):
+		"""How far this mac's FIRST packet fell from a rotation boundary, in seconds.
+
+		0 means it appeared exactly on one; ROTGRID/2 means the middle of a slot, as far from a
+		boundary as it is possible to be. The boundary is the unix epoch multiple itself - see
+		ROTGRIDNEAR for why no phase term is needed.
+		c["first"] IS THE RIGHT TIME and not c["last"] or the claim time: it is when this mac was
+		first heard at all, and CARRYBACK preserves it across a short gap, so a mac that flickers
+		does not get a new birth every time it comes back.
+
+		Inputs:
+		    mac (str): the mac
+		Outputs:
+		    float or None: seconds from the nearest boundary, None if the mac has gone
+		"""
+		try:	t = self.cands[mac]["first"]
+		except Exception:	return None
+		off = t % ROTGRID
+		return min(off, ROTGRID - off)
+
+	def gridPenalty(self, mac):
+		"""ROTGRIDPEN scaled by how far off the rotation clock this mac was born - 0 on it.
+
+		Flat zero inside ROTGRIDNEAR, flat ROTGRIDPEN beyond ROTGRIDFAR, linear between, so no
+		decision turns on a hard edge. A mac whose birth cannot be read costs nothing: the prior
+		has to be able to say "no opinion", or an unknown would read as evidence against.
+		"""
+		off = self.gridOff(mac)
+		if off is None:				return 0.
+		if off <= ROTGRIDNEAR:		return 0.
+		if off >= ROTGRIDFAR:		return ROTGRIDPEN
+		return ROTGRIDPEN * (off - ROTGRIDNEAR) / (ROTGRIDFAR - ROTGRIDNEAR)
+
+	def rotBatchSolve(self, others, rivals, modePairs=None):
+		"""Which pairings in a whole wave of rotations are forced, and which are still a guess.
+
+		WHAT THE PAIRWISE CONTEST IS NOT SHAPED FOR. resolveRotClaims() judges one claim at a time
+		against its rivals, which is right when one tag rotates. Tags rotate in WAVES - eight of twelve
+		macs inside one ten second window, measured 2026-09-27 - and then every newcomer is a rival of
+		every other for the same handful of lineages, the arbitrations come down to 1 and 4 dBm on a
+		signal that wanders 4.8, and the contested branch burns a lineage for claims that never
+		contested it.
+		AND THAT WAVE WAS STILL RESOLVED CORRECTLY, which is the honest state of the evidence and is
+		why this is additive: every candidate it turned down was in fact still alive and came back or
+		rotated later, so the two macs that took fresh tagIds really were new tags. Nothing here is
+		fixing an observed wrong answer - it is removing a way of arriving at one.
+
+		A WAVE HAS ONE ANSWER, NOT N ANSWERS. Every lineage goes to at most one mac and every mac
+		takes at most one lineage, so the question is which whole assignment is best - and that is
+		worth asking because a pairing that looks poor on its own can be the only way the REST of the
+		wave works out. Solved as one problem, the answer is often unique where no single pair was.
+
+		AND IT COMMITS ONLY WHAT IS FORCED. The cheapest assignment is not evidence by itself; what
+		matters is whether there is a comparable answer that pairs somebody differently. So each pair
+		in the best assignment is put to the test: forbid just that pair, solve again, and if the best
+		remaining answer explains fewer tags - or costs more than ROTBATCH extra - then nothing else
+		fits and the pair is forced. If a near-equal alternative exists, the pair is NOT committed and
+		the claim waits, exactly as an ambiguous one does. Refusing is still the default; this only
+		finds the pairs where refusing would be the wrong answer.
+		THE TEST IS PER PAIR AND NOT PER ASSIGNMENT, which is what makes it degrade gracefully: in a
+		wave where the near tags separate cleanly and the far ones do not, the near ones commit and the
+		far ones wait for the next pass, instead of the whole wave being refused together.
+
+		Inputs:
+		    others (dict): {mac: {oMac: (tagId, rssi, types)}} every claim in flight and its candidates
+		            that are still silent - the bipartite graph, with every hard filter already applied
+		    rivals (dict): {mac: (rssi, types)} each claimant's own smoothed signal and apple types
+		    modePairs (set): {(mac, oMac)} pairings that only fit as a separated <-> nearby switch
+		Outputs:
+		    tuple: ({mac: oMac} forced pairings, set(mac) every mac in a wave worth solving)
+		"""
+		forced, inBatch = {}, set()
+		try:
+			macs = sorted(m for m in others if others[m])
+			if len(macs) < 2:	return forced, inBatch
+			lins = sorted(set(o for m in macs for o in others[m]))
+			# ONLY A WAVE, not two unrelated rotations that happen to be in flight together. If no
+			# lineage is wanted by more than one mac there is nothing to arbitrate and the ordinary
+			# path already handles each of them correctly
+			if not any(sum(1 for m in macs if o in others[m]) > 1 for o in lins):
+				return forced, inBatch
+			if len(macs) > BATCHMAXN or len(lins) > BATCHMAXM:
+				self.logRot("ROTB? {} newcomer(s) and {} lineage(s) in flight - too many to solve as one wave, judging them pairwise as before".format(
+						len(macs), len(lins)))
+				return forced, inBatch
+			inBatch = set(macs)
+
+			cost = {}
+			for ii in range(len(macs)):
+				mac = macs[ii]
+				myRssi, myTypes = rivals.get(mac, (0., ""))
+				# WHEN THIS NEWCOMER APPEARED, against the 15 minute clock every find my mac rotates
+				# on - see ROTGRID. It is a property of the MAC and not of the pairing, so it is the
+				# same for every lineage this one could take and cannot pick between them. What it
+				# does decide is which NEWCOMER inherits when there are fewer lineages than macs
+				# wanting them: one that appeared on a boundary is where a rotation is expected,
+				# one that appeared in the middle of a slot is far more likely to be a genuinely new
+				# tag that has simply turned up mid-wave.
+				# CARRIED AT ROTGRIDTIE WEIGHT HERE, ie as a tie-break only - see that constant for
+				# what happened when it was carried at full weight. Where the clock is actually
+				# given something to decide is the pairwise tie below
+				gridPen = self.gridPenalty(mac)
+				for jj in range(len(lins)):
+					oMac = lins[jj]
+					if oMac not in others[mac]:	continue
+					tagId, oRssi, oTypes = others[mac][oMac]
+					# THE SAME TWO THINGS THE PAIRWISE PATH WEIGHS, in the same order of importance:
+					# an exact apple-type match outranks a subset outright - a bare 12 tag must not
+					# take an airpods case's 07|12 lineage while the case can never take the tag's -
+					# and signal only ranks pairings of the same kind. ROTTYPEPEN is past any dBm
+					# difference, so the two can never be traded against each other
+					cc = abs(myRssi - oRssi) + ROTGRIDTIE * gridPen
+					# and a mode switch ranks below both, by the same margin - see ROTMODEPEN
+					if modePairs and (mac, oMac) in modePairs:	cc += ROTMODEPEN
+					elif myTypes != oTypes:						cc += ROTTYPEPEN
+					cost[(ii, jj)] = cc
+			if not cost:	return forced, inBatch
+
+			pairs0, cost0, best = bestAssignment(cost, len(macs), len(lins))
+			if pairs0 == 0:	return forced, inBatch
+			for ii in sorted(best):
+				jj = best[ii]
+				pairsX, costX, _alt = bestAssignment(cost, len(macs), len(lins), forbid=(ii, jj))
+				# FEWER TAGS EXPLAINED, or the same number at a cost this pair was carrying: either way
+				# there is no comparable answer without it
+				if pairsX < pairs0 or (costX - cost0) > ROTBATCH:
+					forced[macs[ii]] = lins[jj]
+			self.logRot("ROTB  wave of {} newcomer(s) over {} lineage(s): best answer pairs {} of them, {} forced{}".format(
+					len(macs), len(lins), pairs0, len(forced),
+					" - " + ", ".join("{}->{}".format(m[-5:], forced[m][-5:]) for m in sorted(forced)) if forced else " (nothing is certain yet, they wait)"))
+			# WHERE EACH ONE FELL ON THE ROTATION CLOCK, printed whenever the prior actually did
+			# something - ie at least one newcomer was off the grid. Silent when they all appeared
+			# on it, which is the normal case and says nothing worth a line
+			offs = [(m, self.gridOff(m), self.gridPenalty(m)) for m in macs]
+			if any(pp > 0. for _m, _o, pp in offs):
+				self.logRot("ROTB~ on the {:.0f}s rotation clock: {}".format(ROTGRID, ", ".join(
+						"{} {}s{}".format(m[-5:], "?" if o is None else "{:.0f}".format(o),
+											"" if pp <= 0. else " (+{:.1f})".format(pp))
+						for m, o, pp in offs)))
+		except Exception:
+			U.logger.log(20, "", exc_info=True)
+			return {}, set()
+		return forced, inBatch
+
 	def resolveRotClaims(self, now):
 		"""Settles every claim that has waited ROTCONFIRM, and mints a lineage for the ones that fail.
 
@@ -1478,19 +2064,62 @@ class FindMyGroup(object):
 			rivals = dict((m, (self.rotPending[m]["rssi"], self.rotPending[m].get("types", "")))
 								for m in self.rotPending)
 			others = dict((m, self.rotAlive(m)[0]) for m in self.rotPending)
-			for mac in [m for m in sorted(self.rotPending) if now - self.rotPending[m]["at"] >= ROTCONFIRM]:
+			# which claim-to-lineage pairings only fit as a separated <-> nearby switch - see ROTMODEPEN.
+			# Taken before the loop pops anything, like rivals, so every claim sees every other's
+			modePairs = set((m, o) for m in self.rotPending for o in self.rotPending[m].get("modes", {}))
+			# AND THE WHOLE WAVE AT ONCE, before any single claim is judged - see rotBatchSolve().
+			# Recomputed every pass on purpose: candidates eliminate themselves by speaking, and
+			# commits take lineages out, so a wave that is ambiguous now is often forced a few seconds
+			# later. That is the same reason ROTAMBIG waits rather than deciding
+			forced, inBatch = self.rotBatchSolve(others, rivals, modePairs)
+			# DUE, NOT "at + ROTCONFIRM" - see GAPGRACE. A claim made across a feed gap waits for the
+			# FEED rather than for the clock, because the silence it is built on was not measured on a
+			# running one; and a mac parked with no candidates at all waits the whole grace out. The
+			# .get() default is the old arithmetic, so a claim written by a hand-edit that predates
+			# this key still falls due instead of being stranded in flight forever
+			for mac in [m for m in sorted(self.rotPending)
+							if now >= self.rotPending[m].get("due", self.rotPending[m]["at"] + ROTCONFIRM)]:
 				mine, why = self.rotAlive(mac)
 				p         = self.rotPending.pop(mac)
-				p["why"].extend(why)
+				# NOT written into the claim yet: this pass may end in a WAIT and run again on the
+				# next tick, and reasons appended every second would stack up in the log line.
+				# Only a pass that actually settles keeps them
+				whyNow    = list(p["why"]) + why
 				c    = self.cands.get(mac)
 				if c is None:
 					# the newcomer itself went away while we waited. Nothing to hand a lineage to, and
 					# the old one keeps it - which is right: a mac that lasted seconds rotated nowhere
 					self.logRot("ROTD  {} gone before its claim settled - no lineage moved".format(mac))
 					continue
-				keep = {}
+				# THE WAVE ANSWERED IT, and that answer is stronger than anything the pairwise contest
+				# below can work out - it is the only pairing that lets the REST of the wave work out
+				# too, which is evidence no single comparison has. Still checked against "mine": an
+				# earlier claim settling in this same pass can have taken the lineage, and rotAlive()
+				# is recomputed per claim so it already knows
+				if mac in forced and forced[mac] in mine:
+					oMac = forced[mac]
+					self.logRot("ROTB= {} -> {} taken from the wave - forced, nothing else fits".format(oMac, mac))
+					self.commitRotation(mac, oMac, mine[oMac][0], now, p.get("modes", {}).get(oMac, ""))
+					continue
+				# NOT FORCED BY THE WAVE, so the pairwise path below decides exactly as it always has.
+				# IT IS NOT OVERRIDDEN, and that is deliberate: ROTBATCH is stricter than ROTTIE, so a
+				# wave solve that refused whatever it could not force would THROW AWAY pairings the
+				# pairwise path gets right. Replayed against the wave of 2026-09-27 13:30 that is not
+				# hypothetical - 4C:98 -> BB:AF was 4 dBm against 0 for its rival, which ROTTIE settles
+				# correctly and a 5 dBm margin will not. So the wave only ever ADDS a commit above, and
+				# the two places below are the only ones where it changes what the pairwise path does
+				keep  = {}
+				modes = p.get("modes", {})
 				for oMac in sorted(mine):
 					tagId, oRssi, oTypes = mine[oMac]
+					# A MODE MATCH STEPS ASIDE FOR ANY ORDINARY CLAIM ON THE SAME LINEAGE - see ROTMODEPEN.
+					# It is the weakest kind of match there is, so there is nothing to arbitrate: a mac
+					# whose types and indicator both carry straight on is the better explanation. Not
+					# burnt - the rival is entitled to it
+					if oMac in modes and any(m2 != mac and oMac in others[m2] and (m2, oMac) not in modePairs
+												for m2 in others):
+						whyNow.append("{} claimed by an ordinary match, ours is a mode switch".format(oMac[-5:]))
+						continue
 					# EXACTLY THE SAME APPLE TYPES, or merely a subset of them? The subset test that let
 					# this candidate through is deliberately one-way - everything the newcomer sends, the
 					# old mac sent too - and that asymmetry runs the WRONG WAY for a device that sends
@@ -1502,30 +2131,66 @@ class FindMyGroup(object):
 					# already had and were throwing away by going straight to signal
 					mineD, mineSame     = abs(p["rssi"] - oRssi), (p.get("types", "") == oTypes)
 					best,  bestSame     = None, False
+					bestMac             = None		# WHICH rival, so the rotation clock can be asked about it below
 					for m2 in sorted(others):
 						if m2 == mac or oMac not in others[m2]:	continue
+						# a MODE rival does not contest an ordinary claim - it steps aside above when its
+						# own turn comes, so counting it here would burn a lineage it could never take
+						if oMac not in modes and (m2, oMac) in modePairs:	continue
 						d2, same2 = abs(rivals[m2][0] - oRssi), (rivals[m2][1] == oTypes)
 						# the STRONGEST rival, not the closest one: exact beats subset, and signal
 						# only ranks within the same kind
-						if best is None or (same2, -d2) > (bestSame, -best):	best, bestSame = d2, same2
+						if best is None or (same2, -d2) > (bestSame, -best):	best, bestSame, bestMac = d2, same2, m2
 					if best is not None and mineSame != bestSame:
 						# ONE OF US IS AN EXACT MATCH AND THE OTHER IS NOT, so there is nothing to
 						# arbitrate and signal is not consulted at all. The loser simply steps aside -
 						# NOT burnt, because the winner is entitled to it, and when the winner's own
 						# claim settles the loser's will find the lineage already gone
 						if not mineSame:
-							p["why"].append("{} claimed by an exact type match, ours is only a subset".format(
+							whyNow.append("{} claimed by an exact type match, ours is only a subset".format(
 									oMac[-5:]));		continue
 					elif best is not None and mineD - best > ROTTIE:
 						# THE RIVAL IS CLEARLY CLOSER, so this is not a contest - it is a loss, and the
 						# two are not the same thing. Burning the lineage here would deny it to a claim
 						# that plainly deserves it, which is the very mistake the arbitration exists to
 						# stop. Step aside instead and let the better claim take it when it settles
-						p["why"].append("{} claimed by a closer mac ({:.0f} vs {:.0f} dBm off)".format(
+						whyNow.append("{} claimed by a closer mac ({:.0f} vs {:.0f} dBm off)".format(
 								oMac[-5:], mineD, best));		continue
+					elif (best is not None and best - mineD <= ROTTIE and bestMac is not None
+							and self.gridPenalty(mac) >= ROTGRIDPEN and self.gridPenalty(bestMac) <= 0.):
+						# SIGNAL HAS TIED AND THE CLOCK HAS NOT - see ROTGRID. A find my mac is
+						# replaced on a 15 minute grid, so a newcomer that appeared ON one is where a
+						# rotation is expected and a newcomer that appeared in the MIDDLE of a slot is
+						# far more likely to be a tag that has simply turned up. Both of us are inside
+						# ROTTIE, which is the module saying signal cannot tell us apart, and this is
+						# the one other thing known about us that can.
+						# ONLY AT THE TWO ENDS OF THE RAMP: we are past ROTGRIDFAR and the rival is
+						# inside ROTGRIDNEAR. Anything in between is not worth acting on - the measured
+						# spread is about 81 s against a 900 s period, which separates a boundary from
+						# mid-slot and nothing finer.
+						# STEPPING ASIDE, NOT WINNING, which is why this sits here rather than in a new
+						# commit path: it is the same move the "clearly closer" case above makes, with
+						# the same consequence, and it REPLACES an outcome where the lineage was burnt
+						# for both of us and nobody got it. One of us having it is strictly better than
+						# neither, when there is a reason to prefer one
+						whyNow.append("{} claimed by a mac that appeared on the {:.0f}s rotation clock ({:.0f}s off it) while ours appeared {:.0f}s off, mid-slot - signal could not separate us ({:.0f} vs {:.0f} dBm)".format(
+								oMac[-5:], ROTGRID, self.gridOff(bestMac) or 0., self.gridOff(mac) or 0., mineD, best))
+						continue
 					elif best is not None and best - mineD <= ROTTIE:
-						p["why"].append("{} also claimed by another mac ({:.0f} vs {:.0f} dBm off)".format(
+						whyNow.append("{} also claimed by another mac ({:.0f} vs {:.0f} dBm off)".format(
 								oMac[-5:], mineD, best))
+						# NOT BURNT INSIDE A WAVE, and this is the one thing the wave solve takes away
+						# from the pairwise path. The burn below is right when two claims contest one
+						# lineage in isolation - nobody may have it - but inside a wave it destroys the
+						# very evidence rotBatchSolve() needs: it removes the lineage from claims that
+						# never contested anything, and a pairing that looks poor on its own is often
+						# the only way the REST of the wave works out. Left alone, the candidate is
+						# re-judged next pass, when rivals have spoken and commits have removed
+						# lineages, and the wave is frequently forced by then. The claim still gets no
+						# lineage THIS pass - only the burning of everyone else's is skipped
+						if mac in inBatch:
+							p["cands"].pop(oMac, None)
+							continue
 						# AND IT IS BURNT FOR THE RIVAL TOO. Refusing only OUR claim would hand the
 						# lineage to whichever of us happened to fall due second, because by then the
 						# first claim has been popped and there is no rival left to see. Contested
@@ -1538,24 +2203,72 @@ class FindMyGroup(object):
 								self.rotPending[m2]["cands"].pop(oMac, None)
 								self.rotPending[m2]["why"].append("{} contested with {} - neither took it".format(
 										oMac[-5:], mac[-5:]))
+						# AND FOR US. It used to be enough to skip it for this pass, because the
+						# pass always ended in a fresh tagId - now the claim can come round again,
+						# and the rival's copy is already gone, so a retry would find no contest
+						# and quietly take the thing neither of us was allowed to have
+						p["cands"].pop(oMac, None)
 						continue
 					keep[oMac] = tagId
+				# AN ORDINARY SURVIVOR OUTRANKS EVERY MODE ONE - see ROTMODEPEN. A mode match is only
+				# taken when nothing better is left after the silence wait, which at 10:41 on
+				# 2026-09-28 is exactly what happened: 91:4B and 6C:63 spoke again within 3 s and the
+				# airpods' own CE:25 was the only lineage still silent
+				if any(o not in modes for o in keep):
+					for o in [o for o in keep if o in modes]:
+						whyNow.append("{} only fits as a mode switch, an ordinary match outranks it".format(o[-5:]))
+						del keep[o]
 				if len(keep) == 1:
 					oMac = sorted(keep)[0]
-					self.commitRotation(mac, oMac, keep[oMac], now)
+					self.commitRotation(mac, oMac, keep[oMac], now, modes.get(oMac, ""))
+					continue
+				if len(keep) > 1 and now - p["at"] < self.rotAmbig:
+					# STILL TOO MANY, BUT NOT FOR LONG ENOUGH TO GIVE UP - see ROTAMBIG. Put back
+					# untouched and judged again next tick: the set can only shrink, so this either
+					# becomes a match or runs out of time, and it cannot become more wrong
+					if not p.get("waited"):
+						p["waited"] = True
+						self.logRot("ROT+  {} still {} candidates after {:.0f}s, waiting up to {:.0f}s for one to be taken or speak: {}".format(
+								mac, len(keep), now - p["at"], self.rotAmbig, ",".join(sorted(k[-5:] for k in keep))))
+					self.rotPending[mac] = p
 					continue
 				if len(keep) > 1:
-					self.logRot("ROT?  {} could be any of {} - refusing, it takes a new tagId".format(
-							mac, ",".join(sorted(keep))))
+					self.logRot("ROT?  {} could be any of {} after {:.0f}s - refusing, it takes a new tagId".format(
+							mac, ",".join(sorted(keep)), now - p["at"]))
+				# ONE LAST WAIT IF IT IS PART OF A WAVE. Everything above has failed to give this mac a
+				# lineage, and the next line mints one - which is the answer that cannot be taken back,
+				# because the plugin makes an indigo device for it. Inside a wave that is premature:
+				# the claims settle over tens of seconds as the rpi first hears each new mac, rivals
+				# take themselves out by speaking, and commits remove lineages - so the set can only
+				# shrink and rotBatchSolve() is run again from scratch every pass. A mac that nothing
+				# forces now is often forced two passes later. Bounded by ROTAMBIG exactly as the
+				# "could be any of" wait is, and for the same reason: the tag is held out of members
+				# while it waits, so this cannot run past the plugin's member down-delay
+				if mac in inBatch and now - p["at"] < self.rotAmbig:
+					if not p.get("waitedBatch"):
+						p["waitedBatch"] = True
+						self.logRot("ROTB~ {} is one of a wave and nothing forces its pairing yet - waiting up to {:.0f}s before minting a lineage".format(
+								mac, self.rotAmbig))
+					p["why"] = list(p["why"])		# the reasons above were for THIS pass only
+					self.rotPending[mac] = p
+					continue
 				c["tagId"]        = self.nextTagId
 				self.nextTagId   += 1
 				self.tagIdOf[mac] = c["tagId"]
-				self.logRot("ROTX  {} no lineage matched, fresh tagId:{} - {} candidate(s) turned down: {}".format(
-						mac, c["tagId"], len(p["why"]), "; ".join(p["why"][:8]) or "none in range at all"))
+				if p.get("gap"):
+					# PARKED, NOT REFUSED, and the line has to say so - see GAPGRACE. Nothing was
+					# turned down because there was nothing to turn down, and "0 candidate(s) turned
+					# down: none in range at all" was the old way of saying that, which read like a
+					# search that came back empty rather than a memory that was never there
+					self.logRot("ROTX  {} nothing to inherit after a {} - fresh tagId:{}, parked {:.0f}s and neither its own mac nor a lineage turned up".format(
+							mac, p["gap"], c["tagId"], now - p["at"]))
+				else:
+					self.logRot("ROTX  {} no lineage matched, fresh tagId:{} - {} candidate(s) turned down: {}".format(
+							mac, c["tagId"], len(whyNow), "; ".join(whyNow[:8]) or "none in range at all"))
 		except Exception:
 			U.logger.log(20, "", exc_info=True)
 
-	def commitRotation(self, mac, oMac, tagId, now):
+	def commitRotation(self, mac, oMac, tagId, now, mode=""):
 		"""Hands one lineage from oMac to mac, once the wait has confirmed oMac really stopped.
 
 		Lifted out of matchRotation() unchanged when the decision moved here, so that the bookkeeping
@@ -1566,6 +2279,7 @@ class FindMyGroup(object):
 		    oMac (str): the mac it is the continuation of
 		    tagId (int): the lineage
 		    now (float): epoch seconds
+		    mode (str): what the separated <-> nearby switch changed, "" for an ordinary match
 		Outputs:
 		    None
 		"""
@@ -1579,8 +2293,8 @@ class FindMyGroup(object):
 		self.rotLast[tagId] = (oMac, mac, now)
 		if mac in self.cands:		self.cands[mac]["tagId"] = tagId
 		self.tagIdOf[mac] = tagId
-		self.logRot("ROT   {} -> {} same tag, tagId {} kept - silent {:.0f}s since the claim".format(
-				oMac, mac, tagId, ROTCONFIRM))
+		self.logRot("ROT   {} -> {} same tag, tagId {} kept - silent {:.0f}s since the claim{}".format(
+				oMac, mac, tagId, ROTCONFIRM, " - MODE SWITCH, " + mode if mode else ""))
 
 	def slotOf(self, mac):
 		"""The slot this mac holds, or "--" while it holds none.
@@ -1662,7 +2376,7 @@ class FindMyGroup(object):
 				f.close()
 				want = {"0": 0, "1": 1, "2": 2, "10": 1, "20": 2, "off": 0, "on": 1}.get(txt)
 				if want is None:
-					U.logger.log(20, "findMyGroup {}: '{}' is not a debug level - use 0, 1 (or 10), 2 (or 20)".format(fName, txt))
+					if self.debug: U.logger.log(20, "findMyGroup {}: '{}' is not a debug level - use 0, 1 (or 10), 2 (or 20)".format(fName, txt))
 					return
 				src = fName
 				break
@@ -1693,9 +2407,11 @@ class FindMyGroup(object):
 	def trimCsv(self, fName):
 		"""Drops the OLDEST rows so the calibration csv stays under CSVMAXBYTES.
 
-		A SIZE CAP, NOT AN AGE ONE, because temp/ is a 2 MB tmpfs holding findMyGroup.state as well:
-		what matters is that this file cannot grow into that, not how old its rows are. It also means
-		there is nothing to sweep up on a schedule and no second file to keep track of.
+		A SIZE CAP, NOT AN AGE ONE: what matters is that this file cannot grow without bound, not how
+		old its rows are, and a size is the thing that can be checked on the write that just happened.
+		It also means there is nothing to sweep up on a schedule and no second file to keep track of.
+		THE CAP USED TO BE ABOUT temp/, a 2 MB tmpfs it shared with findMyGroup.state, and it was
+		200 kB because of that. The file is on the card now and the cap is 20 MB - see CSVMAXBYTES.
 
 		The newest rows are the ones worth keeping - this is a rolling record of what is on the air
 		now - so the tail survives and the head goes. Cut on LINE boundaries, never mid-row, and the
@@ -1723,8 +2439,7 @@ class FindMyGroup(object):
 			f.writelines(out)
 			f.close()
 			self.lastHeader = time.time()		# one was just written, do not follow it with another
-			U.logger.log(20, "findMyGroup calibration csv over {}kB, oldest rows dropped, {} rows kept".format(
-					CSVMAXBYTES // 1024, len(out)))
+			if self.debug: U.logger.log(20, "findMyGroup calibration csv over {}kB, oldest rows dropped, {} rows kept".format(CSVMAXBYTES // 1024, len(out)))
 		except Exception:
 			U.logger.log(20, "", exc_info=True)
 
@@ -1741,7 +2456,7 @@ class FindMyGroup(object):
 			# THE MARKER GOES ON ONE ROW, NOT ON ALL OF THEM. It is an EVENT - "from here on, the
 			# tag is at the street door" - and the same sentence repeated on every row of a ten
 			# minute session is the same fact written a thousand times, in a file capped at
-			# CSVMAXBYTES on a 2 MB tmpfs. Whoever reads the file forward-fills it instead;
+			# CSVMAXBYTES. Whoever reads the file forward-fills it instead;
 			# findmy_merge.py does exactly that.
 			# RESTATED WITH EVERY HEADER BLOCK, and for the same reason the header is repeated:
 			# these files are read by scrolling into the middle of one, and a marker written once
@@ -1800,11 +2515,16 @@ class FindMyGroup(object):
 				lines.extend(rows)
 
 			if lines:
-				# temp/ belongs to the pi user, so this is a plain append - no writeFileAsRoot and
-				# no chown, which is the whole reason the file moved here
+				# the pibeacon dir belongs to the pi user, so this is a plain append - no
+				# writeFileAsRoot and no chown on the write path itself
 				f = open(fName, "a")
 				f.write("\n".join(lines) + "\n")
 				f.close()
+				# ONLY WHEN WE JUST MADE IT. umask 0 covers a file this process creates, but one
+				# left behind by an older version running as root keeps its 0644/root and appending
+				# to it does not change that - so the one cheap syscall is spent on the pass that
+				# created the file, and never again
+				if newFile:	U.makeOwnFileWritable(fName)
 				if os.path.getsize(fName) > CSVMAXBYTES:	self.trimCsv(fName)
 		except Exception:
 			U.logger.log(20, "", exc_info=True)

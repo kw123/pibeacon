@@ -3,6 +3,8 @@
 #
 ## py prept, but _rpi_ws281x  not available as py3 
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import sys
 import os 
 import time

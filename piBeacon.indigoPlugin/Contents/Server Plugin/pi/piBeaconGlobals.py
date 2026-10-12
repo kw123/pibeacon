@@ -8,6 +8,8 @@
 # they will be valid across all imported modules if included.
 #
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 homeDir				= "/home/pi/pibeacon/"
 homeDir0			= "/home/pi/"
 logDir				= "/var/log/"
@@ -92,7 +94,10 @@ rebootIfNoMessagesSeconds = 99999999999
 ipOfRouter			= ""
 enableRebootCheck	= "restartLoop"
 pythonVersion		= 2
-compressRPItoPlugin = 2000
+compressRPItoPlugin = 1000		# HARDWIRED, see piBeaconUtils.getGlobalParams: compressing is free
+								# (0.01-0.02 ms for normal traffic) while every byte left on the wire
+								# costs 0.05 ms of the ack wait, and an UNcompressed alive message
+								# over 9999 bytes overflows the 30 byte frame header
 ipNumberRpiStatic	= False
 ipNumberPi			= ""
 networkRestartTries = 0

@@ -6,9 +6,19 @@
 ##
 ##	  --- utils 
 #
+# MASTER DOES NOT START THIS ANY MORE. The loop it ran lives in master.py as a thread - see
+# copyToTempLoop() there - because one small half-second poll did not need a process, a pid, a
+# kill-the-old-one dance and a liveness check to do it. The body of the loop is shared, in
+# U.copyParamsToTemp(), so this file still does exactly what master does if it is ever run by
+# hand for debugging.
+# IT STAYS IN G.programFiles, and must: that is what kills a copy left running by a version which
+# still launched one, and without it an upgrade would have the old process and the new thread
+# mirroring the same files.
 #	
 ## ok for py3
  
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import sys 
 import os 
 import time
@@ -71,32 +81,8 @@ if __name__ == "__main__":
 	except: 
 		timeLastFile = 0
 
-	while True:	   
-		doCopy = 0
-
-		if os.path.isfile(G.homeDir+"temp/touchFile"):
-			if timeLastFile != os.path.getmtime(G.homeDir+"temp/touchFile"):
-				doCopy = 1
-				
-		elif os.path.isdir(G.homeDir+"temp"):
-				doCopy = 2
-				U.touchFile(G.homeDir + "temp/touchFile")
-
-		if not os.path.isfile(G.homeDir+"temp/parameters"):
-				doCopy = 3
-				
-		###print G.program, doCopy 
-		if doCopy >0:
-				U.logger.log(10,"copying to files to temp dir files={}".format(G.parameterFileList))
-				for fileName in G.parameterFileList:
-					if os.path.isfile(G.homeDir+fileName):
-							cmd = "sudo cp "+G.homeDir+fileName +" " +G.homeDir+"temp/"+fileName
-							subprocess.call(cmd, shell=True)
-				try:  
-					timeLastFile = os.path.getmtime(G.homeDir+"temp/touchFile")
-				except:	 timeLastFile = -10
-				subprocess.call("chmod a+w -R "  +G.homeDir+"temp/*", shell=True)
-				subprocess.call("chown -R pi:pi "+G.homeDir+"temp/*", shell=True)
-				time.sleep(10)
-
+	# THE SAME BODY MASTER'S THREAD RUNS, so this cannot drift from it - see U.copyParamsToTemp()
+	while True:
+		timeLastFile, didCopy = U.copyParamsToTemp(timeLastFile)
+		if didCopy:	time.sleep(10)
 		time.sleep(0.5)

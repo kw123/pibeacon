@@ -92,6 +92,15 @@ Change here or in initial setup:</Label>
 				<Label>start up x-windows with master:</Label>
 			</Field>
 
+			<Field    id="pigpiodSampleRate"   type="menu" defaultValue="auto" tooltip="pigpiod samples every gpio on a fixed timer whether or not anything is listening, so it costs the same idle as busy - measured at a constant 11% of a core on an rPi with no gpio device in use. 10 us halves that. The rate only sets how finely gpio edges and PWM/servo steps are resolved; for buttons, rotary encoders, touch pads and ultrasound echoes 10 us is far finer than anything being measured. Pick 5 us if a neopixel, servo or PWM output misbehaves - hardware PWM frequencies shift with this setting.">
+				 <List>
+					<Option value="auto" >auto - 5 us only if a pulse/ultrasound/PWM/stepper/neopixel device is on this rPi (recommended)</Option>
+					<Option value="10"   >10 us always - half the cpu</Option>
+					<Option value="5"    >5 us always - pigpio default, about twice the cpu</Option>
+				  </List>
+				<Label>pigpiod gpio sample rate:</Label>
+			</Field>
+
 			<Field    id="macIfWOLsendToIndigoServer"   type="textfield" defaultValue="">
 				<Label>WOL action on RPI: mac number of indigo ethernet card:</Label>
 			</Field>
@@ -280,7 +289,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="secDisplayColumn" type="label" fontColor="green"> <Label>==== What this device shows in the indigo Status column:</Label> </Field>
-			<Field id="displayS" type="menu"     defaultValue="Status" hidden="no"> <Label>Property to display in the Status Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="status" hidden="no"> <Label>Property to display in the Status Column:</Label>
      				<Label>Property to display in the Status Column:</Label>
 				<List>
 					<Option value="status"  >status</Option>
@@ -553,7 +562,7 @@ if you want to keep it running add an "&amp;" to the end </Label>
 					<Option value="14400">4 hours </Option>
 					<Option value="18000">5 hours </Option>
 					<Option value="21600">6 hours </Option>
-					<Option value="28800">7 hours </Option>
+					<Option value="25200">7 hours </Option>
 					<Option value="28800">8 hours </Option>
 					<Option value="36000">10 hours </Option>
 					<Option value="43200">12 hours </Option>
@@ -949,20 +958,6 @@ if you want to keep it running add an "&amp;" to the end </Label>
 				<Label>EXPERTS ONLY!! ================================================= </Label>
 			</Field>
 
-			<Field id="compressRPItoPlugin"   type="menu" defaultValue="20000" tooltip="" >
-				<List>
-					<Option value="2000"     >msg GT 2   KB </Option>
-					<Option value="10000"    >msg GT 10  KB </Option>
-					<Option value="20000"    >msg GT 20  KB </Option>
-					<Option value="40000"    >msg GT 64  KB </Option>
-				</List>
-				<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label>
-			</Field>
-
-			<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>use if you have a slow connection iw wifi and large packages dont come through</Label>
-			</Field>
-
 
 			<Field id="suppressUnderVoltMessages"   type="checkbox" defaultValue="false" > <Label>suppress undervolt log entries from RPI:</Label> </Field>
 
@@ -1095,6 +1090,15 @@ Change here or in initial setup:</Label>
 					<Option value="leaveAlone" >dont touch x windows</Option>
 				  </List>
 				<Label>start up x-windows with master:</Label>
+			</Field>
+
+			<Field    id="pigpiodSampleRate"   type="menu" defaultValue="auto" tooltip="pigpiod samples every gpio on a fixed timer whether or not anything is listening, so it costs the same idle as busy - measured at a constant 11% of a core on an rPi with no gpio device in use. 10 us halves that. The rate only sets how finely gpio edges and PWM/servo steps are resolved; for buttons, rotary encoders, touch pads and ultrasound echoes 10 us is far finer than anything being measured. Pick 5 us if a neopixel, servo or PWM output misbehaves - hardware PWM frequencies shift with this setting.">
+				 <List>
+					<Option value="auto" >auto - 5 us only if a pulse/ultrasound/PWM/stepper/neopixel device is on this rPi (recommended)</Option>
+					<Option value="10"   >10 us always - half the cpu</Option>
+					<Option value="5"    >5 us always - pigpio default, about twice the cpu</Option>
+				  </List>
+				<Label>pigpiod gpio sample rate:</Label>
 			</Field>
 
 			<Field    id="macIfWOLsendToIndigoServer"   type="textfield" defaultValue="">
@@ -1369,7 +1373,7 @@ if you want to keep it running add an "&amp;" to the end </Label>
 					<Option value="14400">4 hours </Option>
 					<Option value="18000">5 hours </Option>
 					<Option value="21600">6 hours </Option>
-					<Option value="28800">7 hours </Option>
+					<Option value="25200">7 hours </Option>
 					<Option value="28800">8 hours </Option>
 					<Option value="36000">10 hours </Option>
 					<Option value="43200">12 hours </Option>
@@ -1399,7 +1403,7 @@ if you want to keep it running add an "&amp;" to the end </Label>
 				</List>
 			</Field>
 
-			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="typeOfUPS" visibleBindingValue="OnlyB,OnlyC,Only,AB,AC,AD"  tooltip="= ">
+			<Field id="batteryChargeTimeForMaxCapacity"   type="menu" defaultValue="5400" visibleBindingId="typeOfUPS" visibleBindingValue="OnlyB,OnlyC,OnlyD,AB,AC,AD"  tooltip="= ">
 				<Label>...how long to recharge Li Battery to 90% (C,D):</Label>
 				<List>
 					<Option value="1800"   >30 min</Option>
@@ -1670,7 +1674,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="syncTimeWithMAC"   type="menu" defaultValue="" tooltip="use if you have no NTP service">
+			<Field id="syncTimeWithMAC"   type="menu" defaultValue="0" tooltip="use if you have no NTP service">
 				<Label>...sync time MAC to RPi:</Label>
 				<List>
 					<Option value="0" > do not sync</Option>
@@ -1806,20 +1810,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Supports StatusRequest:</Label></Field>
 			<Field id="AllowOnStateChange" 		type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Allow OnStateChange:</Label></Field>
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" visibleBindingId="showSpecialParameters" visibleBindingValue="true"><Label>Allow SensorValueChange:</Label></Field>
-
-			<Field id="compressRPItoPlugin"   type="menu" defaultValue="20000" tooltip="" >
-				<List>
-					<Option value="2000"     >msg GT 2   KB </Option>
-					<Option value="10000"    >msg GT 10  KB </Option>
-					<Option value="20000"    >msg GT 20  KB </Option>
-					<Option value="40000"    >msg GT 64  KB </Option>
-				</List>
-				<Label>Compress large messages from RPI to plugin (ony for socket comm):</Label>
-			</Field>
-
-			<Field id="compressRPItoPluginLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>use if you have a slow connection iw wifi and large packages dont come through</Label>
-			</Field>
 
 			<Field id="printPropsSeparator" type="separator"></Field>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
@@ -2370,7 +2360,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>How often should we ping the BLE device:</Label>
 			</Field>
 
-			<Field id="iPhoneRefreshDownSecs" type="menu"     defaultValue="10" toolTip="if phone is in DOWN status, when to check again">
+			<Field id="iPhoneRefreshDownSecs" type="menu"     defaultValue="10" tooltip="if phone is in DOWN status, when to check again">
 				<Label>try to reach iPhone when DOWN again after:</Label>
 				<List>
 					<Option value="0"   > try continuously </Option>
@@ -2397,7 +2387,7 @@ xx_Count_groupname_ .. Home, Away</Label>
        reduces pinging of iphone on RPIs that can not reach iphone:</Label>
 			</Field>
 
-			<Field id="iPhoneRefreshUpSecs" type="menu"     defaultValue="60" toolTip="if phone is in UP status, when to check again">
+			<Field id="iPhoneRefreshUpSecs" type="menu"     defaultValue="60" tooltip="if phone is in UP status, when to check again">
 				<Label>try to reach iPhone when Up again after :</Label>
 				<List>
 					<Option value="3"  >3 secs</Option>
@@ -2422,7 +2412,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="BLEtimeout" type="menu"     defaultValue="3" toolTip="wait for an answer from the BLE-phone for how long after ping to phone" >
+			<Field id="BLEtimeout" type="menu"     defaultValue="3" tooltip="wait for an answer from the BLE-phone for how long after ping to phone" >
 				<Label>time out BLE-ping after:</Label>
 				<List>
 					<Option value="0.5"   > 0.5 secs </Option>
@@ -5315,7 +5305,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance - min/max/average:</Label> </Field>
 			<Field id="Illuminance_EnableChanges" type="checkbox" defaultValue="true" > <Label>Illuminance - changes + trend:</Label> </Field>
-			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_trendDelta" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
+			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableChanges" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
 				<List>
 					<Option value="300"   > 5 minutes</Option>
 					<Option value="600"   > 10 minutes</Option>
@@ -5327,7 +5317,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="86400" > 24 hour</Option>
 				</List>
 			</Field>
-			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_trendDelta" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableChanges" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
 				<List>
 					<Option value="10"    > 0.1 %</Option>
 					<Option value="20"    > 0.2 %</Option>
@@ -6621,11 +6611,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
 			</State>
 
-			<State id="currentOnEvent">
-				<ValueType>string</ValueType>
-				<TriggerLabel>currentOnEvent</TriggerLabel>
-				<ControlPageLabel>currentOnEvent</ControlPageLabel>
-			</State>
 
 			<State id="softwareVersion">
 				<ValueType>string</ValueType>
@@ -6836,11 +6821,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<ControlPageLabel>previousOnEvent</ControlPageLabel>
 			</State>
 
-			<State id="currentOnEvent">
-				<ValueType>string</ValueType>
-				<TriggerLabel>currentOnEvent</TriggerLabel>
-				<ControlPageLabel>currentOnEvent</ControlPageLabel>
-			</State>
 
 			<State id="currentMove">
 				<ValueType>string</ValueType>
@@ -8891,7 +8871,7 @@ The device will only send a message "ON" when button is pressed: state "onOff" w
 			<Field id="displayState" type="textfield"     defaultValue="status" hidden="YES"> </Field>
 			
 
-			<Field id="displayS" type="menu"     defaultValue="counonOffStateter" hidden="True"> <Label>Property to display in the Status Column:</Label>
+			<Field id="displayS" type="menu"     defaultValue="onOffState" hidden="True"> <Label>Property to display in the Status Column:</Label>
 				<List>
 					<Option value="onOffState"  >onOffState</Option>
 				</List>
@@ -13035,7 +13015,7 @@ After some days of running in clean air, proposed setup is:
 				</List>
 			</Field>
 
-			<Field id="recalibrateIfGT" type="menu"     defaultValue="103" visibleBindingId="calibrateSetting" visibleBindingValue="dynamic">
+			<Field id="recalibrateIfGT" type="menu"     defaultValue="103" visibleBindingId="calibrateSetting" visibleBindingValue="dynamic-startWithFile,dynamic-noFile">
 				<Label>Set re-calibrate if AirQuality &gt;</Label>
 				<List>
 					<Option value="101"    >dynamic, change if &gt; 101 percent, likely to sensitive</Option>
@@ -13529,10 +13509,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="65"   >0x41 = 65 default addr0=0 addr1=1</Option>
 					<Option value="66"   >0x42 = 66 default addr0=0 addr1=SDA</Option>
 					<Option value="67"   >0x43 = 67 default addr0=0 addr1=SCL</Option>
-					<Option value="66"   >0x44 = 68 default addr0=1 addr1=0</Option>
-					<Option value="67"   >0x45 = 69 default addr0=0 addr1=1</Option>
-					<Option value="68"   >0x46 = 70 default addr0=0 addr1=SDA</Option>
-					<Option value="69"   >0x47 = 71 default addr0=0 addr1=SCL</Option>
+					<Option value="68"   >0x44 = 68 default addr0=1 addr1=0</Option>
+					<Option value="69"   >0x45 = 69 default addr0=0 addr1=1</Option>
+					<Option value="70"   >0x46 = 70 default addr0=0 addr1=SDA</Option>
+					<Option value="71"   >0x47 = 71 default addr0=0 addr1=SCL</Option>
 				</List>
 			</Field>
 
@@ -14147,7 +14127,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="deltaX" type="menu"     defaultValue="3" hidden="no" tooltip="to cut off small changes = noise">
+			<Field id="deltaX" type="menu"     defaultValue="5" hidden="no" tooltip="to cut off small changes = noise">
 				<Label>delta X(%) to trigger update:</Label>
 				<List>
 					<Option value="5"    > 5</Option>
@@ -14785,7 +14765,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="secSendTiming" type="label" fontColor="green"> <Label>==== How often values are sent to indigo:</Label> </Field>
-			<Field id="minSendDelta" type="menu"     defaultValue="4" hidden="no" >
+			<Field id="minSendDelta" type="menu"     defaultValue="5" hidden="no" >
 				<Label>Min secs between indigo updates - not more often:</Label>
 				<List>
 					<Option value="5"  > 5  secs</Option>
@@ -15197,6 +15177,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 	<Device type="sensor" id="BLEfindMyMember">     	<Name>BLE-Find My member (one tag / device)</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
+	<AllowManualCreation>false</AllowManualCreation>
 		<ConfigUI>
 			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -15247,8 +15228,9 @@ is about 3 dB per metre. Treat it as near / mid / far, not as a measurement.
 not half a metre. A distance state is never 0.
 
 999 (and -999 for a signal) means NEVER MEASURED - that rPi has not once heard this
-tag. It is stamped when the device is made and never written again, so these states
-otherwise only ever hold real readings.
+tag, not even too faintly to count. It is stamped when the device is made, and again
+if an rPi is added to the group later, so these states otherwise only ever hold real
+readings.
 NOTHING IS BLANKED WHEN THE TAG GOES DOWN: signal, distance, indicator, mac, battery
 and apple types all keep the LAST measurement, and Pi_NN_Time says when it was taken.
 Whether the tag is here NOW is what "status" is for, and it is the only state that
@@ -15257,7 +15239,10 @@ answers it.
 PER RPI, Pi_NN_State says what THAT rPi is saying about the tag right now:
    up      in its member list - the signal and distance beside it are live
    weak    it hears the tag but does not count it: below "signal to join" or still
-           short of the packet minimum. A threshold to adjust, not a tag that left
+           short of the packet minimum. A threshold to adjust, not a tag that left -
+           and the signal beside it is that faint reading, so how FAR below the join
+           level is visible. -88 against a join of -80 is a threshold to think about,
+           -95 is a tag on the far side of the house
    noData  that rPi is not reporting at all, so it is saying nothing about anything
    down    it is reporting, and this tag is in nothing it sent
 A trigger for "not properly here on this rPi" is != "up" - that catches all three.</Label>
@@ -15285,9 +15270,10 @@ report where it is. "lenNN" is a payload length this plugin does not know. The t
 independent - a separated tag can be lying on the desk beside the rPi.
 
 appleTypes lists every apple continuity type this mac sends and what they add up to:
-"12  tag", "07|12  airpods/case", "05|0C|10|12  phone/mac". A tag has nothing to say
-beyond find my, so a lone "12" is a real tag and anything more is airpods, a phone or
-a mac.
+"12  find my only", "07|12  airpods/case", "05|12  findmy+other". A tag has nothing to
+say beyond find my, so a lone "12" is a tag and anything more is an airpods case or
+something unusual. Phones and macs do not appear here at all - one in normal use is on
+the network and relays other tags rather than broadcasting find my itself.
 
 status shows up / down with the time of the LAST MESSAGE, not of the last change: a
 stamp that has stopped moving means the rPi has stopped reporting, which nothing else
@@ -15324,7 +15310,9 @@ actually reports one, because indigo's default of 0 would read as a flat battery
 	<Device type="custom" id="BLEfindMyGroup">     	<Name>BLE-Find My group counter (AirTags)</Name>
 	<UiDisplayStateId>status</UiDisplayStateId>
 		<ConfigUI>
+
 			<Field id="isSensorDevice"     type="checkbox"     defaultValue="true" hidden="yes"> </Field>
+
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="SupportsOnState" type="checkbox" defaultValue="false" hidden="true"></Field>
@@ -15341,9 +15329,13 @@ actually reports one, because indigo's default of 0 would read as a flat battery
 			     both had values, and the column was still empty. Hence type="custom" above.
 			     The counts are real Integer states - numberOfUp, numberOfMembers, numberOfActive,
 			     numberOfActiveRaw - and each is a better thing to plot than sensorValue was -->
+
 			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
+
 			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+
 			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+
 			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="True"></Field>
 
 			<Field id="infoLabel" type="label">
@@ -15355,8 +15347,11 @@ a candidate, and a candidate whose smoothed signal is strong enough counts as a 
 The count only changes after the new value has HELD for a while, so a tag swapping its
 mac (old one expires, new one appears) never shows up as a change.
 
-Other Find My devices - AirPods cases, an offline iPhone or Mac, third-party Find My
-tags - advertise the same way and are counted too. Calibrate to learn the baseline.
+Other Find My ACCESSORIES - AirPods cases, third-party Find My tags - advertise the
+same way and are counted too. Calibrate to learn the baseline.
+IPHONES AND MACS ARE NOT COUNTED, and that is not a gap: only a device that is itself
+lost broadcasts the find my payload. One in normal use is ON the network and RELAYS
+other people's tags instead, so it never sends the advertisement this counts.
 
 ONE DEVICE, ANY NUMBER OF RPIS. Each rPi reports what it can hear, the areas overlap,
 and the counts are never added - the macs are combined instead, so a tag two rPis can
@@ -15370,34 +15365,41 @@ both hear counts once. One member device per TAG, not per tag per rPi.</Label>
  rPis is one tag. The same tag carries the same BLE mac on every rPi at the same
  moment, so the house count is the UNION of the macs, and a tag heard by two or more
  is reported separately in seenBy2Plus - a much better "really inside" than any single
- signal level. An rPi that stops reporting drops out after twice its send interval.</Label>
+ signal level. An rPi that stops reporting drops out after twice its send interval.
+ EACH RPI CHECKED HERE ALSO GETS A Pi_NN_Tags STATE on this device: how many members
+ it is nearest to right now, ie how many find my devices are in that room. Those are
+ the numbers to trigger on - counting is what this feature gets right, while any ONE
+ member device is a slot and may not be the tag its name says. They add up to
+ numberOfUp, and an rPi hearing nothing reads 0.</Label>
 			</Field>
 
 			<Field id="RPI_ENABLE_BLOCK" type="label" hidden="true"> <Label> </Label> </Field>
 
 			<Field id="sec1" type="label" fontColor="green"> <Label>==== which tags count as "in the house"</Label> </Field>
 
-			<Field id="joinRssi" type="menu" defaultValue="-70" tooltip="smoothed rssi a tag must reach to be counted">
-				<Label>signal to be counted (join):</Label>
+			<Field id="joinRssi" type="menu" defaultValue="-75" tooltip="smoothed rssi a tag must reach before it is accepted and counted">
+				<Label>min signal to accept new tags:</Label>
 				<List>
-					<Option value="-55">-55  very close only</Option>
-					<Option value="-60">-60</Option>
+					<Option value="-60">-60 very close</Option>
 					<Option value="-65">-65</Option>
-					<Option value="-70">-70  default</Option>
-					<Option value="-75">-75</Option>
-					<Option value="-80">-80 </Option>
+					<Option value="-70">-70</Option>
+					<Option value="-75">-75 default</Option>
+					<Option value="-80">-80</Option>
+					<Option value="-85">-85 out to the property line</Option>
 				</List>
 			</Field>
-			<Field id="leaveRssi" type="menu" defaultValue="-80" tooltip="must be weaker than the join level - the gap is the hysteresis that stops a tag flickering in and out">
-				<Label>signal to stop counting (leave):</Label>
+
+			<Field id="leaveRssi" type="menu" defaultValue="-85" tooltip="must be weaker than the join level - the gap is the hysteresis that stops a tag flickering in and out">
+				<Label>signal below is ignored (leave):</Label>
 				<List>
 					<Option value="-75">-75</Option>
-					<Option value="-80">-80  default</Option>
-					<Option value="-85">-85</Option>
+					<Option value="-80">-80</Option>
+					<Option value="-85">-85 default</Option>
 					<Option value="-90">-90</Option>
-					<Option value="-95">-95  only when it stops being heard at all</Option>
+					<Option value="-95">-95 all but only when it stops being heard at all</Option>
 				</List>
 			</Field>
+
 			<Field id="labelRssi" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>Leave must be weaker than join; the gap between them is what keeps a tag at the
 edge of range from flickering in and out. Calibrate: put a tag at the far corners
@@ -15414,55 +15416,92 @@ close from very close - there is nothing to measure. Put the boundary out where 
 signal is still moving.</Label>
 			</Field>
 
-			<Field id="sec2" type="label" fontColor="green"> <Label>==== timing</Label> </Field>
+			<Field id="secMembers" type="label" fontColor="green"> <Label>==== how many member devices this group may create</Label> </Field>
 
-			<Field id="stableSecs" type="menu" defaultValue="60" tooltip="a new count must hold this long before it is reported - longer than a mac rotation takes">
-				<Label>count must hold for:</Label>
-				<List>
-					<Option value="30">30 seconds</Option>
-					<Option value="60">60 seconds  default</Option>
-					<Option value="120">2 minutes</Option>
-					<Option value="300">5 minutes</Option>
-				</List>
-			</Field>
-			<Field id="expireSecs" type="menu" defaultValue="10" tooltip="tags advertise every ~2 s, so a few missed packets is normal">
-				<Label>a mac is gone after:</Label>
-				<List>
-					<Option value="6">6 seconds</Option>
-					<Option value="10">10 seconds  default</Option>
-					<Option value="20">20 seconds</Option>
-					<Option value="30">30 seconds</Option>
-				</List>
-			</Field>
-			<Field id="sendEverySecs" type="menu" defaultValue="60" tooltip="a change is always sent at once; this is the periodic refresh in between">
-				<Label>send a refresh every:</Label>
-				<List>
-					<Option value="60">60 seconds  default</Option>
-					<Option value="120">2 minutes</Option>
-					<Option value="300">5 minutes</Option>
-					<Option value="600">10 minutes</Option>
-				</List>
-			</Field>
-			<Field id="findMyMaxSlots" type="menu" defaultValue="30" tooltip="how many member devices this group may ever have - the rPi hands out this many slot numbers">
-				<Label>most member devices:</Label>
+			<Field id="findMyMaxSlots" type="menu" defaultValue="15" tooltip="count the find my devices you expect in range - yours AND the neighbours' - and add 2 to 10 for the slots a mac rotation ties up">
+				<Label>max number of member devices:</Label>
 				<List>
 					<Option value="10">10</Option>
+					<Option value="15">15  default</Option>
 					<Option value="20">20</Option>
-					<Option value="30">30  default</Option>
+					<Option value="30">30</Option>
 					<Option value="40">40</Option>
 					<Option value="50">50</Option>
 					<Option value="60">60</Option>
 				</List>
 			</Field>
+
 			<Field id="labelFindMyMaxSlots" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>THE CAP DECIDES WHICH TAGS EXIST once it is reached - a mac arriving when every
+				<Label>HOW MANY: count the find my devices you expect to be in range - yours AND the
+neighbours', everything above the join level, not just your own tags - and ADD 2 TO 10.
+
+THAT HEADROOM IS NOT SPARE, it is working space. Every tag rotates its mac, and when a
+rotation is not matched the new mac takes a FRESH slot while the old one is still being
+held for the tag that has just gone. One tag, two slots, until the old device has been
+down long enough to be handed on ("reuse a down member device after", below the EXPERTS
+line). So the list sits a little above the number of tags actually present, all the time,
+and settles back by itself.
+Add 2 if you have a handful of tags that sit still; closer to 10 if you have many, or they
+move between rooms, or you watch the count churn.
+
+THE CAP DECIDES WHICH TAGS EXIST once it is reached - a mac arriving when every
 slot is taken gets no slot and no device, and a real tag looks exactly like noise at that
 moment. Measured here: twenty slots filled in ten hours, almost all of it nearby apple
 devices hovering on the join level rather than tags.
-So set it above what you expect to see, and use "delete member devices" to keep the list
-honest rather than a small number here. Raising it is not a fix for churn, only headroom.
+So set it above what you expect to see and let the slots be reused - a down device is handed on
+to the next tag rather than a new one being made, which keeps the list honest by itself. Raising
+this is not a fix for churn, only headroom.
 The rPi is told this number too and both sides clamp it to 60.</Label>
 			</Field>
+
+			<Field id="expertSep1" type="separator"></Field>
+
+			<Field id="expertSep2" type="separator"></Field>
+
+			<Field id="secExperts" type="label" fontColor="red">
+				<Label>==== EXPERTS ONLY - member device housekeeping, tuning, logging and debug
+ABOVE THIS LINE IS THE WHOLE SETUP: which rPis count, the join/leave levels, and how many
+member devices this group may have. Everything below has a working default and does not
+need to be touched.
+The housekeeping settings decide when a member device goes down, when its slot may be given
+to another tag, and when a leftover is deleted. They are safe to leave alone - the defaults
+hand slots round without ever deleting anything - but they are the ones to look at if you
+see more member devices than you have tags.
+The tuning settings change HOW a tag is recognised and followed, not which tags are counted,
+and a wrong value there is hard to spot: the count still looks plausible while the tag
+identities quietly drift. Change one at a time and read the rPi log before changing the next.
+The logging and print settings at the bottom cost nothing to turn on and change no behaviour -
+they are down here because nothing needs them until something looks wrong.</Label>
+			</Field>
+
+			<Field id="sec4" type="label" fontColor="green"> <Label>==== one device per member - ON, and nothing to do unless you want it OFF</Label> </Field>
+
+			<Field id="createMemberDevices" type="checkbox" defaultValue="true" tooltip="a slot coming into use creates its own indigo device, findmy_NN - on by default, untick it if you only want the counts">
+				<Label>create a device per member:</Label>
+			</Field>
+
+			<Field id="labelMemberDev" type="label" visibleBindingId="createMemberDevices" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Each slot that comes into use gets its own device, "findmy_NN", carrying mac, rssi,
+form, battery, the previous mac and when it changed. RENAME IT to whatever it is -
+the device name is the label, and it survives everything the plugin writes.
+
+They are created in the SAME FOLDER as this device, so they sit next to the counter
+they came from rather than in the plugin's own folder.
+
+Devices are never removed automatically. A slot falling empty blanks the states and
+turns the device off; the device stays, with previousMacs and lastMacChange showing what
+was last in it. Delete one yourself if you no longer want it.
+
+READ THIS BEFORE NAMING ONE: the device is tied to a SLOT, not to a tag. Find My macs
+rotate and nothing in the frame is stable, so if a slot changes hands the device now
+describes something else - under the name you gave it. previousMacs keeps the last 5
+macs this slot held, newest first, which is what tells a mac rotation apart from the
+slot changing hands. That is why mac and lastMacChange
+are on the device: check them before believing the name.</Label>
+			</Field>
+
+			<Field id="secLifecycle" type="label" fontColor="green"> <Label>==== when a member device goes down, is reused, and is tidied away</Label> </Field>
+
 			<Field id="memberDownDelaySecs" type="menu" defaultValue="60" tooltip="how long a member device stays UP after the last rPi stopped hearing its tag - the same idea as a beacon's expirationTime">
 				<Label>a member stays up for:</Label>
 				<List>
@@ -15476,13 +15515,59 @@ The rPi is told this number too and both sides clamp it to 60.</Label>
 					<Option value="600">10 minutes</Option>
 				</List>
 			</Field>
-			<Field id="deleteDownMembersHours" type="menu" defaultValue="0" tooltip="delete a member device that has been down too long, freeing its slot">
-				<Label>delete member devices:</Label>
+
+			<Field id="labelMemberDownDelay" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>ONE SETTING FOR EVERY MEMBER of this group, like the join/leave levels - not twenty
+to keep in step. A tag advertises every ~2 seconds, so a handful of lost packets is
+normal and the first report that does not mention it is not evidence that it has gone.
+While a member is being held its slot is not given away, and the device is left exactly
+as it was when last heard rather than half blanked.
+NOTE this delays the DEVICES, not the count: the tag count is settled on the Pi and is
+not touched here, so a setting much longer than "count must hold for" means the counter
+can drop before the member devices do.</Label>
+			</Field>
+
+			<Field id="findMyReuseAfterMins" type="menu" defaultValue="15" tooltip="how long a member device must have been unheard before its slot may be given to another tag">
+				<Label>reuse a down member device after:</Label>
 				<List>
-					<Option value="0">never - keep them  default</Option>
-					<Option value="4pm">at 4pm, if down 4 hours or more (ie gone since this morning)</Option>
-					<Option value="10m">any time, once down 10 minutes</Option>
-					<Option value="30m">any time, once down 30 minutes</Option>
+					<Option value="5">5 minutes</Option>
+					<Option value="10">10 minutes</Option>
+					<Option value="15">15 minutes  default</Option>
+					<Option value="30">30 minutes</Option>
+					<Option value="60">1 hour</Option>
+					<Option value="120">2 hours</Option>
+					<Option value="480">8 hours</Option>
+				</List>
+			</Field>
+			<Field id="labelReuseAfter" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>ONCE A DEVICE IS THIS OLD IT IS REUSED IN PREFERENCE TO MAKING A NEW ONE. A member
+device belongs to a SLOT, not to a tag, so a new tag takes over the device already on the slot
+it is given - it keeps its id, and every trigger, control page and plot pointing at it goes on
+working. Nothing is deleted. A name YOU chose is handed back at that moment, with a log line
+saying so, because by then it describes a tag that has gone.
+THE ORDER A NEW TAG PICKS FROM, cheapest first: a device nobody renamed that is past this time;
+then an unused slot number, which means a NEW device; then a device nobody renamed that is not
+past it yet; then a renamed one. Inside each, the one unheard longest goes first, and where
+there is a choice the one last closest to the same rPi - an individual Find My tag cannot be
+identified from its frames at all, so "how many tags are near this rPi" is the real answer
+these devices carry, and keeping a device with its rPi keeps that answer readable.
+WHY NOT SHORTER: airpods in a closed case stop advertising and come back on the SAME mac every
+3 to 4 minutes, and the rPi holds a slot for its own mac for 5 minutes on top of that. Under
+about 10 minutes the slot of a tag that is merely asleep or briefly out of range gets handed
+on. Longer is simply more cautious and costs only a few more devices in the list.
+THIS IS NOT "keep a member up for" - that one decides how long the DEVICE goes on showing the
+tag after it stops being heard, and a slot inside its down-delay is not available at all. This
+time should be the longer of the two.</Label>
+			</Field>
+
+			<Field id="deleteDownMembersHours" type="menu" defaultValue="4am" tooltip="the once-a-day tidy - devices are handed to the next tag automatically, this only removes the leftovers">
+				<Label>delete leftover member devices:</Label>
+				<List>
+					<Option value="4am">at 4am, if down 4 hours or more and untouched since (ie gone before midnight)  default</Option>
+					<Option value="4pm">at 4pm, the same (ie gone before noon)</Option>
+					<Option value="0">never - keep every device for ever</Option>
+					<Option value="10m">any time, once down 10 minutes - short, see the note</Option>
+					<Option value="30m">any time, once down 30 minutes - short, see the note</Option>
 					<Option value="1">any time, once down 1 hour</Option>
 					<Option value="2">any time, once down 2 hours</Option>
 					<Option value="3">any time, once down 3 hours</Option>
@@ -15491,8 +15576,36 @@ The rPi is told this number too and both sides clamp it to 60.</Label>
 					<Option value="6">any time, once down 6 hours</Option>
 				</List>
 			</Field>
+
 			<Field id="labelDeleteDownMembers" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>THE DEVICE IS DELETED, NOT EMPTIED - with the name you gave it, and anything
+				<Label>NOTHING IS DELETED TO MAKE ROOM ANY MORE, so this setting is not how a slot is
+freed - it only removes leftovers. A member device belongs to a SLOT, not to a tag, so when a
+slot is handed to a new tag that tag simply takes over the device already there: it keeps its
+id, and every trigger, control page and plot pointing at it goes on working. A name YOU chose
+is handed back at that moment, because by then it describes a tag that has gone, and the log
+says so by name. Devices move between kinds freely - an airpods case's device is reused by an
+airtag and renamed findmy_NN, and an airtag's device is reused by a case and renamed
+findmy_NN_airpod-case.
+A FREE SLOT IS TAKEN IN THE ROOM IT CAME FROM where there is a choice: one whose device was
+last closest to the same rPi is preferred. An individual Find My tag cannot be identified from
+its frames at all, so "how many tags are near this rPi" is the real answer these devices
+carry, and keeping a device with its rPi is what keeps that answer readable. An EMPTY slot is
+always taken before any device, and a device nobody has renamed before one you named.
+
+SO ALL THIS SETTING DOES is stop the list growing findmy_NN headstones for ever, and once a
+day is enough for that. THREE THINGS MUST ALL BE TRUE before a device is deleted:
+  - it is still under a name this plugin gave it. A name you chose is NEVER deleted by a timer,
+    at any age - it is the one thing here that cannot be put back
+  - it has been down long enough
+  - and NOTHING about it changed in that time - not lastSeen, not the mac, not the tagId. A
+    device can be "down" while its slot was handed over an hour ago or a rotation was followed
+    through it minutes ago, and anything that moved recently is in use whatever its status says
+4 HOURS AT 4AM means it went before midnight, so it has been gone all night rather than being
+out at the shops - the hour and the threshold belong together and are not separate knobs. The
+"any time" settings below are for clearing up faster; the two in minutes are short enough to
+matter, see the end of this note.
+
+WHEN IT DOES DELETE, THE DEVICE GOES, NOT ITS CONTENTS - and with it everything
 pointing at it from a trigger, a control page or a plot. A tag that comes back gets a
 fresh device under the plain findmy_NN name, because nothing in a Find My frame can
 tell the plugin it is the same tag you had named.
@@ -15510,6 +15623,92 @@ Leave it on "never" unless slots filling with departed tags is actually a proble
 a member device costs nothing to keep, and the name is the expensive part to lose.</Label>
 			</Field>
 
+			<Field id="deleteLogPluginOnly" type="checkbox" defaultValue="false" tooltip="write the deletion line to plugin.log only, instead of the indigo event log as well">
+				<Label>log deletions to plugin.log only:</Label>
+			</Field>
+
+			<Field id="labelDeleteLogPluginOnly" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>The deletion is always logged, with the device name, slot, last mac and how long it had
+been down - the only question is WHERE. Off (default) it goes to the indigo event log as
+well, because a device disappearing without a word is alarming and a deletion cannot be
+undone. On, it goes only to plugin.log.
+Turn it on once you have settled on a short "delete leftover member devices" setting: in
+a busy place that is several lines an hour about devices nobody had named, which is event log
+noise rather than news. The record does not go away, it just stops interrupting.</Label>
+			</Field>
+
+			<Field id="sec2" type="label" fontColor="green"> <Label>==== timing</Label> </Field>
+
+			<Field id="stableSecs" type="menu" defaultValue="60" tooltip="a new count must hold for MORE THAN HALF of this before it is reported - so it must be more than twice 'a member stays up for'">
+				<Label>counts must hold for:</Label>
+				<List>
+					<Option value="30">30 seconds</Option>
+					<Option value="60">60 seconds  default</Option>
+					<Option value="120">2 minutes</Option>
+					<Option value="300">5 minutes</Option>
+				</List>
+			</Field>
+
+			<Field id="expireSecs" type="menu" defaultValue="10" tooltip="tags advertise every ~2 s, so a few missed packets is normal">
+				<Label>a mac is gone after:</Label>
+				<List>
+					<Option value="6">6 seconds</Option>
+					<Option value="10">10 seconds  default</Option>
+					<Option value="20">20 seconds</Option>
+					<Option value="30">30 seconds</Option>
+				</List>
+			</Field>
+
+			<Field id="sendEverySecs" type="menu" defaultValue="60" tooltip="a change is always sent at once; this is the periodic refresh in between">
+				<Label>send a refresh every:</Label>
+				<List>
+					<Option value="60">60 seconds  default</Option>
+					<Option value="120">2 minutes</Option>
+					<Option value="300">5 minutes</Option>
+					<Option value="600">10 minutes</Option>
+				</List>
+			</Field>
+
+			<Field id="labelTiming" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>A count CHANGE is sent immediately. After a restart nothing is sent for about a
+minute and a half, so a Pi coming back does not report an empty house before it
+has heard the tags.</Label>
+			</Field>
+
+			<Field id="secRotation" type="label" fontColor="green"> <Label>==== following one tag through a mac rotation</Label> </Field>
+
+			<Field id="findMyAmbiguityWait" type="menu" defaultValue="55" tooltip="keep re-judging a rotation that only ambiguity refuses, instead of giving the tag a new identity straight away">
+				<Label>wait out an ambiguous rotation:</Label>
+				<List>
+					<Option value="0">off - refuse at once, the tag becomes a new device</Option>
+					<Option value="30">up to 30 seconds</Option>
+					<Option value="45">up to 45 seconds</Option>
+					<Option value="55">up to 55 seconds  default</Option>
+					<Option value="90">up to 90 seconds  (longer than the down delay, set above)</Option>
+					<Option value="120">up to 2 minutes  (longer than the down delay, set above)</Option>
+				</List>
+			</Field>
+
+			<Field id="labelFindMyAmbiguityWait" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>WHEN TWO OLD TAGS BOTH FIT A NEW MAC, the rPi refuses to guess - a wrong guess renames
+somebody's tag, which is worse than an extra device. But "two fit" is often only true for a
+few more seconds: tags rotate in waves on the quarter hour, the rPi first hears each new mac
+at a slightly different moment, and one of the two candidates is usually claimed by its own
+replacement shortly after. Waiting lets that happen and the answer becomes unambiguous.
+Measured here: a tag was refused with two candidates left, and the one that did not belong to
+it was taken by its real successor 18 seconds later - too late, the tag had already been given
+a new identity and a second device.
+A candidate list only ever gets SHORTER, so waiting can turn two into one but never one into
+two. Nothing is loosened: the same evidence decides, just later.
+THE TAG IS NOT COUNTED WHILE IT WAITS, which is why this has a limit. Keep it BELOW "a member
+stays up for" set above (60 s by default) - beyond that, a tag whose device is already up will
+blink down and come back while its new mac waits. The two longest settings are past the
+default and are there for rPis in very busy places, where you should raise the down delay too.
+"off" restores the old behaviour: decide once, about 20 s after the new mac appears.</Label>
+			</Field>
+
+			<Field id="secRPIs" type="label" fontColor="green"> <Label>==== several rPis reporting the same tag</Label> </Field>
+
 			<Field id="moveHoldSecs" type="menu" defaultValue="20" tooltip="a different rPi must stay the strongest this long before the tag is said to have moved to it">
 				<Label>a move to another rPi counts after:</Label>
 				<List>
@@ -15521,6 +15720,7 @@ a member device costs nothing to keep, and the name is the expensive part to los
 					<Option value="60">60 seconds</Option>
 				</List>
 			</Field>
+
 			<Field id="labelMoveHold" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>THE RPIS DO NOT REPORT IN STEP. Each sends on its own schedule, so a tag missing
 from one rPi's last message only means it could not hear it WHEN IT SENT - not that it
@@ -15533,24 +15733,7 @@ Only applies between two rPis - being heard for the first time, or losing the ta
 altogether, is not in doubt and is taken as it comes.</Label>
 			</Field>
 
-			<Field id="labelMemberDownDelay" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>ONE SETTING FOR EVERY MEMBER of this group, like the join/leave levels - not twenty
-to keep in step. A tag advertises every ~2 seconds, so a handful of lost packets is
-normal and the first report that does not mention it is not evidence that it has gone.
-While a member is being held its slot is not given away, and the device is left exactly
-as it was when last heard rather than half blanked.
-NOTE this delays the DEVICES, not the count: the tag count is settled on the Pi and is
-not touched here, so a setting much longer than "count must hold for" means the counter
-can drop before the member devices do.</Label>
-			</Field>
-
-			<Field id="labelTiming" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>A count CHANGE is sent immediately. After a restart nothing is sent for about a
-minute and a half, so a Pi coming back does not report an empty house before it
-has heard the tags.</Label>
-			</Field>
-
-			<Field id="sec3" type="label" fontColor="green"> <Label>==== advanced</Label> </Field>
+			<Field id="sec3" type="label" fontColor="green"> <Label>==== how one mac's signal is measured</Label> </Field>
 
 			<Field id="smoothN" type="menu" defaultValue="5" tooltip="the signal used is the median of the last N packets, which throws away single bad readings">
 				<Label>smooth the signal over:</Label>
@@ -15561,6 +15744,7 @@ has heard the tags.</Label>
 					<Option value="15">15 packets</Option>
 				</List>
 			</Field>
+
 			<Field id="minPackets" type="menu" defaultValue="3" tooltip="how many packets a new mac must produce before it can be counted">
 				<Label>packets before a mac can count:</Label>
 				<List>
@@ -15568,14 +15752,6 @@ has heard the tags.</Label>
 					<Option value="3">3  default</Option>
 					<Option value="5">5</Option>
 				</List>
-			</Field>
-			<Field id="dropFromBeaconPipeline" type="checkbox" defaultValue="true" tooltip="strongly recommended - without it every rotated mac looks like a brand new beacon">
-				<Label>keep Find My frames out of the beacon list:</Label>
-			</Field>
-			<Field id="labelDrop" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>Leave this on. A Find My tag invents a new mac every 15 minutes, and without this
-each one arrives as a new beacon - the beacon list fills with junk that will never
-be seen again.</Label>
 			</Field>
 
 			<Field id="findMyRssiStat" type="menu" defaultValue="strong" tooltip="how the signal of one mac is reduced to a number - see the note">
@@ -15585,6 +15761,7 @@ be seen again.</Label>
 					<Option value="median">median of all  (old)</Option>
 				</List>
 			</Field>
+
 			<Field id="labelRssiStat" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>A tag does not give one clean signal. An AirTag 24 cm from the rPi produced, on the
 same mac in the same second:  -68 then -24, -68 then -24, over and over. The weak
@@ -15599,20 +15776,18 @@ If you change this, RE-PICK join and leave: the numbers get stronger, typically 
 20-40 dB, so a join of -70 chosen under the old setting is now far too generous.</Label>
 			</Field>
 
-			<Field id="printMembersToLog" type="checkbox" defaultValue="false">
-				<Label>print members:</Label>
-				<Description>print every member device to the log as a table, one column per member (resets itself)</Description>
+			<Field id="dropFromBeaconPipeline" type="checkbox" defaultValue="true" tooltip="strongly recommended - without it every rotated mac looks like a brand new beacon">
+				<Label>keep Find My frames out of the beacon list:</Label>
 			</Field>
-			<Field id="labelPrintMembers" type="label" visibleBindingId="printMembersToLog" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>One COLUMN per member device, one ROW per state, so the members can be read
-against each other - which slot is stale, which rPi hears what, which devices are
-still under their birth name and so are the next to be taken over by a new tag.
-The names are listed once above the table and the columns are headed by slot.
 
-Lines are kept under 285 characters: with more members than fit, the same rows are
-printed again as a further set of columns rather than wrapped. Two rows are marked
-"*" - they are worked out for the table and are not states.</Label>
+			<Field id="labelDrop" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Leave this on. A Find My tag invents a new mac every 15 minutes, and without this
+each one arrives as a new beacon - the beacon list fills with junk that will never
+be seen again.</Label>
 			</Field>
+
+			<Field id="secDebug" type="label" fontColor="green"> <Label>==== logging and calibration</Label> </Field>
+
 			<Field id="findMyDebug" type="menu" defaultValue="0" tooltip="decoded find my logging on the rPi - the named fields, not raw hex">
 				<Label>debug logging on the rPi:</Label>
 				<List>
@@ -15621,6 +15796,7 @@ printed again as a further set of columns rather than wrapped. Two rows are mark
 					<Option value="2">also the apple frames that were rejected</Option>
 				</List>
 			</Field>
+
 			<Field id="labelFindMyDebug" type="label" visibleBindingId="findMyDebug" visibleBindingValue="1,2" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>Goes to the normal rPi log at level 20, so it is readable without putting the whole
 pi into debug. "summary" prints the decoded picture each time a message goes out:
@@ -15644,54 +15820,60 @@ The same thing can be set on the rPi without going through indigo:
     rm       /home/pi/pibeacon/temp/findmy.debug     (back to this setting)
 The file wins while it exists, and takes effect within about 5 seconds.</Label>
 			</Field>
+
 			<Field id="findMyDebugMac" type="textfield" defaultValue="" visibleBindingId="findMyDebug" visibleBindingValue="1,2" tooltip="only log frames whose mac contains this text - leave empty for all">
 				<Label>only this mac (per-frame):</Label>
 			</Field>
 
-			<Field id="calibrationLog" type="checkbox" defaultValue="false" tooltip="writes temp/findMyGroup.csv on the rPi, capped at 200kB - for choosing the join/leave levels">
+			<Field id="calibrationLog" type="checkbox" defaultValue="false" tooltip="writes findMyGroup.csv on the rPi, capped at 20MB - for choosing the join/leave levels and for findmy_rotation.py">
 				<Label>write a calibration log on the rPi:</Label>
 			</Field>
+
 			<Field id="labelCalib" type="label" visibleBindingId="calibrationLog" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>ONE file: /home/pi/pibeacon/temp/findMyGroup.csv, capped at 200kB with the
-OLDEST rows dropped - temp/ is a 2MB ram disk shared with findMyGroup.state, so it
-cannot be allowed to grow. master does not delete it when it empties temp/, but it
-is a ram disk: a REBOOT loses it. Copy it off before rebooting if it matters.
+				<Label>ONE file: /home/pi/pibeacon/findMyGroup.csv, capped at 20MB with the OLDEST
+rows dropped. That is roughly 40 hours on a busy rPi, and it SURVIVES A REBOOT - it is
+written straight to the card, not to the ram disk, so there is nothing to copy off
+first and nothing is lost if the rPi restarts mid-measurement.
+
+Fetch it with scp, there is no button for it:
+   scp pi@&lt;rpi-ip&gt;:/home/pi/pibeacon/findMyGroup.csv .
+
 Label a spot while
 measuring:   echo "tag at street" &gt; /home/pi/pibeacon/temp/findMyGroup.marker
-Then merge the files from several rPis with findmy_merge.py, in the plugin's
-Server Plugin folder - it runs on the Mac, it is not sent to the rPis.</Label>
+(the marker still lives in temp/ - it is a signal to the running program, not a record)
+
+Two mac-side tools read these files, both in the plugin's Server Plugin folder and
+neither sent to the rPis: findmy_merge.py combines several rPis' logs and prints the
+rssi per marker, which is how the join/leave levels get chosen. findmy_rotation.py
+measures how long a mac lives and when it rotates, which is how to tell whether a tag
+near its owner is on the same 15-minute clock as one that is separated.
+
+TURN THIS OFF when you are done. It costs about 12MB of card writes a day.</Label>
 			</Field>
 
-			<Field id="sec4" type="label" fontColor="green"> <Label>==== one device per member</Label> </Field>
-
-			<Field id="createMemberDevices" type="checkbox" defaultValue="false" tooltip="a slot coming into use creates its own indigo device, findmy_NN">
-				<Label>create a device per member:</Label>
+			<Field id="printMembersToLog" type="checkbox" defaultValue="false">
+				<Label>print members:</Label>
+				<Description>print every member device to the log as a table, one column per member (resets itself)</Description>
 			</Field>
-			<Field id="labelMemberDev" type="label" visibleBindingId="createMemberDevices" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
-				<Label>Each slot that comes into use gets its own device, "findmy_NN", carrying mac, rssi,
-form, battery, the previous mac and when it changed. RENAME IT to whatever it is -
-the device name is the label, and it survives everything the plugin writes.
 
-They are created in the SAME FOLDER as this device, so they sit next to the counter
-they came from rather than in the plugin's own folder.
+			<Field id="labelPrintMembers" type="label" visibleBindingId="printMembersToLog" visibleBindingValue="true" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>One COLUMN per member device, one ROW per state, so the members can be read
+against each other - which slot is stale, which rPi hears what, which devices are
+still under their birth name and so are the next to be taken over by a new tag.
+The names are listed once above the table and the columns are headed by slot.
 
-Devices are never removed automatically. A slot falling empty blanks the states and
-turns the device off; the device stays, with previousMacs and lastMacChange showing what
-was last in it. Delete one yourself if you no longer want it.
-
-READ THIS BEFORE NAMING ONE: the device is tied to a SLOT, not to a tag. Find My macs
-rotate and nothing in the frame is stable, so if a slot changes hands the device now
-describes something else - under the name you gave it. previousMacs keeps the last 5
-macs this slot held, newest first, which is what tells a mac rotation apart from the
-slot changing hands. That is why mac and lastMacChange
-are on the device: check them before believing the name.</Label>
+Lines are kept under 285 characters: with more members than fit, the same rows are
+printed again as a further set of columns rather than wrapped. Two rows are marked
+"*" - they are worked out for the table and are not states.</Label>
 			</Field>
 
 			<Field id="printPropsSeparator" type="separator"></Field>
+
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+
 		</ConfigUI>
 		<States>
 		</States>
@@ -17487,7 +17669,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>select rPi-server to which the sensor is connect to:</Label>
 			</Field>
 
-			<Field id="integrationTime" type="menu"     defaultValue="1.0"> <Label>integration Time multiplier(for rSet=270k):</Label>
+			<Field id="integrationTime" type="menu"     defaultValue="1"> <Label>integration Time multiplier(for rSet=270k):</Label>
 				<List>
 					<Option value="0"   >0.5*0.1125 secs</Option>
 					<Option value="1"   >1.0*0.1125 secs default</Option>
@@ -18049,7 +18231,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="2"    > 2</Option>
 					<Option value="3"    > 3</Option>
 					<Option value="5"    > 5</Option>
-					<Option value="15"   > 15</Option>
 					<Option value="10"   > 10</Option>
 					<Option value="15"   > 15</Option>
 					<Option value="20"   > 20</Option>
@@ -18734,7 +18915,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Image setup =====================</Label>
 			</Field>
 
-			<Field id="mode" type="menu"     defaultValue="0">
+			<Field id="mode" type="menu"     defaultValue="off">
 				<List>
 					<Option value="off"    >do not create image file</Option>
 					<Option value="manual" >use detailed parameters</Option>
@@ -18833,7 +19014,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Show parameters</Label>
 			</Field>
 
-			<Field id="showLegend" type="menu"     defaultValue="1" visibleBindingId="mode" visibleBindingValue="manual,auto">
+			<Field id="showLegend" type="menu"     defaultValue="upper right" visibleBindingId="mode" visibleBindingValue="manual,auto">
 				<List>
 					<Option value="upper left"   >upper left</Option>
 					<Option value="upper right"  >upper right</Option>
@@ -18917,20 +19098,20 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>.set colors use #ff00aa or red green ..  lightgrey ..  r g b ...</Label>
 			</Field>
 
-			<Field id="colorCurrent" type="textField"     defaultValue="red"  visibleBindingId="mode" visibleBindingValue="manual,auto">
+			<Field id="colorCurrent" type="textfield"     defaultValue="red"  visibleBindingId="mode" visibleBindingValue="manual,auto">
 				<Label>Color for current dots:</Label>
 
 			</Field>
 
-			<Field id="colorCalibrated" type="textField"     defaultValue="green"  visibleBindingId="mode" visibleBindingValue="manual,auto">
+			<Field id="colorCalibrated" type="textfield"     defaultValue="green"  visibleBindingId="mode" visibleBindingValue="manual,auto">
 				<Label>Color for Calibrated room dots:</Label>
 			</Field>
 
-			<Field id="colorLast" type="textField"     defaultValue="blue"  visibleBindingId="mode" visibleBindingValue="manual,auto">
+			<Field id="colorLast" type="textfield"     defaultValue="blue"  visibleBindingId="mode" visibleBindingValue="manual,auto">
 				<Label>Color for previous values dots:</Label>
 			</Field>
 
-			<Field id="colorBackground" type="textField"     defaultValue="lightgrey"  visibleBindingId="mode" visibleBindingValue="manual,auto">
+			<Field id="colorBackground" type="textfield"     defaultValue="lightgrey"  visibleBindingId="mode" visibleBindingValue="manual,auto">
 				<Label>Color for background:</Label>
 			</Field>
 
@@ -19230,7 +19411,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>dynamic / fixed temp scale:</Label>
 			</Field>
 
-			<Field id="imageFileColorBar" type="menu"     defaultValue="color,noBar"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="8,16,32,64,128,256,512,1024">
+			<Field id="imageFileColorBar" type="menu"     defaultValue="color,noBar"  visibleBindingId="imageFileNumberOfDots" visibleBindingValue="32,64,128,256,512,1024">
 				<List>
 					<Option value="color,noBar"   > color no bar </Option>
 					<Option value="grey,noBar"    > grey no bar</Option>
@@ -20709,7 +20890,7 @@ For the MQ gas sensors you need to understand the required heating voltage.
 			</Field>
 
 			<Field id="seci2c" type="label" fontColor="green"> <Label>==== i2c connection of this device:</Label> </Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="62"> <Label>i2c address of device:</Label>
+			<Field id="i2cAddress" type="menu"     defaultValue="80"> <Label>i2c address of device:</Label>
 				<List>
 					<Option value="80"  >0x50 = 80  (default)</Option>
 					<Option value="81"  >0x51 = 81 </Option>
@@ -21400,11 +21581,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -21544,11 +21720,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
 			</State>
-			<State id="INPUT_0MinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>INPUT_0MinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUT_0MinYesterday</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -21605,7 +21776,6 @@ returns numbers 0... 12 - 16 bits</Label>
 					<Option value="475"  >475</Option>
 					<Option value="250"  >250</Option>
 					<Option value="128"  >128</Option>
-					<Option value="128"  >128</Option>
 					<Option value="64"   >64</Option>
 					<Option value="32"   >32</Option>
 					<Option value="16"   >16</Option>
@@ -21642,7 +21812,6 @@ returns numbers 0... 12 - 16 bits</Label>
 					<Option value="50"  > 50  secs</Option>
 					<Option value="60"  > 60  secs</Option>
 					<Option value="70"  > 70  secs</Option>
-					<Option value="80"  > 80  secs</Option>
 					<Option value="80"  > 80  secs</Option>
 					<Option value="90"  > 90  secs</Option>
 					<Option value="120"  > 120  secs</Option>
@@ -21841,11 +22010,6 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
 				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
 			</State>
-			<State id="INPUTMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -21933,7 +22097,6 @@ returns numbers 0...255</Label>
 					<Option value="50"  > 50  secs</Option>
 					<Option value="60"  > 60  secs</Option>
 					<Option value="70"  > 70  secs</Option>
-					<Option value="80"  > 80  secs</Option>
 					<Option value="80"  > 80  secs</Option>
 					<Option value="90"  > 90  secs</Option>
 					<Option value="120"  > 120  secs</Option>
@@ -22125,11 +22288,6 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<ValueType>Float</ValueType>
 				<TriggerLabel>INPUT_0MaxYesterday</TriggerLabel>
 				<ControlPageLabel>INPUTMaxYesterday</ControlPageLabel>
-			</State>
-			<State id="INPUTMinYesterday">
-				<ValueType>Float</ValueType>
-				<TriggerLabel>INPUTMinYesterday</TriggerLabel>
-				<ControlPageLabel>INPUTMinYesterday</ControlPageLabel>
 			</State>
 			<State id="INPUTMinYesterday">
 				<ValueType>Float</ValueType>
@@ -22711,7 +22869,6 @@ The i2c number is fixed: 0x72= 114</Label>
 					<Option value="50"  >50</Option>
 					<Option value="40"  >40</Option>
 					<Option value="30"  >30</Option>
-					<Option value="30"  >30</Option>
 					<Option value="20"  >20</Option>
 					<Option value="10"  >10</Option>
 				</List>
@@ -22728,7 +22885,6 @@ The i2c number is fixed: 0x72= 114</Label>
 					<Option value="60"  >60</Option>
 					<Option value="50"  >50</Option>
 					<Option value="40"  >40</Option>
-					<Option value="30"  >30</Option>
 					<Option value="30"  >30</Option>
 					<Option value="20"  >20</Option>
 					<Option value="10"  >10</Option>
@@ -23061,7 +23217,7 @@ Static mode ie fixed sensitivity does not require any relays to be setup.
 				<Label>select mode for sensor:</Label>
 			</Field>
 
-			<Field id="relayType"   type="menu" defaultValue="dynamic"  >
+			<Field id="relayType"   type="menu" defaultValue="gpio-relay"  >
 				<List>
 					<Option value="gpio-relay"   >use relays connected to gpios (low = relay ON)</Option>
 					<Option value="i2c-relay"    >use i2c relay from 52pi</Option>
@@ -23163,7 +23319,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
+			<Field id="displayS"     type="menu"         defaultValue="rainLevel">
 				<List>
 					<Option value="rainLevel"         >Rain level</Option>
 					<Option value="rainRate"          >Rain Rate</Option>
@@ -23391,7 +23547,7 @@ The Chirp sensor also has a crude measurement of light, the adafruit will show 0
 			</Field>
 
 
-			<Field id="sensorMode" type="menu"     defaultValue="chirp"  >
+			<Field id="sensorMode" type="menu"     defaultValue="chirp-2.7"  >
 				<Label>Sensor make:</Label>
 				<List>
 					<Option value="adafruit"   >adafruit </Option>
@@ -23535,7 +23691,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
+			<Field id="displayS"     type="menu"         defaultValue="Moisture">
 				<List>
 					<Option value="Moisture"        >Moisture</Option>
 					<Option value="Temperature"     >Temperature[C/F]</Option>
@@ -23757,7 +23913,7 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS"     type="menu"         defaultValue="lastEventDate">
+			<Field id="displayS"     type="menu"         defaultValue="count">
 				<List>
 					<Option value="count"  >count</Option>
 					<Option value="countPerSecond"    >countsPerSecond = frequency</Option>
@@ -24029,7 +24185,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				</List>
 			</Field>
 
-			<Field id="deadTimeBurst" type="menu"     defaultValue="1" visibleBindingId="minEventsinTimeWindowToTriggerBursts"  visibleBindingValue="1,2,3,4,6,8,10,12,15,20" tooltip="software gate, after accepting an event, within deadTime no other event is accepted for count  ">
+			<Field id="deadTimeBurst" type="menu"     defaultValue="1.0" visibleBindingId="minEventsinTimeWindowToTriggerBursts"  visibleBindingValue="1,2,3,4,5,6,8,10,15,20" tooltip="software gate, after accepting an event, within deadTime no other event is accepted for count  ">
 				<Label>accept new pulse after(deadTime) for BURST:</Label>
 				<List>
 					<Option value="0.0"   >immediately (min = 0.1 .. 1.0mSec dep. on RPI)</Option>
@@ -24058,7 +24214,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 				</List>
 			</Field>
 
-			<Field id="timeWindowForBursts" type="menu"     defaultValue="4" hidden="no"  visibleBindingId="minEventsinTimeWindowToTriggerBursts"    visibleBindingValue="1,2,3,4,6,8,10,12,15,20">
+			<Field id="timeWindowForBursts" type="menu"     defaultValue="4" hidden="no"  visibleBindingId="minEventsinTimeWindowToTriggerBursts"    visibleBindingValue="1,2,3,4,5,6,8,10,15,20">
 				<Label>time window for pulses to trigger Burst event:</Label>
 				<List>
 					<Option value="0.2" > 0.2 secs </Option>
@@ -24354,7 +24510,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the touch points:</Label>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="0" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" hidden="yes"  >
+			<Field id="INPUTstate"   type="menu" defaultValue="0" visibleBindingId="piDone"    visibleBindingValue="true" hidden="yes"  >
 				<Label>(1) INPUT state#:</Label>
 				<List>
 					<Option value="0"   >0</Option>
@@ -24363,12 +24519,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select touch pad for this INPUT channel/state:</Label>
 				<List class="self" filter="" method="filterList16" dynamicReload="false" />
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -24377,7 +24533,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -24395,9 +24551,9 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="deviceDefs" type="textfield"        defaultValue="" hidden="YES"> </Field>
-			<Field id="displayS" type="textfield"        defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
+			<Field id="displayS" type="textfield"        defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -24411,7 +24567,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="down-up"     >show 1 as down; 0 as up</Option>
 				</List>
 			</Field>
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -24531,7 +24687,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the touch points:</Label>
 			</Field>
 
-			<Field id="addToInputName" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true">
+			<Field id="addToInputName" type="menu"     defaultValue="0" visibleBindingId="piDone"    visibleBindingValue="true">
 				<Label>add 1 to state numbering:</Label>
 				<List>
 					<Option value="0"   >use states 0...3</Option>
@@ -24539,19 +24695,19 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
+			<Field id="INPUTstate"   type="menu" defaultValue="-1" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
 				<Label>(1) select INPUT state#:</Label>
 			<List class="self" filter="" method="filterList4" dynamicReload="false" />
 			</Field>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="True" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select touch pad for this INPUT channel:</Label>
 			<List class="self" filter="" method="filterList16" dynamicReload="false" />
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -24560,7 +24716,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -24578,9 +24734,9 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="deviceDefs" type="textfield"        defaultValue="" hidden="YES"> </Field>
-			<Field id="displayS" type="textfield"         defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
+			<Field id="displayS" type="textfield"         defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -24595,7 +24751,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -24722,7 +24878,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the touch points:</Label>
 			</Field>
 
-			<Field id="addToInputName" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true">
+			<Field id="addToInputName" type="menu"     defaultValue="0" visibleBindingId="piDone"    visibleBindingValue="true">
 				<Label>add 1 to state numbering:</Label>
 				<List>
 					<Option value="0"   >use states 0...11</Option>
@@ -24730,19 +24886,19 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
+			<Field id="INPUTstate"   type="menu" defaultValue="-1" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
 				<Label>(1) select INPUT state#:</Label>
 			<List class="self" filter="" method="filterList12" dynamicReload="false" />
 			</Field>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="True" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select touch pad for this INPUT channel:</Label>
 			<List class="self" filter="" method="filterList16" dynamicReload="false" />
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -24751,7 +24907,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -24769,9 +24925,9 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="textfield"         defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
+			<Field id="displayS" type="textfield"         defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -24786,7 +24942,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -24953,7 +25109,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the touch points:</Label>
 			</Field>
 
-			<Field id="addToInputName" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true">
+			<Field id="addToInputName" type="menu"     defaultValue="0" visibleBindingId="piDone"    visibleBindingValue="true">
 				<Label>add 1 to state numbering:</Label>
 				<List>
 					<Option value="0"   >use states 0...15</Option>
@@ -24961,19 +25117,19 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
+			<Field id="INPUTstate"   type="menu" defaultValue="-1" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
 				<Label>(1) select INPUT state#:</Label>
 			<List class="self" filter="" method="filterList16" dynamicReload="false" />
 			</Field>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="True" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select touch pad for this INPUT channel:</Label>
 			<List class="self" filter="" method="filterList16" dynamicReload="false" />
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -24982,7 +25138,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -25001,9 +25157,9 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
-			<Field id="displayS" type="textfield"         defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
+			<Field id="displayS" type="textfield"         defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -25018,7 +25174,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -25180,23 +25336,23 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
+			<Field id="INPUTstate"   type="menu" defaultValue="-1" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
 				<Label>(1) select INPUT channel/state#:</Label>
 				<List class="self" filter="" method="filterINPUTchannels" dynamicReload="true"/>
 			</Field>
 
-			<Field  id="buttonState" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" >
+			<Field  id="buttonState" type="button" visibleBindingId="piDone"    visibleBindingValue="true" >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmStateBUTTONI</CallbackMethod>
 			</Field>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select gpio# for this INPUT channel/state:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 
-			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="inpType" type="menu"     defaultValue="high" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(3) INPUT type:</Label>
 				<List>
 					<Option value="high"        >PullUp ResistorON </Option>
@@ -25205,7 +25361,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -25214,7 +25370,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -25233,9 +25389,9 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
-			<Field id="displayS" type="textfield"        defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
+			<Field id="displayS" type="textfield"        defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -25252,7 +25408,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -25410,23 +25566,23 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
+			<Field id="INPUTstate"   type="menu" defaultValue="-1" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
 				<Label>(1) select INPUT channel/state#:</Label>
 				<List class="self" filter="" method="filterINPUTchannels" dynamicReload="true"/>
 			</Field>
 
-			<Field  id="buttonState" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" >
+			<Field  id="buttonState" type="button" visibleBindingId="piDone"    visibleBindingValue="true" >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmStateBUTTONI</CallbackMethod>
 			</Field>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select gpio# for this INPUT channel/state:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 
-			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="inpType" type="menu"     defaultValue="high" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(3) INPUT type:</Label>
 				<List>
 					<Option value="high"        >PullUp ResistorON </Option>
@@ -25435,7 +25591,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -25444,7 +25600,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -25462,9 +25618,9 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="textfield"        defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
+			<Field id="displayS" type="textfield"        defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -25479,7 +25635,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -25568,23 +25724,23 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
+			<Field id="INPUTstate"   type="menu" defaultValue="-1" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
 				<Label>(1) select INPUT channel/state#:</Label>
 				<List class="self" filter="" method="filterINPUTchannels" dynamicReload="true"/>
 			</Field>
 
-			<Field  id="buttonState" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" >
+			<Field  id="buttonState" type="button" visibleBindingId="piDone"    visibleBindingValue="true" >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmStateBUTTONI</CallbackMethod>
 			</Field>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select gpio# for this INPUT channel/state:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 
-			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="inpType" type="menu"     defaultValue="high" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(3) INPUT type:</Label>
 				<List>
 					<Option value="high"        >PullUp ResistorON </Option>
@@ -25593,7 +25749,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -25602,7 +25758,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -25621,10 +25777,10 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 
-			<Field id="displayS" type="textfield"        defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="displayS" type="textfield"        defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -25639,7 +25795,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -25760,23 +25916,23 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="INPUTstate"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
+			<Field id="INPUTstate"   type="menu" defaultValue="-1" visibleBindingId="piDone"    visibleBindingValue="true" tooltip="select the INPUT state for which to pick the GPIO" >
 				<Label>(1) select INPUT channel/state#:</Label>
 				<List class="self" filter="" method="filterINPUTchannels" dynamicReload="true"/>
 			</Field>
 
-			<Field  id="buttonState" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" >
+			<Field  id="buttonState" type="button" visibleBindingId="piDone"    visibleBindingValue="true" >
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmStateBUTTONI</CallbackMethod>
 			</Field>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="stateDone"    visibleBindingValue="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select gpio# for this INPUT channel/state:</Label>
 			<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 
-			<Field id="inpType" type="menu"     defaultValue="high" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="inpType" type="menu"     defaultValue="high" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(3) INPUT type:</Label>
 				<List>
 					<Option value="high"        >PullUp   ResistorON </Option>
@@ -25785,7 +25941,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="count" type="menu"     defaultValue="off" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field id="count" type="menu"     defaultValue="off" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label>(4) count on/off..:</Label>
 				<List>
 					<Option value="off"   >regular input</Option>
@@ -25794,7 +25950,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="stateDone"    visibleBindingValue="true">
 				<Label> (6)....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONI</CallbackMethod>
 			</Field>
 
@@ -25812,9 +25968,9 @@ will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
-			<Field id="displayS" type="textfield"        defaultValue="0" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
+			<Field id="displayS" type="textfield"        defaultValue="0" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>State INPUT# to display in the Status Column:</Label></Field>
 
-			<Field id="infoLabelF" type="label" enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
+			<Field id="infoLabelF" type="label" visibleBindingId="stateDone"    visibleBindingValue="true"> <Label>    define parameters for status column:</Label> </Field>
 			<Field id="onOff"  type="menu"      defaultValue="x">		<Label>show 0/1 as ON/off in status Column:</Label>
 				<List>
 					<Option value="x"           >regular 0-1</Option>
@@ -25829,7 +25985,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -26365,7 +26521,7 @@ You can setup a trigger eg Distance becomes less than 30cm condition gt 10cm and
 				</List>
 			</Field>
 
-			<Field id="smoothMeasurements" type="checkBox"     defaultValue="true" hidden="no">
+			<Field id="smoothMeasurements" type="checkbox"     defaultValue="true" hidden="no">
 				<Label>smooth measurements (take 3 and use middle):</Label>
 			</Field>
 
@@ -26433,9 +26589,10 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
 			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
 			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
-			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="-1" >		
 				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
 				<List>
+					<Option value="-1"  >off</Option>
 					<Option value="0.5"  > 0.5</Option>
 					<Option value="1"    > 1</Option>
 					<Option value="1.5"  > 1.5</Option>
@@ -26502,31 +26659,31 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				</List>
 			</Field>
 
-			<Field id="width1"  type="textfield" defaultValue="18" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
+			<Field id="width1"  type="textfield" defaultValue="18"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
 				<Label>default points for text 1:</Label>
 			</Field>
 
-			<Field id="width2"  type="textfield" defaultValue="28" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width2"  type="textfield" defaultValue="28"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for text 2:</Label>
 			</Field>
 
-			<Field id="width3"  type="textfield" defaultValue="5" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width3"  type="textfield" defaultValue="5"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for bar:</Label>
 			</Field>
 
-			<Field id="pos1"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos1"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 1[x,y]:</Label>
 			</Field>
 
-			<Field id="pos2"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos2"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 2[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3LinLog"  type="menu" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3LinLog"  type="menu" defaultValue="lin"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3 lin/log:</Label>
 				<List>
 					<Option value= "lin"  >linear scale  </Option>
@@ -26782,9 +26939,10 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
 			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
 			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
-			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="-1" >		
 				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
 				<List>
+					<Option value="-1"  >off</Option>
 					<Option value="0.5"  > 0.5</Option>
 					<Option value="1"    > 1</Option>
 					<Option value="1.5"  > 1.5</Option>
@@ -26837,31 +26995,31 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				</List>
 			</Field>
 
-			<Field id="width1"  type="textfield" defaultValue="18" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
+			<Field id="width1"  type="textfield" defaultValue="18"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
 				<Label>default points for text 1:</Label>
 			</Field>
 
-			<Field id="width2"  type="textfield" defaultValue="28" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width2"  type="textfield" defaultValue="28"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for text 2:</Label>
 			</Field>
 
-			<Field id="width3"  type="textfield" defaultValue="5" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width3"  type="textfield" defaultValue="5"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for bar:</Label>
 			</Field>
 
-			<Field id="pos1"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos1"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 1[x,y]:</Label>
 			</Field>
 
-			<Field id="pos2"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos2"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 2[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3LinLog"  type="menu" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3LinLog"  type="menu" defaultValue="lin"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3 lin/log:</Label>
 				<List>
 					<Option value= "lin"  >linear scale  </Option>
@@ -27144,9 +27302,10 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
 			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
 			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
-			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="-1" >		
 				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
 				<List>
+					<Option value="-1"  >off</Option>
 					<Option value="0.5"  > 0.5</Option>
 					<Option value="1"    > 1</Option>
 					<Option value="1.5"  > 1.5</Option>
@@ -27200,31 +27359,31 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				</List>
 			</Field>
 
-			<Field id="width1"  type="textfield" defaultValue="18" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
+			<Field id="width1"  type="textfield" defaultValue="18"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
 				<Label>default points for text 1:</Label>
 			</Field>
 
-			<Field id="width2"  type="textfield" defaultValue="28" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width2"  type="textfield" defaultValue="28"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for text 2:</Label>
 			</Field>
 
-			<Field id="width3"  type="textfield" defaultValue="5" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width3"  type="textfield" defaultValue="5"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for bar:</Label>
 			</Field>
 
-			<Field id="pos1"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos1"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 1[x,y]:</Label>
 			</Field>
 
-			<Field id="pos2"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos2"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 2[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3LinLog"  type="menu" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="1,2"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
+			<Field id="pos3LinLog"  type="menu" defaultValue="lin"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
 				<Label>lin/log:</Label>
 				<List>
 					<Option value= "lin"  >linear scale  </Option>
@@ -27232,15 +27391,15 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				</List>
 			</Field>
 
-			<Field id="colorOfDistanceBar"  type="textfield" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="2"  visibleBindingId="displayEnable"    visibleBindingValue="2">
+			<Field id="colorOfDistanceBar"  type="textfield" defaultValue="lin"  visibleBindingId="displayEnable"    visibleBindingValue="2">
 				<Label>color of bar eg 0,100,100:</Label>
 			</Field>
 
-			<Field id="normalizeDistance"  type="textfield" defaultValue="500" enableBindingId="displayEnable" enableBindingValue="1,1"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
+			<Field id="normalizeDistance"  type="textfield" defaultValue="500"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
 				<Label>max distance:</Label>
 			</Field>
 
-			<Field id="inverseDistance"  type="menu" defaultValue="normal" enableBindingId="displayEnable" enableBindingValue="2"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
+			<Field id="inverseDistance"  type="menu" defaultValue="normal"  visibleBindingId="displayEnable"    visibleBindingValue="1,2">
 				<Label>show # of LEDs inverse to distance:</Label>
 				<List>
 					<Option value= "normal"  >normal</Option>
@@ -27517,9 +27676,10 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
 			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
 			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
-			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="-1" >		
 				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
 				<List>
+					<Option value="-1"  >off</Option>
 					<Option value="0.5"  > 0.5</Option>
 					<Option value="1"    > 1</Option>
 					<Option value="1.5"  > 1.5</Option>
@@ -27572,31 +27732,31 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				</List>
 			</Field>
 
-			<Field id="width1"  type="textfield" defaultValue="18" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
+			<Field id="width1"  type="textfield" defaultValue="18"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
 				<Label>default points for text 1:</Label>
 			</Field>
 
-			<Field id="width2"  type="textfield" defaultValue="28" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width2"  type="textfield" defaultValue="28"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for text 2:</Label>
 			</Field>
 
-			<Field id="width3"  type="textfield" defaultValue="5" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width3"  type="textfield" defaultValue="5"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for bar:</Label>
 			</Field>
 
-			<Field id="pos1"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos1"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 1[x,y]:</Label>
 			</Field>
 
-			<Field id="pos2"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos2"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 2[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3LinLog"  type="menu" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3LinLog"  type="menu" defaultValue="lin"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3 lin/log:</Label>
 				<List>
 					<Option value= "lin"  >linear scale  </Option>
@@ -27821,9 +27981,10 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="actionLongDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for LONG   distance event:</Label></Field>
 			<Field id="actionVeryLongDistance"   type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"  defaultValue="" >	<Label>action for VeryLONG   distance event:</Label></Field>
 			<Field id="actionStopDistance"       type="textfield"  visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >	<Label>action for stop:</Label></Field>
-			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="" >		
+			<Field id="actionStopMinSpeed"       type="menu"       visibleBindingId="actionEnable" visibleBindingValue="1"   defaultValue="-1" >		
 				<Label>STOP: min speed[cm/s] to trigger stop event:</Label>
 				<List>
+					<Option value="-1"  >off</Option>
 					<Option value="0.5"  > 0.5</Option>
 					<Option value="1"    > 1</Option>
 					<Option value="1.5"  > 1.5</Option>
@@ -27876,31 +28037,31 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				</List>
 			</Field>
 
-			<Field id="width1"  type="textfield" defaultValue="18" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
+			<Field id="width1"  type="textfield" defaultValue="18"  visibleBindingId="displayEnable"    visibleBindingValue="1" >
 				<Label>default points for text 1:</Label>
 			</Field>
 
-			<Field id="width2"  type="textfield" defaultValue="28" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width2"  type="textfield" defaultValue="28"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for text 2:</Label>
 			</Field>
 
-			<Field id="width3"  type="textfield" defaultValue="5" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="width3"  type="textfield" defaultValue="5"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>default points for bar:</Label>
 			</Field>
 
-			<Field id="pos1"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos1"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 1[x,y]:</Label>
 			</Field>
 
-			<Field id="pos2"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos2"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 2[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3"  type="textfield" defaultValue="[]" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3"  type="textfield" defaultValue="[]"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3[x,y]:</Label>
 			</Field>
 
-			<Field id="pos3LinLog"  type="menu" defaultValue="lin" enableBindingId="displayEnable" enableBindingValue="1"  visibleBindingId="displayEnable"    visibleBindingValue="1">
+			<Field id="pos3LinLog"  type="menu" defaultValue="lin"  visibleBindingId="displayEnable"    visibleBindingValue="1">
 				<Label>position Parameter 3 lin/log:</Label>
 				<List>
 					<Option value= "lin"  >linear scale  </Option>
@@ -28374,17 +28535,16 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="minStrikes" type="menu"     defaultValue="3"> <Label>min # of strikes to accept lighning:</Label>
+			<Field id="minStrikes" type="menu"     defaultValue="1"> <Label>min # of strikes to accept lighning:</Label>
 				<List>
-					<Option value="0"   >0</Option>
 					<Option value="1"   >1</Option>
 					<Option value="5"   >5</Option>
-					<Option value="9"   >3</Option>
+					<Option value="9"   >9</Option>
 					<Option value="16"  >16</Option>
 				</List>
 			</Field>
 
-			<Field id="calibrationDynamic" type="menu"     defaultValue="3"> <Label>set calibration fixed or allow dynamic changes in parameters:</Label>
+			<Field id="calibrationDynamic" type="menu"     defaultValue="1"> <Label>set calibration fixed or allow dynamic changes in parameters:</Label>
 				<List>
 					<Option value="0"   >static</Option>
 					<Option value="1"   >dynamic</Option>
@@ -28512,7 +28672,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -28641,7 +28801,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="lowHighAs"  type="menu"      defaultValue="0x">		<Label>On RPI use low/High voltage as  :</Label>
+			<Field id="lowHighAs"  type="menu"      defaultValue="0">		<Label>On RPI use low/High voltage as  :</Label>
 				<List>
 					<Option value="0" >ON/off .. 1/0</Option>
 					<Option value="1" >off/ON .. 0/1  </Option>
@@ -28856,7 +29016,7 @@ For the read settings from the device to work you need to set up the device on t
 			<Field id="mac" type="textfield"     defaultValue=""> <Label>mac number of  switch bot:</Label>
 			</Field>
 
-			<Field id="gatMode" type="menu"     defaultValue="batch"  tooltipe="for simple on off cammands (besides repeated pulses) the gatt comamnd can be issues as a onlineer (batch or as a sequence of commands connect, send command disconect)">
+			<Field id="gatMode" type="menu"     defaultValue="batch"  tooltip="for simple on off cammands (besides repeated pulses) the gatt comamnd can be issues as a onlineer (batch or as a sequence of commands connect, send command disconect)">
 				<Label>for gatttool command ONoff use batch or interactive:</Label>
 				<List>
 						<Option value="batch" >batch = one line gatttool command</Option>
@@ -29246,7 +29406,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select relay# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="1"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select relay# for this INPUT channel/state" >
 				<Label>(2) select relay #:</Label>
 				<List>
 					<Option value="1"      >relay# 1 </Option>
@@ -29256,7 +29416,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"  >
+			<Field id="outType"   type="menu" defaultValue="0"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"  >
 				<Label> OUTPUT type:</Label>
 				<List>
 					<Option value="0"        >set OUTPUT normal </Option>
@@ -29264,7 +29424,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"  >
+			<Field id="initialValue"   type="menu" defaultValue="-"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true"  >
 				<Label> initial Value:</Label>
 				<List>
 					<Option value="down"      >set OUTPUT initially to low </Option>
@@ -29273,7 +29433,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
 			</Field>
 
@@ -29323,12 +29483,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Type of input function for each of the pins:</Label>
 			</Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="piDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select gpio#:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 
-			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="outType"   type="menu" defaultValue="0"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 				<Label> OUTPUT type:</Label>
 				<List>
 					<Option value="0"        >set OUTPUT normal </Option>
@@ -29336,7 +29496,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="initialValue"   type="menu" defaultValue="float"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 				<Label> initial Value:</Label>
 				<List>
 					<Option value="down"      >set OUTPUT initially to low </Option>
@@ -29345,7 +29505,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="piDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
 			</Field>
 
@@ -29398,12 +29558,12 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 			<Field id="stateDone" type="checkbox"     defaultValue="false" hidden="yes"></Field>
 
-			<Field id="gpio"   type="menu" defaultValue="-1" enableBindingId="stateDone" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
+			<Field id="gpio"   type="menu" defaultValue="-1"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select gpio pin# for this INPUT channel/state" >
 				<Label>(2) select gpio#:</Label>
 				<List class="self" filter="" method="filtergpioList" dynamicReload="false" />
 			</Field>
 
-			<Field id="outType"   type="menu" defaultValue="0" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="outType"   type="menu" defaultValue="0"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 				<Label> OUTPUT type:</Label>
 				<List>
 					<Option value="0"        >set OUTPUT normal </Option>
@@ -29411,7 +29571,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field id="initialValue"   type="menu" defaultValue="-" enableBindingId="0" enableBindingValue="true"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
+			<Field id="initialValue"   type="menu" defaultValue="-"  visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true" tooltip="select output mode inverse: on= pull low" >
 				<Label> initial Value:</Label>
 				<List>
 					<Option value="down"      >set OUTPUT initially to low </Option>
@@ -29420,7 +29580,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 				</List>
 			</Field>
 
-			<Field  id="buttonselect" type="button"    enableBindingId="stateDone"    enableBindingValue="true" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
+			<Field  id="buttonselect" type="button" visibleBindingId="piDone"    visibleBindingValue="true" alwaysUseInDialogHeightCalc="true">
 				<Label> ....after selection click</Label><Title>CONFIRM</Title> <CallbackMethod>confirmSelectionBUTTONO</CallbackMethod>
 			</Field>
 
@@ -30005,11 +30165,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<TriggerLabel>Channel-29</TriggerLabel>
 				<ControlPageLabel>Channel-29</ControlPageLabel>
 			</State>
-			<State id="Channel-20">
-				<ValueType>string</ValueType>
-				<TriggerLabel>Channel-20</TriggerLabel>
-				<ControlPageLabel>Channel-20</ControlPageLabel>
-			</State>
 
 			<State id="Channel-30">
 				<ValueType>string</ValueType>
@@ -30258,7 +30413,7 @@ learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi
 			</Field>
 
 			<Field id="seci2c" type="label" fontColor="green"> <Label>==== i2c connection of this device:</Label> </Field>
-			<Field id="i2cAddress" type="menu"     defaultValue="60" enableBindingId="devType" enableBindingValue="ssd1306,sh1106,LCD1602" visibleBindingId="devType" visibleBindingValue="ssd1306,sh1106,LCD1602">
+			<Field id="i2cAddress" type="menu"     defaultValue="60" visibleBindingId="devType" visibleBindingValue="ssd1306,sh1106,LCD1602">
 				<Label>i2c address of device:</Label>
 				<List>
 					<Option value="60"   >60 = 0x3c  ssd1306,sh1106</Option>
@@ -30269,16 +30424,16 @@ learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi
 			</Field>
 
 			<Field id="textForssd1351-1" type="textfield" defaultValue="GPIO11 = SCLK"
-    readonly="yes" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
+    readonly="yes" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
 				<Label>Connect SCL:</Label>
 			</Field>
 
 			<Field id="textForssd1351-2" type="textfield" defaultValue="GPIO10 = MOSI"
-    readonly="yes" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
+    readonly="yes" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
 				<Label>..SDA:</Label>
 			</Field>
 
-			<Field id="PIN_RST" type="menu"     defaultValue="26" enableBindingId="devType"    enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
+			<Field id="PIN_RST" type="menu"     defaultValue="26" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
 				<List>
 					<Option value= "26"  >GPIO26 lower left</Option>
 					<Option value= "25"  >GPIO25 center right  ssd1351</Option>
@@ -30287,7 +30442,7 @@ learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi
 				<Label>..RES:</Label>
 			</Field>
 
-			<Field id="PIN_CS" type="menu"     defaultValue="24" enableBindingId="devType"    enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351">
+			<Field id="PIN_CS" type="menu"     defaultValue="24" visibleBindingId="devType" visibleBindingValue="ssd1351">
 				<List>
 					<Option value= "19"  >GPIO19 lower left</Option>
 					<Option value= "24"  >GPIO24 center right</Option>
@@ -30295,7 +30450,7 @@ learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi
 				<Label>..CS:</Label>
 			</Field>
 
-			<Field id="PIN_DC" type="menu"     defaultValue="23" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
+			<Field id="PIN_DC" type="menu"     defaultValue="23" visibleBindingId="devType" visibleBindingValue="ssd1351,st7735">
 				<List>
 					<Option value= "13"  >GPIO13 lower left</Option>
 					<Option value= "23"  >GPIO23 center right ssd1351</Option>
@@ -30304,7 +30459,7 @@ learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi
 				<Label>..DC:</Label>
 			</Field>
 
-			<Field id="PIN_CE" type="menu"     defaultValue="1" enableBindingId="devType" enableBindingValue="ssd1351" visibleBindingId="devType" visibleBindingValue="ssd1351">
+			<Field id="PIN_CE" type="menu"     defaultValue="1" visibleBindingId="devType" visibleBindingValue="ssd1351">
 				<Label>SPI dev # CEx_N:</Label>
 				<List>
 					<Option value= "0"  >0, no cable connection</Option>
@@ -30312,7 +30467,7 @@ learn.adafruit.com/adafruit-rgb-matrix-plus-real-time-clock-hat-for-raspberry-pi
 				</List>
 			</Field>
 
-			<Field id="flipDisplay" type="menu"     defaultValue="0" enableBindingId="devType" enableBindingValue="screen" visibleBindingId="devType" visibleBindingValue="screen,screenXwindows">
+			<Field id="flipDisplay" type="menu"     defaultValue="0" visibleBindingId="devType" visibleBindingValue="screen,screenXwindows">
 				<Label>flip display:</Label>
 				<List>
 					<Option value= "0"  >no</Option>
@@ -31092,7 +31247,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value= '[59,1]'  >blink 59sec on,  1sec off</Option>
 					<Option value= '[0,1]'   >blink 1sec  off, 1sec on</Option>
 					<Option value= '[0,2]'   >blink 2sec  off, 1sec on</Option>
-					<Option value= '[3,1]'   >blink 1sec  off, 3sec on</Option>
 					<Option value= '[2,2]'   >blink 2sec  off, 2sec on</Option>
 					<Option value= '[3,2]'   >blink 2sec  off, 3sec on</Option>
 					<Option value= '[3,3]'   >blink 3sec  off, 3sec on</Option>
@@ -31133,7 +31287,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value= '[59,1]'  >blink 59sec on,  1sec off</Option>
 					<Option value= '[0,1]'   >blink 1sec  off, 1sec on</Option>
 					<Option value= '[0,2]'   >blink 2sec  off, 1sec on</Option>
-					<Option value= '[3,1]'   >blink 1sec  off, 3sec on</Option>
 					<Option value= '[2,2]'   >blink 2sec  off, 2sec on</Option>
 					<Option value= '[3,2]'   >blink 2sec  off, 3sec on</Option>
 					<Option value= '[3,3]'   >blink 3sec  off, 3sec on</Option>
@@ -31174,7 +31327,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value= '[59,1]'  >blink 59sec on,  1sec off</Option>
 					<Option value= '[0,1]'   >blink 1sec  off, 1sec on</Option>
 					<Option value= '[0,2]'   >blink 2sec  off, 1sec on</Option>
-					<Option value= '[3,1]'   >blink 1sec  off, 3sec on</Option>
 					<Option value= '[2,2]'   >blink 2sec  off, 2sec on</Option>
 					<Option value= '[3,2]'   >blink 2sec  off, 3sec on</Option>
 					<Option value= '[3,3]'   >blink 3sec  off, 3sec on</Option>
@@ -31214,7 +31366,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value= '[59,1]'  >blink 59sec on,  1sec off</Option>
 					<Option value= '[0,1]'   >blink 1sec  off, 1sec on</Option>
 					<Option value= '[0,2]'   >blink 2sec  off, 1sec on</Option>
-					<Option value= '[3,1]'   >blink 1sec  off, 3sec on</Option>
 					<Option value= '[2,2]'   >blink 2sec  off, 2sec on</Option>
 					<Option value= '[3,2]'   >blink 2sec  off, 3sec on</Option>
 					<Option value= '[3,3]'   >blink 3sec  off, 3sec on</Option>
@@ -31424,7 +31575,7 @@ You can use up to 3 GPIO input pins to control the range of the motor
 				<Label>select rPi-server to which the device is connect to:</Label>
 			</Field>
 
-			<Field id="motorType"  type="menu" defaultValue="bipolar-200-2">
+			<Field id="motorType"  type="menu" defaultValue="bipolar-2">
 				<List>
 					<Option value= "unipolar-1"> 5 unipolar coils          4096 steps - ULN2003 chip or alike</Option>
 					<Option value= "bipolar-1" > 2 bipolar coils bridge 1 *x steps - L9110/L298N chip or alike</Option>
@@ -32003,6 +32154,6 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Device type="sensor" id="DHT11">        	<Name>INPUT-Temp+Hum-DHT11- deprecated</Name>		</Device>
 	<Device type="sensor" id="DHTxx">        	<Name>INPUT-Temp+Hum-DHTxx- deprecated</Name>		</Device>
 	<Device type="sensor" id="mhz-I2C">			<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
-	<Device type="sensor" id="mhz-SERIAL">		<Name>INPUT-mhz-I2C- deprecated</Name>				</Device>
+	<Device type="sensor" id="mhz-SERIAL">		<Name>INPUT-mhz-SERIAL- deprecated</Name>				</Device>
 
 </Devices>	

@@ -43,9 +43,15 @@
 #    sudo python3 qualifyDongle.py 10 catalogue=/tmp/x.json write the local catalogue elsewhere
 #    sudo python3 qualifyDongle.py 10 catalogue=none        no local catalogue (plugin keeps the
 #                                                           shared one in the indigo prefs dir)
+#    sudo python3 qualifyDongle.py 10 stop=no               do NOT stop/start piBeacon (for a caller
+#                                                           that already did - receiveCommands does)
 #
-# IMPORTANT: stop beaconloop first, it owns the radios and keeps reconfiguring them:
-#    sudo pkill -f beaconloop.py ; sudo pkill -f master.py
+# piBeacon IS STOPPED AUTOMATICALLY for the measurement and started again when the run ends, also on
+# an exception and on ctrl-c. It has to be: a radio that beaconloop is scanning on refuses
+# create-connection with ENOSYS and shares its report rate, so a perfectly good dongle is reported as
+# "connect unreliable" and "scan too slow" - measured on one rpi minutes apart, the same ASUS at 100%
+# with piBeacon stopped and 40% with it running. The old "REMINDER: stop beaconloop first" was
+# printed on every such run and read straight past, every time.
 #
 # python3 only (native AF_BLUETOOTH raw HCI socket, no pybluez needed).
 ####################
@@ -58,8 +64,10 @@ import json
 import struct
 import socket as pySocket
 import subprocess
+import signal				# restart piBeacon on ctrl-c / kill - see startPiBeacon()
+import atexit				# ... and on a normal end or an exception
 
-VERSION = 2.4
+VERSION = 2.9
 
 OGF_LE_CTL                 = 0x08
 OCF_LE_SET_EVENT_MASK      = 0x0001
@@ -69,6 +77,7 @@ OCF_LE_SET_ADV_DATA        = 0x0008
 OCF_LE_SET_ADV_ENABLE      = 0x000A
 OCF_LE_SET_SCAN_PARAMETERS = 0x000B
 OCF_LE_SET_SCAN_ENABLE     = 0x000C
+OCF_LE_SET_EXT_ADV_ENABLE  = 0x0039
 OCF_LE_EXT_SCAN_PARAMS     = 0x0041
 OCF_LE_EXT_SCAN_ENABLE     = 0x0042
 
@@ -79,7 +88,11 @@ HCI_EVENT_PKT = 0x04
 # thresholds, all from measurements on real hardware (scanRateTest, 2026-07):
 #   109/s pi onboard broadcom | 92/s good USB | 56/s CSR clone | 24/s ASUS extended | 2.6/s Barrot
 SCAN_GOOD      = 80.0		# reports/s: full-time scanner
-SCAN_OK        = 40.0		# reports/s: usable scanner (clone territory)
+SCAN_OK        = 40.0		# reports/s: usable scanner - FALLBACK ONLY, see COVERAGE_* below
+COVERAGE_GOOD  = 85.0		# % of the macs ANY radio on this rpi heard: full-time scanner
+COVERAGE_OK    = 65.0		# % ditto: usable scanner. Two live runs on rpi#2 moved each radio
+							# by ~5 points (ASUS 94.3/89.0, onboard 74.3/78.1, UB500 71.4/67.1),
+							# so the bands are set wide enough that nobody changes role between runs
 EXT_MIN_RATE   = 1.0		# reports/s in extended mode to call extended reception WORKING
 EXT_MIN_MACS   = 5			# ... and it has to hear more than one talkative neighbour
 CLONE_ACL_MTU  = 400		# ACL MTU <= this = CSR8510 clone: scans fine, unreliable for connects
@@ -104,6 +117,36 @@ def shell(cmd):
 
 def listAdapters():
 	return re.findall(r"^(hci\d+):", shell("hciconfig"), re.M)
+
+
+def followAdapter(mac, oldHci=""):
+	"""which hci name carries this MAC right now?
+
+	A USB dongle can RE-ENUMERATE while it is being reset and comes back under a NEW name. Measured
+	on a BCM20702A0 (0a5c:21e8) that has no firmware patch installed - the kernel says
+	"BCM: firmware Patch file not found: brcm/BCM20702A1-0a5c-21e8.hcd" at every probe - and the log
+	then reads "usb 1-1.2: USB disconnect, device number 7" / "new full-speed USB device number 8",
+	with the same radio reappearing as hci3 while the tool was still addressing hci0. Everything sent
+	to the old name goes to a device node that no longer exists: ACL MTU 0, zero reports, advertising
+	"FAILED", and the verdict "ROLES: NONE - do not use this dongle" about a radio that measures
+	94.5 reports/s once it is addressed by its new name. The MAC is the only stable identity here,
+	which is also why beaconloop pins its roles by MAC.
+
+	Inputs:
+	    mac (str): the BD address to look for
+	    oldHci (str): the name it used to have, skipped in the search
+	Outputs:
+	    str: the new hci name, or "" if that MAC is not on the bus at all
+	"""
+	if not mac:	return ""
+	for _try in range(3):
+		time.sleep(1.0)							# re-enumeration takes a moment to settle
+		for hh in listAdapters():
+			if hh == oldHci:	continue
+			try:
+				if fingerprint(hh).get("mac", "") == mac:	return hh
+			except Exception:	pass
+	return ""
 
 
 def fingerprint(hci):
@@ -184,11 +227,21 @@ def vendorName(fp):
 
 
 def resetHCI(hci):
-	shell("sudo hciconfig {} reset".format(hci))
-	time.sleep(0.4)
-	shell("sudo hciconfig {} up".format(hci))
-	time.sleep(0.4)
-	return "UP" in shell("hciconfig {}".format(hci))
+	"""down+up, NEVER "hciconfig reset". HCIDEVRESET does not clear every controller and leaves some
+	DOWN: measured here on a BCM20702A0 (0a5c:21e8) that stayed down for the whole run and was duly
+	reported as "adapter does not come up properly - unusable" with 0 reports and no advertising -
+	a perfectly good dongle, condemned by its own reset. It came back only when the USB device
+	re-enumerated, and a plain down+up brought the same dongle up every time afterwards (10/10
+	connects right after). beaconloop learned the identical lesson on a different radio, see
+	hciNeedsDownUp / temp/hciMuteOnReset.json. The second attempt waits longer: a controller that
+	needs re-probing by the kernel is not always back within half a second."""
+	for _try in range(2):
+		shell("sudo hciconfig {} down".format(hci))
+		time.sleep(0.4)
+		shell("sudo hciconfig {} up".format(hci))
+		time.sleep(0.6 if _try == 0 else 2.0)
+		if "UP" in shell("hciconfig {}".format(hci)):	return True
+	return False
 
 
 def resetAllAdapters(adapters):
@@ -205,16 +258,21 @@ def resetAllAdapters(adapters):
 	    None
 	"""
 	print("resetting all adapters first: {}".format(", ".join(adapters)))
+	# down-all then up-all, with NO "hciconfig reset" in between - see resetHCI(): the reset is what
+	# left a healthy BCM20702A0 down for an entire run and got it reported as unusable.
 	for hci in adapters:
 		shell("sudo hciconfig {} down".format(hci))
-	time.sleep(0.3)
-	for hci in adapters:
-		shell("sudo hciconfig {} reset".format(hci))
 	time.sleep(0.5)
 	for hci in adapters:
 		shell("sudo hciconfig {} up".format(hci))
 	time.sleep(0.5)
 	for hci in adapters:
+		# VERIFY, and give a slow controller a second chance before calling it unusable. A USB
+		# BCM20702A0 needs noticeably longer than half a second to come back after a down, and this
+		# status line printed "DOWN   <-- not usable" for a radio that went on to scan at 94.5/s in
+		# the very same run - with its ACL MTU already readable as 1021 on the same line, which is
+		# what gave the premature read away. resetHCI does its own down+up and retries once.
+		if "UP" not in shell("hciconfig {}".format(hci)):	resetHCI(hci)
 		state = "UP" if "UP" in shell("hciconfig {}".format(hci)) else "DOWN"
 		mtu   = fingerprint(hci)["aclMTU"]
 		print("   {}: {}  ACL MTU:{}{}".format(hci, state, mtu, "   <-- not usable" if (state != "UP" or mtu == 0) else ""))
@@ -244,6 +302,41 @@ def cmdComplete(sock, ocf, params=b""):
 	return -1, bytearray()
 
 
+def macToStr(b6):
+	"""HCI carries addresses LSB FIRST - print them the way everyone else writes them."""
+	try:	return ":".join("{:02X}".format(b) for b in bytearray(b6)[::-1])
+	except Exception:	return "??"
+
+
+def addrRotates(addrType, mb):
+	"""does this address CHANGE OVER TIME, making it useless for comparing one radio against another?
+
+	BLE random addresses carry a subtype in the TOP TWO BITS of their most significant byte - which
+	is the LAST byte of the little-endian HCI buffer, and the FIRST one when printed:
+	   11 -> static random      - fixed while the device stays powered, comparable
+	   01 -> RESOLVABLE private - rotates, typically every 15 minutes
+	   00 -> non-resolvable     - rotates
+	Only Address_Type 0x01 (Random) has a subtype at all. A public address's first byte is an OUI
+	octet, where those same bit patterns mean nothing, so the type field has to be read first - this
+	is exactly the case that cannot be decided from the address alone.
+
+	WHY IT MATTERS HERE: the phases run sequentially, so a phone that rotates between two radios'
+	windows is counted as a mac each radio "missed". Measured on rpi#2: the ASUS was charged with
+	missing 66:B0:1E:B3:DA:65, 69:8C:AE:CA:47:5E and 58:D6:9C:2D:80:7D - three addresses, ~40 msgs
+	each, ALL at exactly -67 dBm and all 01xxxxxx. That is one or two phones it had already heard
+	under another name, and 23 of the 80 macs in that run were heard by one radio only.
+
+	Inputs:
+	    addrType (int): Address_Type from the advertising report
+	    mb (bytes): the 6 address bytes, little-endian as the HCI buffer carries them
+	Outputs:
+	    bool: True when the address is a private one that rotates
+	"""
+	if addrType != 0x01:	return False
+	try:    return (bytearray(mb)[-1] & 0xC0) in (0x40, 0x00)
+	except Exception:    return False
+
+
 def countReports(sock, secs, subevent):
 	"""Delivery measurement AND performance profile.
 
@@ -261,9 +354,11 @@ def countReports(sock, secs, subevent):
 	    dict: n, macs, buckets(list per second), gapMax, rssiMean, rssiMin, rssiMax
 	"""
 	n, macs   = 0, set()
+	perMac    = {}							# mac -> [reports, best rssi], consumed by macCoverage()
 	nLegacyPdu, nExtPdu = [0], [0]			# only filled for subevent 0x0D - see the split below
 	macsLegacyPdu, macsExtPdu = set(), set()
 	rssis     = []
+	rssiBad   = [0]							# samples outside the spec range - see the filter below
 	buckets   = [0] * int(max(1, secs))
 	t0        = time.time()
 	tLast     = t0
@@ -290,10 +385,14 @@ def countReports(sock, secs, subevent):
 				# byte earlier than the legacy one - both were wrong here: the report showed
 				# "rssi mean/max 16/113 dBm", which are txPower/length bytes read as a signed rssi.
 				if subevent == 0x02:
-					macs.add(bytes(ev[7:13]))
+					mb = bytes(ev[7:13])
+					aType = ev[6]			# [6]=Address_Type, see addrRotates()
+					macs.add(mb)
 					r = ev[-1]
 				else:
-					macs.add(bytes(ev[8:14]))
+					mb = bytes(ev[8:14])
+					aType = ev[7]			# [7]=Address_Type, see addrRotates()
+					macs.add(mb)
 					r = ev[18] if len(ev) > 18 else 0
 					# Event_Type bit 4 = "legacy PDU used": a BT5 controller in EXTENDED scan mode
 					# reports the ordinary BLE4 advertisements too, flagged with this bit. Counting
@@ -305,13 +404,30 @@ def countReports(sock, secs, subevent):
 					else:
 						nExtPdu[0] += 1
 						macsExtPdu.add(bytes(ev[8:14]))
-				rssis.append(r - 256 if r > 127 else r)
+				# PER MAC, counted BEFORE the rssi filter: the report arrived either way, and the
+				# count is what decides whether another radio missing this mac means anything.
+				ent = perMac.setdefault(mb, [0, -999, 1 if addrRotates(aType, mb) else 0])
+				ent[0] += 1
+				rssi = r - 256 if r > 127 else r
+				# BT Core: RSSI is a signed byte in -127..+20 dBm, and 127 means "not available".
+				# Anything outside that is NOT an rssi - it is a txPower/length/flags byte the
+				# slicing picked up, which is what "rssi mean/max -71/123 dBm" was: an impossible
+				# +123 dBm in the max. A single HCI event can also carry SEVERAL reports (ev[4] =
+				# num_reports), and ev[-1] is then only the last one's rssi. Out-of-range samples are
+				# DISCARDED and counted, so a parse that drifts shows up as a number on the report
+				# instead of quietly skewing the mean and the sensitivity verdict built on it.
+				if -127 <= rssi <= 20:
+					rssis.append(rssi)
+					if rssi > ent[1]:	ent[1] = rssi
+				else:
+					rssiBad[0] += 1
 			except Exception:	pass
 	if time.time() - tLast > gapMax:	gapMax = time.time() - tLast
 	out = {"n": n, "macs": len(macs), "buckets": buckets, "gapMax": round(gapMax, 1),
-			"rssiMean": 0, "rssiMin": 0, "rssiMax": 0,
+			"rssiMean": 0, "rssiMin": 0, "rssiMax": 0, "rssiBad": rssiBad[0],
 			"nLegacyPdu": nLegacyPdu[0], "macsLegacyPdu": len(macsLegacyPdu),
-			"nExtPdu": nExtPdu[0], "macsExtPdu": len(macsExtPdu)}
+			"nExtPdu": nExtPdu[0], "macsExtPdu": len(macsExtPdu),
+			"perMac": dict((macToStr(k), v) for k, v in perMac.items())}
 	if rssis:
 		out["rssiMean"] = int(sum(rssis) / float(len(rssis)))
 		out["rssiMin"]  = min(rssis)
@@ -350,12 +466,24 @@ def phaseLegacy(hci, secs, res):
 	resetHCI(hci)
 	sock = openSock(hci)
 	try:
+		# LEAVE THE RADIO IDLE FIRST, as phaseExtended and the connect phase already do.
+		# "LE Set Scan Parameters" is DISALLOWED (0x0C) while scanning is enabled - that is
+		# the spec, not a quirk - and the down+up in resetHCI hands the adapter straight back
+		# to bluetoothd, which re-arms its own background LE scan on the adapters it manages.
+		# So a 0x0C here could be the tool's own leftover state rather than the dongle, and it
+		# was being read as "this firmware has no legacy scan mode". The ASUS 0b05:1d70 showed
+		# exactly that: legCmdStatus [12,12] in a run where its extended scan did 32.9/s from
+		# 45 macs. Clearing both scan families first costs two commands whose status we ignore.
+		cmdComplete(sock, OCF_LE_SET_SCAN_ENABLE, struct.pack("<BB", 0x00, 0x00))			# legacy scan off
+		cmdComplete(sock, OCF_LE_EXT_SCAN_ENABLE, struct.pack("<BBHH", 0x00, 0x00, 0, 0))	# extended scan off
 		stP, _ = cmdComplete(sock, OCF_LE_SET_SCAN_PARAMETERS, struct.pack("<BHHBB", 0x01, 0x0010, 0x0010, 0x00, 0x00))
 		stE, _ = cmdComplete(sock, OCF_LE_SET_SCAN_ENABLE, struct.pack("<BB", 0x01, 0x00))
 		res["legCmdStatus"] = [stP, stE]
 		if stP != 0 or stE != 0:
-			# 0x0C = Command Disallowed: the controller is locked to the extended command family.
-			# That is the Barrot signature and it means "never give this dongle the scan role".
+			# 0x0C = Command Disallowed. With both scan families turned off immediately above,
+			# the controller has no scan running to object to, so this now really does mean the
+			# firmware is locked to the extended command family - the Barrot signature, and
+			# "never give this dongle the scan role".
 			res["nLeg"], res["uLeg"] = 0, 0
 			return
 		prof = countReports(sock, secs, 0x02)
@@ -371,6 +499,15 @@ def phaseAdvertise(hci, res):
 	resetHCI(hci)
 	sock = openSock(hci)
 	try:
+		# IDLE FIRST - see phaseLegacy. "LE Set Advertising Parameters" is disallowed (0x0C)
+		# while advertising is already enabled, which is the state bluetoothd leaves a powered
+		# connectable adapter in. A controller that implements only the extended family also
+		# wants its extended sets disabled before it will take the legacy commands, so disable
+		# those too: Enable=0 with Num_Sets=0 means "all advertising sets off".
+		cmdComplete(sock, OCF_LE_SET_ADV_ENABLE,     struct.pack("<B", 0x00))				# legacy adv off
+		cmdComplete(sock, OCF_LE_SET_EXT_ADV_ENABLE, struct.pack("<BB", 0x00, 0x00))		# all ext adv sets off
+		cmdComplete(sock, OCF_LE_SET_SCAN_ENABLE,    struct.pack("<BB", 0x00, 0x00))		# and both scans
+		cmdComplete(sock, OCF_LE_EXT_SCAN_ENABLE,    struct.pack("<BBHH", 0x00, 0x00, 0, 0))
 		stP, _ = cmdComplete(sock, OCF_LE_SET_ADV_PARAMETERS,
 							struct.pack("<HHBBB6sBB", 0x00A0, 0x00A0, 0x03, 0x00, 0x00, b"\x00"*6, 0x07, 0x00))
 		data   = bytearray(32)
@@ -399,6 +536,34 @@ def phaseConnectRepeat(hci, mac, res, tries, timeout=12.):
 	Outputs:
 	    None
 	"""
+	# THE RADIO MUST BE IDLE FIRST. This phase runs straight after two scan phases and an advertise
+	# phase on the SAME radio, and a create-connection on a controller that still has a scan running
+	# is refused with ENOSYS (SO_ERROR:38). That cost real verdicts: the ASUS measured 30% here with
+	# 7x ENOSYS and 100% with the scan stopped, and the onboard radio - the proven connector all
+	# along - was marked "connect(weak)" off a single ENOSYS. phaseExtended already clears a stuck
+	# scan this way before it starts; the connect phase never did.
+	try:
+		sock = openSock(hci)
+		try:
+			cmdComplete(sock, OCF_LE_SET_SCAN_ENABLE, struct.pack("<BB", 0x00, 0x00))			# legacy scan off
+			cmdComplete(sock, OCF_LE_EXT_SCAN_ENABLE, struct.pack("<BBHH", 0x00, 0x00, 0, 0))	# extended scan off
+			cmdComplete(sock, OCF_LE_SET_ADV_ENABLE,  struct.pack("<B", 0x00))					# and advertising
+		finally:
+			sock.close()
+	except Exception:
+		pass
+	time.sleep(0.5)
+
+	# ONE WARM-UP ATTEMPT, NOT COUNTED. Even with the scan disabled above, the first connect after a
+	# radio has been scanning routinely fails once or twice and then succeeds for the rest of the
+	# run - measured on three different dongles, including 3 ENOSYS in a row followed by 7 clean
+	# connects at 0.23 s. Which radio happens to eat that leftover state is luck, and it should not
+	# decide the report. The result is kept and printed, so the warm-up is never silently hidden.
+	warm = {"fingerprint": res["fingerprint"]}
+	phaseConnect(hci, mac, warm, timeout)
+	res["connectWarmup"] = "ok" if warm.get("connectOk") else "{}".format(warm.get("connectErr", "?"))
+	time.sleep(1.0)
+
 	ok, times, errs = 0, [], {}
 	for ii in range(max(1, tries)):
 		one = {"fingerprint": res["fingerprint"]}
@@ -427,6 +592,48 @@ BDADDR_LE_PUBLIC = 0x01
 BDADDR_LE_RANDOM = 0x02
 
 forceAddrType = ""		# "public" / "random" from the command line, "" = decide per address
+# the piBeacon programs that HOLD RADIOS, found running at startup. Not cosmetic: every number in a
+# run made while these are up is a measurement of a shared radio, and it reads exactly like a bad
+# dongle. Measured on one rpi within minutes: the same ASUS 100% connect with piBeacon stopped and
+# 40% (6x ENOSYS) with beaconloop scanning on it. So it is said once at the top AND carried into
+# every adapter's notes - which is also what reaches the shared catalogue.
+piBeaconRunning = [""]
+stoppedByUs     = [False]		# did WE stop piBeacon? then WE have to start it again - see startPiBeacon
+
+
+def findPiBeacon():
+	"""the running piBeacon programs that hold radios, as "pid command-line" lines ("" = none).
+
+	receiveCommands is deliberately NOT in this list: when the plugin menu runs this tool, that is
+	our own parent - killing it would kill the run and the report with it."""
+	try:	return shell("pgrep -af 'python.*(beaconlo[o]p\\.py|BLEconne[c]t\\.py|mast[e]r\\.py)' || true").strip()
+	except Exception:	return ""
+
+
+def stopPiBeacon():
+	"""stop the radio users. Supervisors FIRST: master.sh restarts master.py within 90 s and
+	master.py restarts everything else, so killing the workers first just feeds them back."""
+	for pat in ["mast[e]r.sh", "startmast[e]r.sh"]:
+		shell("sudo pkill -f '{}'".format(pat))
+	time.sleep(1.0)
+	for pat in ["mast[e]r.py", "beaconlo[o]p.py", "BLEconne[c]t.py"]:
+		shell("sudo pkill -9 -f '{}'".format(pat))
+	time.sleep(2.0)
+	stoppedByUs[0] = True
+
+
+def startPiBeacon():
+	"""start it again, but ONLY if we were the one who stopped it.
+
+	Registered with atexit AND called from the signal handler, because the failure mode here is the
+	worst one this tool has: nothing on the rpi brings master back by itself - no cron entry, no
+	systemd unit, callbeacon.py runs only at boot - so a tool that stops piBeacon and then exits
+	through an exception or a ctrl-c would leave the rpi dead until someone noticed. ctrl-c during a
+	measurement is not hypothetical, it happened while testing this."""
+	if not stoppedByUs[0]:	return
+	stoppedByUs[0] = False							# never twice
+	shell("cd /home/pi/pibeacon; nohup /bin/bash master.sh yes > /dev/null 2>&1 &")
+	print("\npiBeacon restarted (master.sh -> master.py -> beaconloop/BLEconnect)")
 
 
 def peerAddrType(mac):
@@ -491,6 +698,23 @@ def phaseConnect(hci, mac, res, timeout=12.):
 def verdict(res, secs):
 	"""which piBeacon ROLES this adapter qualifies for - the actual output of the program"""
 	fp     = res["fingerprint"]
+
+	# A radio that is NOT THERE gets no roles, and no findings either. Everything below counts
+	# delivered packets, and an adapter that left the bus delivers none - so it collected "no BLE5",
+	# "scan too slow" and "cannot advertise" as though those were discoveries about the dongle, and
+	# was then handed "connect" by the ACL MTU fallback at the bottom, read from a fingerprint taken
+	# BEFORE it vanished. Seen in the fleet sweep: an onboard radio that had dropped off the bus
+	# mid-run was reported as "ROLES: connect".
+	if res.get("vanished") or not res.get("healthy", True):
+		if res.get("vanished"):
+			why = ["{} was not on the bus during this run - nothing was measured and no role can be"
+					" judged. This is NOT a verdict on the dongle".format(res.get("vanished"))]
+		else:
+			why = ["the adapter did not come up - nothing was measured and no role can be judged"]
+		res["rateLegacy"], res["rateExtended"] = 0.0, 0.0
+		res["roles"], res["notes"] = [], why
+		return [], why
+
 	rLeg   = res.get("nLeg", 0) / float(secs) if res.get("nLeg", 0) > 0 else 0.0
 	rExt   = res.get("nExt", 0) / float(secs) if res.get("nExt", 0) > 0 else 0.0
 	roles, why = [], []
@@ -500,13 +724,31 @@ def verdict(res, secs):
 	else:
 		why.append("no BLE5: {:.1f} BLE5 reports/s from {} macs".format(rExt, res.get("uExt", 0)))
 
-	if rLeg >= SCAN_OK:
+	# 0x0C Command Disallowed on either legacy scan command = this controller has NO BLE4 scan mode
+	# at all (BLE5-only firmware, e.g. the Barrot/UGREEN 33fa:0012). Needed in TWO places: here, and
+	# in the combined-scanner test below which used to award such a radio a perfect score.
+	legRejected = (res.get("legCmdStatus", [0, 0])[0] == 0x0C or res.get("legCmdStatus", [0, 0])[1] == 0x0C)
+
+	# SCAN ROLE ON MAC COVERAGE, not reports/s - see coverageIntoEntries(). The rate threshold
+	# stays as the FALLBACK, because coverage needs at least two radios to compare and an rpi
+	# with a single radio has nothing to measure itself against.
+	cov = res.get("covPct")
+	if legRejected:
+		why.append("BLE4 scan commands REJECTED (0x0C) - BLE5-only firmware, cannot be the scan radio")
+	elif cov is not None:
+		if cov >= COVERAGE_OK:
+			roles.append("scan-BLE4" + ("" if cov >= COVERAGE_GOOD else "(weak)"))
+			why.append("scan judged on COVERAGE: heard {}/{} of the macs any radio here heard = {:.0f}%"
+				" at {:.1f} reports/s".format(res.get("covHeard", 0), res["covTotal"], cov, rLeg))
+		else:
+			why.append("scan coverage too low: heard only {}/{} macs = {:.0f}% (need {:.0f}%),"
+				" even at {:.1f} reports/s".format(res.get("covHeard", 0), res["covTotal"],
+				cov, COVERAGE_OK, rLeg))
+	elif rLeg >= SCAN_OK:
 		roles.append("scan-BLE4" + ("" if rLeg >= SCAN_GOOD else "(weak)"))
 	else:
-		if res.get("legCmdStatus", [0, 0])[0] == 0x0C or res.get("legCmdStatus", [0, 0])[1] == 0x0C:
-			why.append("BLE4 scan commands REJECTED (0x0C) - BLE5-only firmware, cannot be the scan radio")
-		else:
-			why.append("scan too slow: {:.1f}/s (need {:.0f})".format(rLeg, SCAN_OK))
+		why.append("scan too slow: {:.1f}/s (need {:.0f}) - only one radio here, so there is no"
+			" coverage to compare against".format(rLeg, SCAN_OK))
 
 	# ONE radio for BLE4+BLE5. A BT5 controller is REQUIRED to report legacy advs while in extended
 	# mode (event type bit 4), but how much it delivers is firmware - so it is measured, not assumed.
@@ -516,16 +758,30 @@ def verdict(res, secs):
 	perMacMin = (60.0 * rLegInExt / uLegInExt) if uLegInExt > 0 else 0.0
 	res["combinedPerMacPerMin"] = round(perMacMin, 1)
 	uLegOwn  = res.get("uLeg", 0)
-	coverage = (100.0 * uLegInExt / uLegOwn) if uLegOwn > 0 else 100.0
-	res["combinedCoveragePct"] = round(coverage, 0)
-	if coverage >= COMBINED_MIN_COVERAGE and perMacMin >= COMBINED_MIN_PER_MIN and rExt >= EXT_MIN_RATE:
+	# A radio with no BLE4 scan mode hears 0 macs in BLE4 mode, and the old "else 100.0" then handed
+	# it PERFECT coverage of a set that does not exist. That is how the BLE5-only UGREEN/Barrot
+	# earned "scan-BLE4+BLE5" on the very same report that said "BLE4 scan commands REJECTED (0x0C)
+	# - cannot be the scan radio", and printed "reaches 100% of the macs it hears in BLE4 mode
+	# (8 of 0)". A combined scanner is one radio REPLACING a BLE4 scanner plus a BLE5 listener;
+	# with no BLE4 mode there is nothing to replace and nothing to compare against.
+	noLegacyMode = legRejected or uLegOwn == 0
+	coverage = (100.0 * uLegInExt / uLegOwn) if uLegOwn > 0 else 0.0
+	# capped for DISPLAY and for the catalogue: extended mode can legitimately hear MORE macs than
+	# the legacy run did (the ASUS reported "104%"), which reads like a bug. The raw counts are
+	# printed next to it, so nothing is hidden.
+	covShown = min(coverage, 100.0)
+	res["combinedCoveragePct"] = round(covShown, 0)
+	if noLegacyMode:
+		why.append("not a combined BLE4+BLE5 scanner: this radio has no BLE4 scan mode at all, so the"
+					" {} macs it hears in BLE5 mode cannot be compared with a BLE4 run".format(uLegInExt))
+	elif coverage >= COMBINED_MIN_COVERAGE and perMacMin >= COMBINED_MIN_PER_MIN and rExt >= EXT_MIN_RATE:
 		roles.append("scan-BLE4+BLE5")
-		why.append("one radio can do BLE4+BLE5 here: in BLE5 mode it still reaches {:.0f}% of the macs it hears in BLE4 mode ({} of {}), {:.0f} reports per mac per minute".format(
-					coverage, uLegInExt, uLegOwn, perMacMin))
+		why.append("one radio can do BLE4+BLE5 here: in BLE5 mode it still reaches {:.0f}% of the macs it hears in BLE4 mode ({} vs {}), {:.0f} reports per mac per minute".format(
+					covShown, uLegInExt, uLegOwn, perMacMin))
 	elif rExt >= EXT_MIN_RATE:
 		if coverage < COMBINED_MIN_COVERAGE:
-			why.append("not a combined BLE4+BLE5 scanner: in BLE5 mode it reaches only {:.0f}% of the macs it hears in BLE4 mode ({} of {})".format(
-						coverage, uLegInExt, uLegOwn))
+			why.append("not a combined BLE4+BLE5 scanner: in BLE5 mode it reaches only {:.0f}% of the macs it hears in BLE4 mode ({} vs {})".format(
+						covShown, uLegInExt, uLegOwn))
 		else:
 			why.append("not a combined BLE4+BLE5 scanner: only {:.0f} reports per mac per minute in BLE5 mode (need {:.0f})".format(
 						perMacMin, COMBINED_MIN_PER_MIN))
@@ -569,6 +825,24 @@ def verdict(res, secs):
 			why.append("{} sensitivity poor: mean rssi {} dBm - hears only the loudest neighbours".format(label, pr.get("rssiMean")))
 
 	res["rateLegacy"], res["rateExtended"] = round(rLeg, 1), round(rExt, 1)
+	# FIRST note, not last: this one changes how every other line on the adapter has to be read, and
+	# it travels with the entry into the shared catalogue so a contaminated run cannot quietly become
+	# received wisdom about a dongle model.
+	if piBeaconRunning[0] != "":
+		why.insert(0, "MEASURED WHILE PIBEACON WAS RUNNING - the radios were shared, so these rates and"
+					" connect results are not a verdict on this dongle")
+
+	# ONBOARD RADIO = SAME SILICON AS WIFI, always. Every Pi's built-in Bluetooth is one die
+	# with the WiFi - BCM43430A1 on a 3B, BCM43455 on a 3B+/4 - sharing a single antenna and
+	# time-sliced with it by a coexistence scheduler. This is stated UNCONDITIONALLY and
+	# WITHOUT reading wlan0: the state at measuring time says nothing about the state next
+	# month, and a radio that is fine today because wlan0 happens to be down becomes the
+	# wrong scan radio the moment someone switches WiFi on. The rate is not demoted - an
+	# rpi whose only radio is the onboard one still has to scan with it.
+	if fp.get("bus", "") == "UART":
+		why.append("onboard radio: one die and one antenna shared with WiFi, time-sliced. This"
+			" rate holds only while WiFi is unused and will drop if it is ever switched on -"
+			" prefer a USB dongle for the scan role")
 	res["roles"], res["notes"] = roles, why
 	return roles, why
 
@@ -581,7 +855,24 @@ def report(res, secs):
 			fp["bus"], fp["aclMTU"], fp["scoMTU"], usbText(fp) or "-", fp["usbName"]))
 	print("  kernel:{}   LE feature bit12 (CLAIMED BLE5): {}".format(fp["kernel"], res.get("claimsBLE5")))
 	if not res.get("healthy", True):
-		print("  HEALTH   : adapter does not come up properly (ACL MTU {}) - unusable".format(fp["aclMTU"]))
+		# "unusable" is a verdict on a DONGLE. A radio that left the usb bus is not a bad dongle, it
+		# is not here - and saying so points at the real cause (re-enumeration, a missing firmware
+		# patch, a power or cabling problem) instead of at the hardware.
+		if res.get("vanished"):
+			# bus-aware: the onboard UART radio is not on the usb bus at all, so "re-enumeration" and
+			# "check dmesg | grep usb" are the wrong advice for it. Seen on an rpi whose B8:27:EB
+			# onboard radio disappeared mid-run while that same rpi was reporting under-voltage.
+			if "{}".format(fp.get("bus", "")).upper() == "UART":
+				print("  HEALTH   : {} (the ONBOARD uart radio) disappeared during the run - it cannot"
+						" re-enumerate on usb, so look at the bluetooth service and at POWER:"
+						" 'dmesg | grep -i -e bluetooth -e voltage' and 'vcgencmd get_throttled'."
+						" This is NOT a verdict on the radio".format(res.get("vanished")))
+			else:
+				print("  HEALTH   : {} is NO LONGER ON THE BUS under any hci name - it disconnected during"
+						" the run (usb re-enumeration?). Check 'dmesg | grep -i usb' and whether its"
+						" firmware patch is installed; this is NOT a verdict on the dongle".format(res.get("vanished")))
+		else:
+			print("  HEALTH   : adapter does not come up properly (ACL MTU {}) - unusable".format(fp["aclMTU"]))
 	print("  BLE4     : {:5d} reports = {:6.1f}/s from {:3d} macs   cmd status:{}".format(
 			res.get("nLeg", 0), res.get("rateLegacy", 0), res.get("uLeg", 0), res.get("legCmdStatus")))
 	print("  BLE5     : {:5d} reports = {:6.1f}/s from {:3d} macs   cmd status:{}".format(
@@ -593,6 +884,11 @@ def report(res, secs):
 		print("  {:9s} performance: rssi mean/max {}/{} dBm, longest silence {:.1f}s, per-second {}".format(
 				label, pr.get("rssiMean"), pr.get("rssiMax"), pr.get("gapMax"),
 				"/".join("{}".format(b) for b in bk[:12]) + ("..." if len(bk) > 12 else "")))
+		# never silent about discarded samples: a handful is the odd malformed report, a large share
+		# means the rssi is being read from the wrong byte and the mean above is not to be trusted.
+		if pr.get("rssiBad", 0) > 0:
+			print("             {} of {} {} reports had an out-of-range rssi (not -127..+20 dBm) and were not counted".format(
+					pr.get("rssiBad"), pr.get("n", 0) , label))
 	if "nExtLegacyPdu" in res:
 		# the SAME extended scan, split by PDU kind. "legacyPDU" is what a BLE4-only tag looks like
 		# when a BT5 controller reports it in extended mode - if that number is close to the LEGACY
@@ -622,7 +918,16 @@ def report(res, secs):
 				res.get("connectAddrType", "?"),
 				res.get("connectSecs", 0), res.get("connectSecsMax", 0),
 				"errors:{}".format(res.get("connectErrors")) if res.get("connectErrors") else ""))
-	print("  ROLES    : {}".format(", ".join(res["roles"]) if res["roles"] else "NONE - do not use this dongle"))
+		# the uncounted warm-up is PRINTED, never hidden: a warm-up that failed with SO_ERROR:38 is
+		# the proof that this radio needed one, and the reason the counted attempts look clean.
+		if res.get("connectWarmup", "ok") != "ok":
+			print("             warm-up attempt (not counted) failed with {} - leftover scan state on this radio".format(
+					res.get("connectWarmup")))
+	if res["roles"]:					noRoles = ", ".join(res["roles"])
+	elif res.get("vanished"):			noRoles = "none judged - the radio was not on the bus"
+	elif not res.get("healthy", True):	noRoles = "none judged - the adapter did not come up"
+	else:								noRoles = "NONE - do not use this dongle"
+	print("  ROLES    : {}".format(noRoles))
 	for w in res["notes"]:
 		print("             - {}".format(w))
 
@@ -644,6 +949,146 @@ def writeStructured(entries):
 	except Exception as e:
 		print("could not write the structured result: {}".format(e))
 	return entriesOut
+
+
+COVERAGE_MUST_HEAR = 3			# reports the best radio needs before a mac counts as missable
+
+
+def _coverageData(entries):
+	"""the maths behind the coverage section, separated from the printing because the SCAN ROLE is
+	decided from it - and that has to happen before any adapter's report is written, while
+	macCoverage() prints after the summary.
+
+	Inputs:
+	    entries (list): per-adapter result dicts, phases already run
+	Outputs:
+	    tuple: (obs, ref, total) - obs is [(label, {mac: [reports, rssi]})] per radio, ref is
+	           {mac: [best reports, best rssi, how many radios heard it]}, total is len(ref).
+	           obs is [] when fewer than 2 radios delivered anything, i.e. nothing to compare.
+	           The 4th value is how many ROTATING addresses were excluded - see addrRotates().
+	"""
+	obs, rotSeen = [], set()
+	for res in entries:
+		if not res.get("healthy"):	continue
+		fp	   = res["fingerprint"]
+		merged = {}
+		for key in ("profLeg", "profExt"):
+			for mac, v in ((res.get(key) or {}).get("perMac", {})).items():
+				# ROTATING ADDRESSES ARE NOT COMPARABLE and are left out of the union entirely -
+				# see addrRotates(). They are not dropped silently: the count is printed.
+				if len(v) > 2 and v[2]:
+					rotSeen.add(mac)
+					continue
+				# BEST OF THE TWO MODES, not the sum: in production the radio runs ONE of them, so
+				# adding legacy and extended would credit it with a coverage it never has at once.
+				e = merged.setdefault(mac, [0, -999])
+				if v[0] > e[0]:	e[0] = v[0]
+				if v[1] > e[1]:	e[1] = v[1]
+		res["_covHeard"] = merged
+		if merged:	obs.append(("{} {}".format(fp["hci"], vendorName(fp) or usbText(fp) or fp["mac"]), merged))
+	if len(obs) < 2:
+		return [], {}, 0, len(rotSeen)
+	ref = {}
+	for _lab, m in obs:
+		for mac, v in m.items():
+			e = ref.setdefault(mac, [0, -999, 0])
+			if v[0] > e[0]:	e[0] = v[0]			# best observer's report count
+			if v[1] > e[1]:	e[1] = v[1]			# best observer's rssi
+			e[2] += 1							# how many radios heard it at all
+	return obs, ref, len(ref), len(rotSeen)
+
+
+def coverageIntoEntries(entries):
+	"""store each radio's coverage on its own result dict, so verdict() can judge the scan role on
+	MAC COVERAGE instead of reports/s. Measured on rpi#2: the onboard radio delivered 821 reports in
+	10 s - more than both dongles together - and heard 57 of 73 macs, while the ASUS BT500 heard 65
+	at two thirds the rate. piBeacon summarises every ~60 s and keeps an AVERAGE rssi, so a tag the
+	radio never hears is lost outright and a tag heard 80 times instead of 50 is worth nothing extra.
+	"""
+	_obs, ref, total, _nRot = _coverageData(entries)
+	for res in entries:
+		res["covTotal"] = total
+		if total:
+			heard = len(res.get("_covHeard", {}) or {})
+			res["covHeard"] = heard
+			res["covPct"]   = round(100.0 * heard / float(total), 1)
+
+
+def macCoverage(entries, secs):
+	"""WHICH macs does a slower radio MISS, and do the missed ones matter?
+
+	"the uart heard 59 macs, the tp-link 50" says nothing on its own. The 9 missing ones could be
+	chatty neighbours the slower radio cannot keep up with - a real defect - or tags that advertise
+	once a minute and simply did not transmit during its window. THE MESSAGE COUNT DECIDES IT.
+
+	Every phase measures for the same number of seconds, so a mac the best observer heard >=3 times
+	has an advertising interval short enough that it MUST transmit again inside any other window of
+	that length. Missing such a mac is a real miss. Below 3 reports the comparison is inconclusive,
+	so those are listed separately instead of being scored - otherwise a slow radio gets blamed for
+	the sampling, which is exactly the mistake this whole report exists to avoid.
+
+	THE PHASES ARE SEQUENTIAL, not simultaneous: each radio gets its own window, a minute or more
+	apart. That is why the 3-report bar exists, and it is printed with the result so nobody reads
+	these percentages as a same-instant comparison.
+
+	The rssi line is the diagnosis. If the macs a radio missed were weaker than the ones it heard, it
+	is a sensitivity/antenna limit and the fix is placement. If they were just as strong, the radio is
+	dropping reports it could hear - a throughput limit, and no amount of placement helps.
+
+	Inputs:
+	    entries (list): the per-adapter result dicts, after the phases have run
+	    secs (float): the measuring window each phase used
+	Outputs:
+	    None: prints the coverage section; returns early with fewer than 2 measured radios
+	"""
+	obs, ref, total, nRot = _coverageData(entries)
+	if not obs:	return
+	MUST_HEAR = COVERAGE_MUST_HEAR
+	print("\n==== mac coverage: {} distinct macs, heard by {} radios ====".format(total, len(obs)))
+	print("   each radio measured in its OWN {:.0f}s window, minutes apart - so a mac is only scored as".format(secs))
+	print("   MISSED when the best radio heard it >={} times, which means its interval is short enough".format(MUST_HEAR))
+	print("   that it had to transmit again during every other window too. Rarer macs are listed apart.")
+	if nRot:
+		print("   {} rotating private address(es) left out of the comparison - they change between"
+			" the windows, so each radio hears the same phone under a different name".format(nRot))
+	uniq = [mac for mac, e in ref.items() if e[2] == 1]
+	if uniq:
+		print("   {} mac(s) were heard by ONE radio only - those are what the differences are made of".format(len(uniq)))
+	for lab, m in obs:
+		missReal, missRare = [], []
+		for mac, e in ref.items():
+			if mac in m:	continue
+			if e[0] >= MUST_HEAR:	missReal.append((mac, e))
+			else:					missRare.append((mac, e))
+		heardR = [v[1] for v in m.values() if v[1] > -999]
+		missR  = [e[1] for _mac, e in missReal if e[1] > -999]
+		msgs   = sum(v[0] for v in m.values())
+		# THE SUM MUST RECONCILE ON THE LINE. "heard 65/73 ... real misses: 1" reads as "only one
+		# mac missing" while 8 are: 1 scored and 7 below the bar. Print the total missing and
+		# its split, so heard + missing = total is visible instead of having to be worked out.
+		print("\n{:32s} heard {:3d}/{:3d} = {:5.1f}%  {:5d} msgs   missing {:2d} = {} scored + {} too rare to judge".format(
+				lab[:32], len(m), total, 100.*len(m)/float(total), msgs,
+				len(missReal) + len(missRare), len(missReal), len(missRare)))
+		# THREE outcomes, not two, and only with enough missed macs to mean anything. The first
+		# live run compared ONE missed mac at -40 dBm against 66 heard at -81 dBm and announced
+		# "just as strong: it is dropping reports it can hear" - drawn from a single sample, and
+		# backwards: -40 is 41 dB STRONGER than the average, which is not a sensitivity story at
+		# all. A mac that is both very strong and heard by one radio only was almost certainly not
+		# transmitting during the other windows, so say that instead of blaming the radio.
+		if heardR and len(missR) >= 3:
+			mh, mm = sum(heardR)/float(len(heardR)), sum(missR)/float(len(missR))
+			if   mm < mh - 5.:	what = "the missed ones are WEAKER: sensitivity or placement"
+			elif mm > mh + 5.:	what = "the missed ones are STRONGER - not range: they were probably not transmitting in this window"
+			else:				what = "the missed ones are JUST AS STRONG: it is dropping reports it can hear"
+			print("     rssi heard {:4.0f} dBm  vs  missed {:4.0f} dBm  ->  {}".format(mh, mm, what))
+		elif heardR:
+			print("     rssi heard {:4.0f} dBm over {} macs - only {} scored miss(es), too few to compare".format(
+					sum(heardR)/float(len(heardR)), len(heardR), len(missR)))
+		for mac, e in sorted(missReal, key=lambda x: -x[1][0])[:12]:
+			print("     MISSED {}  best radio: {:4d} msgs at {:4d} dBm, heard by {} of {} radios".format(
+					mac, e[0], e[1], e[2], len(obs)))
+		if len(missReal) > 12:
+			print("     ... and {} more".format(len(missReal) - 12))
 
 
 def saveCatalogue(entries, path, send):
@@ -740,9 +1185,15 @@ def main():
 	connectTo    = ""
 	connectTries = 3
 	send         = False
+	# stop=no: for a caller that has ALREADY stopped piBeacon and will restart it itself -
+	# receiveCommands (the plugin menu) does exactly that. Without it we would restart master at the
+	# end of OUR run, master.py would wipe temp/ on startup, and the structured result would be gone
+	# before receiveCommands had read it.
+	doStop       = True
 	catalogue = "/home/pi/pibeacon/dongleCatalogue.json"
 	for a in sys.argv[1:]:
 		if a.startswith("connect="):		connectTo = a.split("=", 1)[1].strip().upper()
+		elif a.startswith("stop="):			doStop    = a.split("=", 1)[1].strip().lower() not in ("no", "false", "0")
 		elif a.startswith("tries="):		connectTries = int(a.split("=", 1)[1].strip())
 		elif a.startswith("send="):			send      = a.split("=", 1)[1].strip().lower() in ("yes", "true", "1")
 		elif a.startswith("catalogue="):	catalogue = a.split("=", 1)[1].strip()
@@ -756,19 +1207,73 @@ def main():
 		print("no bluetooth adapters found")
 		return
 
+	# ARM THE RESTART BEFORE ANYTHING IS STOPPED. atexit covers a normal end and an exception;
+	# the signal handler covers ctrl-c and kill, which atexit does NOT see. os._exit in the handler
+	# skips atexit, so the restart is done first, by hand.
+	atexit.register(startPiBeacon)
+	def _onSignal(_sig, _frm):
+		print("\ninterrupted - restarting piBeacon before leaving")
+		startPiBeacon()
+		os._exit(1)
+	for _s in ("SIGINT", "SIGTERM", "SIGHUP"):
+		try:	signal.signal(getattr(signal, _s), _onSignal)
+		except Exception:	pass
+
 	print("BLE dongle role qualification v{}   {} s per measuring phase".format(VERSION, secs))
 	if os.path.isfile("/home/pi/pibeacon/temp/beaconloop.pause"):
 		print("beaconloop/BLEconnect are PAUSED by the caller (plugin menu) - radios are free")
 	else:
-		print("REMINDER: beaconloop must NOT be running (sudo pkill -f beaconloop.py; sudo pkill -f master.py)")
+		# a REMINDER is not enough - it was printed on every run that was then read as a dongle
+		# verdict anyway. Look instead, and by default DO something about it: a radio that is being
+		# scanned on refuses create-connection with ENOSYS and shares its report rate, so a good
+		# dongle comes out as "connect unreliable" and "scan too slow".
+		busy = findPiBeacon()
+		if busy != "" and doStop:
+			print("piBeacon is running - stopping it for this measurement:")
+			for _ln in busy.split("\n"):	print("      {}".format(_ln.strip()))
+			stopPiBeacon()
+			busy = findPiBeacon()
+			if busy == "":	print("   stopped - it is started again automatically when this run ends")
+		piBeaconRunning[0] = busy
+		if busy != "":
+			print("")
+			print("*** piBeacon IS RUNNING - the numbers below are NOT a verdict on these dongles ***")
+			for _ln in busy.split("\n"):
+				print("      {}".format(_ln.strip()))
+			print("    Stop piBeacon first:   sudo bash /home/pi/pibeacon/stopAll.sh")
+			print("    and start it again:    sudo python3 /home/pi/callbeacon.py &")
+			print("")
+		elif not stoppedByUs[0]:
+			print("piBeacon is not running - the radios are free")
 	if connectTo:	print("connect test against {} ({} attempts, address type {})".format(connectTo, connectTries,
 						"random" if peerAddrType(connectTo) == BDADDR_LE_RANDOM else "public"))
 	resetAllAdapters(listAdapters())		# ALL of them, not only the ones we are about to test
 
+	# Which MAC each name carries, read BEFORE we start resetting things. Once a dongle has
+	# re-enumerated, fingerprint(oldName) returns nothing at all and the MAC needed to find it again
+	# would be lost - so it has to be captured up front, not looked up at the moment of failure.
+	_macWanted = {}
+	for hh in adapters:
+		try:	_macWanted[hh] = fingerprint(hh).get("mac", "")
+		except Exception:	_macWanted[hh] = ""
+
 	entries = []
 	for hci in adapters:
 		res = {"fingerprint": fingerprint(hci)}
-		res["healthy"] = resetHCI(hci) and res["fingerprint"]["aclMTU"] > 0
+		_up  = resetHCI(hci)
+		# the radio may have RE-ENUMERATED under a new name while we reset it - follow it by MAC
+		# rather than condemning a dongle that is alive and well a few hci numbers further along.
+		if not _up or res["fingerprint"]["aclMTU"] == 0:
+			_mac = res["fingerprint"]["mac"] or _macWanted.get(hci, "")
+			_new = followAdapter(_mac, hci)
+			if _new != "":
+				print("   {} re-enumerated as {} (same mac {}) - following it".format(hci, _new, _mac))
+				hci  = _new
+				res  = {"fingerprint": fingerprint(hci)}
+				_up  = "UP" in shell("hciconfig {}".format(hci)) or resetHCI(hci)
+			elif _mac != "":
+				res["vanished"] = _mac
+		res["healthy"] = _up and res["fingerprint"]["aclMTU"] > 0
 		if res["healthy"]:
 			sock = openSock(hci)
 			st, ev = cmdComplete(sock, OCF_LE_READ_LOCAL_FEATURES)
@@ -780,9 +1285,19 @@ def main():
 			if connectTo:	phaseConnectRepeat(hci, connectTo, res, connectTries)
 		else:
 			res["claimsBLE5"] = False
+		entries.append(res)
+		if res["healthy"]:
+			print("   {} measured: BLE4 {:.1f}/s from {} macs, BLE5 {:.1f}/s from {} macs".format(
+				res["fingerprint"]["hci"], res.get("nLeg", 0)/float(secs), res.get("uLeg", 0),
+				res.get("nExt", 0)/float(secs), res.get("uExt", 0)))
+
+	# EVERY ADAPTER IS MEASURED BEFORE ANY IS JUDGED. The scan role is decided on mac coverage,
+	# which is a comparison between the radios of this rpi - so no report can be written until
+	# the last radio has been measured. The one-line progress above is why that is not silence.
+	coverageIntoEntries(entries)
+	for res in entries:
 		verdict(res, secs)
 		report(res, secs)
-		entries.append(res)
 
 	print("\n==== summary ====")
 	for res in entries:
@@ -793,6 +1308,7 @@ def main():
 		print("{:6s} {:18s} {:5s} {:11s} {:26s} -> {}".format(fp["hci"], fp["mac"], fp.get("bus", ""),
 				usbText(fp), vendorName(fp),
 				", ".join(res["roles"]) if res["roles"] else "NONE"))
+	macCoverage(entries, secs)
 	saveCatalogue(entries, catalogue, send)
 
 

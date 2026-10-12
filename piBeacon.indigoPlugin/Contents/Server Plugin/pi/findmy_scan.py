@@ -34,6 +34,8 @@ Status byte: bits 7-6 = battery level per public reverse engineering (0 full .. 
 The raw hex is logged too, so you can see whether AirPods / iPhones differ from AirTags.
 """
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import argparse
 import binascii
 import collections

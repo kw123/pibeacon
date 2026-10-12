@@ -2,6 +2,8 @@
 Read data from Mi Temp environmental (Temp and humidity) sensor.
 """
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 from datetime import datetime, timedelta
 import logging
 from threading import Lock

@@ -60,7 +60,7 @@ class MAP2Vendor:
 		self.refreshFromIeeAfterDays = refreshFromIeeAfterDays
 
 		if not os.path.isdir(self.filePath):
-			subprocess.call("mkdir "+self.filePath, shell=True)
+			os.makedirs(self.filePath)		# was a shell mkdir, which also could not make parents
 
 	   
 		if not self.isFileCurrent("mac2Vendor.json"): 

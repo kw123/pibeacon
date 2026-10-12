@@ -1,4 +1,6 @@
 #!/usr/bin/ python
+
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 homeDir = "/home/pi/pibeacon/"
 logDir	= "/var/log/"
 import	sys, os, subprocess, copy

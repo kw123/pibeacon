@@ -17,11 +17,9 @@ import math
 import matplotlib as mlp
 mlp.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.patches as patches
 import logging
 import logging.handlers
 global logging, logger
-import copy
 
 
 

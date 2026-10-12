@@ -11,6 +11,8 @@
 	madified / adapted by KW Nov 2024
 	adopted by Karl Wachs
 """
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 version			= 1.4
 
 import serial

@@ -8,6 +8,8 @@
 ##  do it in a timed manner not to load the system, is every 1 seconds then 30 senods break
 ##
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import  sys, os, time, json, datetime,subprocess,copy
 import math
 
@@ -30,7 +32,10 @@ try:
 	if not _test.connected:					# pigpiod not up yet - start it and try once more
 		try:	_test.stop()
 		except Exception:	pass
-		subprocess.call("/usr/bin/sudo /usr/bin/pigpiod &", shell=True)
+		# local import: piBeaconUtils is imported further down in this file, and this
+		# runs at import time - U does not exist yet here
+		import piBeaconUtils as _U
+		subprocess.call(_U.pigpiodStartCmd(sudoPath="/usr/bin/sudo", pigpiodPath="/usr/bin/pigpiod"), shell=True)
 		time.sleep(2)
 		_test = pigpio.pi()
 	if not _test.connected:	raise Exception("pigpiod not reachable")

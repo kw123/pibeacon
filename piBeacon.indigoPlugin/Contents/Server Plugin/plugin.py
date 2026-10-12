@@ -50,10 +50,11 @@ except ImportError:
 
 
 # ---- static tables: moved out of this file, see piBeaconConstants.py ----
-# kDefaultPluginPrefs and _devtypesToStates are NOT imported: nothing in this file reads them.
-# kDefaultPluginPrefs was already dead here before the split, _devtypesToStates is only used inside
-# piBeaconConstants to build _stateListToDevTypes. Both still live there if they are needed again.
+# _devtypesToStates is NOT imported: it is only used inside piBeaconConstants to build
+# _stateListToDevTypes. kDefaultPluginPrefs IS again (it had been dead since before the split):
+# __init__ fills every missing plugin pref from it
 from piBeaconConstants import (
+			kDefaultPluginPrefs,
 			_GlobalConst_numberOfiBeaconRPI, _GlobalConst_numberOfRPI,
 			_rpiList, _rpiBeaconList, _rpiSensorList,
 			_sqlLoggerDevTypes, _sqlLoggerDevTypesNotSensor, _sqlLoggerIgnoreStates,
@@ -68,7 +69,8 @@ from piBeaconConstants import (
 			_defaultDateStampFormatDay, _addingstates,
 			_stateListToDevTypes, _GlobalConst_gpioFieldDirection, _GlobalConst_gpioReferenceFields,
 			_GlobalConst_gpioIgnoreBindingOn, _GlobalConst_findMyMemberStates,
-			_GlobalConst_findMyMacHistory
+			_GlobalConst_findMyMacHistory, _GlobalConst_pigpioFineRateTypes,
+			_GlobalConst_pigpioPwmCapableTypes
 			)
 
 
@@ -140,10 +142,20 @@ class Plugin(indigo.PluginBase):
 		"""
 		indigo.PluginBase.__init__(self, pluginId, pluginDisplayName, pluginVersion, pluginPrefs)
 
+		# PLUGIN-CONFIG DEFAULTS COME FROM kDefaultPluginPrefs, not from PluginConfig.xml: indigo applies
+		# the xml defaults only on the very first load, so a setting added later is simply missing from
+		# pluginPrefs. Filled here, before anything below reads a pref. Only MISSING keys - a value the
+		# user saved is never touched. The constant is aligned with the fallbacks the code used before,
+		# so this changes no behaviour; it gives validatePrefsConfigUi and the dialog a real value
+		for kk, vv in kDefaultPluginPrefs.items():
+			if kk not in self.pluginPrefs:	self.pluginPrefs[kk] = vv
+
 		self.pluginShortName 			= "piBeacon"
 
 		self.quitNow					= ""
 		self.toshibaIRSweepRunning		= False		# the variant sweep runs in its own thread, one at a time
+		self.hangCheckLast				= {}		# ip -> when the rPi-down/hanging verdict was last logged (10 min limit)
+		self.hangCheckRunning			= {}		# ip -> a diagnosis thread is already on this one
 	###############  common for all plugins ############
 		self.getInstallFolderPath		= indigo.server.getInstallFolderPath()+"/"
 		self.indigoPath					= indigo.server.getInstallFolderPath()+"/"
@@ -188,6 +200,33 @@ class Plugin(indigo.PluginBase):
 		self.plugin_file_handler.setFormatter(formatter)
 		self.indiLOG = logging.getLogger("Plugin")
 		self.indiLOG.setLevel(logging.THREADDEBUG)
+
+		# A NORMAL SHUTDOWN IS NOT AN ERROR, and it was being reported as a dozen of them.
+		# INDIGO STOPS A THREAD by raising StopThread out of self.sleep(). It derives from
+		# Exception, so every "except Exception: log the traceback" that happens to wrap a sleep
+		# catches it and prints a stack trace at level 40 on the way out. The two THREAD LOOPS now
+		# name it and break (see workOnBeaconMessages and delayedActionsThread), so the threads
+		# exit properly - but roughly 25 helper functions still wrap a sleep in a generic handler,
+		# and a stop landing inside one of those logs a traceback from wherever it was. Seen from
+		# testPing, twice in one shutdown.
+		# FILTERED IN ONE PLACE RATHER THAN PATCHED IN 25. The alternative is "except
+		# self.StopThread: raise" ahead of every generic handler, which is 25 mechanical edits to
+		# a file that is hand-edited - and it would not finish the job, because a re-raised
+		# StopThread then meets whatever generic handler sits ABOVE that one and gets logged from
+		# there instead. This catches all of them, present and future, at the only point every one
+		# of those records passes through.
+		# IT SILENCES THE LOG AND CHANGES NOTHING ELSE: the helper still returns early, which is
+		# the right thing to do while stopping, and the thread loop above it still exits on its
+		# next sleep. Nothing worth seeing is hidden - a StopThread is never an error, it is how
+		# indigo says "stop", and the plugin says so itself when it stops
+		class _dropStopThread(logging.Filter):
+			def filter(_self, record):
+				try:
+					exc = record.exc_info
+					return not (exc and isinstance(exc[1], self.StopThread))
+				except Exception:
+					return True
+		self.indiLOG.addFilter(_dropStopThread())
 
 		self.indigo_log_handler.setLevel(logging.INFO)
 
@@ -266,7 +305,9 @@ class Plugin(indigo.PluginBase):
 
 
 			if os.path.isfile(self.indigoPreferencesPluginDir+"dataVersion"):
-				subprocess.call("rm '"+self.indigoPreferencesPluginDir+"dataVersion' &", shell=True)
+				# was a backgrounded shell rm: neither its result nor its failure was observable
+				try:	os.remove(self.indigoPreferencesPluginDir+"dataVersion")
+				except OSError as e:	self.indiLOG.log(20, f"could not remove dataVersion: {e}")
 
 			self.startTime = time.time()
 
@@ -296,6 +337,8 @@ class Plugin(indigo.PluginBase):
 			self.setGroupStatus(force=True)
 
 			self.checkPiEnabled()
+
+			self.fixBundledExecutables()
 
 			if self.userIdOfServer != "":
 				cmd = "echo '"+self.passwordOfServer+"' | sudo -S /usr/bin/xattr -rd com.apple.quarantine '"+self.pathToPlugin+"pngquant'"
@@ -354,6 +397,42 @@ class Plugin(indigo.PluginBase):
 
 
 	####-------------------------------------------------------------------------####
+	def fixBundledExecutables(self):
+		"""Makes sure the binaries the plugin runs out of its own bundle are still executable, and fixes them if not.
+
+		THE EXECUTABLE BIT DOES NOT SURVIVE EVERYTHING. pngquant is a Mach-O binary this plugin
+		invokes directly, and it arrived as -rw-r--r-- after the bundle was copied to the server -
+		so every plot compression failed with "Permission denied". Copy tools, archives, sync
+		clients and macOS itself all have ways of dropping it, and nothing says so at the time: the
+		plot scripts just quietly keep the uncompressed png.
+		Checked and repaired at every startup rather than documented, because a bundle gets copied
+		far more often than anyone reads the readme. No password needed - chmod on our own file.
+		The quarantine flag is the OTHER half of the same problem and is handled right after this
+		call (that one does need sudo).
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: makes the files executable where needed and logs what it changed
+		"""
+		for rel in ["pngquant"]:
+			ff = self.pathToPlugin + rel
+			try:
+				if not os.path.isfile(ff):
+					self.indiLOG.log(30, f"fixBundledExecutables: {rel} is MISSING from the plugin bundle - a partial copy? plot compression will be skipped")
+					continue
+				if os.access(ff, os.X_OK):	continue
+				mode = os.stat(ff).st_mode
+				os.chmod(ff, mode | 0o111)			# +x for user, group and other, keep the rest
+				if os.access(ff, os.X_OK):
+					self.indiLOG.log(20, f"fixBundledExecutables: {rel} had lost its executable bit (a copy of the bundle does that) - fixed")
+				else:
+					self.indiLOG.log(30, f"fixBundledExecutables: {rel} is still not executable after chmod - check the file's owner and the volume's mount options")
+			except Exception:
+				self.indiLOG.log(40, f"fixBundledExecutables: {rel}", exc_info=True)
+
+
+	####-------------------------------------------------------------------------####
 	def startupFIXES1(self):
 		"""Startup data-migration/repair pass that iterates all of the plugin's Indigo devices and normalizes them: fixes lastStatusChange/displayStatus state strings and status images, repairs missing signal/time states for beacon and rPI devices, populates self.beacons entries and vendor names, sets RPI position data, uppercases MAC/address props, and sets the various isXxxDevice marker props based on device type.
 		
@@ -390,6 +469,20 @@ class Plugin(indigo.PluginBase):
 									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 								else:
 									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
+
+								# WHAT INDIGO SHOWS in the status column is the uiValue of dev.displayStateId,
+								# not displayStatus itself. On a device whose state list was REBUILT - any
+								# version that added states does that - every uiValue fell back to the raw
+								# state value, and for these devices that state is onOffState: a boolean,
+								# which indigo renders "on"/"off". The up|down wording is only re-applied
+								# when the status VALUE next changes, so an rPi that simply stays up reads
+								# "on" indefinitely while sending messages normally. force=True because the
+								# value is unchanged here and only what is shown for it differs.
+								try:
+									for stId in set(["onOffState", "status", "{}".format(dev.displayStateId)]):
+										if stId in ("", "displayStatus") or stId not in dev.states:	continue
+										self.addToStatesUpdateDict(dev.id, stId, dev.states[stId], uiValue=new, force=True)
+								except Exception:	pass
 
 					if dev.deviceTypeId.lower() in ["beacon", "rpi"]:
 						for piU in _rpiBeaconList:
@@ -615,8 +708,8 @@ class Plugin(indigo.PluginBase):
 
 				self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + "RPIconf", fmtOn=self.RPIFileSort)
 
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 			try:
 				os.remove(self.indigoPreferencesPluginDir + "config")
 			except:
@@ -635,6 +728,9 @@ class Plugin(indigo.PluginBase):
 						dev.replaceOnServer()
 
 				props = dev.pluginProps
+				if "SupportsBatteryLevel" in props:
+					del props["SupportsBatteryLevel"]
+					dev.replacePluginPropsOnServer(props)
 
 				if dev.deviceTypeId.find("rPI") >-1:
 					if dev.deviceTypeId.find("rPI-Sensor") >-1:
@@ -644,11 +740,6 @@ class Plugin(indigo.PluginBase):
 							self.updateStateOnServerlog(dev, "note", "Pi-"+dev.address)
 					else:
 						self.updateStateOnServerlog(dev, "note", "Pi-"+dev.pluginProps.get("RPINumber","") )
-
-
-	######## fix  address vendors ..
-			for dev in indigo.devices.iter(self.pluginId):
-				props = dev.pluginProps
 
 
 
@@ -834,8 +925,8 @@ class Plugin(indigo.PluginBase):
 				else : # single zone manual, check if overwrite max duration
 					if "sprinklerActiveZoneSetManualDuration" in indigo.variables:
 						try:	dur = max(0,float(indigo.variables["sprinklerActiveZoneSetManualDuration"].value ) )
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							dur = 0
 					if dur == 0:  # no overwrite, use max duration
 								dur = zoneMaxDurations[activeZone-1]
@@ -997,8 +1088,8 @@ class Plugin(indigo.PluginBase):
 						dev.updateStateImageOnServer(indigo.kStateImageSel.Auto)
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def deviceDeleted(self, dev):  ### indigo calls this
@@ -1073,8 +1164,8 @@ class Plugin(indigo.PluginBase):
 				if dev.address in self.beacons:
 					self.beacons[dev.address]["enabled"] = False
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -1175,8 +1266,8 @@ class Plugin(indigo.PluginBase):
 				#valuesDict = self.confirmPiNumberBUTTONI(valuesDict=valuesDict, typeId=typeId, devId=devId)
 				#valuesDict = self.confirmStateBUTTONI(valuesDict=valuesDict, typeId=typeId, devId=devId)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 	###########################		INIT	## END	 ########################
 
@@ -1273,8 +1364,8 @@ class Plugin(indigo.PluginBase):
 
 						if typeId =="rPI" and piU == "-1":
 								theDictList[0]["newMACNumber"]	= "00:00:00:00:pi:00"
-					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 
 				if typeId.find("beacon") > -1:
 						beacon = dev.address
@@ -1333,8 +1424,8 @@ class Plugin(indigo.PluginBase):
 
 
 			return theDictList
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return super().getDeviceConfigUiValues(pluginProps, typeId, devId)
 	####-------------------------------------------------------------------------####
@@ -1516,9 +1607,12 @@ class Plugin(indigo.PluginBase):
 		  USB radios are RECEIVERS - BLE4 / BLE5 / both, and only the variants the radio was
 		    MEASURED to manage (qualifyDongle -> dongleCatalogue, by mac). A BLE5-only dongle is
 		    never offered "scanner BLE4"; "BLE4 + BLE5" appears only for a radio that earned it.
-		  the INTERNAL radio is never a scanner (its scanning fights wifi) - the only thing worth
-		    pinning it to is BLEconnect, and with no second dongle there is nothing to choose at
-		    all, so it is left with "let the RPi decide".
+		  the INTERNAL radio is never offered a scanner role - it is one die and one antenna
+		    shared with wifi, so its scan rate only holds while wifi is unused.
+		  BLEconnect and "ignore" are offered on EVERY radio of an rpi that has more than one,
+		    internal or USB. Which radio connect belongs on is the auto policy's business; this
+		    dialog exists to overrule it. With a single radio neither is offered - that radio
+		    does every job, and ignoring it would leave the rpi with no bluetooth at all.
 
 		Inputs:
 		    devId (int): the rPI device being edited
@@ -1543,7 +1637,6 @@ class Plugin(indigo.PluginBase):
 			return ('\t\t\t<Field id="hciRoleNone" type="label" fontColor="darkgrey"> <Label>'
 					'this rpi has not reported its BLE radios yet - roles stay automatic</Label> </Field>')
 
-		nUSB = len([1 for c in channels if f"{c[2]}".upper() == "USB"])
 
 		out = []
 		for hci, upDown, bus, mac, usbId, cap in channels:
@@ -1566,10 +1659,18 @@ class Plugin(indigo.PluginBase):
 				if canBLE4:	opts.append('\t\t\t\t\t<Option value="scanBLE4">scanner BLE4</Option>')
 				if canBLE5:	opts.append('\t\t\t\t\t<Option value="scanBLE5">scanner BLE5</Option>')
 				if canBoth:	opts.append('\t\t\t\t\t<Option value="scanBLE45">scanner BLE4 + BLE5</Option>')
-			else:
-				# internal: only worth pinning when there IS a dongle to take the receive job
-				if nUSB > 0:
-					opts.append('\t\t\t\t\t<Option value="bleconnect">BLEconnect + iphone</Option>')
+			# BLEconnect ON ANY RADIO of a multi-radio rpi. This was offered on a USB dongle ONLY when
+			# the rpi had no internal radio, on the strategy that connect belongs on the internal one
+			# because its scanning fights wifi while connects tolerate it. That reasoning belongs to
+			# the AUTOMATIC pick, not to a manual pin - restricting the override is what defeats the
+			# point of the menu. rpi#2 has two dongles AND an internal radio, and there was no way to
+			# move connect off the internal radio at all. The internal radio is one die and one
+			# antenna shared with wifi, so moving connect to a dongle is exactly what someone opening
+			# this dialog is likely to want. The rpi honours it: pinnedRadio() checks present, UP and
+			# unclaimed, and has no bus condition. With a single radio the question does not arise -
+			# that radio does every job.
+			if len(channels) > 1:
+				opts.append('\t\t\t\t\t<Option value="bleconnect">BLEconnect + iphone</Option>')
 			# "ignore" on every channel - a radio can be broken, reserved for something else, or simply
 			# in the way. Offered last because it is the destructive choice. Never offered when it is
 			# the ONLY radio: ignoring that one leaves the rpi with no bluetooth at all.
@@ -1673,8 +1774,8 @@ class Plugin(indigo.PluginBase):
 				valuesDict = self.dynamicCallbackSetSwitchbotactionsFields(valuesDict)
 
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -1733,11 +1834,11 @@ class Plugin(indigo.PluginBase):
 							xxx= propsNEO["devType"].split("x")
 							ymax = int(xxx[0])
 							xmax = int(xxx[1])
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							return
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					return
 
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,f"{action}" )
@@ -1760,8 +1861,8 @@ class Plugin(indigo.PluginBase):
 							position += f"[{props0[mmm]}],"
 						position  = position.strip(",") +"]"
 						position = json.loads(position)
-					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,f"actionControlDimmerRelay position data: {position}")
 						position=[]
 				chList =[]
@@ -1820,8 +1921,8 @@ class Plugin(indigo.PluginBase):
 				if "speedOfChange" in props0 and props0["speedOfChange"] !="":
 					try:
 						valuesDict["speedOfChange0"]		  = int(props0["speedOfChange"])
-					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,f"props0 {props0}" )
 
 				valuesDict["outputDev"]			 = devId
@@ -1974,8 +2075,8 @@ class Plugin(indigo.PluginBase):
 
 			self.setPinCALLBACKmenu(valuesDict, typeId)
 			return
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -2959,7 +3060,7 @@ class Plugin(indigo.PluginBase):
 			serverPlugin.restart(waitUntilDone=False)
 
 
-		subprocess.call(f"/bin/kill -9 {self.myPID}", shell=True )
+		os.kill(self.myPID, 9)		# was "/bin/kill -9" through a shell; 9 = SIGKILL (signal is not imported here)
 
 		return
 
@@ -3055,8 +3156,8 @@ class Plugin(indigo.PluginBase):
 				theValue = theValue.replace("NaN","-9999")
 			self.addToDataQueue(newVar.name, json.loads(theValue), theValue )
 			return
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,newVar.value)
 
 
@@ -3090,9 +3191,14 @@ class Plugin(indigo.PluginBase):
 			# is a property of its GROUP. So its per-rPi states follow the group's rPiEnable flags,
 			# which is why saving the group device rebuilds its members' state lists.
 			# None means "no group restriction", ie every device that is not a member device
+			# THE GROUP DEVICE IS FILTERED THE SAME WAY, for its Pi_NN_Tags states: those are its own
+			# rPi checkboxes rather than somebody else's, but the question is identical - an rPi this
+			# group does not use must not put a column in the device history
 			enabledPis = None
 			if dev.deviceTypeId == "BLEfindMyMember":
 				enabledPis = self.findMyMemberPis(dev)
+			elif dev.deviceTypeId == "BLEfindMyGroup":
+				enabledPis = self.findMyGroupPis(dev)
 
 			for stateBaseName in statesCategoriesForDevtype: #  eg (Temperature, Humidity, CO2, beacon ,......)
 				if stateBaseName in removeStates:
@@ -3131,7 +3237,8 @@ class Plugin(indigo.PluginBase):
 						# rPis existed or not. A switched-off rPi's trio now goes, here and on member devices.
 						if addToState.find("Pi_") == 0:
 							if (addToState.find("_Signal") == 5 or addToState.find("_Distance") == 5
-									or addToState.find("_Time") == 5 or addToState.find("_State") == 5):
+									or addToState.find("_Time") == 5 or addToState.find("_State") == 5
+									or addToState.find("_Tags") == 5):
 								# AN EMPTY RPI TABLE MEANS THE CONFIG HAS NOT BEEN READ YET, not that every rPi
 								# is switched off - indigo can ask for a state list before readConfig has run.
 								# Filtering on that would strip all 60 per-rPi states off every beacon in the
@@ -3195,8 +3302,8 @@ class Plugin(indigo.PluginBase):
 			return newStateList
 
 		
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return {}
 
 
@@ -3353,7 +3460,7 @@ class Plugin(indigo.PluginBase):
 	####-----------------  exception logging ---------
 	def exceptionHandler(self, level, exception_error_message, extraText=""):
 
-		"""Logs an exception with the traceback's failing method name, line number, and statement at the given log level, optionally appending extra text; silently skips messages whose text contains 'None'.
+		"""Logs an exception with the traceback's failing method name, line number, and statement at the given log level, optionally appending extra text.
 		
 		Inputs:
 		    level (int): Logging level to emit at
@@ -3362,11 +3469,6 @@ class Plugin(indigo.PluginBase):
 		Outputs:
 		    None: Writes a formatted exception entry to the log
 		"""
-		try:
-			if f"{exception_error_message}".find("None") >-1: return
-		except:
-			pass
-
 		filename, line_number, method, statement = traceback.extract_tb(sys.exc_info()[2])[-1]
 		#module = filename.split('/')
 		log_message = f"'{exception_error_message}'"
@@ -3622,7 +3724,7 @@ class Plugin(indigo.PluginBase):
 
 
 		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 			if f"{e}".find("timeout waiting") > -1:
 				valuesDict, errorDict  = self.setErrorCode(valuesDict,errorDict,  "communication to indigo is interrupted")
 			else:
@@ -3655,8 +3757,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.delayedActions["data"].put( {"actionTime":time.time()+1.1, "devId":dev.id, "updateItems":["setupCARS"]})
 			return True, errorDict, valuesDict
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return False, errorDict, valuesDict
 
 
@@ -3679,8 +3781,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			valuesDict = self.setupGarageDoor(dev, valuesDict)
 			return True, errorDict, valuesDict
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return False, errorDict, valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -3702,8 +3804,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			valuesDict["address"] = "Pi-"+valuesDict["piServerNumber"]
 			return True, errorDict, valuesDict
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return False, errorDict, valuesDict
 
 
@@ -3934,8 +4036,8 @@ class Plugin(indigo.PluginBase):
 					self.RPI[thisPi]["PosX"] = float(xyz[0]) * self.distanceUnits
 					self.RPI[thisPi]["PosY"] = float(xyz[1]) * self.distanceUnits
 					self.RPI[thisPi]["PosZ"] = float(xyz[2]) * self.distanceUnits
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,f"bad input for xyz-coordinates:{valuesDict['PosXYZ']}" )
 
 			self.updateNeeded += " fixConfig "
@@ -4318,8 +4420,9 @@ class Plugin(indigo.PluginBase):
 						if errorText == "":
 							valuesDict, errorText = self.addBracketsPOS(valuesDict, "pos3")
 
-				if typeId in ["vl503l0xDistance","vl503l1xDistance","ultrasoundDistance","vl6180xDistance,vcnl4010Distance"]:
-						self.rPiRestartCommand[pi] += typeId
+				# was "vl6180xDistance,vcnl4010Distance" - ONE string with the comma inside, so neither type matched
+				if typeId in ["vl503l0xDistance","vl503l1xDistance","ultrasoundDistance","vl6180xDistance","vcnl4010Distance"]:
+						self.rPiRestartCommand[pi] += typeId+","
 
 				if "INPUTpulse" == typeId :
 					pinMappings = "gpio="+valuesDict["gpio"]+ "," +valuesDict["risingOrFalling"]+ " Edge, " +valuesDict["deadTime"]+ "secs deadTime"
@@ -4764,18 +4867,12 @@ class Plugin(indigo.PluginBase):
 					pixels =pixels.strip(" ")
 				valuesDict["description"]	= "rampSp="+ valuesDict["speedOfChange"]+"[sec]"+ pixels
 
-			elif typeId == "neopixel2":
-				try:
-					piU = valuesDict["piServerNumber"]
-					pi = int(piU)
-					self.rPiRestartCommand[pi] += "neopixel2,"
-					valuesDict["address"]		 = "Pi-"+valuesDict["piServerNumber"]
-					valuesDict["devType"]		 = valuesDict["devTypeROWs"] +"x"+valuesDict["devTypeLEDs"]
-					valuesDict["description"]	 = "type="+valuesDict["devType"]
-					self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
-				except:
-					pass
-			elif typeId == "neopixel3":
+			# WAS "neopixel3", the rpi PROGRAM's name - no device type is called that, the device type is
+			# "neopixel", so this never ran: devType was never stored and neopixel-dimmer (which splits
+			# its neopixel device's devType) refused every neopixel created since. A "neopixel2" branch
+			# beside it was the same for a python2 program that has no device type either - removed.
+			# The rpi derives devType from devTypeROWs x devTypeLEDs itself, so nothing changes there
+			elif typeId == "neopixel":
 				try:
 					piU = valuesDict["piServerNumber"]
 					pi = int(piU)
@@ -4796,7 +4893,7 @@ class Plugin(indigo.PluginBase):
 					self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"])
 				except:
 					pass
-			elif typeId ==" setStepperMotor":
+			elif typeId == "setStepperMotor":		# was " setStepperMotor" - the leading blank meant it never matched
 				try:
 					piU = valuesDict["piServerNumber"]
 					pi = int(piU)
@@ -4966,8 +5063,8 @@ class Plugin(indigo.PluginBase):
 				if yy != self.SQLLoggingEnable:
 					self.SQLLoggingEnable = yy
 					self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = True
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				self.SQLLoggingEnable = {"devices":True, "variables":True}
 
 
@@ -5063,8 +5160,6 @@ class Plugin(indigo.PluginBase):
 
 			try:	self.maxSocksErrorTime			= float(valuesDict["maxSocksErrorTime"])
 			except: self.maxSocksErrorTime			= 600.
-			try: self.compressRPItoPlugin			= min(40000,int(valuesDict["compressRPItoPlugin"]))
-			except: pass
 
 
 			try:
@@ -5185,7 +5280,7 @@ class Plugin(indigo.PluginBase):
 
 			self.uselastMessageReceived		=  valuesDict["uselastMessageReceived"]
 
-			if valuesDict["getBatteryMethod"] != self.pluginPrefs.get("getBatteryMethod","interactive"):
+			if valuesDict.get("getBatteryMethod","interactive") != self.pluginPrefs.get("getBatteryMethod","interactive"):
 				self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 
 			self.userIdOfServer = valuesDict["userIdOfServer"]
@@ -5198,9 +5293,10 @@ class Plugin(indigo.PluginBase):
 			self.GPIOpwm = pp
 
 
-			ss = valuesDict["wifiSSID"]
-			pp = valuesDict["wifiPassword"]
-			kk = valuesDict["key_mgmt"]
+			# not fields of the dialog (any more) - .get, so a prefs file without them does not abort the save here
+			ss = valuesDict.get("wifiSSID", "")
+			pp = valuesDict.get("wifiPassword", "")
+			kk = valuesDict.get("key_mgmt", "")
 			eth0					= '{"on":"dontChange",	"useIP":"use"}'
 			wlan0					= '{"on":"dontChange",	"useIP":"useIf"}'
 			try:	mm  			= {"eth0":json.loads(valuesDict["eth0"]), "wlan0":json.loads(valuesDict["wlan0"]) }
@@ -5217,8 +5313,8 @@ class Plugin(indigo.PluginBase):
 				self.printConfig()
 
 			self.fixConfig(checkOnly = ["all", "rpi", "force"],fromPGM="validatePrefsConfigUi")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return True, valuesDict
 
 	####=====================================================================####
@@ -5332,15 +5428,15 @@ class Plugin(indigo.PluginBase):
 			if typeId in self.RPI[piU]["output"] and f"{devId}" in self.RPI[piU]["output"][typeId]:
 				try:
 					default = (piU, self.piLabelWithDevName(piU))
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,f" devid {devIDpi}")
 				continue
 			else:
 				try:
 					xList.append((piU, self.piLabelWithDevName(piU)))
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,f" devid {devIDpi}")
 
 		if default != "":
@@ -5408,8 +5504,8 @@ class Plugin(indigo.PluginBase):
 					pass
 			return sorted(xList, key=lambda tup: tup[1])
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return []
 	####-------------------------------------------------------------------------####
 	def filterRPIsReturnNumber(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
@@ -5435,12 +5531,12 @@ class Plugin(indigo.PluginBase):
 					ipN	 = self.RPI[RPINumber]["ipNumberPi"]
 					xList.append([f"{RPINumber}-{dev.id}-{ipN}", f"{RPINumber} - {name}" if name else f"{RPINumber} - {ipN}"])
 
-				except	Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except	Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 			return sorted(xList, key=lambda tup: tup[1])
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return []
 	####-------------------------------------------------------------------------####
 	def filterAllpiSimple(self, filter="", valuesDict=None, typeId=None, devId=None):
@@ -6202,8 +6298,8 @@ class Plugin(indigo.PluginBase):
 				if props["piServerNumber"] == piN:
 					xList.append( (f"{dev.id}", f"{dev.name} {dev.id}" ))
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return xList
 
@@ -6498,8 +6594,8 @@ class Plugin(indigo.PluginBase):
 				if self.beacons[mac]["ignore"] <= 0 and self.beacons[mac]["indigoId"] != 0:
 					listActive.append([mac, name + "- active, used"])
 			listActive = sorted(listActive, key=lambda tup: tup[1])
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			listActive = []
 		return listActive
 
@@ -6550,8 +6646,8 @@ class Plugin(indigo.PluginBase):
 			listOldIgnored 	= sorted(listOldIgnored, key=lambda tup: tup[1])
 
 			return  listOldIgnored + listDeleted + listIgnored + listActive
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return []
 
 
@@ -6584,8 +6680,8 @@ class Plugin(indigo.PluginBase):
 					pass
 			return sorted(xList, key=lambda tup: tup[1])
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return []
 
 
@@ -6618,8 +6714,8 @@ class Plugin(indigo.PluginBase):
 					pass
 			return sorted(xList, key=lambda tup: tup[1])
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return []
 
 
@@ -6771,8 +6867,8 @@ class Plugin(indigo.PluginBase):
 					if gpioList[ii]["gpio"] != ll[0]: continue
 					okList.append((ll[0], f"OUTPUT_{ii}"+" "+ll[1]))
 					break
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return okList
 
 
@@ -7257,6 +7353,269 @@ class Plugin(indigo.PluginBase):
 
 
 	####-------------------------------------------------------------------------####
+	def printRPIstatesCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
+		"""Menu callback that prints a table of all rPi device states - one column per rPi - to the log.
+
+		Inputs:
+		    valuesDict (dict or None): Menu values dictionary, passed through unchanged
+		    typeId (str or None): Menu/device type identifier (unused)
+		    devId (int or None): Device ID (unused)
+		Outputs:
+		    dict or None: The unchanged valuesDict
+		"""
+		self.printRPIstates()
+		return valuesDict
+
+
+	####-------------------------------------------------------------------------####
+	def shortTimeStamp(self, value):
+		"""Shortens a "2026-10-03 11:22:33" style state value to "26-10-03 11:22:33" so the minutes and seconds fit a narrow table column.
+
+		The century is the one part of a state timestamp that is never in question, and dropping it
+		buys exactly the two characters the seconds need. Without it the column cut the value at
+		"2026-10-03 11:.." - hour present, minute half there, seconds gone, which is the wrong half
+		to lose when the question being asked is how long ago something last reported. A fractional
+		second is dropped for the same reason: noise at this width.
+
+		Tested structurally rather than with a regex (re is not imported in this plugin, and this
+		runs once per table cell): the separators must sit exactly where a timestamp puts them and
+		everything else must be a digit, so a note or a name that merely starts with digits is
+		returned untouched instead of being quietly mangled.
+
+		Inputs:
+		    value (str): the state value as text
+		Outputs:
+		    str: "YY-MM-DD hh:mm:ss", "YY-MM-DD" for a date-only value, else value unchanged
+		"""
+		try:
+			if not value.startswith("20"):					return value
+			if len(value) >= 19:
+				if	 value[4] != "-" or value[7] != "-":	return value
+				if	 value[10] not in " T":					return value
+				if	 value[13] != ":" or value[16] != ":":	return value
+				for pos in [2, 3, 5, 6, 8, 9, 11, 12, 14, 15, 17, 18]:
+					if not value[pos].isdigit():			return value
+				return value[2:19]
+			if len(value) == 10:
+				if	 value[4] != "-" or value[7] != "-":	return value
+				for pos in [2, 3, 5, 6, 8, 9]:
+					if not value[pos].isdigit():			return value
+				return value[2:]
+			return value
+		except Exception:
+			return value
+
+
+	####-------------------------------------------------------------------------####
+	def keyValueTable(self, pairs, maxLine=298, nameW=30, colW=17):
+		"""Renders a table as text: one LINE per key, one COLUMN per device in pairs.
+
+		Shared by the state report and the properties report, and by both sections of each: the
+		rPis, their sensor children, states and props all want exactly the same table and differ
+		only in which dict is handed in and what goes in the column labels. It takes DICTS rather
+		than devices for that reason - dev.states and dev.pluginProps are both just dicts here.
+
+		Lines are kept under maxLine characters: the devices are split into as many blocks as that
+		takes rather than wrapped, since wrapping destroys the alignment that is the only reason to
+		print a table at all.
+
+		The key list is the UNION over all devices in pairs, so a key one device is MISSING is
+		visible as "-" instead of being silently dropped - that gap is usually what is being looked
+		for. A state no device IN A GIVEN BLOCK has is left out of that block, where it would have
+		been a row of dashes saying nothing.
+
+		Inputs:
+		    pairs (list): [(columnLabel str, values dict), ...] in the order to print
+		    maxLine (int): maximum characters per line
+		    nameW (int): width of the state-name column
+		    colW (int): width of each device column, 17 so a shortened timestamp fits whole
+		Outputs:
+		    str: the table, starting with a newline; "" if pairs is empty
+		"""
+		if len(pairs) == 0: return ""
+
+		keyNames = set()
+		for label, values in pairs:
+			keyNames.update(values.keys())
+		keyNames = sorted(keyNames, key=lambda x: x.lower())
+
+		perBlock = max(1, (maxLine - nameW) // (colW + 1))
+
+		out = ""
+		for start in range(0, len(pairs), perBlock):
+			block = pairs[start:start + perBlock]
+			out += "\n\n" + self.padOrCut("key", nameW)
+			for label, values in block:
+				out += " " + self.padOrCut(label, colW)
+			out += "\n" + "-" * (nameW + len(block) * (colW + 1))
+			for keyName in keyNames:
+				if not any(keyName in values for label, values in block): continue
+				line = self.padOrCut(keyName, nameW)
+				for label, values in block:
+					if keyName in values:	value = self.shortTimeStamp(f"{values[keyName]}")
+					else:					value = "-"
+					line += " " + self.padOrCut(value, colW)
+				out += "\n" + line
+		return out
+
+
+	####-------------------------------------------------------------------------####
+	def printRPIstates(self):
+		"""Builds and logs the states of every rPI device side by side - one line per state name, one column per rPi - then the same for the rPI-Sensor children, grouped by their rPi.
+
+		Side by side is the whole point. Printing each device's states one after another is what the
+		device dump already does, and it makes the question actually asked here - "why is THIS rpi
+		different" - a scrolling exercise. In columns the odd one out is visible.
+
+		The sensors are a SEPARATE section, not more columns in the first table: they are different
+		devices answering different questions, they have their own state names, and there are far
+		more of them than there are rPis. Mixing them would have made a table that is mostly "-".
+		Within that section they are ONE table, exactly like the rPis - not grouped per rPi. The
+		state names of a sensor on one rPi and a sensor on another are the same names, so grouping
+		only broke the comparison that the table exists for.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Logs the report via self.indiLOG
+		"""
+		try:
+			rpis	= []
+			sensors	= []
+			for dev in indigo.devices.iter(self.pluginId):
+				piU = f"{dev.pluginProps.get('RPINumber','')}".strip()
+				if dev.deviceTypeId == "rPI":
+					rpis.append((piU, dev))
+				elif dev.deviceTypeId == "rPI-Sensor":
+					sensors.append((piU, dev))
+
+			if len(rpis) == 0 and len(sensors) == 0:
+				self.indiLOG.log(20, "no rPI or rPI-Sensor devices to print")
+				return
+
+			def piSort(x): return (int(x) if f"{x}".isdigit() else 9999, f"{x}")
+
+			# WHAT INDIGO PUTS IN THE STATUS COLUMN is none of the states below: it is the uiValue of
+			# dev.displayStateId, which indigo caches when the device's state list is built and which a
+			# state-list rebuild resets to the raw value. So when the column disagrees with "status" - a
+			# pi reading "on" while status says "up" - the answer is in these two lines and in no state
+			# at all. Prefixed "*" so they sort to the top of the table.
+			def statesPlus(dev):
+				try:	ss = dict(dev.states)
+				except Exception:	return dev.states
+				try:
+					ss["*displayStateId"] = f"{dev.displayStateId}"
+					ss["*shownInColumn"]  = f"{dev.displayStateValUi}"
+				except Exception:	pass
+				return ss
+
+			rpis.sort(key=lambda x: (piSort(x[0]), x[1].name))
+
+			out  = "\n============ states of all rPI devices ================================================"
+			out += f"\n{len(rpis)} rPi(s), '-' = this rPi does not have that state"
+			out += "\n"
+			for piU, dev in rpis:
+				out += f"\n  rPi {self.padOrCut(piU, 4)} {'enabled ' if dev.enabled else 'DISABLED'}  {dev.name}"
+
+			out += self.keyValueTable([(f"rPi {piU}" if piU != "" else dev.name, statesPlus(dev)) for piU, dev in rpis])
+
+			# ---- rPI-Sensor children: ONE table, like the rPis ----
+			# The columns are NUMBERED and the names given in the legend above: a sensor name like
+			# "s-BLEswitchbotContact-door-2-right" does not survive a 16 wide column, and a column
+			# headed "s-BLEswitchbotCo.." tells you nothing about WHICH contact it is. The legend
+			# carries the rPi number, so the table still says which rpi a column belongs to.
+			sensors.sort(key=lambda x: (piSort(x[0]), x[1].name))
+			out += "\n\n============ states of all rPI-Sensor devices =========================================="
+			if len(sensors) == 0:
+				out += "\nno rPI-Sensor devices"
+			else:
+				out += f"\n{len(sensors)} sensor device(s), '-' = this sensor does not have that state"
+				out += "\n"
+				for nn, (piU, dev) in enumerate(sensors):
+					out += f"\n  #{nn+1:<4d} rPi {self.padOrCut(piU if piU != '' else '-', 4)} {'enabled ' if dev.enabled else 'DISABLED'}  {dev.name}"
+				out += self.keyValueTable([(f"#{nn+1}", statesPlus(dev)) for nn, (piU, dev) in enumerate(sensors)])
+
+			out += "\n ==========  rPI / rPI-Sensor device states END ================\n"
+			self.indiLOG.log(20, out)
+
+		except Exception as e:
+			self.indiLOG.log(40, f"printRPIstates failed: {e}", exc_info=True)
+
+
+	####-------------------------------------------------------------------------####
+	def printRPIpropsCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
+		"""Menu callback that prints a table of all rPi device PROPERTIES - one column per rPi - to the log.
+
+		Inputs:
+		    valuesDict (dict or None): Menu values dictionary, passed through unchanged
+		    typeId (str or None): Menu/device type identifier (unused)
+		    devId (int or None): Device ID (unused)
+		Outputs:
+		    dict or None: The unchanged valuesDict
+		"""
+		self.printRPIprops()
+		return valuesDict
+
+
+	####-------------------------------------------------------------------------####
+	def printRPIprops(self):
+		"""Builds and logs the pluginProps of every rPI device side by side - one line per prop name, one column per rPi - then the same for the rPI-Sensor children.
+
+		The same table as the state report and for the same reason: the question being asked is
+		"why is THIS rpi configured differently", and one device dump after another makes that a
+		scrolling exercise while columns show the odd one out.
+
+		Props, not states: what the USER set, rather than what the rpi reported back. The two
+		disagreeing is itself a thing worth seeing - a prop changed in the dialog that the rpi has
+		not picked up yet - so they are deliberately two separate reports rather than one merged
+		table.
+
+		Inputs:
+		    None.
+		Outputs:
+		    None: Logs the report via self.indiLOG
+		"""
+		try:
+			rpis	= []
+			sensors	= []
+			for dev in indigo.devices.iter(self.pluginId):
+				piU = f"{dev.pluginProps.get('RPINumber','')}".strip()
+				if	 dev.deviceTypeId == "rPI":			rpis.append((piU, dev))
+				elif dev.deviceTypeId == "rPI-Sensor":	sensors.append((piU, dev))
+
+			if len(rpis) == 0 and len(sensors) == 0:
+				self.indiLOG.log(20, "no rPI or rPI-Sensor devices to print")
+				return
+
+			def piSort(x): return (int(x) if f"{x}".isdigit() else 9999, f"{x}")
+
+			rpis.sort(key=lambda x: (piSort(x[0]), x[1].name))
+			sensors.sort(key=lambda x: (piSort(x[0]), x[1].name))
+
+			out  = "\n============ pluginProps of all rPI devices ============================================"
+			out += f"\n{len(rpis)} rPi(s), '-' = this rPi does not have that prop"
+			out += "\n"
+			for piU, dev in rpis:
+				out += f"\n  rPi {self.padOrCut(piU, 4)} {'enabled ' if dev.enabled else 'DISABLED'}  {dev.name}"
+			out += self.keyValueTable([(f"rPi {piU}" if piU != "" else dev.name, dev.pluginProps) for piU, dev in rpis])
+
+			out += "\n\n============ pluginProps of all rPI-Sensor devices ====================================="
+			if len(sensors) == 0:
+				out += "\nno rPI-Sensor devices"
+			else:
+				out += f"\n{len(sensors)} sensor device(s), '-' = this sensor does not have that prop"
+				out += "\n"
+				for nn, (piU, dev) in enumerate(sensors):
+					out += f"\n  #{nn+1:<4d} rPi {self.padOrCut(piU if piU != '' else '-', 4)} {'enabled ' if dev.enabled else 'DISABLED'}  {dev.name}"
+				out += self.keyValueTable([(f"#{nn+1}", dev.pluginProps) for nn, (piU, dev) in enumerate(sensors)])
+
+			out += "\n ==========  rPI / rPI-Sensor pluginProps END ================\n"
+			self.indiLOG.log(20, out)
+
+		except Exception as e:
+			self.indiLOG.log(40, f"printRPIprops failed: {e}", exc_info=True)
+
+	####-------------------------------------------------------------------------####
 	def buttonPrintStatsCALLBACK(self, valuesDict=None, typeId=None, devId=None):
 		"""Menu callback that prints full TCP/IP statistics and update statistics to the log by calling self.printTCPIPstats(all='yes') and self.printUpdateStats().
 		
@@ -7382,8 +7741,8 @@ class Plugin(indigo.PluginBase):
 			pinMappings = "|".join(	f"{n}:{xxx[n]['gpio']}" for n in range(nChan) if "gpio" in xxx[n] )
 
 			valuesDict["pinMappings"] = pinMappings
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 		return valuesDict
@@ -7881,8 +8240,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict["MSG"] = f"cmd {action} submitted"
 			return valuesDict
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		valuesDict["MSG"] = "Error, see log "
 		return valuesDict
 
@@ -8208,8 +8567,8 @@ class Plugin(indigo.PluginBase):
 					valuesDict['stopActionsForSecondsVisible'] = True
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -8232,8 +8591,8 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.newBeaconsLogTimer = 0
 				valuesDict["MSG"]  = "newBeaconsLogTimer:off"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			valuesDict["MSG"]  = "error, check log"
 			self.newBeaconsLogTimer = 0
 		return valuesDict
@@ -8287,8 +8646,8 @@ class Plugin(indigo.PluginBase):
 				self.selectBeaconsLogTimer[valuesDict["selectBEACON"]]	 = length
 				valuesDict["MSG"]  = f"track beacon:{dev.name}"
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return valuesDict
 		return valuesDict
 
@@ -8311,8 +8670,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict["MSG"]  = f"{devName} logging started"
 			return valuesDict
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return valuesDict
 		return valuesDict
 
@@ -8486,8 +8845,8 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict["MSG"] = "replaced, moved MAC number"
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -8545,8 +8904,8 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(30,f"=== replaced MAC number {oldMAC}  of device {oldName} with {newMAC} --	and deleted device {newName}    ===" )
 			valuesDict["MSG"] = "replaced, moved MAC number"
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -8591,8 +8950,8 @@ class Plugin(indigo.PluginBase):
 			
 			valuesDict["MSG"] = "executed"
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -8721,11 +9080,11 @@ class Plugin(indigo.PluginBase):
 		self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonConfirmMACDeleteALLCALLBACK")
 		for piU in _rpiBeaconList:
 			self.setONErPiV(piU, "piUpToDate", ["updateParamsFTP"], resetQueue=True)
-		try:
-			subprocess.call("rm '"+ self.indigoPreferencesPluginDir + "rejected/reject-1'", shell=True )
-			subprocess.call("cp '"+ self.indigoPreferencesPluginDir + "rejected/rejects' '"+ self.indigoPreferencesPluginDir + "rejected/reject-1'" , shell=True)
-			subprocess.call("rm '"+ self.indigoPreferencesPluginDir + "rejected/rejects*'" , shell=True)
-		except: pass
+		# the rejected/ rotation is gone: the feature is dead. NOTHING in the plugin ever wrote a
+		# rejected/rejects file - only this rotation and a mkdir ever named them - and the "rejects*"
+		# glob sat inside single quotes anyway, so the shell never expanded it and the rm deleted
+		# nothing. updateRejects.py was the only reader of such files; with no producer left it no
+		# longer ships either.
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -8749,8 +9108,8 @@ class Plugin(indigo.PluginBase):
 
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonConfirmMACnonactiveCALLBACK")
 			self.indiLOG.log(10,f"from initially {ll0} beacons in internal list,  {ll0-len(self.beacons)} ignored/inactive were removed" )
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -8774,7 +9133,7 @@ class Plugin(indigo.PluginBase):
 						continue
 					except Exception as e:
 						if f"{e}".find("timeout waiting") >-1: continue
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 
 				delB.append(beacon)
 
@@ -8785,18 +9144,14 @@ class Plugin(indigo.PluginBase):
 				self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
 
 
-			try:
-				subprocess.call(f"rm '{self.indigoPreferencesPluginDir}rejected/rejects*'", shell=True )
-				self.indiLOG.log(10,f"old rejected/rejects files removed in {self.indigoPreferencesPluginDir}")
-			except: pass
 
 
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonConfirmMACDeleteOLDHISTORYCALLBACK")
 			ll2 = len(self.beacons)
 			self.indiLOG.log(10,f"from initially good {ll0} beacons # of beacons removed from BEACONlist: {ll0-ll2}" )
 			self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		valuesDict["MSG"] = "delete history initiated"
 		return valuesDict
 
@@ -8825,8 +9180,8 @@ class Plugin(indigo.PluginBase):
 					except:
 						pass
 			self.indiLOG.log(10,"set all existing iBeacon devices to active")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 	####-------------------------------------------------------------------------####
@@ -8854,8 +9209,8 @@ class Plugin(indigo.PluginBase):
 					except:
 						pass
 			self.indiLOG.log(10,"set all existing iBeacon devices to in active")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 	####-------------------------------------------------------------------------####
@@ -8882,8 +9237,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonSetAllbeaconsTonoFastDownCALLBACK")
 			self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 			valuesDict["MSG"] = "all beacon set to no Fast Down"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 	###-------------------------------------------------------------------------####
 	def buttonSetAllbeaconsTonoSignalDeltaCALLBACK(self, valuesDict=None, typeId=None, devId=None):
@@ -8909,8 +9264,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonSetAllbeaconsTonoSignalDeltaCALLBACK")
 			self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 			valuesDict["MSG"] = "all beacon set to no Signal Delta"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 	###-------------------------------------------------------------------------####
 	def buttonSetAllbeaconsTonominSignalOffCALLBACK(self, valuesDict=None, typeId=None, devId=None):
@@ -8935,8 +9290,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonSetAllbeaconsTonominSignalOffCALLBACK")
 			self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 			valuesDict["MSG"] = "all beacon set to no Signal min off "
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 	###-------------------------------------------------------------------------####
 	def buttonSetAllbeaconsTonominSignalOnCALLBACK(self, valuesDict=None, typeId=None, devId=None):
@@ -8961,8 +9316,8 @@ class Plugin(indigo.PluginBase):
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonSetAllbeaconsTonominSignalOnCALLBACK")
 			self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 			valuesDict["MSG"] = "all beacon set to no Signal min ON"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 
@@ -8992,8 +9347,8 @@ class Plugin(indigo.PluginBase):
 				for ii in range(10):
 					if "INPUTdevId"+str(ii) in props and len(props["INPUTdevId"+str(ii)]) >3:
 						valuesDict["i"+str(ii)] = True
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 
@@ -9043,8 +9398,8 @@ class Plugin(indigo.PluginBase):
 			## show new ones on screen
 			vd = self.setdisplayPropsWindowCALLBACKbutton(valuesDict=vd)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return vd
 
 	####-------------------------------------------------------------------------####
@@ -9345,13 +9700,13 @@ class Plugin(indigo.PluginBase):
 										dev = indigo.devices[dev.id]
 									except Exception as e:
 										if f"{e}".find("timeout waiting") > -1:
-											if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+											self.indiLOG.log(40,"", exc_info=True)
 											self.indiLOG.log(40,"communication to indigo is interrupted")
 											return valuesDict
 										if f"{e}".find("not found in database") ==-1:
-											if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+											self.indiLOG.log(40,"", exc_info=True)
 											return valuesDict
-										if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+										self.indiLOG.log(40,"", exc_info=True)
 
 									dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 									self.addToStatesUpdateDict(dev.id, "status", "expired")
@@ -9509,8 +9864,8 @@ class Plugin(indigo.PluginBase):
 
 			self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="buttonConfirmPiServerConfigCALLBACK")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 		self.RPI[piU]["piOnOff"] = "1"
@@ -9590,8 +9945,8 @@ class Plugin(indigo.PluginBase):
 			else:					dev.updateStateOnServer(stateName, newValue)
 			valuesDict["MSG"] = "dev/state overwritten, select next device/state        3"
 			valuesDict["stateName"] = ""
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 
@@ -9617,8 +9972,8 @@ class Plugin(indigo.PluginBase):
 			dev = indigo.devices[int(devId)]
 			for state in dev.states:
 				ret.append([state, state])
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return ret
 
@@ -9643,8 +9998,8 @@ class Plugin(indigo.PluginBase):
 			props = indigo.devices[int(devId)].pluginProps
 			for prop in props:
 				ret.append([str(prop), str(prop)])
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return ret
 
@@ -9680,8 +10035,8 @@ class Plugin(indigo.PluginBase):
 			props = dev.pluginProps
 			valuesDict["MSG"] = "dev/prop overwritten, select next device/prop        3"
 			valuesDict["propertyName"] = ""
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 
@@ -9721,8 +10076,8 @@ class Plugin(indigo.PluginBase):
 					oldValue = dev.pluginProps[valuesDict.get("propertyName","")]
 
 				valuesDict["oldValue"] = oldValue
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 	####------------- END  -----------
@@ -9899,8 +10254,8 @@ class Plugin(indigo.PluginBase):
 
 			valuesDict["MSG"] = "ERROR, wrong pi"
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			valuesDict["MSG"] = "Error, see log "
 		return valuesDict
 
@@ -10013,8 +10368,8 @@ class Plugin(indigo.PluginBase):
 	
 			self.savefastBLEReaction()
 			self.makeBeacons_parameterFile()
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 
@@ -10092,8 +10447,8 @@ class Plugin(indigo.PluginBase):
 			toSend = [{"device": typeId, "command":"file", "fileName":"/home/pi/pibeacon/temp/"+theType+".reset", "fileContents":resetGPIOCount}]
 			self.sendtoRPI(self.RPI[piU]["ipNumberPi"], piU, toSend, calledFrom="resetGPIOCountCALLBACKmenu")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -10148,8 +10503,8 @@ class Plugin(indigo.PluginBase):
 
 			
 			dev.replacePluginPropsOnServer(props)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -10194,8 +10549,8 @@ class Plugin(indigo.PluginBase):
 
 			indigo.variable.updateValue("piBeacon_property", propertyContents)
 			retJ = json.dumps({propertyName:f"{propertyContents}"}) #
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return retJ
 
@@ -10324,8 +10679,8 @@ class Plugin(indigo.PluginBase):
 
 								cmd = {"device": typeId, "command": pulseUpDown, "values":{pulseUpDown:pulseLength}, "pin": GPIOpin, "devId": outputDev.id, "sensorTriggerValue":sensorTriggerValue, "outputType":targetType, "fileName":"receiveCommands.input"}
 								self.fastBLEReaction[macSens] = {"cmd":cmd, "IPOfSwitchbotRPI":IPOfSwitchbotRPI,"IdOfSwitchbotRPI":IdOfSwitchbotRPI,"pwdOfSwitchbotRPI":pwdOfSwitchbotRPI}
-					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 						return valuesDict
 				
 			self.indiLOG.log(20,f"setting rpi-rpi action  macSens:{macSens}, to pi:{sensorPi} , target type:{targetType},  fastBLEReaction:{self.fastBLEReaction[macSens]}")
@@ -10335,8 +10690,8 @@ class Plugin(indigo.PluginBase):
 			self.execButtonConfig(valuesDict, level="0,", action=["updateParamsFTP"], Text="send switchbot command to pi# ")
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 
@@ -10449,8 +10804,8 @@ class Plugin(indigo.PluginBase):
 				  json.dumps({"outputDev":vd["outputDev"],"device": typeId})+" error")
 			self.sendtoRPI(ip, piServerNumber, toSend, calledFrom="setTEA5767CALLBACKmenu")
 			vd["MSG"] = " ok"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def setdisplayCALLBACKaction(self, action1=None, typeId=None, devId=None):
@@ -10504,9 +10859,8 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except Exception as e:
-					if f"{e}" != "None":
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,f"setdisplayCALLBACKmenuv error in json conversion for {cmds}")
 					vd["MSG"] = "error in json conversion"
 					return vd
@@ -10762,10 +11116,9 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"\n"+line+"\n")
 				vd["MSG"] = " ok"
 
-			except Exception as e:
-				if f"{e}" != "None":
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-					vd["MSG"] = "error"
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
+				vd["MSG"] = "error"
 			jData = {"device": typeId,  "restoreAfterBoot": "0", "intensity":intensity, "zoom":zoom,"repeat":repeat,"resetInitial":resetInitial,"startAtDateTime":startAtDateTime,
 				"scrollxy":scrollxy, "showDateTime":showDateTime,"scrollPages":scrollPages,"scrollDelay":scrollDelay,"source":source,"scrollDelayBetweenPages":scrollDelayBetweenPages,
 				"command": cmds}
@@ -10774,8 +11127,8 @@ class Plugin(indigo.PluginBase):
 				jData["xwindowSize"] = xwindowSize
 			self.sendtoRPI(ip, piServerNumber, [jData], calledFrom="setdisplayCALLBACKmenu")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"error display check {vd}")
 			vd["MSG"] = "error in parameters"
 		return vd
@@ -10840,9 +11193,8 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except Exception as e:
-					if f"{e}" != "None":
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,f"error in json conversion for {cmds}")
 					vd["MSG"] = "error in json conversion"
 					return vd
@@ -11032,9 +11384,8 @@ class Plugin(indigo.PluginBase):
 				line+="]'\n })\n"
 				line+= "##=======   end   =====\n"
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"\n"+line+"\n")
-			except Exception as e:
-				if f"{e}" != "None":
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(40,"use this as a ppython script command:\n"+"plug = indigo.server.getPlugin(\"com.karlwachs.piBeacon\")\nplug.executeAction(\"Neopixel\" , props ="+
 				  (json.dumps({"outputDev":vd["outputDev"],"device": typeId, "restoreAfterBoot": "0", "intensity":intensity,"repeat":repeat,"resetInitial":resetInitial})).strip("}").replace("false", "False").replace("true", "True")+"\n,\"command\":'"+json.dumps(cmds) +"'})"+"\n")
 				self.indiLOG.log(10,f"vd: {vd}")
@@ -11053,8 +11404,8 @@ class Plugin(indigo.PluginBase):
 			self.sendtoRPI(ip, piServerNumber, toSend, calledFrom="setneopixelCALLBACKmenu")
 			vd["MSG"] = " ok"
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"error display check {vd}")
 			valuesDict["MSG"] = "error in parameters"
 		return vd
@@ -11112,8 +11463,8 @@ class Plugin(indigo.PluginBase):
 
 				try:
 					cmds = json.loads(cmds)
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,f"error in json conversion for {cmds}")
 					vd["MSG"] = "error in json conversion"
 					return vd
@@ -11258,15 +11609,14 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,"\n"+line+"\n")
 				vd["MSG"] = " ok"
 
-			except Exception as e:
-				if f"{e}" != "None":
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-					vd["MSG"] = "error"
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
+				vd["MSG"] = "error"
 			toSend = [{"device": typeId, "repeat":repeat, "waitForLast":waitForLast, "dev.id":dev.id, "startAtDateTime":startAtDateTime, "command": cmds}]
 			self.sendtoRPI(ip, piServerNumber, toSend, calledFrom="setStepperMotorCALLBACKmenu")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"error stepperMotor check {vd}")
 			valuesDict["MSG"] = "error in parameters"
 		return vd
@@ -11296,8 +11646,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict["MSG"] = f"datestamp updated for :{dev.name}"
 			self.indiLOG.log(20,f"{dev.name} has new date stamp for battery replaced, from:{oldV} to:{newV}" )
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			valuesDict["MSG"] = "error, see log"
 		return valuesDict
 
@@ -11317,8 +11667,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict["typeId"]		 = "playSound"
 			valuesDict["cmd"]			 = "playSound"
 			self.setPin(valuesDict)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return valuesDict
 		return valuesDict
 
@@ -11433,8 +11783,8 @@ class Plugin(indigo.PluginBase):
 							f.write(line.strip("\n")+"\n")
 						f.close()
 
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 		valuesDict["MSG"] = f"rmved pi# {removed.strip('; ')} entries"
 
@@ -11483,8 +11833,8 @@ class Plugin(indigo.PluginBase):
 		try:
 				devId = int(valuesDict["devIdOfBeacon"])
 				return  self.getBeaconParametersCALLBACKmenu( valuesDict=valuesDict, devId=devId, force=True )
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 	####-------------------------------------------------------------------------####
@@ -11639,8 +11989,8 @@ class Plugin(indigo.PluginBase):
 
 								if (time.time() - lastUpdateBatteryLevel) > (3600*24*3): # error message if last update > 3 days ago
 									self.indiLOG.log(20,f"Battery level update outdated  for beacon: {dev.name:30s}; lastV: {dev.states['batteryLevel']:3d}; last successful check @: {dev.states['lastUpdateBatteryLevel']}, closestRPI:{dev.states['closestRPIText']}" )
-							except Exception as e:
-								if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							except Exception:
+								self.indiLOG.log(40,"", exc_info=True)
 
 						else:
 							if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,f"getBeaconParameters no update needed              for beacon: {dev.name:30s}; lastV: {dev.states['batteryLevel']:3d}; last successful check @: {dev.states['lastUpdateBatteryLevel']}, closestRPI:{dev.states['closestRPIText']}" )
@@ -11685,8 +12035,8 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog("BatteryLevel"): self.indiLOG.log(10,f"getBeaconParameters no active/requested beacons on rpi# {sorted(nothingFor)}" )
 			valuesDict["MSG"]  = f"get BatL {countB} beacons on {countP} Pi"
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 
@@ -11747,8 +12097,8 @@ class Plugin(indigo.PluginBase):
 								lastU = dev.states["lastUpdateBatteryLevel"]
 							try:	
 								lastTimeStamp = self.getTimetimeFromDateString(lastU)
-							except Exception as e:
-								if f"{e}".find("None") == -1: self.indiLOG.log(43,"makeBatteryLevelReportCALLBACKmenu: ", exc_info=True)
+							except Exception:
+								self.indiLOG.log(43,"makeBatteryLevelReportCALLBACKmenu: ", exc_info=True)
 								lastTimeStamp = time.time() - 999*(24*3600)
 						else:
 							lastU = "disabled"
@@ -11779,8 +12129,8 @@ class Plugin(indigo.PluginBase):
 
 			self.indiLOG.log(20,out+out1+out2+out3+out4+out5+out6+outBad)
 			valuesDict["MSG"]   = "bat report in indigo log"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return valuesDict
 
@@ -11894,8 +12244,8 @@ class Plugin(indigo.PluginBase):
 			else:
 				valuesDict["MSG"] = "rejected, bad beacon selected"
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
 
@@ -11983,8 +12333,8 @@ class Plugin(indigo.PluginBase):
 						self.sleep(2)
 						break
 			
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 		self.setPin(valuesDict)
 
@@ -12122,8 +12472,11 @@ class Plugin(indigo.PluginBase):
 	def qualifyDongleCALLBACKmenu(self, valuesDict=None, typeId=None, devId=None):
 		"""Menu callback: ask one rpi to qualify its bluetooth dongles (pi/qualifyDongle.py).
 
-		The rpi pauses beaconloop/BLEconnect for the duration, runs the test and sends the report
-		back, which is printed into the indigo log - nothing has to be read off the rpi by hand.
+		The rpi STOPS master/beaconloop/BLEconnect for the duration (pausing is not enough: a connect
+		on a radio that is still scanning is refused with ENOSYS and a good dongle is then reported as
+		"connect unreliable"), runs the test and sends the report back, which is printed into the
+		indigo log - nothing has to be read off the rpi by hand. Because the rpi goes quiet while it
+		runs, this callback also suppresses our own silent-rpi recovery for it, see below.
 		The parameters travel in typeId as "secs;connectMac;tries" because that is the one free
 		string field the existing command path (setPin -> sendGPIOCommand) carries.
 
@@ -12140,16 +12493,65 @@ class Plugin(indigo.PluginBase):
 			if mac != "" and not self.isValidMAC(mac):
 				valuesDict["MSG"] = "bad MAC number for the connect test - leave empty to skip it"
 				return valuesDict
-			valuesDict["cmd"]    = "qualifyDongle"
-			valuesDict["typeId"] = "{};{};{}".format(secs, mac, trys)
-			self.setPin(valuesDict)
+			# "999" is the tail entry of filterPiDInclAll = ALL ble rpis. Sensor-only rpis are not in
+			# that list at all (the field filters on "blue"), which is what we want: they have no
+			# bluetooth to qualify and stopping their master for a measurement would be pointless.
+			piSel = "{}".format(valuesDict.get("piServerNumber", "")).strip()
+			if piSel == "999":
+				targets = [p for p in _rpiBeaconList
+							if p in self.RPI and self.RPI[p]["piOnOff"] != "0"
+							and self.isValidIP(self.RPI[p]["ipNumberPi"])]
+			else:
+				targets = [piSel]
+			if not targets:
+				valuesDict["MSG"] = "no enabled BLE rpi with a valid ip to test"
+				return valuesDict
+
+			# ONE AT A TIME. Every rpi STOPS its own master/beaconloop/BLEconnect for the run, so
+			# firing them off together would leave the whole fleet blind at the same moment. Each one
+			# is given a delay and sleeps it out before it stops anything, so the gaps never overlap.
+			# The slot is sized for THREE adapters (the common case) - est below is the one-adapter
+			# estimate used for the message only, and would overlap the runs if used as the spacing.
+			perRpi = 3 * (2 * int(secs)) + 40 + (3 * int(trys) * 13 if mac else 0)
+			for ii, piU in enumerate(targets):
+				delay = ii * perRpi
+				valuesDict["piServerNumber"] = piU
+				valuesDict["cmd"]    = "qualifyDongle"
+				valuesDict["typeId"] = "{};{};{};{}".format(secs, mac, trys, delay)
+				self.setPin(valuesDict)
+				try:
+					# the suppression has to cover the WAIT as well as the run, or an rpi far down the
+					# queue gets "rescued" by checkifNewSSD while it is still waiting its turn
+					if piU in self.RPI:
+						self.RPI[piU]["lastSSDCheck"] = time.time() + delay + 660.
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
+			valuesDict["piServerNumber"] = piSel
 			# runtime: 2 measuring phases + advertising + 4 controller resets + the pause settle,
 			# and each connect attempt can sit in its 12 s window before it gives up
 			est = 2 * int(secs) + 20 + (int(trys) * 13 if mac else 0)
-			valuesDict["MSG"]    = "sent to rpi#{}: {}s per phase{}. Report follows in the log in ~{}s".format(
-									valuesDict.get("piServerNumber"), secs,
+			nT  = len(targets)
+			# Each target had its lastSSDCheck pushed out in the loop above, covering its WAIT and its
+			# RUN. Without that, an rpi that stops master/beaconloop/BLEconnect for the measurement
+			# simply looks dead: checkifNewSSD sees it unheard from for 2*90 s and runs
+			# "configure rpi" + REBOOT in the middle of it, which is exactly what ruined a test run.
+			# The window is delay + 660, not "est": est assumes ONE adapter and is for the message
+			# only, while runQualifyDongle gives up on the tool after maxRunSecs=600 and restarts
+			# master immediately - so 600 + 60 is the true upper bound of one rpi's quiet period.
+			self.indiLOG.log(20,"qualifyDongle: sent to {} rpi(s): {} - one after the other, silent-rpi"
+							" recovery suppressed for each until its own run can have finished".format(
+							nT, ", ".join(targets)))
+			if nT == 1:
+				valuesDict["MSG"] = "sent to rpi#{}: {}s per phase{}. Report follows in the log in ~{}s".format(
+									targets[0], secs,
 									", connect test to {} ({}x)".format(mac, trys) if mac else "",
 									est)
+			else:
+				valuesDict["MSG"] = "sent to {} BLE rpis ({}), ONE AT A TIME so only one is blind at once: {}s per phase{}." \
+									" Last report in roughly {} min".format(
+									nT, ", ".join(targets), secs,
+									", connect test to {} ({}x)".format(mac, trys) if mac else "",
+									int(((nT - 1) * perRpi + est) / 60) + 1)
 		except Exception:
 			self.indiLOG.log(40,"", exc_info=True)
 			valuesDict["MSG"] = "error, see log"
@@ -12287,7 +12689,7 @@ class Plugin(indigo.PluginBase):
 			valuesDict["piServerNumber"]	 = props["address"].split("-")[1]
 			#valuesDict["cmd"]				  = "analogWrite"
 			self.setPin(valuesDict)
-		except Exception as e:
+		except Exception:
 			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
@@ -12311,7 +12713,7 @@ class Plugin(indigo.PluginBase):
 			valuesDict["piServerNumber"]	 = props["address"].split("-")[1]
 			#valuesDict["cmd"]				  = "analogWrite"
 			self.setPin(valuesDict)
-		except Exception as e:
+		except Exception:
 			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
@@ -12471,8 +12873,8 @@ class Plugin(indigo.PluginBase):
 				if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,f"sending parameters file via socket: {v}"+" \n"+fileContents)
 				self.sendFileToRPIviaSocket(ip,piU, "/home/pi/pibeacon/parameters", fileContents, fileMode="w")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -12510,8 +12912,8 @@ class Plugin(indigo.PluginBase):
 			if len(fileContents) >0:
 				self.sendFileToRPIviaSocket(ip, piU, "/home/pi/pibeacon/temp/extraPageForDisplay.inp",json.dumps(fileContents),fileMode="w",touchFile=False)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -12780,8 +13182,8 @@ class Plugin(indigo.PluginBase):
 			helpText += '  \n'
 			helpText += '=============== help for GPIO or neopixel actions triggered by distance sensors                       END    ======  \n'
 			self.myLog( theText = helpText, destination="standard")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def resetTcpipSocketStatsCALLBACK(self, valuesDict=None, typeId=None):
@@ -12821,8 +13223,8 @@ class Plugin(indigo.PluginBase):
 			toSend= [{"command":"file", "fileName":fileName, "fileContents":fileContents, "fileMode":fileMode, "touchFile":touchFile}]
 			if self.decideMyLog("OutputDevice"): self.indiLOG.log(5, f"sending file to  {ip};  {toSend}" )
 			self.sendtoRPI(ip, piU, toSend, calledFrom="sendFileToRPIviaSocket")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -12908,36 +13310,34 @@ class Plugin(indigo.PluginBase):
 				if sys.version_info[0] > 2: 	sock.sendall(bytes(theStringToRPI + "\n",'utf-8'))
 				else:							sock.sendall(theStringToRPI + "\n")
 			except Exception as e:
-					if f"{e}" != "None":
-						if	time.time() > self.currentlyBooting:  # NO MSG IF RPIS ARE BOOTING
-							if piU in self.rpiQueues["busy"]:
-								if time.time() - self.rpiQueues["busy"][piU] > 20: # supress warning if we just updated the RPI
-									self.indiLOG.log(10,f"socket-send not working,  rPi:{pi} {ip} is currently updating, delaying send" )
+					if	time.time() > self.currentlyBooting:  # NO MSG IF RPIS ARE BOOTING
+						if piU in self.rpiQueues["busy"]:
+							if time.time() - self.rpiQueues["busy"][piU] > 20: # supress warning if we just updated the RPI
+								self.indiLOG.log(10,f"socket-send not working,  rPi:{pi} {ip} is currently updating, delaying send" )
+							else:
+								if f"{e}".find("onnection refused") ==-1:
+									self.indiLOG.log(30,f"error in socket-send to rPi:{pi} {ip}  cmd= {json.dumps(theList)[0:30]}...{json.dumps(theList)[-30:]}" )
 								else:
-									if f"{e}".find("onnection refused") ==-1:
-										self.indiLOG.log(30,f"error in socket-send to rPi:{pi} {ip}  cmd= {json.dumps(theList)[0:30]}...{json.dumps(theList)[-30:]}" )
-									else:
-										self.indiLOG.log(30,f"error in socket-send to rPi:{pi} {ip}, connection refused, rebooting/restarting RPI?" )
-								self.checkIPSendSocketOk[ip]["count"] += 1
-								self.checkIPSendSocketOk[ip]["time"]	= time.time()
-						try:	sock.close()
-						except: pass
-						return -1
+									self.indiLOG.log(30,f"error in socket-send to rPi:{pi} {ip}, connection refused, rebooting/restarting RPI?" )
+							self.checkIPSendSocketOk[ip]["count"] += 1
+							self.checkIPSendSocketOk[ip]["time"]	= time.time()
+					try:	sock.close()
+					except: pass
+					return -1
 			finally:
 					sock.close()
 		except Exception as e:
-			if f"{e}" != "None":
-				if	time.time() > self.currentlyBooting: # NO MSG IF RPIS ARE BOOTING
-					if f"{e}".find("onnection refused") ==-1:
-						self.indiLOG.log(40,f"error in socket-send to rPi:{pi} {ip}  cmd= {json.dumps(theList)[0:30]}..{json.dumps(theList)[-30:]}" )
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-					else:
-						self.indiLOG.log(30,f"error in socket-send to rPi:{pi} {ip}, connection refused,  rebooting/restarting RPI?" )
-					self.checkIPSendSocketOk[ip]["count"] += 1
-					self.checkIPSendSocketOk[ip]["time"]   = -time.time()
-				try:	sock.close()
-				except: pass
-				return -1
+			if	time.time() > self.currentlyBooting: # NO MSG IF RPIS ARE BOOTING
+				if f"{e}".find("onnection refused") ==-1:
+					self.indiLOG.log(40,f"error in socket-send to rPi:{pi} {ip}  cmd= {json.dumps(theList)[0:30]}..{json.dumps(theList)[-30:]}" )
+					self.indiLOG.log(40,"", exc_info=True)
+				else:
+					self.indiLOG.log(30,f"error in socket-send to rPi:{pi} {ip}, connection refused,  rebooting/restarting RPI?" )
+				self.checkIPSendSocketOk[ip]["count"] += 1
+				self.checkIPSendSocketOk[ip]["time"]   = -time.time()
+			try:	sock.close()
+			except: pass
+			return -1
 		self.checkIPSendSocketOk[ip]["count"] = 0
 		self.checkIPSendSocketOk[ip]["time"]  = time.time()
 		return 0
@@ -12968,8 +13368,8 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,f"sendInitialValuesToOutput init pin: sending to pi# {piServerNumber}; pin: {props['gpio']}  {cmd};  deviceDefs: {props['deviceDefs']}" )
 					self.sendGPIOCommand(ip, int(piServerNumber), dev.deviceTypeId, cmd, GPIOpin=gpio, restoreAfterBoot="1", inverseGPIO =inverseGPIO )
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.sendInitialValue = ""
 		return
 
@@ -13050,7 +13450,7 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 			if f"{e}".find("timeout waiting") > -1:
 				self.indiLOG.log(40,"communication to indigo is interrupted")
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	###-------------------------------------------------------------------------####
@@ -13168,15 +13568,15 @@ class Plugin(indigo.PluginBase):
 					dev = indigo.devices["Pi_" + piMACSend]
 				except Exception as e:
 					if f"{e}".find("timeout waiting") > -1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"handleRPIMessagePart communication to indigo is interrupted")
 						keepThisMessage = "handleRPIMessagePart error timeout (4)"
 						return keepThisMessage, beaconUpdatedIds
 					if f"{e}".find("not found in database") ==-1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						keepThisMessage = "handleRPIMessagePart error  not in db (5)"
 						return keepThisMessage, beaconUpdatedIds
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,"", exc_info=True)
 					keepThisMessage = "handleRPIMessagePart error other (6)"
 					return keepThisMessage, beaconUpdatedIds
 
@@ -13212,10 +13612,10 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"handleRPIMessagePart communication to indigo is interrupted")
 			if e is not None	and f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 			keepThisMessage = "handleRPIMessagePart indigo error general 99"
 
 		return  keepThisMessage, beaconUpdatedIds
@@ -13236,7 +13636,7 @@ class Plugin(indigo.PluginBase):
 					self.RPI[piU]["passwordPi"] = copy.copy(self.RPI[pi]["passwordPi"])
 					return
 				
-		except Exception as e:
+		except Exception:
 			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
@@ -13322,8 +13722,8 @@ class Plugin(indigo.PluginBase):
 
 			self.sendtoRPI(ip, pi, [cmd1], calledFrom="sendGPIOCommand")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -13350,8 +13750,8 @@ class Plugin(indigo.PluginBase):
 			if self.decideMyLog("OutputDevice"): self.indiLOG.log(5,f"sendGPIOCommand-s-: {cmds}" )
 			self.sendtoRPI(ip, pi ,cmds, calledFrom="sendGPIOCommand")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -13447,6 +13847,12 @@ class Plugin(indigo.PluginBase):
 			if len(err) > 0:
 				ok = self.fixHostsFile(ret, err, cmd, piU)
 				if not ok: return 0
+				# A SHUT PORT WILL STILL BE SHUT. Everything below this is a retry - once here and
+				# once more after a 2 second sleep - which is right for a transient or a host key
+				# that has just been repaired, and pointless three times over for an rPi that is
+				# rebooting. It is also why the same block appeared two and three times in the log
+				# for one send
+				if self.sshUnreachable(ret, err):	return 1
 				self.indiLOG.log(10,f"return code from fix {ret}  trying again to configure PI")
 				ret, err = self.readPopen(cmd)
 
@@ -13464,8 +13870,8 @@ class Plugin(indigo.PluginBase):
 					self.indiLOG.log(10,"setup pi response (2) message>>>> \n{}\n<<<<<<".format(ret.strip("\n")) )
 				return 1
 			return 0
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return 1
 
 
@@ -13539,8 +13945,8 @@ class Plugin(indigo.PluginBase):
 						
 					if not noLog:
 						self.indiLOG.log(20,f"check if plugin installed ok on Pi#{piU};  last ok rpiInstall check:{time.time() - self.RPI[piU]['lastSSDCheck']:.1f} secs ago" )
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(20,"check from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace("\n\n", "\n"), err.replace("\n\n", "\n")) )
 
 				return 0
@@ -13578,17 +13984,16 @@ class Plugin(indigo.PluginBase):
 					ret3 = ret2.replace("\n\n", "\n").replace("\n", tag)
 						
 					self.indiLOG.log(20,f"{tag}pibeacon logfile from Pi# {piU}  ==============:  {tag}{ret1}{tag}pibeacon logfile  END    ===================================\n" )
-				except Exception as e:
-					if f"{e}" != "None":
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-						self.indiLOG.log(20,"pibeacon logfile from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace("\n\n", "\n"), err.replace("\n\n", "\n")) )
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(20,"pibeacon logfile from Pi# {} raw \n {} \n errors:\n{}" .format(piU, ret.replace("\n\n", "\n"), err.replace("\n\n", "\n")) )
 
 				return 0
 
 			return 0
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return 1
 
 
@@ -13635,6 +14040,131 @@ class Plugin(indigo.PluginBase):
 		return "\n".join(keep)
 
 	####-------------------------------------------------------------------------####
+	def sshUnreachable(self, ret, err):
+		"""True when ssh/sftp could not get a connection at all - as opposed to failing once it had one.
+
+		THE DIFFERENCE MATTERS because nothing on this side can do anything about it, and because
+		it is the common case: an rPi rebooting, sshd not up yet, a machine switched off after its
+		ip stayed in the arp table long enough to answer a ping. There is no host-key to fix, no
+		password to re-send and no point retrying three times a few seconds apart - the port is
+		shut, and it will still be shut.
+		MATCHED ON ssh's OWN WORDS, which are stable across versions and are the only thing the
+		expect script passes back. Deliberately NOT matching "Permission denied" or a host-key
+		complaint: those are reachable-but-refused-us, which is a real configuration problem and
+		must keep its full, loud report.
+
+		Inputs:
+		    ret (str): stdout from the expect script
+		    err (str): stderr, already through stripBenignStderr
+		Outputs:
+		    bool: True if the connection never came up
+		"""
+		both = "{}\n{}".format(ret, err).lower()
+		for sign in ["connection refused", "no route to host", "host is down",
+					"network is unreachable", "connection timed out", "operation timed out"]:
+			if sign in both:	return True
+		return False
+
+	####-------------------------------------------------------------------------####
+	def pingHost(self, ipN, waitMsec=400):
+		"""One ICMP ping. True when the host answered.
+
+		ICMP ON PURPOSE, and only here. testPing below deliberately does NOT ping - it asks the one
+		question its callers need, "can I ssh to this rpi" - and ping answers a different one. That
+		difference is exactly what makes ping useful for a DIAGNOSIS: ping alive + ssh dead is a
+		very specific state, an rPi whose kernel still answers the network while sshd is gone.
+		Raw ICMP needs root, so this goes through /sbin/ping; there is no unprivileged stdlib way.
+
+		Inputs:
+		    ipN (str): IP address
+		    waitMsec (int): how long to wait for the reply (macOS ping -W is milliseconds)
+		Outputs:
+		    bool: True when a reply came back
+		"""
+		try:
+			ret = subprocess.call(f"/sbin/ping -c 1 -W {int(waitMsec)} -o -q {ipN} >/dev/null 2>&1", shell=True)
+			return int(ret) == 0
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		return False
+
+
+	####-------------------------------------------------------------------------####
+	def startHangCheck(self, ipN):
+		"""Starts the background "is it down or is it hung" diagnosis for an rPi whose ssh port did not answer.
+
+		NON-BLOCKING, because it has to be: it waits 30 s between its two pings, and the callers of
+		testPing are in the middle of pushing files to every rPi in turn. So it runs in its own
+		daemon thread and testPing returns at once, exactly as before.
+		Rate-limited to one verdict per rPi per 10 minutes, and the limit gates the THREAD, not just
+		the log line - otherwise a push loop would start a new diagnosis on every attempt.
+
+		Inputs:
+		    ipN (str): the rPi's IP address
+		Outputs:
+		    None: starts a thread, or returns silently when one is running / it is too soon
+		"""
+		try:
+			if self.hangCheckRunning.get(ipN, False):							return
+			if time.time() - self.hangCheckLast.get(ipN, 0) < 600:				return		# 10 min
+			self.hangCheckRunning[ipN] = True
+			th = threading.Thread(name=f"hangCheck-{ipN}", target=self.hangCheck, args=(ipN,))
+			th.daemon = True
+			th.start()
+		except Exception:
+			self.hangCheckRunning[ipN] = False
+			self.indiLOG.log(40,"", exc_info=True)
+
+
+	####-------------------------------------------------------------------------####
+	def hangCheck(self, ipN):
+		"""Decides whether an rPi that is not answering ssh is DOWN or HUNG, and says which.
+
+		The two states look identical to a caller that only tried ssh, and they need opposite
+		responses: a down rPi will come back by itself or needs power, a HUNG one needs a hard reset
+		and will sit there for ever otherwise. Seen when a reboot does not complete - "sudo reboot"
+		with a program like display.py still holding on - where the kernel keeps answering ICMP
+		while sshd is already gone.
+		Sequence: ping, wait 30 s, RE-TEST SSH, ping again. The ssh re-test is what keeps this quiet
+		shortly after a boot, when ssh is briefly unavailable and nothing is wrong: if ssh comes
+		back within the 30 s the rPi was simply still starting, and that is logged as information
+		rather than as a fault.
+		Two pings 30 s apart rather than one, so a single dropped packet or a momentary wifi gap
+		does not get reported as a dead rPi.
+
+		Inputs:
+		    ipN (str): the rPi's IP address
+		Outputs:
+		    None: logs one line, at most one per rPi per 10 minutes
+		"""
+		try:
+			piU = ""
+			try:
+				for pp in self.RPI:
+					if f"{self.RPI[pp].get('ipNumberPi','')}" == f"{ipN}":	piU = f"{pp}"; break
+			except Exception:	pass
+			who = f"rPi {piU} ({ipN})" if piU != "" else f"rPi at {ipN}"
+
+			ping1 = self.pingHost(ipN)
+			self.sleep(30)
+			if self.testPing(ipN) == 0:
+				self.indiLOG.log(20, f"{who}: ssh was not answering but is back within 30 s - it was still starting up, no action needed")
+				self.hangCheckLast[ipN] = time.time()
+				return
+			ping2 = self.pingHost(ipN)
+
+			self.hangCheckLast[ipN] = time.time()
+			if not ping1 and not ping2:
+				self.indiLOG.log(20, f"{who} IS DOWN: no ping, no ssh (both pings 30 s apart failed) - powered off, crashed, or off the network")
+			else:
+				self.indiLOG.log(20, f"{who} IS HANGING, NEEDS A HARD RESET: it answers ping ({'both' if (ping1 and ping2) else 'one'} of 2 pings 30 s apart) but sshd does not answer - typically a reboot that did not complete because a program was still running")
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		finally:
+			self.hangCheckRunning[ipN] = False
+
+
+	####-------------------------------------------------------------------------####
 	def testPing(self, ipN):
 		"""Pings an IP address up to twice (a quick 40ms attempt then a longer 400ms attempt) and reports whether the host responded.
 		
@@ -13643,23 +14173,32 @@ class Plugin(indigo.PluginBase):
 		Outputs:
 		    int: 0 if the host responded to a ping, 1 if unreachable or on error
 		"""
-		try:
-			ss = time.time()
-			ret = subprocess.call("/sbin/ping  -c 1 -W 40 -o " + ipN, shell=True) # send max 2 packets, wait 40 msec   if one gets back stop
-			if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,f" sbin/ping  -c 1 -W 40 -o {ipN} return-code: {ret}" )
-
-
-			if int(ret) ==0:  return 0
+		# A TCP CONNECT TO PORT 22, NOT ICMP. Every caller of this asks it one question - "can I ssh
+		# or sftp to this rpi" - and ping answers a different one: ICMP can be filtered while sshd is
+		# fine, and more usefully here, an rpi mid-boot or with a wedged sshd answers ping happily
+		# while every ssh attempt then times out. A connect to 22 is the actual precondition.
+		# It also drops two shell+fork per check, on a path that runs for every rpi.
+		# The two-stage timing is kept: a short attempt first (the LAN case, answered in ~ms), then
+		# one longer attempt, so a busy rpi is not written off on the strength of 40 ms.
+		for timeout in [0.25, 1.5]:
+			sock = None
+			try:
+				sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+				sock.settimeout(timeout)
+				ss = time.time()
+				sock.connect((ipN, 22))
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,f"testPing {ipN}: port 22 open after {time.time()-ss:.3f}s (timeout {timeout}s)" )
+				return 0
+			except Exception as e:
+				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,f"testPing {ipN}: port 22 not reachable within {timeout}s ({type(e).__name__})" )
+			finally:
+				if sock is not None:
+					try:	sock.close()
+					except Exception:	pass
 			self.sleep(0.1)
-			ret = subprocess.call("/sbin/ping  -c 1 -W 400 -o " + ipN, shell=True)
-			if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,f"/sbin/ping  -c 1 -W 400 -o {ipN} ret-code: {ret}" )
-
-
-			if int(ret) ==0:  return 0
-			return 1
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-
+		# ssh did not answer. Is this rPi DOWN or HUNG? The caller cannot tell and must not wait to
+		# find out, so the diagnosis runs in the background and logs its own verdict
+		self.startHangCheck(ipN)
 		return 1
 	####-------------------------------------------------------------------------####
 	def handlesockReporting(self, IPN, nBytes, msgName, xType, msg=""):
@@ -13701,8 +14240,8 @@ class Plugin(indigo.PluginBase):
 					pass
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -13748,7 +14287,7 @@ class Plugin(indigo.PluginBase):
 						break
 				except Exception as e:
 					if f"{e}".find("serve_forever") == -1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 					self.killHangingProcess(ret)
 
 				self.sleep(1)
@@ -13779,8 +14318,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
 			return ret.decode('utf_8'), err.decode('utf_8')
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def killHangingProcess(self, ret):
@@ -13801,10 +14340,10 @@ class Plugin(indigo.PluginBase):
 						killcmd = f"/bin/kill -9 {pidTokill}"
 						self.indiLOG.log(10,f" ..   startTcpipListening .. trying to kill hanging process with: {killcmd}, process:{xx} " )
 						subprocess.call(killcmd, shell=True)
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####=====================================================================####
 	####  QUEUES & BACKGROUND THREADS
@@ -13842,6 +14381,23 @@ class Plugin(indigo.PluginBase):
 		# A rpi that really cannot set up bluetooth re-sends on every program restart, so a
 		# persistent fault is still logged - just after the boot noise instead of inside it.
 		self.hciErrorQuietSecs = 180.
+		# Same idea for the rpi->plugin socket. After a version bump the PLUGIN reloads first and the
+		# rpis are pushed afterwards, so for a few minutes they are still sending the previous frame
+		# format and every one of them lands in a parse error. Keep those visible at info level but do
+		# not raise them: they stop by themselves as soon as the rpis have the new files.
+		self.socketQuietSecs = 180.
+		# EVERY rpi's silence clock starts NOW, at plugin start. Without this lastSSDCheck still holds
+		# whenever that rpi's last message was decoded - hours ago after a reload, or never for one
+		# this instance has not heard from yet - so checkifNewSSD would judge the whole fleet as long
+		# dead and run restartmasterSSH and then configure + reboot across all of it within minutes of
+		# a reload. A value already in the FUTURE is kept: that is a quiet period the dongle test
+		# announced, and a plugin restart must not cancel it.
+		try:
+			_now = time.time()
+			for _pp in self.RPI:
+				if self.RPI[_pp].get("lastSSDCheck", 0) < _now:	self.RPI[_pp]["lastSSDCheck"] = _now
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		self.indiLOG.log(20,"entering init runConcurrentThread")
 
@@ -13981,8 +14537,8 @@ class Plugin(indigo.PluginBase):
 
 			self.freezeAddRemove	= False
 			self.initStatesOnServer = False
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return anyChange
 
@@ -14007,8 +14563,8 @@ class Plugin(indigo.PluginBase):
 				self.actionList["setSqlLoggerIgnoreStatesAndVariables"] = False
 				self.setSqlLoggerIgnoreStatesAndVariables()
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.actionList["setTime"] = []
 		return
 
@@ -14119,8 +14675,8 @@ class Plugin(indigo.PluginBase):
 			if "bluetooth" in varJson:
 				self.checkBlueTooth(piU, varJson["bluetooth"])
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,varNameIN+"  " + varUnicode[0:30])
 
 
@@ -14220,15 +14776,25 @@ class Plugin(indigo.PluginBase):
 					beaconUpdatedIds = []
 					self.queueList = ""
 					self.sleep(0.05)
-				except Exception as e:
-					if f"{e}" != "None":
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				# INDIGO STOPS A PLUGIN THREAD BY RAISING THIS OUT OF self.sleep(), and StopThread
+				# derives from Exception - so the generic handler below used to catch it, log a
+				# traceback at level 40 as though something had gone wrong, and then go round the
+				# loop again. The thread did not exit. Indigo waited out its shutdown timeout and
+				# killed the process, which is where "the plugin takes seconds to reload, and the
+				# reload has to be done twice" came from: the copy of a new plugin.py was racing a
+				# stop that had not finished.
+				# CAUGHT FIRST AND BY NAME, because the order of except clauses is the whole fix -
+				# a handler for Exception will swallow it wherever it is reached first
+				except self.StopThread:
+					break
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 
 
 			self.beaconMessages["state"] = "stopped - exiting thread"
 			self.indiLOG.log(10,f" .. stopped   thread for beaconMessages, state is: {self.beaconMessages['state']}" )
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -14304,11 +14870,11 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 				return
 			if e is not None	and f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -14408,15 +14974,15 @@ class Plugin(indigo.PluginBase):
 						if  "eval" in action:
 							try:
 								eval(action["eval"])
-							except Exception as e:
-								if f"{e}".find("None") == -1: self.indiLOG.log(40,f"eval:{action['eval']}", exc_info=True)
+							except Exception:
+								self.indiLOG.log(40,f"eval:{action['eval']}", exc_info=True)
 							continue
 
 						if  "exec" in action:
 							try:
 								exec(action["exec"])
-							except Exception as e:
-								if f"{e}".find("None") == -1: self.indiLOG.log(40,f"exec:{action['exec']}", exc_info=True)
+							except Exception:
+								self.indiLOG.log(40,f"exec:{action['exec']}", exc_info=True)
 							continue
 
 						if "setONErPiV" in action:
@@ -14451,8 +15017,8 @@ class Plugin(indigo.PluginBase):
 
 						if devId > 0:
 							try:	dev = indigo.devices[devId]
-							except Exception as e:
-								if f"{e}".find("None") == -1: self.indiLOG.log(30,"devId not in indgo devices", exc_info=True)
+							except Exception:
+								self.indiLOG.log(30,"devId not in indgo devices", exc_info=True)
 								continue
 							execUpdate = False
 
@@ -14490,7 +15056,11 @@ class Plugin(indigo.PluginBase):
 
 								elif "applyOnOffDisplay" in updateItem:
 									# after a device-config save: the state-list rebuild wiped our uiValue
-									self.applyOnOffDisplay(dev, dev.pluginProps, calledFrom="after config save")
+									# verbose=False: this ran on every device config save and logged a line
+									# nobody reads - it reports what the icon and display text were set
+									# to, which is visible in the device list itself. The summary is
+									# still returned, and verbose=True still logs it for debugging.
+									self.applyOnOffDisplay(dev, dev.pluginProps, calledFrom="after config save", verbose=False)
 
 								elif  "fastDown" in updateItem:
 									self.execDelaytedActionForFastDown(dev, updateItem["fastDown"])
@@ -14534,12 +15104,19 @@ class Plugin(indigo.PluginBase):
 
 					for action in addback:
 						self.delayedActions["data"].put(action)
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				# SAME AS workOnBeaconMessages - see the note there. This one was worse: the generic
+				# handler caught the StopThread, logged it, and then called self.sleep(3), which
+				# raised it straight back out of the except block. So a normal shutdown logged the
+				# same traceback TWICE, once here and once from the outer handler, before the thread
+				# finally fell out of the loop
+				except self.StopThread:
+					break
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.sleep(3)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.delayedActions["state"] = "stopped - exiting thread"
 		self.indiLOG.log(10,f"delayedActions  update thread stopped, state is:{self.delayedActions['state']}" )
 		return
@@ -14596,8 +15173,8 @@ class Plugin(indigo.PluginBase):
 								self.startOneUpdateRPIqueue(piU, reason="active messages pending timeout")
 							elif self.rpiQueues["state"][piU] != "running":
 								self.startOneUpdateRPIqueue(piU, reason="not running")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -14661,8 +15238,8 @@ class Plugin(indigo.PluginBase):
 			self.sleep(0.1)
 			self.rpiQueues["thread"][piU]  = threading.Thread(name='self.rpiUpdateThread', target=self.rpiUpdateThread, args=(piU,))
 			self.rpiQueues["thread"][piU].start()
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 	###-------------------------------------------------------------------------####
 	def stopUpdateRPIqueues(self, piSelect="all"):
@@ -14772,10 +15349,9 @@ class Plugin(indigo.PluginBase):
 							self.rpiQueues["reset"][piU] = 4
 							if self.decideMyLog("OfflineRPI"): self.indiLOG.log(10,f"device {indigo.devices[id].name} not enabled, no sending to RPI" )
 							continue
-					except Exception as e:
-						if f"{e}" != "None":
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-							self.indiLOG.log(10,f"setting update queue for pi#{piU} to empty")
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(10,f"setting update queue for pi#{piU} to empty")
 						self.rpiQueues["reset"][piU] = 5
 
 					# time for sending?
@@ -14816,8 +15392,8 @@ class Plugin(indigo.PluginBase):
 					for nxt in addBack:
 						self.rpiQueues["data"][piU].put(nxt)
 				self.rpiQueues["reset"][piU] = 0
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.rpiQueues["state"][piU] = "stopped - exiting thread"
 		self.indiLOG.log(10,f"rpi: {piU}  update thread stopped, state is:{self.rpiQueues['state'][piU]}" )
 		return
@@ -15070,9 +15646,6 @@ class Plugin(indigo.PluginBase):
 
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get("maxSocksErrorTime", "600."))
 			except: self.maxSocksErrorTime	= 600.
-			self.compressRPItoPlugin		= self.pluginPrefs.get("compressRPItoPlugin", "20000")
-			try:	self.compressRPItoPlugin	= min(40000, int(self.compressRPItoPlugin))
-			except:	self.compressRPItoPlugin	= 20000
 			self.userIdOfServer				= self.pluginPrefs.get("userIdOfServer", "")
 			self.passwordOfServer			= self.pluginPrefs.get("passwordOfServer", "")
 			self.myIpNumber					= self.pluginPrefs.get("myIpNumber", "192.168.1.130")
@@ -15346,8 +15919,8 @@ class Plugin(indigo.PluginBase):
 						if triggerGroup[group][tType]:
 							self.triggerEvent(group+"-"+tType)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.setGroupStatusNextCheck = time.time() +  self.setGroupStatusrepeat
 		self.statusChanged = 0
 		return
@@ -15390,7 +15963,7 @@ class Plugin(indigo.PluginBase):
 
 			if savetoFile: self.saveCARS(force=True)
 
-		except Exception as e:
+		except Exception:
 			self.indiLOG.log(40,f"deleted beacon? .. car beacons beacon#  {beacon}\nfor   indigoCarId {indigoCarIds}",  exc_info=True)
 
 	####-------------------------------------------------------------------------####
@@ -15605,8 +16178,8 @@ class Plugin(indigo.PluginBase):
 			if indigoCarIds in self.checkCarsNeed:
 				if self.decideMyLog("CAR"): self.indiLOG.log(10,f"{carName}-{indigoCarIds} -7- update states:  checkCarsNeed last={time.time() - self.checkCarsNeed[indigoCarIds]:.0f}[secs]")
 			if self.decideMyLog("CAR"): self.indiLOG.log(10,f"{carName}-{indigoCarIds} -8- updateStatesList: {self.updateStatesDict}" )
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 		return
@@ -15627,8 +16200,8 @@ class Plugin(indigo.PluginBase):
 			valuesDict["MSG"] = error
 			errorDict["MSG"]  = error
 			self.indiLOG.log(40,"validateDeviceConfigUi "+error)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return   valuesDict, errorDict
 
 
@@ -15649,8 +16222,8 @@ class Plugin(indigo.PluginBase):
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 				else:
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-			except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 		self.devUpdateList ={}
 
 
@@ -15741,8 +16314,8 @@ class Plugin(indigo.PluginBase):
 						self.setONErPiV(f"{pi}", "piUpToDate", ["updateBeaconParamsFTP"])
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 	####-------------------------------------------------------------------------####
 	def execBeaconUpdate(self, timeStampOfReceive, pi, data, varUnicode):
@@ -15815,8 +16388,8 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(30,f"rPi#:{piU} {self.RPI[piU]['ipNumberPi']}: piMAC empty ")
 						return beaconUpdatedIds
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,varUnicode)
 		return beaconUpdatedIds
 
@@ -15838,8 +16411,10 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(40,"rPi error message: Please check that RPI  you might need to replace SD")
 				self.indiLOG.log(40,varUnicode)
 				return
-			if varUnicode.find("data may be corrupt") >-1:
-				self.indiLOG.log(30,"rPi error message: >>dosfsck has error: data may be corrupt<<<   Please check that RPI  you might need to replace SD")
+			# underscore form is what the rpi sends now; the spaced form is kept so an rpi that has
+			# not been updated yet is still heard
+			if varUnicode.find("data_may_be_corrupt") >-1 or varUnicode.find("data may be corrupt") >-1:
+				self.indiLOG.log(30,"rPi error message: >>dosfsck has error: data_may_be_corrupt<<<   Please check that RPI  you might need to replace SD")
 				self.indiLOG.log(30,varUnicode)
 				return
 			pi = int(varJson["pi"])
@@ -15905,7 +16480,7 @@ class Plugin(indigo.PluginBase):
 							out+= f"{jj[xx][yy]:{headers[yy]+2}}"
 						out += "\n"
 
-				except Exception as e:
+				except Exception:
 					self.indiLOG.log(40,"", exc_info=True)
 					out += varJson["text"]
 				self.indiLOG.log(20, out.strip("\n"))
@@ -15916,11 +16491,11 @@ class Plugin(indigo.PluginBase):
 			except Exception as e:
 
 				if f"{e}".find("timeout waiting") > -1:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,"communication to indigo is interrupted")
 					return
 				if f"{e}".find("not found in database") ==-1:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,"", exc_info=True)
 					return
 				self.RPI[piU]["piDevId"]=0
 				return
@@ -15956,8 +16531,8 @@ class Plugin(indigo.PluginBase):
 
 			self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom="addToDataQueue pi_IN_Alive")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return
 
@@ -16017,8 +16592,8 @@ class Plugin(indigo.PluginBase):
 					
 				self.setStatusCol( dev, deviceStateName, x, UI, "", "", "", decimalPlaces=decimalPlaces)
 				return x
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return ""
 
 
@@ -16047,8 +16622,8 @@ class Plugin(indigo.PluginBase):
 				ret =  indigo.devices[dev.id].states[state]
 				#self.indiLOG.log(5,"...  was fixed using indigo states")
 				return ret
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,f"  .. called from= {fromMETHOD};  state= {state};  updateStatesDict= {self.updateStatesDict}" )
 				try:	self.indiLOG.log(40,f"  .. dev= {dev.name}" )
 				except: self.indiLOG.log(40,f"  .. device does not exist, just deleted? .. IndigoId={devIds}" )
@@ -16086,11 +16661,11 @@ class Plugin(indigo.PluginBase):
 					except Exception as e:
 
 						if f"{e}".find("timeout waiting") > -1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"communication to indigo is interrupted")
 							return
 						if f"{e}".find("not found in database") ==-1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							return
 
 						self.indiLOG.log(40,f"bad devId send from pi:{piU}; devId: {devIds}, deleted? " )
@@ -16121,7 +16696,7 @@ class Plugin(indigo.PluginBase):
 						self.executeUpdateStatesDict(onlyDevID=devIds, calledFrom="updateOutput end")
 
 		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 			if f"{e}".find("timeout waiting") > -1:
 				self.indiLOG.log(40,"updateOutput communication to indigo is interrupted")
 
@@ -16177,11 +16752,11 @@ class Plugin(indigo.PluginBase):
 					except Exception as e:
 
 						if f"{e}".find("timeout waiting") > -1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"communication to indigo is interrupted")
 							return
 						if f"{e}".find("not found in database") ==-1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							return
 
 						self.indiLOG.log(10,f"bad devId send from pi:{piU} devId: {devIds} deleted?")
@@ -16381,8 +16956,8 @@ class Plugin(indigo.PluginBase):
 							self.addToStatesUpdateDict(dev.id, "CO2calibration", data["calibration"])
 							self.addToStatesUpdateDict(dev.id, "raw", float(data["raw"]),	decimalPlaces = 1)
 							self.addToStatesUpdateDict(dev.id, "CO2offset", float(data["CO2offset"]),	decimalPlaces = 1)
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,f"props:{props}\nstates:{dev.states}\n:data:{data}" )
 
 					if "VOC" in data:
@@ -16403,8 +16978,8 @@ class Plugin(indigo.PluginBase):
 							
 							self.addToStatesUpdateDict(dev.id, "raw", float(data["raw"]))
 
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(10, f"{props}")
 
 
@@ -16439,8 +17014,8 @@ class Plugin(indigo.PluginBase):
 									self.addToStatesUpdateDict(dev.id, "lightning", "calibrating,- sensitivity ")
 								elif data["lightning"].find("Disturber") == 0:
 									self.addToStatesUpdateDict(dev.id, "lightning", "calibrating,- Disturber event ")
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40, f"{props}" +f"\n{data}")
 						continue
 
@@ -16450,9 +17025,19 @@ class Plugin(indigo.PluginBase):
 						newStatus = self.setStatusCol( dev, "CO2", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 1)
 
 
-					if "PM25" in data:
-						x, UI  = round(float(data["PM25"]),1),   f"pm2.5 {float(data['PM25']):.1f}[ug/m3] "
-						newStatus = self.setStatusCol( dev, "PM25", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 1)
+					# ALL FOUR PARTICLE SIZES. Only PM25 was written, because the compact Ruuvi Air format
+					# 06 carries nothing else - but the E1 extended advertisement carries PM1.0, PM2.5,
+					# PM4.0 and PM10, and those three states existed on the device and were never filled.
+					# The states themselves were already declared: _addingstates["PM1"/"PM4"/"PM10"] and
+					# _stateListToDevTypes[...] = {"BLERuuviAir":1}. Same idiom and units for all four.
+					for _pmKey, _pmTxt in (("PM1", "pm1.0"), ("PM25", "pm2.5"), ("PM4", "pm4.0"), ("PM10", "pm10")):
+						if _pmKey in data:
+							try:
+								x  = round(float(data[_pmKey]), 1)
+								UI = "{} {:.1f}[ug/m3] ".format(_pmTxt, float(data[_pmKey]))
+								newStatus = self.setStatusCol( dev, _pmKey, x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,"", decimalPlaces = 1)
+							except Exception:
+								self.indiLOG.log(40, "bad {} value:{}".format(_pmKey, data.get(_pmKey, "?")), exc_info=True)
 
 					if "NOx" in data:
 						x, UI  = int(float(data["NOx"])),   f"NOx {float(data['NOx']):.0f}"
@@ -16512,7 +17097,7 @@ class Plugin(indigo.PluginBase):
 					if dev.deviceTypeId == "BLEaprilAccel":
 						self.updateAPRILaccel(dev,data,whichKeysToDisplay, pi)
 
-					if dev.deviceTypeId in ["BLEiBS01", "BLEiBS02", "BLEiBS03"]:
+					if dev.deviceTypeId in ["BLEiBS01"]:		# BLEiBS02 / BLEiBS03 were listed too - no such device types
 						self.updateBLEiBSxxOneOnOff(dev,data,whichKeysToDisplay, pi)
 
 					# NOTE: no "BLEiBS03G" device type exists in Devices.xml, so this branch was
@@ -16601,8 +17186,8 @@ class Plugin(indigo.PluginBase):
 										cmd = self.pythonPath + " '" + self.pathToPlugin + "makeCameraPlot.py' '" +imageParams+"' '"+dataRaw+"' & "
 										if props["imageFilelogLevel"] == "1": self.indiLOG.log(10,f"AMG88 command:{cmd}")
 										subprocess.call(cmd, shell=True)
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40, f"{props}")
 							self.indiLOG.log(40, f"{len(data['rawData'])}"+"     "+data["rawData"])
 
@@ -16620,8 +17205,8 @@ class Plugin(indigo.PluginBase):
 										cmd = self.pythonPath + " '" + self.pathToPlugin + "makeCameraPlot.py' '" +imageParams+"' '"+dataRaw+"' & "
 										if props["imageFilelogLevel"] == "1": self.indiLOG.log(10,f"mlx90640 command:{cmd}")
 										subprocess.call(cmd, shell=True)
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40, f"{props}")
 							self.indiLOG.log(40, f"{len(data['rawData'])}"+"     "+data["rawData"])
 
@@ -16720,8 +17305,8 @@ class Plugin(indigo.PluginBase):
 										if props["logLevel"] in ["1", "3"] : self.indiLOG.log(10,f"lidar360 command:{cmd}")
 										self.writeJson(data, fName="/tmp/makeLidar360.dat")
 										subprocess.call(cmd, shell=True)
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,f"props: {props}")
 							self.indiLOG.log(40,f"triggervalues: {data['triggerValues']}" )
 
@@ -16737,8 +17322,8 @@ class Plugin(indigo.PluginBase):
 
 			self.checkGarageDoor()
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"pi# {piU}  {sensors}")
 
 		return
@@ -16853,8 +17438,8 @@ class Plugin(indigo.PluginBase):
 				
 				dev.replacePluginPropsOnServer(props)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17112,8 +17697,8 @@ class Plugin(indigo.PluginBase):
 					elif dev.states["lastUpdateFromRPI"] != _lastRPIoffText:				self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", _lastRPIoffText)
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 
 
@@ -17211,8 +17796,8 @@ class Plugin(indigo.PluginBase):
 				self.sleep(0.5)
 				self.delayedActions["data"].put( {"actionTime":time.time()+delayOff, "devId":dev.id, "updateItems":actions})
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17341,8 +17926,8 @@ class Plugin(indigo.PluginBase):
 			if "rawOnOff" in dev.states and dev.states["rawOnOff"] != data[statename]: 
 						self.addToStatesUpdateDict(dev.id,"rawOnOff" , data[statename], uiValue=uiValue)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return 
 
@@ -17365,8 +17950,8 @@ class Plugin(indigo.PluginBase):
 
 				if "onOff" in data and "onOffState" in dev.states: 		self.addToStatesUpdateDict(dev.id, "onOffState", data["onOff"])
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 
 
@@ -17385,8 +17970,8 @@ class Plugin(indigo.PluginBase):
 		try:
 				if "onOff" in data and "onOffState" in dev.states: 		self.addToStatesUpdateDict(dev.id, "onOffState", data["onOff"])
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 
 	###-------------------------------------------------------------------------####
@@ -17412,6 +17997,17 @@ class Plugin(indigo.PluginBase):
 		    str: one-line summary of what was written ("" on error) - bulk callers log examples
 		"""
 		try:
+			# THE STATUS-DRIVEN FAMILY IS NOT AN ON/OFF DEVICE. beacon / rPI* / BLEconnect build their
+			# display from "status" - up|down|expired - and the live status path writes it, uiValue
+			# included. Running the on/off scheme over them asked getpropForonOffText for a wording
+			# they have no props for, so it returned its historical default "on" and wrote that as
+			# the onOffState uiValue: an rPi that was up read "on" in the device list from the moment
+			# its dialog was saved. displayStatus was rebuilt from status at the next restart, the
+			# uiValue - which is what indigo actually renders - was not, and the status path only
+			# rewrites it when status CHANGES, so a pi that simply stayed up kept "on" for weeks.
+			# The two bulk passes already skipped this family; the device-config-save caller did not.
+			if dev.deviceTypeId == "beacon" or dev.deviceTypeId.find("rPI") > -1 or dev.deviceTypeId == "BLEconnect":
+				return ""
 			onOffScheme = self.getpropForonOffTrueFalse(props)
 			isOn        = bool(dev.states.get("onOffState", False))
 			txt         = ""
@@ -17590,8 +18186,8 @@ class Plugin(indigo.PluginBase):
 
 		# set to grey if expired	 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17686,8 +18282,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17757,8 +18353,8 @@ class Plugin(indigo.PluginBase):
 					self.addToStatesUpdateDict(dev.id, "devType", data["devType"])
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17809,8 +18405,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17845,8 +18441,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id, "currentOnEvent", datetime.datetime.now().strftime(_defaultDateStampFormat))
 						indigo.variable.updateValue("lastButtonOnBeaconDevId", f"{dev.pluginProps.get('beaconDevId','0')}")
 						indigo.variable.updateValue("lastButtonOnDevId", f"{dev.id}")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17896,8 +18492,8 @@ class Plugin(indigo.PluginBase):
 							elif AirQualityText == "Moderate":	 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 							else:								 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorTripped)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 
@@ -17966,10 +18562,9 @@ class Plugin(indigo.PluginBase):
 							break
 
 
-		except Exception as e:
-			if f"{e}" != "None":##
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-				self.indiLOG.log(40,f"dev:{dev.name}, key:{key}")
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,f"dev:{dev.name}, key:{key}")
 		return newStatus
 
 
@@ -18091,12 +18686,12 @@ class Plugin(indigo.PluginBase):
 								else:
 									self.indiLOG.log(20,f"updateOneWire:   do not create new device not enabled for sn:{serialNumber}")
 
-							except Exception as e:
-								if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							except Exception:
+								self.indiLOG.log(40,"", exc_info=True)
 								continue
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -18116,8 +18711,8 @@ class Plugin(indigo.PluginBase):
 			x, UI, decimalPlaces, useFormat  = self.convTemp(data["temp"])
 			self.setStatusCol( dev, "Temperature", x, UI, whichKeysToDisplay, indigo.kStateImageSel.TemperatureSensorOn,dev.states["status"], decimalPlaces = decimalPlaces )
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -18300,8 +18895,8 @@ class Plugin(indigo.PluginBase):
 						if dev.states["lastContinuousEventStopTime"] == "":
 							self.addToStatesUpdateDict(dev.id, "lastContinuousEventStopTime", dd)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -18445,8 +19040,8 @@ class Plugin(indigo.PluginBase):
 
 			return
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -18475,9 +19070,8 @@ class Plugin(indigo.PluginBase):
 				for ii in range(iii,41):
 					ch = f"Channel-{ii:02d}"
 					self.addToStatesUpdateDict(devId,ch,"")
-			except Exception as e:
-				if f"{e}" != "None":
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -18527,8 +19121,8 @@ class Plugin(indigo.PluginBase):
 					else:
 						self.indiLOG.log(10,f"GetBeaconParameters update received pi:{pi} beacon:{beacon},  no indigo device present, data:{data}" )
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def updateINPUT(self, dev, data, upState, nInputs, sensor):
@@ -18627,8 +19221,8 @@ class Plugin(indigo.PluginBase):
 								if dev.states["status"] != ssUI + unit:
 									self.addToStatesUpdateDict(dev.id, "status", ssUI+unit)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def setStateColor(self, dev, props, ss):
@@ -18649,8 +19243,8 @@ class Plugin(indigo.PluginBase):
 				for cmd in commands:
 					if len(commands[cmd]) > 0: ok = True
 				if commands["green"] == commands["grey"] and commands["grey"] == commands["red"]: return False
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 			
 			if not ok: return False
 
@@ -18687,8 +19281,8 @@ class Plugin(indigo.PluginBase):
 
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return False
 
 
@@ -18713,12 +19307,12 @@ class Plugin(indigo.PluginBase):
 				icon = default.split("-")[zeroOrOne]
 			try:
 				dev.updateStateImageOnServer(getattr(indigo.kStateImageSel, icon, None))
-			except Exception as e:
+			except Exception:
 				if zeroOrOne == 0:					 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOff)
 				else:								 dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
-		except Exception as e:
+		except Exception:
 			if self.decideMyLog("SensorData"):
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 			return
 
 	###-------------------------------------------------------------------------####
@@ -18804,9 +19398,9 @@ class Plugin(indigo.PluginBase):
 
 			self.updateRGB(dev, props, data, props["displayS"])
 
-		except Exception as e:
+		except Exception:
 			if self.decideMyLog("SensorData"):
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -18861,9 +19455,9 @@ class Plugin(indigo.PluginBase):
 							ss, ssUI, unit = self.addmultOffsetUnit(data[input], dev.pluginProps)
 							self.setStatusCol( dev, input, ss, ssUI+unit, whichKeysToDisplay, "","" )
 				self.setIcon(dev,props, "SensorOff-SensorOn",1)
-		except Exception as e:
+		except Exception:
 			if self.decideMyLog("SensorData"):
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def updateADC121(self,dev,data,whichKeysToDisplay):
@@ -19015,9 +19609,9 @@ class Plugin(indigo.PluginBase):
 
 						self.setStatusCol( dev, "value", ss, ssUI+unit, whichKeysToDisplay, "","" )
 						self.setStatusCol( dev, "adc", ADC, f"{ADC}", whichKeysToDisplay,"","" )
-		except Exception as e:
+		except Exception:
 			if self.decideMyLog("SensorData"):
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -19079,8 +19673,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id, "status",out)
 					self.addToStatesUpdateDict(dev.id,stateName,out)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -19192,8 +19786,8 @@ class Plugin(indigo.PluginBase):
 							sp = f"{speed:.3f}"
 							decimalPlaces = 2
 						self.setStatusCol(dev, "speed", speed, sp+ud, whichKeysToDisplay, "","", decimalPlaces = decimalPlaces)
-					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 
 				if not self.setStateColor( dev, props, dist):
 					if "actionShortDistanceLimit" in props:
@@ -19205,8 +19799,8 @@ class Plugin(indigo.PluginBase):
 					else:
 							self.setIcon(dev,props, "SensorOff-SensorOn",0)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -19251,10 +19845,9 @@ class Plugin(indigo.PluginBase):
 					self.updateRGB( dev, props, data, whichKeysToDisplay, theType="")
 
 
-		except Exception as e:
-			if f"{e}" != "None":
-				#if self.decideMyLog("SensorData"):
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			#if self.decideMyLog("SensorData"):
+				self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -19331,8 +19924,8 @@ class Plugin(indigo.PluginBase):
 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 				return
 		
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,f"dev:{dev.name}; pi:{pi}; data:{data}", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,f"dev:{dev.name}; pi:{pi}; data:{data}", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -19380,8 +19973,10 @@ class Plugin(indigo.PluginBase):
 	# as the types arrive, which is usually within a minute. The lookup defaults to "other" too,
 	# so a label added to findMyAppleTypes() and forgotten here produces a dull name and not a
 	# crash or a wrong one
+	# NO "phone/mac" ENTRY any more - see findMyAppleTypes(). Nothing is named that, and
+	# findMyMemberNameIsOurs() still recognises the old suffix so devices carrying it get renamed
 	_GlobalConst_findMyNameSuffix = {"find my only": "", "airpods/case": "airpod-case",
-									"phone/mac": "phone-mac", "findmy+other": "other",
+									"findmy+other": "other",
 									"no findmy": "other", "": "other"}
 
 	_GlobalAppleContinuityTypes = {
@@ -19458,9 +20053,16 @@ class Plugin(indigo.PluginBase):
 			# the lid is open - that is the pair seen in practice
 			# NOT "tag" - see the docstring. An iPhone broadcasting find my reads exactly this too,
 			# so the honest label is what was actually observed and nothing more
+			# NO "phone/mac" KIND. It used to fire on nearby-info (10) or handoff (0C) and label the
+			# device a phone or a mac - but an iphone or a mac in normal use is never counted here at
+			# all: only a device that is itself LOST broadcasts find my, and one on the network
+			# RELAYS other people's tags instead of advertising itself. Nothing reaches this function
+			# without having sent find my, so the label was claiming a kind that cannot be here, and
+			# it named devices findmy_NN_phone-mac on the strength of it. A mac that sends find my
+			# AND those live messages is something unusual, and "findmy+other" says exactly that
+			# without inventing what it is
 			if   codes == ["12"]:						kind = "find my only"
 			elif "07" in codes and "12" in codes:		kind = "airpods/case"
-			elif "10" in codes or "0C" in codes:		kind = "phone/mac"
 			elif "12" in codes:							kind = "findmy+other"
 			else:										kind = "no findmy"
 
@@ -19470,24 +20072,42 @@ class Plugin(indigo.PluginBase):
 		return ""
 
 	def findMyDeleteOldMembers(self):
-		"""Deletes find my member devices that have been DOWN longer than the group device allows.
+		"""The once-a-day tidy: deletes member devices whose tag has been gone since before the night.
 
-		Off unless the group's "delete member devices:" is set, and it has TWO shapes:
-		  "4pm"    a once-a-day tidy at 16:00, 4 hours or more down. 4 hours at 4pm means it went
-		           before noon, so it has been missing for most of the day rather than being out at
-		           the shops - the hour and the threshold belong together and are not separate knobs
+		DELETING IS NOT HOW A SLOT IS FREED ANY MORE, and that is what this pass is left doing. A
+		member device is addressed by its SLOT, so the next tag to land there takes over the device
+		it finds - the only thing that had to happen was handing back a name the user chose, and that
+		is done at the moment the slot actually changes hands, in updateFindMyMembers(). Nothing here
+		is needed to keep the counter working. All this is for is stopping the device list growing
+		findmy_NN headstones for ever, and once a day is often enough for that.
+		Default "4am": at 04:00, down 4 hours or more, and untouched in those 4 hours.
+
+		Off unless the group's setting is set, and the threshold has THREE shapes:
+		  "4am"    a once-a-day tidy at 04:00, 4 hours or more down. 4 hours at 4am means it went
+		           before midnight, so it has been gone all night rather than being out at the shops
+		  "4pm"    the same at 16:00 - 4 hours by then means it went before noon. The hour and the
+		           threshold belong together and are not separate knobs
 		  "1".."6" any time, as soon as it has been down that many hours
-		  "10m"    and "30m", the same but in MINUTES. These are for clearing up after a rotation
-		           that was not followed - a device minutes old that is already a headstone - and
-		           they are short enough to take a real tag's name with it if it is merely out of
-		           range, which is why the wording in the dialog says so plainly
+		  "10m"    and "30m", the same but in MINUTES. Short enough to take a real tag's name with
+		           it if it is merely out of range, which is why the dialog says so plainly
+		A value left over from the version that put "reuse:15m" in this field parses as nothing and
+		deletes nothing, which is the right way round for a setting nobody has since chosen.
 		Called from updateFindMyGroup, rate limited to once every DELETECHECKSECS, so the "any time"
 		settings act within minutes of the hours being up instead of waiting for an hourly pass.
 
-		THE DEVICE GOES, NOT ITS CONTENTS - with the name the user gave it and anything pointing at
-		it. A tag that comes back gets a fresh findmy_NN, because nothing in a find my frame can say
-		it is the same tag that had a name. That is why the default is never, and why every deletion
-		is logged by name and last mac: a device disappearing silently would be alarming.
+		THREE THINGS PROTECT A DEVICE, and all of them have to pass:
+		  - IT IS STILL UNDER A NAME THIS PLUGIN GAVE IT. A name the user chose is the one thing that
+		    cannot be recreated - the device id can be pointed at again, the states come back on the
+		    next frame, the name does not - so it is never deleted automatically, whatever its age.
+		    Devices reach this pass unclaimed the honest way: their slot changed hands and the name
+		    was handed back then, in front of a log line saying so
+		  - IT HAS BEEN DOWN long enough, measured from lastStatusChange
+		  - AND NOTHING ABOUT IT HAS CHANGED IN THAT TIME - not lastSeen, not lastMacChange, not
+		    lastTagIdChange. Down-for alone reads one state, and a device can be "down" while its
+		    slot was handed to a tag that has since gone quiet again, or while a rotation was being
+		    followed through it minutes ago. Anything that moved recently is in use, whatever the
+		    status says, and "gone since before midnight" has to mean the whole device was still,
+		    not just the one state that is easiest to read
 
 		A member that has NEVER been dated is never deleted. lastStatusChange is the only evidence
 		of how long it has been down, and "no evidence" must not read as "long enough".
@@ -19501,9 +20121,11 @@ class Plugin(indigo.PluginBase):
 			for groupDev in indigo.devices.iter("self.BLEfindMyGroup"):
 				mode = f"{groupDev.pluginProps.get('deleteDownMembersHours', '0')}".strip().lower()
 				if mode in ["", "0"]:	continue
-				if mode == "4pm":
-					# the ONLY setting with a clock in it, and only this hour will do
-					if datetime.datetime.now().hour != 16:	continue
+				if mode in ["4am", "4pm"]:
+					# THE ONLY SETTINGS WITH A CLOCK IN THEM, and only that hour will do. Both mean
+					# "down 4 hours by then", which is what makes the hour worth naming: 4 hours at
+					# 4am is gone since before midnight, at 4pm gone since before noon
+					if datetime.datetime.now().hour != (4 if mode == "4am" else 16):	continue
 					hours = 4.
 				elif mode.endswith("m"):
 					# MINUTES. Kept as hours from here on so there is still one threshold and one
@@ -19527,12 +20149,39 @@ class Plugin(indigo.PluginBase):
 						downFor = (datetime.datetime.now() - datetime.datetime.strptime(downSince, _defaultDateStampFormat)).total_seconds()
 					except Exception:	continue
 					if downFor < hours * 3600.:	continue
+					# A NAME THE USER CHOSE IS NEVER DELETED BY A TIMER, whatever its age. It is the
+					# one thing here that cannot be put back - the states return on the next frame and
+					# a device id can be pointed at again, the name cannot - and a device only ever
+					# reaches this pass unclaimed the honest way, by its slot changing hands and the
+					# name being handed back then, in front of a log line saying so
+					if not self.findMyMemberNameIsOurs(devM, groupDev, slot):	continue
+					# AND NOTHING ABOUT IT MAY HAVE MOVED IN THAT TIME. "Down" reads one state, and a
+					# device can be down while its slot was handed over an hour ago, or while a
+					# rotation was followed through it minutes ago - either way it is in use and its
+					# age says otherwise. The newest stamp on it is the honest answer to "when was
+					# this device last part of anything", so that is what the threshold is applied to
+					touched = downFor
+					for st in ["lastSeen", "lastMacChange", "lastTagIdChange"]:
+						when = f"{devM.states.get(st,'')}".strip()
+						if when == "":	continue
+						try:	age = (datetime.datetime.now() - datetime.datetime.strptime(when, _defaultDateStampFormat)).total_seconds()
+						except Exception:	continue
+						touched = min(touched, age)
+					if touched < hours * 3600.:	continue
 					# minutes below the hour, hours above it - "0h" was what {hours:.0f} made of
 					# the 10 minute setting, which is worse than useless in a deletion record
 					took = f"{downFor / 60.:.0f} min" if downFor < 3600. else f"{downFor / 3600.:.1f} hours"
-					self.indiLOG.log(20, f"findMyGroup {groupDev.name}: deleting member {devM.name} - slot {slot}, "
-										f"last mac {devM.states.get('mac','')}, down since {downSince} "
-										f"(down {took}, setting '{mode}')")
+					# THE EVENT LOG OR ONLY plugin.log, the device's choice. indigo_log_handler sits
+					# at INFO, so 20 reaches both and 10 only the file. A deletion is worth
+					# announcing by default - a device vanishing silently is alarming - but with a
+					# short "delete member devices" setting in a busy place it is several lines an
+					# hour about devices nobody named, and then the event log is the wrong place
+					lvl = 10 if groupDev.pluginProps.get("deleteLogPluginOnly", False) else 20
+					self.indiLOG.log(lvl, f"findMyGroup {groupDev.name}: deleting member {devM.name} - slot {slot}, "
+										f"last mac {devM.states.get('mac','')}, last closest rPi "
+										f"{devM.states.get('closestRPI',-1)}, down since {downSince} "
+										f"(down {took}, nothing about it changed in that time, still under the name "
+										f"this plugin gave it, setting '{mode}')")
 					try:	indigo.device.delete(devM)
 					except Exception:	self.indiLOG.log(40, "", exc_info=True)
 		except Exception:
@@ -19580,10 +20229,10 @@ class Plugin(indigo.PluginBase):
 		    int: slots in force, 1.._GlobalConst_findMyMemberStates
 		"""
 		try:
-			nn = int(float(f"{groupDev.pluginProps.get('findMyMaxSlots', 30)}".strip() or 30))
+			nn = int(float(f"{groupDev.pluginProps.get('findMyMaxSlots', 15)}".strip() or 15))
 			return max(1, min(_GlobalConst_findMyMemberStates, nn))
 		except Exception:
-			return min(30, _GlobalConst_findMyMemberStates)
+			return min(15, _GlobalConst_findMyMemberStates)
 
 	def findMyMemberDevices(self, groupDev):
 		"""The member devices belonging to this group device, by slot.
@@ -19598,11 +20247,41 @@ class Plugin(indigo.PluginBase):
 		"""
 		out = {}
 		try:
+			# TWO WAYS A MEMBER DEVICE USED TO DISAPPEAR WITHOUT A WORD, both of which leave a device
+			# sitting in the list looking normal - it is never updated again, never counted in
+			# "N/M up", and never tidied away, because as far as everything downstream is concerned
+			# it does not exist. Neither is repaired here: this is a lookup and guessing which of two
+			# devices owns a slot would be worse than saying so. But they are SAID now
+			clash, noSlot = {}, []
 			for devM in indigo.devices.iter("self.BLEfindMyMember"):
 				pM = devM.pluginProps
 				if f"{pM.get('findMyGroupDevId','0')}" != f"{groupDev.id}":	continue
 				slot = f"{pM.get('findMySlot','')}".strip()
-				if slot != "":	out[slot] = devM
+				if slot == "":
+					# 2. NO SLOT AT ALL. It cannot be looked up by anything, so it is invisible
+					noSlot.append(devM)
+					continue
+				# 1. TWO DEVICES ON ONE SLOT. "out[slot] = devM" kept whichever came last in the
+				#    iteration and dropped the other on the floor - no error, no log, nothing
+				if slot in out:	clash.setdefault(slot, [out[slot]]).append(devM)
+				out[slot] = devM
+			if clash or noSlot:
+				# RATE LIMITED: this runs on every message from every rPi, and the condition is a
+				# standing one that will not fix itself. Once an hour is enough to be noticed and
+				# not enough to bury the log
+				if not hasattr(self, "findMyOrphanWarned"):	self.findMyOrphanWarned = {}
+				if time.time() - self.findMyOrphanWarned.get(groupDev.id, 0.) > 3600.:
+					self.findMyOrphanWarned[groupDev.id] = time.time()
+					msg = ["findMyGroup {}: member devices this group cannot use, so they are NOT in its"
+							" counts and are never updated:".format(groupDev.name)]
+					for slot in sorted(clash):
+						msg.append("   slot {} is claimed by {} devices, only one of them can be used: {}".format(
+								slot, len(clash[slot]), ", ".join("{} (id:{})".format(d.name, d.id) for d in clash[slot])))
+					for d in noSlot:
+						msg.append("   {} (id:{}) has no slot number at all".format(d.name, d.id))
+					msg.append("   Fix by deleting the duplicate, or set findMySlot on it to a free slot -"
+								" the device list will then agree with the group's \"N/M up\".")
+					self.indiLOG.log(20, "\n".join(msg))
 		except Exception:
 			self.indiLOG.log(40, "", exc_info=True)
 		return out
@@ -19716,6 +20395,19 @@ class Plugin(indigo.PluginBase):
 			except Exception:
 				self.indiLOG.log(40, "", exc_info=True)
 
+			# THE GROUP'S OWN STATE LIST, not only its members'. It carries a Pi_NN_Tags state per
+			# rPi it uses - how many members that rPi is nearest to - so ticking or unticking an rPi
+			# in this very dialog changes which states the GROUP should have, and indigo rebuilds a
+			# device's list only when that device is told to. Unconditional and cheap: indigo
+			# compares the new list against the old one and does nothing when they match
+			try:	indigo.devices[groupDev.id].stateListOrDisplayStateIdChanged()
+			except Exception:	pass
+
+			# BEFORE THE DEVICES ARE READ, because it changes which slot they are on. Saving the
+			# group device is exactly when the cap can have been lowered, so this is where a device
+			# stranded above it gets rescued rather than merely reported
+			self.findMyCompactSlots(groupDev)
+
 			devs = self.findMyMemberDevices(groupDev)
 			if not devs:	return
 			for slot in sorted(devs):
@@ -19751,19 +20443,46 @@ class Plugin(indigo.PluginBase):
 							devM.updateStateOnServer("closestRPILast", -1)
 							if "closestRPITextLast" in devM.states:	devM.updateStateOnServer("closestRPITextLast", "")
 
-					# 3. A DISTANCE OF 0, WHICH NOW ONLY EVER MEANS "NEVER SET" - findMyDistance() floors
+					# 3. A PER-RPI TRIO THAT WAS ADDED AFTER THE DEVICE WAS BORN, which is what ticking
+					#    a NEW rPi on the group device does to every member that already existed.
+					#    createFindMyMemberDevice() stamps -999 / 999 / "down" over the states the device
+					#    has AT BIRTH, and that is the only place it is done - so a Pi_NN_ trio that
+					#    appears later is left at indigo's type defaults, 0 and 0.0, which read as "on
+					#    top of that rPi at full strength" instead of "that rPi has never heard this tag".
+					#    SEEN DOING IT: rPi 5 added to a group whose member devices dated from two days
+					#    earlier, every one of them then reading Pi_05_Signal 0 and Pi_05_Distance 0.0,
+					#    beside slots created after the change correctly reading -999 and 999.
+					#    THE TEST IS Pi_NN_Time, not the value: it is written only when that rPi really
+					#    did report this tag, so an empty one is the unambiguous "never heard from it",
+					#    and it cannot be confused with a tag that is simply out of range now.
+					for st in devM.states:
+						if st.find("Pi_") != 0:		continue
+						base = st[:5]
+						if base + "_Time" not in devM.states:					continue
+						if f"{devM.states[base + '_Time']}".strip() != "":		continue
+						try:
+							if st.endswith("_Signal")   and int(devM.states[st]) == 0:
+								devM.updateStateOnServer(st, -999)
+							elif st.endswith("_Distance") and float(devM.states[st]) == 0.:
+								devM.updateStateOnServer(st, self._GlobalConst_findMyNoDistance, decimalPlaces=1)
+						except Exception:	pass
+
+					# 4. A DISTANCE OF 0, WHICH NOW ONLY EVER MEANS "NEVER SET" - findMyDistance() floors
 					#    a real reading at _GlobalConst_findMyMinDistance. The signal check stays for the
 					#    devices written BEFORE that floor existed, where a 0.0 really could be a tag a
-					#    few centimetres away; those correct themselves on their next update anyway
+					#    few centimetres away; those correct themselves on their next update anyway.
+					#    0 COUNTS AS "never measured" FOR THE SIGNAL TOO, not just -999: step 3 above is
+					#    the case where both were left at the type default, and requiring exactly -999
+					#    here is what let those distances stay at 0.0
 					for st in devM.states:
 						if st == "distance":									sig = "rssi"
 						elif st.find("Pi_") == 0 and st.endswith("_Distance"):	sig = st[:-9] + "_Signal"
 						else:													continue
 						if float(devM.states[st]) != 0.:						continue
-						if sig in devM.states and int(devM.states[sig]) != -999:	continue
+						if sig in devM.states and int(devM.states[sig]) not in [-999, 0]:	continue
 						devM.updateStateOnServer(st, self._GlobalConst_findMyNoDistance, decimalPlaces=1)
 
-					# 4. INDIGO'S OWN BATTERY SUPPORT, for every member device made before this
+					# 5. INDIGO'S OWN BATTERY SUPPORT, for every member device made before this
 					#    version. The battery WORD is already on the device and is never blanked, so
 					#    the percentage is seeded from it HERE rather than waiting for a message -
 					#    which matters most for a tag that is DOWN, because no message is coming and
@@ -19775,6 +20494,82 @@ class Plugin(indigo.PluginBase):
 			# level 10 = plugin.log only: this happens on every save of the group device and is
 			# housekeeping, not news
 			self.indiLOG.log(10, f"findMyGroup {groupDev.name}: rebuilt the state list of {len(devs)} member device(s), per-rPi states for rPi(s): {','.join(pis) if pis else '(none enabled)'}")
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return
+
+	####-------------------------------------------------------------------------####
+	def findMyCompactSlots(self, groupDev):
+		"""Moves member devices that sit ABOVE the cap down into free slots below it.
+
+		LOWERING "max number of member devices" leaves every device above the new number stranded:
+		the update loop runs slots 1..maxSlots and never visits them again. They are then counted
+		as down and reported, which is honest but useless - the device is still there, still
+		carrying its mac, tagIds, previousMacs and history, and there is often an empty slot below
+		the cap it could simply occupy.
+
+		RUN ON SAVE AND AT STARTUP, not on the message path, and that is the whole reason it is
+		safe. Lowering the cap IS a save, so this happens at the one moment nothing is in flight -
+		no mac is being assigned a slot in the same pass, and nothing is mid-rotation through the
+		slot being vacated.
+
+		WHAT MOVES AND WHAT DOES NOT. Only devices above the cap, and only into slots no device
+		holds. Devices that already fit are left exactly where they are: a general compaction would
+		renumber devices that are working, for no reason beyond tidiness, and findMySlot being
+		written in one place is most of why the NN in a name cannot lie.
+		A NAME THE USER CHOSE IS KEPT, like everywhere else. Only a name this plugin gave is
+		rebuilt for the new slot - and then it has to be, or the name would claim a slot the device
+		no longer holds, which is the one thing this numbering is good for.
+		The address follows by itself: the update loop rewrites it from the slot every pass.
+
+		Inputs:
+		    groupDev (indigo.Device): the BLEfindMyGroup device
+		Outputs:
+		    None: moves devices and logs what it did
+		"""
+		try:
+			maxSlots = self.findMyMaxSlots(groupDev)
+			devs     = self.findMyMemberDevices(groupDev)
+			above    = sorted([sl for sl in devs if f"{sl}".isdigit() and int(sl) > maxSlots], key=lambda x: int(x))
+			if not above:	return
+			free     = [f"{nn:02d}" for nn in range(1, maxSlots + 1) if f"{nn:02d}" not in devs]
+			moved, stuck = [], []
+			for old in above:
+				if not free:
+					stuck.append("{} \"{}\"".format(old, devs[old].name))
+					continue
+				new  = free.pop(0)
+				devM = indigo.devices[devs[old].id]
+				# ASKED BEFORE THE MOVE, against the OLD slot: the name was built from that one, so
+				# that is the only slot it can be tested against
+				mine    = self.findMyMemberNameIsOurs(devM, groupDev, old)
+				wasName = f"{devM.name}"
+				try:
+					pM = devM.pluginProps
+					pM["findMySlot"] = new
+					pM["address"]    = "findmy-{}".format(new)
+					devM.replacePluginPropsOnServer(pM)
+					devM = indigo.devices[devM.id]
+					if "slot" in devM.states:	devM.updateStateOnServer("slot", new)
+					if mine:
+						want = self.findMyMemberAutoName(new, devM.states.get("appleTypes", ""))
+						if want in indigo.devices:	want = "{}_{}".format(want, groupDev.id)
+						if want not in indigo.devices:
+							devM.name = want
+							devM.replaceOnServer()
+					moved.append("slot {} -> {}{}".format(old, new,
+							"" if not mine or f"{devM.name}" == wasName else ", renamed \"{}\" -> \"{}\"".format(wasName, devM.name)))
+				except Exception:
+					self.indiLOG.log(40, "", exc_info=True)
+			if moved:
+				self.indiLOG.log(20, f"findMyGroup {groupDev.name}: 'max number of member devices' is {maxSlots}, so "
+									f"{len(moved)} device(s) that sat above it were moved down into free slots and are "
+									f"in use again - {'; '.join(moved)}. Everything on them is kept: mac, tagIds, "
+									f"previousMacs, history and any name you chose")
+			if stuck:
+				self.indiLOG.log(20, f"findMyGroup {groupDev.name}: {len(stuck)} device(s) sit above the cap of "
+									f"{maxSlots} and there is NO free slot below it to move them into - {', '.join(stuck)}. "
+									f"They are counted as down and are not tracked. Raise the setting, or delete them")
 		except Exception:
 			self.indiLOG.log(40, "", exc_info=True)
 		return
@@ -19824,6 +20619,102 @@ class Plugin(indigo.PluginBase):
 			if gid > 0:	return self.findMyGroupPis(indigo.devices[gid])
 		except Exception:	pass
 		return []
+
+	####-------------------------------------------------------------------------####
+	def findMySettleSet(self, devId, values, stableSecs):
+		"""The set of counters that held for MOST of the last stableSecs, not the instant ones.
+
+		WHY THESE NEED IT AT ALL. numberOfActive has been settled since it existed, precisely so a
+		mac rotation never reaches indigo as a change - the old mac expires as the new one appears
+		and the raw number blips. numberOfUp and the kind counters were never given the same
+		treatment, and they blip for a LONGER reason: when a rotation is not matched the new mac
+		gets its own device while the old one serves out memberDownDelaySecs, so one tag is two up
+		devices for up to that long. Measured 2026-09-30: numberOfAirtagsUp went 5 -> 8 -> 5 over
+		84 seconds with three tags rotating together at 19:00, against a down-delay of 90.
+		So one number on this device was carefully steady and the others were not, which is an
+		inconsistency rather than a design.
+
+		AS ONE SET AND NOT ONE NUMBER AT A TIME, which is the whole reason this takes a dict.
+		These counters have arithmetic between them - the three "up" kinds add to numberOfUp, all
+		six add to numberOfMembers, the room counts add to numberOfUp - and settling each on its
+		own would take numbers from different instants and break every one of those relations.
+		Settled together, whatever is written was TRUE AT ONE MOMENT: the answer is always a set
+		that really occurred, never a combination that never did.
+		THE FAILURE MODE IS SAFE for the same reason. If the counters were so restless that no set
+		held a majority, this returns whichever single set was observed longest - still one real
+		moment, just a poorly supported one. It cannot invent a blend.
+
+		HOW BIG THE WINDOW HAS TO BE, measured rather than guessed, because the obvious answer is
+		wrong: it is a TIME-WEIGHTED MAJORITY, so a blip is only absorbed while it occupies less
+		than half the window. A window merely LONGER than the blip does nothing. An 84 second
+		surge - three tags rotating together against a 90 second down-delay - still committed at
+		stableSecs 90 and at 120, and was only absorbed at 180.
+		SO THE RULE IS stableSecs > 2 x memberDownDelaySecs, because the down-delay is what sets
+		how long one unmatched rotation holds two devices. With the default 60/60 a rotation blip
+		is absorbed; with a 90 second down-delay it needs 300, which is the next option up.
+		SHORTENING THE DOWN-DELAY INSTEAD IS NOT FREE: it must stay comfortably above
+		sendEverySecs, or a tag goes down between two reports that were never going to mention it.
+
+		Inputs:
+		    devId (int): the group device, so two groups keep separate histories
+		    values (dict): {state name: number} as measured right now
+		    stableSecs (float): the window. 0 or less returns the input untouched
+		Outputs:
+		    dict: the same keys, holding the settled numbers
+		"""
+		try:
+			if stableSecs <= 0 or not values:	return values
+			nowT = time.time()
+			if not hasattr(self, "findMySettleHist"):	self.findMySettleHist = {}
+			hist = self.findMySettleHist.setdefault(devId, [])
+			key  = tuple(sorted(values.items()))
+			hist.append((nowT, key))
+			# one sample OLDER than the window is kept on purpose - it is what says the window is
+			# covered rather than merely started, and it holds its value up to the boundary. Same
+			# rule the union count uses
+			while len(hist) > 2 and nowT - hist[1][0] > stableSecs:	hist.pop(0)
+			while len(hist) > 500:	hist.pop(0)
+			# NOT ENOUGH HISTORY YET - a plugin start, or a group that has just been saved. The raw
+			# numbers are the honest answer then; holding back would show nothing at all
+			if nowT - hist[0][0] < stableSecs:	return values
+			weight, seenAt = {}, {}
+			for ii in range(len(hist)):
+				tt, vv = hist[ii]
+				until  = hist[ii + 1][0] if ii + 1 < len(hist) else nowT
+				start  = max(tt, nowT - stableSecs)
+				seenAt[vv] = max(seenAt.get(vv, 0.), tt)
+				if until > start:	weight[vv] = weight.get(vv, 0.) + (until - start)
+			if not weight:	return values
+			# most seconds wins; a dead heat goes to whichever was seen most recently
+			best = max(weight, key=lambda vv: (weight[vv], seenAt[vv]))
+			return dict(best)
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+			return values
+
+	####-------------------------------------------------------------------------####
+	def findMyRoomOf(self, devM, groupPis):
+		"""Which rPi a member device is currently nearest to, read off the device.
+
+		THE STORED closestRPI AND NOT A LIVE COMPARISON, on purpose: that state has already had the
+		moveHoldSecs hysteresis applied to it, and it is KEPT when nobody can hear the tag - so it
+		is the answer for a member held up by the down-delay, which is the case this exists for.
+
+		Inputs:
+		    devM (indigo.Device): the BLEfindMyMember device
+		    groupPis (list): its group's rPis, only to decide whether "0" is a real answer
+		Outputs:
+		    int: the rPi number, or -1 for "not known"
+		"""
+		try:
+			rpi = int(devM.states.get("closestRPI", -1))
+		except Exception:
+			return -1
+		# indigo defaults an Integer state to 0, so a device that has never had this written reads
+		# rPi 0 - the same reading updateFindMyMembers and refreshFindMyMemberStates both make, and
+		# only when rPi "0" is not one of this group's, because then 0 is a real answer
+		if rpi == 0 and "0" not in groupPis:	return -1
+		return rpi
 
 	####-------------------------------------------------------------------------####
 	def findMyMemberDisplay(self, devM):
@@ -20081,7 +20972,7 @@ class Plugin(indigo.PluginBase):
 				# EXACTLY a birth name, never a prefix - "findmy_03-k2" starts with "findmy_" and
 				# is very much a name somebody chose. ONE TEST for all three places that ask this
 				# (here, findMyAssignSlots and the auto-rename), because a member is now born as
-				# findmy_NN_airpod-case or findmy_NN_phone-mac too: a list of two literals here
+				# findmy_NN_airpod-case or findmy_NN_other too: a list of two literals here
 				# would have called every one of those "claimed by the user" while the rename code
 				# went on treating them as its own, and the two would have fought
 				claimed = not self.findMyMemberNameIsOurs(devM, groupDev, slot)
@@ -20189,6 +21080,85 @@ class Plugin(indigo.PluginBase):
 			return 9.e9
 
 	####-------------------------------------------------------------------------####
+	def findMyVoidStaleLineages(self, groupDev, pi, nextTagId=None, allFromPi=False, why=""):
+		"""Drops stored lineages from one rPi once its tagId counter has been REUSED.
+
+		THE ONE THING THAT MAKES A tagId WORTH ANYTHING is that it is never reused - that is what lets
+		this side follow a tag through a mac rotation it cannot see. The rPi mints them from a counter
+		it carries in its state file, so if that file is lost the counter restarts at 1 and starts
+		handing out ids that indigo devices here still remember as OTHER tags. From then on the
+		lineage match in findMyAssignSlots() - which is a STRING COMPARE of the device's stored tagIds
+		against the mac's - is not following anything, it is pairing strangers that happen to share a
+		number, and each wrong pairing drags the device's name and its accumulated apple types onto a
+		tag they never belonged to.
+		MEASURED, 2026-09-27: previousTagIds of 2-20, 2-22, 2-27 and 2-29 sitting beside current ones
+		of 2-1..2-9, the counter having restarted at least twice in one afternoon. tagId 2-2 was held
+		by two devices and 2-4 by two more, one mac appeared on two slots at once, and slots 02, 05
+		and 22 traded macs in a ring - an airpods case's label and name riding across to a plain tag
+		that had never sent anything but find my.
+
+		THE TEST NEEDS NO HISTORY, which is the point of doing it this way: while all is well the
+		counter is strictly ABOVE every id it has ever issued, so a device holding id T for this rPi
+		while the rPi reports nextTagId <= T is proof on its own that the counter went back. A
+		legitimate restart cannot trip it - restoreSlots() raises nextTagId above everything it
+		restores - and neither can a legitimately issued id, because it was minted below the counter.
+
+		VOIDING IS THE CONSERVATIVE ANSWER, not a repair: the lineage really is unknowable now, and
+		NOT matching costs one extra device for that tag, once, at its next rotation. Matching a
+		reused id corrupts identity silently and compounds, which is what the measurement above is.
+		Only this rPi's entries go - a "2-3,5-7" device keeps its rPi-5 half.
+
+		Inputs:
+		    groupDev (indigo.Device): the group device
+		    pi (str): the rPi that sent the message
+		    nextTagId: what it reports its counter is now, None from an older findMyGroup.py
+		Outputs:
+		    int: how many member devices were voided
+		"""
+		try:
+			nxt = 0
+			if not allFromPi:
+				# the counter test, kept as the backstop for an rPi too old to send a runId
+				if nextTagId in [None, ""]:	return 0
+				try:	nxt = int(nextTagId)
+				except Exception:	return 0
+				if nxt <= 0:	return 0
+			pre, done = f"{pi}-", 0
+			devices   = self.findMyMemberDevices(groupDev)
+			for slot in sorted(devices):
+				devM  = devices[slot]
+				keys  = [k.strip() for k in f"{devM.states.get('tagIds','')}".split(",") if k.strip() != ""]
+				stale = []
+				for k in keys:
+					if not k.startswith(pre):	continue
+					# EVERY ONE OF THEM when the numbering itself changed - not the ones above some
+					# number. A new runId means the counter restarted, so an id of 2 from the old
+					# numbering and an id of 2 from the new one are different tags, and there is no
+					# arithmetic that separates them. The whole set from that rPi is unknowable
+					if allFromPi:					stale.append(k);	continue
+					try:	tid = int(k[len(pre):])
+					except Exception:	continue
+					# >= AND NOT >: nextTagId is the id about to be handed out, so a device already
+					# holding that very number is holding one the rPi is about to give to somebody else
+					if tid >= nxt:	stale.append(k)
+				if not stale:	continue
+				kept = [k for k in keys if k not in stale]
+				try:
+					devM.updateStateOnServer("tagIds", ",".join(kept))
+					done += 1
+					self.indiLOG.log(20, f"findMyGroup {groupDev.name}: rPi-{pi} "
+										f"{why or f'has REUSED its tagId counter (it reports next={nxt})'} - its state "
+										f"file was lost and the lineages it is minting already mean something here. "
+										f"Dropping {','.join(stale)} from {devM.name} (slot {slot}) so it cannot be "
+										f"matched to a stranger; the tag gets a new device at its next rotation "
+										f"instead of stealing one")
+				except Exception:	self.indiLOG.log(40, "", exc_info=True)
+			return done
+		except Exception:
+			self.indiLOG.log(40, "", exc_info=True)
+		return 0
+
+	####-------------------------------------------------------------------------####
 	def findMyAssignSlots(self, groupDev, macs, heldSlots=None, tagKeys=None):
 		"""Gives every mac in the union a slot number, STICKY: a mac keeps its slot while it is there.
 
@@ -20206,9 +21176,11 @@ class Plugin(indigo.PluginBase):
 		    heldSlots (set): slots whose member is inside its down-delay - not given to a new mac
 		    tagKeys (dict): {mac: set("2-1043", ...)} - the rPi lineages reporting each mac
 		Outputs:
-		    dict: {mac: "01", ...} - macs beyond the group's maxSlots get nothing
+		    tuple: ({mac: "01", ...}, {slot: mac}) - the slots handed out, and the ones that had
+		           to be taken off an existing DEVICE because no empty slot was left. Macs beyond
+		           the group's maxSlots get nothing
 		"""
-		byMac = {}
+		byMac, recycled = {}, {}
 		used  = set()
 		try:
 			devices = self.findMyMemberDevices(groupDev)
@@ -20275,34 +21247,70 @@ class Plugin(indigo.PluginBase):
 			# device's own "mac" state, which the hold does not blank
 			if heldSlots:	used |= set(heldSlots)
 
-			# WHICH FREE SLOT A NEW MAC GETS, AND IT IS NOT SIMPLY THE LOWEST ANY MORE.
-			# A "free" slot can still carry a member DEVICE - one whose tag has gone - and giving that
-			# slot away makes somebody's named device come back to life describing a different thing.
-			# Measured: opening an airpods case produces three new macs at once (case and both buds),
-			# they took slots 02, 03, 05 because those numbers were lowest, and three devices that had
-			# nothing to do with it - including one for a tag in another room - came up under them.
-			# Lowest-first spends the slots people care about first, which is exactly backwards.
-			# Least disruptive first instead:
-			#   0  a slot with NO device on it - nothing to disturb at all
-			#   1  a device still under its birth name findmy_NN - nobody has claimed it
-			#   2  a device somebody RENAMED - the expensive one, taken only when nothing else is left
-			# and inside each tier the one unheard LONGEST, which is the likeliest to be really gone.
-			# The slot number is the last tiebreak, so the numbering is still predictable when the
-			# slots are otherwise equal - which is the only thing lowest-first was ever buying
+			# WHICH FREE SLOT A NEW MAC GETS, AND IT IS NOT THE LOWEST NUMBER, NOR AN EMPTY ONE FIRST.
+			# REUSING A DEVICE THAT IS ALREADY THERE BEATS MAKING ANOTHER, which is the reverse of what
+			# this used to say and the reverse is what it measured. The old order put "a slot with no
+			# device on it" first as the least disruptive thing to take - true in itself, but it meant
+			# every unused slot NUMBER was spent before any down device was looked at, and each one
+			# spent is a brand new indigo device. Measured 2026-09-27: eight devices in use, maxSlots
+			# 30, three of them down for 6, 26 and 35 minutes - and new tags went on creating devices
+			# in the twenty-two empty numbers while those three sat untouched. The list only ever grows
+			# that way, up to maxSlots, and then the reuse starts anyway.
+			# AN OLD DEVICE IS REUSED AS SOON AS IT IS AVAILABLE, and "available" is a time: the
+			# group's "reuse a down member device after" (default 15 min). Past that the device is a
+			# headstone and handing it over costs nothing; before it, the tag may simply have stepped
+			# out and a new device is the safer spend. So, cheapest first:
+			#   0  a device nobody renamed, down LONGER than the reuse time - take this every time
+			#   1  a slot with NO device on it - a new device, which is a real cost, not a free win
+			#   2  a device nobody renamed but not down long enough yet - nothing is lost by taking
+			#      it either, only the chance that its tag was coming back, so it goes after an
+			#      empty number rather than before it
+			#   3  a device somebody RENAMED, down longer than the reuse time
+			#   4  a device somebody RENAMED and not down long enough - the last thing touched
+			# and inside each tier the one unheard LONGEST, which is the likeliest to be really gone -
+			# so a 3 hour headstone goes before a 20 minute one. The slot number is the final tiebreak,
+			# so the numbering is still predictable when the slots are otherwise equal.
+			# A DEVICE STILL INSIDE ITS DOWN-DELAY IS NOT HERE AT ALL - heldSlots took it out of the
+			# running above - so memberDownDelaySecs and the reuse time are two different fences and
+			# the reuse one is meant to be the longer of them.
+			# WHY THE TIERS ARE THIS WAY ROUND, measured 2026-09-27 21:35: the old order put an empty
+			# slot FIRST as the least disruptive thing to take. True in itself, and it meant every
+			# unused slot NUMBER was spent before any down device was looked at - each one a brand new
+			# indigo device. Eight devices at 18:23 became EIGHTEEN by 21:35, created straight up the
+			# empty numbers (01, 07, 08 .. 18, 24, 25), while thirteen sat down for two and three hours
+			# untouched. It only ever grows that way, to maxSlots, and then reuses anyway.
+			# WORKED OUT ONCE PER SLOT, not once per comparison: the two expensive parts are the name
+			# test - which builds a set - and parsing a date stamp, and the pick below is per MAC, so
+			# leaving them inside it turned one pass into slots x macs of them
+			try:	reuseAfter = float(f"{groupDev.pluginProps.get('findMyReuseAfterMins', 15)}".strip() or 15) * 60.
+			except Exception:	reuseAfter = 900.
 			def slotRank(slot):
 				devM = devices.get(slot)
-				if devM is None:	return (0, 0., int(slot))
+				# TIER 1, IN THE MIDDLE: making a device is a real cost and is not preferred to
+				# handing over one that is already a headstone. It still beats taking a device
+				# whose tag might yet come back, which is why there is a tier either side of it
+				if devM is None:	return (1, 0., int(slot), -1)
 				# EXACTLY a birth name, not a prefix: "findmy_03-k2" starts with "findmy_" and is
 				# very much a name somebody chose. The same one test the other two places use -
 				# see findMyMemberNameIsOurs(), which knows every name this plugin can produce.
 				# It matters here: an unclaimed findmy_NN_airpod-case must stay CHEAP to reuse,
-				# and a stale literal list would have made it tier 2 and protected a device
-				# nobody had ever named
-				tier = 1 if self.findMyMemberNameIsOurs(devM, groupDev, slot) else 2
-				return (tier, -self.findMySecsSinceSeen(devM), int(slot))
+				# and a stale literal list would have protected a device nobody had ever named
+				mine  = self.findMyMemberNameIsOurs(devM, groupDev, slot)
+				since = self.findMySecsSinceSeen(devM)
+				ripe  = since >= reuseAfter
+				tier  = (0 if ripe else 2) if mine else (3 if ripe else 4)
+				# THE rPi IT WAS LAST CLOSEST TO, which a device that goes down KEEPS - closestRPILast
+				# is written on a MOVE and never on the way down, so closestRPI is still the answer to
+				# "which part of the house was this" long after the tag stopped being heard
+				try:	rpi = int(devM.states.get("closestRPI", -1))
+				except Exception:	rpi = -1
+				return (tier, -since, int(slot), rpi)
 
-			free = sorted([f"{nn:02d}" for nn in range(1, self.findMyMaxSlots(groupDev) + 1)
-								if f"{nn:02d}" not in used], key=slotRank)
+			base = {}
+			for slot in [f"{nn:02d}" for nn in range(1, self.findMyMaxSlots(groupDev) + 1)
+								if f"{nn:02d}" not in used]:
+				base[slot] = slotRank(slot)
+			free = sorted(base, key=lambda s: base[s][:3])
 			for mac in sorted(macs):
 				if mac in byMac:	continue
 				# THE OUTGOING HALF OF A ROTATION NEVER GETS A SLOT. Its lineage has just been
@@ -20311,10 +21319,36 @@ class Plugin(indigo.PluginBase):
 				# within expireSecs anyway
 				if mac in superseded:	continue
 				if not free:		break
-				byMac[mac] = free.pop(0)
+				# SAME ROOM FIRST, AND ONLY INSIDE A TIER. An individual find my tag cannot be told
+				# apart from any other by anything in its frames, so what a member device really
+				# carries is "a tag near this rPi" - and a device that keeps being handed to tags in
+				# the same part of the house goes on meaning that, while one that jumps between rPis
+				# means nothing at all. So among equally cheap slots, prefer the one whose device was
+				# last closest to an rPi that is hearing THIS mac now.
+				# A TIEBREAK AND NOT A TIER OF ITS OWN, which is the whole care needed here: an EMPTY
+				# slot (tier 0) must still beat reusing any device, and an unclaimed device (tier 1)
+				# must still beat one somebody named (tier 2), whatever the rPis say. Ordering by
+				# (tier, sameRoom, ...) keeps that exactly - the room only ever decides between slots
+				# that were already equally cheap to take
+				want = set(f"{k}".split("-")[0].strip() for k in (tagKeys or {}).get(mac, ()) if f"{k}".strip() != "")
+				if want:
+					slot = min(free, key=lambda s: (base[s][0],
+									0 if base[s][3] != -1 and f"{base[s][3]}" in want else 1,
+									base[s][1], base[s][2]))
+					free.remove(slot)
+				else:
+					slot = free.pop(0)
+				byMac[mac] = slot
+				# EVERY EMPTY SLOT IS GONE and this one still carries a device. REPORTED, NOT
+				# SILENT, and the caller hands the device over rather than deleting it - see the
+				# comment there for why the reverse was wrong. What is reported is the one thing
+				# only the caller can act on: a name the USER chose is about to stop being true,
+				# and it has to be given back. slotRank already picked the least disruptive
+				# candidate, so this is the cheapest device there was to hand over
+				if slot in devices:	recycled[slot] = mac
 		except Exception:
 			self.indiLOG.log(40, "", exc_info=True)
-		return byMac
+		return byMac, recycled
 
 	####-------------------------------------------------------------------------####
 	def updateFindMyMembers(self, groupDev, props, union, perPi=None, tagKeys=None, piAt=None, weakAt=None):
@@ -20332,15 +21366,23 @@ class Plugin(indigo.PluginBase):
 		    tagKeys (dict): {mac: set("2-1043", ...)} - the rPi lineages, which survive a mac rotation
 		    piAt (dict): {piU: epoch} - when each rPi last reported anything, for the move damping
 		Outputs:
-		    tuple: (upNow, devTotal, kinds) - how many member devices are up, how many exist, and
-		           {"airtag":{"up":n,"down":n}, "airpods":{..}, "other":{..}} over ALL of them.
-		           The six add up to devTotal and the three "up" ones add up to upNow, because
-		           they are counted from the same decision rather than worked out again.
+		    tuple: (upNow, devTotal, kinds, perPiUp) - how many member devices are up, how many
+		           exist, {"airtag":{"up":n,"down":n}, "airpods":{..}, "other":{..}} over ALL of
+		           them, and {"2": n, "5": n} - how many of the UP ones each rPi is nearest to.
+		           The six kinds add up to devTotal and the three "up" ones add up to upNow,
+		           because they are counted from the same decision rather than worked out again.
+		           The room counts add up to upNow too, except for a member held up by the
+		           down-delay that has never had a closestRPI written - see findMyRoomOf
 		           None when member devices are switched off or this threw, which is NOT the
 		           same as a set of zeros
 		"""
 		try:
-			if not props.get("createMemberDevices", False):	return
+			# TRUE IS THE DEFAULT, matching the dialog's defaultValue - a group device is far more
+			# useful with a device per tag than as a bare count, and that is what almost everybody
+			# wants. The fallback only applies to a group device whose props do not carry the key at
+			# all, ie one saved before the field existed; those start creating member devices, which
+			# is the same thing a new device does. Untick it to go back to counts only
+			if not props.get("createMemberDevices", True):	return
 			existing = self.findMyMemberDevices(groupDev)
 			maxSlots = self.findMyMaxSlots(groupDev)
 
@@ -20361,7 +21403,59 @@ class Plugin(indigo.PluginBase):
 					if f"{devH.states.get('mac','')}".strip().upper() in union:	continue
 					if self.findMySecsSinceSeen(devH) < downDelay:					heldSlots.add(slot)
 
-			byMac    = self.findMyAssignSlots(groupDev, set(union), heldSlots, tagKeys)
+			byMac, recycled = self.findMyAssignSlots(groupDev, set(union), heldSlots, tagKeys)
+			# THE SLOTS ARE FULL AND A NEW TAG IS HERE. The device on the slot it was given is HANDED
+			# OVER, not deleted and remade - changed 2026-09-27, and the reasoning that used to be
+			# here had it backwards. It said a device silently describing a different tag was worse
+			# than a deletion, because triggers, control pages and plots go on pointing at it. They
+			# do - and DELETING IT BREAKS THOSE SAME REFERENCES OUTRIGHT, which is strictly worse
+			# than having them point at a device that is still there and still says what it is.
+			# Deleting an indigo device is not ordinary business; it takes the name, the id and
+			# everything anybody built on it, and it cannot be undone. Nothing here is worth that.
+			# WHAT ACTUALLY HAS TO HAPPEN is that the device stops claiming to be the old tag, and
+			# the machinery for that already existed: newTag in the fill loop below is true exactly
+			# when the old and new lineages do not overlap, and it RESETS appleTypes instead of
+			# merging them, so the kind is relearned from the new tag; the auto-rename then derives
+			# the name from those types. So a slot's device moves between kinds freely - an airpods
+			# case's device is reused by an airtag and renamed findmy_NN, and an airtag's device is
+			# reused by a case and renamed findmy_NN_airpod-case. findMyMemberNameIsOurs() knows all
+			# four birth spellings for the slot, so every one of them is ours to rename.
+			# THE ONE THING DONE HERE is taking back a name the USER chose, because that is the only
+			# part the fill loop will not touch - and it must not, everywhere else. Here the slot has
+			# changed hands, so the name is describing a tag that has gone, and leaving it would be
+			# the silent mis-description the old comment feared. Given back explicitly, the device
+			# is unclaimed again and the ordinary rename takes it from there.
+			# AN UP DEVICE IS NEVER TOUCHED. It should not be possible to be given a slot whose
+			# device is still up - a held slot is not free - but "should not" is not a guarantee
+			for slot in sorted(recycled):
+				devOld = existing.get(slot)
+				if devOld is None:									continue
+				if devOld.states.get("onOffState", False):			continue
+				wasName = f"{devOld.name}"
+				mine    = self.findMyMemberNameIsOurs(devOld, groupDev, slot)
+				if not mine:
+					try:
+						# from the INCOMING tag's types, not the outgoing device's - it is the new
+						# occupant the name has to describe. Unknown types name it findmy_NN, and the
+						# rename in the fill loop corrects that as soon as a 07 frame turns up
+						want = self.findMyMemberAutoName(slot, union.get(recycled[slot], {}).get("appleTypes", ""))
+						if want in indigo.devices:	want = f"{want}_{groupDev.id}"
+						if want not in indigo.devices:
+							devOld.name = want
+							devOld.replaceOnServer()
+							existing[slot] = indigo.devices[devOld.id]
+					except Exception:	self.indiLOG.log(40, "", exc_info=True)
+				# LEVEL 10, plugin.log only. indigo_log_handler sits at INFO, so 20 would put one of
+				# these in the indigo event log for every hand-over - and since .194.3 a hand-over is
+				# the NORMAL way a slot is filled, not an incident. Nothing is destroyed by it, so
+				# there is nothing here the event log needs to interrupt anybody with. The deletion
+				# line in findMyDeleteOldMembers() is the one that stays at 20 by default
+				self.indiLOG.log(10, f"findMyGroup {groupDev.name}: all {maxSlots} slots are taken and "
+									f"{recycled[slot]} is new - slot {slot} is handed over to it, KEEPING the "
+									f"device (last mac {devOld.states.get('mac','')}, unheard "
+									f"{self.findMySecsSinceSeen(devOld):.0f}s). "
+									f"{f'The name you chose, ' + chr(34) + wasName + chr(34) + ', was given back - it described the tag that has gone. ' if not mine else ''}"
+									f"Nothing is deleted, so everything pointing at this device still works")
 			bySlot   = {slot: mac for mac, slot in byMac.items()}
 			now      = datetime.datetime.now().strftime(_defaultDateStampFormat)
 			# the rPis this group uses - the same list getDeviceStateList built the member devices'
@@ -20391,12 +21485,52 @@ class Plugin(indigo.PluginBase):
 					out.append(f"     !! {len(union) - len(byMac)} mac(s) got NO slot - only {maxSlots} exist (maxSlots, ceiling {_GlobalConst_findMyMemberStates})")
 				self.indiLOG.log(10, "\n".join(out))
 
+			# MACS THAT GOT NO SLOT AT ALL - the cap is full and nothing was ripe for reuse, so a
+			# tag that is being heard and counted has no device and appears nowhere in the list.
+			# IT USED TO BE VISIBLE ONLY AT LEVEL 10 behind the FindMy debug switch, which is the
+			# wrong place for it: every other consequence of a full cap is cosmetic, and this one
+			# loses a real tag. Somebody who has not turned debug on sees numberOfActive climb past
+			# numberOfMembers and nothing to say why.
+			# RATE LIMITED to once an hour, like the other standing conditions: it is re-evaluated
+			# on every message and will not fix itself while the cap stays where it is. Level 10
+			# still carries the per-pass detail for anyone watching a test
+			missed = [m for m in union if m not in byMac]
+			if missed:
+				if not hasattr(self, "findMyNoSlotWarned"):	self.findMyNoSlotWarned = {}
+				if time.time() - self.findMyNoSlotWarned.get(groupDev.id, 0.) > 3600.:
+					self.findMyNoSlotWarned[groupDev.id] = time.time()
+					missed.sort(key=lambda m: -union[m]["rssi"])
+					try:	reuseMins = float(f"{groupDev.pluginProps.get('findMyReuseAfterMins', 15)}".strip() or 15)
+					except Exception:	reuseMins = 15.
+					worst = ", ".join("{} ({} dBm)".format(m, union[m]["rssi"]) for m in missed[:5])
+					self.indiLOG.log(20, f"findMyGroup {groupDev.name}: {len(missed)} find my device(s) are being "
+										f"counted but have NO member device - all {maxSlots} slots are taken and none "
+										f"is free to hand on yet. UP the 'max number of member devices' setting in this "
+										f"device's dialog, or lower 'reuse a down member device after' (now {reuseMins:.0f} "
+										f"min) so slots come free sooner. Strongest without a slot: {worst}")
+
 			# HOW MANY DEVICES END UP UP, counted here rather than by re-reading them afterwards:
 			# the writes below have not necessarily landed yet, and this loop already knows
 			upNow, devTotal = 0, 0
 			kinds = {"airtag":  {"up": 0, "down": 0},
 					 "airpods": {"up": 0, "down": 0},
 					 "other":   {"up": 0, "down": 0}}
+			# AND HOW MANY ARE IN EACH ROOM - rPi number -> how many members are up and nearest to
+			# it. Filled at the same three points as kinds, from the same up/down decision, so the
+			# room counts cannot disagree with numberOfUp: they add up to it.
+			# WHY IT IS COUNTED HERE AND NOT FROM THE UNION. The union knows which rPi hears a mac
+			# loudest at this instant; this knows which rPi a member DEVICE is assigned to, which
+			# has had moveHoldSecs of hysteresis applied and is kept while the tag is inside its
+			# down-delay. A count built from the union would flicker exactly where closestRPI was
+			# damped to stop it flickering, and a trigger on "2 tags in the kitchen" would fire on
+			# the flicker rather than on anybody walking anywhere
+			perPiUp = {}
+			def creditRoom(piNum):
+				if piNum in [None, "", -1]:		return
+				try:	key = f"{int(piNum)}"
+				except Exception:	return
+				if int(piNum) < 0:				return
+				perPiUp[key] = perPiUp.get(key, 0) + 1
 			for nn in range(1, maxSlots + 1):
 				slot  = f"{nn:02d}"
 				mac   = bySlot.get(slot, "")
@@ -20455,6 +21589,7 @@ class Plugin(indigo.PluginBase):
 						and self.findMySecsSinceSeen(devM) < downDelay + self.noDownAfterRestartSecs):
 					upNow += 1			# left exactly as it was, and it was up
 					kinds[kind]["up"] += 1
+					creditRoom(self.findMyRoomOf(devM, groupPis))
 					continue
 
 				# STILL INSIDE ITS DOWN-DELAY: left EXACTLY as it was when last heard - states, uiValue
@@ -20467,6 +21602,10 @@ class Plugin(indigo.PluginBase):
 				if not inUse and slot in heldSlots:
 					upNow += 1			# held up by the down-delay - this is the difference numberOfUp shows
 					kinds[kind]["up"] += 1
+					# THE rPi IT WAS LAST NEAREST TO. A tag missing a few packets has not left the
+					# kitchen, and closestRPI is deliberately not blanked when nobody hears it -
+					# so the room count holds it exactly as long as numberOfUp does
+					creditRoom(self.findMyRoomOf(devM, groupPis))
 					continue
 
 				chList = []
@@ -20655,13 +21794,85 @@ class Plugin(indigo.PluginBase):
 					# NOT HEARING IT RIGHT NOW IS NOT A READING. The trio keeps what that rPi last
 					# measured, and Pi_NN_Time says when - which is what tells a current reading from an
 					# old one, and is far more use than every silent rPi reporting the same -999
-					if hh is None:	continue
+					if hh is None:
+						# HEARING IT TOO FAINTLY TO COUNT IS STILL HEARING IT, and that reading was
+						# being computed and thrown away. The rPi sends every mac it hears but does
+						# not count, this side uses it to say "weak" above, and then wrote nothing -
+						# so the device said Pi_NN_State "weak" beside Pi_NN_Signal -999, ie "that
+						# rPi can hear this tag" and "that rPi has never heard this tag" at once.
+						# WHAT IT IS GOOD FOR is the one question a bare "weak" cannot answer: HOW
+						# far below the join level. "-88, join is -80" is a threshold to think about;
+						# "-95" is a tag on the far side of the house. Both used to print as -999.
+						# -999 NOW MEANS STRICTLY "never heard by any means", which is what the
+						# member device's own dialog has always claimed it means.
+						# IT DOES NOT COMPETE FOR closestRPI: bestPi is decided over the rPis that
+						# count the tag as a member, and a weak reading is by definition one that did
+						# not qualify. It can still be numerically the stronger of the two, because
+						# membership carries hysteresis from join down to leave - which is exactly
+						# why letting it win would move a tag to an rPi that is not counting it
+						wr = weakHere.get(piU)
+						if wr is not None:
+							chList.append({"key": piXX + "_Signal",   "value": int(wr)})
+							chList.append({"key": piXX + "_Distance", "decimalPlaces": 1,
+											"value": self.findMyDistance(rssi1m, int(wr))})
+							# STAMPED LIKE ANY OTHER READING, which also keeps the invariant the
+							# seeding pass in refreshFindMyMemberStates depends on: a non-empty
+							# Pi_NN_Time means that rPi has heard this tag, member or not
+							try:	wAt = (piAt or {})[piU]
+							except Exception:	wAt = time.time()
+							chList.append({"key": piXX + "_Time",
+											"value": datetime.datetime.fromtimestamp(wAt).strftime(_defaultDateStampFormat)})
+							# AND IT COMPETES FOR closestRPI, which it did not when this was written
+							# this morning. MEMBERSHIP IS A COUNTING DECISION AND CLOSEST-RPI IS A
+							# DISTANCE ONE, and letting the first gate the second is a bug: an rPi
+							# that hears a tag at -81 is very likely the nearest one, and it was
+							# being treated as though it could not hear the tag at all.
+							# WHAT THAT COST, measured on a house where nothing had moved for 20
+							# hours: four tags sat within 3 dB of the join level on rPi 2 (-79, -81,
+							# -82, -83). Each time one crossed, that rPi vanished from the contest,
+							# the tag was said to have moved to the other rPi, and the per-room
+							# counts flipped - 2,3,2,3,4,5,4,5 on a set of tags that had not moved
+							# at all. moveHoldSecs only damps how fast that happens.
+							# I ARGUED AGAINST THIS THIS MORNING, on the grounds that a tag held at
+							# -90 by an rPi that counts it should not be lost to one reading -85
+							# that does not. That case is real but it is the HYSTERESIS case, and
+							# the answer there is still right: -85 IS nearer than -90. Which rPi
+							# counts the tag is what Pi_NN_State says, and it is not this question.
+							# ONLY WHILE THE TAG IS UP. A device that is down keeps closestRPI as
+							# "where it was last", which is deliberate - see the note below - and a
+							# faint reading must not quietly move a tag that has gone
+							if inUse and int(wr) > bestRssi:	bestPi, bestRssi = int(piU), int(wr)
+						else:
+							# AND THE SAME SEEDING refreshFindMyMemberStates DOES, done again here
+							# because that one can arrive too early to do it. It runs about 2s after
+							# the group is saved, and indigo does not necessarily have the new states
+							# on the device by then - if they are not there yet the loop simply does
+							# not see them, and nothing ever comes back to it. Measured: the states
+							# appeared, but a noticeable while after the save.
+							# HERE IT CANNOT BE MISSED, because this runs on every message: whenever
+							# the trio exists and that rPi has never reported this tag, indigo's type
+							# defaults of 0 and 0.0 - which read as "on top of that rPi at full
+							# strength" - become the -999 / 999 that mean "never heard".
+							# COSTS ONE WRITE EACH, ONCE. After it the test is false for ever, and a
+							# tag that really has been heard has a Pi_NN_Time and is never touched
+							if f"{devM.states.get(piXX + '_Time', '')}".strip() == "":
+								try:
+									if piXX + "_Signal" in devM.states and int(devM.states[piXX + "_Signal"]) == 0:
+										chList.append({"key": piXX + "_Signal", "value": -999})
+									if piXX + "_Distance" in devM.states and float(devM.states[piXX + "_Distance"]) == 0.:
+										chList.append({"key": piXX + "_Distance", "decimalPlaces": 1,
+														"value": self._GlobalConst_findMyNoDistance})
+								except Exception:	pass
+						continue
 					chList.append({"key": piXX + "_Signal",   "value": int(hh["rssi"])})
 					chList.append({"key": piXX + "_Distance", "decimalPlaces": 1,
 									"value": self.findMyDistance(rssi1m, hh["rssi"])})
 					chList.append({"key": piXX + "_Time",
 									"value": datetime.datetime.fromtimestamp(hh["at"]).strftime(_defaultDateStampFormat)})
-					if hh["rssi"] > bestRssi:	bestPi, bestRssi = int(piU), hh["rssi"]
+					# >= AND NOT >, so a MEMBER reading takes an exact tie from a weak one whichever
+					# order the rPis are walked in: both are the same distance evidence, and the one
+					# that also passed minPackets and the join level is the better measurement
+					if hh["rssi"] >= bestRssi:	bestPi, bestRssi = int(piU), hh["rssi"]
 
 				# CLOSEST RPI, and the one before it. Same rule the BLEconnect path uses, and the reason
 				# it is that rule: GOING DOWN MUST NOT WRITE THE Last PAIR. If -1 displaced the real rPi
@@ -20756,6 +21967,21 @@ class Plugin(indigo.PluginBase):
 				if inUse:
 					upNow += 1
 					kinds[kind]["up"] += 1
+					# bestPi is the DAMPED choice - the block above has already held it on the old
+					# rPi if a challenger has not stayed strongest long enough - so the room counts
+					# inherit that hysteresis rather than needing their own.
+					# THE TWO FALLBACKS ARE BOTH FOR ONE PASS ONLY, and they exist so the counts add
+					# up to numberOfUp in every case rather than nearly every case: bestPi is -1
+					# when this member's per-rPi states have not been built yet, which is true for
+					# exactly the pass that created the device. Then the stored closestRPI, and
+					# failing that the loudest rPi in this message - a tag that is up was heard by
+					# somebody, so the last one always answers
+					room = bestPi
+					if room == -1:	room = self.findMyRoomOf(devM, groupPis)
+					if room == -1 and heard:
+						try:	room = int(max(heard, key=lambda pp: heard[pp]["rssi"]))
+						except Exception:	room = -1
+					creditRoom(room)
 				else:
 					kinds[kind]["down"] += 1
 
@@ -20804,11 +22030,69 @@ class Plugin(indigo.PluginBase):
 								wasName   = f"{devM.name}"
 								devM.name = want
 								devM.replaceOnServer()
-								self.indiLOG.log(20, f"findMyGroup {groupDev.name}: slot {slot} renamed \"{wasName}\" -> \"{want}\", from everything it has been heard sending: {self.findMyAppleTypes(typesNow)}. Rename it yourself and this stops")
+								# LEVEL 10, plugin.log only, for the reason the hand-over line carries: this
+								# fires on every slot that changes KIND, and since .194.3 a slot changing
+								# hands is ordinary - an airpods case's device reused by an airtag is
+								# renamed the moment the types are relearned. It is only ever renaming a
+								# name this plugin gave itself, so nothing of the user's is being touched
+								# and the event log has no stake in it
+								self.indiLOG.log(10, f"findMyGroup {groupDev.name}: slot {slot} renamed \"{wasName}\" -> \"{want}\", from everything it has been heard sending: {self.findMyAppleTypes(typesNow)}. Rename it yourself and this stops")
 					except Exception:
 						self.indiLOG.log(40, "", exc_info=True)
 
-			return upNow, devTotal, kinds
+			# DEVICES STRANDED ABOVE THE CAP. The loop above runs slots 1..maxSlots, so LOWERING
+			# "max number of member devices" does not move the devices that were already above the
+			# new number - it simply stops visiting them. They are never updated, never counted and
+			# never tidied away, and because nothing ever writes them down they go on reading "up"
+			# for ever, which is the one thing they certainly are not.
+			# SEEN DOING IT: the cap taken from 30 to 10 with member devices on slots 12 and 25, the
+			# group reading "5/7 up" beside NINE member devices in the list, two of them showing up
+			# and neither of them heard from since the cap changed.
+			# COUNTED, AND PUT DOWN. Counted because they are still this group's devices and the
+			# second number is meant to be the one you would otherwise get by counting the list by
+			# hand - excluding them is what made the two disagree. Put down because a device nothing
+			# tracks is down by definition, and leaving it claiming otherwise is the actual fault
+			# here: a trigger on it would never fire again either way, but it would sit there
+			# looking live for ever.
+			# NOT DELETED, and not renumbered into a free slot: deleting is not this plugin's habit,
+			# and moving a device to another slot would silently point it at a different tag. The
+			# log says which they are and the choice is the user's - raise the cap again and they
+			# come straight back to life with everything intact
+			stranded = []
+			for slot in sorted(existing, key=lambda x: int(x) if f"{x}".isdigit() else 9999):
+				try:
+					if int(slot) <= maxSlots:	continue
+				except Exception:	continue
+				devM = indigo.devices[existing[slot].id]
+				devTotal += 1
+				kinds[self.findMyKind(devM.states.get("appleTypes", ""))]["down"] += 1
+				stranded.append("slot {} \"{}\" (id:{})".format(slot, devM.name, devM.id))
+				if not devM.states.get("onOffState", False):	continue
+				wasStatus = f"{devM.states.get('lastStatusChange','')}".strip()
+				chList    = []
+				if wasStatus != "" and "previousStatusChange" in devM.states:
+					chList.append({"key": "previousStatusChange", "value": wasStatus})
+				chList.append({"key": "lastStatusChange", "value": now})
+				display = self.padDisplay("down", now[5:])
+				chList.append({"key": "status",     "value": "down", "uiValue": display})
+				chList.append({"key": "onOffState", "value": False,  "uiValue": display})
+				self.execUpdateStatesList(devM, chList)
+			if stranded:
+				# RATE LIMITED to once an hour: this runs on every message and the condition is a
+				# standing one that will not fix itself, so it has to be noticeable without burying
+				# everything else. Level 20 on purpose - it is the explanation for a number on the
+				# device not matching the list, and that is exactly the kind of thing somebody is
+				# staring at the event log trying to explain
+				if not hasattr(self, "findMyStrandedWarned"):	self.findMyStrandedWarned = {}
+				if time.time() - self.findMyStrandedWarned.get(groupDev.id, 0.) > 3600.:
+					self.findMyStrandedWarned[groupDev.id] = time.time()
+					self.indiLOG.log(20, f"findMyGroup {groupDev.name}: \"max number of member devices\" is "
+										f"{maxSlots}, but {len(stranded)} device(s) sit above it and are no longer "
+										f"tracked at all - {', '.join(stranded)}. They are counted as down. Raise the "
+										f"setting to {max(int(x) for x in existing if f'{x}'.isdigit())} or more to use "
+										f"them again, or delete them if they are finished with")
+
+			return upNow, devTotal, kinds, perPiUp
 
 		except Exception:
 			self.indiLOG.log(40, "", exc_info=True)
@@ -20819,8 +22103,6 @@ class Plugin(indigo.PluginBase):
 
 		  findmy_NN_airpod-case     07+12, the pairing advertisement a case sends with its lid
 		                           open. Nothing else sends it, so this one is certain
-		  findmy_NN_phone-mac      it sends nearby info (10) or handoff (0C) as well - live apple
-		                           device messages, which a tag cannot send
 		  findmy_NN_other          find my plus something, but not a combination with a name
 		  findmy_NN                12-AND-NOTHING-ELSE, the one label with no suffix: that is an
 		                           airtag OR any other find my accessory OR an offline iphone,
@@ -20871,7 +22153,14 @@ class Plugin(indigo.PluginBase):
 			# a kind can never leave this behind and quietly start refusing to rename devices
 			# the plugin does in fact own
 			ours = {f"findmy_{slot}"}		# the no-suffix form, for "find my only"
-			for suffix in set(self._GlobalConst_findMyNameSuffix.values()):
+			# RETIRED SUFFIXES STAY RECOGNISED. "phone-mac" was dropped from the suffix map once it
+			# was established that iphones and macs are not counted at all - only a device that is
+			# itself LOST broadcasts find my, and one in normal use relays other people's tags
+			# instead - so nothing is named that any more. A device already carrying the name must
+			# still read as OURS, or it would be taken for a name somebody chose and then never
+			# reused and never renamed. Listed here rather than left in the map so it cannot be
+			# handed out again. Delete when none are left
+			for suffix in set(self._GlobalConst_findMyNameSuffix.values()) | {"phone-mac"}:
 				if suffix == "":	continue
 				ours.add(f"findmy_{slot}_{suffix}")
 				# LEGACY, and only worth carrying because devices made during .59's own testing
@@ -21056,8 +22345,50 @@ class Plugin(indigo.PluginBase):
 					try:	weak[f"{mm}".strip().upper()] = int(rs)
 					except Exception:	pass
 			except Exception:	pass
+			# THE rPi's LINEAGE COUNTER, and whether it has gone BACKWARDS - see
+			# findMyVoidStaleLineages(), which is where the why is. Carried in the record rather than
+			# recomputed, so the high-water mark survives the record being rewritten every message.
+			# CHECKED WHEN THERE IS A REASON TO, not every message: the check has to walk the member
+			# devices, and that walks every indigo device. A counter that is at or above the highest
+			# this rPi has ever reported cannot have been reused, so nothing is looked at. The FIRST
+			# message after a plugin start has no high-water mark and is always checked - a counter
+			# that went back while this side was not running would otherwise never be noticed, and
+			# that is exactly the case a restart of both sides produces
+			# THE NUMBERING'S OWN ID FIRST, because it is the complete test and the counter is not.
+			# The rPi mints a runId whenever its lineage counter restarts - which is whenever its
+			# state file could not be read - so a runId that has changed means every tagId this side
+			# holds for that rPi belonged to a different numbering. The counter test below cannot see
+			# that twice over: after one lost state file every stored id is small, so the NEXT loss
+			# climbs past them within minutes and looks like ordinary progress. Measured 2026-09-27:
+			# tagId 2-3 on two slots and 2-4 on two more, the counter having restarted twice, and the
+			# guard that shipped that afternoon caught only the first.
+			# REMEMBERED IN THE GROUP'S OWN PROPS, not just in memory, so a plugin restart does not
+			# forget which numbering the member devices' stored lineages came from - that window is
+			# exactly when both sides restart together. Written only when it changes, which is once
+			# per rPi restart, so this is not a props write on the message path
+			runNow = f"{data.get('runId','')}".strip()
+			runWas = f"{props.get('findMyRunId' + f'{pi}', '')}".strip()
+			if runNow != "" and runNow != runWas:
+				if runWas != "":
+					self.findMyVoidStaleLineages(dev, pi, allFromPi=True,
+							why=f"is on a NEW lineage numbering ({runWas} -> {runNow})")
+				try:
+					newProps = dev.pluginProps
+					newProps["findMyRunId" + f"{pi}"] = runNow
+					dev.replacePluginPropsOnServer(newProps)
+				except Exception:	self.indiLOG.log(40, "", exc_info=True)
+			try:	nxtNow = int(data.get("nextTagId", 0) or 0)
+			except Exception:	nxtNow = 0
+			try:	nxtMax = int(store.get(f"{pi}", {}).get("maxNextTagId", 0) or 0)
+			except Exception:	nxtMax = 0
+			# ONLY WHEN THE rPi SENDS NO runId, ie one still on an older findMyGroup.py. With a runId
+			# the test above has already answered it exactly, and running both would walk the devices
+			# twice on the one pass that matters
+			if runNow == "" and nxtNow > 0 and (nxtMax == 0 or nxtNow < nxtMax):
+				self.findMyVoidStaleLineages(dev, pi, nxtNow)
 			store[f"{pi}"] = {"at": time.time(), "macs": macs, "weak": weak,
-							"nearby": data.get("numberOfWeak", 0), "cand": data.get("numberOfCandidates", 0)}
+							"nearby": data.get("numberOfWeak", 0), "cand": data.get("numberOfCandidates", 0),
+							"maxNextTagId": max(nxtMax, nxtNow)}
 
 			# ---- the union, ignoring rpis that have gone quiet ----
 			staleAfter = max(120., 2. * float(f"{props.get('sendEverySecs', 60)}".strip() or 60))
@@ -21202,34 +22533,49 @@ class Plugin(indigo.PluginBase):
 			res = self.updateFindMyMembers(dev, props, union, perPi, tagKeys, piAt, weakAt)
 			# None when member devices are switched off, or when updateFindMyMembers threw - and a
 			# count that is not known must not be written as 0, which would read as "nothing is here"
-			upNow, devTotal, memberKinds = res if isinstance(res, tuple) and len(res) == 3 else (None, 0, None)
-			if upNow is not None:
-				self.addToStatesUpdateDict(dev.id, "numberOfUp",      upNow)
-				self.addToStatesUpdateDict(dev.id, "numberOfMembers", devTotal)
+			upNow, devTotal, memberKinds, perPiUp = res if isinstance(res, tuple) and len(res) == 4 else (None, 0, None, None)
 
-			# WHAT THE MEMBERS ARE, COUNTED OVER THE MEMBERS AND SPLIT UP FROM DOWN. A member
-			# device that is DOWN keeps its appleTypes - it always has, they are the record of
-			# what was there - and it keeps its place in this breakdown too: two airpods shut in
-			# their case are still two airpods, and reading 0 beside two devices that both say
-			# airpods is simply wrong.
-			# TWO COUNTERS PER KIND RATHER THAN ONE, because one number had to answer two
-			# questions and could only ever answer one of them. "How many airtags are here" and
-			# "how many airtags does this group know about" are both worth asking, they differ by
-			# exactly the ones that have gone quiet, and a single numberOfAirtags meant picking
-			# which question to be wrong about. Now neither is inferred: both are counted.
-			# THE ARITHMETIC CLOSES ON STATES THAT ALREADY EXIST, which is the point of doing it
-			# this way - the three "Up" states add up to numberOfUp, all six add up to
-			# numberOfMembers, and none of that is asserted here: they are tallied at the same
-			# three places that decide up or down, so they cannot drift from it.
-			# numberOfTotal is the sum of all six and must therefore equal numberOfMembers. Kept
-			# as exactly that check - every device landing in exactly one bucket - and written
-			# from the one walk that produced them, so a disagreement is real
-			if memberKinds is not None:
-				for _kind, _name in (("airtag", "Airtags"), ("airpods", "Airpods"), ("other", "Other")):
-					self.addToStatesUpdateDict(dev.id, f"numberOf{_name}Up",   memberKinds[_kind]["up"])
-					self.addToStatesUpdateDict(dev.id, f"numberOf{_name}Down", memberKinds[_kind]["down"])
-				self.addToStatesUpdateDict(dev.id, "numberOfTotal",
-											sum(v["up"] + v["down"] for v in memberKinds.values()))
+			# EVERY COUNTER THAT COUNTS DEVICES, GATHERED AND SETTLED AS ONE SET - see
+			# findMySettleSet(). They are written from here rather than each where it was measured
+			# because the arithmetic between them only survives if they come from ONE moment: the
+			# three "up" kinds add to numberOfUp, all six add to numberOfMembers, and the room
+			# counts add to numberOfUp. Settling them one at a time would mix instants and break
+			# all three relations at once.
+			# WHAT IT IS FOR: an unmatched rotation gives one tag two up devices for up to
+			# memberDownDelaySecs, so these numbers surge and fall back with nothing having
+			# happened. numberOfActive has been settled against exactly that since it existed;
+			# these were not, which was an inconsistency rather than a decision.
+			# numberOfActive AND numberOfActiveRaw ARE NOT TOUCHED HERE - they count MACS in the
+			# union and are settled separately above, on their own history
+			if upNow is not None:
+				vals = {"numberOfUp": upNow, "numberOfMembers": devTotal}
+				if memberKinds is not None:
+					for _kind, _name in (("airtag", "Airtags"), ("airpods", "Airpods"), ("other", "Other")):
+						vals[f"numberOf{_name}Up"]   = memberKinds[_kind]["up"]
+						vals[f"numberOf{_name}Down"] = memberKinds[_kind]["down"]
+				if perPiUp is not None:
+					# ONLY THE rPis THE GROUP USES have the state at all - getDeviceStateList drops
+					# the rest - so this writes what exists and nothing else. An enabled rPi hearing
+					# nothing correctly writes 0, which is a real answer and not a missing one, and
+					# it is written every message because a room emptying is the change worth
+					# triggering on and would otherwise be the one thing never written
+					for piU in self.findMyGroupPis(dev):
+						try:	piXX = f"Pi_{int(piU):02d}_Tags"
+						except Exception:	continue
+						if piXX in dev.states:	vals[piXX] = perPiUp.get(f"{int(piU)}", 0)
+				try:	settleSecs = float(f"{props.get('stableSecs', 60)}".strip() or 60)
+				except Exception:	settleSecs = 60.
+				vals = self.findMySettleSet(dev.id, vals, settleSecs)
+				for _k in sorted(vals):
+					self.addToStatesUpdateDict(dev.id, _k, vals[_k])
+				# numberOfTotal is the sum of the six and must therefore equal numberOfMembers.
+				# Kept as exactly that check - every device landing in exactly one bucket - and
+				# summed from the SETTLED six, so it agrees with the settled numberOfMembers beside
+				# it rather than with a moment that is no longer being shown
+				if memberKinds is not None:
+					self.addToStatesUpdateDict(dev.id, "numberOfTotal",
+							sum(vals.get(f"numberOf{_n}{_d}", 0) for _n in ("Airtags", "Airpods", "Other")
+																	for _d in ("Up", "Down")))
 
 			# housekeeping, off unless the device asks for it. Here rather than on an hourly pass so
 			# the "any time" settings act within minutes of the hours being up, and rate limited
@@ -21288,8 +22634,8 @@ class Plugin(indigo.PluginBase):
 				# should not be writing there
 				self.indiLOG.log(10, f"findMyGroup {dev.name}: {st.get('previous','?')} -> {count} members, union of {reporting} of {enabled} rPi(s), {len([m for m in seenBy if seenBy[m] > 1])} seen by 2+, last msg from rPi-{pi}")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def updateDF2301Q(self, dev, props, data, pi):
@@ -21370,8 +22716,8 @@ class Plugin(indigo.PluginBase):
 					dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 					return
 		
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,f"dev:{dev.name}; pi:{pi}; data:{data}", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,f"dev:{dev.name}; pi:{pi}; data:{data}", exc_info=True)
 		return
 
 
@@ -21418,8 +22764,8 @@ class Plugin(indigo.PluginBase):
 			if "Green" in data and whichKeysToDisplay == "Red/Green/Klue":
 						self.addToStatesUpdateDict(dev.id, "status", f"r/g/b: {data['Red']}/{data['Green']}/{data['Blue']} {unit}" )
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -21455,8 +22801,8 @@ class Plugin(indigo.PluginBase):
 				self.setStatusCol(dev, colorState, float(data[colorState]), f"color {data[colorState]}"+unit, whichKeysToDisplay, "","",decimalPlaces=dispType )
 				return 1
 			return 0
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return 0
 
 
@@ -21622,9 +22968,9 @@ class Plugin(indigo.PluginBase):
 						else:
 							logTRUEfromSignal =	 ( abs(deltaSignalLOG) > self.trackSignalStrengthIfGeaterThan[0]  ) and ( rssi !=-999 and self.beacons[mac]["receivedSignals"][fromPiI]["rssi"] !=-999)
 
-					except Exception as e:
+					except Exception:
 
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						logTRUEfromSignal = False
 
 
@@ -21642,9 +22988,8 @@ class Plugin(indigo.PluginBase):
 						if ( update or (deltaDistance > self.beaconPositionsdeltaDistanceMinForImage) ) and "showBeaconOnMap" in props and props["showBeaconOnMap"] in _GlobalConst_beaconPlotSymbols:
 							self.beaconPositionsUpdated =6
 
-					except Exception as e:
-						if f"{e}" != "None":
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 
 				if self.newBeaconsLogTimer > 0:
 						try:
@@ -21654,8 +22999,8 @@ class Plugin(indigo.PluginBase):
 							if self.newBeaconsLogTimer < time.time():
 								self.indiLOG.log(10,"new.beacon logging: resetting  newBeaconsLogTimer to OFF")
 								self.newBeaconsLogTimer =0
-						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 
 				if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, "newMSG    -5  - passed")
 
@@ -21676,10 +23021,10 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 			if e is not None	and f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 
 		if setALLrPiVUpdate == "updateParamsFTP":
 			self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
@@ -21764,7 +23109,7 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 			if	f"{e}".find("UnexpectedNullErrorxxxx") >-1: return newStates
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 		self.executeUpdateStatesDictActive = ""
 		return newStates
 
@@ -21797,7 +23142,7 @@ class Plugin(indigo.PluginBase):
 					try:
 						local = copy.deepcopy(self.updateStatesDict)
 						break
-					except Exception as e:
+					except Exception:
 						self.sleep(0.05)
 				self.updateStatesDict = {}
 
@@ -21806,12 +23151,12 @@ class Plugin(indigo.PluginBase):
 					try:
 						local = {onlyDevID: copy.deepcopy(self.updateStatesDict[onlyDevID])}
 						break
-					except Exception as e:
+					except Exception:
 						self.sleep(0.05)
 
 				try:
 					del self.updateStatesDict[onlyDevID]
-				except Exception as e:
+				except Exception:
 					pass
 			else:
 				self.executeUpdateStatesDictActive = ""
@@ -22034,7 +23379,7 @@ class Plugin(indigo.PluginBase):
 					if image != "":
 						try:
 							dev.updateStateImageOnServer(getattr(indigo.kStateImageSel, image, "NoImage"))
-						except Exception as e:
+						except Exception:
 							pass
 
 					if False:
@@ -22097,7 +23442,7 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 			if	f"{e}".find("UnexpectedNullErrorxxxx") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 		self.executeUpdateStatesDictActive = ""
 		return
 
@@ -22145,8 +23490,8 @@ class Plugin(indigo.PluginBase):
 						self.rePopulateStates = f"error update state:{uu['key']} on server, dev:{dev.name}"  # try to re-do state list
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"chList: {chList}")
 
 	###############################################################################################
@@ -22182,8 +23527,8 @@ class Plugin(indigo.PluginBase):
 			if key not in self.dataStats["states"]: self.dataStats["states"][key] = 0
 			self.dataStats["states"][key] += 1
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####=====================================================================####
 	####  PERIODIC & CONSISTENCY CHECKS
@@ -22315,7 +23660,7 @@ class Plugin(indigo.PluginBase):
 
 
 				self.executeUpdateStatesDict(onlyDevID=devId)
-		except Exception as e:
+		except Exception:
 			self.indiLOG.log(40,f"self.garageData:{self.garageData}", exc_info=True)
 		return
 
@@ -22336,8 +23681,8 @@ class Plugin(indigo.PluginBase):
 					self.checkCarsNeed[carId] = time.time() - 5
 				self.lastCARupdate  = time.time()
 			self.checkIfCarsNeedUpdate()
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -22358,8 +23703,8 @@ class Plugin(indigo.PluginBase):
 					if self.decideMyLog("CAR"): self.indiLOG.log(30,f"checkIfCarsNeedUpdate:  updating id:{carId} " )
 					self.updateAllCARbeacons(carId)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return
 
@@ -22388,8 +23733,8 @@ class Plugin(indigo.PluginBase):
 						dev.replacePluginPropsOnServer(props)
 						self.indiLOG.log(20,f"checkDF2301Q_commandlist: updating for dev: {dev.name}")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(30,"checkDF2301Q_commandlist", exc_info=True)
+		except Exception:
+			self.indiLOG.log(30,"checkDF2301Q_commandlist", exc_info=True)
 
 
 
@@ -22445,8 +23790,8 @@ class Plugin(indigo.PluginBase):
 			if len(addback) > 0: 
 				self.writeJson(self.RPI, fName=self.indigoPreferencesPluginDir + "RPIconf", fmtOn=self.RPIFileSort)
 				self.indiLOG.log(20,f" adding  back dev ids: {addback}")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -22473,8 +23818,8 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(30,f"adding back out device {dev.name} to RPI:{piU}")
 				self.RPI[piU]["output"][typeId][f"{dev.id}"] = {}
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -22495,8 +23840,8 @@ class Plugin(indigo.PluginBase):
 				self.checkDevToRPIlinksOneDevOutput(dev)
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -22526,14 +23871,49 @@ class Plugin(indigo.PluginBase):
 				else:
 					self.sensorMessages[devIds][item] = default
 				return 0
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return 1
 
 
 
 
 
+
+	####-------------------------------------------------------------------------####
+	def noteContactFromIP(self, ipN):
+		"""ANY message from an rpi proves it is alive - reset its silence clock, parsed or not.
+
+		checkifNewSSD judges an rpi by lastSSDCheck, which was only refreshed by a message the plugin
+		had successfully DECODED. An rpi that is up and talking but whose frames the plugin cannot
+		read - exactly what happens after a version bump until that rpi is pushed - therefore looked
+		dead, and got restartmasterSSH at 3 minutes and configure + reboot at 6, neither of which it
+		needed. Contact is contact.
+
+		ONLY for the first socketQuietSecs after the plugin starts, which is the window where that
+		mismatch is expected. After it, an unparseable message must NOT count as proof of life: an
+		rpi that keeps sending something the plugin cannot read is broken and has to be recovered,
+		not excused for ever. From then on only a successfully decoded message refreshes the clock,
+		as before.
+
+		A lastSSDCheck in the FUTURE is left alone: that is a deliberately announced quiet period
+		(qualifyDongleCALLBACKmenu sets it while the dongle test has the rpi stopped), and a stray
+		message must not cancel it.
+
+		Inputs:
+		    ipN (str): client ip the message came from
+		Outputs:
+		    None
+		"""
+		try:
+			now = time.time()
+			if now - self.startTime > self.socketQuietSecs:	return
+			for pp in self.RPI:
+				if f"{self.RPI[pp].get('ipNumberPi','')}" != f"{ipN}":	continue
+				if self.RPI[pp].get("lastSSDCheck", 0) < now:	self.RPI[pp]["lastSSDCheck"] = now
+				return
+		except Exception:
+			pass
 
 	####-------------------------------------------------------------------------####
 	def checkifNewSSD(self, force=False):
@@ -22549,13 +23929,37 @@ class Plugin(indigo.PluginBase):
 			if not self.pluginPrefs.get("enableAutoconfigEmptySSD", True) : return # is check enabled ?
 			self.lastcheckIfNewSSD = time.time()
 			dontcheckBase = 90
+			restartAfter  = 180															# secs of silence -> just restart master.py
 			for piU in self.RPI:
 				if  self.RPI[piU]["piOnOff"] == "0": continue								# rpi is not enabled?
 
 				if self.RPI[piU]["rpiType"] == "rPiSensor": dontcheckFor = 2.*dontcheckBase	# they do not send message too often only when sensor is active
 				else:										dontcheckFor = 1.*dontcheckBase	# as ble rpi
+				# stage 2 needs its OWN threshold, it cannot stay at 2*dontcheckFor: for a ble rpi that
+				# is 180 secs, the same as restartAfter, so the stage 1 window "180 <= silentFor < 180"
+				# would be empty and the plain restart would never happen - the reconfigure + reboot
+				# would take over at 3 minutes instead. 3 minutes to restart master, 6 to reconfigure.
+				reconfigAfter = max(2*dontcheckFor, restartAfter + 180)
 
-				if time.time() - self.RPI[piU]["lastSSDCheck"] < 2*dontcheckFor: continue 	# last rpi message was in time window ?
+				# STAGE 1: after restartAfter secs of silence just RESTART master.py over ssh. That is
+				# what actually fixes the common case - a master.sh/master.py that died takes the whole
+				# rpi down with it and nothing on the rpi brings it back (no cron, no systemd unit, and
+				# callbeacon.py runs only at boot) - and it costs no reconfigure and no reboot. The
+				# heavy "configure + reboot" below is left for an rpi that is STILL quiet afterwards.
+				# A NEGATIVE silentFor means the silence is expected and was announced in advance
+				# (qualifyDongleCALLBACKmenu pushes lastSSDCheck into the future while the dongle test
+				# has master/beaconloop/BLEconnect stopped), so both stages are skipped for it.
+				silentFor = time.time() - self.RPI[piU]["lastSSDCheck"]
+				if restartAfter <= silentFor < reconfigAfter:
+					if time.time() - self.RPI[piU].get("lastMasterRestart", 0) < reconfigAfter:	continue	# one restart per window
+					if not self.isValidIP(self.RPI[piU]["ipNumberPi"]):								continue
+					if self.testPing(self.RPI[piU]["ipNumberPi"]) != 0:								continue	# offline - nothing to restart over ssh
+					self.RPI[piU]["lastMasterRestart"] = time.time()
+					self.indiLOG.log(20,f"= checkifNewSSD rpi:{piU} #:{self.RPI[piU]['ipNumberPi']} silent for {silentFor:.0f} secs - restarting master.py (no reconfigure, no reboot)")
+					self.execButtonConfig({"configurePi": piU}, level="", action=["restartmasterSSH"], Text="rPi restart master.py ")
+					continue
+
+				if silentFor < reconfigAfter: continue 										# last rpi message was in time window ?
 
 				if  not self.isValidIP(self.RPI[piU]["ipNumberPi"]): continue				# rpi has no valid IP?
 			
@@ -22565,7 +23969,7 @@ class Plugin(indigo.PluginBase):
 					self.execButtonConfig({"configurePi": piU}, level="0,", action=["checkIfInstallOkSSH"], Text="rPi check if configured")
 					self.sleep(10)															# if the action enough time to finish
 					self.indiLOG.log(20,f"= checkifNewSSD checking after config of  rpi:{piU}   ..  last contact was :{time.time() - self.RPI[piU]['lastSSDCheck']:.0f} secs ago")
-					if time.time() - self.RPI[piU]["lastSSDCheck"] > 2*dontcheckFor: 		# could have been reset by previous execButtonConfig if it is online
+					if time.time() - self.RPI[piU]["lastSSDCheck"] > reconfigAfter: 			# could have been reset by previous execButtonConfig if it is online
 						self.RPI[piU]["clearQueue"] = True 									# kill other actions for this rpi
 						self.sleep(1)														# give it time to cancel other actions
 						self.execButtonConfig({"configurePi": piU}, level="0,", action=["initSSH", "updateAllAllFilesFTP", "restartmasterSSH"], Text="rPi configure and reboot pi# ")
@@ -22575,8 +23979,8 @@ class Plugin(indigo.PluginBase):
 					
 				self.RPI[piU]["lastSSDCheck"] = time.time() + 0.5*dontcheckFor  			# dont do this again for another 30 secs.. wait until ping is back
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.lastcheckIfNewSSD = time.time()
 		return
 
@@ -22601,8 +24005,8 @@ class Plugin(indigo.PluginBase):
 				self.indiLOG.log(20,f"updating dev states, trying to add missing states, check pibeacon.log file for details, switch on SPECIAL log in config for more info , trigger is:{self.rePopulateStates}")
 				for dev in indigo.devices.iter(self.pluginId):
 					dev.stateListOrDisplayStateIdChanged()	# update  states, add keys if missing
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.rePopulateStates = ""
 		if force:
 				self.pluginPrefs["debugSpecial"]  = oldDebug
@@ -22640,8 +24044,8 @@ class Plugin(indigo.PluginBase):
 											else:
 												self.addToStatesUpdateDict(dev.id, "isBeepable", "not capable")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.executeUpdateStatesDict()
 		return
 
@@ -22671,9 +24075,8 @@ class Plugin(indigo.PluginBase):
 					if len(pi) >1:
 						self.setONErPiV(pi[1],"piUpToDate", ["updateParamsFTP"])
 						if self.decideMyLog("UpdateRPI"): self.indiLOG.log(5,f"sending update to pi#{pi}")
-				except Exception as e:
-					if f"{e}" != "None":
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 
 				self.updateNeeded = ""
 
@@ -22759,8 +24162,8 @@ class Plugin(indigo.PluginBase):
 							if "resetOutputSSH" in self.RPI[piU]["piUpToDate"]  and not  "updateParamsFTP" in self.RPI[piU]["piUpToDate"]:
 								self.sshToRPI(piU,expFile="resetOutputSSH.exp")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return anyChange
 
 
@@ -22796,8 +24199,8 @@ class Plugin(indigo.PluginBase):
 					if time.time() - self.RPI[piU]["lastMessage"] < 330.:	continue
 					if self.decideMyLog("Logic"): self.indiLOG.log(5,f"pi server # {piU}  ip# {self.RPI[piU]['ipNumberPi']}  has not send a message in the last {time.time() - self.RPI[piU]['lastMessage']:.0f} seconds")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -22829,8 +24232,8 @@ class Plugin(indigo.PluginBase):
 						dev.updateStateImageOnServer(indigo.kStateImageSel.Error)
 			self.saveSensorMessages(devId="")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			try:
 				self.indiLOG.log(40, f"{dev.pluginProps}")
 			except:
@@ -22909,8 +24312,8 @@ class Plugin(indigo.PluginBase):
 						else:
 							dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 		return
@@ -22960,8 +24363,7 @@ class Plugin(indigo.PluginBase):
 									indigo.device.delete(dev)
 						except Exception as e:
 							self.sleep(10)
-							if f"{e}" != "None":
-								if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							if f"{e}".find("timeout waiting") >-1:
 								self.indiLOG.log(40,"communication to indigo is interrupted")
 								return
@@ -22985,9 +24387,8 @@ class Plugin(indigo.PluginBase):
 							self.writeJson(self.beacons, fName=self.indigoPreferencesPluginDir + "beacons", fmtOn=self.beaconsFileSort)
 
 
-			except Exception as e:
-				if f"{e}" != "None":
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 			try:
 				if now.hour == 0:
@@ -22998,11 +24399,10 @@ class Plugin(indigo.PluginBase):
 					self.setupFilesForPi()
 					for piU in self.RPI:
 						self.sendFilesToPiFTP(piU, expFile="updateParamsFTP.exp")
-			except Exception as e:
-				if f"{e}" != "None":
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def checkDay(self,now):
@@ -23026,8 +24426,8 @@ class Plugin(indigo.PluginBase):
 						self.getBeaconParametersCALLBACKmenu(valuesDict={"piServerNumber":"all"}, force=False)
 						self.lastDayChecked[ii] = now.day
 						return
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		try:
 		### report on bad ibeacon battery status
@@ -23063,8 +24463,8 @@ class Plugin(indigo.PluginBase):
 				self.lastDayChecked[len(self.checkBatteryLevelHours)] = now.day
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		##### second .. nothing yet
 
@@ -23091,8 +24491,8 @@ class Plugin(indigo.PluginBase):
 					self.RPI[piU]["ipNumberPi"]			!= "" and
 					self.RPI[piU]["piMAC"]				!= ""):
 						self.indiLOG.log(10,f"pi# {piU} is configured but not enabled, mistake? This is checked once a day;  to turn it off set userId or password of unused rPi to empty ")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -23122,7 +24522,7 @@ class Plugin(indigo.PluginBase):
 					if not dev.enabled: return False
 				except Exception as e:
 
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,"", exc_info=True)
 					if f"{e}".find("timeout waiting") > -1:
 						self.indiLOG.log(40,"communication to indigo is interrupted")
 						return False
@@ -23139,8 +24539,8 @@ class Plugin(indigo.PluginBase):
 			elif f"{devId}" not in self.RPI[piU][io][sensor]:
 				self.RPI[piU][io][sensor][f"{devId}"] = ""
 				anyChange = True
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return anyChange
 
 
@@ -23175,11 +24575,11 @@ class Plugin(indigo.PluginBase):
 									
 							except Exception as e:
 								if f"{e}".find("timeout waiting") > -1:
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+									self.indiLOG.log(40,"", exc_info=True)
 									self.indiLOG.log(40,"checkSensortoPi communication to indigo is interrupted")
 									return True
 								if f"{e}".find(" not found in database") ==-1:
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+									self.indiLOG.log(40,"", exc_info=True)
 									return True
 
 								deldevID[devIDrpi] = 1
@@ -23224,7 +24624,7 @@ class Plugin(indigo.PluginBase):
 								
 
 						except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							if f"{e}".find("not found in database") ==-1:
 								return True
 							deldevID[devIDrpi] = 1
@@ -23241,8 +24641,8 @@ class Plugin(indigo.PluginBase):
 				anyChange = True
 				del self.RPI[piU][io][sensor]
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return anyChange
 
 
@@ -23316,8 +24716,8 @@ class Plugin(indigo.PluginBase):
 									self.beacons[piMAC]["indigoId"] = indigoId
 									self.RPI[piU]["piMAC"] = piMAC
 									self.indiLOG.log(20,f"MAC# from RPI  was updated from:{oldMAC}, to {piMAC}")
-								except Exception as e:
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+								except Exception:
+									self.indiLOG.log(40,"", exc_info=True)
 									if self.decideMyLog("Logic"): self.indiLOG.log(10,f"MAC# from RPI...	 indigoId: {indigoId} does not exist, ignoring" )
 
 						# added to cover situation when RPI was set to expire by mistake ==>  reset it to ok
@@ -23325,8 +24725,8 @@ class Plugin(indigo.PluginBase):
 							if self.beacons[piMAC]["ignore"] > 0: self.beacons[piMAC]["ignore"] = 0
 							self.beacons[piMAC]["lastUp"] = time.time() # for rpi only, do not use last message send info
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return False, "", ""
 
 		return True, piMAC, piNU
@@ -23394,7 +24794,7 @@ class Plugin(indigo.PluginBase):
 				Found =True
 			except Exception as e:
 
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				if f"{e}".find("timeout waiting") > -1:
 					self.indiLOG.log(40,"communication to indigo is interrupted")
 					return -1
@@ -23409,8 +24809,8 @@ class Plugin(indigo.PluginBase):
 						self.addToStatesUpdateDict(dev.id, "online", "up")
 						dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return 0
 
@@ -23463,11 +24863,11 @@ class Plugin(indigo.PluginBase):
 		except Exception as e:
 
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 				return
 			if e is not None	and f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -23487,8 +24887,8 @@ class Plugin(indigo.PluginBase):
 					if mac.find(sMAC[:self.selectBeaconsLogTimer[sMAC]]) == 0:
 						self.indiLOG.log(10,f"sel.beacon logging: {mac}:: {text}")
 
-		except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def checkBeaconDictIfok(self, mac, dateString, rssi, fromPiU, msg, keepNew, acceptMAC, lastMessageReceived):
@@ -23534,10 +24934,10 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 			if e is not None	and f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 		return  False
 
 	####=====================================================================####
@@ -23603,8 +25003,8 @@ class Plugin(indigo.PluginBase):
 				for ll in range(lx,len(_rpiBeaconList)):
 					self.beacons[mac][area].append({"distance": 99999, "lastSignal": 0, "rssi": -999})
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -23621,13 +25021,15 @@ class Plugin(indigo.PluginBase):
 
 			if not os.path.exists(self.indigoPreferencesPluginDir + "all"):
 				os.mkdir(self.indigoPreferencesPluginDir + "all")
-			if not os.path.exists(self.indigoPreferencesPluginDir + "rejected"):
-				os.mkdir(self.indigoPreferencesPluginDir + "rejected")
-				subprocess.call("mv '" + self.indigoPreferencesPluginDir + "reject*' '" + self.indigoPreferencesPluginDir + "rejected'", shell=True)
+			# "rejected" is not created any more - dead feature, see buttonConfirmMACDeleteALLCALLBACK.
+			# Its mv was "mv '<dir>/reject*' ...", glob inside quotes, so it never moved anything.
 			if not os.path.exists(self.indigoPreferencesPluginDir + "interfaceFiles"):
 				os.mkdir(self.indigoPreferencesPluginDir + "interfaceFiles")
-				subprocess.call("rm '" + self.indigoPreferencesPluginDir + "param*'", shell=True)
-				subprocess.call("rm '" + self.indigoPreferencesPluginDir + "interfa*'", shell=True)
+				# the two rm calls here were "rm '<dir>/param*'" and "rm '<dir>/interfa*'": the glob
+				# sat INSIDE single quotes, so the shell looked for files literally named "param*"
+				# and "interfa*", found none, and deleted nothing. A migration from an old layout
+				# that has therefore never run - removed rather than repaired, because repairing it
+				# would delete real files for the first time, years late.
 				subprocess.call("rm '" + self.indigoPreferencesPluginDir + "wpa_supplicant'*", shell=True)
 			if not os.path.exists(self.indigoPreferencesPluginDir + "soundFiles"):
 				os.mkdir(self.indigoPreferencesPluginDir + "soundFiles")
@@ -23750,9 +25152,9 @@ class Plugin(indigo.PluginBase):
 				self.dataStats["states"] = {}
 			if "beaconUpdates" not in self.dataStats:
 				self.dataStats["beaconUpdates"] = {"count":0 , "min": 99999, "max": 0, "consumedTime":0, "startDate": datetime.datetime.now().strftime(_defaultDateStampFormat), "startTime":time.time()}
-		except Exception as e:
+		except Exception:
 			self.resetDataStats()
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 		if "data" not in self.dataStats:
 			self.resetDataStats()
 
@@ -23856,8 +25258,8 @@ class Plugin(indigo.PluginBase):
 				garage["closeSensorStateValue"]		= devClose.states["onOffState"]
 				garage["movingSensorStateValue"]	= devMotion.states["onOffState"]
 				#garage["movingSensorStateValue"]	= devMotion.states[garage["movingSensorStateName"]]
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				garage["openSensorStateValue"]		= ""
 				garage["closeSensorStateValue"]		= ""
 				garage["movingSensorStateValue"]	= ""
@@ -23867,8 +25269,8 @@ class Plugin(indigo.PluginBase):
 			props["address"] = ""
 			if garage["numberOfMagnets"] >0:
 				props["address"] = f"{int(garage['numberOfMagnets'])} rail magnets installed"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return props
 	####-------------------------------------------------------------------------####
 	####------================----------- garage door   END ==============-----------
@@ -23895,7 +25297,7 @@ class Plugin(indigo.PluginBase):
 				for carId in copy.deepcopy(self.CARS["carId"]):
 					try: indigo.devices[int(carId)]
 					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						if f"{e}".find("timeout waiting") > -1:
 							self.indiLOG.log(40,"communication to indigo is interrupted")
 							return
@@ -23915,8 +25317,8 @@ class Plugin(indigo.PluginBase):
 						del self.CARS["beacon"][beacon]
 
 			self.writeJson(self.CARS, fName=self.indigoPreferencesPluginDir + "CARS" )
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def readCARS(self):
@@ -23943,7 +25345,7 @@ class Plugin(indigo.PluginBase):
 					f = open(self.indigoPreferencesPluginDir + "CARS", "r")
 					xxx = json.loads(f.read())
 					f.close()
-				except Exception as e:
+				except Exception:
 					xxx={"carId":{}, "beacon":{}}
 
 			self.CARS = {"carId":{}, "beacon":{}}
@@ -23975,8 +25377,8 @@ class Plugin(indigo.PluginBase):
 
 			self.saveCARS()
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -24000,7 +25402,7 @@ class Plugin(indigo.PluginBase):
 			update, text = self.setupBeaconsForCARS(props, carIds)
 
 		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 			if f"{e}".find("timeout waiting") > -1:
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 			self.indiLOG.log(40,f"devId {carIds} indigo lookup/save problem")
@@ -24018,8 +25420,8 @@ class Plugin(indigo.PluginBase):
 				self.executeUpdateStatesDict(onlyDevID=carIds,calledFrom = "setupCARS")
 			if update:
 				self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return props
 		return	props
 
@@ -24069,7 +25471,7 @@ class Plugin(indigo.PluginBase):
 					del self.CARS["carId"][carIds]["beacons"][b]
 					del self.CARS["beacon"][b]
 		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 			if f"{e}".find("timeout waiting") > -1:
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 				return False,""
@@ -24288,8 +25690,8 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(5," ..   config read from files")
 			self.fixConfig(checkOnly = ["all", "rpi", "beacon", "CARS", "sensors", "output", "force"], fromPGM="readconfig")
 			self.saveConfig(calledFrom="readConfig")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			exit(1)
 		return
 
@@ -24320,8 +25722,8 @@ class Plugin(indigo.PluginBase):
 					if devId.find("-") > -1: continue
 					if  int(devId) not in indigo.devices:
 						del self.changedValues[devId]
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		self.saveChangedValues()
 
 	####-------------------------------------------------------------------------####
@@ -24337,8 +25739,8 @@ class Plugin(indigo.PluginBase):
 			f = open(self.indigoPreferencesPluginDir + "changedValues.json", "w")
 			f.write(json.dumps(self.changedValues))
 			f.close()
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -24409,8 +25811,8 @@ class Plugin(indigo.PluginBase):
 				
 			
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(30,"readOtherParams", exc_info=True)
+		except Exception:
+			self.indiLOG.log(30,"readOtherParams", exc_info=True)
 		
 	####-------------------------------------------------------------------------####
 	def readknownBeacontags(self):
@@ -24431,8 +25833,8 @@ class Plugin(indigo.PluginBase):
 				f = open(self.pathToPlugin + "knownBeaconTags.json", "r")
 				self.knownBeaconTags = json.loads(f.read())
 				f.close()
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				try: f.close()
 				except: pass
 				return False
@@ -24478,8 +25880,8 @@ class Plugin(indigo.PluginBase):
 
 			### knwon beacon tags section END ###
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return False
 		return True
 
@@ -24507,10 +25909,9 @@ class Plugin(indigo.PluginBase):
 					f.close()
 					if oldName !="" and os.path.isfile(oldName):
 						subprocess.call("rm "+oldName, shell=True)
-				except Exception as e:
-					if f"{e}".find("None") == -1:
-						self.indiLOG.log(40,"", exc_info=True)
-						self.indiLOG.log(40,f"getParamsFromFile newName:{newName}:  readfile:{out1}")
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,f"getParamsFromFile newName:{newName}:  readfile:{out1}")
 					out = copy.deepcopy(default)
 			else:
 				out = copy.deepcopy(default)
@@ -24521,13 +25922,12 @@ class Plugin(indigo.PluginBase):
 					out	 = json.loads(out1)
 					f.close()
 					subprocess.call("rm "+oldName, shell=True)
-				except Exception as e:
-					if f"{e}".find("None") == -1:
-						self.indiLOG.log(40,"", exc_info=True)
-						self.indiLOG.log(40,f"getParamsFromFile oldName:{oldName}:  readfile:{out1}")
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,f"getParamsFromFile oldName:{oldName}:  readfile:{out1}")
 					out = copy.deepcopy(default)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return out
 
 	####-------------------------------------------------------------------------####
@@ -24545,8 +25945,8 @@ class Plugin(indigo.PluginBase):
 			f.write(json.dumps(self.beaconPositionsData))
 			f.close()
 			if self.decideMyLog("PlotPositions"): self.indiLOG.log(5,f"savebeaconPositionsFile {str(self.beaconPositionsData['mac'])[0:100]}"  )
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -24599,8 +25999,8 @@ class Plugin(indigo.PluginBase):
 								"textColor":			showBeaconTextColor ,
 								"bType":				"beacon" ,
 								"status":				dev.states["status"]					}
-					except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 
 			for dev in indigo.devices.iter("props.isBLEconnectDevice"):
 					try:
@@ -24637,8 +26037,8 @@ class Plugin(indigo.PluginBase):
 								"textColor":			showBeaconTextColor ,
 								"bType":				"BLEconnect" ,
 								"status":				dev.states["status"]					}
-					except Exception as e:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -24688,7 +26088,7 @@ class Plugin(indigo.PluginBase):
 				self.exceptionHandler(40, e, extraText="communication to indigo is interrupted")
 				return
 			if f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 
 		self.beaconPositionsUpdated		= 0
 		self.beaconPositionsLastCheck	= time.time()
@@ -24825,7 +26225,7 @@ class Plugin(indigo.PluginBase):
 							self.sleep(0.2)
 							if self.RPI[piU]["piDevId"] !=0:
 								try:
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+									self.indiLOG.log(40,"", exc_info=True)
 									self.indiLOG.log(40,"error normal if rpi has been deleted, removing from list: setting piDevId=0")
 								except: pass
 								self.delRPI(pi=piU, calledFrom="fixConfig")
@@ -24838,8 +26238,8 @@ class Plugin(indigo.PluginBase):
 								continue
 					if myIPrangeValid == "ok":
 						self.myIpNumberRange = myIPrange
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 			try:
 				if "all" in checkOnly:
@@ -24962,8 +26362,8 @@ class Plugin(indigo.PluginBase):
 					for dev in delDEV:
 						self.indiLOG.log(30,f"fixConfig dev: {dev.name}  has no addressfield")
 						# indigo.device.delete(dev)
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 			try:
 				if "all" in checkOnly or "beacon" in checkOnly:
@@ -25043,14 +26443,14 @@ class Plugin(indigo.PluginBase):
 								except Exception as e:
 									anyChange = True
 									if f"{e}".find("timeout waiting") > -1:
-										if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+										self.indiLOG.log(40,"", exc_info=True)
 										self.indiLOG.log(40,"communication to indigo is interrupted")
 										return
 									elif f"{e}".find("not found in database") >-1:
 										self.beacons[beacon]["indigoId"] =0
 										continue
 									else:
-										if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+										self.indiLOG.log(40,"", exc_info=True)
 										self.indiLOG.log(40,f"dev={dev.name}")
 										return
 
@@ -25061,8 +26461,8 @@ class Plugin(indigo.PluginBase):
 						self.indiLOG.log(10, f"fixConfig:  deleting beacon:{beacon}  {self.beacons[beacon]}")
 						del self.beacons[beacon]
 
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 			try:
 				if "rpi" in checkOnly or "all" in checkOnly:
@@ -25088,7 +26488,7 @@ class Plugin(indigo.PluginBase):
 	
 									except Exception as e:
 										if f"{e}".find("timeout waiting") > -1:
-											if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+											self.indiLOG.log(40,"", exc_info=True)
 											self.indiLOG.log(40,"communication to indigo is interrupted")
 											return
 										elif f"{e}".find("not found in database") >-1:
@@ -25097,12 +26497,12 @@ class Plugin(indigo.PluginBase):
 											self.indiLOG.log(20,	f"fixConfig anychange: (fix) set indigoID=0,  beacon{beacon}, pi:{piU}" )
 											continue
 										else:
-											if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+											self.indiLOG.log(40,"", exc_info=True)
 											self.indiLOG.log(40,"unknown error")
 											return
 
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 
 
 			if "rpi" in checkOnly:
@@ -25121,8 +26521,8 @@ class Plugin(indigo.PluginBase):
 			if self.decideMyLog("Special"):
 				self.indiLOG.log(10,f" cpu time used in fixconfig = {time.time() - startTime:.1f} secs, total time = {self.totalTimeInFixConfig:.1f} secs")
  			
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -25145,8 +26545,8 @@ class Plugin(indigo.PluginBase):
 			else:
 				self.writeJson(self.sensorMessages,fName=self.indigoPreferencesPluginDir + "sensorMessages")
 			return
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -25176,10 +26576,9 @@ class Plugin(indigo.PluginBase):
 				f.close()
 			return out
 
-		except Exception as e:
-			if f"{e}".find("None") == -1:
-				self.indiLOG.log(40,"", exc_info=True)
-				self.indiLOG.log(40,f"{data}")
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,f"{data}")
 		return ""
 
 	####-------------------------------------------------------------------------####
@@ -25209,8 +26608,8 @@ class Plugin(indigo.PluginBase):
 			if only in ["all"]:
 				self.writeJson( self.knownBeaconTags,   fName=self.indigoPreferencesPluginDir + "all/knownBeaconTags", fmtOn=True)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -25393,8 +26792,8 @@ class Plugin(indigo.PluginBase):
 			self.beacons[beacon]["expirationTime"]	  = float(props["expirationTime"])
 			self.beacons[beacon]["updateSignalValuesSeconds"] = float(props["updateSignalValuesSeconds"])
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return 0
 
@@ -25432,7 +26831,7 @@ class Plugin(indigo.PluginBase):
 					valuesDict["showDateTime"] = "0"
 		except Exception as e:
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 	####-------------------------------------------------------------------------####
 	####-------------------------------------------------------------------------####
@@ -25515,8 +26914,8 @@ class Plugin(indigo.PluginBase):
 								if v not in self.RPI[piU][item]:
 									self.RPI[piU][item].append(v)
 			return
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -25579,7 +26978,7 @@ class Plugin(indigo.PluginBase):
 
 		except Exception as e:
 				if f"{e}".find("timeout waiting") > -1:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -25603,8 +27002,8 @@ class Plugin(indigo.PluginBase):
 						ret	 =	self.addBrackets(ret,cType=lenItem)
 					else:
 						ret = int(ret)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return ret
 
 
@@ -25637,13 +27036,13 @@ class Plugin(indigo.PluginBase):
 					else:
 						cmds[nn][item]	 = json.loads(xxx)
 					return cmds, vd, True
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40," error in input: "+item+f" ii={ii}"+f" nn={nn}"+ " cmds="+	 f"{cmds}" + " xxx="+  f"{xxx}")
 					vd["MSG"] = "error in parameter"
 				return cmds,vd, False
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"item {item}"+ f"{ii}"+f"  , vd {vd}")
 			return cmds,vd, False
 		return cmds,vd, True
@@ -25689,8 +27088,8 @@ class Plugin(indigo.PluginBase):
 					self.resetRPI(pi)
 				return
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"trying to delete indigo device for pi# {pi};  devID:{devID}; calledFrom:{calledFrom}")
 		return
 
@@ -25738,8 +27137,8 @@ class Plugin(indigo.PluginBase):
 
 			self.indiLOG.log(30,f"fixRPIfromBeaconDev pi:{piU},  no rpi found,  manual fix required ")
 					
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return False
 
 	####-------------------------------------------------------------------------####
@@ -25871,8 +27270,8 @@ class Plugin(indigo.PluginBase):
 								
 								self.updatelastUpdateBatteryLevel(devBot, dtNow, False)
 								self.executeUpdateStatesDict(onlyDevID=devBot.id, calledFrom="updateBeaconStates isSwitchbotDevice")
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 				return		
 
 			if mac in self.isBLESensorDevice: 		return
@@ -26087,8 +27486,8 @@ class Plugin(indigo.PluginBase):
 					folder			= self.piFolderId,
 					props			= newprops
 					)
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,f"name: {name}")
 				return
 			if isAnInputDevice:
@@ -26130,8 +27529,8 @@ class Plugin(indigo.PluginBase):
 			self.setONErPiV(fromPiU,"piUpToDate", ["updateParamsFTP"])
 			self.setGroupStatusNextCheck = -1
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -26163,8 +27562,8 @@ class Plugin(indigo.PluginBase):
 				self.makeSupplicantFile(piU)
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -26258,11 +27657,11 @@ class Plugin(indigo.PluginBase):
 				f = open(self.indigoPreferencesPluginDir + "all/knownBeaconTags", "w")
 				f.write(json.dumps(self.knownBeaconTags))
 				f.close()
-			except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -26291,8 +27690,8 @@ class Plugin(indigo.PluginBase):
 			f.write("iface wlan0 inet manual\n")
 			f.write("   wpa-conf /etc/wpa_supplicant/wpa_supplicant.conf\n")
 			f.close()
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -26318,9 +27717,50 @@ class Plugin(indigo.PluginBase):
 				f.write('   key_mgmt="' + self.key_mgmt + '"\n')
 			f.write("}\n")
 			f.close()
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
+
+	####-------------------------------------------------------------------------####
+	def piNeedsFineGpioRate(self, piU):
+		"""Does this rPi have a device whose measurement or output waveform depends on pigpio's gpio sample rate?
+
+		pigpiod samples every gpio on a fixed timer whether or not anything is listening, so the
+		rate is pure cost on an rPi that has none of these - measured at a constant 11% of a core on
+		one with no gpio device in use at all. Buttons, rotary encoders and touch pads read events
+		milliseconds apart, where 10 us is far finer than anything being measured; pulse counting,
+		ultrasound, PWM outputs and IR sending are the cases where the rate IS the measurement or
+		the waveform.
+
+		THE DEVICE LIST IS WALKED DIRECTLY, not self.RPI[piU]["input"]/["output"]. That was the first
+		implementation and it was wrong: those dicts are only written by the validateDeviceConfigUi_*
+		callbacks, and only for some types - OUTPUTthermostatIRac, the IR AC output, is never put
+		there at all. makeParametersFile reaches it by iterating indigo.devices instead, which is why
+		the rpi's parameters list it while self.RPI does not. Reading self.RPI therefore missed the
+		one device that most needs the fine rate, and the IR would have stayed broken after a reload.
+		So this uses the same two facts makeParametersFile uses: the device's typeId, and the rPi it
+		is assigned to via piServerNumber / RPINumber.
+
+		Inputs:
+		    piU (str): Raspberry Pi number/key
+		Outputs:
+		    bool: True when any enabled device of a fine-rate type is on this rPi
+		"""
+		try:
+			pwmOn = f"{self.GPIOpwm}" not in ["", "0", "off", "False", "false"]
+			for dev in indigo.devices.iter(self.pluginId):
+				if not dev.enabled:	continue
+				typeId = dev.deviceTypeId
+				if typeId not in _GlobalConst_pigpioFineRateTypes and not (pwmOn and typeId in _GlobalConst_pigpioPwmCapableTypes):
+					continue
+				props = dev.pluginProps
+				devPi = f"{props.get('piServerNumber', props.get('RPINumber',''))}".strip()
+				if devPi != f"{piU}".strip():	continue
+				return True
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+			return True		# cannot tell -> the SAFE answer is the fine rate, not the cheap one
+		return False
 
 	####-------------------------------------------------------------------------####
 	def makeParametersFile(self, piU, retFile=False):
@@ -26356,7 +27796,6 @@ class Plugin(indigo.PluginBase):
 				out["rebootHour"]			 		= self.pluginPrefs.get("rebootHour", -1)
 				out["ipOfServer"]					= self.myIpNumber
 				out["getBatteryMethod"]				= "interactive"
-				out["compressRPItoPlugin"]			= self.compressRPItoPlugin
 				out["indigoInputPORT"]				= self.indigoInputPORT
 				out["wifiEth"]						= self.wifiEth
 				out["myPiNumber"]					= piU
@@ -26386,17 +27825,17 @@ class Plugin(indigo.PluginBase):
 							piDeviceExist=True
 					except Exception as e:
 						if f"{e}".find("timeout waiting") > -1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"communication to indigo is interrupted")
 							return ""
 						if f"{e}".find("not found in database") >-1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,f"RPI:{piU} devid:{piID} not in indigo, if RPI justd eleted, it will resolve itself ")
 							self.delRPI(pi=piU, calledFrom="makeParametersFile")
 							self.updateNeeded += ",fixConfig"
 							self.fixConfig(checkOnly = ["all", "rpi", "force"],fromPGM="makeParametersFile bad rpi")
 						else:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,f"RPI: {piU} error ..  piDevId not set:{self.RPI[piU]}")
 							self.updateNeeded += ",fixConfig"
 							self.fixConfig(checkOnly = ["all", "rpi"],fromPGM="makeParametersFile2")
@@ -26419,9 +27858,24 @@ class Plugin(indigo.PluginBase):
 								out["BLEconnectMode"]			  = props["BLEconnectMode"] if ("BLEconnectMode" in props and props["BLEconnectMode"] in ["commandLine", "socket", "attSocket"]) else self.BLEconnectMode
 
 
-						if "compressRPItoPlugin" in props:
-							try: 	 min(self.compressRPItoPlugin, out["compressRPItoPlugin"],40000)
-							except: out["compressRPItoPlugin"] = self.compressRPItoPlugin
+						# RADIO ROLE PINS. The dialog writes one prop per radio (hciRole_hci0, hciRole_hci1,
+						# ...); beaconloop reads ONE "hciRolesPinned" dict out of its parameters. Nothing
+						# ever bridged the two, so every pin the dialog collected was silently dropped and
+						# each rpi always used its own auto pick - there was no way to overrule a bad radio
+						# choice from indigo at all, which is the whole point of those menus.
+						# "auto" and empty are left OUT rather than sent: absent means "let the rpi decide",
+						# and that is also what an rpi running older code does with an unknown key.
+						_pins = {}
+						try:
+							for _k in props:
+								if not f"{_k}".startswith("hciRole_"):		continue
+								_hci = f"{_k}"[len("hciRole_"):].strip()
+								_val = f"{props[_k]}".strip()
+								if _hci == "" or _val in ("", "auto"):		continue
+								_pins[_hci] = _val
+						except Exception:
+							self.indiLOG.log(40,"makeParametersFile: hciRole pins", exc_info=True)
+						out["hciRolesPinned"] = _pins
 
 						out["usePython3"] = self.pluginPrefs.get("usePython3","-1")  # general setting  -1 0 1  if -1 dont, if +1 yes, if 0 check individual setting for rpi
 						if  out["usePython3"] == "0":
@@ -26435,6 +27889,23 @@ class Plugin(indigo.PluginBase):
 						if "startXonPi" in props:
 							try:    out["startXonPi"]  = props["startXonPi"]
 							except: out["startXonPi"]  = "leaveAlone"
+
+						# pigpiod's gpio sample rate, per rPi. "auto" is the default and the right
+						# answer almost always: 5 us only when this rPi actually has a device whose
+						# measurement or output waveform depends on the rate - pulse counting,
+						# ultrasound, a gpio output driven as PWM, a stepper, a neopixel - and the
+						# cheaper 10 us otherwise. Validated rather than trusted: pigpiod accepts
+						# only 1,2,4,5,8,10 and refuses to start on anything else, which would take
+						# every gpio device on that rPi down with it.
+						try:
+							rr = f"{props.get('pigpiodSampleRate','auto')}" if piDeviceExist else "auto"
+							if rr == "auto":
+								rr = "5" if self.piNeedsFineGpioRate(piU) else "10"
+							elif rr not in ["1","2","4","5","8","10"]:
+								rr = "10"
+							out["pigpiodSampleRate"] = rr
+						except Exception:
+							out["pigpiodSampleRate"] = "10"
 
 
 						if "macIfWOLsendToIndigoServer" in props:
@@ -26575,8 +28046,8 @@ class Plugin(indigo.PluginBase):
 						out = self.updateSensProps(out, props, "BLEserial", elseSet="sequential")
 						out = self.updateSensProps(out, props, "sendToIndigoSecs")
 
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					return ""
 
 
@@ -26603,13 +28074,13 @@ class Plugin(indigo.PluginBase):
 								doPrint = False # dev.id in [1672150172]
 							except Exception as e:
 								if f"{e}".find("timeout waiting") > -1:
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+									self.indiLOG.log(40,"", exc_info=True)
 									self.indiLOG.log(40,"communication to indigo is interrupted")
 									return ""
 								if f"{e}".find("not found in database") > -1:
 									self.indiLOG.log(30,f"devid:{devId} not in indigo devices, ok if just deleted")
 									continue
-								if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+								self.indiLOG.log(40,"", exc_info=True)
 								continue
 							if doPrint: self.indiLOG.log(20,f"makeParametersFile ====== dev:{dev.name}, piU:{piU}, enabled:{dev.enabled}, input:{self.RPI[piU]['input']}")
 
@@ -26695,8 +28166,8 @@ class Plugin(indigo.PluginBase):
 							if doPrint: self.indiLOG.log(20,f"makeParametersFile ====== dev:{dev.name}, sens:{sens}" )
 						if sens != {}:
 							out["sensors"][sensor] = sens
-					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 
 				out["sensorList"] = self.RPI[piU]["sensorList"]
 
@@ -26727,7 +28198,8 @@ class Plugin(indigo.PluginBase):
 							"stableSecs":				f"{pFM.get('stableSecs','60')}",
 							"smoothN":					f"{pFM.get('smoothN','5')}",
 							"minPackets":				f"{pFM.get('minPackets','3')}",
-							"maxSlots":					f"{pFM.get('findMyMaxSlots','30')}",
+							"maxSlots":					f"{pFM.get('findMyMaxSlots','15')}",
+							"ambiguityWait":			f"{pFM.get('findMyAmbiguityWait','55')}",
 							"sendEverySecs":			f"{pFM.get('sendEverySecs','60')}",
 							"dropFromBeaconPipeline":	f"{1 if pFM.get('dropFromBeaconPipeline', True) else 0}",
 							"calibrationLog":			f"{1 if pFM.get('calibrationLog', False) else 0}",
@@ -26873,7 +28345,7 @@ class Plugin(indigo.PluginBase):
 										dev2Name =  ""
 	
 									out["output"][typeId][devIdoutS][0]["data"][devS] = {"setpointHeat":setpointHeat,"roomName":dev2Name,"LEVELName":dev1Name, "LEVEL":LEVEL, "roomTemperature": roomTemperature}
-							except Exception as e:
+							except Exception:
 								self.indiLOG.log(30,f"creating parametersfile ..{devOut.name}-{piU}  typeId  FBHtempshow not defiend, typeId: {typeId}, out[output]: {out['output']}")
 
 
@@ -26932,14 +28404,14 @@ class Plugin(indigo.PluginBase):
 					try:
 						if out["output"][typeId] == {}:
 							del out["output"][typeId]
-					except Exception as e:
+					except Exception:
 						self.indiLOG.log(30,f"creating parametersfile .. please fix device {devOut.name}; rpi number:{piU} , outdput dev not linked ?, typeId: {typeId}, out[output]: {out['output']}")
 
 
 				out = self.writeJson(out, fName = self.indigoPreferencesPluginDir + "interfaceFiles/parameters." + piU , fmtOn=self.parametersFileSort )
 				#if pi == 5: self.indiLOG.log(30,f" piu 25 params file: {out}")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		if retFile: return out
 		return ""
 
@@ -26959,6 +28431,22 @@ class Plugin(indigo.PluginBase):
 		try:
 			try:	cmdMasked = cmd.replace(f" {self.RPI[piU]['passwordPi']} ", " ***** ")
 			except:	cmdMasked = cmd
+			# THE WHOLE DUMP USED TO GO OUT BEFORE ANYTHING WAS EVEN LOOKED AT - the full expect
+			# command, all of stdout and all of stderr, at level 20, every time stderr was not
+			# empty. For the one case this function can actually repair, a known_hosts conflict,
+			# that is the right amount of detail. For an rPi that is simply not answering on port
+			# 22 it is five lines of expect internals and a stack trace from the .exp script
+			# saying "connection refused" three different ways, and nothing is fixed by any of it.
+			# A REBOOTING rPi IS NOT A FAULT and must not read like one: one line, naming the pi
+			# and the reason, at most once a minute per rPi while it stays down
+			if self.sshUnreachable(ret, err):
+				if not hasattr(self, "sshDownWarned"):	self.sshDownWarned = {}
+				if time.time() - self.sshDownWarned.get(piU, 0.) > 60.:
+					self.sshDownWarned[piU] = time.time()
+					self.indiLOG.log(20, f"rPi-{piU} at {self.RPI[piU].get('ipNumberPi','?')} answers a ping but refuses ssh - rebooting, or sshd is not up. Nothing to fix here, the send will be retried later")
+				return True
+			# it is answering again, so the next time it does go quiet says so straight away
+			if hasattr(self, "sshDownWarned"):	self.sshDownWarned.pop(piU, None)
 			self.indiLOG.log(20,f"fixHostsFile .ssh/known_hosts  for pi{piU} response  ===>> you might need to  re-issue the send command <==== \n===cmd:{cmdMasked}\n===ret:{ret}\n===err:{err}")
 			if ret.find(".ssh/known_hosts:") > -1:
 				ipN = self.RPI[piU]["ipNumberPi"]
@@ -26978,11 +28466,11 @@ class Plugin(indigo.PluginBase):
 						f.write(line.strip("\n")+"\n")
 					f.close()
 
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return  True
 
 	####------------------rpi update queue management ----------------------------END
@@ -27003,8 +28491,8 @@ class Plugin(indigo.PluginBase):
 		return
 		try:
 			self.setupFilesForPi(calledFrom="configureWifi")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -27051,11 +28539,11 @@ class Plugin(indigo.PluginBase):
 						dev = indigo.devices[self.RPI[piU]["piDevId"]]
 					except Exception as e:
 						if f"{e}".find("timeout waiting") > -1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"communication to indigo is interrupted")
 							return
 
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,f"self.RPI[piU][piDevId] not defined for pi: {piU}")
 						continue
 					line = ""
@@ -27075,8 +28563,8 @@ class Plugin(indigo.PluginBase):
 					onOff= " on"
 					if self.RPI[piU]["piOnOff"] != "1": onOff = "off"
 					self.myLog( theText = line, mType= f"pi#: {pi:2d} {onOff} {self.RPI[piU]['ipNumberPi']}")
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					self.indiLOG.log(40,f"RPI#{piU} - {dev.name}  has problem:  disabled?")
 		
 
@@ -27150,8 +28638,8 @@ configuration         - ==========  defined beacons ==============
 						self.myLog( theText = f"{time.time()-self.rpiQueues['lastCheck'][piU]:10.1f} {time.time()-self.rpiQueues['lastActive'][piU]:10.1f}   >{self.rpiQueues['lastData'][piU][0:120]:} ...",  mType=  f"{piU:3s} {self.rpiQueues['state'][piU]:10s}")
 					self.myLog( theText = "", mType= "pi configuration")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -27390,8 +28878,8 @@ configuration         - ==========  defined beacons ==============
 
 
 				self.executeUpdateStatesDict(onlyDevID=dev.id)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 	####-------------------------------------------------------------------------####
 	def resetStatsMenu(self, valuesDict=None, typeId=None):
 		"""Menu callback that resets the accumulated data statistics by calling self.resetDataStats().
@@ -27426,8 +28914,8 @@ configuration         - ==========  defined beacons ==============
 		try:
 			xList = "; ".join( 	f"{piU} :{self.RPI[piU]['piUpToDate']}"	for piU in self.RPI )
 			if self.decideMyLog("OfflineRPI"): self.indiLOG.log(5,"printpiUpToDate list .. pi#:[actionLeft];.. ([]=ok): "+ xList	 )
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -27448,8 +28936,8 @@ configuration         - ==========  defined beacons ==============
 						self.indiLOG.log(10,"no errors")
 					else:
 						self.indiLOG.log(10,"errors:\n"+BLEreport[rep][1].strip("\n"))
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -27467,8 +28955,8 @@ configuration         - ==========  defined beacons ==============
 			out = f"\ntrackMac report received  from RPI#:{piU}\n"
 			out += report.replace(";;", "\n")
 			self.myLog(theText= out)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 
@@ -27556,7 +29044,7 @@ configuration         - ==========  defined beacons ==============
 											elif rr[mac][ss[1]][ii] != "":
 												out += f"{pp:>30} : {rr[mac][ss[1]][ii]:}\n"
 
-										except Exception as e:
+										except Exception:
 											self.indiLOG.log(10,f"ServiceSections mac:{mac} serv{ss} data:{rr[mac][ss[1]]}")
 
 
@@ -27568,8 +29056,8 @@ configuration         - ==========  defined beacons ==============
 							else:
 								out += f"{item:31s}: {rr[mac][item]}\n"
 			self.myLog(theText= out)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.myLog(theText= out)
 			indigo.server.log(f"printBLEAnalysis :{report}")
 		return
@@ -27587,8 +29075,8 @@ configuration         - ==========  defined beacons ==============
 		try:
 				xList = ";".join( f"{ll[xx]};" for ll in stateList for xx in ll if xx == "Key" 	)+";"
 				self.indiLOG.log(10,f"updating states:{dev.name}, len:{len(stateList)}, ret={xList[0:200]}.. ")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -27674,8 +29162,8 @@ configuration         - ==========  defined beacons ==============
 			helpText += '  \n'
 			self.myLog( theText = helpText, destination="")
 			self.myLog( theText = helpText, destination="standard")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def printGroups(self):
@@ -27735,8 +29223,8 @@ configuration         - ==========  defined beacons ==============
 			out+= "\n"
 			self.indiLOG.log(20,out)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return
 
@@ -27811,8 +29299,8 @@ configuration         - ==========  defined beacons ==============
 					out += f"\n===  Stats for RPI --> INDIGO data transfers ==  END total time measured: {int(time.strftime('%d', time.gmtime(secMeasured)))-1:.0f} {time.strftime('%H:%M:%S', time.gmtime(secMeasured))} ; min measured: {minMeasured:.0f}" 
 				out += "\n=pi TCPIP socket ----------------------------------\n"
 			self.indiLOG.log(20,out)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return
 
@@ -27873,8 +29361,8 @@ configuration         - ==========  defined beacons ==============
 			out +="\ndev/var updateStats\n"
 			self.indiLOG.log(20,out)
 	
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		try:
 			if "beaconUpdates" in self.dataStats:
@@ -27891,8 +29379,8 @@ configuration         - ==========  defined beacons ==============
 							f"\n=========  Beacon update times END ==============================="), mType=	 "\n=========  Beacon update times      ===============================")
 				self.indiLOG.log(20," no beaconUpdates data recorded")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return
 
@@ -27933,7 +29421,7 @@ configuration         - ==========  defined beacons ==============
 							lastUpdateBatteryLevel = lastUpdateBatteryLevel
 				except Exception as e:
 					if f"{e}".find("timeout waiting") > -1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"communication to indigo is interrupted")
 					continue
 				if len(batteryLevelUUID) != 14: batteryLevelUUID = batteryLevelUUID.ljust(14)
@@ -28005,7 +29493,7 @@ configuration         - ==========  defined beacons ==============
 
 		except Exception as e:
 			if	f"{e}".find("UnexpectedNullErrorxxxx") >-1: return
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	########################################
@@ -28030,8 +29518,7 @@ configuration         - ==========  defined beacons ==============
 			if msgLevel in self.debugLevel:							 return True
 			return False
 		except	Exception as e:
-			if f"{e}" != "None":
-				indigo.server.log(f"decideMyLog Line {sys.exc_info()[2].tb_lineno} has error={e}")
+			indigo.server.log(f"decideMyLog Line {sys.exc_info()[2].tb_lineno} has error={e}")
 		return False
 
 	####-----------------  print to logfile or indigo log  ---------
@@ -28074,8 +29561,8 @@ configuration         - ==========  defined beacons ==============
 				self.indiLOG.log(level,f"{ts} {mType:25} - {theText}" )
 			return
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			indigo.server.log(theText)
 			indigo.server.log(f"type: {type(theText)}")
 
@@ -28146,10 +29633,10 @@ configuration         - ==========  defined beacons ==============
 						deltaDist = math.sqrt(deltaDist)
 						self.piToPiDistance[pi1][pi2][3] = deltaDist
 						self.piToPiDistance[pi2][pi1][3] = deltaDist
-					except Exception as e:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return True
 
 	####-------------------------------------------------------------------------####
@@ -28268,8 +29755,8 @@ configuration         - ==========  defined beacons ==============
 
 			return dt, retC
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 		return 0, -1
@@ -28328,8 +29815,8 @@ configuration         - ==========  defined beacons ==============
 				self.indiLOG.log(10,f"addBrackets error in input: pos= {pos}; wrong number of coordinates, should be: {nItems}" )
 
 			return pp
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"addBrackets error in input: cType:{cType};  default= {default};  pos= {pos}" )
 		return default
 
@@ -28363,8 +29850,8 @@ configuration         - ==========  defined beacons ==============
 					if rgbV > maxRGB:
 						maxRGB	= rgbV
 				except: pass
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return maxRGB
 
 	####-------------------------------------------------------------------------####
@@ -28380,8 +29867,8 @@ configuration         - ==========  defined beacons ==============
 			for piU in self.RPI:
 				if self.RPI[piU][item] != []:
 					return True
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return False
 
 	####-------------------------------------------------------------------------####
@@ -28421,14 +29908,13 @@ configuration         - ==========  defined beacons ==============
 							dev.replacePluginPropsOnServer(props)
 							dev = indigo.devices[devId]
 							props = dev.pluginProps
-					except Exception as e:
-						if f"{e}" != "None":
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
-							self.indiLOG.log(40,"ok if replacing RPI")
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"ok if replacing RPI")
 				self.newADDRESS={}
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -28470,7 +29956,7 @@ configuration         - ==========  defined beacons ==============
 							sensorList+=","
 
 				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					self.indiLOG.log(40,"", exc_info=True)
 					if f"{e}".find("timeout waiting") > -1:
 						self.indiLOG.log(40,"communication to indigo is interrupted")
 						return anyChange
@@ -28482,8 +29968,8 @@ configuration         - ==========  defined beacons ==============
 				anyChange = True
 			self.RPI[piU]["sensorList"] = sensorList
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return anyChange
 
 	####-------------------------------------------------------------------------####
@@ -28505,7 +29991,7 @@ configuration         - ==========  defined beacons ==============
 			if piU not in _rpiBeaconList: 	return
 
 			try: rpiDev = indigo.devices[self.RPI[piU]["piDevId"]]
-			except Exception as e:
+			except Exception:
 				self.indiLOG.log(30,f"findClosestiBeaconToRPI pi:{piU}, piDevId not in indigodevices rpi:{self.RPI[piU]}")
 				return
 
@@ -28541,8 +30027,8 @@ configuration         - ==========  defined beacons ==============
 					if dist  < closestDist:
 						closestDist = dist
 						closestName = dev.name
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 
 			if closestDist < cutOffForClosestBeacon:
 					cN = closestName+f"@{closestDist}"
@@ -28554,8 +30040,8 @@ configuration         - ==========  defined beacons ==============
 					self.addToStatesUpdateDict(f"{rpiDev.id}", "closestiBeacon", "None")
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -28604,8 +30090,8 @@ configuration         - ==========  defined beacons ==============
 				if "lastUp" in dev.states:
 					lastUp =  float(self.getTimetimeFromDateString(self.getCurrentState(dev,devIds,"lastUp", fromMETHOD="calcPostion1")))
 
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				lastUp	= 0
 
 			if dev.deviceTypeId == "BLEconnect":
@@ -28673,9 +30159,8 @@ configuration         - ==========  defined beacons ==============
 				if currStatus != status :
 					if "lastStatusChange" in dev.states:
 						try: lastStatusChangeDT  =  time.time() - self.getTimetimeFromDateString(dev.states["lastStatusChange"])
-						except Exception as e:
-								if f"{e}" != "None":
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+								self.indiLOG.log(40,"", exc_info=True)
 					if lastStatusChangeDT > 3.:
 						update = True
 						self.addToStatesUpdateDict(dev.id, "status", status)
@@ -28716,8 +30201,8 @@ configuration         - ==========  defined beacons ==============
 						self.addToStatesUpdateDict(devIds,pos[ii], newPos[ii],decimalPlaces=1)
 						deltaDistance +=dd
 
-		except	Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return update, deltaDistance
 
 
@@ -28812,8 +30297,8 @@ configuration         - ==========  defined beacons ==============
 					p = int(p)
 				pu = pu.strip()
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return p, pu, decimalPlaces, useFormat
 
 	####-------------------------------------------------------------------------####
@@ -28831,8 +30316,8 @@ configuration         - ==========  defined beacons ==============
 			if value == 0: return decPoint
 			x = int(math.log10(abs(value)))
 			decPoints = max(0,min(7, significantDigits - x))
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return decPoints
 
 
@@ -29035,8 +30520,8 @@ configuration         - ==========  defined beacons ==============
 				ui = props["format"] % ui
 			else:
 				ui = f"{ui}"
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			ui   = f"{data}"
 			unit = ""
 		return dd, ui, unit
@@ -29105,8 +30590,8 @@ configuration         - ==========  defined beacons ==============
 			tempU = useFormat.format(temp)
 			return temp, tempU + suff,self.tempDigits, useFormat
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return -99, "",self.tempDigits, useFormat
 
 
@@ -29159,8 +30644,8 @@ configuration         - ==========  defined beacons ==============
 				pass
 			altU = (cString % alt).strip()
 			return round(alt,aD) , altU + suff,aD, useFormat
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return -99, "",aD, useFormat
 
 
@@ -29176,8 +30661,8 @@ configuration         - ==========  defined beacons ==============
 		"""
 		try:
 			return int(float(hum)), f"{float(hum):.0f}%" ,0
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			return -99, "",0
 
 	####-------------------------------------------------------------------------####
@@ -29283,11 +30768,11 @@ configuration         - ==========  defined beacons ==============
 					newStates = copy.copy(dev.states)
 				except Exception as e:
 					if f"{e}".find("timeout waiting") > -1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"communication to indigo is interrupted")
 						return setALLrPiVUpdate, dev, props, newStates, False
 					if f"{e}".find("not found in database") ==-1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						return setALLrPiVUpdate, dev, props, newStates, False
 					self.indiLOG.log(40,f"Line {sys.exc_info()[2].tb_lineno} has error={e}"   + f" indigoId:{self.beacons[mac]['indigoId']}")
 					self.beacons[mac]["indigoId"] = 0
@@ -29370,7 +30855,7 @@ configuration         - ==========  defined beacons ==============
 				except Exception as e:
 
 					if f"{e}".find("timeout waiting") > -1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"communication to indigo is interrupted")
 						return setALLrPiVUpdate, dev, props, newStates, False
 				dev.updateStateImageOnServer(indigo.kStateImageSel.SensorOn)
@@ -29422,10 +30907,10 @@ configuration         - ==========  defined beacons ==============
 
 		except Exception as e:
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 			if e is not None and f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 			ignoreMessage = True
 
 
@@ -29448,8 +30933,8 @@ configuration         - ==========  defined beacons ==============
 			if newresult[0] == newFirstPart: return existing
 			newresult[0] = newFirstPart
 			return " ".join(newresult)
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return existing
 
 
@@ -29497,8 +30982,8 @@ configuration         - ==========  defined beacons ==============
 			currClosestRPI	= int(deviBeacon.states["closestRPI"])
 			if currClosestRPI !=-1	and (time.time() - self.beacons[mac]["receivedSignals"][currClosestRPI]["lastSignal"]) <70.: # ["receivedSignals"] =[rssi, timestamp,dist]
 				currMinDist	= self.beacons[mac]["receivedSignals"][currClosestRPI]["distance"]
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			currClosestRPI =-1; currMinDist = -9999.
 
 		if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, f"findClosestRPI  ClostR 1    currClosestRPIL:{currClosestRPI}, newClosestRPI:{newClosestRPI},  newMinDist:{newMinDist}   currMinDist:{currMinDist}")
@@ -29525,8 +31010,8 @@ configuration         - ==========  defined beacons ==============
 				newClosestRPI = currClosestRPI
 			if self.selectBeaconsLogTimer != {}: self.checkIfselectBeaconsLogTimer(mac, f"findClosestRPI  currClosestRPI:{currClosestRPI}, newClosestRPI:{newClosestRPI},  newMinDist:{newMinDist}   currMinDist:{currMinDist}" )
 	
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return newClosestRPI
 
 
@@ -29581,13 +31066,12 @@ configuration         - ==========  defined beacons ==============
 								newClosestRPI  = pix
 					if self.decideMyLog("BLE"): self.indiLOG.log(5,f"findClosestRPIForBLEConnect loop pi:{piU}, newClosestRPI:{newClosestRPI}, devdist:{devBLE.states[piXX+'_Distance']}, newDist:{newMinDist} deltaS:{deltaSec}" )
 				except Exception as e:
-					if f"{e}" != "None":
-						self.indiLOG.log(40,f"Line {sys.exc_info()[2].tb_lineno} has error={e}" )
+					self.indiLOG.log(40,f"Line {sys.exc_info()[2].tb_lineno} has error={e}" )
 			# dont switch if: <	 4 dBm diff and	 not defined then keep current
 			if abs(newMinDist - currMinDist) < 2 and  currClosestRPI !=-1: #
 				newClosestRPI = currClosestRPI
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		if self.decideMyLog("BLE"): self.indiLOG.log(5,f"findClosestRPIForBLEConnect return w  newClosestRPI:{newClosestRPI}" )
 
 		return newClosestRPI
@@ -29616,8 +31100,8 @@ configuration         - ==========  defined beacons ==============
 			dist = round(dist, 1)
 			return dist
 
-		except	 Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except	 Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return 99999.
 
 
@@ -29699,8 +31183,8 @@ configuration         - ==========  defined beacons ==============
 				if enableEval and oneFound and (textIn.find("+")>-1 or	 textIn.find("-")>-1 or textIn.find("/")>-1 or textIn.find("*")>-1):
 					textIn = f"{eval(textIn)}"
 			except: pass
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return textIn
 	####-------------------------------------------------------------------------####
 	def convertFtoC(self,textIn):
@@ -29728,8 +31212,8 @@ configuration         - ==========  defined beacons ==============
 			var = textOut[:end]
 			try:
 				vText= f"{(float(var)-32.)*5./9.:.1f}"
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				return textIn, False
 
 			try:
@@ -29740,8 +31224,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return textIn, False
 	####-------------------------------------------------------------------------####
 	def convertCtoF(self,textIn):
@@ -29769,8 +31253,8 @@ configuration         - ==========  defined beacons ==============
 			var = textOut[:end]
 			try:
 				vText= f"{(float(var)*9./5.) + 32:.1f}"
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				return textIn, False
 
 			try:
@@ -29781,8 +31265,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return textIn, False
 
 	####-------------------------------------------------------------------------####
@@ -29811,8 +31295,8 @@ configuration         - ==========  defined beacons ==============
 			var = textOut[:end]
 			try:
 				vText= eval(var)
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(10,var)
 				self.indiLOG.log(10,textOut[:50])
 				return textIn, False
@@ -29825,11 +31309,11 @@ configuration         - ==========  defined beacons ==============
 				textOut= textIn[:start]+vText+textOut[end+2:]
 				self.indiLOG.log(10,textOut)
 				return textOut, True
-			except Exception as e:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
 				return textIn, False
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return textIn, False
 
 
@@ -29874,8 +31358,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return textIn, False
 
 
@@ -29926,8 +31410,8 @@ configuration         - ==========  defined beacons ==============
 				return textOut, True
 			except:
 				return textIn, False
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return textIn, False
 
 
@@ -30150,8 +31634,8 @@ configuration         - ==========  defined beacons ==============
 
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -30237,8 +31721,8 @@ configuration         - ==========  defined beacons ==============
 					if self.decideMyLog("GarageDoor"): self.indiLOG.log(20,f"alertGarageDoor {dev.name}: current state:{dev.states.get('onOffState','--')}, newdata:{garage['newData']}" )
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -30255,8 +31739,8 @@ configuration         - ==========  defined beacons ==============
 			self.beaconPositionsData["logLevel"]		= "PlotPositions" in self.debugLevel
 			self.beaconPositionsData["logFile"]			= self.PluginLogFile
 			self.beaconPositionsData["distanceUnits"]	= self.distanceUnits
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 	####-------------------------------------------------------------------------####
@@ -30357,8 +31841,8 @@ configuration         - ==========  defined beacons ==============
 
 			self.indiLOG.log(10,f"set time of RPI# {piU}  finished, new delta time ={dt:6.1f}[secs]")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 		return
 
@@ -30490,11 +31974,11 @@ configuration         - ==========  defined beacons ==============
 					startAtDateTime	   = startAtDateTimeIN.replace("-","").replace(":","").replace(" ","").replace("/","").replace(".","").replace(",","")
 					startAtDateTime	   = startAtDateTime.ljust(14,"0")
 					return	 max(0, self.getTimetimeFromDateString(startAtDateTime, fmrt= "%Y%m%d%H%M%S") - time.time() )
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					return 0
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return 0
 
 
@@ -30680,8 +32164,8 @@ configuration         - ==========  defined beacons ==============
 					out += cmd + f",{analogValue}"
 					out += cmd + f",{rampTime}"
 					if "writeOutputToState" not in props or ("writeOutputToState" in props and props["writeOutputToState"] == "1"): self.addToStatesUpdateDict(dev.id, "OUTPUT", out)
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					outN = 0
 				try:
 					line = "\n##=======use this as a python script in an action group action :=====\n"
@@ -30804,8 +32288,8 @@ configuration         - ==========  defined beacons ==============
 					outN = int(output)
 					if f"OUTPUT_{outN:02d}" in dev.states: self.addToStatesUpdateDict(dev.id, f"OUTPUT_{outN:02d}", out)
 					if "OUTPUT" in dev.states and ("writeOutputToState" not in props or ("writeOutputToState" in props and props["writeOutputToState"] == "1") ): self.addToStatesUpdateDict(dev.id, "OUTPUT", out)
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,"", exc_info=True)
 					outN = 0
 				try:
 					line = "\n##=======use this as a python script in an action group action :=====\n"
@@ -30836,8 +32320,8 @@ configuration         - ==========  defined beacons ==============
 
 			self.indiLOG.log(10,"setPIN:   no condition met, returning")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def BLEconnectCheckPeriod(self, force = False):
@@ -30917,8 +32401,8 @@ configuration         - ==========  defined beacons ==============
 			self.updateBLEconenctStatusOnRpi(updBLE, sendToRPI)
 			#### check for last up and send to rpi to avoid extra pings to phone if last up was recent ------
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -31050,7 +32534,7 @@ configuration         - ==========  defined beacons ==============
 
 					except Exception as e:
 						if f"{e}".find("timeout waiting") > -1:
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+							self.indiLOG.log(40,"", exc_info=True)
 							self.indiLOG.log(40,"BeaconsCheckPeriod communication to indigo is interrupted")
 							return anyChange
 
@@ -31065,11 +32549,11 @@ configuration         - ==========  defined beacons ==============
 									self.beacons[beacon]["ignore"] = 0
 							except Exception as e:
 								if f"{e}".find("timeout waiting") > -1:
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+									self.indiLOG.log(40,"", exc_info=True)
 									self.indiLOG.log(40,"BeaconsCheckPeriod communication to indigo is interrupted")
 									return anyChange
 								if f"{e}".find("not found in database") ==-1:
-									if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+									self.indiLOG.log(40,"", exc_info=True)
 									return anyChange
 
 								self.indiLOG.log(10,f"=== deleting device beaconDict: {self.beacons[beacon]}")
@@ -31094,14 +32578,13 @@ configuration         - ==========  defined beacons ==============
 									else:
 										self.addToStatesUpdateDict(dev.id,piXX+"_Distance", 99999.,decimalPlaces=1)
 
-					except Exception as e:
-						if f"{e}" != "None":
-							if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+					except Exception:
+						self.indiLOG.log(40,"", exc_info=True)
 				if dev !="":
 					self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom="BeaconsCheckPeriod end")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			try: self.indiLOG.log(40,f"============= {dev.name}")
 			except: pass
 		return anyChange
@@ -31157,8 +32640,8 @@ configuration         - ==========  defined beacons ==============
 				self.checkSensortoPi(piU, "output")
 				if self.mkSensorList(piU): anyChange =True
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return anyChange
 
 	####----------------------reset sensor min max at midnight -----------------------------------####
@@ -31241,13 +32724,12 @@ configuration         - ==========  defined beacons ==============
 											if ttx+"MeasurementsToday" in dev.states:
 												self.addToStatesUpdateDict(dev.id,ttx+"MeasurementsYesterday",		dev.states[ttx+"MeasurementsToday"],	decimalPlaces=0)
 												self.addToStatesUpdateDict(dev.id,ttx+"MeasurementsToday", 			1, 										decimalPlaces=0)
-						except Exception as e:
-							if f"{e}" != "None":
-								if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						except Exception:
+							self.indiLOG.log(40,"", exc_info=True)
 						self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom="resetMinMaxSensors")
 				self.pluginPrefs["resetMinMaxDayDoneToday"] = time.time()
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####----------------------reset sensor min max at midnight -----------------------------------####
 	def fillMinMaxSensors(self, dev, stateName, value, decimalPlaces):
@@ -31334,8 +32816,8 @@ configuration         - ==========  defined beacons ==============
 					self.addToStatesUpdateDict(dev.id,stateName+"MeasurementsToday", nMeas+1, decimalPlaces=0)
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,f"{dev.name}, {stateName}, {value}", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,f"{dev.name}, {stateName}, {value}", exc_info=True)
 
 	####----------------------reset rain sensor every hour/day/week/month/year -----------------------------------####
 	def rollOverRainSensors(self):
@@ -31379,8 +32861,8 @@ configuration         - ==========  defined beacons ==============
 					props["lastDateCheck"] = dd.strftime("%Y-%m-%d-%H")
 					dev.replacePluginPropsOnServer(props)
 				self.executeUpdateStatesDict(onlyDevID=dev.id, calledFrom="rollOverRainSensors")
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 	####-------------------------------------------------------------------------####
 	def storeDongleQualify(self, piU, varJson):
@@ -31502,8 +32984,8 @@ configuration         - ==========  defined beacons ==============
 
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return
 
 
@@ -31543,8 +33025,8 @@ configuration         - ==========  defined beacons ==============
 						return
 					if dev.states["lastMessageFromRpi"][:-2] != now[:-2]: # only update if > 60 sec difference , approx by ignoring last 2 digits
 						self.addToStatesUpdateDict(dev.id, "lastMessageFromRpi", now)
-				except Exception as e:
-					if f"{e}".find("None") == -1: self.indiLOG.log(40,f"setRPIonline pi:{piU}  RPI:{self.RPI[piU]}", exc_info=True)
+				except Exception:
+					self.indiLOG.log(40,f"setRPIonline pi:{piU}  RPI:{self.RPI[piU]}", exc_info=True)
 
 
 
@@ -31580,10 +33062,10 @@ configuration         - ==========  defined beacons ==============
 
 		except Exception as e:
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 				return
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f" pi{piU}  RPI{self.RPI[piU]}" )
 		return
 
@@ -31629,7 +33111,7 @@ configuration         - ==========  defined beacons ==============
 				except Exception as e:
 
 					if f"{e}".find("timeout waiting") > -1:
-						if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+						self.indiLOG.log(40,"", exc_info=True)
 						self.indiLOG.log(40,"BLEconnectupdate communication to indigo is interrupted")
 						return updateBLE
 					self.indiLOG.log(10,f"BLEconnectupdate devId not defined in devices pi:{piU}; devId={devId}; info:{info}")
@@ -31716,7 +33198,7 @@ configuration         - ==========  defined beacons ==============
 
 
 		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+			self.indiLOG.log(40,"", exc_info=True)
 			if f"{e}".find("timeout waiting") > -1:
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 
@@ -31827,8 +33309,8 @@ configuration         - ==========  defined beacons ==============
 													}
 												)
 	
-									except Exception as e:
-										if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+									except Exception:
+										self.indiLOG.log(40,"", exc_info=True)
 							else:
 								onB = data[xx] == "on"
 								onT = "on"  if onB else "off"
@@ -31856,8 +33338,8 @@ configuration         - ==========  defined beacons ==============
 					elif xx != "actualStatus" and xx in dev.states : self.addToStatesUpdateDict(dev.id, xx, data[xx])
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40, f"{data}")
 		return
 	####-------------------------------------------------------------------------####
@@ -31887,8 +33369,8 @@ configuration         - ==========  defined beacons ==============
 			return test.strip(",").split(",")
 			
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return []
 
 
@@ -31926,8 +33408,8 @@ configuration         - ==========  defined beacons ==============
 				self.addToStatesUpdateDict(dev.id, "lastBatteryReplaced",	datetime.datetime.now().strftime(_defaultDateStampFormat))
 
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 
 
 	####-------------------------------------------------------------------------####
@@ -31951,8 +33433,8 @@ configuration         - ==========  defined beacons ==============
 				pu = pu.strip()
 				newStatus = self.setStatusCol(dev, "Proximity", p, pu, whichKeysToDisplay, "",newStatus, decimalPlaces = 0)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return newStatus
 
 
@@ -31983,8 +33465,8 @@ configuration         - ==========  defined beacons ==============
 					self.addToStatesUpdateDict(dev.id, "Moisture_raw", raw)
 				newStatus = self.setStatusCol(dev, "Moisture", relM, relMU, "Moisture", indigo.kStateImageSel.TemperatureSensorOn, newStatus, decimalPlaces = 0)
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 		return newStatus
 
 	###-------------------------------------------------------------------------####
@@ -32114,10 +33596,10 @@ configuration         - ==========  defined beacons ==============
 		except Exception as e:
 
 			if f"{e}".find("timeout waiting") > -1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 				self.indiLOG.log(40,"communication to indigo is interrupted")
 			if e is not None	and f"{e}".find("not found in database") ==-1:
-				if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+				self.indiLOG.log(40,"", exc_info=True)
 		return updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
 
 
@@ -32160,8 +33642,8 @@ configuration         - ==========  defined beacons ==============
 			if sLine != "": line += sLine	
 			return line.strip(",").strip("\n")
 
-		except Exception as e:
-			if f"{e}".find("None") == -1: self.indiLOG.log(40,"", exc_info=True)
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
 			self.indiLOG.log(40,f"RPI#{piU} has problem:  disabled?")
 		return ""
 
@@ -32223,15 +33705,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 					
 					if not buff or len(buff) == 0:
 						break
+					# first bytes of this message: the rpi is alive, whatever the frame turns out to be
+					if seqN == 1:	indigo.activePlugin.noteContactFromIP(self.client_address[0])
 					if data0 == "":	data0  = buff
 					else:			data0 += buff
 					len0  = len(data0)
 
 					### check if package is complete:
-					## first part is : "{}x-6-a{}x-6-a{} padded w blanks for 30 characters
-					try: 	header = data0[:30].decode('utf-8')
-					except:	header = data0[:30]
-					actualData = data0[30:]
+					## first part is : "{len}x-6-a{name}x-6-a{tag}" padded with blanks.
+					try: 	header = data0[:35].decode('utf-8')
+					except:	header = data0[:35]
+					actualData = data0[35:]
 
 					headerSplit = header.split(idTag)
 					if len(headerSplit) < 3: continue
@@ -32260,9 +33744,17 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 				self.request.settimeout(1)
 
 				self.sendResponse(f"{sendError}; received bytes:{len0} in {seqN} packets")	
-				indigo.activePlugin.indiLOG.log(40,f"ThreadedTCPRequestHandler ip#:{self.client_address[0]}, Line {sys.exc_info()[2].tb_lineno} has error={e}" )
+				if time.time() - indigo.activePlugin.startTime < indigo.activePlugin.socketQuietSecs:
+					indigo.activePlugin.indiLOG.log(20,f"ThreadedTCPRequestHandler ip#:{self.client_address[0]} cannot parse this message {int(time.time()-indigo.activePlugin.startTime)}s after plugin start - NOT reported as an error, the rpi is most likely still on the previous frame format and waiting for its update: {e}" )
+				else:
+					indigo.activePlugin.indiLOG.log(40,f"ThreadedTCPRequestHandler ip#:{self.client_address[0]}, Line {sys.exc_info()[2].tb_lineno} has error={e}" )
 				if e.find("timed out") == -1:
-					indigo.activePlugin.handlesockReporting( self.client_address[0],len0, piName,e[0:min(10,len(e))] )
+					# in the startup window label it "preUpdate", not the first 10 chars of the
+					# exception: that put a row called "a bytes-li" with no pi name into the socket
+					# stats table for every rpi still on the old frame format, one per distinct
+					# error text, and truncated mid-word it says nothing anyway.
+					sockLabel = "preUpdate" if time.time() - indigo.activePlugin.startTime < indigo.activePlugin.socketQuietSecs else e[0:min(10,len(e))]
+					indigo.activePlugin.handlesockReporting( self.client_address[0],len0, piName, sockLabel )
 				else:
 					indigo.activePlugin.indiLOG.log(30,f".. received data  tries:{seqN}, len:{nBytes}, dt:{time.time() - tStart:.1f}, header:{header}" )
 					indigo.activePlugin.handlesockReporting( self.client_address[0], len0, piName, "timeout" )
@@ -32274,8 +33766,8 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 				## split message should look like:  len-TAG-piName-TAG-data; -TAG- = x-6-a
 				if piName == "": # tag not found
 					if indigo.activePlugin.decideMyLog("Socket"): indigo.activePlugin.indiLOG.log(10,f"TCPIP socket  \"x-6-a\"   not found in header: \"{header}\", headerSplit:\"{headerSplit}\", nbytes:{nBytes}, seqN:{seqN}" )
-					self.sendResponse("error-tag missing")
-					self.sendResponse("error")	
+					# ONE response - see above, the second call wrote to an already closed socket
+					self.sendResponse("error-tag-missing")
 					indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName, "errTag" )
 					return
 
@@ -32283,9 +33775,12 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
 				if lenData != nBytes: # expected # of bytes not received
 					if lenData < nBytes:
-						if indigo.activePlugin.decideMyLog("Socket"): indigo.indigoLOG.log(30,f"TCPIP socket length of {header} data too short, len:{nBytes};   piName:; {piName}" )
-						self.sendResponse(f"error-lenDatawrong-{lenData}")	
-						self.sendResponse("error,len-short")	
+						if time.time() - indigo.activePlugin.startTime < indigo.activePlugin.socketQuietSecs:
+							indigo.activePlugin.indiLOG.log(20,f"TCPIP socket bad length from {self.client_address[0]} {int(time.time()-indigo.activePlugin.startTime)}s after plugin start - NOT reported, the rpi is most likely still on the previous frame format: got {lenData}, expected {nBytes}" )
+						elif indigo.activePlugin.decideMyLog("Socket"): indigo.activePlugin.indiLOG.log(30,f"TCPIP socket length of {header} data too short, len:{nBytes};   piName:; {piName}" )
+						# ONE response: sendResponse() closes the socket, so a second call always threw
+						# and logged a level-30 error that looked like a socket fault but was our own.
+						self.sendResponse(f"error-lenData-short-got-{lenData}-expected-{nBytes}")
 						indigo.activePlugin.handlesockReporting(self.client_address[0],len0,piName, "tooShort" )
 						return
 					else:
@@ -32317,7 +33812,7 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 				else:
 					dataJIn = actualData.decode('utf-8')
 				if dataJIn.find("NaN") > -1:
-					dataJIn.replace("NaN","-9999")
+					dataJIn = dataJIn.replace("NaN","-9999")	# the result WAS thrown away - indigo rejects NaN
 				dataJ = json.loads(dataJIn)
 			except Exception as e:
 				indigo.activePlugin.indiLOG.log(30, f"ThreadedTCPRequestHandler Line {sys.exc_info()[2].tb_lineno} has error={e}")
@@ -32338,7 +33833,10 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 
 				if wrongIP < 2:
 					if indigo.activePlugin.decideMyLog("Socket"):
-						indigo.activePlugin.indiLOG.log(10, f" sending ok to {piName.ljust(13)} data: {dataJIn[0:50]}..{dataJIn[:-20]}" )
+						# [-20:] = the LAST 20 chars. [:-20] was everything EXCEPT the last 20, so this
+						# debug line printed the entire payload - 100 kB of log for one BLEanalysis
+						# message. Line ~33746 already does it correctly with [-10:].
+						indigo.activePlugin.indiLOG.log(10, f" sending ok to {piName.ljust(13)} data: {dataJIn[0:50]}..{dataJIn[-20:]}" )
 					self.sendResponse(f"ok-{len0}-{lenData}")
 
 		except Exception as e:

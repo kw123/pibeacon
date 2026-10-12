@@ -1,3 +1,5 @@
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import subprocess, json
 import io
 import sys
@@ -27,7 +29,6 @@ raspiConfigCommand = {
 		'BOOT_CLI_autologin':'sudo raspi-config nonint do_boot_behaviour B2', # cli auto login
 		'BOOT_GUI_login':'sudo raspi-config nonint do_boot_behaviour B3',
 		'BOOT_GUI_autologin':'sudo raspi-config nonint do_boot_behaviour B4',
-		'BOOT_WAIT':'sudo raspi-config nonint do_boot_wait %d', # number
 		'SPLASH':'sudo raspi-config nonint do_boot_splash %d',
 		'OVERSCAN':'sudo raspi-config nonint do_overscan %d',
 		'CAMERA':'sudo raspi-config nonint do_camera %d',
@@ -39,13 +40,37 @@ raspiConfigCommand = {
 		'SERIAL_CONSOLE':'sudo raspi-config nonint do_serial_cons %d',  # 0/1; 0= enable
 		'SERIAL_HARDWARE':'sudo raspi-config nonint do_serial_hw %d',  # 0/1; 0= enable
 		'1WIRE':'sudo raspi-config nonint do_onewire %d',
-		'RGPIO':'sudo raspi-config nonint do_rgpio %d',
 		'OVERCLOCK':'sudo raspi-config nonint do_overclock %s',
-		'GPU_MEM':'sudo raspi-config nonint do_memory_split %d',
 		'HDMI_GP_MOD':'sudo raspi-config nonint do_resolution %d %d',
-		'WIFI_COUNTRY':'sudo raspi-config nonint do_wifi_country %s '
+		'WIFI_COUNTRY':'sudo raspi-config nonint do_wifi_country %s ',
+		# THE REST OF WHAT raspi-config CAN SET, one per GET below so the two halves match. Checked
+		# against a 2026 raspi-config; do_boot_wait, do_rgpio and do_memory_split were in here and
+		# are NOT in it any more, so they have gone.
+		# SUDO_PASS IS THE ODD ONE AND THE IMPORTANT ONE. Its argument is inverted from do_ssh and
+		# friends, where 0 enables: the thing being enabled here is the PASSWORD.
+		#     do_sudo_pass 0   admin password REQUIRED   - removes the nopasswd files
+		#     do_sudo_pass 1   admin password DISABLED   - writes /etc/sudoers.d/010_$USER-nopasswd
+		# It builds that filename from $USER, so anything calling it as root must pass the real
+		# user through: "sudo env USER=pi raspi-config nonint do_sudo_pass 1". Without that, root
+		# gets a file it does not need and the pi user is still asked. master.py and the expect
+		# scripts both do this - see enableSudoNoPassword() and initSSH.exp
+		'SUDO_PASS':'sudo raspi-config nonint do_sudo_pass %d',		# 1 = NO password wanted
+		'RPI_CONNECT':'sudo raspi-config nonint do_rpi_connect %d',	# 0/1; 0= enable
+		'LEDS':'sudo raspi-config nonint do_leds %d',
+		'FAN':'sudo raspi-config nonint do_fan %d',
+		'BLANKING_SCREEN':'sudo raspi-config nonint do_blanking %d',
+		'PCI':'sudo raspi-config nonint do_pci %d',
+		'PI4VIDEO':'sudo raspi-config nonint do_pi4video %d',
+		'COMPOSITE_VIDEO':'sudo raspi-config nonint do_composite %d',
+		'OVERSCAN_KMS_SCREEN':'sudo raspi-config nonint do_overscan_kms %d'
 		},
 	"GET": { # used
+		# WHETHER sudo NEEDS A PASSWORD, and it reads the POLICY rather than asking sudo whether it
+		# would prompt right now - sudo remembers a successful password for about 15 minutes, so
+		# the obvious test reports "no password needed" when the rule is not there at all.
+		# raspi-config's own implementation greps "sudo -l -U $USER" for the rule, which is why it
+		# is right. 1 = no password needed, which is the state every pi program depends on
+		'SUDO_PASS':{'cmd':'sudo raspi-config nonint get_sudo_pass','results':{'1':'no password needed','0':'password required','default':'unknown'}},
 		'CAN_EXPAND':{'cmd':'sudo raspi-config nonint get_can_expand','results':{'0':'enabled','1':'disabled','default':'unknown'}},
 		'CAN_CONFIGURE':{'cmd':'sudo raspi-config nonint can_configure','results':{'0':'enabled','default':'unknown'}},
 		'HOSTNAME':{'cmd':'sudo raspi-config nonint get_hostname','results':{'default':'name'}},
@@ -62,7 +87,6 @@ raspiConfigCommand = {
 		'SERIAL_HARDWARE':{'cmd':'sudo raspi-config nonint get_serial_hw','results':{'0':'enabled','1':'disabled','default':'unknown'}},
 		'SERIAL_CONSOLE_OLD':{'cmd':'sudo raspi-config nonint get_serial','results':{'0':'enabled','1':'disabled','default':'unknown'}}, # for old systems
 		'1WIRE':{'cmd':'sudo raspi-config nonint get_onewire','results':{'0':'enabled','1':'disabled','default':'unknown'}},
-		'RGPIO':{'cmd':'sudo raspi-config nonint get_rgpio','results':{'0':'enabled','1':'disabled','default':'unknown'}},
 		'RPI_CONNECT':{'cmd':'sudo raspi-config nonint get_rpi_connect','results':{'0':'enabled','1':'disabled','default':'unknown'}},
 		'PI_TYPE':{'cmd':'sudo raspi-config nonint get_pi_type','results':{'0':'pi_0','1':'pi_1','2':'pi_2','3':'pi_3','4':'pi_4','5':'pi_5','6':'pi_6','7':'pi_7','8':'pi_8','default':'unknown'}},
 		'OVERCLOCK':{'cmd':'sudo raspi-config nonint get_config_var arm_freq /boot/config.txt','results':{'0':'enabled','1':'disabled','default':'unknown'}},
@@ -78,7 +102,6 @@ raspiConfigCommand = {
 		'PI4VIDEO':{'cmd':'sudo raspi-config nonint get_pi4video','results':{'0':'enabled','1':'disabled','default':'unknown'}},
 		'COMPOSITE_VIDEO':{'cmd':'sudo raspi-config nonint get_composite','results':{'0':'enabled','1':'disabled','default':'unknown'}},
 		'BLANKING_SCREEN':{'cmd':'sudo raspi-config nonint get_blanking','results':{'0':'enabled','1':'disabled','default':'unknown'}},
-		'BOOT_WAIT':{'cmd':'sudo raspi-config nonint get_boot_wait','results':{'0':'enabled','1':'disabled','default':'unknown'}},
 		'LEDS':{'cmd':'sudo raspi-config nonint get_leds','results':{'0':'enabled','-1':'notConfigurable','1':'on','default':'unknown'}},
 		'FAN':{'cmd':'sudo raspi-config nonint get_fan','results':{'0':'enabled','1':'on','default':'unknown'}},
 		'FAN_GPIO':{'cmd':'sudo raspi-config nonint get_fan_gpio','results':{'default':'gpioNumber'}},

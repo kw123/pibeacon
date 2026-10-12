@@ -10,6 +10,7 @@
 import	sys, os, subprocess, math, copy
 import	glob, shutil, stat
 import	time, datetime, json
+import	errno
 import	logging
 
 # PLACEHOLDER logger, replaced by setLogging() with the configured one.
@@ -106,7 +107,123 @@ def fixLogPermissions(fnames, owner="pi"):
 
 
 #################################
-def setLogging():
+def versionLine(pgm="", version=None, withShared=False):
+	"""Builds the one-line version report: this program's version plus the SHARED modules it got.
+
+	The point is the shared modules. A program is only ever as current as piBeaconUtils,
+	hciRawSocket and gattAttClient on the same rpi, and a partial file send leaves a mix - which has
+	bitten this code three times, each time as behaviour nobody could explain for hours. One line at
+	startup makes it a grep instead.
+
+	version=None means "find it myself": the VERSION global of the module that CALLED here, so a
+	program needs no argument and cannot pass the wrong thing.
+
+	withShared=False leaves the shared modules out, which is what every program except master does:
+	all programs on one rpi load the SAME piBeaconUtils.py / hciRawSocket.py / gattAttClient.py, so
+	printing those versions in all 7 program lines repeats one fact 7 times. master prints them once
+	for the rpi; the others print their own version only, and sharedVersionMismatch() below catches
+	the one case where a process really can differ.
+
+	Inputs:
+	    pgm (str): program name; "" takes G.program
+	    version (str/float/None): the program's version; None reads the caller's VERSION global
+	    withShared (bool): include the shared-module versions
+	Outputs:
+	    str: eg 'display.py v1.0' or, with withShared, 'master.py v1.0  [utils 1.0, hciRawSocket 1.1]'
+	"""
+	try:
+		if version is None:
+			try:	version = sys._getframe(1).f_globals.get("VERSION", "?")
+			except Exception:	version = "?"
+		if "{}".format(pgm).strip() == "":
+			pgm = "{}".format(getattr(G, "program", "") or "?")
+		if not withShared:
+			return "{} v{}".format(pgm, version)
+		return "{} v{}  [{}]".format(pgm, version, ", ".join(sharedVersions()))
+	except Exception:
+		return "{} v{}".format(pgm, version)
+
+
+def sharedVersions():
+	"""The versions of the SHARED modules this process has loaded, as ['utils 1.0', 'hciRawSocket 1.1', ...].
+
+	Inputs:
+	    None.
+	Outputs:
+	    list: one 'name version' string per shared module currently imported
+	"""
+	out = ["utils {}".format(VERSION)]
+	for modName in ["hciRawSocket", "gattAttClient"]:
+		mod = sys.modules.get(modName)
+		if mod is not None:
+			out.append("{} {}".format(modName, getattr(mod, "VERSION", "?")))
+	return out
+
+
+def publishSharedVersions():
+	"""master writes the shared-module versions it loaded to temp/moduleVersions, for the others to compare against.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: writes the file, failures ignored
+	"""
+	try:
+		writeFile("temp/moduleVersions", json.dumps({"shared": sharedVersions()}))
+	except Exception:
+		pass
+
+
+def sharedVersionMismatch():
+	"""Returns a complaint when THIS process's shared modules differ from what master recorded, else "".
+
+	This is the one case where per-process reporting earns its keep: all programs read the same files
+	from /home/pi/pibeacon, so the versions cannot differ because of the files - but a process that
+	started BEFORE an upgrade keeps the OLD module in memory until it is restarted. Then master (just
+	restarted) has the new one and a long-running sensor program does not, and nothing says so.
+	Compared against master's own list rather than against a constant, so it needs no maintenance.
+
+	Inputs:
+	    None.
+	Outputs:
+	    str: the complaint, or "" when they agree or master has not written the file yet
+	"""
+	try:
+		rr, raw = readJson("{}temp/moduleVersions".format(G.homeDir))
+		want = rr.get("shared", []) if isinstance(rr, dict) else []
+		if len(want) == 0:	return ""				# master has not published yet - nothing to compare
+		mine = sharedVersions()
+		# compare only the modules BOTH have loaded: a sensor program that never imports
+		# gattAttClient is not stale, it simply does not need it
+		wantD = dict(x.rsplit(" ", 1) for x in want if " " in x)
+		mineD = dict(x.rsplit(" ", 1) for x in mine if " " in x)
+		diff  = ["{}: mine {} vs master {}".format(k, mineD[k], wantD[k]) for k in mineD if k in wantD and mineD[k] != wantD[k]]
+		if len(diff) == 0:	return ""
+		return "SHARED MODULE MISMATCH - this process started before an upgrade and still runs the old module(s): {} -> restart it".format("; ".join(diff))
+	except Exception:
+		return ""
+
+
+def logVersion(version=None, pgm="", level=20):
+	"""Logs versionLine() - called automatically by setLogging(), so no program needs to call it.
+
+	Inputs:
+	    version (str/float/None): None reads the caller's VERSION global
+	    pgm (str): program name; "" takes G.program
+	    level (int): log level
+	Outputs:
+	    None: writes one line to the log
+	"""
+	try:
+		if version is None:
+			try:	version = sys._getframe(1).f_globals.get("VERSION", "?")
+			except Exception:	version = "?"
+		logger.log(level, "version: {}".format(versionLine(pgm=pgm, version=version)))
+	except Exception:
+		pass
+
+
+def setLogging(doLog=True):
 	"""Configures the module-wide logging system, setting up a main log file, a permanent critical-only log handler, and a console stream handler, then applies log levels and marks the logger as initialized.
 
 	Inputs:
@@ -162,6 +279,49 @@ def setLogging():
 	fixLogPermissions(["{}pibeacon".format(G.logDir), "{}permanent.log".format(G.homeDir), G.restartLogfileName])
 
 	G.loggerSet = True
+
+	# EVERY program reports its version here, automatically. 81 programs already call setLogging()
+	# as their first act, so hooking it here gets them all without editing 81 call sites - and more
+	# importantly a program CANNOT forget to do it, which a per-program call eventually would.
+	# The version comes from the CALLER's VERSION global (sys._getframe), so nothing is passed in
+	# and nothing can be passed wrongly.
+	# ONCE PER PROCESS, and that needs its own flag: setLogging() has no entry guard and MOST
+	# programs call it two or three times (module level plus a main/restart path - display.py,
+	# INPUTpulse.py and ~20 others call it three times), so without this the line would appear two
+	# or three times at every program start. G.loggerSet cannot serve: it is set at the END of this
+	# function and nothing reads it here, which is exactly why the repeat calls go unnoticed.
+	global _versionLogged
+	try:
+		if not _versionLogged:
+			_versionLogged = True
+			ver     = "?"
+			pgmName = ""
+			try:
+				_cg = sys._getframe(1).f_globals
+				ver = _cg.get("VERSION", "?")
+				# G.program is the name we normally print, but several programs call setLogging()
+				# BEFORE assigning it, and the line then read "version: undefined v1.0" - naming no
+				# program at all, which is the one job the line has. The calling MODULE's filename
+				# is always right and needs no cooperation from the program, so use it as the
+				# fallback. "" keeps G.program as the source whenever it IS set.
+				if "{}".format(getattr(G, "program", "")).strip().lower() in ["", "undefined", "none"]:
+					pgmName = os.path.basename("{}".format(_cg.get("__file__", "")))
+			except Exception:	pass
+			# ONLY MASTER lists the shared modules: they are a property of the rpi, not of the
+			# process - all programs load the same files - so 7 programs printing "utils 1.0" says
+			# one thing 7 times. master publishes them for the rpi; the others print their own
+			# version and, if their in-memory modules really differ from master's, say so.
+			# exact name, not a substring: master.py sets G.program = "master", and a substring
+			# test would hand the shared-module list to any future program with "master" in its name
+			isMaster = "{}".format(getattr(G, "program", "")).strip().lower() in ["master", "master.py"] or pgmName.lower() in ["master", "master.py"]
+			if doLog: logger.log(20, "version: {}".format(versionLine(pgm=pgmName, version=ver, withShared=isMaster)))
+			if isMaster:
+				publishSharedVersions()
+			else:
+				mism = sharedVersionMismatch()
+				if mism != "": logger.log(20, mism)
+	except Exception:
+		pass
 
 #################################
 def setLogLevel():
@@ -256,6 +416,52 @@ def copyFile(src, dst, verbose=False):
 
 
 #################################
+def copyParamsToTemp(timeLastFile):
+	"""ONE PASS of the parameter-file mirror into temp/ - the body of what copyToTemp.py used to
+	loop over on its own, now shared so master can run it as a thread instead of a process.
+
+	WHAT IT IS FOR: the pi programs read their parameters out of temp/, which is a tmpfs, and the
+	plugin writes the real files into the pibeacon dir. Something has to carry them across, and it
+	has to be cheap enough to poll - so the trigger is the MTIME OF temp/touchFile, which whoever
+	changed a parameter file touches. Three ways a copy is due:
+	    1  touchFile exists and its mtime has moved since the last copy
+	    2  touchFile is gone but temp/ is there - a fresh tmpfs, so copy and re-touch
+	    3  temp/parameters is missing, whatever the mtimes say - that one is not optional
+	LEFT TO THE CALLER: the sleeping. This returns as soon as it has decided, so a thread can
+	throttle itself and a standalone loop can do the same, without the policy being buried here.
+
+	Inputs:
+	    timeLastFile (float): the touchFile mtime as of the last copy, or 0 at startup
+	Outputs:
+	    tuple: (timeLastFile, didCopy) - the new mtime to carry forward, and whether it copied
+	"""
+	try:
+		touch  = G.homeDir + "temp/touchFile"
+		doCopy = 0
+		if os.path.isfile(touch):
+			if timeLastFile != os.path.getmtime(touch):		doCopy = 1
+		elif os.path.isdir(G.homeDir + "temp"):
+			doCopy = 2
+			touchFile(touch)
+		if not os.path.isfile(G.homeDir + "temp/parameters"):	doCopy = 3
+		if doCopy == 0:	return timeLastFile, False
+
+		logger.log(10, "copying parameter files to temp, reason:{}, files:{}".format(doCopy, G.parameterFileList))
+		for fileName in G.parameterFileList:
+			if os.path.isfile(G.homeDir + fileName):
+				copyFile(G.homeDir + fileName, G.homeDir + "temp/" + fileName)
+		try:	timeLastFile = os.path.getmtime(touch)
+		except Exception:	timeLastFile = -10
+		# WRITTEN BY ROOT, READ BY pi. master runs as root and so did copyToTemp.py, so a plain
+		# copy lands root-owned and no pi-user program can read or replace it afterwards. This is
+		# the python form of the "chmod a+w -R / chown -R pi:pi" the old loop shelled out for
+		makeAccessible(G.homeDir + "temp", recursive=True, owner="pi")
+		return timeLastFile, True
+	except Exception:
+		logger.log(20, "", exc_info=True)
+		return timeLastFile, False
+
+
 def makeDir(dname):
 	"""mkdir -p: existing directory is not an error.
 
@@ -888,6 +1094,41 @@ def pgmStillRunning(pgmToTest, notPresent ="", verbose=False, param="") :
 
 #################################
 _pigpiodState = [0., False]		# [time of the last probe, verdict]
+
+def pigpiodStartCmd(sudoPath="sudo", pigpiodPath="pigpiod"):
+	"""Returns the pigpiod start command with the gpio sample rate this rPi is configured for.
+
+	pigpiod samples every gpio on a fixed timer whether or not anything is listening, so it costs
+	the same idle as busy - measured at a constant 11% of a core on an rPi with no gpio device in
+	use at all. The sample rate IS that timer, so it is the only lever, and it is now a per-rPi
+	setting in the device edit dialog ("pigpiod gpio sample rate", 10 us or pigpio's own 5 us).
+
+	Read straight from the parameters file rather than from a global: master calls startPigpiod
+	BEFORE readNewParams on purpose (every program picks its gpio backend at import and pigpiod has
+	to exist by then), so at that moment no parameters are loaded yet. The file is already on disk
+	from the previous run, which is exactly what is wanted - the rate only changes when the user
+	changes it, and the next master start picks it up.
+
+	Only 1, 2, 4, 5, 8 and 10 are legal; pigpiod refuses to start on anything else, which would
+	take every gpio device on the rPi down with it. Anything unexpected therefore falls back to 10.
+
+	Inputs:
+	    sudoPath (str): how to call sudo - some callers use the absolute path
+	    pigpiodPath (str): how to call pigpiod - likewise
+	Outputs:
+	    str: the full shell command, eg "sudo pigpiod -s 10 &"
+	"""
+	rate = "10"
+	try:
+		f = open(G.homeDir+"parameters","r")
+		try:	inp = json.loads(f.read())
+		finally:f.close()
+		rr = "{}".format(inp.get("pigpiodSampleRate","10"))
+		if rr in ["1","2","4","5","8","10"]: rate = rr
+	except Exception:
+		pass
+	return "{} {} -s {} &".format(sudoPath, pigpiodPath, rate)
+
 
 def pigpiodRunning(recheckSecs=30., force=False):
 	"""Is pigpiod up? Asked ONCE for a positive answer, and rarely for a negative one.
@@ -1662,9 +1903,14 @@ def getGlobalParams(inp):
 		except: pass
 
 
-		if "compressRPItoPlugin"	in inp:	 
-			try:	G.compressRPItoPlugin =	int(inp["compressRPItoPlugin"])
-			except: G.compressRPItoPlugin = 20000
+		# compressRPItoPlugin is HARDWIRED in piBeaconGlobals (1000) and the value the plugin pushes
+		# is deliberately IGNORED. The plugin pref defaulted to 20000, which meant that in practice
+		# nothing was ever compressed: measured, compressing costs 0.01-0.02 ms for normal traffic and
+		# 2 ms for a 279 kB BLEanalysis payload, while every byte left on the wire costs 0.05 ms of the
+		# ack wait - a 279 kB message took 10.2 s uncompressed against 2.25 s compressed. Worse, an
+		# uncompressed alive message over 9999 bytes overflows the 30 byte frame header (the length
+		# field runs out of digits), the tag "+comp" is truncated to "+com" by the receiver, and the
+		# message is dropped after all 5 retries. A 60-tag beacon payload is already 9615 bytes.
 
 		if "wifiEth"				in inp:
 			xxx = inp["wifiEth"]
@@ -2157,7 +2403,19 @@ def getIPNumber(doPrint=True):
 		f.close()
 		if isValidIP(ipAddressRead):
 			if G.ipAddress != ipAddressRead:
-				if doPrint: logger.log(20, "cBY:{:<20} found new IP number:{}, old:{}".format(G.program, ipAddressRead, G.ipAddress))
+				# THE FIRST READ IN A PROCESS IS NOT A CHANGE, and it used to be logged as one.
+				# G.ipAddress is a module global and every pi program is its OWN process, so it
+				# starts empty and the first call always reported "found new IP number:1.2.3.4,
+				# old:" with nothing after "old". Dozens of programs call this at startup, so that
+				# was the normal case on every restart - and a real address change, which is the
+				# one thing worth seeing here, looked exactly the same and was lost among them.
+				# The old number was never "not found": there was nothing to find yet.
+				if G.ipAddress == "":
+					# at 10, so it is there when debugging and silent otherwise - setLogging puts
+					# the logger at INFO unless debug is on
+					if doPrint: logger.log(10, "cBY:{:<20} IP number is {}".format(G.program, ipAddressRead))
+				elif doPrint:
+					logger.log(20, "cBY:{:<20} IP number CHANGED: {} -> {}".format(G.program, G.ipAddress, ipAddressRead))
 			G.ipAddress = ipAddressRead
 			return 0
 	except Exception as e:
@@ -2306,6 +2564,21 @@ def getIPCONFIG():
 			retwifiID = (subprocess.Popen("/sbin/iwgetid " ,shell=True,stdout=subprocess.PIPE,stderr=subprocess.PIPE).communicate()[0].decode('utf-8')).strip("\n").strip()
 			if retwifiID.find(":") >-1:
 				G.wifiID = retwifiID.split(":")[1]
+			else:
+				# a fallback, not a replacement: iwgetid is wireless-tools, which is present on this
+				# fleet today but is no longer part of a default install. Note that an EMPTY answer
+				# usually just means wifi is not associated (an rpi on ethernet), and then iw says
+				# "Not connected." and this leaves G.wifiID alone, which is correct.
+				# Parsed on the "SSID:" LINE only: the whole output also has "Connected to xx:xx:.."
+				# in it, so a find(":") over everything would pick up the bssid instead
+				try:
+					retIw = (subprocess.Popen("/sbin/iw dev wlan0 link", shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()[0].decode("utf_8", "replace"))
+					for line in retIw.split("\n"):
+						if line.strip().startswith("SSID:"):
+							G.wifiID = line.split("SSID:", 1)[1].strip()
+							break
+				except Exception:
+					pass
 			for ii in range(ind):
 				ddd = dev[ii]
 				if ddd == "eth0":
@@ -3881,18 +4154,32 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 				if role == "scan":
 					order = scanOrder
 				else:
-					order = intern + extGood + extBad + extBoth + extCap
-					if scanOrder and len(order) > 1:
-						sp    = scanOrder[0]
-						order = [hh for hh in order if hh != sp] + [sp]
-					# extAdv/BLE5 radios are RESERVED for the extended-listener; the scanOrder
-					# swap above must never promote one ahead of a usable non-extAdv radio for
-					# connect (with the scanner excluded, scanOrder[0] is the internal, which the
-					# swap parks at the back - shoving connect onto the BLE5 dongle whose connect
-					# cmds then knock the ext-listener into legacy mode).  Keep extCap last always.
-					_extAll = extCap + extBoth
-					if _extAll and len(order) > len(_extAll):
-						order = [hh for hh in order if hh not in _extAll] + [hh for hh in _extAll]
+					# CONNECT ORDER, from what these radios were MEASURED to do:
+					#   internal > good external > BLE5+BLE4 external (only while a BLE5-ONLY radio
+					#   exists to take the listener role) > SHARE the scan radio > clone > BLE5-only
+					# A CLONE (ACL MTU ~310) now sits BELOW sharing the scan radio. It used to sit
+					# above it, and an rpi ran for weeks with its connect role on one: every
+					# switchbot command died on a 40s create-connection timeout while the scan radio
+					# beside it connected the same device in 0.4s. Sharing costs some scan time; a
+					# radio that cannot originate links costs the entire job.
+					# A BLE5+BLE4 radio (ASUS-class) connects perfectly well, so it only needs to be
+					# held free when it is the ONLY radio that could do extended listening. When a
+					# BLE5-ONLY dongle is present that one does the listening - it can do nothing
+					# else - and the dual-mode radio is the best connect radio on the rpi.
+					# A BLE5-ONLY radio stays last always: it cannot even scan BLE4.
+					sp    = scanOrder[0] if scanOrder else ""
+					_mid  = extBoth if extCap else []
+					_late = [] if extCap else extBoth
+					pref  = [hh for hh in (intern + extGood + _mid) if hh != sp]
+					rest  = [hh for hh in (extBad + _late + extCap) if hh != sp]
+					order = pref + ([sp] if sp != "" else []) + rest
+					_seen = {}
+					_ord  = []
+					for hh in order:
+						if hh in _seen:	continue
+						_seen[hh] = 1
+						_ord.append(hh)
+					order = _ord
 				if order:
 					hh = order[0]
 					logger.log(20, "cBY:{:<20} auto-select role:{} -> {} (bus:{}, aclMTU:{}, BLE5:{}, BLE4scan:{})".format(G.program, role, hh, HCIs[hh]["bus"], HCIs[hh].get("aclMTU",0), HCIs[hh].get("extAdv",False), HCIs[hh].get("ble4",True)))
@@ -3938,8 +4225,8 @@ def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHC
 	# a 2-radio rpi) nor the role. Both exclusions and the role go into the message now, plus the
 	# branch that gave up, so the next occurrence does not need guessing.
 	nLeft = len([hh for hh in HCIs if hh not in (doNotUseHCI, doNotUseHCI2)])
-	# underscores on purpose: spaces are squeezed out of the ERROR text on its way into the
-	# indigo log ("noadapterleftaftertheexclusions" is unreadable)
+	# underscores are historical: squeeze used to strip the spaces out of the ERROR text on its
+	# way into the indigo log ("noadapterleftaftertheexclusions"). squeeze defaults to False now.
 	why   = "no_adapter_left_after_the_exclusions" if nLeft == 0 else "no_selection_branch_matched_(useDev/defaultBus)"
 	if quiet:
 		# OPTIONAL pick - the caller has a working fallback (see the quiet arg). Raising an
@@ -3992,7 +4279,37 @@ def leExtAdvSupported(devId):
 
 
 #################################
-def ble4ScanSupported(devId):
+_ble4Cap     = {}                   # mac -> bool, filled by ble4ScanSupported
+_ble4CapFile = "ble4ScanCap.json"   # ... and remembered here, keyed by mac
+
+
+def _ble4CapLoad():
+	"""the remembered BLE4-capability verdicts, keyed by BLE mac."""
+	global _ble4Cap
+	if _ble4Cap:	return _ble4Cap
+	try:
+		f = open(G.homeDir + _ble4CapFile)
+		_ble4Cap = json.load(f)
+		f.close()
+	except Exception:
+		_ble4Cap = {}
+	return _ble4Cap
+
+
+def _ble4CapSave(mac, ok):
+	"""remember one verdict so the probe never runs on this radio again."""
+	try:
+		_ble4CapLoad()[mac] = bool(ok)
+		f = open(G.homeDir + _ble4CapFile, "w")
+		f.write(json.dumps(_ble4Cap, indent=1, sort_keys=True))
+		f.close()
+		try:	os.chmod(G.homeDir + _ble4CapFile, 0o666)
+		except Exception:	pass
+	except Exception:
+		pass
+
+
+def ble4ScanSupported(devId, mac=""):
 	"""True when the adapter accepts BLE4 (legacy) scan commands.
 
 	This is the ONE thing that separates a BLE5 dongle that can carry the whole receive job from
@@ -4007,6 +4324,28 @@ def ble4ScanSupported(devId):
 	Outputs:
 	    bool: True when BLE4 scanning is possible on this adapter
 	"""
+	# PROBED ONCE PER RADIO, EVER - the verdict is remembered by mac in ble4ScanCap.json.
+	# THIS PROBE IS DESTRUCTIVE TO AN EXTENDED SCAN. LE Set Scan Parameters puts the controller
+	# back into the LEGACY command family, and the two are mutually exclusive until an HCI reset
+	# - so an extended scan on that radio keeps answering status 0 and delivers NOTHING from
+	# then on. Measured on rpi#2: the extended listener on hci0 logged "0 extended report(s)/min
+	# from 0 mac(s)" for as long as it ran, while a raw probe on the same radio read 457 reports
+	# in 12 s. With both radios RESET first, hci0 delivered 161 extended reports including 14
+	# Ruuvi E1 while hci1 delivered 842 legacy ones AT THE SAME TIME - the two modes coexist
+	# perfectly and this probe was the only thing breaking them. BLE4 scan support is a fixed
+	# property of the firmware, so asking twice is pointless anyway: "cheap enough for every
+	# startup" above was true of the round trip and wrong about the side effect.
+	if mac != "" and mac in _ble4CapLoad():
+		return _ble4Cap[mac]
+	# SAY WHO IS PROBING. The cache made the repeats stop in beaconloop and 0x200B kept
+	# arriving on the extended radio anyway, so the remaining caller has to name itself -
+	# the log prefix carries the program. Guessing at this cost a whole evening.
+	try:
+		logger.log(20, "ble4ScanSupported: PROBING hci{} (mac {}) with the LEGACY scan-params"
+			" command - this breaks an extended scan on that radio until it is reset".format(
+			devId, mac or "?"))
+	except Exception:
+		pass
 	sock = None
 	try:
 		import hciRawSocket as _hrs
@@ -4025,7 +4364,9 @@ def ble4ScanSupported(devId):
 			ev = bytearray(sock.recv(255))
 			if len(ev) >= 7 and ev[1] == 0x0E and (ev[4] | (ev[5] << 8)) == 0x200B:
 				sock.close()
-				return ev[6] == 0							# 0x0C = Command Disallowed = extended-only
+				_ok = (ev[6] == 0)
+				if mac != "":	_ble4CapSave(mac, _ok)
+				return _ok							# 0x0C = Command Disallowed = extended-only
 	except Exception:
 		pass
 	try:
@@ -4064,6 +4405,140 @@ def usbIdOfHCI(hciName):
 
 
 #################################
+# the stdlib adapter controls, when this python can do them. py2 and any build without
+# AF_BLUETOOTH keep /bin/hciconfig - same two-engine shape as the gatt code
+_versionLogged = False	# setLogging() logs the version line once per process - see the note there
+
+VERSION = "1.3"			# piBeaconUtils itself - every rpi program logs this next to its own version,
+						# so a partial file send shows up as a version mismatch in the log instead of
+						# as mysterious behaviour hours later
+
+HCIRAW_MINVERSION = 1.1					# the adapter ioctls; 1.0 was the scan-socket subset only
+try:
+	import hciRawSocket as _hciRaw
+	# the IMPORT is not enough: a partial file send can leave a 1.0 copy on the rpi, which has no
+	# hci_dev_up/hci_connections at all. Checked by VERSION *and* by attribute, because a version
+	# number only helps when the file that carries it is the one that got sent
+	hciRawPresent = (getattr(_hciRaw, "VERSION", 0.) >= HCIRAW_MINVERSION) and hasattr(_hciRaw, "hci_dev_up") and hasattr(_hciRaw, "hci_connections")
+	if not hciRawPresent:
+		hciRawStale = "hciRawSocket.py on this rpi is v{} but v{} is needed for the adapter ioctls - STALE FILE (partial send?): send ALL pgm files to this rpi. Falling back to hciconfig/hcitool".format(getattr(_hciRaw, "VERSION", 0.), HCIRAW_MINVERSION)
+	else:
+		hciRawStale = ""
+except Exception:
+	hciRawPresent = False
+	hciRawStale   = ""					# not importable at all (py2 / no AF_BLUETOOTH) - expected, not an error
+
+
+def hciDevCtl(hci, what):
+	"""Brings an HCI adapter up, down or resets it - by ioctl where possible, else /bin/hciconfig.
+
+	WHY NOT hciconfig: it is deprecated upstream and already missing from some BlueZ builds, and on
+	an image without it BLE recovery used to fail silently - every caller threw the output of the
+	shell command away, so a failed reset looked exactly like a successful one. The ioctl answers
+	with an errno instead, which is the difference between "already up, fine" (EALREADY) and "this
+	dongle is gone" (ENODEV) on the one path that runs when BLE is already wedged.
+	This is NOT a cpu saving: these calls happen on recovery, a handful of times an hour at worst.
+
+	Inputs:
+	    hci (str): adapter, eg "hci0"
+	    what (str): "up", "down" or "reset"
+	Outputs:
+	    bool: True when the adapter is in the wanted state
+	"""
+	global hciRawStale
+	try:
+		if what not in ["up", "down", "reset"]:
+			logger.log(20, "hciDevCtl: unknown action:{}".format(what))
+			return False
+		if hciRawStale != "":
+			logger.log(20, hciRawStale)
+			hciRawStale = ""			# once is enough - the fallback keeps working
+
+		if hciRawPresent:
+			if	 what == "up":		ok, err = _hciRaw.hci_dev_up(hci)
+			elif what == "down":	ok, err = _hciRaw.hci_dev_down(hci)
+			else:					ok, err = _hciRaw.hci_dev_reset(hci)
+			if ok: return True
+			# ENETDOWN on a reset means the adapter is down: bring it up, that IS the intent
+			if what == "reset" and err == errno.ENETDOWN:
+				okUp, errUp = _hciRaw.hci_dev_up(hci)
+				if okUp:
+					logger.log(20, "hciDevCtl: {} was down, brought it up instead of resetting it".format(hci))
+					return True
+				err = errUp
+			logger.log(20, "hciDevCtl: {} {} failed, errno:{} ({}) - falling back to hciconfig".format(hci, what, err, os.strerror(err) if err and err > 0 else "?"))
+
+		cmd = "sudo /bin/hciconfig {} {}".format(hci, what)
+		ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		errTxt = ret[1].decode("utf_8", "replace").strip() if ret[1] is not None else ""
+		if errTxt != "":
+			logger.log(20, "hciDevCtl: {} returned:{}".format(cmd, errTxt))
+			return False
+		return True
+	except Exception:
+		logger.log(20,"", exc_info=True)
+	return False
+
+
+def hciConnections(hci):
+	"""The adapter's current links as a one-line string, for the ENOSYS diagnostics - "hcitool con"
+	without the process.
+
+	Both callers want a log line, nothing more: when a create-connection fails with ENOSYS the
+	question is whether a stale pending link squats the single initiator slot, and that is the one
+	thing the blind retry ladder cannot tell. By ioctl where this python can, else hcitool.
+
+	Inputs:
+	    hci (str): adapter, eg "hci0"
+	Outputs:
+	    str: the links on one line, or "" when there are none
+	"""
+	try:
+		if hciRawPresent:
+			conns = _hciRaw.hci_connections(hci)
+			if len(conns) == 0: return "no links"
+			return "; ".join("{} {} handle:{} state:{} {}".format(cc["type"], cc["mac"], cc["handle"], cc["state"], "out" if cc["out"] else "in") for cc in conns)
+		ret = subprocess.Popen("sudo hcitool -i {} con".format(hci), shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+		return "{}".format(ret[0].decode("utf_8", "replace")).replace("\n", "; ").strip()
+	except Exception:
+		logger.log(20,"", exc_info=True)
+	return ""
+
+
+def ifUpDown(iface, what):
+	"""Brings a network interface up or down - "ip link set" first, /sbin/ifconfig as the fallback.
+
+	ip FIRST because iproute2 is essential and always present, while net-tools is no longer part of
+	a default Debian install and may not survive a future image. It IS present on this fleet today -
+	checked on an rpi: net-tools 2.10-1.3 and /sbin/ifconfig executable - so this is forward-looking,
+	not a fix for a current breakage.
+	No output is parsed, which is what makes the swap safe: both tools print NOTHING on success and
+	write to stderr on failure (measured on an rpi: "Cannot find device" vs "ERROR while getting
+	interface flags"), so the differing wording never has to be understood - only the emptiness of
+	stderr. Most of this file already picks ip for osVersion >= 8 and keeps ifconfig for older ones;
+	this is for the places that never got that treatment.
+
+	Inputs:
+	    iface (str): interface name, eg "wlan0"
+	    what (str): "up" or "down"
+	Outputs:
+	    bool: True when the command reported no error
+	"""
+	if what not in ["up", "down"]:
+		logger.log(20, "ifUpDown: unknown action:{}".format(what))
+		return False
+	for cmd in ["/usr/bin/sudo /sbin/ip link set {} {}".format(iface, what),
+				"/usr/bin/sudo /sbin/ifconfig {} {}".format(iface, what)]:
+		try:
+			ret = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			err = ret[1].decode("utf_8", "replace").strip() if ret[1] is not None else ""
+			if err == "":	return True
+			logger.log(20, "ifUpDown: {} -> {}".format(cmd, err))
+		except Exception:
+			logger.log(20,"", exc_info=True)
+	return False
+
+
 def whichHCI():
 	"""Runs hciconfig to enumerate Bluetooth HCI adapters, parsing each adapter's bus type, number, BD address, and up/down state into a nested dict, retrying once if the first call returns no output.
 
@@ -4121,7 +4596,7 @@ def whichHCI():
 				hci["hci"][hciNo]["extAdv"] = leExtAdvSupported(hci["hci"][hciNo]["numb"])
 				# BLE4 capability is only in question for a BLE5 radio - everything else scans BLE4
 				# by definition, and the probe costs a round trip we do not need to spend.
-				hci["hci"][hciNo]["ble4"]   = ble4ScanSupported(hci["hci"][hciNo]["numb"]) if hci["hci"][hciNo]["extAdv"] else True
+				hci["hci"][hciNo]["ble4"]   = ble4ScanSupported(hci["hci"][hciNo]["numb"], hci["hci"][hciNo].get("BLEmac","")) if hci["hci"][hciNo]["extAdv"] else True
 		hci["ret"] = ret
 		return hci
 	except Exception as e:
@@ -4208,7 +4683,7 @@ def hciUnblock():
 	return
 
 #################################
-def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=True, escape=False, forceCompress=False):
+def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=False, escape=False, forceCompress=False):
 
 	"""Queues a data payload to be sent to the Indigo plugin server, starting the background send thread if not already running; skips sending entirely when the network is unavailable or off.
 
@@ -4218,7 +4693,8 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Tr
 	    text (str): Optional text field added to the payload
 	    wait (bool): Whether the send should wait
 	    verbose (bool): Enable verbose logging of the send
-	    squeeze (bool): Whether to strip spaces from serialized data
+	    squeeze (bool): strip spaces from the serialized data. Default FALSE - json.dumps already
+	        leaves no structural whitespace, so it would only mangle string VALUES
 	    escape (bool): Whether to escape the data
 	    forceCompress (bool): Force zlib compression of the payload
 	Outputs:
@@ -4321,8 +4797,16 @@ def execSend():
 								while ii > 0: 
 									ii -= 1
 									dataC = json.dumps(data, separators=(',',':'))
-									if dataC.find("NaN") > 0: dataC = dataC.replace("NaN","-9999")
+									if dataC.find("NaN") > -1: dataC = dataC.replace("NaN","-9999")
 									lenStart = len(dataC)
+									# squeeze defaults to FALSE now. json.dumps(separators=(",",":")) already
+									# leaves no structural whitespace, so this can only ever strip spaces out
+									# of string VALUES - it mangled every piece of text that was sent. Every
+									# one of the 38 explicit squeeze= arguments in the code is False, and two
+									# places wrote underscores instead of spaces to work around the old
+									# default. It also broke a real check: the rpi reports a corrupt sd card
+									# as "... data may be corrupt ..." and the plugin looks for exactly that
+									# phrase, which arrived as "datamaybecorrupt" and never matched.
 									if squeeze: dataC = dataC.replace(" ","")
 									if  len(dataC) > G.compressRPItoPlugin or forceCompress: 
 										if sys.version_info[0] == 3: data0 = zlib.compress(bytes(dataC,'utf-8'))
@@ -4333,8 +4817,23 @@ def execSend():
 										compressedTag = "+NOTC"
 									lld = len(data0)
 									if verbose: logger.log(20, "cBY:{:<20}  socket send data lengths  in:{} --> :sq:{} --> cmp:{} ".format(G.program, lenStart, len(dataC), lld))
-									sendData = "{}x-6-a{}x-6-a{}".format(lld, name,compressedTag)
-									sendData = "{:<30}".format(sendData)
+									# FIXED 5-digit length in a 35 byte frame. It used to be the bare number in
+									# a 30 byte frame, so the header width depended on how many DIGITS the
+									# length happened to have - and "pi_IN_Alive" is 11 characters, leaving
+									# room for only 4. Any alive message over 9999 bytes on the wire built a
+									# 31 char header, the receiver's data0[:30] clipped "+comp" to "+com",
+									# compressed bytes were then fed to json.loads, and the message died with
+									# "error-Json" on all 5 retries. A 400-tag beacon payload already
+									# compresses to 9768 bytes, so this was close. The receiver accepts BOTH
+									# widths (it matches on the declared length), so old and new rpis can
+									# talk to the same plugin during a rolling update.
+									if lld > 99999:
+										logger.log(40, "cBY:{:<20} message NOT SENT: {} bytes on the wire exceeds the 5-digit"
+													" length field (max 99999). Raise G.compressRPItoPlugin coverage or split"
+													" the message".format(G.program, lld))
+										break
+									sendData = "{:05d}x-6-a{}x-6-a{}".format(lld, name, compressedTag)
+									sendData = "{:<35}".format(sendData)
 									if sys.version_info[0] == 3 and type(data0) == type(bytes("xx","utf-8")): 
 										if verbose: logger.log(20, "cBY:{:<20}  sendData type{}, data0 type:{} ".format(G.program, type(sendData), type(data0) ))
 										sendData = bytes(sendData,"utf8")
@@ -4349,7 +4848,12 @@ def execSend():
 										soc.settimeout(6.)
 										soc.connect((G.ipOfServer, G.indigoInputPORT))
 										soc.sendall(sendData)	# send() may transmit only PART of a large buffer -> server rejects, pointless retries
-										time.sleep(0.2+ min(10,lld/20000))
+										# NO sleep before the read. recv() already blocks until the
+										# plugin answers and settimeout() already bounds it, so the old
+										# "time.sleep(0.2 + min(10, lld/20000))" was pure dead time on
+										# every single message - 0.2 s at best and 10 s for a large
+										# BLEanalysis payload, which dwarfed both the transmit time
+										# (22 ms for 279 kB on 100 Mb) and the compression (2 ms).
 										soc.settimeout(3.+ min(10,lld/10000))
 										response = soc.recv(512).decode('utf-8')
 										#logger.log(20, "cBY:{:<20}  socket send  response{} ".format(G.program, response))

@@ -20,12 +20,33 @@
 HOMEDIR=/home/pi/pibeacon
 MODE="${1:-pibeacon}"
 
+# master.py is started as "python3 -E master.py" from INSIDE $HOMEDIR - a RELATIVE path, so its
+# command line does not contain /home/pi/pibeacon and "python.*${HOMEDIR}" never matched it. The
+# result was the worst kind of failure: stopAll printed "all piBeacon programs stopped" while
+# master.py was still running, restarted beaconloop/BLEconnect within seconds, and killed the
+# measurement tool's "sudo .." wrapper through its own killSudos - so qualifyDongle died silently
+# right after "resetting all adapters" with no traceback and no report. callbeacon.py is started
+# from /home/pi and is relative in the same way.
+# Two patterns, because no single one sees everything piBeacon starts:
+#   PYPAT - the python programs. master.py and callbeacon.py are the relative ones described above.
+#   SHPAT - the supervisors AND the shell helpers that live in $HOMEDIR (getRaspiConfig.sh and
+#           friends). Those are not python at all, so every python pattern is blind to them and
+#           they were left running by every previous version - visible as "bash
+#           /home/pi/pibeacon/getRaspiConfig.sh" surviving a "all piBeacon programs stopped".
+PYPAT="python.*(${HOMEDIR}|master\.py|callbeacon\.py)"
+SHPAT="(master\.sh|startmaster\.sh|${HOMEDIR}/[^ ]*\.sh)"
+
+# every piBeacon process, as "pid command-line". This script, its sudo wrapper and its shell all
+# carry "stopAll" in their own command line (SHPAT matches $HOMEDIR/stopAll.sh), so they are
+# filtered out by name; $$ / $PPID in pibPids below catch anything the name filter misses.
 listPiBeacon() {
-	# pgrep -af prints "pid full-command-line" and matches the same way the kills below do, so the
-	# status output cannot disagree with what actually gets killed
-	pgrep -af "python.*${HOMEDIR}" | grep -v stopAll
-	pgrep -af "master\.sh" | grep -v stopAll
-	pgrep -af "startmaster\.sh" | grep -v stopAll
+	{ pgrep -af "$PYPAT"; pgrep -af "$SHPAT"; } 2>/dev/null | grep -v stopAll | sort -un -k1,1
+}
+
+# the same set as PIDs only, de-duplicated. ONE source for the listing and for the kills, so the
+# "all piBeacon programs stopped" line can never again claim success while something is still up.
+pibPids() {
+	listPiBeacon | awk '{print $1}' | grep -vx -e "$$" -e "$PPID" | sort -un
 }
 
 if [ "$MODE" = "status" ]; then
@@ -61,14 +82,14 @@ if pgrep -f "${HOMEDIR}/display.py" > /dev/null; then
 	sleep 2
 fi
 
-# 3. piBeacon python programs: TERM first so they can close sockets and radios, KILL what is left
-pids=$(pgrep -f "python.*${HOMEDIR}" | tr '\n' ' ')
+# 3. piBeacon programs: TERM first so they can close sockets and radios, KILL what is left
+pids=$(pibPids | tr '\n' ' ')
 if [ -n "$pids" ]; then
 	echo "   TERM: $pids"
 	sudo kill -15 $pids 2>/dev/null
 	sleep 2
 fi
-pids=$(pgrep -f "python.*${HOMEDIR}" | tr '\n' ' ')
+pids=$(pibPids | tr '\n' ' ')
 if [ -n "$pids" ]; then
 	echo "   KILL: $pids"
 	sudo kill -9 $pids 2>/dev/null

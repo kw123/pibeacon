@@ -3,6 +3,8 @@
 # SPDX-FileCopyrightText: 2021 ladyada for Adafruit Industries
 # SPDX-License-Identifier: MIT
 
+VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+
 import time
 import sys
 import json
@@ -14,7 +16,7 @@ import	piBeaconGlobals as G
 
 sys.path.append(os.getcwd())
 
-U.setLogging()
+U.setLogging(doLog=False)
 
 program = "killSudos"
 

@@ -20,18 +20,25 @@ import time
 ######### set new  pluginconfig defaults
 # this needs to be updated for each new property added to pluginProps.
 # indigo ignores the defaults of new properties after first load of the plugin
+# THE ONE SOURCE OF THE DEFAULTS: plugin.py __init__ copies every key missing from pluginPrefs from
+# here, and PluginConfig.xml's defaultValue= mirror these values (first install / dialog).
+# Values were aligned 2026-09-28 with the fallbacks the code actually ran with, so filling a
+# missing key changes nothing: rebootHour was "1" here (would reboot every rpi at 1am) where the
+# code used -1, key_mgmt "NONE" where the code used "", and 12 others had drifted the same way
 kDefaultPluginPrefs = {
+				# groupNameN "" = group not used - what a missing name has always meant (plugin.py reads
+				# it that way); a name here would switch a group ON for every install that lacks the key
 				"iBeaconFolderName":							"Pi_Beacons_new",
 				"iBeaconFolderVariablesName":					"piBeacons",
 				"awayWhenNochangeInSeconds":					"600",
 				"groupCountNameDefault":						"iBeacon_Count_",
-				"groupName0":									"Family",
-				"groupName1":									"Guests",
-				"groupName2":									"Other1",
-				"groupName3":									"Other2",
-				"groupName4":									"Other3",
-				"groupName5":									"Other4",
-				"groupName6":									"Other5",
+				"groupName0":									"",
+				"groupName1":									"",
+				"groupName2":									"",
+				"groupName3":									"",
+				"groupName4":									"",
+				"groupName5":									"",
+				"groupName6":									"",
 				"ibeaconNameDefault":							"iBeacon_",
 				"SQLLoggingEnable":								"on-on",
 				"secToDown":									"80",
@@ -44,19 +51,18 @@ kDefaultPluginPrefs = {
 				"indigoInputPORT":								"12087",
 				"blockNonLocalIp":								False,
 				"checkRPIipForReject":							True,
-				"maxSocksErrorTime":							"10",
-				"compressRPItoPlugin":							"20000",
+				"maxSocksErrorTime":							"600",
 				"userIdOfServer":								"",
 				"passwordOfServer":								"",
-				"key_mgmt":										"NONE",
+				"key_mgmt":										"",
 				"enableAutoconfigEmptySSD":						True,
 				"rebootIfNoMessagesSeconds":					"99999999999999",
 				"enableRebootRPIifNoMessages":					"999999999",
-				"eth0":											'{"on":"on", "useIP":"use"}',
-				"wlan0":										'{"on":"dontChange", "useIP":"use"}',
+				"eth0":											'{"on":"dontChange","useIP":"use"}',
+				"wlan0":										'{"on":"dontChange", "useIP":"useIf"}',
 				"piUpdateWindow":								"0",
 				"rPiCommandPORT":								"9999",
-				"rebootHour":									"1",
+				"rebootHour":									"-1",
 				"expectTimeout":								"20",
 				"restartBLEifNoConnect":						"1",
 				"rebootWatchDogTime":							"-1",
@@ -68,13 +74,13 @@ kDefaultPluginPrefs = {
 				"tempDigits":									"1",
 				"distanceUnits":								"1.0",
 				"speedUnits":									"1.0",
-				"pressureUnits":								"Pascal",
+				"pressureUnits":								"mBar",
 				"rainUnits":									"mm",
-				"rainDigits":									"1",
+				"rainDigits":									"0",
 				"lightningTimeWindow":							"10",
-				"lightningNumerOfSensors":						"10",
+				"lightningNumerOfSensors":						"1",
 				"beaconPositionsUpdateTime":					"-1",
-				"beaconPositionsdeltaDistanceMinForImage":		"10",
+				"beaconPositionsdeltaDistanceMinForImage":		"1",
 				"beaconPositionsimageXscale":					"20",
 				"beaconPositionsimageYscale":					"30",
 				"beaconPositionsimageZlevels":					"0,5",
@@ -85,18 +91,19 @@ kDefaultPluginPrefs = {
 				"beaconRandomBeacons":							"0",
 				"beaconSymbolSize":								"1.0",
 				"beaconLargeCircleSize":						"1.0",
-				"beaconPositionsimageShowCaption":				"-1",
-				"beaconPositionsShowTimeStamp":					"0",
+				"beaconPositionsimageShowCaption":				"0",
+				"beaconPositionsShowTimeStamp":					"1",
 				"beaconPositionsTitleText":						"text on Top",
 				"beaconPositionsTitleTextPos":					"0,0",
 				"beaconPositionsTitleTextRotation":				"0",
 				"beaconPositionsTitleTextColor":				"#000000",
 				"beaconPositionsTitleTextSize":					"12",
 				"beaconPositionsCaptionTextSize":				"12",
-				"beaconPositionsLabelTextSize":					"18",
-				"beaconPositionstextPosLargeCircle":			"0",
-				"beaconPositionsimageCompress":					"true",
+				"beaconPositionsLabelTextSize":					"12",
+				"beaconPositionstextPosLargeCircle":			"atCenter",
+				"beaconPositionsimageCompress":					False,
 				"mapUUIDtoNAME":								"0",
+				"usePython3":									"0",
 				"maxSizeOfLogfileOnRPI":						"10000000",
 				"cycleVariables"								: True,
 				"debugRPI":										"-1",
@@ -126,10 +133,17 @@ kDefaultPluginPrefs = {
 				"debugSpecial":									False,
 				"debugDelayedActions":							False,
 				"debugall":										False,
-				"showLoginTest":								False,
+				"debuglastRPI":									False,
+				"debugFindMy":									False,
+				"showLoginTest":								True,
 				"execcommandsListAction":						"delete",
-				"getBatteryMethod":								"interactive"
+				"getBatteryMethod":								"interactive",
+				"wifiSSID":										"",
+				"wifiPassword":									""
 		}
+# NOT HERE ON PURPOSE: bleEngineDefault. plugin.py derives it from the two old prefs
+# (rpiDataAcquistionmethod + BLEconnectmode) when it is missing, and a default filled in first
+# would skip that migration
 
 
 
@@ -418,9 +432,9 @@ _GlobalConst_beaconPlotSymbols = [
 
 
 _BLEsensorTypes =["BLERuuviTag", "BLERuuviAir",
-				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03G", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG", "BLEiTrackButton", "BLEShellyButton","BLEShellyMotion","BLEShellyDoor",
+				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG", "BLEiTrackButton", "BLEShellyButton","BLEShellyMotion","BLEShellyDoor",
 				"BLEaprilAccel", "BLEaprilTHL", "BLEThermopro", "BLETempspike",
-				"BLEminewE8", "BLEminewS1TH", "BLEminewS1TT", "BLEminewS1Plus", "BLEminewAcc",
+				"BLEminewE8", "BLEminewS1TH", "BLEminewS1Plus", "BLEminewAcc",
 				"BLEiSensor-on", "BLEiSensor-onOff", "BLEiSensor-RemoteKeyFob", "BLEiSensor-TempHum",
 				"BLEblueradio",
 				"BLEKKMsensor",
@@ -496,6 +510,43 @@ _GlobalConst_i2cSensors	  = [
 
 _GlobalConst_allowedOUTPUT = [
 	"neopixel", "neopixel-dimmer", "neopixelClock", "OUTPUTswitchbotRelay", "OUTPUTswitchbotCurtain", "OUTPUTswitchbotCurtain3", "OUTPUTgpio-1-ONoff", "OUTPUTgpio-1", "OUTPUTi2cRelay", "OUTPUTgpio-4", "OUTPUTgpio-10", "OUTPUTgpio-26", "setMCP4725", "OUTPUTxWindows", "display", "setPCF8591dac", "setTEA5767", "sundial", "setStepperMotor", "FBHtempshow", "OUTPUTthermostatIRac"]
+
+# Device types that need pigpio's FINE gpio sample rate (5 us) rather than the cheaper 10 us.
+# pigpiod samples every gpio on a fixed timer whether or not anything is listening, so the rate is
+# pure cost on an rpi that has none of these - measured at a constant 11% of a core. Buttons and
+# rotary encoders read events MILLISECONDS apart (INPUTgpio-* included), where 10 us is far finer
+# than anything being measured.
+# CHECKED AGAINST WHAT EACH PROGRAM ACTUALLY USES, because the obvious guesses were wrong:
+#   - the NEOPIXELS are not here. neopixel2/3.py drive ws281x/PixelStrip, which does its own
+#     PWM/DMA and never touches pigpio, so pigpiod's sample rate cannot affect them.
+#   - setStepperMotor is not here either: no program drives it through pigpio.
+#   - ultrasoundDistance IS here, and is the clearest case - the echo time is the distance, and
+#     10 us of jitter is about 1.7 mm of error. ultrasoundDistance.py is pigpio throughout.
+#   - INPUTpulse / INPUTcoincidence: the pulse width and the count are the measurement.
+# The PWM outputs are handled separately, in piNeedsFineGpioRate(): pigpio PWM goes through
+# receiveCommands' set_PWM_dutycycle, which only runs when the GPIOpwm pref is on, so an rpi with a
+# plain ON/off relay does not pay for a dimmer it does not have.
+#   - IR SENDING IS THE SHARPEST CASE OF ALL, and it is not PWM so the GPIOpwm pref does not cover
+#     it: irReplay.send() builds the 38 kHz carrier out of pigpio.pulse() pairs of 13 us on and
+#     13 us off, and pigpio realises wave delays as MULTIPLES OF THE SAMPLE RATE. At 10 us a 13 us
+#     pulse becomes 10 or 20 us, so the carrier lands anywhere between 25 and 50 kHz and the
+#     receiver's bandpass around 38 kHz rejects it - IR stops working, silently, since IR is one
+#     way and nothing reads back. At 5 us it comes out ~40 kHz, inside the few percent receivers
+#     tolerate, which is why it works today. So OUTPUTthermostatIRac is fine-rate UNCONDITIONALLY.
+_GlobalConst_pigpioFineRateTypes = [
+	"INPUTpulse", "INPUTcoincidence", "ultrasoundDistance", "OUTPUTthermostatIRac"]
+
+# OUTPUTgpio types that CAN be driven as pigpio PWM - only relevant when the GPIOpwm pref is on.
+# OUTPUTgpio-1-ONoff IS DELIBERATELY NOT HERE, though it was at first: it is declared
+# <Device type="relay">, so indigo only ever sends it on or off and there is no brightness to turn
+# into a duty cycle. Leaving it in meant an rpi whose only gpio output is an ON/off relay paid the
+# fine rate for a dimmer it does not have - which is exactly what rpi0 was doing, with pigpiod as
+# its single largest cpu consumer.
+# OUTPUTgpio-1 is the dimmer (<Device type="dimmer">). The deprecated multi-pin ones stay because
+# they are "custom" types whose actions are not constrained the way a relay's are.
+_GlobalConst_pigpioPwmCapableTypes = [
+	"OUTPUTgpio-1", "OUTPUTgpio-4", "OUTPUTgpio-10", "OUTPUTgpio-26"]
+
 
 # gpio pin usage report: prop-name prefix -> what the pin DOES, where the device type alone would
 # be wrong or unhelpful. An INPUTpulse device reads on gpioEcho but drives gpioTrigger, and a
@@ -913,14 +964,18 @@ _addingstates["BLEfindMyMember"]				= {"addTag":False, "States":_devtypesToState
 #                    thing it heard. FOUR VALUES because "down" used to mean three things:
 #                      up      in that rpi's member list - the trio beside it is live
 #                      weak    it HEARS the tag and does not count it (below joinRssi, or short
-#                              of minPackets). A threshold to adjust, not a tag that has gone
+#                              of minPackets). A threshold to adjust, not a tag that has gone.
+#                              Pi_NN_Signal carries that faint reading, so how far below the
+#                              join level is visible rather than only the fact of it
 #                      noData  that rpi is not reporting at all. It says nothing about this tag
 #                              because it is saying nothing - not the same as "cannot hear it"
 #                      down    reporting, and this tag is in nothing it sent
 #                    A trigger for "not properly here" is != "up", which covers all three.
-#                    -999 / 999 are stamped once at birth and mean ONE thing for the life of
-#                    the device: that rpi has never heard this tag. Nothing overwrites a real
-#                    reading with them - the question "is it here now" has its own state
+#                    -999 / 999 are stamped at birth - and again for a trio that appears later,
+#                    when an rPi is added to the group - and mean ONE thing for the life of the
+#                    device: that rpi has never heard this tag, not even too faintly to count.
+#                    Nothing overwrites a real reading with them - the question "is it here now"
+#                    has its own state
 # ALL of them are declared; getDeviceStateList drops the ones that do not apply - an rpi that is
 # switched off, and on a member device any rpi its GROUP does not have enabled. That is why
 # saving the group device rebuilds its members' state lists.
@@ -939,6 +994,31 @@ _devtypesToStates["findMyPerRpi"]["closestRPIText"]		= "String"
 _devtypesToStates["findMyPerRpi"]["closestRPILast"]		= "Integer"	# kept when the tag goes down -
 _devtypesToStates["findMyPerRpi"]["closestRPITextLast"]	= "String"	# "where was it last seen"
 _addingstates["findMyPerRpi"]					= {"addTag":False, "States":_devtypesToStates["findMyPerRpi"]}
+
+# HOW MANY MEMBERS EACH RPI IS NEAREST TO, one state per rPi the group uses: "how many find my
+# devices are in the kitchen right now". THE ONE THING THIS FEATURE GETS RIGHT IS COUNTING, and
+# until now the only way to ask it per room was to walk the member devices from a script and read
+# their closestRPI - which is asking a question about counts through the devices that are
+# explicitly NOT to be trusted individually. This asks it of the group, where it belongs.
+# ONLY THE ONES THAT ARE UP are counted, which is what makes it a room occupancy and not a
+# history: a tag that has gone quiet is not in the kitchen, it is nowhere.
+# TALLIED AT THE SAME THREE POINTS AS THE AIRTAG/AIRPODS SPLIT and for the same reason - it is
+# made of the same up/down decision, so it cannot drift from it: these add up to numberOfUp.
+# WITH ONE EXCEPTION, stated rather than glossed over, because the airtag/airpods split has no
+# such hole and this one must not be read as if it did: a member that is up but has never had a
+# closestRPI written is in no room and is not counted. That needs a device whose per-rPi states
+# have not been built yet AND which is being held up by the down-delay rather than heard - one
+# pass of one device's life, and the next pass fixes it. If the room counts are short by one for
+# longer than that, something else is wrong
+# THE ROOM IS THE DAMPED closestRPI, not the loudest rPi of the moment. That matters: the
+# moveHoldSecs hysteresis is applied before this is counted, so a tag sitting on a boundary
+# between two rPis does not move a count back and forth all evening - which is exactly what a
+# trigger on these states would otherwise fire on
+_devtypesToStates["findMyGroupPerRpi"] = {}
+for ii in range(_GlobalConst_numberOfiBeaconRPI):
+	kk = f"{ii:02d}"
+	_devtypesToStates["findMyGroupPerRpi"]["Pi_"+kk+"_Tags"]	= "Integer"
+_addingstates["findMyGroupPerRpi"]				= {"addTag":False, "States":_devtypesToStates["findMyGroupPerRpi"]}
 
 _addingstates["packetId"]						= {"addTag":False, "States":{"packetId":"Integer"}}
 _addingstates["currentEvent"]					= {"addTag":False, "States":{"currentEvent":"String"}}
@@ -993,6 +1073,8 @@ for _fmState in (["numberOfMembers","numberOfUp","numberOfActive","numberOfActiv
 					"numberOfOtherUp","numberOfOtherDown","numberOfTotal",
 					]):
 	_stateListToDevTypes[_fmState]				= {"BLEfindMyGroup":1}
+
+_stateListToDevTypes["findMyGroupPerRpi"]		= {"BLEfindMyGroup":1}
 
 _stateListToDevTypes["BLEfindMyMember"]			= {"BLEfindMyMember":1}
 _stateListToDevTypes["findMyPerRpi"]			= {"BLEfindMyMember":1}
@@ -1067,7 +1149,6 @@ _stateListToDevTypes["accelerationX"]	 		= {"BLERuuviTag":1,"BLEminewAcc":1,"BLE
 _stateListToDevTypes["accelerationY"]	 		= {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationZ"]	 		= {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationTotal"]	 	= {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
-_stateListToDevTypes["accelerationXYZMaxDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationXYZMaxDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["PM25"]	 				= {"BLERuuviAir":1}
 _stateListToDevTypes["NOx"]	 					= {"BLERuuviAir":1}
