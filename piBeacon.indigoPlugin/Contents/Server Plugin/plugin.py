@@ -14386,6 +14386,13 @@ class Plugin(indigo.PluginBase):
 		# format and every one of them lands in a parse error. Keep those visible at info level but do
 		# not raise them: they stop by themselves as soon as the rpis have the new files.
 		self.socketQuietSecs = 180.
+		# WHEN DID THE LISTENER LAST ACCEPT ANYTHING, from any rpi. The rpis report a CONNECT that
+		# times out after 6 s - not a refusal - which means their SYN went unanswered, and from the
+		# rpi's own log there is no way to tell whether the listener had stopped accepting or that
+		# one rpi's packets were not arriving. This timestamp answers it from the plugin's side:
+		# 14 rpis talk constantly, so a gap of a minute is the listener, not the traffic.
+		self.lastSocketAccept	= time.time()
+		self.lastSocketGapSaid	= 0.
 		# EVERY rpi's silence clock starts NOW, at plugin start. Without this lastSSDCheck still holds
 		# whenever that rpi's last message was decoded - hours ago after a reload, or never for one
 		# this instance has not heard from yet - so checkifNewSSD would judge the whole fleet as long
@@ -14477,6 +14484,8 @@ class Plugin(indigo.PluginBase):
 		try:
 			tt = time.time()
 			if time.time()- self.lastSecChecked < 9. or time.time()- self.startTime < 30: return anyChange
+
+			self.checkSocketListener()
 
 			self.checkifNewSSD()
 
@@ -14637,6 +14646,12 @@ class Plugin(indigo.PluginBase):
 			# warning message (e.g. beaconloop clone-dongle warning) - level 30
 			if "data" in varJson and "warning" in varJson["data"]:
 				self.indiLOG.log(30,f"pi#{piU}: {varJson['data']['warning']}" )
+
+			# the same channel at level 10, for news an rpi wants on the record without interrupting
+			# anybody: the bluetooth firmware patch LOADING is the case it was added for. A success
+			# is not a warning, and "error"/"warning" were the only two levels an rpi could reach.
+			if "data" in varJson and "debug" in varJson["data"]:
+				self.indiLOG.log(10,f"pi#{piU}: {varJson['data']['debug']}" )
 
 			##
 			# update sensors
@@ -16410,12 +16425,14 @@ class Plugin(indigo.PluginBase):
 			if varUnicode.find("_dump_") >-1:
 				self.indiLOG.log(40,"rPi error message: Please check that RPI  you might need to replace SD")
 				self.indiLOG.log(40,varUnicode)
+				self.markRPIheard(varJson.get("pi",""))
 				return
 			# underscore form is what the rpi sends now; the spaced form is kept so an rpi that has
 			# not been updated yet is still heard
 			if varUnicode.find("data_may_be_corrupt") >-1 or varUnicode.find("data may be corrupt") >-1:
 				self.indiLOG.log(30,"rPi error message: >>dosfsck has error: data_may_be_corrupt<<<   Please check that RPI  you might need to replace SD")
 				self.indiLOG.log(30,varUnicode)
+				self.markRPIheard(varJson.get("pi",""))
 				return
 			pi = int(varJson["pi"])
 			piU = f"{pi}"
@@ -23929,7 +23946,16 @@ class Plugin(indigo.PluginBase):
 			if not self.pluginPrefs.get("enableAutoconfigEmptySSD", True) : return # is check enabled ?
 			self.lastcheckIfNewSSD = time.time()
 			dontcheckBase = 90
-			restartAfter  = 180															# secs of silence -> just restart master.py
+			# 360, was 180. The rpi's heartbeat is at the latest every 120 secs when it has nothing
+			# else to send (U.checkIfAliveNeedsToBeSend), checked on master's nominally-30-sec main
+			# loop, so 180 left room for ONE late beat and no more - and a beat is late whenever a
+			# loop pass runs an i2c scan or a dosfsck, or a send spends up to 45 secs failing. The
+			# log showed what that costs: "silent for 181/186/190/207/213 secs" on four different
+			# rpis within 20 minutes, each one a live rpi whose master was then restarted over ssh
+			# for nothing, and the same rpi again at the next window. 360 is three beats. Stage 2
+			# follows at restartAfter+180, so the stage-1 window stays non-empty for both rpi types.
+			restartAfter  = 360															# secs of silence -> just restart master.py
+			masterStartAllowance = 180													# how long master may take to come up and report in
 			for piU in self.RPI:
 				if  self.RPI[piU]["piOnOff"] == "0": continue								# rpi is not enabled?
 
@@ -23957,6 +23983,17 @@ class Plugin(indigo.PluginBase):
 					self.RPI[piU]["lastMasterRestart"] = time.time()
 					self.indiLOG.log(20,f"= checkifNewSSD rpi:{piU} #:{self.RPI[piU]['ipNumberPi']} silent for {silentFor:.0f} secs - restarting master.py (no reconfigure, no reboot)")
 					self.execButtonConfig({"configurePi": piU}, level="", action=["restartmasterSSH"], Text="rPi restart master.py ")
+					# ANNOUNCE THE QUIET PERIOD WE JUST CAUSED, or stage 2 punishes the rpi for it.
+					# master has to come up and get its first message out, and on an rpi0 that is
+					# not quick: it checks the disk, the filesystem and i2c, starts the sensor
+					# programs and only then sends. Without this the silence WE asked for keeps
+					# growing - the restart itself adds to it - reaches reconfigAfter, and the heavy
+					# stage below reconfigures and reboots an rpi that was halfway through the
+					# restart it was told to do. "one restart per window" above does not cover that:
+					# it only stops a second STAGE 1. Same mechanism the dongle test uses - a
+					# lastSSDCheck in the future is a quiet period somebody announced, and both
+					# stages skip it. If master really is dead the clock simply resumes afterwards.
+					self.RPI[piU]["lastSSDCheck"] = time.time() + masterStartAllowance
 					continue
 
 				if silentFor < reconfigAfter: continue 										# last rpi message was in time window ?
@@ -23984,6 +24021,69 @@ class Plugin(indigo.PluginBase):
 		self.lastcheckIfNewSSD = time.time()
 		return
 
+
+
+	####-------------------------------------------------------------------------####
+	def checkSocketListener(self):
+		"""Says so when the listener has accepted nothing for a while - the one measurement that
+		tells a dead listener apart from one rpi's broken network path.
+
+		An rpi reports this as a CONNECT that timed out after 6 s, five times, 9 s apart, and then
+		"message not send after 5 tries due to network error" - all its programs at once. A timeout
+		rather than a refusal means the port is listening and the SYN went unanswered, which is
+		either the kernel dropping it because our accept queue is full (the backlog was the stock 5
+		until this version) or the packets never arriving. The rpi cannot tell those apart. This
+		can: 14 rpis talk constantly, so if NOTHING was accepted for a minute the fault is here,
+		and if connections kept coming while one rpi was timing out, it is that rpi's path.
+
+		Inputs:
+		    None
+		Outputs:
+		    None
+		"""
+		try:
+			gap = time.time() - self.lastSocketAccept
+			if gap > 60.:
+				# once per outage, not once per 9 s pass
+				if time.time() - self.lastSocketGapSaid > 300.:
+					self.lastSocketGapSaid = time.time()
+					self.indiLOG.log(30,f"the rPi socket listener has accepted NOTHING for {gap:.0f} secs"
+							f" - with {len(self.RPI)} rPis configured that is the listener, not the rPis."
+							" Their programs will be reporting connect timeouts and \"message not send"
+							" after 5 tries\"")
+			elif self.lastSocketGapSaid > 0. and gap < 30.:
+				self.indiLOG.log(30,"the rPi socket listener is accepting connections again")
+				self.lastSocketGapSaid = 0.
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		return
+
+
+	####-------------------------------------------------------------------------####
+	def markRPIheard(self, piIn):
+		"""Refreshes an rPi's silence clock because a message from it arrived.
+
+		A MESSAGE THAT ARRIVED IS PROOF OF LIFE, whatever it said. updateRPIAlive returns early for
+		a register dump and for a corrupt sd card, and both returns sat ABOVE the lastSSDCheck
+		refresh - so an rPi reporting the worst news it has was counted as silent, and checkifNewSSD
+		then restarted its master over ssh for not talking. A lastSSDCheck in the FUTURE is left
+		alone: that is a quiet period somebody announced in advance (the dongle test).
+
+		Inputs:
+		    piIn (str or int): the rPi number as the message carries it - the two callers are above
+		        the point where updateRPIAlive has parsed it, so it is parsed here
+		Outputs:
+		    None
+		"""
+		try:
+			try:	piU = f"{int(piIn)}"
+			except:	return
+			if piU not in self.RPI: return
+			if self.RPI[piU].get("lastSSDCheck", 0) < time.time():
+				self.RPI[piU]["lastSSDCheck"] = time.time()
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		return
 
 
 	####-------------------------------------------------------------------------####
@@ -33663,6 +33763,9 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 		    None: No return value; reads the socket, parses/queues incoming pi data, sends responses, updates socket reporting, logs, and closes the connection
 		"""
 		try:
+			# an accepted connection, whatever it turns out to contain: this is the proof that the
+			# listener is still taking them (see self.lastSocketAccept).
+			indigo.activePlugin.lastSocketAccept = time.time()
 			data0 = ""
 			dataS =[]
 			tStart=time.time()
@@ -33868,7 +33971,31 @@ class ThreadedTCPRequestHandler(socketserver.BaseRequestHandler):
 ####-------------------------------------------------------------------------####
 ####-------------------------------------------------------------------------####
 class ThreadedTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
-	pass
+	# THE LISTEN BACKLOG WAS THE STOCK 5, and that is what the rpis' "message not send after 5
+	# tries due to network error" bursts are. 5 is the number of completed connections the kernel
+	# will hold for us between accept() calls; the 6th SYN is DROPPED, not refused - so the rpi
+	# does not get "connection refused" and move on, it sits in connect() until its own 6 s
+	# timeout, sleeps 3 s, and tries again: 9 s per try, 5 tries, 45 s thrown away per message.
+	# Measured on rpi#39, where every program on the pi timed out together for 75 s - master,
+	# beaconloop and DF2301Q, all at exactly 9 s intervals, which is the signature of a dropped
+	# SYN rather than anything wrong on the rpi. 14 rpis send on their own schedules and each
+	# handler holds its connection while it reads a framed message, so bursts past 5 are normal
+	# traffic, not an attack. The silence that follows is what the plugin then answers with
+	# "silent for 190 secs - restarting master.py".
+	request_queue_size = 128
+
+	# SO_REUSEADDR BEFORE THE BIND, not after it. startTcpipListening sets it on socS.socket, but
+	# ThreadedTCPServer(...) has already bound and listened by then - TCPServer.__init__ calls
+	# server_bind() + server_activate() - so the option arrived too late to do the one thing it is
+	# for, and the 90-try "port busy" loop existed to wait out the TIME_WAIT it was supposed to
+	# prevent. As a class attribute TCPServer applies it in server_bind(), before the bind.
+	allow_reuse_address = True
+
+	# Shutdown only: with daemon_threads false, server_close() joins every request thread still
+	# running. The thread list itself does not grow - _Threads.append() reaps the dead ones - so
+	# this is not a leak, it only decides whether a plugin reload can be held up by a request
+	# that is still being served.
+	daemon_threads = True
 
 ###################	 TCPIP listen section  receive data from RPI via socket comm  end			 #################
 ##################################################################################################################

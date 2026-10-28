@@ -46,7 +46,7 @@ while true; do
 						echo "master.py is running, no need to restart"
 					else 
 						#echo " restarting master"
-						echo "$(date '+%Y-%m-%d %H:%M:%S') master.sh: master.py not running restarting with  >>sudo /usr/bin/python master.py<<" >> permanent.log
+						echo "$(date '+%Y-%m-%d %H:%M:%S') master.sh: master.py not running restarting with  >>sudo /usr/bin/python master.py<<" >> /var/log/pibeacon
 						nohup sudo $usePython3 master.py > /dev/null 2>&1 &
 				fi
 			fi

@@ -4,7 +4,7 @@ Indigo plugin that uses Raspberry Pis to track iBeacons / BLE devices and to rea
 sensors attached to the Pis. The Pis report to the Indigo server over the network; the plugin manages
 device states, triggers, and the sensor programs running on each Pi.
 
-- **Current version:** 2022.194.16 (2026-10-05) — release
+- **Current version:** 2022.194.22 (2026-10-19) — release
 - **Author:** Karl Wachs
 - **Forum / support:** http://forums.indigodomo.com/viewforum.php?f=164
 - **Change log:** see `Contents/changelist.txt`
@@ -23,6 +23,12 @@ is required.
 (instead of double-clicking the .indigoPlugin, which does this for you), always **reload the plugin
 in Indigo afterwards**. A running plugin whose folder was replaced underneath it keeps working, but
 every command it spawns logs harmless `shell-init: getcwd` warnings until it is restarted.
+
+**Upgrading from 2022.194.18 or older:** the rPi→plugin frame header changed width, so the **plugin
+must be reloaded before the rPis are pushed** — which is the normal order anyway. For the few
+minutes in between, every rPi is still sending the old format and none of its messages can be
+parsed: the plugin says so at info level, naming the rPi, and does not count it as an error for the
+first 3 minutes.
 
 ## How the communication works
 
@@ -70,6 +76,9 @@ modules `hciRawSocket.py` and `gattAttClient.py`: raw-HCI sockets for scanning a
 advertising setup, HCI ioctls for adapter up/down/reset, and ATT over L2CAP for GATT. No hcidump,
 lescan, hcitool, gatttool, hciconfig or pybluez is needed on a Pi with python ≥ 3.5, which matters
 because those tools are deprecated upstream and already missing from some BlueZ builds.
+Adapter recovery is always *down* then *up*, never a plain `reset`: these controllers accept a reset
+with status 0 and then deliver nothing at all, which was the most expensive bug of this release and
+sat in five different places.
 
 One plugin config switch covers it: *"BLE engine on the rPis — scanning + connecting"* (python
 socket / commandline), overridable per Pi in the rPi device edit. Pis that cannot run it
@@ -109,17 +118,23 @@ for the broadcast.
   receives no ordinary beacons at all. The Pi logs this and sends an error to Indigo.
 
 Every role can also be **pinned per radio** in the rPi device edit. A USB radio is only offered the
-scanner variants it was *measured* to manage ("scanner BLE4", "scanner BLE5", "scanner BLE4 + BLE5"),
-the internal radio is only offered BLEconnect, and any radio (except the last one) can be set to
-"ignore". A pin also lifts the "BLE5 needs three radios" rule — you have said which radio does it.
+scanner variants it was *measured* to manage ("scanner BLE4", "scanner BLE5", "scanner BLE4 + BLE5")
+— the internal radio is offered no scanner role at all, since its scan rate only holds while wifi is
+unused. **BLEconnect** and **"ignore"** are offered on *every* radio of a Pi that has more than one,
+internal or USB: which radio connect belongs on is the automatic policy's business, and this dialog
+exists to overrule it. With a single radio neither appears — that radio does every job, and ignoring
+it would leave the Pi with no bluetooth. A pin also lifts the "BLE5 needs three radios" rule — you
+have said which radio does it.
 
 Each radio has its own device state `hci0`…`hci3`, holding
 `mac / bus / usb-id / UP-DOWN / BLE4+5 / scan4+5`, so what the Pi found and what it decided is
-visible in Indigo.
+visible in Indigo. A radio pinned to "ignore" is still reported, with `ignored` as its function —
+otherwise it would vanish from the only dialog that can un-ignore it.
 
-### Testing dongles: "Qualify the BLE dongles of one RPI.."
+### Testing dongles: "Qualify the BLE dongles of one / all RPI.."
 
-The menu item runs `pi/qualifyDongle.py` on one Pi and prints the report into the Indigo log. It
+The menu item runs `pi/qualifyDongle.py` on one Pi — or on every BLE Pi in turn, one at a time — and
+prints the report into the Indigo log. It
 answers the deployment question — *which of the four roles can this adapter actually do* — and it
 trusts nothing the hardware claims; only delivered packets count. (LE feature bit 12 is set by
 dongles that deliver zero extended reports, and dongles that pass the extended test can be useless
@@ -130,8 +145,13 @@ one lucky connect proves nothing. Each measuring phase also profiles per-second 
 longest silence (an average hides a radio that delivers one burst and then stops) plus the RSSI
 distribution as a sensitivity proxy.
 
-beaconloop and BLEconnect are paused while the test runs, so no beacons are received for those
-seconds — run it when a short gap does not matter. Results are appended to a shared
+The tool **stops master, beaconloop and BLEconnect itself** for the measurement and starts them
+again when it is done — registered with `atexit` *and* on SIGINT/SIGTERM, because nothing on a Pi
+brings master back by itself, so a ctrl-c in the middle must not leave that Pi dead. So the Pi
+receives no beacons while it runs, roughly a minute per adapter: run it when a short gap does not
+matter. A fleet sweep walks the Pis one after another, each sleeping out its slot *before* it stops
+anything, so two rooms are never blind at once; the dialog says how long the whole sweep will take
+(ten Pis with a 10× connect test ≈ 77 minutes, without ≈ 16). Results are appended to a shared
 `dongleCatalogue.json` in the plugin's preferences folder, keyed by USB VID:PID, and they are what
 the per-radio pin menus offer.
 
@@ -144,6 +164,13 @@ Compare dongles only against each other **on the same Pi in the same place**: ho
 radio delivers depends entirely on how many BLE devices are talking around it, so the plugin judges
 a radio relative to what the other radios in that Pi hear, never against a number from someone
 else's house. What follows is therefore a ranking, not a specification.
+
+The number that decides the scanner role is **mac coverage**, not packets per second. Every radio's
+reports are counted per mac address, the macs all radios together heard form the union, and each
+radio is scored on the share of that union it heard by itself. A radio three times slower that still
+hears 90% of the macs loses nothing that matters — it hears every device, just less often — while a
+fast radio that hears only half of them misses beacons outright. Rotating private addresses are left
+out of the union: a mac that appears once and never again cannot be "missed" by anybody.
 
 - **Pi internal, Broadcom (`B8:27:EB`)** — the fastest scanner of the lot, no BLE5. It is
   deliberately kept for connects and broadcast anyway, because scanning on it fights wifi.
@@ -160,6 +187,22 @@ else's house. What follows is therefore a ranking, not a specification.
   this job.
 - **CSR8510 clones** — scan acceptably but their ACL MTU gives them away; they get the scan or
   broadcast role and are kept away from connects.
+- **TP-Link UB500 (`37ad:0600`) and ASUS USB-BT500 BT6.0 (`0b05:1d70`)** — delivered nothing in any
+  mode, and not because of the radio: `btusb`'s quirks table is keyed on USB **VID:PID**, neither id
+  is in it, so `btrtl` never runs and the chip stays on its ROM firmware. Nothing on the Pi can fix
+  that; it needs a kernel in which the id has been added. The same vendors' *older* ids
+  (`2357:0604`, `0b05:190e`) are in the table and work fine. So **check the VID:PID, not the box** —
+  both vendors moved to new ids without changing the product name.
+
+**Broadcom patch firmware is shipped with the plugin.** A BCM20702 dongle whose `.hcd` patch file is
+missing runs on ROM firmware and drops off the USB bus whenever it is reset — which looks like a
+radio that accepts every command and delivers nothing, or like a dongle that reappears under a
+different `hci` number mid-run. Debian and Raspberry Pi OS do not package that file (`bluez-firmware`
+carries only the *onboard* radios, which is why the UART radio never misbehaved), so the plugin
+carries it and installs it on **every** Pi at master start, whether such a dongle is plugged in there
+or not: 36 kB, inert until a matching controller is probed, and it means moving a dongle to another
+Pi simply works. Measured after installing: ten down/up cycles in a row, same `hci` number every
+time, zero re-enumerations — where before it was about one per qualification run.
 
 ## Supported iBeacon types
 
@@ -236,7 +279,9 @@ beacons on different floors are drawn with different hatching.
 
 Reaction time for buttons is < 0.4 s; battery friendly. Full details in `Contents/BLE-sensorTypes.txt`.
 
-- **ruuvi**: RuuviTag (T/H/P/accel), RuuviAir (T/H/P/CO2…)
+- **ruuvi**: RuuviTag (T/H/P/accel), RuuviAir (T/H/P, CO₂, VOC, NOx, particulate matter). The
+  compact format 06 carries **PM2.5 only**; the BLE5 **E1** format carries PM1.0 / 2.5 / 4.0 / 10
+  and luminosity, and needs an extended-listener radio (see above)
 - **INGICS iBS01/02/03/04**: on/off button, magnet contact, IR/PIR motion, temp, probe temp, XYZ accel
 - **Xiaomi MiJia**: LYWSD02 clock, LYWSDCGQ round, LYWSD03MMC square, formaldehyde MJHFD1,
   VegTrug / Flower Care (moisture + conductivity)
@@ -631,6 +676,8 @@ reboot of that rPi.
   - `irTest.sh` — the record / replay / scan / walk steps as single commands
   - `qualifyDongle.py`, `extScanTest.py`, `ruuviPrint.py` — standalone diagnostic tools that can
     also be run by hand on a Pi
+  - `installBTfirmware.py` — puts the Broadcom `.hcd` patch from `pi/copyme/firmware/` into
+    `/lib/firmware/brcm/` and re-probes the dongle; run by `master.py` before beaconloop starts
 - `Contents/changelist.txt` — version history
 - `Contents/beaconTypes.txt` — beacon hardware comparison
 - `Contents/BLE-sensorTypes.txt` — BLE sensor hardware details

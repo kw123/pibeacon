@@ -24,7 +24,7 @@
 # Called from master.py at startup. Safe to run at any time: it is idempotent.
 
 from __future__ import print_function
-VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+VERSION = "1.1"			# printed at startup by U.setLogging() -> U.versionLine()
 import os
 import re
 import sys
@@ -218,7 +218,7 @@ def main():
 				print("   installed {} bytes -> {}  sha256 {}".format(os.path.getsize(dst), dst, sha256(dst)[:16]))
 			except Exception as e:
 				print("   COULD NOT install {}: {} (run with sudo?)".format(dst, e))
-				report.append("{} could NOT be installed: {}".format(fn, e))
+				report.append((30, "{} could NOT be installed: {}".format(fn, e)))
 				continue
 		if port == "":
 			# Staged, nothing to re-probe. This IS reported to indigo, because it happens exactly ONCE
@@ -227,8 +227,8 @@ def main():
 			# into each one by hand, which needs the password once per pi. One line per rpi on the
 			# rollout, never again, is worth that.
 			print("   no {}:{} dongle on this pi - the patch is now in place for whenever one is plugged in".format(vid, pid))
-			report.append("staged {} - no {}:{} dongle on this rpi, so nothing was re-probed; the patch "
-						"is in place for whenever one is plugged in".format(fn, vid, pid))
+			report.append((30, "staged {} - no {}:{} dongle on this rpi, so nothing was re-probed; the patch "
+						"is in place for whenever one is plugged in".format(fn, vid, pid)))
 			continue
 		print("   re-probing {}:{} on usb port {} so the driver loads it".format(vid, pid, port))
 		if not reprobe(port):	continue
@@ -239,32 +239,36 @@ def main():
 		seen, bld = confirmPatch(fn)
 		if seen and bld not in ("", "0000"):
 			print("   PATCH LOADED - firmware build now {}".format(bld))
-			report.append("{} {} for the {}:{} dongle and re-probed it - PATCH LOADED, firmware "
+			# LEVEL 10, not 30. This is the SUCCESS case - the patch loaded and the radio now works -
+			# and a success is not a warning. It is still in the rpi's own log at level 20 either
+			# way; only whether it interrupts the indigo log changes.
+			report.append((10, "{} {} for the {}:{} dongle and re-probed it - PATCH LOADED, firmware "
 						"build now {}. Without it this controller runs on ROM firmware and drops off "
 						"the usb bus on every reset".format(
-						"installed" if needInstall else "re-applied", fn, vid, pid, bld))
+						"installed" if needInstall else "re-applied", fn, vid, pid, bld)))
 		elif seen and bld == "0000":
 			print("   the kernel sent the patch but the controller still reports build 0000 - NOT loaded")
-			report.append("{} was sent to the {}:{} dongle but it still reports firmware build 0000, "
+			report.append((30, "{} was sent to the {}:{} dongle but it still reports firmware build 0000, "
 						"which is the UNPATCHED rom - the patch did not take. Check 'dmesg | grep -i "
-						"bcm | tail' on this rpi".format(fn, vid, pid))
+						"bcm | tail' on this rpi".format(fn, vid, pid)))
 		elif seen:
 			print("   patch sent, kernel has not printed a new build number yet")
-			report.append("{} was sent to the {}:{} dongle but the kernel has not reported a new "
-						"firmware build yet - check 'dmesg | grep -i bcm | tail' on this rpi".format(fn, vid, pid))
+			report.append((30, "{} was sent to the {}:{} dongle but the kernel has not reported a new "
+						"firmware build yet - check 'dmesg | grep -i bcm | tail' on this rpi".format(fn, vid, pid)))
 		else:
 			print("   re-probed, but no 'Patch' line in dmesg - check: dmesg | grep -i bcm | tail")
-			report.append("installed {} for {}:{} and re-probed, but the kernel never reported loading "
-						"it - check 'dmesg | grep -i bcm | tail' on this rpi".format(fn, vid, pid))
+			report.append((30, "installed {} for {}:{} and re-probed, but the kernel never reported loading "
+						"it - check 'dmesg | grep -i bcm | tail' on this rpi".format(fn, vid, pid)))
 
 	if did == 0:
 		print("installBTfirmware {}: none of the {} shipped file(s) has a usable usb id in its name"
 				" - nothing to do".format(VERSION, len(shipped)))
 
-	# the marker master.py looks for to decide whether this is worth a level-30 line in the INDIGO
-	# log. Printed only when something actually happened, never on a quiet start.
-	for line in report:
-		print("BTFIRMWARE: {}".format(line))
+	# the marker master.py looks for, now carrying the INDIGO log level each line deserves:
+	# 10 for "the patch loaded" (a success is not a warning), 30 for anything that needs looking at.
+	# Printed only when something actually happened, never on a quiet start.
+	for lvl, line in report:
+		print("BTFIRMWARE:{}: {}".format(lvl, line))
 
 
 main()

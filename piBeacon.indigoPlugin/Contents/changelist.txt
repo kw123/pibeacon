@@ -1,22 +1,218 @@
-SINCE v2022.193.20 - @ 2026-10-08
-   CPU on the rpis roughly halved, measured with py-spy, not guessed:
-     - beaconloop 25-30% -> 6%  (a 79-tag search whose result was thrown away, per-byte hex,
-       a 10 Hz poll that found nothing)
-     - display.py 65% -> ~30%  (the whole command list was redrawn for every clock tick)
-     - pigpiod 11% -> 5 us only where it is needed (pulse, ultrasound, PWM, IR), 10 us elsewhere
-   NO MORE COMMAND LINE in the BLE path:
-     - gatttool, hcitool, hciconfig -> raw-HCI ioctls, HCI commands, ATT over L2CAP
-     - the shell stays only as the py2 fallback; those tools are deprecated and already missing
-       from some BlueZ builds, where the old code failed silently
-     - phone presence reads the REAL tx power now, not an ACL handle byte
-   SMALLER BUGS, several of which had never worked at all:
-     - the camera plot deleted its png before knowing the compressed one existed
-     - its contrast window was centred below the data; playsound had a "++" typo
-   NEW REPORTING:
-     - rPi states and props as tables, one column per rPi
-     - an rPi that does not answer ssh is logged as "down" or "hanging, needs a hard reset"
+SINCE v2022.194.4 - in short:
+   FIXES:     Ruuvi Air E1 fixed ; Find My lost tags on a rotation
+   TECHNICAL: reduced CPU by > 50% on rpi
+   NEW:       BLE5 extended listener = Ruuvi Air E1 with PM1/2.5/4/10; qualify
+              the dongles report(what and how are BLE dongles doing), 
+              Apple Find My tags, report state+props tables per rpi
+
+
+
+v2022.194.23  @ 2026-10-19
+   CORRECTION, 2026-10-22: THE "silent for NNN secs - restarting master.py" STORM WAS NOT OURS.
+       It was the NetworkScanner plugin on the indigo mac running "sudo arp -d -a" after every
+       sweep - every 60 s by default - which deletes the mac's ENTIRE arp cache, right after a ping
+       sweep of the whole /24 has left the arp subsystem resolving ~254 addresses that mostly do not
+       answer. An rpi's SYN then arrives and the mac cannot reply until it has re-resolved that
+       rpi's MAC; when that exchange is lost the SYN-ACK never goes out, and macOS marks a host
+       whose arp resolution failed as DOWN for net.link.ether.inet.host_down_time = 20 s and drops
+       everything to it meanwhile. Hence 30-45 s in which every program on one rpi fails to connect,
+       on wired ethernet, with static IPs and no MAC change, recovering by itself - and hence a
+       plugin that heard nothing from that rpi and restarted its master for being silent.
+       PROVEN BY DISABLING IT: NetworkScanner off, errors gone.
+       WHAT THIS MEANS FOR THE CHANGES MADE CHASING IT: all of them stand on their own, none was the
+       fix. The backlog of 5 really is too small for 14 rpis opening a connection per message, the
+       180 s silence threshold really did leave room for only one late heartbeat, SO_REUSEADDR
+       really was being set after the bind, and an rpi that reports a corrupt sd card really is
+       alive. Keeping them is right; believing they fixed this was not.
+       AND THE LESSON, for the third time this month: four of five explanations offered here were
+       wrong - the failed-send clock, ignoreRPI, master's own self-restart, the backlog - and every
+       one of them came from reasoning about which end was at fault instead of measuring. What
+       actually resolved it was the user asking "could this be netscanner" and one sweep of a
+       plugin's source for what it does on the wire. The handoff is in
+       claude files/networkscanner-arp-flush-report.md.
+   RPI: the logfile. NUL runs in /var/log/pibeacon turned out to be ext4's unwritten blocks after a
+       power cycle, not a bad log call - the line after each hole is always the next boot. master
+       strips them once at startup now, so grep stops calling the file binary. The handler is a
+       WatchedFileHandler, so rotation reopens the path instead of needing a master restart to get
+       off the moved-away inode: a 10 MB log no longer restarts every program on the rpi.
+       permanent.log is removed completely. The out-of-disk "reboot -f" now syncs first, like the
+       other two forced-reboot paths already did.
+   RPI beaconloop 22.4: the junk-length line fires only at the CEILING. A frame under 16 chars
+       cannot be a lost advert - the smallest one that exists is exactly 16 after the preamble
+       strip - so the short ones were noise ("12 chars x1, 14 chars x1" every 5 s). The ceiling is
+       where a Ruuvi Air E1 was once lost, so that end still reports.
+   RPI PROGRAM VERSIONS: piBeaconUtils 1.3 -> 1.4, master 1.0 -> 1.1, beaconloop 22.3 -> 22.4,
+       installBTfirmware 1.0 -> 1.1.
+
+v2022.194.21  @ 2026-10-19
+   PLUGIN: THE MEASUREMENT THAT TELLS THE TWO EXPLANATIONS BELOW APART, because the rpi cannot. From the rpi all that is visible is a CONNECT that timed out after 6 s, five times,
+       9 s apart - and a timeout rather than a refusal means the port was listening and the SYN went
+       unanswered. That is either our own accept queue being full (the backlog was the stock 5) or
+       the packets not arriving at all, and nothing in the rpi's log distinguishes them. The plugin
+       now timestamps every accepted connection and says so, once per outage at level 30, when it
+       has accepted NOTHING for 60 s - and again when they come back. With 14 rpis talking
+       constantly a one-minute gap is the listener; connections still arriving while one rpi times
+       out is that rpi's network path. Either way the next occurrence names the end that is at
+       fault instead of being argued about.
+   RPI+PLUGIN: "PATCH LOADED, firmware build now 1764" IS NOT A WARNING. It went to the indigo log
+       at level 30 because that was the only channel an rpi had for anything other than an error -
+       "error" at 40 and "warning" at 30, nothing below. There is a "debug" key now, logged at 10
+       as "pi#<n>: ..", and the installer tags each of its report lines with the level it deserves:
+       the patch loading is a success and goes at 10, while a patch that was sent and did NOT take
+       (still reporting build 0000), one the kernel never confirmed, and an install that failed all
+       stay at 30, because those change how that rpi's radios behave and somebody has to look. It
+       is in the rpi's own log at level 20 either way; only whether it interrupts the indigo log
+       changed. The "staged on an rpi with no such dongle" line is left at 30 for now - it is the
+       one-per-rpi census that says the firmware reached the whole fleet.
+   PLUGIN: THE LISTEN BACKLOG WAS THE STOCK 5 - worth fixing, but NOT the cause of the silences;
+       see the correction at the top of v2022.194.22. That is how many completed connections
+       the kernel holds for the plugin between accept() calls; the 6th SYN is DROPPED, not refused.
+       So an rpi does not get "connection refused" and move on - it sits in connect() until its own
+       6 s timeout, sleeps 3 s, tries again: 9 s per try, 5 tries, 45 s thrown away, and then
+       "message not send after 5 tries due to network error". The rpi#39 log is unambiguous: master,
+       beaconloop and DF2301Q all timing out together, every single attempt exactly 9 s after the
+       last, for 75 s, then succeeding again with nothing changed. All three programs at once means
+       it is not the rpi, and a timeout rather than a refusal means the port is listening and the
+       queue is full. 14 rpis sending on their own schedules, each handler holding its connection
+       while it reads a framed message, and the backlog of 5 is simply too small for normal
+       traffic. request_queue_size = 128.
+       WHY IT STARTED WITH v2022.194.19 AND NOT BEFORE, which is how it was found: the backlog has
+       always been 5, but .19 removed the thing that was accidentally pacing the clients. execSend
+       used to sleep 0.2 + lld/20000 s before reading the ack - 0.24 s on a small message, 2.25 s on
+       a BLEanalysis report - and compression was effectively never on, so messages were bigger and
+       slower too. Every rpi now opens its connections as fast as it can produce messages. Nothing
+       about the queue changed; the dead time in front of it went away, and 5 slots stopped being
+       enough. "This was working until the socket changes about a week ago" was the decisive clue -
+       a regression that the measurements in .19 caused and that none of them could show.
+       It also explains why one rpi is clean while four are not, without needing a second cause:
+       the queue overflows for everybody, but only an rpi that CONNECTS during an overflow window
+       notices, so the busiest talkers eat it. rpi#39 runs master, beaconloop, BLEconnect and
+       DF2301Q all sending on their own schedules, and the log shows all four colliding inside the
+       same few seconds; a quieter rpi can miss every window.
+       AND THE RPI'S OWN LOG DATES ITSELF, which settled one false alarm: "L:4895" for the
+       after-5-tries line is the OLD piBeaconUtils - in the fixed file that line is 4918 - so a
+       burst logged after the push had simply not reached that rpi yet. Line numbers and the
+       json:/wire: labels both say which client produced a line, which is worth more than it
+       sounds when the question is "is this before or after the fix".
+       IT WAS NOT, HOWEVER, THE ANSWER to "silent for 181/186/190/207/213 secs" - that was
+       NetworkScanner flushing the mac's whole ARP cache, see the correction at the top of
+       v2022.194.22. The backlog of 5 was still too small for 14 rpis that each open a connection
+       per message, and the change stands on its own; it simply did not fix what it was aimed at.
+       ALSO: SO_REUSEADDR was being set AFTER the bind. startTcpipListening sets it on socS.socket,
+       but TCPServer.__init__ has already called server_bind() and server_activate() by then, so
+       the option arrived too late to do the one thing it is for - and the 90-try "port busy" loop
+       exists to wait out exactly the TIME_WAIT it was supposed to prevent. It is a class attribute
+       now, which TCPServer applies inside server_bind(). Plus daemon_threads, which only decides
+       whether a plugin reload can be held up by a request still being served (the thread list
+       itself does not grow - _Threads.append reaps the dead ones - so there was no leak).
+   RPI: the send log said "compr:4141, unc:1182" - a compressor that inflates. The two labels were
+       swapped: "compr:" was given the json length and "unc:" the number of bytes actually going
+       out. json: and wire: now, which is what the line is for.
+   RPI: sendURL's PAYLOAD DEFAULT WAS ONE SHARED DICT, data={}, and the send thread writes into it
+       - program, pi, ipAddress, ts, msgType, text, and "reboot" for a reboot message. So the keys
+       accumulated for the life of the process: after one doReboot() every later sendURL() without
+       its own data still carried reboot=True, and after one register dump or one dosfsck report
+       every later one still carried that text. Nine calls in master share that dict (5 reboots,
+       the dump, the dosfsck report, the raspi-config dump, the heartbeat).
+       It was nearly invisible as long as the heartbeat went out as a "regular" message, because
+       the plugin's regular path reads none of those keys. On the alive path it reads all three,
+       and two of them RETURN BEFORE the silence clock is refreshed - so the moment the heartbeat
+       became a proper alive message, one old "_dump_" or "data_may_be_corrupt" in that dict would
+       have had the plugin answer every heartbeat with "please replace the SD" and then restart
+       master for being silent, on an rpi that was heartbeating perfectly. data=None now, with the
+       caller's dict copied as well: the thread adds a fresh "ts" on each of the 5 retries, which
+       has no business happening inside a dict the caller still holds.
+   RPI: THE HEARTBEAT HAS TWO CADENCES NOW, 120 s and 240 s, because the two questions are
+       different. QUIET RPI: nothing of any kind sent for 120 s -> send one (it was 100 s, same
+       idea). ANY RPI: no alive message for 240 s -> send one anyway, which is new. temp/messageSend
+       is written by every program on the rpi and its mtime is the only thing that knows when
+       anything here last sent, so on a ble rpi carrying beacon traffic the quiet gate never fires -
+       and the plugin could therefore go hours with no fresh temperature, throttle or last-boot
+       information from exactly the rpis that are busiest. No extra beat when the plugin is away: a
+       failed send moves that mtime like a successful one, deliberately, so a plugin that is
+       reloading is retried once per interval and not once per 20 s main loop - and the plugin
+       resets every rpi's silence clock to "now" when it starts, so it does not need 14 rpis
+       telling it at once that they are alive.
+       AND THE HEARTBEAT IS AN ALIVE MESSAGE AGAIN. It called sendURL(sendAlive=True), and True
+       matches none of the sendAlive tests in sendURL, so it went out as an ordinary pi_IN_<n>
+       message with msgType "regular". It did refresh the plugin's silence clock, so nothing ever
+       looked wrong from the outside, but it was not an alive message - and it never updated
+       G.lastAliveSend2, which is the timestamp the new 240 s cadence reads.
+   PLUGIN: THE RESTART WE ORDER IS NOW ANNOUNCED AS A QUIET PERIOD. Stage 1 restarts master over
+       ssh and then went straight back to counting that rpi's silence - but master has to come up
+       and get its first message out, and on an rpi0 that is not quick: it checks the disk, the
+       filesystem and i2c, starts the sensor programs, and only then sends. So the silence WE asked
+       for kept growing, the restart itself adding to it, until it passed reconfigAfter and stage 2
+       reconfigured and REBOOTED an rpi that was halfway through the restart it had just been told
+       to do. The "one restart per window" guard does not cover that - it only stops a second stage
+       1. lastSSDCheck is now pushed 180 s into the future when the restart is sent, the same
+       mechanism the dongle test uses, and both stages skip an rpi whose quiet period was announced.
+       If master really is dead the clock just resumes afterwards and stage 2 follows as before.
+   RPI: AND THE RPI SAYS SO WHEN ITS OWN BEAT SLIPS, so "is the heartbeat sent often enough" stops
+       being a thing to reason about. The 120 s check only runs once per main loop pass, so if the
+       gap since this rpi last sent anything has already grown past 180 s by the time the check
+       runs, the check did not run often enough - the loop was busy that long, or the network is
+       gone. That is logged at level 30 with the real number, throttled to one line per 5 minutes,
+       and silent on a healthy rpi where the gap is ~120-140 s. It is the measurement that was
+       missing while three different explanations were being argued about.
+   PLUGIN: 180 s of silence is no longer a dead master - it is 360 s. With the heartbeat at 120 s
+       and master's main loop sleeping 20 s per pass plus its work, 180 left room for ONE late beat
+       and no more, and a beat is late whenever a pass shells out to dosfsck, two i2cdetect runs or
+       the network checks. A watchdog whose action is "restart the program over ssh" has to tolerate
+       two misses: 360 is three beats. Stage 2 (reconfigure + reboot) still follows at
+       restartAfter+180, so the stage-1 window stays non-empty for both rpi types. The cost is
+       detection latency on a genuinely dead master, 3 minutes to 6, which is the cheaper side of
+       the trade against restarting live rpis every 7 minutes.
+   PLUGIN: A MESSAGE THAT ARRIVED IS PROOF OF LIFE, whatever it said. updateRPIAlive returns early
+       for a register dump and for a corrupt sd card, and both returns sat ABOVE the lastSSDCheck
+       refresh - so an rpi reporting the worst news it has was counted as silent, and checkifNewSSD
+       restarted its master over ssh for not talking. Both now mark the rpi as heard first
+       (markRPIheard, which also leaves a lastSSDCheck in the future alone, so an announced quiet
+       period still holds).
+   NOT CHANGED, and worth knowing: master's own pass-duration check. tAtLoopSTart is set at the
+       start of a pass's work, so "abs(tAtLoopSTart - time.time()) > 30 -> restartMyself(new time
+       set)" is measuring the DURATION OF THE PREVIOUS PASS - 20 s of watchdog delay plus
+       everything it did - against a 30 s limit. A time step and a busy pass are told apart by
+       nothing there, and a master that restarts itself is silent while it does. It was a suspect
+       for the "silent for.." lines until the rpi#39 log named the backlog instead, so it has been
+       left alone: nothing in that log says a pass ever ran long. Worth a grep for "new time set"
+       if it ever comes up again.
 
 v2022.194.20  @ 2026-10-08
+   RPI beaconloop: AN IGNORED RADIO IS STILL REPORTED. dropIgnoredRadios takes a radio pinned to
+       "ignore" out of HCIs so that no role pick can see it - which is right - but its hciN state
+       then stayed empty, and the device dialog skips a channel with an empty state. So the radio
+       vanished from the only UI that can un-ignore it: a one-way door, hit on rpi#2 with three
+       radios present (hci0/hci2/hci3), only two offered, and hci0 stuck on "ignore" with no way
+       back. The dropped radios are remembered now and reported with function "ignored", so the
+       state says plainly why that radio holds no role. The role picks still see only the kept ones.
+   RPI beaconloop: BEEP BELONGS WITH CONNECT, not with scan. Beeping a tag opens a GATT connection,
+       so it IS a connect operation, and a connect on the scan radio stalls the scan - which is
+       exactly why the BLEconnect picker excludes the scan radio. But the beep picker only ever
+       takes a radio with NO role at all; on a 2-radio rpi there is none, and the fall-through then
+       chose the worst of the two available: the scanner. Seen on rpi-garage-blue - hci1 (ASUS,
+       scan4+5) carried beep while hci0 (internal, connect+BC) sat idle. It now prefers the CONNECT
+       radio and only falls back to the scanner when no connect radio is up. Battery reads take the
+       same path, so the same applies to them.
+       AND THE PICKER STAYS OUT OF IT ENTIRELY WHILE BLEconnect IS ALIVE. receiveCommands routes
+       every beep, battery and updateTimeAndZone job to BLEconnect whenever temp/alive.BLEconnect is
+       younger than 90 s, and BLEconnect does them over its own ATT socket; beaconloop's gatttool
+       path - and so useHCIForBeep - is only the fallback for a dead BLEconnect. The picker was
+       resetting a radio and claiming it for a job that was never going to run there. It now reports
+       the connect radio as the beep radio and returns.
+   RPI beaconloop: the beep picker reset its radio with plain "reset" - the FIFTH place with that
+       bug, after qualifyDongle's resetHCI, the extended listener and the scan radio (twice). Now
+       down+up. The standing comment about never picking the extended listener for beep - "98
+       reports/min -> 0 exactly one 50 s check later and stayed dead" - was this same mute-on-reset
+       worked around by exclusion instead of fixed; with a real reset that exclusion is belt and
+       braces rather than load-bearing.
+   RPI beaconloop: the cached extended-scan verdict is logged ON CHANGE only. It was printed on
+       every probe, which after the throttling is every 30 s, repeating the same sentence for ever.
+   RPI beaconloop: NOT DONE, and why it is not needed: a temp/BLEconnect.pause handshake. beaconloop
+       honours BLEconnect's pause file; the reverse file is read in BLEconnect.py but nobody ever
+       writes it. Written, then reverted - with the GATT jobs routed to BLEconnect, beaconloop no
+       longer runs a connect that BLEconnect would have to stand back from, so the handshake could
+       never fire. The dead read is left in place with a comment saying so.
    PLUGIN: PM1, PM4 and PM10 device states are now written. Only PM25 ever was, because the
        compact Ruuvi Air format 06 carries no other particle size - but E1 carries PM1.0, PM2.5,
        PM4.0 and PM10, and the other three states existed on the device and sat empty. Nothing was

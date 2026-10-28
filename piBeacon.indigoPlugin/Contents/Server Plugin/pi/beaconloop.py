@@ -64,7 +64,7 @@ try:
 except Exception as e:
 	fmGroup = None
 	fmGroupImportError = "{}".format(e)
-VERSION   = 22.3
+VERSION   = 22.4
 
 if sys.version[0] == "3": usePython3 = True
 else:					  usePython3 = False
@@ -11077,14 +11077,19 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 			U.logger.log(20,"", exc_info=True)
 			continue
 
-	# SAY WHEN FRAMES WERE DROPPED FOR THEIR LENGTH - but NOT for the one that is expected.
-	# Every set contains a 0-char frame: the command-complete event of our own scan
-	# re-enable, which is empty once the 14-char preamble is stripped. Reporting that
-	# printed the same sentence every ~8 s and said nothing. What matters is a frame with
-	# REAL length being thrown away - an E1 at 112 chars was how this started - so the
-	# 0-char artifact is counted but never triggers the line, and is only shown alongside
-	# a length that does.
-	_junkReal = dict([(k, v) for k, v in nJunkLens.items() if k != 0])
+	# SAY WHEN FRAMES WERE DROPPED FOR THEIR LENGTH - but ONLY AT THE CEILING, because that is the
+	# only end where an advertisement can be lost. A SHORT frame is not a lost advert, it cannot be:
+	# the smallest advertisement that exists is 6 mac + 1 data length + 0 data + 1 rssi = 8 bytes =
+	# 16 chars once fillHCIdump has stripped the 7-byte preamble, which is exactly the lower bound.
+	# So anything under 16 is some other HCI event - a command-complete of our own scan re-enable,
+	# a completed-packets event - and throwing it away loses no beacon data at all. Excluding them
+	# one length at a time did not work: first the 0-char one, then "12 chars x1, 14 chars x1" every
+	# 5 s on rpi#39, which is the same sentence with two more numbers in it. The ceiling is the
+	# dangerous end and stays reported - a Ruuvi Air E1 at 112 chars silently dropped by a 110-char
+	# limit is what this line was written for - and the short counts are still shown ALONGSIDE an
+	# oversize one, so the context is there when it matters. nJunkFrames still counts every drop,
+	# so the "nothing but junk in this stream" watchdog is unaffected.
+	_junkReal = dict([(k, v) for k, v in nJunkLens.items() if k > 510])
 	if _junkReal:
 		U.logger.log(20,"{} frame(s) dropped for their length in this set (want 16..510 chars): {}".format(
 			nJunkFrames, ", ".join(["{} chars x{}".format(k, nJunkLens[k]) for k in sorted(nJunkLens)])))

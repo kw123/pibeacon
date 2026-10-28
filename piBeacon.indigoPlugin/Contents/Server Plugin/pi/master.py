@@ -3,7 +3,7 @@
 # by Karl Wachs
 # feb 5 2016
 
-VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
+VERSION = "1.1"			# printed at startup by U.setLogging() -> U.versionLine()
 
 masterVersion			= 17.11
 ## changelog: 
@@ -1592,8 +1592,49 @@ def writeJson2(data, fileName, lastWriteBatteryStatusI):
 
 
 ####################      #########################
+def cleanLogHoles():
+	"""Removes NUL runs from the logfile - what an UNCLEAN STOP leaves behind, not a bad log call.
+
+	ext4 allocates the blocks for an appended line before the data is written back, so a power cut
+	or a hard reset leaves that region reading as zeros while the file size already counts it. The
+	file then looks like this, and the line right after the hole is from the next boot:
+	    630:^@^@^@^@ ... ^@^@^@28-10:17:18.6 callbeacon
+	Two reasons to clean it rather than live with it: grep calls the whole file binary and prints
+	"binary file matches" instead of the lines - on the one file somebody reaches for when
+	something is wrong, needing -a to work at all - and a hole is indistinguishable from a line
+	nobody wrote. The history either side of it is kept; only the zeros go.
+
+	Once per master start, BEFORE the other programs are started, so nothing is logging into the
+	file while it is replaced. Three holes in one 10 MB file on rpi#39 was what prompted it.
+
+	Inputs:
+	    None.
+	Outputs:
+	    None: rewrites the logfile without its NUL bytes, if it has any
+	"""
+	try:
+		fname = "{}pibeacon".format(G.logDir)
+		if not os.path.isfile(fname):	return
+		f   = open(fname, "rb")
+		raw = f.read()
+		f.close()
+		if raw.find(b"\x00") < 0:		return				# the normal case, nothing to do
+		nNul = raw.count(b"\x00")
+		f = open(fname + "-tmp", "wb")
+		f.write(raw.replace(b"\x00", b""))
+		f.close()
+		subprocess.call("sudo mv {}-tmp {}".format(fname, fname), shell=True)
+		U.fixLogPermissions([fname])
+		U.logger.log(20, "removed {} NUL byte(s) from the logfile - the hole an unclean stop (power cut,"
+					" hard reset) leaves in it, which makes grep treat the whole file as binary".format(nNul))
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	return
+
+
+####################      #########################
 def checkLogfiles():
-	"""Monitors disk space and log files: clears /var/log files or restarts the master when space is low, truncates the permanent log, and rotates the piBeacon and restart log files when they exceed size limits, restarting if rotation occurred.
+	"""Monitors disk space and log files: clears /var/log files or restarts the master when space is low, and rotates the piBeacon and restart log files when they exceed size limits.
 
 	Inputs:
 	    None.
@@ -1623,12 +1664,12 @@ def checkLogfiles():
 
 		if retCode in [1,2]:   # (need 500Mbyte free or 80% max
 			U.restartMyself(reason=" out of space ", python3=usePython3)
-			subprocess.call("sudo killall -9 python;sudo killall -9 python3; sleep 2;sudo reboot -f", shell=True)
-
-		try:
-			if os.path.isfile("{}permanent.log".format(G.homeDir)) and os.path.getsize("{}permanent.log".format(G.homeDir)) > 20000:
-				subprocess.call("tail -300 {}permanent.log > {}tempFileaa ; mv {}tempFileaa  {}permanent.log".format(G.homeDir,G.homeDir,G.homeDir,G.homeDir), shell=True)
-		except: pass
+			# sync BEFORE reboot -f. "-f" means do not tell userspace and do not unmount, so an
+			# explicit sync is the only thing standing between this and a filesystem that comes back
+			# with holes in it - NUL runs in /var/log/pibeacon, and a dosfsck "data may be corrupt"
+			# on the boot partition. forceReboot.sh (the default doReboot path) and the REBOOTFORCE
+			# constant both sync first; this one did not.
+			subprocess.call("sudo killall -9 python;sudo killall -9 python3; sudo sync;sync; sleep 2;sudo reboot -f", shell=True)
 
 		#U.logger.log(20, "checking for "+G.logDir+"pibeacon")
 		fname = G.logDir+"pibeacon"
@@ -1636,8 +1677,12 @@ def checkLogfiles():
 			nBytes = int(os.path.getsize(fname))
 			#U.logger.log(20, "checking pibeacon logfile size: {}>{}, reset:{}?".format(nBytes, maxSizeOfLogfileOnRPI, nBytes > maxSizeOfLogfileOnRPI))
 			if nBytes > maxSizeOfLogfileOnRPI: # default 10 mBytes
-				restart = True
-
+				# NO RESTART for a full logfile any more. The restart was never about the disk, it
+				# was how the loggers got off the rotated-away inode: a plain FileHandler holds the
+				# inode it opened, so without a restart every program went on writing into
+				# pibeacon-1. setLogging uses WatchedFileHandler now, which reopens the path by
+				# itself, so a 10 MB log costs a rename instead of restarting every program on the
+				# rpi - and with it the beacons, the sensors and the displays.
 				if  os.path.isfile(fname+"-1"):  
 					U.removeFile(fname + "-1")
 				subprocess.call("sudo mv "+fname+" "+fname+"-1 ", shell=True)
@@ -2296,21 +2341,34 @@ def checkBTfirmware():
 		# one unreadable line with literal \n in it instead of the installer's report.
 		res = U.readPopen("sudo /usr/bin/python3 -E {}installBTfirmware.py".format(G.homeDir))
 		out, err = res if (isinstance(res, tuple) and len(res) == 2) else ("", "")
-		toIndigo = []
+		toIndigo = {10: [], 30: []}
 		for line in "{}\n{}".format(out, err).split("\n"):
 			line = line.rstrip()
 			if line.strip() == "":	continue
 			U.logger.log(20, "{}".format(line))
-			# "BTFIRMWARE:" is printed by the installer ONLY when something really happened - a patch
-			# installed and loaded, or a failure. A quiet start prints none, which is what keeps a
-			# level-30 line out of the indigo log on every boot of every rpi.
+			# "BTFIRMWARE:<level>:" is printed by the installer ONLY when something really happened -
+			# a patch installed and loaded, or a failure. A quiet start prints none, which is what
+			# keeps any line at all out of the indigo log on every boot of every rpi. The LEVEL comes
+			# from the installer, because only it knows whether the news is good: the patch loading
+			# is a success and goes at 10, everything that needs somebody to look stays at 30.
 			if line.strip().startswith("BTFIRMWARE:"):
-				toIndigo.append(line.strip()[len("BTFIRMWARE:"):].strip())
-		if toIndigo:
-			# -> indigo log at level 30 (the plugin logs a 'warning' payload as "pi#<n>: ..." at 30).
-			# This is a one-off per rpi and it changes how its radios behave, so it belongs in the
-			# plugin log and not only in a log file on the rpi that nobody reads.
-			U.sendURL(data={"data": {"warning": "bluetooth firmware: " + "; ".join(toIndigo)}},
+				rest = line.strip()[len("BTFIRMWARE:"):]
+				lvl  = 30
+				if rest.find(":") > -1:
+					head, tail = rest.split(":", 1)
+					try:
+						if int(head.strip()) in toIndigo:
+							lvl  = int(head.strip())
+							rest = tail
+					except:	pass
+				toIndigo[lvl].append(rest.strip())
+		for lvl in (30, 10):
+			if not toIndigo[lvl]:	continue
+			# the plugin logs a 'warning' payload at 30 and a 'debug' one at 10, both as
+			# "pi#<n>: ..". A patch that did not take changes how that rpi's radios behave and has
+			# to be seen; a patch that loaded is a one-liner for whoever is looking.
+			key = "warning" if lvl == 30 else "debug"
+			U.sendURL(data={"data": {key: "bluetooth firmware: " + "; ".join(toIndigo[lvl])}},
 						squeeze=False, wait=False)
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
@@ -3540,6 +3598,8 @@ def execMaster():
 		checkFilesystem()
 
 		checkIfGpioIsInstalled()
+
+		cleanLogHoles()			# before anything else logs into the file we are about to replace
 
 		checkstartOtherProgram(init =True)
 		U.logger.log(20, "=========START-8.. adhocWifiStarted:{}<< G.ipAddress:{}<<, RTCpresent:{}<<, networkType:{}<<".format(adhocWifiStarted, G.ipAddress, RTCpresent, G.networkType) )

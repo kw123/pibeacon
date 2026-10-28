@@ -234,7 +234,7 @@ def setLogging(doLog=True):
 	global logging, logger
 	import logging
 	import logging.handlers
-	global streamhandler, permLogHandler
+	global streamhandler
 	global failedURLimport
 
 	# timestamps with TENTHS of a second: a plain datefmt cannot express that
@@ -245,17 +245,23 @@ def setLogging(doLog=True):
 
 	logFormat = '%(asctime)s %(module)-17s %(funcName)-22s L:%(lineno)-4d %(message)s'
 
-	# regular logfile
-	logging.basicConfig(level=logging.INFO, filename= "{}pibeacon".format(G.logDir),format=logFormat, datefmt='%d-%H:%M:%S')
-	for hh in logging.getLogger().handlers: hh.setFormatter(TenthSecFormatter(logFormat, datefmt='%d-%H:%M:%S'))
+	# regular logfile - WatchedFileHandler, NOT basicConfig's plain FileHandler. A FileHandler holds
+	# the INODE it opened, not the path, so after checkLogfiles() rotates the log ("mv pibeacon
+	# pibeacon-1" plus a new empty pibeacon) it keeps writing into the file that was moved away -
+	# and that file is deleted at the next rotation. It was survivable only because rotation set
+	# restart=True and a master restart takes every program with it; the restart was doing the
+	# reopening. WatchedFileHandler stats the path and reopens when the device/inode changes, so
+	# rotation needs no restart at all - a 10 MB logfile no longer costs the rpi every program it
+	# runs - and the low-disk "truncate in place" path stops leaving a hole in the file too.
+	logFileHandler = logging.handlers.WatchedFileHandler("{}pibeacon".format(G.logDir))
+	logFileHandler.setFormatter(TenthSecFormatter(logFormat, datefmt='%d-%H:%M:%S'))
+	logFileHandler.setLevel(logging.INFO)
 	logger = logging.getLogger(__name__)
-
-	# permanent logfile in pibeacon directory only for serious restarts, in case log dir is ramdisk
-	permLogHandler = logging.handlers.WatchedFileHandler("{}permanent.log".format(G.homeDir))
-	permFormat = TenthSecFormatter(logFormat, datefmt='%d-%H:%M:%S')
-	permLogHandler.setFormatter(permFormat)
-	permLogHandler.setLevel(logging.CRITICAL)
-	logger.addHandler(permLogHandler)
+	logger.setLevel(logging.INFO)
+	logger.addHandler(logFileHandler)
+	# nothing above us: the root logger has no handlers here, and propagate=True would send every
+	# record to logging.lastResort (stderr, WARNING+) on top of our own stream handler
+	logger.propagate = False
 
 	# console output
 	streamhandler = logging.StreamHandler()
@@ -276,7 +282,7 @@ def setLogging(doLog=True):
 
 	# see fixLogPermissions: without this the first sudo-started program owns the logfiles and
 	# everything that later runs as pi logs into the void
-	fixLogPermissions(["{}pibeacon".format(G.logDir), "{}permanent.log".format(G.homeDir), G.restartLogfileName])
+	fixLogPermissions(["{}pibeacon".format(G.logDir), G.restartLogfileName])
 
 	G.loggerSet = True
 
@@ -325,21 +331,20 @@ def setLogging(doLog=True):
 
 #################################
 def setLogLevel():
-	"""Sets the logger level to DEBUG or INFO based on the global debug flag, and fixes the permanent log handler to CRITICAL and the console stream handler to WARNING.
+	"""Sets the logger level to DEBUG or INFO based on the global debug flag, and fixes the console stream handler to WARNING.
 
 	Inputs:
 	    None.
 	Outputs:
 	    None: adjusts logging levels on the global handlers
 	"""
-	global streamhandler, permLogHandler, logger
+	global streamhandler, logger
 	if G.debug !=0:
 		logger.setLevel(logging.DEBUG)
 	else:
 		logger.setLevel(logging.INFO)
 	logger.log(10, "cBY:{:<20} setting debuglevel to {}".format(G.program, "on" if  G.debug == 1 else "off"))
 
-	permLogHandler.setLevel(logging.CRITICAL)
 	streamhandler.setLevel(logging.WARNING)
 
 
@@ -4409,7 +4414,7 @@ def usbIdOfHCI(hciName):
 # AF_BLUETOOTH keep /bin/hciconfig - same two-engine shape as the gatt code
 _versionLogged = False	# setLogging() logs the version line once per process - see the note there
 
-VERSION = "1.3"			# piBeaconUtils itself - every rpi program logs this next to its own version,
+VERSION = "1.4"			# piBeaconUtils itself - every rpi program logs this next to its own version,
 						# so a partial file send shows up as a version mismatch in the log instead of
 						# as mysterious behaviour hours later
 
@@ -4683,12 +4688,28 @@ def hciUnblock():
 	return
 
 #################################
-def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=False, escape=False, forceCompress=False):
+def sendURL(data=None, sendAlive="", text="", wait=True, verbose=False, squeeze=False, escape=False, forceCompress=False):
 
 	"""Queues a data payload to be sent to the Indigo plugin server, starting the background send thread if not already running; skips sending entirely when the network is unavailable or off.
 
+	data=None, NOT data={}. A MUTABLE DEFAULT IS ONE DICT SHARED BY EVERY CALL that does not pass
+	its own, and the send thread WRITES INTO IT - program, pi, ipAddress, ts, msgType, text, and
+	"reboot" for a reboot message. So the keys accumulated for the life of the process: after one
+	doReboot(), every later sendURL() without data still carried reboot=True, and after one
+	checkSystemLOG register dump or one dosfsck report, every later one still carried that text.
+	In master that is 9 calls sharing one dict (5 reboots, the dump, the dosfsck report, the
+	raspi-config dump and the heartbeat).
+	It was almost invisible while the heartbeat went out as a "regular" message, because the
+	plugin's regular path reads none of those keys. On the alive path it reads all three, and two
+	of them make it RETURN BEFORE it refreshes that rpi's silence clock: a stale "_dump_" or
+	"data_may_be_corrupt" in text is answered with "please replace the SD" and a return, so the rpi
+	would be counted as silent while it was heartbeating perfectly, and a stale reboot flag makes
+	every heartbeat look like a fresh reboot notification.
+	The caller's dict is copied as well: the thread adds a new "ts" on every one of the 5 retries,
+	which has no business happening inside a dict the caller still holds.
+
 	Inputs:
-	    data (dict): Payload to send to the plugin server
+	    data (dict or None): Payload to send to the plugin server; None means an empty payload
 	    sendAlive (str): Alive-message type tag (e.g. 'alive', 'reboot') or empty for regular
 	    text (str): Optional text field added to the payload
 	    wait (bool): Whether the send should wait
@@ -4711,6 +4732,8 @@ def sendURL(data={}, sendAlive="", text="", wait=True, verbose=False, squeeze=Fa
 				G.sendThread = { "run":True, "queue": Queue.Queue(), "thread": threading.Thread(name='execSend', target=execSend, args=())}
 				G.sendThread["thread"].start()
 
+			if data is None:	data = {}
+			else:				data = dict(data)
 			G.sendThread["queue"].put({"data":data, "sendAlive":sendAlive, "text":text, "wait":wait, "verbose":verbose, "squeeze":squeeze, "escape":escape, "forceCompress":forceCompress})
 	except Exception as e:
 		logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
@@ -4870,7 +4893,12 @@ def execSend():
 									except Exception as e:
 										errCode = str(e)
 										logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, errCode))
-										logger.log(20, "cBY:{:<20} trying to send  bytes: compr:{}, unc:{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
+										# labels were SWAPPED: "compr:" got len(dataC), the json, and "unc:" got
+										# len(data0), the bytes actually going out. It read as a compressor
+										# that inflates - "compr:4141, unc:1182" in a real log - which is
+										# exactly the wrong thing for a line whose job is to show how big the
+										# message on the wire is.
+										logger.log(20, "cBY:{:<20} trying to send  bytes: json:{}, wire:{};  starting w:{}".format(G.program, len(dataC), len(data0), dataC[:100]))
 										if errCode.find("Network is unreachable") >-1: socketError += 1
 										try:	soc.shutdown(socket.SHUT_RDWR)
 										except: pass
@@ -4911,11 +4939,21 @@ def execSend():
 
 ######## un decode i2c ether from in or from hex
 def echoToMessageSend(data, wasSend):
-	"""Logs and appends a record of a sent (or unsent) message to the temp/messageSend file, truncating very long data payloads before writing.
+	"""Logs a record of a sent (or unsent) message to the temp/messageSend file, truncating very long data payloads before writing.
+
+	THIS FILE'S MTIME IS THE RPI'S HEARTBEAT CLOCK. Every program on the rpi writes it through
+	here - they all have their own copy of this module but share one temp/ - so its mtime is what
+	checkIfAliveNeedsToBeSend() reads to decide whether anything on this rpi has sent lately.
+	A FAILED send moves it too, DELIBERATELY: a send fails when the plugin is being reloaded or the
+	network is really broken, and in both cases the right answer is to back off for the full
+	interval rather than to keep hammering a plugin that is coming back up. The plugin resets every
+	rpi's silence clock to "now" when it starts anyway, so the silence either side of a reload
+	cannot be mistaken for a dead master.
 
 	Inputs:
 	    data (str): Serialized message content that was sent
-	    wasSend (str): Status label describing the send outcome
+	    wasSend (str): Status label describing the send outcome - it is the only place the outcome
+	        is recorded, because the clock deliberately moves either way
 	Outputs:
 	    None: Logs and writes the send record to a file
 	"""
@@ -6091,8 +6129,35 @@ def testBad(newX, lastX, inXXX, deltaAbs=99999999.):
 
 
 #################################
+_lateHeartbeatWarn = [0.]		# throttle for the "heartbeat is late" line, see checkIfAliveNeedsToBeSend
+
 def checkIfAliveNeedsToBeSend():
-	"""Checks the modification time of the temp/messageSend file and, if more than 100 seconds have elapsed since the last message, sends an 'alive' signal to the plugin via sendURL.
+	"""Sends the rpi's heartbeat to the plugin - at the latest 120 secs after the rpi last sent
+	anything at all, and every 240 secs in any case.
+
+	TWO CADENCES, because the two questions are different:
+	  QUIET RPI, nothing of ANY kind sent for 120 secs. temp/messageSend is written by every
+	    program on the rpi (see echoToMessageSend), so its mtime is the only thing that knows
+	    whether this rpi has reached the plugin lately. On a ble rpi carrying beacon traffic this
+	    never fires, which is the point - no message is added to a busy link.
+	  ANY RPI, no alive message for 240 secs. A chatty rpi could go hours without one, so the
+	    plugin had no fresh temperature / throttle / last-boot information from it at all.
+	The plugin calls 180 secs of silence a dead master and restarts master.py over ssh, so the
+	quiet beat must leave room for a missed one: master's main loop sleeps 20 secs per pass plus
+	whatever the pass did, and a pass that runs an i2c scan or a dosfsck takes much longer.
+	120 + that granularity against 180 was NOT enough room - the plugin's threshold is 360 secs
+	now, which is three beats.
+
+	AND IT SAYS SO WHEN THE BEAT SLIPS. Whether the heartbeat is really sent often enough is not a
+	thing to reason about: if the gap since this rpi last sent anything has grown past 180 secs by
+	the time this check runs, the check itself did not run often enough - master's loop was busy
+	elsewhere - and that is logged at level 30 with the real number. Silent while healthy, because
+	a healthy gap is ~120-140 secs.
+
+	NO EXTRA BEAT WHEN THE PLUGIN IS AWAY. A failed send moves temp/messageSend's mtime like a
+	successful one (see echoToMessageSend), so a plugin that is reloading is retried once per
+	interval and not once per main loop - and the plugin resets every rpi's silence clock to "now"
+	when it starts, so it does not need to be told by 14 rpis at once that they are alive.
 
 	Inputs:
 	    None.
@@ -6100,13 +6165,28 @@ def checkIfAliveNeedsToBeSend():
 	    None: may call sendURL to send an alive heartbeat; logs errors
 	"""
 	try:
+		tt = time.time()
 		lastSend = 0
 		if os.path.isfile("{}temp/messageSend".format(G.homeDir)):
 			try:  	lastSend = float(os.path.getmtime("{}temp/messageSend".format(G.homeDir)))
 			except:	lastSend = 0
-		#logger.log(20, "cBY:{:<20} last messageSend was {:.1f} sec ago".format(G.program, time.time() - lastSend ))
-		if time.time() - lastSend > 100:	 # do we have to send alive signal to plugin?
-			sendURL(sendAlive=True )
+		#logger.log(20, "cBY:{:<20} last messageSend was {:.1f} sec ago".format(G.program, tt - lastSend ))
+		if lastSend > 0 and tt - lastSend > 180. and tt - _lateHeartbeatWarn[0] > 300.:
+			# throttled to one line per 5 minutes: with no network at all sendURL returns without
+			# queueing anything, so nothing touches temp/messageSend and this condition would
+			# otherwise hold on every pass for as long as the network is gone.
+			_lateHeartbeatWarn[0] = tt
+			logger.log(30, "cBY:{:<20} HEARTBEAT IS LATE: nothing sent for {:.0f} secs, and the 120 sec check only "
+						"runs once per main loop pass - so the loop itself was busy that long, or the network is "
+						"gone. The plugin calls 360 secs of silence a dead master and restarts this program over "
+						"ssh".format(G.program, tt - lastSend))
+		if tt - lastSend > 120 or tt - G.lastAliveSend2 > 240:
+			# "alive", not True: True matches none of the sendAlive tests in sendURL, so the
+			# heartbeat went out as an ordinary pi_IN_<n> message with msgType "regular". It still
+			# refreshed the plugin's silence clock, so nothing looked wrong, but it was not an
+			# alive message - it carried no msgType the plugin could recognise and it never
+			# updated G.lastAliveSend2, which the 240 sec cadence above reads.
+			sendURL(sendAlive="alive")
 	except Exception as e:
 		logger.log(20, "cBY:{:<20} Line {} has error={}".format(G.program, sys.exc_info()[-1].tb_lineno, e))
 	return
