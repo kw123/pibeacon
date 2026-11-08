@@ -819,7 +819,12 @@ def startSensor(devId, CO2Target="", reset=False):
 	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCO2Target, altitudeCompensation
 	startTime =time.time()
 
-	
+	# SELECT THE MUX CHANNEL FIRST - same omission as sensirionscd30.py had: this program only ever
+	# called muxTCA9548Areset(), which DESELECTS every channel, so a scd40 behind a TCA9548A could
+	# never be reached. select-before-use / reset-after is the pattern every other i2c sensor
+	# program follows (si7021 is the model); these two had only the second half.
+	U.muxTCA9548A(sensors[sensor][devId])
+
 	if devId  in SENSOR:
 		if reset:
 			U.logger.log(20," soft resetting sensor")
@@ -903,7 +908,8 @@ def getValues(devId):
 	global serialNumber, sensorTemperatureOffset, autoCalibration, sensorCO2Target, altitudeCompensation
 	global badSensor
 
-	
+	U.muxTCA9548A(sensors[sensor][devId])		# the channel has to be open before every read too
+
 	try:
 		if devId not in SENSOR:
 			startSensor(devId) 

@@ -1,14 +1,14 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 # by Karl Wachs
 # April 16 2020
 # version 1.1 
 ##
 ##
-from __future__ import division
-
 import math
 
 import	sys, os, time, json, datetime,subprocess,copy

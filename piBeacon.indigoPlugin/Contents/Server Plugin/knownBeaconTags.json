@@ -225,6 +225,7 @@
    ],
    "commands": {},
    "comment": "  S e n s o r B u g + # ",
+   "correspondingSensorType": "BLEblueradio",
    "correspondingSwitchbotDevice": "",
    "dBm": "-59",
    "hexCode": "0953656E736F72427567-",
@@ -805,6 +806,7 @@
     "batteryLevel": {}
    },
    "comment": "",
+   "correspondingSensorType": "BLEminewS1TH",
    "correspondingSwitchbotDevice": "",
    "dBm": "-61",
    "hexCode": "18XXXXXXXXXXXXXXXX16E1FFA101XXXXXXXXXXRMAC########-",
@@ -1438,7 +1440,15 @@
      "type": "FF"
     }
    ],
-   "commands": {},
+   "commands": {
+    "beep": {
+     "beaconModeUUID": "cb9e957e-952d-4761-a7e1-4416494a5bfa",
+     "buzzerUUID": "5b026510-4088-c297-46d8-be6c736a087b",
+     "comment": "shelly BLU buzzer. NOT gatttool: every writable characteristic on this device is write-bonded, so it needs a real bluez bond and the write goes through bluetoothctl gatt by UUID. Beacon mode must be ON for the buzzer to work; the device stops it after 30s by itself.",
+     "random": "randomON",
+     "type": "BLEbonded"
+    }
+   },
    "comment": "",
    "correspondingShellyButtonDevice": "BLEShellyButton",
    "correspondingSwitchbotDevice": "",
@@ -2475,6 +2485,7 @@
     }
    },
    "comment": "       L Y W S D 0 3 M M C  TH sensor w display, small square w lipo cr2032 battery requires gattool connection",
+   "correspondingBLEConnectSensorType": "BLEXiaomiMiTempHumSquare",
    "correspondingSwitchbotDevice": "",
    "dBm": "-61",
    "hexCode": "0C0B094C5957534430334D4D43-",

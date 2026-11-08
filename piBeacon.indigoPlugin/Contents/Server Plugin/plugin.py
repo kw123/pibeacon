@@ -37,6 +37,7 @@ import logging
 import zlib
 
 import MAC2Vendor
+import pwCrypt		# local copy of the utilities plugin's module - no indigo dependency
 from checkIndigoPluginName import checkIndigoPluginName
 #import pydevd_pycharm
 #pydevd_pycharm.settrace('localhost', port=5678, stdoutToServer=True, stderrToServer=True)
@@ -230,6 +231,21 @@ class Plugin(indigo.PluginBase):
 
 		self.indigo_log_handler.setLevel(logging.INFO)
 
+		# PASSWORDS IN THE PLUGIN PREFS ARE STORED ENCRYPTED ("enc1:.."), same scheme as the
+		# utilities plugin (shared pwCrypt.py). The key is derived from the hardware id of THIS
+		# Mac, so a copy of the prefs is useless on another one - restored there, the passwords
+		# have to be entered again. self.passwordOfServer / self.wifiPassword always hold the
+		# PLAIN text; loadPasswords() in setVariables() decrypts them once.
+		# "passwordsEncrypted" is deliberately NOT in kDefaultPluginPrefs: its ABSENCE is how
+		# loadPasswords() recognizes prefs written before this version (= plain text), and the
+		# defaults loop above would create it before that test could ever run.
+		self.pw							= pwCrypt.PwCrypt(self.pluginId)
+		self.passwordsEncrypted			= False
+		self.passwordErrors				= indigo.Dict()
+		self.passwordsPlain				= {}
+		self.passwordOfServer			= ""
+		self.wifiPassword				= ""
+
 		self.indiLOG.log(20,"initializing  ... ")
 		self.indiLOG.log(20,"path To files:          =================")
 		self.indiLOG.log(10,f"indigo                  {self.indigoRootPath}")
@@ -341,9 +357,11 @@ class Plugin(indigo.PluginBase):
 			self.fixBundledExecutables()
 
 			if self.userIdOfServer != "":
-				cmd = "echo '"+self.passwordOfServer+"' | sudo -S /usr/bin/xattr -rd com.apple.quarantine '"+self.pathToPlugin+"pngquant'"
-				ret, err = self.readPopen(cmd)
-				if self.decideMyLog("Logic"): self.indiLOG.log(10,f"setting attribute for catalina  with:  {cmd}")
+				# sudo -S READS THE PASSWORD FROM STDIN, so it goes there and not into the command
+				# line, which every user on this mac can read with "ps -ef"
+				cmd = "sudo -S /usr/bin/xattr -rd com.apple.quarantine '"+self.pathToPlugin+"pngquant'"
+				ret, err = self.readPopen(cmd, stdin=self.passwordOfServer+"\n")
+				if self.decideMyLog("Logic"): self.indiLOG.log(10,f"setting attribute for catalina  with:  {self.maskPw(cmd)}")
 				if self.decideMyLog("Logic"): self.indiLOG.log(10,f" ......... result:{ret}")
 
 			self.setSqlLoggerIgnoreStatesAndVariables()
@@ -1013,7 +1031,11 @@ class Plugin(indigo.PluginBase):
 				gattBeep = False
 				if typeOfBeacon in self.knownBeaconTags["input"] and "commands" in self.knownBeaconTags["input"][typeOfBeacon]:
 					beepCmd = self.knownBeaconTags["input"][typeOfBeacon]["commands"].get("beep", {})
+					# "BLEbonded" (shelly BLU) has no gatttool command list at all - the write goes
+					# through bluetoothctl on a real bond - but it still belongs in the beep menu,
+					# and beaconBeepUUID is the flag that puts it there.
 					if "cmdON" in beepCmd or "cmdSeq" in beepCmd: gattBeep = True
+					if f"{beepCmd.get('type','')}" == "BLEbonded": gattBeep = True
 				if gattBeep and props.get("beaconBeepUUID","") != "gatttool":
 					props["beaconBeepUUID"] = "gatttool"
 					try:	dev.replacePluginPropsOnServer(props)
@@ -1697,6 +1719,51 @@ class Plugin(indigo.PluginBase):
 	####-------------------------------------------------------------------------####
 	####----------- device edit validation section -      -----------------------####
 	####-------------------------------------------------------------------------####
+	def showLastRPIforDev(self, dev):
+		"""Whether to write this device's lastUpdateFromRPI state.
+
+		The config setting decides how much say the device has:
+		    allOn      - on for every device, the device setting is ignored
+		    allOff     - off for every device, the device setting is ignored
+		    deviceOn   - the device decides; "use the plugin-config setting" means ON
+		    deviceOff  - the device decides; "use the plugin-config setting" means OFF
+		and the device's own field is on / off / useDefault.
+
+		The state names the rpi a device was last heard by. It is the noisiest state the plugin
+		writes - about a quarter of all writes - and it is useful on one or two devices at a time,
+		which is why "deviceOff" is the default: off everywhere, switched on where you are looking.
+
+		Cached per dev.id, because this is asked on every message from every rpi and reading
+		pluginProps that often is not free; closedDeviceConfigUi clears the entry when a dialog is
+		saved, and a config save clears the lot.
+
+		Inputs:
+		    dev (indigo.Device): the device whose state would be written
+		Outputs:
+		    bool: True = write the state, False = leave it showing _lastRPIoffText
+		"""
+		# getattr, not self.x: the attributes are set in setVariables() and this can be reached
+		# from a socket thread before that has run - and an AttributeError inside the except
+		# clause would be raised, not swallowed.
+		_cfg = f"{getattr(self, 'lastRPIstateMode', 'deviceOff')}"
+		if _cfg == "allOn":		return True
+		if _cfg == "allOff":	return False
+		_dflt = (_cfg == "deviceOn")
+		try:
+			_cache = getattr(self, "showLastRPIcache", None)
+			if _cache is None:	return _dflt
+			if dev.id in _cache:	return _cache[dev.id]
+			_mode = f"{dev.pluginProps.get('lastUpdateFromRPImode','useDefault')}"
+			if   _mode == "on":		_show = True
+			elif _mode == "off":	_show = False
+			else:					_show = _dflt
+			_cache[dev.id] = _show
+			return _show
+		except Exception:
+			return _dflt
+
+
+	####-------------------------------------------------------------------------####
 	def closedDeviceConfigUi(self, valuesDict, userCancelled, typeId, devId):
 		"""Saving a device dialog replaces the device and rebuilds its state list, which resets the
 		uiValues to the raw state values - so the text+image the config button just applied are
@@ -1712,6 +1779,10 @@ class Plugin(indigo.PluginBase):
 		"""
 		try:
 			if userCancelled:	return
+			# before the early return below: EVERY device type can carry the
+			# lastUpdateFromRPImode override, not just the ones with an onOffState
+			try:	del self.showLastRPIcache[int(devId)]
+			except Exception:	pass
 			dev = indigo.devices[int(devId)]
 			if "onOffState" not in dev.states:	return
 			self.delayedActions["data"].put({"actionTime":time.time()+2., "devId":dev.id, "updateItems":[{"applyOnOffDisplay":True}]})
@@ -5047,6 +5118,12 @@ class Plugin(indigo.PluginBase):
 		try:
 			self.getDebugLevels(useMe=valuesDict)
 
+			# FIRST: the password fields hold either an unchanged "enc1:.." token or newly typed
+			# plain text. This replaces them with what gets stored and puts the plain text into
+			# self.passwordsPlain - the comparisons further down need plain against plain.
+			if not self.savePasswords(valuesDict):
+				return (False, valuesDict, self.passwordErrors)
+
 			test = valuesDict["debugRPI"]
 			try: 	test = int(test)
 			except:	test = -1
@@ -5123,6 +5200,9 @@ class Plugin(indigo.PluginBase):
 			if xxx != self.restartBLEifNoConnect:
 				self.setALLrPiV("piUpToDate", ["updateParamsFTP"])
 			self.restartBLEifNoConnect				= xxx
+			# the per-device cache holds decisions that fall back to this pref, so it goes
+			self.lastRPIstateMode					= f"{valuesDict.get('updateLastUpdateFromRPIstate', 'deviceOff')}"
+			self.showLastRPIcache					= {}
 
 
 			try: self.enableRebootRPIifNoMessages	 = int(valuesDict["enableRebootRPIifNoMessages"])
@@ -5285,7 +5365,7 @@ class Plugin(indigo.PluginBase):
 
 			self.userIdOfServer = valuesDict["userIdOfServer"]
 
-			self.passwordOfServer = valuesDict["passwordOfServer"]
+			self.passwordOfServer = self.passwordsPlain["passwordOfServer"]
 
 			pp = valuesDict["GPIOpwm"]
 			if pp != self.GPIOpwm:
@@ -5295,7 +5375,7 @@ class Plugin(indigo.PluginBase):
 
 			# not fields of the dialog (any more) - .get, so a prefs file without them does not abort the save here
 			ss = valuesDict.get("wifiSSID", "")
-			pp = valuesDict.get("wifiPassword", "")
+			pp = self.passwordsPlain["wifiPassword"]
 			kk = valuesDict.get("key_mgmt", "")
 			eth0					= '{"on":"dontChange",	"useIP":"use"}'
 			wlan0					= '{"on":"dontChange",	"useIP":"useIf"}'
@@ -5719,7 +5799,7 @@ class Plugin(indigo.PluginBase):
 				if props["typeOfBeacon"] not in self.knownBeaconTags["input"]: continue
 				if "commands" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]: continue
 				if "beep" not in self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]: continue
-				if self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]["beep"]["type"] == "BLEconnect":
+				if self.knownBeaconTags["input"][props["typeOfBeacon"]]["commands"]["beep"]["type"] in ("BLEconnect", "BLEbonded"):
 					xList.append( (f"{dev.id}", dev.name ) )
 
 		return xList
@@ -12202,6 +12282,30 @@ class Plugin(indigo.PluginBase):
 				valuesDict["MSG"] = "rejected, rpi not defined"
 				return valuesDict
 
+			# A BONDED DEVICE CAN ONLY BE BEEPED BY THE rpi THAT HOLDS THE BOND - the keys live in
+			# /var/lib/bluetooth of that one adapter, so "closest rpi" is the wrong answer here and
+			# any other rpi would just fail to connect. Override it and say so.
+			try:
+				_tob = f"{dev.pluginProps.get('typeOfBeacon','')}"
+				_bt  = self.knownBeaconTags["input"].get(_tob,{}).get("commands",{}).get("beep",{}).get("type","")
+				if f"{_bt}" == "BLEbonded":
+					_bonded = set(getattr(self, "shellyBondedPi", {}).get(f"{dev.address}".strip().upper(), set()))
+					if not _bonded:
+						valuesDict["MSG"] = "rejected, no rPi is paired to this device yet - use 'relink' in its device dialog first"
+						return valuesDict
+					if piU not in _bonded:
+						# SEVERAL rpis CAN BE PAIRED. Prefer the closest one that is, otherwise the
+						# lowest numbered - any of them can do it, an unpaired one cannot.
+						_closest = f"{dev.states.get('closestRPI','')}".strip()
+						if _closest in _bonded:	_pick = _closest
+						else:
+							try:	_pick = sorted(_bonded, key=lambda x: int(x))[0]
+							except Exception:	_pick = sorted(_bonded)[0]
+						self.indiLOG.log(20,f"beep {dev.name}: rPi#{piU} is not paired to it - sending to rPi#{_pick} instead (paired: {','.join(sorted(_bonded))})")
+						piU = _pick
+			except Exception:
+				self.indiLOG.log(40,"", exc_info=True)
+
 			if "mustBeUp" in valuesDict and valuesDict["mustBeUp"] == "1":
 				mustBeUp = True
 			else:
@@ -12248,6 +12352,154 @@ class Plugin(indigo.PluginBase):
 			self.indiLOG.log(40,"", exc_info=True)
 		return valuesDict
 
+
+
+	####-------------------------------------------------------------------------####
+	def filterPiDInclAllBonded(self, filter="blue", valuesDict=None, typeId=None, devId=None, action=None):
+		"""The rPi list for the BEEP dialogs: for a device that needs a pairing, only the rPis that
+		HAVE one. Any other rpi cannot connect to it at all, so offering them is just a trap.
+
+		Needs dynamicReload="true" on the field, because the answer depends on which beacon is
+		selected in the same dialog. Anything that is not a bonded type gets the normal list.
+		"""
+		_why = ""
+		try:
+			sel = f"{(valuesDict or {}).get('selectbeacon','')}".strip()
+			if sel in ("", "-1"):
+				_why = "no beacon selected yet"
+			else:
+				dev   = indigo.devices[int(sel)]
+				_tob  = f"{dev.pluginProps.get('typeOfBeacon','')}"
+				_bt   = f"{self.knownBeaconTags['input'].get(_tob,{}).get('commands',{}).get('beep',{}).get('type','')}"
+				if _bt != "BLEbonded":
+					_why = f"{dev.name}: typeOfBeacon '{_tob}' has beep type '{_bt}', not BLEbonded - no pairing needed"
+				else:
+					# THE MAC, NOT dev.address ALONE. A beacon's address IS its mac, but the keys in
+					# shellyBondedPi come from the rpi messages, so match on both spellings and on
+					# the props mac - one mismatched case here silently showed every rpi again.
+					_reg  = getattr(self, "shellyBondedPi", {})
+					_keys = [f"{dev.address}", f"{dev.address}".upper(),
+							 f"{dev.pluginProps.get('mac','')}".strip(), f"{dev.pluginProps.get('mac','')}".strip().upper()]
+					bonded = set()
+					for _k in _keys:
+						if _k and _k in _reg:
+							bonded = set(_reg[_k]); break
+					if not bonded:
+						self.indiLOG.log(20,f"beep rPi list for {dev.name}: no rPi has reported a pairing yet (looked for {[k for k in _keys if k]}, known: {list(_reg.keys())[:4]}) - pair it in its device dialog")
+						return [("-1", "none - no rPi is paired to this device yet (pair it in its device dialog)")]
+					out = []
+					for piU in sorted(bonded, key=lambda x: int(x) if f"{x}".isdigit() else 999):
+						out.append((f"{piU}", f"rPi {piU}  (paired)"))
+					return out
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+			_why = "error, see the log above"
+		# no log on this path: falling through is the NORMAL case for every beacon that needs no
+		# pairing, and the menu is opened often enough that saying so would be pure noise. The one
+		# case worth a line - a bonded type with no rpi paired yet - logs above.
+		return self.filterPiDInclAll(filter, valuesDict, typeId, devId, action)
+
+
+	####-------------------------------------------------------------------------####
+	def filterShellyRPIs(self, filter="", valuesDict=None, typeId=None, devId=None, action=None):
+		"""The rPis that monitor THIS shelly device, each labelled with its pairing status.
+
+		A shelly takes several bonds at once and bluez keeps the keys per radio, so pairing is a
+		per-rpi job - hence a list rather than one "the" rpi. Only the rpis actually enabled for
+		this device (rPiEnable<N>) are offered: pairing an rpi that never hears it is pointless.
+		"""
+		out = []
+		try:
+			dev    = indigo.devices[int(devId)]
+			props  = dev.pluginProps
+			bonded = set(getattr(self, "shellyBondedPi", {}).get(f"{props.get('mac','')}".strip().upper(), set()))
+			for piU in sorted(_rpiBeaconList, key=lambda x: int(x) if f"{x}".isdigit() else 999):
+				if not props.get(f"rPiEnable{piU}", False): continue
+				out.append((f"{piU}", f"rPi {piU}  -  {'PAIRED' if f'{piU}' in bonded else 'not paired'}"))
+			if not out: out = [("-1", "no rPi enabled for this device - tick one above first")]
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		return out
+
+
+	####-------------------------------------------------------------------------####
+	def testShellyLinkCALLBACK(self, valuesDict=None, typeId=None, devId=None):
+		"""Device-dialog button: ask one rPi whether its pairing with this shelly actually works.
+
+		Writes nothing and does not buzz. It tells apart the three states that look identical from
+		here: no pairing, a ONE-SIDED pairing (the button was factory reset, our keys remain, so
+		the state says paired and nothing works), and a good pairing with the device simply not
+		answering at that moment. The answer goes to the rpi log.
+		"""
+		return self._shellyBondJob(valuesDict, devId, mode="check")
+
+
+	####-------------------------------------------------------------------------####
+	def testShellyLinkBeepCALLBACK(self, valuesDict=None, typeId=None, devId=None):
+		"""Device-dialog button: test THIS rPi's pairing and BEEP the button if the test passes.
+
+		The silent test answers "are the keys here, does it connect, is the buzzer characteristic
+		reachable" - which is everything up TO the write. Hearing the button is the only check that
+		covers the rest: the write itself, and that the buzzer really is enabled on the device. So
+		the two sit side by side rather than one replacing the other - a silent one for when the
+		button is somewhere you do not want it chirping, this one when you want proof.
+		"""
+		return self._shellyBondJob(valuesDict, devId, mode="checkBeep")
+
+
+	####-------------------------------------------------------------------------####
+	def unpairShellyCALLBACK(self, valuesDict=None, typeId=None, devId=None):
+		"""Device-dialog button: remove THIS rPi's pairing with the shelly.
+
+		One side only: the button keeps its own copy of the key, so it still believes it is paired
+		and one of its bond slots stays used until the button itself is factory reset. Harmless -
+		pairing again writes fresh keys on both sides - and it is the way to hand the pairing to a
+		different rPi, or to clear one that has gone stale.
+		"""
+		return self._shellyBondJob(valuesDict, devId, mode="unpair")
+
+
+	####-------------------------------------------------------------------------####
+	def _shellyBondJob(self, valuesDict, devId, mode="pair"):
+		"""Queues a pair / link test / unpair for one shelly on one rPi. Shared by the 3 buttons."""
+		try:
+			if valuesDict is None: valuesDict = {}
+			dev = indigo.devices[int(devId)]
+			mac = f"{dev.pluginProps.get('mac','')}".strip().upper()
+			if mac == "":
+				valuesDict["MSG"] = "rejected, no mac set on this device"
+				return valuesDict
+			piU = f"{valuesDict.get('shellyPickRPI','')}".strip()
+			if piU in ("", "-1"):	piU = f"{dev.states.get('closestRPI','')}".strip()
+			if piU not in _rpiBeaconList:
+				valuesDict["MSG"] = "rejected, pick an rPi above (and tick it in the rPi list)"
+				return valuesDict
+			# "pair" IS NO LONGER OFFERED IN THE DIALOG, on purpose: arming an rpi from here still
+			# required somebody to walk over and hold the button past 10 s to open pairing mode, so
+			# the click bought nothing - and beaconloop arms the nearest rpi off that same hold by
+			# itself. The mode is kept because it is the rpi-side command and the stale-keys case
+			# goes out as "unpair" + a hold.
+			job = {"pair":      {"beep": True, "force": True},
+					"check":     {"check": True},
+					"checkBeep": {"check": True, "beep": True},
+					"unpair":    {"unpair": True}}.get(mode, {"beep": True, "force": True})
+			xx  = {"cmd":"bondBeacon", "piServerNumber":piU, "typeId":json.dumps({mac: job})}
+			self.setCurrentlyBooting(20, setBy="shelly link")
+			self.setPin(xx)
+			if mode in ("check", "checkBeep"):
+				_withBeep = " and BEEPING it" if mode == "checkBeep" else ""
+				valuesDict["MSG"] = f"testing the link from rPi#{piU}{_withBeep} - the answer appears in the indigo log in a few seconds"
+				self.indiLOG.log(20,f"link test {dev.name}: asked rPi#{piU}{_withBeep}, mac {mac}")
+			elif mode == "unpair":
+				valuesDict["MSG"] = f"unpairing rPi#{piU} from this button - the state bondedToRPI drops it within a few seconds"
+				self.indiLOG.log(20,f"unpair {dev.name}: asked rPi#{piU} to drop its keys, mac {mac}")
+			else:
+				valuesDict["MSG"] = f"pairing {mac} on rPi#{piU} - NOW HOLD THE BUTTON PAST 10 SECONDS; it buzzes when it worked and the result is logged"
+				self.indiLOG.log(20,f"relink {dev.name}: pairing queued on rPi#{piU}, mac {mac} - the button has to be HELD past 10s to enter pairing mode")
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+			valuesDict["MSG"] = "failed, see the log"
+		return valuesDict
 
 
 	####-------------------------------------------------------------------------####
@@ -13666,7 +13918,7 @@ class Plugin(indigo.PluginBase):
 		"""
 		cmd1 =""
 		try:
-			if cmd in["updateTimeAndZone", "beepBeacon", "getBeaconParameters", "resetDevice", "restartDevice", "startCalibration", "newMessage"]:
+			if cmd in["updateTimeAndZone", "beepBeacon", "bondBeacon", "getBeaconParameters", "resetDevice", "restartDevice", "startCalibration", "newMessage"]:
 				cmd1 = {"device": typeId, "command":cmd, "startAtDateTime": startAtDateTime}
 			elif cmd == "BLEAnalysis":
 				cmd1 = {"minRSSI": typeId, "command":cmd, "startAtDateTime": startAtDateTime}
@@ -13715,9 +13967,16 @@ class Plugin(indigo.PluginBase):
 
 
 			if cmd1 == "" or cmd1 == {}:
-				# nothing matched: sending this would be a no-op the user never hears about
-				self.indiLOG.log(30, f"sendGPIOCommand: NO command built for cmd:{cmd}, typeId:{typeId} - nothing sent to pi#{pi}")
-				return
+				# NO WHITELIST. The list at the top of this function is a payload SHAPE chooser, not
+				# a gate - BLEAnalysis needs "minRSSI", trackMac needs "mac", the GPIO types need
+				# pins and i2c addresses - but a command needing none of that used to fall through
+				# all of it and be dropped with a warning. That is how bondBeacon vanished: the
+				# relink and link-test buttons logged "asked rPi#N" on the mac and nothing ever
+				# reached the rpi. Now the plain shape is the DEFAULT, so a new command works
+				# without being listed anywhere and only the ones needing a special shape need a
+				# branch above.
+				cmd1 = {"device": typeId, "command": cmd, "startAtDateTime": startAtDateTime}
+				if self.decideMyLog("OutputDevice"): self.indiLOG.log(10, f"sendGPIOCommand: cmd:{cmd} has no special shape - sending the plain one to pi#{pi}")
 			if self.decideMyLog("OutputDevice"): self.indiLOG.log(10, f"sendGPIOCommand: to:{pi}-{ip}  {cmd1}")
 
 			self.sendtoRPI(ip, pi, [cmd1], calledFrom="sendGPIOCommand")
@@ -13833,12 +14092,13 @@ class Plugin(indigo.PluginBase):
 			expectTimeout = self.RPI[piU].get("expectTimeout","")
 			if expectTimeout == "": expectTimeout = self.expectTimeout
 			cmd = "/usr/bin/expect '" + self.pathToPlugin + expFile + "' "
-			cmd+=	self.RPI[piU]["userIdPi"] + " " + self.RPI[piU]["passwordPi"]+" " + prompt+" "
+			cmd+=	self._expectCredArgs() + prompt+" "
+			_env = self._expectEnv(self.RPI[piU]["userIdPi"], self.RPI[piU]["passwordPi"])
 			cmd+=	self.RPI[piU]["ipNumberPi"] + " "
 			cmd+=	piU + " '" + self.indigoPreferencesPluginDir + "' '" + self.pathToPlugin + "pi' "+expectTimeout+ " "+hostCheck
 
 			if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,f"updating pi server config for # {piU} executing\n{cmd}" )
-			ret, err = self.readPopen(cmd)
+			ret, err = self.readPopen(cmd, env=_env)
 			err = self.stripBenignStderr(err)
 
 			if expFile == "upgradeOpSysSSH.exp":
@@ -13854,7 +14114,7 @@ class Plugin(indigo.PluginBase):
 				# for one send
 				if self.sshUnreachable(ret, err):	return 1
 				self.indiLOG.log(10,f"return code from fix {ret}  trying again to configure PI")
-				ret, err = self.readPopen(cmd)
+				ret, err = self.readPopen(cmd, env=_env)
 
 			if ret[-600:].find("sftp> ") > -1:
 				if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,f"UpdateRPI seems to have been completed for pi# {piU}  {expFile}" )
@@ -13862,7 +14122,7 @@ class Plugin(indigo.PluginBase):
 				return 0
 			else:
 				self.sleep(2)  # try it again after 2 seconds
-				ret, err = self.readPopen(cmd)
+				ret, err = self.readPopen(cmd, env=_env)
 				if ret[-600:].find("sftp> ") > -1:
 					if self.decideMyLog("UpdateRPI"): self.indiLOG.log(10,f"UpdateRPI seems to have been completed for pi# {piU}  {expFile}" )
 					return 0
@@ -13908,10 +14168,11 @@ class Plugin(indigo.PluginBase):
 			if expectTimeout == "": expectTimeout = self.expectTimeout
 			prompt = self.getPasswordSshPrompt(piU, expFile)
 			checkHostfile = self.getHostFileCheck(piU)
-			cmd = "/usr/bin/expect '" + self.pathToPlugin + expFile+"'  " + self.RPI[piU]["userIdPi"] + " " + self.RPI[piU]["passwordPi"] + " " + prompt+" "+ self.RPI[piU]["ipNumberPi"]+ " "+expectTimeout+ " "+checkHostfile+ " "+batch
+			cmd = "/usr/bin/expect '" + self.pathToPlugin + expFile+"'  " + self._expectCredArgs() + prompt+" "+ self.RPI[piU]["ipNumberPi"]+ " "+expectTimeout+ " "+checkHostfile+ " "+batch
+			_env = self._expectEnv(self.RPI[piU]["userIdPi"], self.RPI[piU]["passwordPi"])
 
 			if batch == " ":
-				ret, err = self.readPopen(cmd)
+				ret, err = self.readPopen(cmd, env=_env)
 				err = self.stripBenignStderr(err)
 				if len(err) > 0:
 					ok = self.fixHostsFile(ret, err, cmd, piU)
@@ -13921,14 +14182,14 @@ class Plugin(indigo.PluginBase):
 						else:
 							return 0
 					redo = True
-					ret, err = self.readPopen(cmd)
+					ret, err = self.readPopen(cmd, env=_env)
 					err = self.stripBenignStderr(err)
 					if len(err) == 0:
 						self.indiLOG.log(10,f" pi server # {piU} PI# {self.RPI[piU]['ipNumberPi']}   redo ssh cmd {expFile} worked")
 
 
 			else:
-				ret, err = self.readPopen(cmd)
+				ret, err = self.readPopen(cmd, env=_env)
 				return 0
 
 
@@ -14307,16 +14568,20 @@ class Plugin(indigo.PluginBase):
 
 
 	####-------------------------------------------------------------------------####
-	def readPopen(self, cmd):
+	def readPopen(self, cmd, env=None, stdin=None):
 		"""Runs a shell command via subprocess.Popen and returns its decoded stdout and stderr; logs and returns None on failure.
 		
 		Inputs:
 		    cmd (str): Shell command line to execute
+		    env (dict or None): environment for the child, as made by _expectEnv(); None = inherit ours
+		    stdin (str or None): text written to the child's stdin, e.g. the password that "sudo -S" reads
 		Outputs:
 		    tuple or None: (stdout, stderr) decoded strings, or None if execution raised an exception
 		"""
 		try:
-			ret, err = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE).communicate()
+			pp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, env=env,
+					stdin=(subprocess.PIPE if stdin is not None else None))
+			ret, err = pp.communicate(input=(stdin.encode("utf_8") if stdin is not None else None))
 			return ret.decode('utf_8'), err.decode('utf_8')
 		except Exception:
 			self.indiLOG.log(40,"", exc_info=True)
@@ -15422,6 +15687,152 @@ class Plugin(indigo.PluginBase):
 
 
 
+	####=====================================================================####
+	####  PASSWORDS IN THE PLUGIN PREFS
+	####  "passwordsEncrypted" says if they are stored encrypted ("enc1:..") or plain
+	####  (4 methods)
+	####=====================================================================####
+	passwordPrefs = ("passwordOfServer", "wifiPassword")
+
+	####-------------------------------------------------------------------------####
+	def prefIsTrue(self, value):
+		"""indigo stores a checkbox as True, "true" or "1" depending on where it came from."""
+		return value is True or f"{value}".lower() in ("true", "1", "yes", "on")
+
+	####-------------------------------------------------------------------------####
+	def loadPasswords(self):
+		"""Decrypts the stored passwords into self.passwordOfServer / self.wifiPassword.
+
+		Prefs WITHOUT the "passwordsEncrypted" flag were written by a version before this one and
+		hold plain text: they are used as they are and converted to encrypted once, here. A token
+		that does not decrypt comes from another Mac - it is dropped and has to be typed again,
+		because the key is not recoverable.
+
+		Inputs:
+		    None
+		Outputs:
+		    None: sets self.passwordOfServer, self.wifiPassword and self.passwordsEncrypted
+		"""
+		try:
+			flagKnown				= "passwordsEncrypted" in self.pluginPrefs
+			self.passwordsEncrypted		= self.prefIsTrue(self.pluginPrefs.get("passwordsEncrypted", False))
+			plain = {}
+			for key in self.passwordPrefs:
+				stored = self.pluginPrefs.get(key, "")
+				if not self.passwordsEncrypted:
+					plain[key] = stored
+					continue
+				plain[key] = self.pw.decrypt(stored)
+				if plain[key] is None:
+					if self.pw.isToken(stored):
+						plain[key] = ""
+						self.indiLOG.log(40, f"{key} in the plugin prefs can not be decrypted (prefs from another Mac?), please enter it again in the plugin config")
+					else:
+						plain[key] = stored		# typed into the prefs by hand, it is encrypted when the config is saved the next time
+			self.passwordOfServer		= plain["passwordOfServer"]
+			self.wifiPassword			= plain["wifiPassword"]
+
+			if flagKnown: return
+			# no flag = prefs of an older version: plain text -> encrypt once
+			tokens = {key: self.pw.encrypt(plain[key]) for key in self.passwordPrefs}
+			if not all(tt is not None for tt in tokens.values()):
+				self.indiLOG.log(30, "passwords in the plugin prefs can not be encrypted, the hardware id of this Mac is not readable; they stay plain text")
+				return
+			for key in self.passwordPrefs:
+				self.pluginPrefs[key] = tokens[key]
+			self.pluginPrefs["passwordsEncrypted"]	= True
+			self.passwordsEncrypted				= True
+			# nothing to announce on a fresh install where both are still empty
+			if any(plain[key] != "" for key in self.passwordPrefs):
+				self.indiLOG.log(20, "passwords in the plugin prefs are now stored encrypted (untick \"store the passwords encrypted\" in the config to store them as plain text)")
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+
+	####-------------------------------------------------------------------------####
+	def savePasswords(self, valuesDict):
+		"""Turns the password fields of the config dialog into what is stored in the prefs.
+
+		A field holds either the old "enc1:.." token (= left alone by the user) or newly typed
+		plain text. valuesDict gets the STORED form, because indigo writes valuesDict into
+		pluginPrefs; self.passwordsPlain gets the plain text for the caller, which needs it to
+		compare against the values currently on self.
+
+		Inputs:
+		    valuesDict (indigo.Dict): preferences dialog values, modified in place
+		Outputs:
+		    bool: False if encrypting is impossible, self.passwordErrors says why
+		"""
+		self.passwordErrors		= indigo.Dict()
+		self.passwordsPlain		= {}
+		encrypt = self.prefIsTrue(valuesDict.get("passwordsEncrypted", False))
+		new = {}
+		for key in self.passwordPrefs:
+			shown = valuesDict.get(key, "")
+			plain = self.pw.decrypt(shown)
+			if plain is None:			# not an encrypted value = newly typed (or plain text from before)
+				plain  = shown
+				stored = self.pw.encrypt(plain) if encrypt else plain
+			else:					# unchanged
+				stored = shown if encrypt else plain
+			if stored is None:
+				self.passwordErrors["passwordsEncrypted"] = "can not encrypt: the hardware id of this Mac is not readable"
+				return False
+			new[key] = (plain, stored)
+		for key in self.passwordPrefs:
+			valuesDict[key]			= new[key][1]
+			self.passwordsPlain[key]	= new[key][0]
+		valuesDict["passwordsEncrypted"]	= encrypt
+		self.passwordsEncrypted			= encrypt
+		return True
+
+	####-------------------------------------------------------------------------####
+	####  CREDENTIALS FOR THE EXPECT SCRIPTS
+	####  the command line of a process is readable by EVERY user on this mac ("ps -ef"),
+	####  so the rpi userid and password are handed to expect in its environment instead,
+	####  which only the same user can read. The .exp scripts take $env(PIBEACON_UID/PWD)
+	####  when those are set and fall back to argv 0/1, so they still run by hand.
+	####-------------------------------------------------------------------------####
+	expectUidVar = "PIBEACON_UID"
+	expectPwdVar = "PIBEACON_PWD"
+
+	####-------------------------------------------------------------------------####
+	def _expectEnv(self, userid, passwd):
+		"""The environment for an expect child: our own, plus the ssh credentials. The full copy is
+		needed, expect finds ssh / sftp through PATH."""
+		try:
+			env = dict(os.environ)
+			env[self.expectUidVar] = f"{userid}"
+			env[self.expectPwdVar] = f"{passwd}"
+			return env
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		return None
+
+	####-------------------------------------------------------------------------####
+	def _expectCredArgs(self):
+		"""What goes into the command line where userid and password used to be: 2 empty arguments,
+		so the position of every following argument - and $argsCount - stays what it was."""
+		return "'' '' "
+
+	####-------------------------------------------------------------------------####
+	####-------------------------------------------------------------------------####
+	def maskPw(self, text):
+		"""Replaces the passwords with ***** in anything that is heading for the log."""
+		try:
+			text = f"{text}"
+			secrets = [self.passwordOfServer, self.wifiPassword]
+			for _pi in getattr(self, "RPI", {}).values():
+				try:		secrets.append(_pi.get("passwordPi", ""))
+				except:	pass
+			for pw_ in set(secrets):
+				# a 1-2 character password would replace every occurrence of those characters
+				if isinstance(pw_, str) and len(pw_) > 2: text = text.replace(pw_, "*****")
+				if pw_ != "": text = text.replace(pw_, "*****")
+		except Exception:
+			pass
+		return text
+
+
 	####-------------------------------------------------------------------------####
 	def setVariables(self):
 		"""Initializes the large set of plugin-wide instance attributes (dictionaries, counters, timers, queues, and unit/preference settings) used throughout the plugin, reading configurable values from self.pluginPrefs with defaults and writing some normalized values back into pluginPrefs.
@@ -15635,11 +16046,16 @@ class Plugin(indigo.PluginBase):
 
 			try:				self.removeJunkBeacons		= self.pluginPrefs.get("removeJunkBeacons", "1") == "1"
 			except:				self.removeJunkBeacons		= False
-			# lastUpdateFromRPI state writes are gated by the "lastRPI" DEBUG area (set in
-			# getDebugLevels); the value is always tracked internally (self.lastRpiForDev)
-			# so the fast-down logic keeps working while the state itself stays quiet
-			self.updateLastUpdateFromRPI	= False
+			# lastUpdateFromRPI is the noisiest state in the plugin - about a quarter of all
+			# state writes - and it only says WHICH rpi last fed a device. It has its own
+			# setting now (config: updateLastUpdateFromRPIstate), overridable per device in
+			# the device edit (prop lastUpdateFromRPImode); it used to be gated by a DEBUG
+			# area, which is the wrong place for something that is a preference, not a trace.
+			# The value is always tracked internally (self.lastRpiForDev) so the fast-down
+			# logic keeps working while the state itself stays quiet.
+			self.lastRPIstateMode			= f"{self.pluginPrefs.get('updateLastUpdateFromRPIstate', 'deviceOff')}"
 			self.lastRpiForDev				= {}
+			self.showLastRPIcache			= {}	# dev.id -> bool; invalidated when a device dialog is saved
 
 			try:				self.restartBLEifNoConnect = self.pluginPrefs.get("restartBLEifNoConnect", "1") == "1"
 			except :				self.restartBLEifNoConnect = True
@@ -15662,7 +16078,7 @@ class Plugin(indigo.PluginBase):
 			try:	self.maxSocksErrorTime	= float(self.pluginPrefs.get("maxSocksErrorTime", "600."))
 			except: self.maxSocksErrorTime	= 600.
 			self.userIdOfServer				= self.pluginPrefs.get("userIdOfServer", "")
-			self.passwordOfServer			= self.pluginPrefs.get("passwordOfServer", "")
+			self.loadPasswords()			# sets self.passwordOfServer + self.wifiPassword, decrypted from the prefs
 			self.myIpNumber					= self.pluginPrefs.get("myIpNumber", "192.168.1.130")
 			self.blockNonLocalIp			= self.pluginPrefs.get("blockNonLocalIp", False)
 			self.checkRPIipForReject		= self.pluginPrefs.get("checkRPIipForReject", True)
@@ -15679,7 +16095,7 @@ class Plugin(indigo.PluginBase):
 			self.anyProperTydeviceNameOrId = 0
 
 			self.wifiSSID					= self.pluginPrefs.get("wifiSSID", "")
-			self.wifiPassword				= self.pluginPrefs.get("wifiPassword", "")
+			#  self.wifiPassword			  is set by loadPasswords() above - it is stored encrypted
 			self.key_mgmt					= self.pluginPrefs.get("key_mgmt", "")
 			eth0							= '{"on":"dontChange",	"useIP":"use"}'
 			wlan0							= '{"on":"dontChange",	"useIP":"useIf"}'
@@ -16458,6 +16874,19 @@ class Plugin(indigo.PluginBase):
 				return
 
 
+
+			# THE SHELLY PAIR / TEST / UNPAIR ANSWER. These run on the rpi, so their result used to
+			# land in the rpi log only - the dialog said "the answer is in that rpi's log", which
+			# means ssh to find out whether a button press worked. It comes here now.
+			if varJson.get("msgType") == "shellyLink":
+				self.indiLOG.log(20, f"RPI# {piU}; {varJson.get('text','no text')}")
+				# AND WRITE THE STATE NOW, do not wait for the next button press. The pairing set
+				# used to be fed only by the shelly's own messages, so a pairing that had just
+				# succeeded still read "not paired" until somebody pressed the button again - and
+				# until then the beep menu would not offer the rpi that had just been paired.
+				if f"{varJson.get('shellyBondMac','')}" != "":
+					self.setShellyBondedForRPI(varJson.get("shellyBondMac",""), piU, f"{varJson.get('shellyBonded','')}" == "yes")
+				return
 
 			if varJson.get("msgType") == "config.txt":
 				out = f"=======  RPI# {piU}; config error ======\n"
@@ -17534,9 +17963,19 @@ class Plugin(indigo.PluginBase):
 				if "batteryLevel" 	in data:
 					if  data["batteryLevel"] != "":
 						if "batteryLevel" not in dev.states:
+							# AND ASK INDIGO TO RE-READ THE STATE LIST. Setting SupportsBatteryLevel is
+							# only half of it: the prop goes to the server but the device's state list
+							# is not rebuilt from it, so batteryLevel still did not exist and nothing
+							# was ever written - the device stayed blank until somebody opened its
+							# dialog and hit save, which is what rebuilds the list. Live: a shelly
+							# button showed no battery for as long as it existed, then showed one
+							# immediately after an edit+save. rePopulateStates is the flag the states
+							# path already uses for exactly this (see "key not defined in" below), and
+							# it runs stateListOrDisplayStateIdChanged() for every plugin device.
 							self.indiLOG.log(20, f"pi:{pi:} updating batterylevels, dev:{dev.id:}/{dev.name:} batteryLevel not in dev.states updating props ")
 							props["SupportsBatteryLevel"] = True
 							dev.replacePluginPropsOnServer(props)
+							self.rePopulateStates = f"batteryLevel not in states for dev:{dev.name}"
 	
 						else:
 								devBL = dev.states["batteryLevel"]
@@ -17709,7 +18148,7 @@ class Plugin(indigo.PluginBase):
 
 				self.lastRpiForDev[dev.id] = f"{piU}"
 				if "lastUpdateFromRPI" in dev.states:
-					if self.updateLastUpdateFromRPI:
+					if self.showLastRPIforDev(dev):
 						if f"{pi}" != f"{dev.states['lastUpdateFromRPI']}":	self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", piU)
 					elif dev.states["lastUpdateFromRPI"] != _lastRPIoffText:				self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", _lastRPIoffText)
 
@@ -18210,6 +18649,67 @@ class Plugin(indigo.PluginBase):
 
 
 	###-------------------------------------------------------------------------####
+	####-------------------------------------------------------------------------####
+	def setShellyBondedForRPI(self, mac, pi, bonded, dev=None):
+		"""Records that rPi `pi` does or does not hold a pairing with this shelly, and writes the
+		bondedToRPI state.
+
+		A shelly accepts SEVERAL bonds at once and bluez keeps the keys per ADAPTER, so every rpi
+		can hold its own pairing and more than one usually will - the state is a LIST. Each rpi
+		answers only for itself, so each one adds or removes itself here and the set builds up with
+		no polling anywhere.
+		TWO THINGS FEED IT. Every shelly button message carries the sending rpi's answer, which
+		keeps the set honest for free; and a pair / relink / unpair reports here the moment it
+		finishes. The second one is why this is a method: without it the state told the truth only
+		after the NEXT button press, so a pairing that had just succeeded still read "not paired"
+		and the beep menu still refused to offer that rpi.
+		dev is passed in when the caller already has it (the message path); otherwise the shelly
+		button device is looked up by mac.
+
+		Inputs:
+		    mac (str): the shelly's mac, any case
+		    pi (int or str): the rpi that is reporting
+		    bonded (bool): True when that rpi holds the keys
+		    dev (indigo device or None): the shelly button device, looked up by mac when not given
+		Outputs:
+		    bool: True when something was recorded
+		"""
+		try:
+			MAC = f"{mac}".strip().upper()
+			if MAC == "": return False
+			piU = f"{pi}"
+			if not hasattr(self, "shellyBondedPi"): self.shellyBondedPi = {}
+			_have = set(self.shellyBondedPi.get(MAC, set()))
+			_pre  = set(_have)
+			if bonded:	_have.add(piU)
+			else:		_have.discard(piU)
+			self.shellyBondedPi[MAC] = _have
+			try:	_txt = ",".join(sorted(_have, key=lambda x: int(x))) if _have else "not paired"
+			except Exception:	_txt = ",".join(sorted(_have)) if _have else "not paired"
+			if dev is None:
+				for ddev in indigo.devices.iter(self.pluginId):
+					try:
+						if ddev.deviceTypeId == "BLEShellyButton" and f"{ddev.address}".strip().upper() == MAC:
+							dev = ddev
+							break
+					except Exception:	continue
+			if dev is None:
+				self.indiLOG.log(20,f"shelly {MAC}: rPi#{piU} reports it is {'paired' if bonded else 'not paired'}, but there is no shelly button device with that address")
+				return False
+			if f"{dev.states.get('bondedToRPI','')}" != _txt:
+				self.addToStatesUpdateDict(dev.id, "bondedToRPI", _txt)
+				if _have - _pre:
+					self.indiLOG.log(20,f"{dev.name}: rPi#{piU} is now paired to it - paired rPis: {_txt}")
+				elif _pre - _have:
+					self.indiLOG.log(20,f"{dev.name}: rPi#{piU} is no longer paired to it - paired rPis: {_txt}"
+										+ ("" if _have else ". Use relink in the device dialog to pair one again"))
+			return True
+		except Exception:
+			self.indiLOG.log(40,"", exc_info=True)
+		return False
+
+
+	####-------------------------------------------------------------------------####
 	def updateBLEShelly(self, dev, data, whichKeysToDisplay, pi):
 		"""Updates a Shelly BLE device from incoming data, de-duplicating by packetId, and handles button, motion, isOpen, Illuminance and rotation events by setting onOffState/status states, updating the on-screen image, recording event timestamps, scheduling delayed auto-off actions, and updating the lastButtonOn Indigo variables.
 		
@@ -18229,6 +18729,11 @@ class Plugin(indigo.PluginBase):
 			if dev.states.get("packetId",-991) == data.get("packetId",-9999): return
 
 			self.addToStatesUpdateDict(dev.id, "packetId",  								data["packetId"] )
+
+			# WHICH rpis ARE PAIRED TO THIS SHELLY - see setShellyBondedForRPI. Every message
+			# carries the sending rpi's own answer, which keeps the set honest without any polling.
+			if "shellyBonded" in data:
+				self.setShellyBondedForRPI(data.get("mac",""), pi, f"{data['shellyBonded']}" == "yes", dev=dev)
 
 			if "button" in data:
 				if data["button"] == "None":
@@ -27246,11 +27751,13 @@ class Plugin(indigo.PluginBase):
 		"""Default for the beacon device's "Enable creation of BLE SENSOR type child" when the user
 		has not saved a choice yet.
 
-		A tag that HAS a corresponding sensor - correspondingSensorType (eg BLERuuviTag),
-		correspondingSwitchbotDevice (bot/curtain OUTPUT child) or correspondingBLEConnectSensorType
-		(gatt-read sensor) - creates its child as it always did. Only PURE BUTTON tags
-		(iTrack / Shelly button/door/motion) default to DISABLED: those were the ones spawning
-		unwanted children, and they are the only thing the .184 change meant to stop.
+		A tag whose USEFUL function sits in the child creates that child as it always did:
+		correspondingSensorType (eg BLERuuviTag), correspondingSwitchbotDevice (bot/curtain OUTPUT
+		child), correspondingBLEConnectSensorType (gatt-read sensor) and, since .194.27,
+		correspondingShellyButtonDevice (shelly BLU button/door/motion - there the button or the
+		contact IS the device, the beacon on its own carries nothing but presence).
+		Only the iTrack / tracker tags (correspondingiTrackButtonDevice) default to DISABLED:
+		those were the ones spawning unwanted children that the .184 change meant to stop.
 
 		Inputs:
 		    typeOfBeacon (str): tag type name, key into knownBeaconTags["input"]
@@ -27259,7 +27766,7 @@ class Plugin(indigo.PluginBase):
 		"""
 		try:
 			tag = self.knownBeaconTags["input"].get(typeOfBeacon,{})
-			for key in ["correspondingSensorType", "correspondingSwitchbotDevice", "correspondingBLEConnectSensorType"]:
+			for key in ["correspondingSensorType", "correspondingSwitchbotDevice", "correspondingBLEConnectSensorType", "correspondingShellyButtonDevice"]:
 				if "{}".format(tag.get(key,"")) != "": return "1"
 		except Exception:
 			pass
@@ -28529,8 +29036,9 @@ class Plugin(indigo.PluginBase):
 		    bool: Always True; side effect is rewriting known_hosts and logging
 		"""
 		try:
-			try:	cmdMasked = cmd.replace(f" {self.RPI[piU]['passwordPi']} ", " ***** ")
-			except:	cmdMasked = cmd
+			# the password is no longer IN cmd (expect gets it in its environment), this stays as
+			# the general guard and covers every known password, not just the " pwd " shape
+			cmdMasked = self.maskPw(cmd)
 			# THE WHOLE DUMP USED TO GO OUT BEFORE ANYTHING WAS EVEN LOOKED AT - the full expect
 			# command, all of stdout and all of stderr, at level 20, every time stderr was not
 			# empty. For the one case this function can actually repair, a known_hosts conflict,
@@ -28618,7 +29126,7 @@ class Plugin(indigo.PluginBase):
 			self.myLog( theText = f"blockNonLocalIp              {self.blockNonLocalIp}",											mType= "pi configuration")
 			self.myLog( theText = f".. ip#s accepted             {self.myIpNumberRange[0]}.{self.myIpNumberRange[1]}.x.x",		mType= "pi configuration")
 			self.myLog( theText = f"indigo UserID                ....{self.userIdOfServer[4:]}",									mType= "pi configuration")
-			self.myLog( theText = f"indigo Password              ....{self.passwordOfServer[4:]}",									mType= "pi configuration")
+			self.myLog( theText = f"indigo Password              {'*****' if self.passwordOfServer != '' else '(not set)'}",									mType= "pi configuration")
 			self.myLog( theText = f"wifi OFF if ETH0             {self.wifiEth}",													mType= "pi configuration")
 			self.myLog( theText = f"Seconds UP to DOWN           {self.secToDown}",												mType= "pi configuration")
 			self.myLog( theText = f"beacon indigo folder Name    {self.iBeaconDevicesFolderName}",									mType= "pi configuration")
@@ -28827,12 +29335,6 @@ configuration         - ==========  defined beacons ==============
 				for d in _debugAreas:
 					if useMe.get("debug"+d, False): self.debugLevel.append(d)
 				self.showLoginTest = useMe.get("showLoginTest", True)
-
-			# state lastUpdateFromRPI is the NOISIEST state of the plugin (~260 writes/min
-			# fleet-wide) and only useful when debugging which rpi feeds a device -> its
-			# state writes are gated by the debug area "lastRPI"; when off the state shows
-			# "off, to enable turn debug on" and the value is tracked internally only
-			self.updateLastUpdateFromRPI = ("lastRPI" in self.debugLevel) or ("all" in self.debugLevel)
 
 			self.indiLOG.log(20,f"debug areas:{self.debugLevel}")
 		except Exception:
@@ -29259,6 +29761,15 @@ configuration         - ==========  defined beacons ==============
 			helpText += '=============== BLE-Sensors        ===========  \n'
 			helpText += fff
 			helpText += '=============== BLE SENSORS .. END ===========  \n'
+			helpText += '  \n'
+
+			f = open(filesIn+"dongleTypes.txt","r")
+			fff = f.read()
+			f.close()
+
+			helpText += '=============== BLE DONGLES        ===========  \n'
+			helpText += fff
+			helpText += '=============== BLE DONGLES .. END ===========  \n'
 			helpText += '  \n'
 			self.myLog( theText = helpText, destination="")
 			self.myLog( theText = helpText, destination="standard")
@@ -32206,7 +32717,10 @@ configuration         - ==========  defined beacons ==============
 				self.indiLOG.log(10," setPIN bad parameter: cmd not set:")
 				return
 
-			if cmd in ["beepBeacon", "updateTimeAndZone","getBeaconParameters"]:
+			# bondBeacon rides the same path as beepBeacon - it was missing from BOTH lists, so
+			# setPin built no command and sent nothing: the relink and link-test buttons logged
+			# "asked rPi#N" on the mac and nothing ever reached the rpi.
+			if cmd in ["beepBeacon", "bondBeacon", "updateTimeAndZone","getBeaconParameters"]:
 				if self.decideMyLog("OutputDevice") or self.decideMyLog("UpdateTimeAndZone") : self.indiLOG.log(5,f"sending command to rPi at {pi}; port: {self.rPiCommandPORT}; cmd:{cmd} ;  devices:{typeId}" )
 				self.sendGPIOCommand(ip, pi, typeId, cmd, startAtDateTime=startAtDateTime )
 				return
@@ -33071,10 +33585,21 @@ configuration         - ==========  defined beacons ==============
 			#   58:11:22:53:8C:D5/USB/0b05:190e/UP/BLE4+5/scan4+5
 			# It replaced hciInfo + _beacons + _beep + _BLEconnect + _BLE5, five states that each
 			# named the radio of a single role and had to be cross-referenced by mac to be read.
+			# ONLY WHAT THE MESSAGE ACTUALLY CARRIES. A MISSING KEY IS NOT "THAT RADIO IS GONE":
+			# the guard above matches the SUBSTRING "hci0".."hci3" anywhere in the raw message, so a
+			# message that merely mentions a radio passes it with no hci keys in "data" at all -
+			# treating absence as a disappearance cleared every radio state on 13 rpis at once.
+			# beaconloop now sends an explicit "" for a name that is not there (v2022.194.33), so a
+			# real disappearance arrives as a value and is handled below. An rpi running older code
+			# sends nothing for it, and the old state is left alone - stale, but never wrong.
 			for _hciX in ("hci0", "hci1", "hci2", "hci3"):
-				if _hciX in dev.states and _hciX in varJson["data"]:
-					if dev.states[_hciX] != varJson["data"][_hciX]:
-						self.addToStatesUpdateDict(dev.id, _hciX, varJson["data"][_hciX])
+				if _hciX not in dev.states or _hciX not in varJson["data"]:		continue
+				_new = f"{varJson['data'][_hciX]}"
+				if dev.states[_hciX] == _new:									continue
+				if _new.strip() == "" and f"{dev.states[_hciX]}".strip() not in ("", "-"):
+					self.indiLOG.log(20,f"pi#{piU} radio {_hciX} is gone (was {dev.states[_hciX]}). "
+										"If it was carrying a role, the same dongle has most likely come back under another hciN")
+				self.addToStatesUpdateDict(dev.id, _hciX, _new)
 			# a good radio message after an error means it sorted itself out - say so, otherwise the
 			# log ends on the complaint and looks like the rpi is still broken
 			if f"{piU}" in getattr(self, "bluetoothErrorPis", set()):
@@ -33290,7 +33815,7 @@ configuration         - ==========  defined beacons ==============
 							self.addToStatesUpdateDict(dev.id, "closestRPIText", self.getRPIdevName(newClosestRPI))
 
 				self.lastRpiForDev[dev.id] = f"{piU}"
-				if self.updateLastUpdateFromRPI:
+				if self.showLastRPIforDev(dev):
 					if dev.states["lastUpdateFromRPI"] != piU:				self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", piU)
 				elif dev.states.get("lastUpdateFromRPI","") != _lastRPIoffText:	self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", _lastRPIoffText)
 
@@ -33674,7 +34199,7 @@ configuration         - ==========  defined beacons ==============
 						newStates = self.addToStatesUpdateDict(dev.id, "closestRPIText", self.getRPIdevName(closestRPI),newStates=newStates)
 
 					self.lastRpiForDev[dev.id] = f"{fromPiI}"
-					if self.updateLastUpdateFromRPI:									newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", fromPiI, newStates=newStates)
+					if self.showLastRPIforDev(dev):										newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", fromPiI, newStates=newStates)
 					elif dev.states.get("lastUpdateFromRPI","") != _lastRPIoffText:		newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", _lastRPIoffText, newStates=newStates)
 
 				if mac not in self.beacons:
@@ -33688,7 +34213,7 @@ configuration         - ==========  defined beacons ==============
 					self.beacons[mac]["receivedSignals"][fromPiI] = {"rssi":rssi+rssiOffset, "lastSignal":time.time(), "distance":distCalc}
 
 			self.lastRpiForDev[dev.id] = f"{fromPiI}"
-			if self.updateLastUpdateFromRPI:									newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", fromPiI, newStates=newStates)
+			if self.showLastRPIforDev(dev):										newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", fromPiI, newStates=newStates)
 			elif dev.states.get("lastUpdateFromRPI","") != _lastRPIoffText:		newStates = self.addToStatesUpdateDict(dev.id, "lastUpdateFromRPI", _lastRPIoffText, newStates=newStates)
 			return updateSignal, newStates, logTRUEfromChangeOFRPI, oldRPI, closestRPI, beaconUpdatedIds
 

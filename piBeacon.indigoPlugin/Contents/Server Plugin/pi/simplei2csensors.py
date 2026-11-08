@@ -1,6 +1,8 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
+from __future__ import division
+
 VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 # by Karl Wachs
 # feb 5 2016
@@ -9,8 +11,6 @@ VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 ##	get sensor values and write the to a file in json format for later pickup, 
 ##	do it in a timed manner not to load the system, is every 1 seconds then 30 senods break
 ##
-from __future__ import division
-
 import math
 
 import	sys, os, time, json, datetime,subprocess,copy

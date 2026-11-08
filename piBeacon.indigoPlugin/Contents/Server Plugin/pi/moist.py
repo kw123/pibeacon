@@ -15,9 +15,10 @@ https://github.com/JasperWallace/chirp-graphite/blob/master/chirp.py
 https://github.com/Miceuz/i2c-moisture-sensor/blob/master/README.md
 """
 
+from __future__ import division
+
 VERSION = "1.0"			# printed at startup by U.setLogging() -> U.versionLine()
 
-from __future__ import division
 from datetime import datetime
 
 import smbus

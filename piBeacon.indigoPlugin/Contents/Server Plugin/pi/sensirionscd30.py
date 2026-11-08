@@ -439,7 +439,10 @@ class SENSORclass():
 			self.scd30.start_periodic_measurement()
 			time.sleep(2)
 		except Exception as e:
-			U.logger.log(20,"", exc_info=True)
+			if U.i2cNoAnswer(e):
+				U.logger.log(20,"scd30 at i2c 0x61 on bus 1 did not answer ({}) - absent, on another address, behind an unselected TCA9548A channel, or miswired. Not started".format(e))
+			else:
+				U.logger.log(20,"", exc_info=True)
 		return 
 
 	def getData(self): 
@@ -588,7 +591,13 @@ def startSensor(devId, Co2Target="", reset=False):
 	global deviceVersion, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
 	startTime =time.time()
 
-	
+	# SELECT THE MUX CHANNEL FIRST. This program only ever called muxTCA9548Areset(), which
+	# DESELECTS every channel - so a scd30 wired behind a TCA9548A could never be reached at all:
+	# the very first command came back OSError EIO and both __init__ and this function dumped a
+	# traceback through smbus2. Every other i2c sensor program pairs select-before-use with
+	# reset-after (si7021 is the model); these two sensirion ones had only the second half.
+	U.muxTCA9548A(sensors[sensor][devId])
+
 	if devId  in SENSOR:
 		if reset:
 			U.logger.log(20," soft resetting sensor")
@@ -632,7 +641,10 @@ def startSensor(devId, Co2Target="", reset=False):
 			sensorTemperatureOffset[devId]	= SENSOR[devId].scd30.get_temperature_offset()
 
 		except Exception as e:
-			U.logger.log(20,"", exc_info=True)
+			if U.i2cNoAnswer(e):
+				U.logger.log(20,"scd30 devId:{} did not answer on i2c 0x61 / bus 1 ({}) - check it is connected, and if it sits behind a TCA9548A that 'useMuxChannel' is set for it".format(devId, e))
+			else:
+				U.logger.log(20,"", exc_info=True)
 			SENSOR[devId] = ""
 			return
 	U.muxTCA9548Areset()
@@ -651,6 +663,8 @@ def getValues(devId):
 	global sensor, sensors,	 SENSOR, badsensorCountCO2
 	global startTime, sendToIndigoSecs, sensorMode
 	global deviceVersion, sensorTemperatureOffset, autoCalibration, sensorCo2Target, altitudeCompensation
+
+	U.muxTCA9548A(sensors[sensor][devId])		# the channel has to be open before every read too
 
 	try:
 		if devId not in SENSOR:

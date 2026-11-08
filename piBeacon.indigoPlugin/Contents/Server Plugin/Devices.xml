@@ -993,6 +993,14 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 			<Label>Debug:</Label>
 			<Description>print all properties of this device to the log after saving (resets itself)</Description>
 		</Field>
+		<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+			<Label>write the state "lastUpdateFromRPI":</Label>
+			<List>
+				<Option value="useDefault">use the plugin-config setting</Option>
+				<Option value="on"        >yes, for this device</Option>
+				<Option value="off"       >no, not for this device</Option>
+			</List>
+		</Field>
 	</ConfigUI>
 
 		<States>
@@ -1816,6 +1824,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2023,8 +2039,9 @@ Setting to only accept the ONE device specific message type from knowBeaconTag f
 			<Field id="enableBELSensorChildLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>Beacons that also have a sensor or button function can have a child device ie the button or temperature,
   which will be created automatically uppon receiving message from the RPI.
-  Default: ENABLED only for switchbot types with an OUTPUT child (bot / curtain);
-  DISABLED for all other types - enable here if you want the sensor/button child.
+  Default: ENABLED for the types whose function lives in that child - sensors (ruuvi, iBS,
+  thermoBeacon ..), gatt-read sensors, switchbot bot/curtain OUTPUT, shelly BLU button/door/motion.
+  DISABLED for the iTrack / tracker types - enable here if you want their button child.
   Children that already exist keep being serviced either way.</Label>
 			</Field>
 
@@ -2271,6 +2288,14 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2503,6 +2528,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2605,6 +2638,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+		<Label>write the state "lastUpdateFromRPI":</Label>
+		<List>
+			<Option value="useDefault">use the plugin-config setting</Option>
+			<Option value="on"        >yes, for this device</Option>
+			<Option value="off"       >no, not for this device</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -2931,6 +2972,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -3357,6 +3406,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3482,6 +3539,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -3722,6 +3787,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3900,6 +3973,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -4100,6 +4181,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4292,6 +4381,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -4515,6 +4612,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -4750,6 +4855,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4961,6 +5074,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5148,6 +5269,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -5402,6 +5531,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5597,6 +5734,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5768,6 +5913,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -6015,6 +6168,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6183,6 +6344,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -6354,6 +6523,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -6589,6 +6766,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6792,6 +6977,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -7054,6 +7247,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7211,6 +7412,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -7402,6 +7611,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7565,6 +7782,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -7734,6 +7959,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7881,6 +8114,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+		<Label>write the state "lastUpdateFromRPI":</Label>
+		<List>
+			<Option value="useDefault">use the plugin-config setting</Option>
+			<Option value="on"        >yes, for this device</Option>
+			<Option value="off"       >no, not for this device</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -8143,6 +8384,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8264,6 +8513,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8286,12 +8543,11 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
 
 			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
-				<Label> To setup one of these on Button BLE sensor types:
-Acccept new beacons type shelly BLE button
-This sensor reacts to a button single /double/tripple/long press on the beacon. The onOfState will be True/On for 2 secs after press.
-download Shelly BLE debug from appstore/ launch/ press button/ connect/ set beacon on. That will enable regular Broadcasts used  to detet the beacon
-
-</Label>
+				<Label> To setup one of these Button BLE sensor types:
+Accept new beacons, type shelly BLE button.
+This sensor reacts to a single / double / tripple / long press. onOffState is True/On for 2 secs after a press.
+Install the Shelly BLE debug app / launch / press the button / connect / switch beacon mode ON. That enables the
+regular broadcasts this plugin needs to see the device at all.</Label>
 			</Field>
 
 			<Field id="mac" type="textfield"     defaultValue=""  >
@@ -8311,6 +8567,103 @@ download Shelly BLE debug from appstore/ launch/ press button/ connect/ set beac
 				<Label>Adding a device to a group
 will add this device to variable for
 xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+			<Field id="labelPairDo"   type="label" fontColor="green">
+				<Label>==== TO PAIR:  tick the rPi above - SAVE this dialog - then HOLD the button next to
+that rPi, past 10 SECONDS.  It worked when the BUTTON BEEPS.      (details: tick "how to" below)</Label>
+			</Field>
+			<Field id="showShellyHelp" type="checkbox" defaultValue="false">
+				<Label>how to:</Label>
+				<Description>show how to pair an rPi with this button - which clicks, when</Description>
+			</Field>
+			<Field id="labelPairHow"   type="label"  alignText="left" visibleBindingId="showShellyHelp" visibleBindingValue="true">
+				<Label>==== WHY A PAIRING IS NEEDED AT ALL
+A shelly BLU accepts a write only from a paired (bonded) peer - the buzzer, beacon mode and every
+other writable characteristic are "write bonded". Bluez keeps the keys per RADIO, so a pairing
+belongs to ONE rPi; the button accepts SEVERAL at once, so every rPi that should be able to beep
+it needs its own. The state "bondedToRPI" lists the paired ones, e.g. "2,7".
+
+TWO THINGS HAVE TO BE TRUE BEFORE ANY OF THIS:
+  a) The button is COMPLETELY set up in the SHELLY APP on the phone. An rPi pairing with a button
+     whose setup was never finished there will most likely just be refused, no matter how right
+     everything on this side looks - so if a pairing keeps failing, check that first. (Beacon mode
+     is a separate thing and also required: that is the shelly BLE debug app, see the orange note
+     at the top of this dialog.)
+  b) The rPi is TICKED IN THE rPi LIST ABOVE AND THIS EDIT HAS BEEN SAVED. The tick is only sent
+     to the rPi when the dialog is saved, so ticking it and then holding the button with this
+     dialog still open does nothing whatsoever - save it, close it, then hold. An rPi only decodes
+     button presses for the devices it has been assigned, so one that was never told never hears
+     the hold, never arms itself and can never pair. That is not a radio or a range problem - it
+     simply is not listening for this button, and nothing appears in any log either, which makes
+     it the one failure with no symptom at all to go on.
+
+THE WHOLE PROCEDURE IS ONE GESTURE:  hold the button next to that rPi, past 10 SECONDS.
+NOTHING IS STARTED FROM THIS DIALOG and there is no reason to keep it open - save it and close it.
+There used to be a "pair this rPi" button here and it bought nothing: somebody still had to walk
+over and hold the button to open its pairing mode, which is the part that cannot be skipped. The
+hold does both jobs at once: it opens the BUTTON's pairing mode (open about a minute, and it makes a sound when
+you let go), and the rPi that hears that hold closer than -65 dBm arms itself for 90 s and pairs
+inside the window. Clicks never pair anything; a double press arms an rPi just as well, but it
+does not open pairing mode, so the hold is the one that cannot be skipped.
+IT WORKED WHEN THE BUTTON BEEPS - and the beep means more than "keys written": the rPi buzzes the
+button over the pairing it has just made, so a beep says the pairing is there AND usable. A few
+refusals in the rPi log before the hold lands are normal ("auth failed with status 0x05" is the
+button saying no while pairing mode is shut); the rPi keeps retrying for about 2 minutes and
+whichever attempt falls inside the window wins.
+WATCH THE INDIGO LOG - the rPi reports both halves there. First that it HEARD the gesture ("PAIRING
+GESTURE SEEN by this rPi .. pairing now"), then how it went. No line at all means no rPi heard it:
+not ticked for this device, the edit not saved, or too far away.
+
+THREE SITUATIONS, SAME GESTURE:
+  1. NEW PAIRING               hold it next to the rPi. Nothing else.
+
+  2. AFTER AN "unpair" HERE    same, and the hold really is not optional: the button kept ITS OWN
+                               copy of the key and refuses a new pairing until pairing mode is
+                               open.
+
+  3. BUTTON WAS FACTORY RESET  its keys are gone, this rPi's are not - so this rPi believes it is
+                               paired, nothing works, and a hold will not arm it. Click "unpair"
+                               below first to drop the stale keys, THEN hold it next to the rPi.
+
+THE BUTTONS BELOW DO NOT PAIR ANYTHING - they are for an existing pairing only: checking one, or
+removing one.
+"test this rPi's link" writes nothing and does not buzz. It separates the three states that look
+identical from here:   no keys on this rPi  /  keys and the device answers = a good link  /  keys
+but NO characteristics = a ONE-SIDED pairing, which is case 3 above.
+"test this rPi's link AND BEEP the button" does the same test and then buzzes it if the test
+passed. The silent one covers everything up TO the write - keys, connect, services resolved,
+buzzer characteristic reachable - and hearing the button is what covers the rest: the write itself
+and the buzzer actually being enabled on the device. Use the silent one when the button is
+somewhere you would rather it stayed quiet.
+
+BEEPING, once paired, needs no press at all - a paired rPi connects whenever the button
+advertises, which it does by itself.</Label>
+			</Field>
+
+			<Field id="shellyPickRPI" type="menu" defaultValue="-1">
+				<Label>rPi to test or unpair:</Label>
+				<List class="self" filter="" method="filterShellyRPIs" dynamicReload="true"/>
+			</Field>
+			<Field id="testShellyLink" type="button">
+				<Label>test:</Label>
+				<Title>test this rPi's link  (silent, no buzz)</Title>
+				<CallbackMethod>testShellyLinkCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="testShellyLinkBeep" type="button">
+				<Label>test+beep:</Label>
+				<Title>test this rPi's link AND BEEP the button</Title>
+				<CallbackMethod>testShellyLinkBeepCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="unpairShelly" type="button">
+				<Label>unpair:</Label>
+				<Title>unpair this rPi from the button</Title>
+				<CallbackMethod>unpairShellyCALLBACK</CallbackMethod>
+			</Field>
+			<Field id="labelUnpairNote" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>unpair removes THIS rPi's keys only - the button keeps its own copy, so pairing
+this rPi again needs the 10 s hold. It is also the way out of a pairing that has gone stale
+(button factory reset): unpair here, then hold the button next to the rPi. Tick "how to" above.</Label>
 			</Field>
 
 		
@@ -8334,6 +8687,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -8453,6 +8814,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8537,6 +8906,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -8660,6 +9037,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -8796,6 +9181,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+		<Label>write the state "lastUpdateFromRPI":</Label>
+		<List>
+			<Option value="useDefault">use the plugin-config setting</Option>
+			<Option value="on"        >yes, for this device</Option>
+			<Option value="off"       >no, not for this device</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -8974,6 +9367,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9126,6 +9527,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9228,6 +9637,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -9440,6 +9857,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9627,6 +10052,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -9855,6 +10288,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9979,6 +10420,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -10149,6 +10598,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10317,6 +10774,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10483,6 +10948,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10630,6 +11103,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 			<Label>Debug:</Label>
 			<Description>print all properties of this device to the log after saving (resets itself)</Description>
+		</Field>
+		<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+			<Label>write the state "lastUpdateFromRPI":</Label>
+			<List>
+				<Option value="useDefault">use the plugin-config setting</Option>
+				<Option value="on"        >yes, for this device</Option>
+				<Option value="off"       >no, not for this device</Option>
+			</List>
 		</Field>
 	</ConfigUI>
 	<States>
@@ -10830,6 +11311,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 	<States>
 	</States>
@@ -10981,6 +11470,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11126,6 +11623,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -11277,6 +11782,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11427,6 +11940,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -11607,6 +12128,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -11789,6 +12318,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11968,6 +12505,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 	<States>
@@ -12149,6 +12694,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -12353,6 +12906,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12534,6 +13095,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12714,6 +13283,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -12935,6 +13512,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -13274,6 +13859,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="GasResistance">
@@ -13475,6 +14068,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13675,6 +14276,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13873,6 +14482,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -14061,6 +14678,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -14203,6 +14828,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -14445,6 +15078,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -14696,6 +15337,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -14980,6 +15629,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -15161,6 +15818,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -15874,6 +16539,14 @@ printed again as a further set of columns rather than wrapped. Two rows are mark
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
 
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -16085,6 +16758,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -16347,6 +17028,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -16505,6 +17194,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -16631,6 +17328,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -16879,6 +17584,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -16949,6 +17662,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -17120,6 +17841,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -17305,6 +18034,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -17489,6 +18226,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -17642,6 +18387,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -17774,6 +18527,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="UV">
@@ -17896,6 +18657,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -18133,6 +18902,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -18366,6 +19143,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 	<States>
@@ -18633,6 +19418,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -19165,6 +19958,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Leaving_count">
@@ -19436,6 +20237,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 
@@ -19607,6 +20416,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -19792,6 +20609,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -19995,6 +20820,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -20176,6 +21009,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -20410,6 +21251,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -20608,6 +21457,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="ACCx">
@@ -20803,6 +21660,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="ACCx">
@@ -20987,6 +21852,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="adc">
@@ -21161,6 +22034,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -21361,6 +22242,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Current1">
@@ -21518,6 +22407,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -21692,6 +22589,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -21978,6 +22883,14 @@ use bit max value, not actual voltage for feedVolt </Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -22261,6 +23174,14 @@ use bit max value, not actual voltage for feedVolt </Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -22765,6 +23686,14 @@ recommened is a relay with transitor switch in front!</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -23124,6 +24053,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -23374,6 +24311,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -23727,6 +24672,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Label>Debug:</Label>
 					<Description>print all properties of this device to the log after saving (resets itself)</Description>
 				</Field>
+				<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+					<Label>write the state "lastUpdateFromRPI":</Label>
+					<List>
+						<Option value="useDefault">use the plugin-config setting</Option>
+						<Option value="on"        >yes, for this device</Option>
+						<Option value="off"       >no, not for this device</Option>
+					</List>
+				</Field>
 			</ConfigUI>
 
 		<States>
@@ -23947,6 +24900,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -24345,6 +25306,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -24611,6 +25580,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -24782,6 +25759,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -24973,6 +25958,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -25205,6 +26198,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -25517,6 +26518,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -25659,6 +26668,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -25819,6 +26836,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -26009,6 +27034,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -26270,6 +27303,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -26409,6 +27450,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -26739,6 +27788,14 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -27075,6 +28132,14 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 
@@ -27456,6 +28521,14 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -27813,6 +28886,14 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="measuredNumber">
@@ -28160,6 +29241,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+		<Label>write the state "lastUpdateFromRPI":</Label>
+		<List>
+			<Option value="useDefault">use the plugin-config setting</Option>
+			<Option value="on"        >yes, for this device</Option>
+			<Option value="off"       >no, not for this device</Option>
+		</List>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -28400,6 +29489,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="proximity">
@@ -28572,6 +29669,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
 			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -28688,6 +29793,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -28818,6 +29931,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -28972,6 +30093,14 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>

@@ -708,7 +708,7 @@ the state isBeepable shows if is enabled, or buys or YES</Label>
 			</Field>
 			<Field id="piServerNumber" type="menu" defaultValue="-1" tooltip="select pi- server number ">
 				<Label>select rPi to use for beep or choose closest (all)</Label>
-				<List class="self" filter="blue" method="filterPiDInclAll" dynamicReload="false" />
+				<List class="self" filter="blue" method="filterPiDInclAllBonded" dynamicReload="true" />
 			</Field>
 			<Field id="execAll" type="button">
 				<Label> ....after selection click</Label>

@@ -233,6 +233,26 @@ with indigo 2022 it ist strongly recommened NOT to use std indigo webserver anym
 		<Label>Check if ip used by rpi is registered (set to off if rpi is in subnet):</Label>
 	</Field>
 
+	<Field    id="updateLastUpdateFromRPIstate" defaultValue="deviceOff"   type="menu"  >
+		<Label>Write the state "lastUpdateFromRPI" (which rPi last fed a device):</Label>
+		<List>
+			<Option value="allOn"     >on for all devices</Option>
+			<Option value="allOff"    >off for all devices</Option>
+			<Option value="deviceOn"  >let the device decide - default on</Option>
+			<Option value="deviceOff" >let the device decide - default off</Option>
+		</List>
+	</Field>
+
+	<Field id="updateLastUpdateFromRPIstateLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+		<Label>The noisiest state in the plugin - about a quarter of all state writes, roughly 260 a minute
+over a 14-rPi fleet - and it only tells you WHICH rPi a device was last heard by. Off means the state
+reads "off, enable in config or device edit" while the value is still tracked internally, so nothing
+that depends on it stops working.
+"on/off for all" ignores the device setting. The two "let the device decide" entries use it, and supply
+the answer for every device still set to "use the plugin-config setting" - which is the useful way to
+run it: default off, and switched on for the one or two devices you are actually chasing.</Label>
+	</Field>
+
 	<Field    id="blockNonLocalIp" defaultValue="false"   type="checkbox"  >
 		<Label>Accept only local ip numbers to contact MAC:</Label>
 	</Field>
@@ -262,6 +282,13 @@ allows to set a threshold on when to report. Eg if set to 10: if 2 events happen
    
 	<Field id="passwordOfServer" defaultValue=""   type="textfield"  tooltip="used to enable storage of PNG files"  >
 		<Label>password for indigo For storing files:</Label> 
+	</Field>
+
+	<Field id="passwordsEncrypted" defaultValue="true"   type="checkbox"   >
+		<Label>store the passwords (indigo, wifi) encrypted in the plugin prefs:</Label>
+	</Field>
+	<Field id="passwordsEncryptedLabel" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+		<Label>Encryption is tied to this Mac (the key comes from its hardware id), so a copy of the prefs is useless elsewhere - restored on a different Mac the passwords have to be entered again. The field above shows the stored value: leave it alone to keep the password, type a new one to replace it. A plain-text password from an older version is encrypted at the first start. Untick to go back to plain text.</Label>
 	</Field>
 
    
@@ -905,7 +932,6 @@ or ancient python2 rPis. Override per rPi: rpi device edit.</Label>
 	<Field    id="debugCAR" defaultValue="false"            type="checkbox"         > <Label>     ... (13) CAR type devices:</Label>  </Field>
 	<Field    id="debugPlotPositions" defaultValue="false"  type="checkbox"         > <Label>     ..  (15) beacon position plots:</Label>  </Field>
 	<Field    id="debugBatteryLevel" defaultValue="false"   type="checkbox"         > <Label>     ..  (16) battery level for iBeacons:</Label>  </Field>
-	<Field    id="debuglastRPI" defaultValue="false"        type="checkbox"         > <Label>     ..  (17) update state lastUpdateFromRPI (NOISY: ~ 1/4 of all writes; off = state shows "off, to enable turn debug on"):</Label>  </Field>
 	<Field    id="debugSQLlogger" defaultValue="false"      type="checkbox"         > <Label>     ..  (17) SQLlogger:</Label>  </Field>
 	<Field    id="debugSQLSuppresslog" defaultValue="false" type="checkbox"         > <Label>     ..  (18) SQL-Suppress-logger:</Label>  </Field>
 	<Field    id="debugBeep" defaultValue="false"           type="checkbox"         > <Label>     ..  (19) beacon Beep:</Label>  </Field>

@@ -4,7 +4,7 @@ Indigo plugin that uses Raspberry Pis to track iBeacons / BLE devices and to rea
 sensors attached to the Pis. The Pis report to the Indigo server over the network; the plugin manages
 device states, triggers, and the sensor programs running on each Pi.
 
-- **Current version:** 2022.194.22 (2026-10-19) — release
+- **Current version:** 2022.194.75 (2026-11-07) — release
 - **Author:** Karl Wachs
 - **Forum / support:** http://forums.indigodomo.com/viewforum.php?f=164
 - **Change log:** see `Contents/changelist.txt`
@@ -172,27 +172,26 @@ hears 90% of the macs loses nothing that matters — it hears every device, just
 fast radio that hears only half of them misses beacons outright. Rotating private addresses are left
 out of the union: a mac that appears once and never again cannot be "missed" by anybody.
 
-- **Pi internal, Broadcom (`B8:27:EB`)** — the fastest scanner of the lot, no BLE5. It is
-  deliberately kept for connects and broadcast anyway, because scanning on it fights wifi.
-- **Broadcom BCM20702A0 (`0a5c:21e8`)** — nearly as fast as the internal radio, no BLE5, connect
-  proven. An excellent BLE4-only scanner.
-- **Realtek ASUS USB-BT500 (`0b05:190e`), Realtek BT5.3 (`0bda:a729`), Realtek BT6.0 (`0bda:a760`)** —
-  clearly slower than the Broadcoms in BLE4, but they receive extended advertising well and connect
-  reliably. The all-rounders: BLE4 + BLE5 in one dongle, and the ones to buy for E1 reception.
-- **Barrot USB2.0-BT (`33fa:0010`)** — refuses BLE4 scan commands entirely, and is the strongest
-  extended receiver measured. Excellent extended listener, useless as a scanner.
-- **UGREEN BT6.0 (`33fa:0012`)** — also BLE4-deaf, and its extended reception is weak. Extended
-  listener and broadcast only.
-- **Mercusys MA530 (`2c4e:0115`)** — delivered nothing in either mode: broadcast only. Do not buy for
-  this job.
-- **CSR8510 clones** — scan acceptably but their ACL MTU gives them away; they get the scan or
-  broadcast role and are kept away from connects.
-- **TP-Link UB500 (`37ad:0600`) and ASUS USB-BT500 BT6.0 (`0b05:1d70`)** — delivered nothing in any
-  mode, and not because of the radio: `btusb`'s quirks table is keyed on USB **VID:PID**, neither id
-  is in it, so `btrtl` never runs and the chip stays on its ROM firmware. Nothing on the Pi can fix
-  that; it needs a kernel in which the id has been added. The same vendors' *older* ids
-  (`2357:0604`, `0b05:190e`) are in the table and work fine. So **check the VID:PID, not the box** —
-  both vendors moved to new ids without changing the product name.
+Per-dongle detail — usb id, measured BLE4 and BLE5 rates, how many runs on how many Pis, and the
+role each one earned — is in `Contents/dongleTypes.txt`. Summary:
+
+- **BLE4 only, the fast scanners:** Pi internal `B8:27:EB`, CSR8510 `0a12:0001`, Broadcom
+  BCM20702A0 `0a5c:21e8`. The internal radio is the fastest of all but is kept for connects and
+  broadcast, because scanning on it fights wifi.
+- **BLE4 + BLE5 in one radio, the all-rounders** and the ones to buy for E1 reception: Realtek ASUS
+  USB-BT500 `0b05:190e` (the reference dongle here), Realtek BT5.3 `0bda:a729`, BT6.0 `0bda:a760`,
+  TP-Link UB500 *old id* `2357:0604`, Realtek Edimax `7392:c611`.
+- **BLE5 only** — these refuse BLE4 scan commands with 0x0C and can never be the scan radio, but
+  make good extended listeners: Barrot `33fa:0010` (strongest measured), Realtek `0b05:1bef`, ASUS
+  USB-BT500 BT6.0 `0b05:1d70`. UGREEN BT6.0 `33fa:0012` is in this class but receives poorly.
+- **Delivered nothing in either mode, do not buy:** Mercusys MA530 `2c4e:0115`, TP-Link UB500 *new
+  id* `37ad:0600`.
+
+**Check the VID:PID, not the box.** TP-Link and ASUS both moved to new ids without changing the
+product name, and the new id can behave completely differently — `2357:0604` scans BLE4 and BLE5,
+`37ad:0600` delivers nothing at all under the same name. `btusb`'s quirks table is keyed on USB
+VID:PID, so an id missing from it leaves the chip on its ROM firmware; nothing on the Pi can fix
+that, it needs a kernel in which the id has been added.
 
 **Broadcom patch firmware is shipped with the plugin.** A BCM20702 dongle whose `.hcd` patch file is
 missing runs on ROM firmware and drops off the USB bus whenever it is reset — which looks like a
@@ -275,7 +274,7 @@ beacons on different floors are drawn with different hatching.
   timestamp and a free title with position and rotation.
 - BLE-connect devices are plotted along with the beacons; expired ones switch to a distinct symbol.
 
-## Supported BLE sensors (no pairing — data via broadcast or GATT)
+## Supported BLE sensors (data via broadcast or GATT — no pairing needed to read them)
 
 Reaction time for buttons is < 0.4 s; battery friendly. Full details in `Contents/BLE-sensorTypes.txt`.
 
@@ -289,11 +288,35 @@ Reaction time for buttons is < 0.4 s; battery friendly. Full details in `Content
   remote button (WoBtn) — can be beeped to locate it
 - **Minew**: E8 (XYZ accel), S1 (temp/hum), S1 Plus (accel + T/H)
 - **Kaipule iSensor**: on/off, magnet, water, PIR, temp/hum, 4-button remote key fob
-- **Shelly**: door, button, motion
+- **Shelly**: door, button, motion — the BLU **button** can also be **paired to an rPi and beeped**
+  to locate it (see below)
 - **Govee** temp/hum (H5101/H5075/H5177/H5174), **ThermoBeacon**, **Thermopro**, **InkBird Pool 01B**,
   **TempSpike** meat thermometer, **april Brother** ABN01/ABN03, **blueradio SensorBug**,
   **Satech STixx**, **iTrack / Musegear button**, **Hunter Node BT**, **meeblue**, **myBlueT**
 - **BLE-connect**: generic GATT connect device for sensors that need an active connection
+
+### Shelly BLU button: pairing and the beep
+
+Everything a shelly BLU will accept a write for — the buzzer, beacon mode, every other writable
+characteristic — is "write bonded", so beeping one needs a **pairing**. BlueZ keeps the keys per
+radio, so a pairing belongs to **one rPi**; the button accepts several at once, and the device
+state `bondedToRPI` lists them (e.g. `2,7`).
+
+**To pair:** tick the rPi in the device dialog, **save it**, then **hold the button next to that
+rPi past 10 seconds**. The hold does both jobs — it opens the button's pairing mode (about a
+minute) and the rPi that hears it close up arms itself and pairs inside that window. **It worked
+when the button beeps**, and the beep proves the pairing is usable, not merely stored. Nothing is
+started from the dialog; the full how-to is behind its "how to" tick.
+
+Two prerequisites, both of which fail quietly: the button must be **completely set up in the Shelly
+phone app** (an unfinished one usually refuses outright — `auth failed with status 0x05` in the rPi
+log), and the rPi must be **ticked and saved**, because an rPi that was never told about the device
+cannot hear the hold at all.
+
+The dialog also has **test this rPi's link** (silent — tells "no keys" from "good link" from a
+one-sided pairing) and **unpair**, which is the way out of a pairing gone stale after a factory
+reset of the button. The beep itself is the ordinary "beep a beacon" action and menu item, which
+offers only the rPis that are actually paired.
 
 ## Supported wired sensors (INPUT devices on the Pi)
 
@@ -681,3 +704,4 @@ reboot of that rPi.
 - `Contents/changelist.txt` — version history
 - `Contents/beaconTypes.txt` — beacon hardware comparison
 - `Contents/BLE-sensorTypes.txt` — BLE sensor hardware details
+- `Contents/dongleTypes.txt` — BLE dongle / radio measurements per usb id

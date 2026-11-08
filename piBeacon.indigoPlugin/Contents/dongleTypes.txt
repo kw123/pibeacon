@@ -1,0 +1,54 @@
+BLE dongles / radios: what each one was MEASURED to do
+======================================================
+
+Written from dongleCatalogue.json in the plugin's preferences folder, which is what the menu item
+"Qualify the BLE dongles of one / all RPI.." fills in. Values are the best of every run: 149 runs over
+15 distinct VID:PID, latest 2026-10-14.
+
+COMPARE A DONGLE ONLY AGAINST THE OTHER RADIOS OF THE SAME PI, IN THE SAME PLACE. How many packets
+a radio delivers depends entirely on how many BLE devices are talking around it, so these are a
+ranking, not a specification. The scanner role is decided on MAC COVERAGE - the share of all macs
+any radio in that pi heard - not on packets per second: a radio 3x slower that still hears 90% of
+the macs misses nothing that matters, a fast one that hears half of them misses beacons outright.
+
+runs / pis say HOW MUCH EVIDENCE is behind a row: 35 runs on 4 pis is a verdict, 1 run on 1 pi is a
+hint. A "--" is a measured zero, not an unknown.
+
+VID:PID    name                     bus    BLE4/s  BLE5/s  runs  pis  best use             comment
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+== BLE4 only - the fast scanners, no extended advertising ==
+B8:27:EB   Pi internal, Broadcom    UART    127.0      --    43    8  connect + broadcast  fastest scanner of the lot, but scanning on it fights wifi - kept for connects
+0a12:0001  CSR8510 A10              USB     120.5      --     2    2  scan / broadcast     scans acceptably, ACL MTU gives the clone away - kept away from connects
+0a5c:21e8  Broadcom BCM20702A0      USB     113.4      --    25   11  scanner BLE4         nearly as fast as the internal radio, connect proven. needs the .hcd patch, shipped
+DC:A6:32   Pi internal, newer OUI   UART     60.6      --     2    2  connect + broadcast  same role as B8:27:EB, slower. UART radios report no product string
+
+== BLE4 + BLE5 in one radio - the all-rounders, buy these for Ruuvi Air E1 ==
+0b05:190e  Realtek ASUS USB-BT500   USB      71.0    26.4    35    4  scan BLE4 + BLE5     the reference dongle here: most runs, most pis, every role incl connect-PROVEN
+0bda:a729  Realtek BT5.3            USB      55.0    24.3     2    1  scan BLE4 + BLE5     slower than the Broadcoms in BLE4, receives extended well, connect proven
+0bda:a760  Realtek BT6.0            USB      54.7    22.2     4    1  scan BLE4 + BLE5     slower than the Broadcoms in BLE4, receives extended well, connect proven
+2357:0604  TP-Link UB500, OLD id    USB      47.2    25.1     7    1  scan BLE4 + BLE5     in btusb's quirks table and works - NOT the same as 37ad:0600 below
+7392:c611  Realtek Edimax           USB      38.1    17.7     2    2  scan BLE4 + BLE5     only 2 runs, and they disagree (7.7/s on pi12 vs 38.1/s on pi2) - thin evidence
+
+== BLE5 only - BLE4 scan REJECTED (0x0C), can never be the scan radio ==
+33fa:0010  Barrot USB2.0-BT         USB        --    68.2     1    1  extListener          strongest extended receiver measured. useless as a scanner
+0b05:1bef  Realtek                  USB        --    36.1     1    1  extListener          second best extended receiver, 59 macs in one run. cannot advertise
+0b05:1d70  ASUS USB-BT500 BT6.0     USB        --    34.2     4    1  extListener          works as an extended listener - BLE5-only firmware, not a dead radio
+33fa:0012  UGREEN BT6.0             USB        --     4.1    16    5  extListener (weak)   extended reception is poor, 4.1/s. extended listener and broadcast only
+
+== delivered NOTHING in either mode - do not buy for this job ==
+2c4e:0115  Mercusys MA530           USB        --      --     1    1  broadcast only       0 reports in BLE4 and in BLE5
+37ad:0600  TP-Link UB500, NEW id    USB        --      --     4    1  broadcast only       0 reports, 0 macs: id is not in btusb's quirks table, so btrtl never runs
+
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CHECK THE VID:PID, NOT THE BOX.  TP-Link and ASUS both moved to new usb ids without changing the
+product name, and the new id can behave completely differently: 2357:0604 scans BLE4 and BLE5,
+37ad:0600 delivers nothing at all under the same name. btusb's quirks table is keyed on VID:PID,
+so an id missing from it leaves the chip on its ROM firmware - nothing on the pi can fix that, it
+needs a kernel in which the id has been added.
+
+BROADCOM BCM20702 NEEDS ITS .hcd PATCH, and the plugin ships it. Without it the dongle runs on ROM
+firmware and drops off the usb bus on every reset - which looks like a radio that accepts every
+command and delivers nothing, or one that reappears under a different hci number mid-run. Debian
+and Raspberry Pi OS package only the onboard radios' firmware, so master.py installs the 36 kB
+file on every pi at start, inert until a matching controller is probed.

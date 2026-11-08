@@ -1,3 +1,21 @@
+SINCE v2022.194.23 - in short:
+   NEW:       Shelly BLU button can be PAIRED to an rPi and BEEPED from indigo - hold the
+              button next to the rPi past 10 s, it beeps when it worked. Per rPi (several
+              allowed), with a bondedToRPI state, link test and unpair in the device dialog
+              dongleTypes.txt - which BLE dongle does what, per usb id
+   FIXES:     a new shelly BLU button / door / motion got NO child device (3 more tags too)
+              5 rPi programs did not start at all - simplei2csensors + its 4 i2c drivers
+              battery level stayed empty on some devices for ever (self-repair never
+              rebuilt the state list)
+              radios are identified by MAC now, not hciN - a usb reset renumbers them and
+              a role pin went to the wrong dongle, or was dropped
+              a scan radio that accepts the scan and delivers NOTHING is detected now
+              a BLE4-only scan dongle could never be "proven", so the BT5 probe kept
+              interrupting the scan every 30 s for the life of the program
+              an arrived message counts as proof of life; dead-master 180 s -> 360 s
+   SECURITY:  the indigo + rPi passwords are stored encrypted, never on a command line
+              (ps -ef is world readable) and never printed by printConfig
+
 SINCE v2022.194.4 - in short:
    FIXES:     Ruuvi Air E1 fixed ; Find My lost tags on a rotation
    TECHNICAL: reduced CPU by > 50% on rpi
@@ -7,7 +25,1097 @@ SINCE v2022.194.4 - in short:
 
 
 
+v2022.194.79  @ 2026-11-07
+   NEW: "test this rPi's link AND BEEP the button" beside the silent test in the shelly button
+       dialog. The two answer different questions and neither replaces the other: the silent test
+       covers everything UP TO the write - keys present, connect, services resolved, buzzer
+       characteristic reachable - while hearing the button is the only thing that covers the rest,
+       the write itself and the buzzer actually being enabled on the device. The silent one stays
+       for a button somewhere it should not chirp.
+       It beeps only if the test PASSED, and says so when it does not ("NOT beeping - the link
+       test did not pass, see the line above") rather than failing quietly. Both halves report to
+       the indigo log like the other pairing answers.
+       New mode "checkBeep" ({"check":true,"beep":true}) through the existing bondBeacon path -
+       receiveCommands passes the job dict through unchanged, so only the two ends needed the
+       extra key.
+
+v2022.194.78  @ 2026-11-07
+   FIX: THE TWO SENSIRION CO2 PROGRAMS NEVER SELECTED THEIR i2c MUX CHANNEL. sensirionscd30.py and
+       sensirionscd40.py called muxTCA9548Areset() - which DESELECTS every channel - and nothing
+       else. The select half was simply missing, so a scd30 or scd40 wired behind a TCA9548A could
+       never be reached at all: the very first command raised OSError EIO ("Input/output error",
+       the bus saying nobody ACKed) and both SENSORclass.__init__ and startSensor dumped a
+       traceback through smbus2. Seen on rpi-2 at 22:15:41 - two tracebacks, back to back, before
+       the sensor had answered once.
+       Both now select before use and keep the reset after, which is what every other i2c sensor
+       program in pi/ already does (si7021 is the model). All 21 of them were checked: these two
+       were the only ones with the select missing.
+   FIX: an unanswered i2c transfer reads as one sentence now, not a stack trace. New U.i2cNoAnswer
+       recognises the bus-level "nobody there" errnos - EIO 5, ENXIO 6, ETIMEDOUT 110, EREMOTEIO
+       121 - and the scd30 handlers log "scd30 at i2c 0x61 on bus 1 did not answer .. absent, on
+       another address, behind an unselected TCA9548A channel, or miswired" instead. A traceback
+       through smbus2's ioctl says none of that, and the real tracebacks are kept for errors that
+       are genuinely unexpected. The helper sits in piBeaconUtils so the other sensor programs can
+       use it as they are touched.
+
+v2022.194.77  @ 2026-11-07
+   NEW: AN rPi NOW REPORTS THAT IT HEARD A PAIRING GESTURE, not just how the pairing went. The
+       result has been going to the indigo log since .58, but nothing said the gesture had been
+       DETECTED - and now that holding the button IS the whole procedure (no pair button in the
+       dialog), a hold that produces no beep and no message is indistinguishable from an rPi that
+       never noticed it, was not ticked for the device, or was out of range. All three outcomes of
+       a gesture report, to indigo and not only to the rpi's own log, because the three answers
+       are completely different:
+         "PAIRING GESTURE SEEN by this rPi (rssi -30 passes -65, code long_press) - pairing now,
+          trying for 90s. It BEEPS when it worked, and the result is logged here either way"
+         ".. but this rPi armed 42s ago already - waiting out the 150s cooldown .., then hold it
+          again"   (a finished pairing costs one of the button's bond slots)
+         ".. but this rPi is ALREADY paired to it - nothing to do. To pair it afresh use 'unpair'
+          in the device dialog first, then hold it again"
+       The already-paired notice has a throttle OF ITS OWN (shellySaidPaired) rather than sharing
+       shellyBondArmed: stamping an arming time for a gesture that armed nothing would make the
+       cooldown turn away a hold right after an unpair, which is the one recovery it must allow.
+       The how-to now says to watch the indigo log for both halves, and that NO line at all means
+       no rPi heard it - not ticked, edit not saved, or too far.
+       The old ARMED text told the user to "HOLD past 10s, then PRESS ONCE", which stopped being
+       true when the hold itself became the trigger.
+
+v2022.194.76  @ 2026-11-07
+   DOC: README brought up to date for the release. The version line still said 2022.194.23
+       (and with a date that version never had). Added a "Shelly BLU button: pairing and the beep"
+       section under the BLE sensors - why a pairing is needed at all, the one gesture that makes
+       one, the two prerequisites that fail quietly (shelly phone app setup, and the rPi ticked
+       AND saved), and what test / unpair are for. The BLE sensor heading said "no pairing", which
+       stopped being true for that button: it now reads "no pairing needed to read them", which is
+       what was always meant.
+
+v2022.194.75  @ 2026-11-07
+   UI: the hidden shelly pairing how-to is plain text now - fontColor="green" dropped, so it uses
+       the standard colour. Green is this dialog's section-heading colour (the rPi list, the
+       on/off text block, and the one-line TO PAIR header all use it), and a whole screen of body
+       text in it read as one enormous heading.
+
+v2022.194.74  @ 2026-11-07
+   UI: the always-visible pairing text is down to two lines - the three actions, the success
+       signal, and where the rest is:
+         "==== TO PAIR: tick the rPi above - SAVE this dialog - then HOLD the button next to that
+          rPi, past 10 SECONDS.  It worked when the BUTTON BEEPS.   (details: tick how to below)"
+       Everything else moved behind the "how to" tick: why nothing is started from the dialog and
+       why there is no reason to keep it open, that the tick only reaches the rPi on save, what
+       the hold does on the device and on the rPi, and that the two remaining buttons do not pair
+       anything - they check or remove an existing pairing.
+
+v2022.194.73  @ 2026-11-07
+   DOC: the pairing text now says the tick has to be SAVED, and that the dialog should then be
+       closed. The rPi selection is only sent to the rPi when the device edit is saved, so ticking
+       an rPi and then holding the button with the dialog still open does nothing at all - the rPi
+       has not been told about the device yet. That is the natural thing to do and it fails
+       silently, which made it worth putting in the header rather than in the detail:
+       "TICK THE rPi ABOVE, SAVE THIS DIALOG, THEN HOLD THE BUTTON NEXT TO THAT rPi PAST 10
+       SECONDS .. nothing is started from here and there is no reason to keep this dialog open."
+       Condition (b) in the how-to says the same at length: save it, close it, then hold.
+
+v2022.194.72  @ 2026-11-07
+   DOC: the pairing text now names the OTHER prerequisite as well: the rPi has to be TICKED IN THE
+       rPi LIST in this same dialog. An rPi only decodes button presses for the devices it has
+       been assigned, so an unticked one never hears the hold, never arms itself and can never
+       pair - and it produces nothing in any log either, which makes it the one failure with no
+       symptom at all to go on. Stated in the visible header next to the gesture, and as condition
+       (b) beside the shelly-app setup in the "how to" text, which is now a two-item list instead
+       of one paragraph.
+
+v2022.194.71  @ 2026-11-07
+   UI: THE "pair this rPi" BUTTON IS GONE FROM THE DEVICE DIALOG. It never saved anybody a step:
+       arming an rPi from here still required somebody to walk over and hold the button past 10 s
+       to open its pairing mode, and beaconloop already arms the nearest rPi off that same hold by
+       itself. So the click bought nothing and only made the procedure look like two things.
+       The dialog now STATES the procedure instead of offering to start it: "TO PAIR: HOLD THE
+       BUTTON NEXT TO THAT rPi, PAST 10 SECONDS .. it worked when the BUTTON BEEPS", with the
+       detail behind the "how to" tick. The two remaining buttons are test and unpair, which is
+       what they are for - things a gesture cannot do. The picker reads "rPi to test or unpair".
+       ONE CASE CHANGES HANDS: a button that was factory reset leaves this rPi holding stale keys,
+       so it thinks it is paired and a hold will NOT arm it - that used to be what the pair
+       button's force flag cleared. It is now "unpair" here first, then the hold, and both the
+       how-to and the unpair caption say so.
+       relinkShellyCALLBACK is removed (nothing referenced it any more). The rpi-side "pair" mode
+       stays, since that is the command the arming writes.
+
+v2022.194.70  @ 2026-11-07
+   NEW: A FULL FRAME TRACE AT THE MOMENT IT IS WANTED. doBLEShelly now dumps the whole decoded
+       frame - raw service data, payload, packet id, adv type and every decoded value - when a
+       HOLD is received above -60 dBm (shellyTraceGate / shellyHoldCodes). That is somebody
+       standing at the button doing the pairing gesture, which is exactly when the detail is
+       worth having: which tags this device really sends, battery among them, and what the
+       advertisement looked like. doPrint could not do this on its own - it is decided BEFORE the
+       frame is decoded, so the button code is not known yet, and findMAC needs a source edit.
+       Logged after the decode, so it is one line with the whole picture instead of per-tag
+       fragments, and only for that gesture at that range, so it costs nothing otherwise.
+   DOC: the pairing how-to now names the success signal where the steps are, not further down:
+       "IT WORKED WHEN THE BUTTON BEEPS", directly under the pick / click / hold line. And it says
+       what the beep actually proves - the rPi buzzes the button OVER THE PAIRING IT HAS JUST
+       MADE, so a beep means the pairing is there AND usable, not merely that keys were written.
+       No beep and no error means the hold did not land inside the window: try again.
+
+v2022.194.69  @ 2026-11-07
+   DOC: THE PAIRING HOW-TO NOW STARTS WITH THE PREREQUISITE IT WAS MISSING: the button has to be
+       COMPLETELY set up in the SHELLY PHONE APP first. A button whose setup was never finished
+       there will most likely refuse an rPi pairing outright, however right everything on this
+       side looks - so it is the first thing to check when a pairing keeps failing, and it belongs
+       above the click instructions rather than nowhere. Kept distinct from beacon mode, which is
+       a separate requirement and a different app (shelly BLE debug, named in the orange note at
+       the top of the dialog).
+       The rpi's own "auth failed / status 0x05" message says it too, since that is the refusal
+       this explains and the message is what the user actually sees when it happens.
+
+v2022.194.68  @ 2026-11-07
+   FIX: THE MISSING-BATTERY SELF-REPAIR ONLY DID HALF THE JOB, which is why a shelly button showed
+       no battery level for as long as it existed and then showed one the moment its device dialog
+       was opened and saved. updateCommonStates already noticed the case ("batteryLevel not in
+       dev.states updating props") and set SupportsBatteryLevel on the server - but setting that
+       prop does not rebuild the device's STATE LIST, so batteryLevel still did not exist as a
+       state and nothing was ever written to it. An edit+save rebuilds the list, which is the only
+       reason it ever started working.
+       It now also sets rePopulateStates, the flag the states path already uses for exactly this
+       (the "key not defined in <dev>" route), which runs stateListOrDisplayStateIdChanged() and
+       adds the missing state by itself. Nothing shelly-specific: this hit any device whose props
+       predate SupportsBatteryLevel being in its ConfigUI.
+       The decode chain was never at fault - BTHome tag 01 -> batteryLevel is mapped, decoded and
+       sent, and the tag map covers every tag in these frames (05 Illuminance, 21 motion, 2D
+       isOpen, 3A button), so there is no parse desync either.
+
+v2022.194.67  @ 2026-11-07
+   DEBUG: doBLEShelly's per-mac trace switch was dead - "doPrint = False #mac == 60:EF:AB:..",
+       a hardcoded mac left commented out, so there was no way to see what a shelly actually
+       broadcasts without editing that line. It now uses findMAC like every other decoder in
+       beaconloop, and prints the raw service data plus every tag as it is decoded. Needed to
+       settle why some shelly buttons report a battery level and others do not: the decode chain
+       itself checks out (BTHome tag 01 -> batteryLevel is mapped, every non-empty value goes into
+       the sent payload, and the plugin's updateCommonStates writes batteryLevel for every sensor
+       before the type-specific handler runs and even repairs a missing SupportsBatteryLevel), so
+       the question is what those devices put on the air.
+
+v2022.194.66  @ 2026-11-07
+   FIX: FIVE rpi PROGRAMS WOULD NOT START AT ALL - SyntaxError. "from __future__ imports must
+       occur at the beginning of the file": the VERSION line added for the startup version banner
+       was inserted ABOVE an existing "from __future__ import division", and python allows only
+       comments and the module docstring before a __future__ import - an assignment is a
+       statement, so the file is rejected outright. Hit on rpi-2 running simplei2csensors.py by
+       hand; the other four are the i2c drivers it uses, so nothing i2c could have run either:
+           simplei2csensors.py   ADS1x15.py   MAX44009.py   PCF8591.py   moist.py
+       The __future__ import now comes first in all five (after the docstring in moist.py, which
+       is allowed), VERSION right below it. Every .py in the plugin and in pi/ was then
+       syntax-checked - these five were the only breakages.
+
+v2022.194.65  @ 2026-11-07
+   LOG: the "SHELLY BUTTON .. code>..< rssi:.. adv:.. CONNECTABLE = bondable window" line in
+       doBLEShelly is now printed ONLY while this rpi has no pairing with that button. The line
+       exists to show whether the adv following a press is connectable - whether a bonding window
+       is open - and once the keys are here there is nothing left to decide, so on a finished
+       device it was one log line per button press for ever. The bonded state is read once now and
+       reused by the arming test below it, which had been asking the same question a second time.
+
+v2022.194.64  @ 2026-11-07
+   DOC: "hci1 IS THE DEDICATED BLE5 LISTENER, BUT THE SCAN RADIO HAS NEVER BEEN PROVEN TO DELIVER
+       BLE4" read as a complaint about a conflict, and there is none. The listener being there is
+       exactly WHY the scanner only has to do BLE4, and "not proven" at that moment means nothing
+       more than "not measured yet" - which is true for the first half-minute after every start.
+       It is now two separate sentences instead of one with a swapped tail:
+         not measured yet -> "... is the dedicated BLE5 listener, SO the scan radio hciN (mac ..)
+            only has to do BLE4 - confirming that it delivers BLE4 before leaving that to it alone
+            (not measured yet, that is all)"
+         measured and mute -> "... is the dedicated BLE5 listener, BUT the scan radio hciN (mac ..)
+            was measured delivering NO BLE4 AT ALL - BLE4 is not being left to it, re-testing"
+       Only the second case is a fault, so only the second case gets a "but".
+
+v2022.194.63  @ 2026-11-07
+   FIX: "LOG ON CHANGE" WAS LOGGING EVERY TIME, because every verdict in probeExtendedScan shared
+       ONE gate variable. The probe prints several different verdicts and compared each of them
+       against the same extScanLastReported[0], so two messages produced by the SAME call took
+       turns overwriting each other's gate and both came out on every run - every 30 s, for the
+       life of the program. Exactly the pair seen on rpi-5-family: "the scan radio hci2 (mac
+       5C:F3:70:6D:DA:75) has never been proven to deliver BLE4 - measuring it before trusting it"
+       (set near the top, just before the fall-through) and "not supported by this adapter ->
+       legacy scanning" (set at the very end of the same call). Neither was repeating because
+       anything was wrong - the gate simply could not hold.
+       The gate is now keyed by the message it guards (extScanSay / extScanSaid), so two different
+       verdicts cannot cancel each other out. All 7 sites in that function converted; the single
+       slot is gone.
+       Note what this means for .62: on this rpi the BLE4 proof still needed ~30 s of traffic
+       after a start, so ONE "never been proven" line at startup is correct and expected. What
+       was wrong was seeing it again every 30 s afterwards.
+
+v2022.194.62  @ 2026-11-07
+   FIX: A BLE4-ONLY SCAN DONGLE COULD NEVER BE "PROVEN", so the probe kept interrupting it for
+       ever. Seen on rpi-5-family, hci0 the dedicated BLE5 listener and hci1 the scanner:
+       "the scan radio hci1 has never been proven to deliver BLE4 - measuring it before trusting
+       it with BLE4 alone", over and over, while nothing ever measured it. Two reasons:
+       1. legOK and the BLE5 verdict SHARED one adapter-mac snapshot, and saveExtScanVerdict
+          DELETES that snapshot whenever the BLE5 verdict is negative - which is the normal state
+          of a BLE4-only dongle. So legacyProven() compared a stored legOK against a missing
+          allMacs and answered None on exactly the radios the verdict was written for. The legacy
+          verdict now carries its own set (legMacs); verdicts without one re-prove once.
+       2. legOK is only ever written by the comparative extended-vs-legacy test, and that test
+          only runs on a radio that HAS the BLE5 feature bit. A radio without one fell straight
+          through to "not supported -> legacy scanning" and cached nothing at all.
+       And it was not free: the probe re-ran every 30 s, and one cmdComplete reads the scan socket
+       for up to 1.2 s hunting its command-complete, DISCARDING every advertising report it meets -
+       so a radio that can never do BLE5 was losing a window of beacons twice a minute for the
+       life of the program, and the role shortcut that would have left it at its full BLE4 rate
+       ("not needed - hciN is the dedicated BLE5 listener") could never fire.
+       A radio with no feature bit now proves BLE4 from THE TRAFFIC IT IS ALREADY DELIVERING - the
+       reader counts frames per scan mac (scanMsgsSeen), 20 of them is the proof - and then latches
+       so the probe stops asking. Nothing extra is measured and nothing is interrupted. An
+       accepted-but-mute radio (7392:c611 answers OK and delivers nothing) still cannot produce
+       that evidence, which is the whole point of the test.
+
+v2022.194.61  @ 2026-11-07
+   UI: THE SHELLY PAIRING HOW-TO WAS IN THE WRONG PLACE AND ALWAYS OPEN. It sat at the TOP of the
+       device dialog, above the mac field, so a screen of pairing prose came before anything a
+       normal edit is actually about. It is now inside the pairing section where the buttons are,
+       behind a "how to" checkbox (visibleBindingId, the same way the other 877 conditional fields
+       in this file work), off by default. The unpair caption keeps only the one line that matters
+       at the moment of clicking - this rPi's keys only, so pairing again needs the hold - and
+       points at the checkbox for the rest.
+   FIX: THE GROUP NOTE WAS ORPHANED on this device type. Every one of the other 148 device types
+       has "Adding a device to a group .." immediately after GROUP_MEMBER_BLOCK; here the pairing
+       fields I added between them had pushed it four controls down, under the unpair button,
+       where it read as a comment about unpairing. Back where the house pattern puts it.
+
+v2022.194.60  @ 2026-11-07
+   DOC: THE PAIRING HOW-TO IN THE DEVICE DIALOG IS NOW THE WHOLE ANSWER AND LEADS WITH IT.
+       "WHICH CLICKS? NONE" first, the 10 second hold on a line of its own, then the three cases
+       - new pairing / after an unpair here / button was factory reset - laid out side by side as
+       what they are: the same two steps, with only the reason they differ written against each.
+       The why (write-bonded characteristics, keys per radio, several rPis at once) moved BELOW
+       that, because it explains the rule rather than telling anyone what to press.
+       Adds that a 10 s hold cannot reset the button by accident - shelly's 30 s factory reset
+       only works shortly after the battery goes in - which is the obvious worry when a how-to
+       says "keep holding".
+
+v2022.194.59  @ 2026-11-06
+   DOC: THE SHELLY PAIRING HOW-TO SAID WHAT TO DO WITHOUT SAYING WHICH CLICKS, and the three cases
+       people actually meet - never paired, paired-then-unpaired here, button factory reset - were
+       not named at all. They turn out to be the SAME two steps, which is now the point the text
+       leads with: clicks never pair anything, the only gesture that pairs is the 10 SECOND HOLD
+       (it switches the BUTTON's pairing mode on for about a minute and makes a sound on release),
+       and "pair this rPi" is always a RE-pair because it drops this rPi's own keys first - so
+       there is no second button to choose between. Clicks only ever ARM an rPi when the dialog is
+       not being used: double press within ~1 m, then hold.
+       Also says that "auth failed with status 0x05" is the BUTTON refusing, not a radio or range
+       problem, that a few refusals before the hold lands are normal because the rPi retries for
+       ~2 minutes, and - on the unpair note, where it is needed - that unpairing here leaves the
+       button holding its own key, which is exactly why pairing again cannot skip the hold.
+       (Confirmed against shelly's own documentation: 10 s hold = pair with another bluetooth
+       device, ~1 minute window; the 30 s factory reset only works shortly after the battery goes
+       in, so a long hold in normal use cannot reset the button by accident.)
+
+v2022.194.58  @ 2026-11-06
+   FIX: THE PAIRED STATE ONLY TOLD THE TRUTH AFTER THE NEXT BUTTON PRESS. The paired-rpi set was
+       fed purely by the shelly's own messages, and a shelly only sends one when it is PRESSED -
+       so a pairing that had just succeeded still read "not paired" in indigo, and the beep menu
+       still refused to offer the rpi that had just been paired, until somebody pressed the button
+       again. A pair / relink / unpair / link test now reports its own answer with the message it
+       already sends, which is exactly the right place: those three are the only things that ever
+       change a pairing. The link test reports THE KEYS, not whether it could reach the device, or
+       a sleeping button would drop its rpi out of the list every time it was tested.
+       The set / state / log handling is one method now (setShellyBondedForRPI), fed by both paths
+       instead of living inline in the message handler.
+   FIX: the bond no longer beeps TWICE. btctlPair already beeps inside the pairing session, on the
+       link the pairing itself just made - the one that has always worked - and the beep that ran
+       afterwards from doShellyBond had to wait for another advertisement and another connect and
+       discovery: measured at 10 seconds, after the button had already buzzed, and it was also
+       what delayed the indigo message. It is now only used when the in-session beep did not go
+       out, and the pairing answer goes to indigo straight away.
+   FIX: "already bonded - nothing to do" answers indigo as well. The device dialog had asked, so
+       it should not be the one case that only replies in the rpi log.
+
+v2022.194.57  @ 2026-11-06
+   FIX: THE PAIRING TEST WAS ASKING THE WRONG QUESTION, and it answered wrong in four places at
+       once. isBonded() asked "does /var/lib/bluetooth/<radio>/<button>/info exist". bluez writes
+       that file for any device it has merely SEEN or connected to, and a REFUSED pairing leaves
+       exactly that behind, so a pairing that never happened read as a pairing that had.
+       Measured on rpi 2 after bluez had rejected the pairing with "auth failed with status 0x05":
+       info present, 144 bytes, [General] / Name / Trusted=true and NOT ONE KEY - and beside it an
+       attributes cache with the five service declarations and NO characteristic at all, which is
+       all a shelly BLU shows a peer it has not bonded with. Hence "no such attribute" on both
+       writes, and "0 characteristics discovered".
+       That single wrong answer: reported the pairing as WORKED and promised a buzz; ended the
+       retry loop on the first attempt, so holding the button past 10 s came too late and was
+       never used; made every later attempt say "already bonded - nothing to do"; and stopped
+       beaconloop re-arming on the next double press, because it too thought it was bonded.
+       Now the KEYS are looked for - [LongTermKey] / [LinkKey], plus the bluez 5.65+
+       [PeripheralLongTermKey] spelling and the older [SlaveLongTermKey] - in BLEconnect and in
+       beaconloop, which had the same test.
+   FIX: A REFUSED PAIRING NO LONGER POISONS THE NEXT ONE. The keyless record and its
+       characteristic-less gatt cache are cleared before pairing and again between retries
+       (dropStaleShellyRecord), so bluez does not pair against a cache that has nothing to write
+       to. It is a no-op when real keys are present, so it can never cost a bond slot.
+   FIX: THE REFUSAL IS NAMED. "auth failed / 0x05" is the BUTTON saying no, not a radio or signal
+       problem: shelly accepts a pairing from an unknown peer only while pairing mode is open.
+       After an unpair the button still holds ITS copy of the key while our side is gone, so the
+       10 s hold is not optional there - it is the only way back in. The log and the indigo
+       message now say that instead of "the device wants to be picked in the shelly app first".
+   FIX: the confirmation beep reports to indigo as well. "WORKED - it should have buzzed" and then
+       silence gave no way of telling a failed beep from a failed pairing.
+   FIX: a beep that finds NO characteristics at all now says so as a pairing answer ("relink this
+       rpi") instead of printing an empty uuid list.
+
+v2022.194.56  @ 2026-11-06
+   FIX: A NEW sendAlive TAG WENT TO THE WRONG PLACE, which is why the shelly link test answered in
+       the rpi log and nothing appeared in indigo. The send thread in piBeaconUtils carried a list
+       - reboot / alive / raspi-config / config.txt - all four doing exactly the same thing, and
+       ANY OTHER TAG fell into the else and was sent as a REGULAR data message with msgType
+       "regular". That is worse than unhandled: the plugin routes pi_IN_Alive to updateRPIAlive,
+       which is where every msgType handler lives, and a regular message never gets there. So
+       sendAlive="shellyLink" was delivered, just nowhere useful.
+       THE LIST IS GONE. A tag means "alive", no tag means "regular data" - the four names behaved
+       identically apart from reboot's extra flag, so there was nothing to dispatch on. Any tag an
+       rpi invents now reaches updateRPIAlive and gets logged by its msgType handler.
+       This was the third gate of this shape today: setPin's command list (.53), and the payload
+       shape chooser in sendGPIOCommand (.53). Worth remembering when adding anything new that
+       travels mac <-> rpi.
+
+
+v2022.194.55  @ 2026-11-06
+   The beep menu's rPi list matches the mac on both spellings and on the props mac as well as on
+   dev.address, so a case mismatch between what an rpi reports and what the beacon device carries
+   cannot quietly bring the whole rPi list back. It also logs, once, when a device that NEEDS a
+   pairing has none yet - naming the keys it looked for - instead of just offering every rpi.
+   No log on the ordinary fall-through: that is the normal path for every beacon that needs no
+   pairing at all, and the menu is opened often enough that saying so would be noise.
+
+
+v2022.194.54  @ 2026-11-06
+   NEW: THE SHELLY PAIR / TEST / UNPAIR RESULT GOES TO THE INDIGO LOG. All three run on the rpi, so
+       the answer used to exist only in /var/log/pibeacon there - the dialog literally said "the
+       answer is in that rpi's log", which meant an ssh session to find out whether a button press
+       had worked. reportShellyToIndigo() sends it as msgType "shellyLink" (the same sendAlive/text
+       channel config.txt and raspi-config already use) and the plugin logs it against the rpi
+       number. Reported now: the pairing outcome (and what to do when it did not work), the link
+       test in full (keys / connect / services / buzzer reachable), "no pairing on radio X", and
+       the three unpair outcomes. Both dialog messages and the how-to say so.
+
+
+v2022.194.53  @ 2026-11-06
+   FIX: THE RELINK AND LINK-TEST BUTTONS SENT NOTHING. setPin / sendGPIOCommand carried a list of
+       command names, and "bondBeacon" was in neither - so the mac logged "asked rPi#N" and no
+       command was ever built or sent. The rpi side was fine all along (receiveCommands has the
+       handler, BLEconnect has the job).
+       THE LIST IS NO LONGER A GATE. It is a payload SHAPE chooser and has to stay one - BLEAnalysis
+       needs "minRSSI", trackMac needs "mac", the GPIO types need pins and i2c addresses - but a
+       command needing none of that used to fall through every branch and be dropped with a
+       warning. The plain shape {"device","command","startAtDateTime"} is the DEFAULT now, so a new
+       command works without being listed anywhere and only the ones needing something special need
+       a branch. bondBeacon is also named explicitly in setPin's dispatch, next to beepBeacon.
+       NOT touched: the two "if x not in [..]" lists in the dialog refresh callbacks. Those are
+       early exits that skip change-detection work for dialogs that do not need it - removing them
+       gates nothing, it just makes those callbacks do needless work on every dialog.
+   NEW: "unpair this rPi from the button" in the device dialog, beside pair and test.
+       removeShellyBond() on the rpi: bluez Adapter1.RemoveDevice, then the key directory cleared,
+       and it says which of the three outcomes happened (removed / there was none / failed).
+       ONE SIDE ONLY, and the dialog says so: the button keeps its own copy of the key, so it still
+       believes it is paired and one of its bond slots stays used until the button itself is reset.
+       Harmless - pairing again writes fresh keys on both sides - and it is how a pairing is handed
+       to a different rPi or a stale one cleared. The state bondedToRPI drops that rpi on its next
+       message. A relink uses the same remover, so the two cannot drift apart.
+
+
+v2022.194.52  @ 2026-11-06
+   FIX: THE "bondedToRPI" STATE NEVER APPEARED. A state needs an entry in _addingstates AS WELL as
+       in _stateListToDevTypes; .50 added only the second, so nothing was ever created and the
+       state could not show up however often it was written. Both are there now.
+   FIX: PAIRING NEEDS THE BUTTON HELD - "pair now" on its own cannot work, and it no longer
+       pretends to. Beeping a BONDED device works whenever it advertises, because a paired peer may
+       connect any time. PAIRING needs the device to accept a connection from a peer it does not
+       know yet, and shelly only allows that while pairing mode is active - the ~10 SECOND HOLD,
+       good for about a minute. A single attempt would have to be lucky, so doShellyBond now
+       RETRIES for the whole arming window (raised to 120 s) and whichever attempt lands inside
+       the window pairs. Every log line and every dialog message says to hold the button.
+   NEW: PAIRING IS PER rPi NOW, which is what it always was underneath - a shelly takes several
+       bonds and bluez keeps the keys per radio.
+       - a menu in the device dialog lists the rPis ENABLED for this device, each marked PAIRED or
+         not paired (filterShellyRPIs). It sits after the rPi checkboxes, so it can only offer rPis
+         that actually hear the device.
+       - "pair this rPi" pairs the selected one, sending force so a one-sided pairing is dropped
+         first rather than making the button a no-op.
+       - "test this rPi's link" is SILENT: no write, no buzzer (checkShellyLink on the rpi). It
+         separates the three states that look identical from indigo - no pairing at all, a
+         one-sided pairing (factory reset of the button: its keys gone, ours still here, everything
+         claims to be paired and nothing works), and a good pairing with the device simply not
+         answering at that moment. It reports keys / connect / services / buzzer reachable.
+   FIX: THE BEEP MENU'S rPi LIST IS FILTERED. It offered every rpi; for a bonded device only the
+       paired ones can do anything, so filterPiDInclAllBonded now lists just those (dynamicReload,
+       since the answer depends on the beacon selected in the same dialog) and says so plainly
+       when none is paired yet. Non-bonded beacons get the normal list. The beep ACTION has no rpi
+       field at all, so nothing to filter there. The callback still overrides and picks a paired
+       rpi, as a backstop.
+
+
+v2022.194.51  @ 2026-11-06
+   FIX .50: "bondedToRPI" IS A LIST OF rpis, NOT ONE. A shelly accepts SEVERAL bonds at once and
+       bluez keeps the keys per ADAPTER, so every rpi can hold its own pairing and more than one
+       usually will. .50 stored a single rpi, so a second one pairing overwrote the first and the
+       state claimed only one could beep the device.
+       Now: the state lists them in numeric order ("2,7,11") or says "not paired". Each message
+       answers only for the rpi that sent it, so each one adds or removes ITSELF and the set
+       builds up with no polling - a "no" from one never clears a "yes" from another, and a repeat
+       of the same answer writes nothing and logs nothing.
+       THE BEEP picks a PAIRED rpi: the selected one if it is paired, otherwise the closest one
+       that is, otherwise the lowest numbered. Any of them can do it; an unpaired one cannot.
+       The how-to in the device dialog says to pair each rpi that should be able to beep it.
+       Tested: add 2, add 7, add 11 (numeric order, not string), drop 2 only, repeat a drop
+       (silent), drop the last one -> "not paired".
+
+
+v2022.194.50  @ 2026-11-06
+   NEW: MANAGEMENT AROUND THE SHELLY BLU PAIRING - 4 things, all of them because a shelly accepts
+   writes only from a bonded peer and bluez keeps the keys per RADIO, so a pairing belongs to ONE
+   rpi and nothing could tell you which.
+   1. STATE "bondedToRPI" ON THE SHELLY DEVICE: the rpi number that is paired to it, or
+      "not paired". Every shelly message now carries whether the rpi that sent it holds the
+      pairing (one isfile() per message), so the picture builds itself with no polling. A "no"
+      from one rpi never clears a "yes" from another, and a change is logged either way.
+   2. "relink / pair this device with its rPi" BUTTON in the device dialog. Queues the bond on the
+      rpi that monitors it; the rpi connects, pairs and BUZZES the button to confirm. No press
+      needed. It sends force, which first drops our side of any existing pairing - the only way
+      out of a ONE-SIDED pairing, which is exactly what a factory reset of the button leaves
+      behind (its keys gone, ours still there, isBonded() saying yes and nothing working).
+      The double press at the device still works too, for when that is more convenient.
+   3. THE BEEP GOES TO THE rpi THAT HOLDS THE PAIRING. "closest rpi" is the wrong answer for a
+      bonded device - any other rpi simply cannot connect - so the choice is overridden and said
+      so in the log, and the action refuses outright when nothing is paired to it yet, pointing at
+      the relink button.
+   4. A HOW-TO in the device dialog: why pairing is needed at all, the two ways to do it, where to
+      beep it from afterwards, and what to do when a factory reset has left the two sides
+      disagreeing.
+   Also: cmd "bondBeacon" in receiveCommands.py (mirrors beepBeacon, writes temp/BLEconnect.bond),
+   and the cached characteristic paths are dropped on a relink so they are re-read.
+
+
+v2022.194.49  @ 2026-11-06
+   Version bump only - no code change. One correction to the history above: the .47 entry
+   describes dbusShellyBeep(), but the edit that wrote it aborted part-way (two call sites matched
+   one pattern) and the version was bumped before the code was in the file. The function and both
+   call sites actually landed during the .48 window. Everything .47 and .48 describe is in
+   BLEconnect.py now and compiles; nothing else differs.
+   STATE OF THE SHELLY BLU SUPPORT, all verified on rpi 2 today:
+       button presses   decoded and logged with rssi and adv type
+       child device     created by default again (.27)
+       bond             double press arms -> connect -> pair -> buzzes to confirm   (bond on hci0)
+       beep             indigo menu + action, beside the trackers, no button press needed
+   DECIDED: THE BOND STAYS ON B8:27:EB:9D:3A:63, the onboard radio. It works, so it is left
+       alone. Worth knowing rather than acting on: bluez stores keys per ADAPTER, so if the
+       connect role ever does move to another dongle the bond does not travel with it and the
+       button has to be paired once more. That radio also logs "Frame reassembly failed (-84)"
+       every 1-2 hours; it has not cost a bond or a beep so far.
+   OPEN, not urgent: the bond path still arms on a double press. That was built around the idea
+       that the device is only reachable just after a press, which turned out to be the missing
+       encryption instead; it could collapse to connect-and-pair with no gesture at all. The
+       gesture does make bonding deliberate, which is an argument for leaving it.
+
+
+v2022.194.48  @ 2026-11-06
+   RPI: THE SHELLY BEEP WORKS FROM INDIGO - and it now waits for an advertisement BEFORE trying to
+       connect, instead of after failing. First live run of .47 from the beep action:
+           connect -> failed                                   (5 s spent timing out)
+           connectable adv seen after 0.2s (rssi -40)
+           connect -> ok, 21 characteristics discovered, beaconMode=on -> written, buzzer=on -> written
+       and the button rang. So the device is NOT continuously connectable - a cold Connect fails
+       and the same Connect succeeds immediately after an adv. .45 removed that wait on the
+       grounds that the phone app connects on demand; the real reason the old waits were useless
+       was the missing encryption (.47), not the waiting, and with that fixed the wait earns its
+       place again. beaconloop reports an adv in a fraction of a second, so asking it first costs
+       nothing and saves the ~5 s a doomed Connect spends timing out.
+       AND NO BUTTON PRESS IS NEEDED: the 0.2 s adv arrived on its own - the device advertises
+       periodically, which is how this plugin tracks its presence at all. A press only brings the
+       next advertisement forward, so the log says that now instead of telling you to press.
+   NOTE: the 21 characteristic UUID reads are what made that run take 14 s after connecting. They
+       are cached per mac from now on, so a second beep is three D-Bus calls.
+
+
+v2022.194.47  @ 2026-11-06
+   RPI: THE SHELLY BEEP GOES THROUGH BLUEZ'S D-BUS API NOW, AND IT WORKS. Verified live on rpi 2:
+       Device1.Connect, then WriteValue on the characteristic objects, and the button buzzed.
+       bluetoothd holds every characteristic as a D-Bus object once the device is connected and
+       its services are resolved, and a write goes out over the bonded encrypted link without
+       anything having to ask for encryption. All four documented characteristics are there,
+       exactly as shelly publishes them:
+           service0015/char0016  5b026510-..  Activate Buzzer      (01 on, 00 off)
+           service0015/char001e  cb9e957e-..  Beacon mode enabled  (required for the buzzer)
+           service0015/char002a  dd78bf35-..  Buzzer enabled
+           service0015/char002e  35c8a5e2-..  Multiclick speed
+       gatttool never saw one of them: "Discover all characteristics failed: Request attribute has
+       encountered an unlikely error" (ATT 0x0E) on EVERY handle range, the standard services
+       included, with and without --sec-level=high, and --char-desc fails the same way. That is
+       gatttool, not the device - bluez reads the same device over D-Bus without complaint.
+       NOTHING IS PARSED FROM A CLI PROMPT ANY MORE, which is where all the earlier attempts died:
+       gatttool cannot write by uuid (--uuid is read-only), it cannot discover this device at all,
+       and bluetoothctl's default device silently drifts to whatever last changed state - an
+       iPhone connecting on the same radio was enough to point a write at the wrong device
+       ("No device connected"). gdbus is non-interactive and addresses the object directly.
+       The char object paths are stable per firmware, so they are discovered once per mac (via
+       busctl tree + a UUID read per characteristic) and cached.
+       The gatttool and bluetoothctl versions stay in the file as gattShellyBeep and
+       doShellyBeepOldBtctl - neither is called, both are there to document what does not work.
+
+
+v2022.194.46  @ 2026-11-06
+   RPI: THE CHARACTERISTIC WALK READ THE PROMPT INSTEAD OF THE RESULTS. gatttool is asynchronous -
+       it prints "[LE]>" the instant a command is accepted and the output arrives afterwards - so
+       expecting the prompt and then reading child.before returned nothing but the echoed command.
+       Hence "0 characteristics found" with an empty uuid list on a connection that was otherwise
+       fine. It matches the result LINES now ("char value handle = 0x.., uuid = ..") and stops when
+       they stop arriving. The other waits in that function were already on real result text
+       ("Connection successful", "Characteristic value was written successfully"), so only the
+       walk was affected.
+   CONFIRMED: --sec-level=high connects to a bonded shelly ON DEMAND, no button press, which is
+       what .45 was betting on and what the phone app has been doing all along.
+
+
+v2022.194.45  @ 2026-11-06
+   RPI: THE SHELLY BEEP NO LONGER WAITS FOR A BUTTON PRESS. .42 made it wait for one, on the
+       theory that a BLU button is only reachable for a moment after a press. That was a
+       workaround for the wrong problem: the connects were failing because the link was never
+       encrypted (.44), not because the device was asleep. It advertises PERIODICALLY - that is
+       how this plugin tracks its presence at all, and the "beacon mode" characteristic IS
+       periodic broadcast - so a bonded peer can connect whenever it catches one, which is
+       precisely what the phone app does when it beeps the button on demand.
+       So the beep connects straight away. A press is used only as a FALLBACK when that first
+       connect fails, to bring the device on air without waiting out an advertising interval.
+
+
+v2022.194.44  @ 2026-11-06
+   RPI: THE SHELLY BEEP NEEDS AN ENCRYPTED LINK, AND NOTHING WAS ASKING FOR ONE. The beep failed
+       identically at rssi -36 and at -90, so the weak-link idea in .43 was wrong - scratch it.
+       What the evidence actually says: connect ok, "ServicesResolved: yes" in 2 s, and
+       /var/lib/bluetooth holds 5 service declarations (00002800) and ZERO characteristic
+       declarations (00002803), rewritten on every attempt. The shelly does not hand out the
+       characteristics of its custom services over an unencrypted link, and bluetoothctl cannot
+       set a security level - so a fresh connect on a stored bond is unencrypted and finds
+       nothing. The one beep that ever worked rode the connection the PAIRING had just made, which
+       is encrypted and authenticated by definition. Nowhere in this program did gatttool ever get
+       a --sec-level either, which is why no beep after a pairing has ever worked.
+       NEW gattShellyBeep(): gatttool -i <hci> -b <mac> --sec-level=high -I, which forces
+       encryption on the stored bond, then "characteristics" ONCE to discover the handles, then
+       char-write-req by HANDLE - gatttool cannot write by uuid at all. If the buzzer uuid is not
+       among the characteristics it now says so and lists what it did find, which answers the one
+       question still open: whether those two uuids exist on this firmware.
+       The bluetoothctl version is kept as doShellyBeepOldBtctl for reference - it can select an
+       attribute by uuid, which gatttool cannot, and that is the only thing it was ever good for.
+
+
+v2022.194.43  @ 2026-11-06
+   RPI: the shelly beep now warns when the triggering press came in on a WEAK LINK. Checked in
+       /var/lib/bluetooth after three failures: the bond is complete and authenticated (identity
+       resolving key + both long term keys, Authenticated=2) and the attribute cache holds 5
+       SERVICE declarations (00002800) and ZERO characteristic declarations (00002803). So every
+       connect resolves the services - a short exchange - and the characteristic walk, which is
+       many more round trips across 5 services, comes back empty. select-attribute then has
+       nothing to select and every uuid reads "no such attribute".
+       The pattern is in the rssi: bonded AND buzzed at -34..-42, then failed three times in a row
+       at -78, -84 and -90. waitForAdvBeaconloop already knows the rssi of the adv it reported, so
+       it keeps it now and the beep says plainly when it is below -72 that discovery may come back
+       empty and the button should be pressed near the rpi.
+
+
+v2022.194.42  @ 2026-11-06
+   RPI: THE SHELLY BEEP ACTION NOW WAITS FOR A BUTTON PRESS instead of opening its own
+       connection. A BLU button accepts and keeps a connection only for a moment after a press,
+       and an action fired from indigo cannot know when that is: live it took 29 s to reach the
+       writes and found an EMPTY attribute list - services had resolved, then the device slept and
+       bluetoothd dropped everything it knew. beaconloop is scanning anyway and reports a
+       connectable adv of a watched mac in well under a second, so the beep asks it to watch
+       (waitForAdvBeaconloop), the user presses, and the connect goes out immediately. So: fire
+       the action, THEN press the button. No press inside 40 s -> it says so and stops.
+   RPI: AND THE PROMPT PATTERN WAS WRONG WHOLE TIME ONCE CONNECTED. bluetoothctl shows
+       "[bluetooth]#" while idle but renames itself to the device and switches to ">" once
+       connected - "[SBBT-002C-bc61]>" in the log. Every expect was matching "]#", so from the
+       connect onwards each one ran to its timeout. It did not break anything (a timeout is
+       treated as normal here) but it put seconds into a sequence that has none to spare. Matches
+       "](#|>)" now. Also list-attributes takes no device argument inside the gatt menu, which is
+       why the .41 diagnostic came back as nothing but two prompts.
+
+
+v2022.194.41  @ 2026-11-06
+   RPI: THE STAND-ALONE SHELLY BEEP DID NOT WAIT FOR SERVICE DISCOVERY. btctlPair waits for
+       "ServicesResolved: yes" after connecting; doShellyBeep went straight from "Connection
+       successful" to select-attribute, so bluez had not finished discovering and both uuids came
+       back "no such attribute". The in-session beep worked precisely because it inherited the
+       pairing connection, whose discovery was already done. Same wait added to the beep path, and
+       it says so when the services do not resolve in 15 s instead of reporting a missing
+       attribute for what is really an unfinished connection.
+   RPI: and when an attribute genuinely is missing, the log now carries list-attributes output
+       (once per attempt). "no such attribute" on its own cannot distinguish failed discovery from
+       a uuid this firmware does not have.
+   CORRECTION: the button was NOT paired to the phone app, so the "a device already claimed by the
+       app will not accept a third party without pairing mode" reasoning in .38 was wrong. What
+       actually made the bond work was connecting BEFORE pairing (so discovery has a live link)
+       and not spending the window on bluetoothctl's own setup (.40). The 10 s hold may well not
+       be needed at all - the arming trigger accepts the double press and the hold either way, so
+       nothing has to change to find out.
+
+
+v2022.194.40  @ 2026-11-06
+   RPI: THE BONDING SESSION WAS SPENDING THE WHOLE WINDOW ON ITS OWN SETUP. Every setup command
+       in btctlPair waited up to 4 s for a "#", and bluetoothctl prints NOTHING after "select" -
+       no new prompt to match - so each one burned its full timeout. Live on rpi 2: the session
+       started at 15:09:41.8 and the scan wait only began at 15:09:59, 17 seconds later, by which
+       time the device was long asleep and the connect failed. The giveaway is in the same line -
+       "bluetoothd SAW the device after 0.0s of scanning": it had been sitting in the registry the
+       whole time, nobody was looking. The prompt is "[bluetooth]#", so the pattern is "]#" now,
+       the waits are 1.2-3 s, and a timeout is treated as normal - these commands do not fail,
+       they just do not always answer. "scan off" also no longer sits between seeing the device
+       and connecting to it; the connect goes out immediately and the scan is stopped afterwards.
+   MEASURED: THE 10 SECOND HOLD *IS* ADVERTISED - "code>hold_press<" at 15:09:45.3, 3.5 s after
+       the double press that armed it. That was the open question behind .38/.39: a device that
+       went quiet on entering pairing mode could never have been triggered by the hold. It does
+       not go quiet, so either gesture works - the double press stays the recommended one simply
+       because it is unambiguous.
+   NOTE: an rpi-side bond can outlive a FACTORY RESET of the button, and then the two disagree -
+       isBonded() says bonded (the keys are still in /var/lib/bluetooth), the device knows nothing
+       about it, and doBLEShelly stops arming because it believes the job is done. After resetting
+       a shelly, remove its bond directory on the rpi that held it. The reverse is not safe on its
+       own: deleting only the rpi side while the device still holds its key leaves the device
+       expecting a key the rpi cannot present.
+
+
+v2022.194.39  @ 2026-11-06
+   RPI: THE DOUBLE PRESS ARMS THE BOND AGAIN - and so does the hold. .38 moved the trigger to the
+       hold alone, on the grounds that the hold is what opens pairing mode on the device. True,
+       but it made the arming depend on something that is NOT established: whether the FULL 10 s
+       hold is still advertised. The long_press / hold_press codes seen so far could have come
+       from a shorter long press, and a device that goes quiet the moment it enters pairing mode
+       would never arm the rpi at all. The double press is a plain broadcast event with no such
+       dependency, so it is the reliable signal; the hold is accepted as well, for when one
+       gesture is more convenient.
+       THE SEQUENCE: double press (arms the rpi) -> hold past 10 s (opens the window on the
+       device) -> one press (the bond rides on it, and the buzzer confirms it).
+
+
+v2022.194.38  @ 2026-11-06
+   RPI: THE BOND NEEDS THE DEVICE IN PAIRING MODE, AND THAT IS THE 10 SECOND HOLD.
+       Shelly: "Connection is only possible from a paired devices, or if pairing mode is active."
+       A button already claimed in the shelly app is paired to the PHONE; the rpi is paired to
+       nothing and therefore has no standing to connect at all. The app manages with simple
+       presses because it is doing first-time provisioning on an unclaimed device - a third party
+       joining a claimed one does not get that. That is what every attempt so far was missing,
+       and both failure modes follow from it: bluez paired, ran service discovery, found nothing
+       because it was never allowed a real session, removed the device object and the keys with
+       it (isBonded() True inside the session and False a moment later in the caller), and the
+       buzzer uuids read back "no such attribute" because no attribute cache was ever built.
+       SO THE TRIGGER IS NOW THE HOLD, not the double press: long_press / hold_press /
+       button_hold, all of which this rpi already decodes. The gesture that opens the window on
+       the device is now the same one that arms the rpi, which is how it should have been from
+       the start - the earlier "the app only needs simple presses" reading was mine and it was
+       wrong for an already-claimed device.
+   RPI: AND IT CONNECTS BEFORE IT PAIRS. Pairing straight off an advertisement leaves bluez to do
+       its service discovery with no live link, which is what failed above. btctlPair now does
+       scan on -> wait for the mac -> scan off -> connect -> wait for ServicesResolved -> pair ->
+       trust -> beep on the SAME connection, and disconnects at the end. A failed connect says so
+       and asks for another press instead of pressing on to a pair that cannot work.
+
+
+v2022.194.37  @ 2026-11-06
+   NEW: A BONDED SHELLY BLU BUTTON CAN BE BEEPED FROM INDIGO, from the same menu and action that
+       beep the iTrack/Nut trackers - no new dialog, no new command path. The send callback ships
+       the WHOLE "beep" dict out of knownBeaconTags to the rpi verbatim, keyed by mac, so the only
+       thing needed was a beep entry of a new type:
+           ShellyButton.commands.beep = {"type": "BLEbonded",
+                                         "beaconModeUUID": cb9e957e-..,
+                                         "buzzerUUID":     5b026510-..}
+       "BLEbonded" and not "BLEconnect" because nothing about it is gatttool: every writable
+       characteristic on that device is write-bonded, and gatttool cannot write by UUID at all
+       (--uuid is read-only, --char-write-req takes a handle). processBeepQueueBLEconnect routes
+       that type to doShellyBeep, which connects and writes through bluetoothctl's gatt menu on
+       the bond THIS radio holds. deviceStartComm marks such a tag beepable so beaconBeepUUID
+       self-heals and the device appears in the menu, and the menu filter accepts the new type.
+       Not bonded yet -> the beep says so in the log instead of failing silently.
+   NOTE: trying to BOND again on an already-bonded device still does nothing and stays silent -
+       doShellyBond returns on isBonded() and the trigger in doBLEShelly does not even queue a
+       job. That is deliberate: the arming gesture is the double press, and making a double press
+       beep a bonded button would fire the buzzer every time the button is used for automation.
+       The beep is an explicit action instead. A triple press would be a free gesture for an
+       on-device "is this still bonded" test if that is ever wanted.
+
+
+v2022.194.36  @ 2026-11-06
+   RPI: THE SHELLY IS BONDED - and the beep now goes out over the same connection.
+       Second live run: "bluetoothd SAW the device after 0.0s", pair, and isBonded() True. Note
+       bluetoothctl SAID "Failed to pair" while /var/lib/bluetooth already held the keys: bluez
+       bonds first and then runs service discovery, and on a sleepy BLE device that discovery
+       times out - which is what it reports, bond done and persisted regardless. The key store is
+       the truth and the code already trusted it; it now also stops treating the message as the
+       verdict, and trusts + beeps on isBonded() rather than on the word "successful".
+   RPI: THE BEEP WROTE BY UUID THROUGH gatttool, WHICH CANNOT DO THAT. gatttool's
+       --char-write-req takes a HANDLE; --uuid is read-only. Hence "A valid handle is required".
+       The retry then found the device asleep ("Connection reset by peer (104)", then "Cannot
+       allocate memory (12)") because it came back with a fresh connection after the pairing.
+       Handles are firmware specific and the uuids are published, so this uses bluetoothctl's gatt
+       menu instead - select-attribute <uuid> + write - and does it IN THE PAIRING SESSION, while
+       the device is still connected from the bond. Beacon mode cb9e957e.. first, then the buzzer
+       5b026510.. (shelly requires the former for the latter); 00 only cuts it short, the device
+       stops after 30 s by itself. The stand-alone beep uses the same path with its own connect,
+       which still needs a button press to be accepted.
+
+
+v2022.194.35  @ 2026-11-06
+   RPI: THE SHELLY BOND NOW PAIRS THROUGH bluetoothd's OWN SCAN. First live run of .30: the
+       trigger, the arming, the watchMAC handshake and the connect all worked - double press
+       logged, armed for 90s, connectable adv reported after 0.6s at rssi -26 - and then bluez
+       answered "Device F4:B3:B1:83:BC:61 not available". bluetoothctl can only pair with a device
+       bluetoothD already has an object for, and bluetoothd learns devices from ITS OWN discovery.
+       beaconloop scans with a raw HCI socket, which never touches bluetoothd's registry, so as
+       far as bluetoothd was concerned the shelly did not exist at all. Piping
+       select/agent/default-agent/pair/trust into it could never have worked.
+       NOW: btctlPair() drives bluetoothctl as a session (pexpect, already a dependency of this
+       program) - select the connect adapter, NoInputNoOutput agent, "scan on", WAIT for the mac
+       to appear in the scan output, then pair + trust. The scan runs on our own adapter, not
+       beaconloop's, so a multi-radio rpi is undisturbed; a single-radio one is already paused.
+   RPI: and the watchMAC wait is GONE from the bond path. Waiting for the connectable adv first
+       and only then starting bluetoothctl spent the window - by the time bluetoothd started
+       scanning the device was asleep again, which needed a THIRD press. bluetoothd's scan is both
+       the wait and the discovery, so the next press now does double duty: it wakes the device and
+       lands in that scan. Two presses: double press to arm, one press to bond.
+   NOTE: the bond lands on whichever radio holds the BLEconnect role - on rpi 2 that is the
+       onboard UART radio B8:27:EB:9D:3A:63, which has been logging "Frame reassembly failed
+       (-84)" and command tx timeouts every 1-2 hours all day. bluez stores bonds PER ADAPTER, so
+       the bond would live on the least reliable radio in that rpi. Moving the connect role to a
+       usb dongle is worth doing before relying on it.
+
+
+v2022.194.34  @ 2026-11-06
+   RPI: A SCAN RADIO WHOSE LEGACY SCAN IS ACCEPTED BUT MUTE IS NOW RECOGNISED, AND NO LONGER
+       SILENTLY GIVEN THE BLE4 JOB. The code modelled two kinds of radio: legacy REJECTED with
+       0x0C (BLE5-only firmware) and legacy works. There is a third: the legacy enable returns OK
+       and the controller then delivers nothing. 7392:c611 on rpi 2 does exactly that - 2 hci
+       events in 8 seconds as the scan radio, while the same dongle's EXTENDED scan does ~22/s,
+       and while the other dongle managed 179 events in the same 8 seconds. It was handed the scan
+       role three times today and received nothing all three times.
+       TWO THINGS LET THAT HAPPEN, both fixed:
+         - probeExtendedScan returned EARLY when a dedicated BLE5 listener exists ("not needed -
+           the scanner keeps its full BLE4 rate"), before any delivery test. Correct in general,
+           fatal for a scanner that cannot do BLE4. That shortcut now needs a POSITIVE legacy
+           verdict for exactly this hardware (new legacyProven(), cached as legOK in the scan role
+           of beaconloop.hci beside the BLE5 verdict, invalidated by any adapter mac change). Not
+           measured yet -> fall through once and let the comparative probe answer it.
+         - the comparative probe itself read nLeg == 0 as "a failed measurement" and declared the
+           whole test INCONCLUSIVE, which left the radio on BLE4 re-probing for ever and, once the
+           retry budget ran out, made it give up on EXTENDED - the one mode that worked. Now
+           "nothing at all" is still inconclusive, but "extended delivers and legacy does not" is
+           a verdict: _legMute joins _legRejected and _pinWantsExt in the extended-wins test, so
+           such a radio gets extended scanning for everything instead of silence.
+       Every cached verdict now also records whether legacy delivered, so the question is asked
+       once per adapter set rather than on every socket setup.
+   RPI: removed the redundant block .33 added to hciStateStrings - it fills hci0..hci3 with "" for
+       absent radios, which that function already does in its initialiser. The real fix for the
+       .32 regression was on the plugin side and stands.
+
+
+v2022.194.33  @ 2026-11-06
+   FIX A REGRESSION FROM .32: IT CLEARED EVERY RADIO STATE ON EVERY RPI. .32 treated an hciN
+       MISSING from a radio message as "that radio is gone". It is not: the guard in front of that
+       code matches the SUBSTRING "hci0".."hci3" anywhere in the raw message, so any message that
+       merely mentions a radio gets through with no hci keys in "data" at all - and every name was
+       then cleared. 13 rpis lost all of their hci0..hci3 states in one pass (they repopulate on
+       the next real report, but the log filled with "radio hciX is gone" for radios that were
+       sitting there working).
+       ABSENCE IS NOT INFORMATION ON THE RECEIVING END. beaconloop now says which names are NOT
+       there, explicitly, by sending "" for them, and the plugin acts only on keys the message
+       actually carries. A real disappearance arrives as a value and is logged as before. An rpi
+       running older code sends nothing for a missing name, so its old state is left alone -
+       stale, but never wrong, which is the right way round for this.
+
+
+v2022.194.32  @ 2026-11-06
+   AUDIT of every place that used an hciN as a radio's IDENTITY rather than as its current
+   location. Already correct, and these are the ones that never caused trouble: BLEconnect's
+   connect-radio pick ("FOLLOW THE MAC, NOT THE hci NAME"), checkRoleChanged() (re-reads
+   beaconloop.hci every 30 s and follows the BLEconnect role's MAC), loadExtScanVerdict()
+   (verdict trusted only for the same scan mac AND the same full adapter mac set), and
+   execExtListener ("radio hci3 re-appeared as hci2 - following it"). Fixed now:
+   RPI: THE RADIOS BLEconnect MUST AVOID WERE TAKEN AS NAMES out of beaconloop.hci - the scan
+       radio and the BLE5 extended listener. The name goes stale the moment a dongle is renumbered
+       and then the WRONG radio was excluded: our own connects were free to grab beaconloop's scan
+       dongle, or the ext listener - where a connect knocks the extended scan back to legacy and
+       costs Ruuvi Air E1 reports - while pointlessly refusing whatever had taken the old name.
+       Both are resolved through the mac now (new hciOfMac()), with the name only as a fallback.
+   RPI: THE "ignore" PIN WAS STILL NAME KEYED in dropIgnoredRadios(). .31 routed the role pins
+       through the mac anchors but not this one, so after a renumber "ignore" disabled whatever
+       held that NAME - a different and possibly perfectly good dongle - while the radio the user
+       meant to ignore quietly came back into play. It goes through resolvePinnedRadios() now.
+   PLUGIN: A RADIO THAT WENT AWAY NOW HAS ITS STATE CLEARED. The rpi device states hci0..hci3 were
+       only ever updated for the names PRESENT in the message, so a renumbered dongle left its old
+       state behind for ever: a radio that is not there, still showing its mac, its usb id and the
+       ROLE it used to hold. That is exactly what hid the outage on pi 2 - the state said hci1 was
+       scanning while hci1 had not existed for a quarter of an hour. A name missing from the
+       message means the radio is gone (beaconloop publishes one entry per present radio on every
+       change), so the state is cleared and the disappearance is logged.
+   OPEN, because both are user visible and your call:
+       - the pin PROP is keyed by name (dialog field hciRole_hciN, read back as the bare hciN).
+         .31's anchors freeze a pin to a mac on first use, but if you open the dialog after a
+         renumber the hciRole_hci1 menu is labelled with a DIFFERENT dongle, so re-saving silently
+         re-points the pin. Keying the field on the mac would fix it and would reset existing pins.
+       - the device state KEYS hci0..hci3 are not stable identities either. The state CONTENT
+         starts with the mac so the data is self-describing, but a trigger or control page naming
+         hci1 describes a different radio after a renumber. Changing the keys is a schema change.
+
+
+v2022.194.31  @ 2026-11-06
+   RPI: THE MAC IS THE RADIO'S IDENTITY NOW, hciN IS ONLY WHERE THAT RADIO CURRENTLY IS.
+       hci numbering is not stable - a replug, a usb reset or a power cycle renames a radio, and
+       the kernel does not even reuse the freed number (the dongle that was hci1 came back as
+       hci3 while hci1 stayed empty). Roles were assigned once at startup and then CAPTURED as an
+       hciN: 131 places in beaconloop.py used that captured name as the radio. After a rename the
+       role pointed at a name that did not exist, nothing was read at all, and beaconloop stayed
+       "alive" updating its alive file - so neither the alive-file watchdog nor anything in indigo
+       noticed. It happened twice on rpi 2 within an hour, ~13 min of ble4 blindness each time,
+       hidden both times because the BLE5 listener kept working (it was already following its mac).
+       NEW: hciMapNow() / hciForMac() answer "where is this dongle now" from one cached whichHCI()
+       lookup, and resyncRadioRoles() re-derives every role's hciN from hciRoles[role]["mac"]:
+         - a NON-scan role (connect, broadcast) whose radio was renamed is corrected IN PLACE and
+           says so, which is what execExtListener has always done for the listener.
+         - the SCAN role takes a restart instead, promptly and rate limited to once per 120 s,
+           because its socket, its scan parameters and the rpi identity mac all hang off it -
+           reopenScanSocket is explicit that "only startBlueTooth can re-pin the radio, re-derive
+           the roles and the rpi identity mac". Before this it sat with a dead socket until the
+           no-message timeout eventually threw the process away.
+         - a role whose dongle is simply ABSENT is left alone: that is the no-message path's job,
+           and correcting it to some other radio would be guessing.
+       Called from getSocketData(), self-throttled to one timestamp compare per read cycle so it
+       does real work every 15 s. The useHCIFor* globals stay - they are now a CACHE refreshed
+       from the mac, so all 131 existing references read a current value instead of a startup one.
+   RPI: the no-message path now says WHY before throwing the process away: whether the scan
+       dongle moved to another hciN, or is not present at all. "restarting due to no messages"
+       alone never distinguished a dead dongle from a renamed one.
+   NOTE: the two radios on rpi 2 are 0b05:190e (ASUS BT500, scan-BLE4 at 95% coverage) and
+       7392:c611 (Edimax, scan-BLE4(weak) at 66%). The auto pick keeps landing the scan role on
+       the Edimax, so the pin is worth keeping - with .30's anchors it now survives a renumber.
+
+
+v2022.194.30  @ 2026-11-06
+   RPI: A RADIO ROLE PIN IS NOW ANCHORED TO THE DONGLE, NOT TO ITS hciN NAME. hci numbering is not
+       stable and the pin was keyed by name, which failed BOTH ways on rpi 2 inside 20 minutes:
+         - the scan dongle hung, the kernel reset the usb device and it came back as hci3. The pin
+           said hci1, so it was dropped ("radio role pin hci1=scanBLE45 ignored - that radio is
+           not present") and the auto pick handed the scan role to the OTHER dongle, the one the
+           catalogue rates scan-BLE4(weak) at 66% coverage. It then delivered 1 hci event per 10 s
+           - no ble4 reception at all for ~13 min, while the BLE5 listener kept working and hid it.
+         - after a replug the weak dongle came up AS hci1, so the pin matched by name and was
+           applied to a radio it was never meant for.
+       Now: resolvePinnedRadios() keeps {mode: mac} anchors in temp/hciRolePins.anchors, learned
+       the first time a pin is used and re-learned whenever the pins CHANGE in the dialog (the
+       dialog lists each radio's mac beside its hciN, so a freshly saved pin means the radio
+       called that hciN now). A renumbered dongle keeps its pin; a different dongle arriving on
+       the old name does not inherit it. A pin whose dongle is simply gone is now SAID so, loudly,
+       instead of silently falling back to the auto pick, and the scan radio's hci state carries
+       "pinLost" so it is visible in indigo - that whole 13 min outage produced nothing on the mac
+       side at all. A pin written as a mac works directly too.
+   RPI: SHELLY BLU BONDING, AND A BEEP WHEN IT WORKED. A BLU button accepts a connection only from
+       a paired client and every writable characteristic on it is "write bonded", so a bond is the
+       one thing between this plugin and beep/config on a shelly - unlike the iTrack/Nut trackers,
+       whose control characteristic takes a write from anybody.
+       THE SEQUENCE, all on the rpi: a DOUBLE PRESS this rpi hears above the gate arms a bond
+       (temp/BLEconnect.bond) -> BLEconnect asks beaconloop to watch for a connectable adv of that
+       mac (the existing watchMAC handshake, same one the battery read uses) -> the NEXT SIMPLE
+       PRESS opens that window -> bluez pairs with a NoInputNoOutput "just works" agent on the
+       connect radio -> on success the device is BUZZED as the confirmation (beacon mode
+       cb9e957e.. on first, then buzzer 5b026510.. = 01; it stops itself after 30 s).
+       The double press stands in for "the user picks the device in the shelly app" - the app needs
+       no long hold either: it scans, the user presses, it lists the device, the user picks it, and
+       it waits for one more simple press. An rpi has no UI to pick with, so the double press is it.
+       MEASURED FIRST (that is why the shape is this): every button event - press, double, tripple,
+       hold, long - advertises as ADV_IND 00 = CONNECTABLE, so the window is real and already
+       detectable. Nothing is retried in a loop: a completed pairing costs one of the device's bond
+       slots, and bluez stores the keys per ADAPTER, so the bond belongs to one radio and a role
+       move to another dongle means it is not there any more.
+   RPI: THE BOND GATE IS -65 dBm, NOT -60. One button event reaches the gate exactly ONCE - the
+       packetId de-duplication returns before it - so "best of 2 packets" cannot work. Measured,
+       same button, same hand, 5 s apart: -42, -44, -50, -60. 18 dB of spread, and the -60 sample
+       failed a "> -60" test. -65 is 1.0 m by calcDist with the tag's -65 dBm/1 m calibration, and
+       the nearest other rpi here is > 5 m = about -79 dBm, so ~14 dB still separate "in my hand"
+       from the next rpi. A tighter gate only loses presses.
+   NOTE: the bluez pairing path wants its first live run. Two things no amount of listening can
+       settle: whether the BLU accepts an UNBONDED connect in the press window without having been
+       picked in the shelly app first, and whether the agent can pair on a radio beaconloop is
+       scanning with (this rpi has the spare radio; a single-radio rpi leans on the pause
+       handshake, which has a 55 s failsafe against a 60 s window).
+
+
+v2022.194.29  @ 2026-11-06
+   RPI: A BROKEN PIPE IN THE BT5 PROBE NO LONGER DUMPS A TRACEBACK AND NO LONGER CLAIMS THE
+       ADAPTER HAS NO BLE5. probeExtendedScan() had one blanket "except Exception" with
+       exc_info, then fell through to reportBLE5("no - no BLE5 capable adapter"). But a socket
+       error there is an ABSENT RADIO, not a capability: hci_open_dev succeeds on a stale device
+       node while the radio is gone or re-enumerating, and the first send fails with
+       BrokenPipeError / "network is down". getSocketData already refuses to log a traceback for
+       exactly this ("an unplugged dongle is not a code fault and its BrokenPipe traceback made
+       every hardware test look like a crash") and execExtListener says the same ("an absent
+       adapter, not a bug: retry quietly instead of dumping a traceback") - the probe was the
+       one place still doing it. Now: (pySocket.error, OSError, IOError) is caught separately,
+       logged as ONE line naming the radio and the errno, log-on-change (this probe runs every
+       couple of seconds, see the note in the function), reported as
+       "unknown - scan radio did not answer the probe" instead of a verdict on the hardware, and
+       it returns before the "not supported by this adapter" line. Nothing is cached, so the
+       next probe decides afresh once the radio is back.
+       Seen live: scan radio hci1/B0:82:E2:1F:77:37 with extended scan ACTIVE, roles then moved
+       to hci2/08:BE:AC:1A:A3:53, and the probe on the old socket raised BrokenPipeError.
+   NOTE: THIS IS A LOGGING AND VERDICT FIX ONLY - it does not change recovery. The receive path
+       owns that and always did: getSocketData() tries reopenScanSocket() once and otherwise
+       restarts the program. reopenScanSocket DELIBERATELY refuses two cases, which then take
+       the full restart: a REPLACED dongle (different mac) and a radio that came back as a
+       different hciN - "only startBlueTooth can re-pin the radio, re-derive the roles and the
+       rpi identity mac". A role move from hci1 to hci2 is exactly that second case.
+
+
+v2022.194.28  @ 2026-11-06
+   RPI: SHELLY BUTTON EVENTS ARE LOGGED WITH THEIR RSSI (doBLEShelly) - groundwork for letting
+       an rpi BOND to a shelly BLU button, which is the only way to send it anything: every
+       writable characteristic on that device is "write bonded", and shelly says a connection is
+       only possible from a paired device or while pairing mode is active. So no beep, no config,
+       nothing at all without a bond - this is why the plugin cannot beep a shelly today while it
+       beeps the iTrack/Nut trackers, whose control characteristic takes writes from anybody.
+       NOTHING BONDS YET. A button event only happens when somebody touches the device, so each
+       one is logged, to settle the 2 unknowns the trigger rests on:
+         - is the adv that follows a button press CONNECTABLE (00=ADV_IND / 01=ADV_DIRECT)?
+           That frame IS the bonding window. The shelly APP needs no long hold at all: it
+           scans, the user presses, the app lists the device, the user picks it, and the app
+           waits for ONE MORE SIMPLE PRESS which completes the pairing. So the double press
+           only replaces "user picks it in the app" - the rpi has no UI to pick with - and the
+           next simple press is what the bond rides on. A connectable adv of a watched mac is
+           already what watchMAC notifies BLEconnect about, so the primitive exists.
+   RPI: parsePackage() now stores the ADV TYPE of the packet it just parsed, as
+       parsedData[mac]["advType"], and the scan loop passes it in. The type byte lives in the
+       hci header IN FRONT of the payload parsePackage gets, so it could not be recovered from
+       the parsed sections - and a decoder reaching back into the raw packet for it would be
+       reading a different packet than the one it is decoding, since parsedData can hold an
+       older parse when a short packet makes parsePackage bail out early. Stored with the
+       sections of the same packet it belongs to, doBLEShelly reads it like every other field.
+       (The BLEanalysis caller parses hcidump text lines and has no header: it keeps the ""
+       default.) doBLEShelly now touches NO raw hex at all - it always read its payload from
+       parsedData["analyzed"]["code"]["16"] like every other sensor decoder.
+       THE TYPE IS TAKEN BEFORE fillHCIdump(): the raw frame is
+           04 3E len 02 01 <evtLegacy> <addrType> <macRev x6> <dataLen> <data..> <rssi>
+       so the type is at [10:12] - where fillHCIdump tests it for watchMAC and where
+       extendedToLegacy writes evtLegacy for a BT5 extended report. fillHCIdump then returns
+       hexstr[14:] ("start w the MAC#, skip the preamble"), and after that [10:12] is the last
+       byte of the REVERSED mac = the FIRST byte of the real mac. The first test run logged
+       exactly that: "adv:F4" for F4:B3:B1:83:BC:61, F4 being the mac and not a pdu type at all.
+   MEASURED on the first run (shelly BLU button at an rpi, 4 presses):
+       - press / double_press / long_press ALL decode and all get logged. The 10 sec hold is
+         NOT swallowed, it arrives as long_press - so the hold is usable as a signal after all.
+       - rssi -24 .. -32 dBm with a hand on the device. The -60 gate has 28-36 dB of margin,
+         far more than the ~15 dB estimated from the -65 dBm/1 m calibration, and hand
+         absorption is plainly not the problem it was expected to be.
+       - the connectable question is still OPEN: that run's adv byte was the mac (see above).
+         - what rssi does an rpi really see with a hand wrapped around the button. The gate will
+           be rssi > -60: the tag is calibrated -65 dBm at 1 m, so -60 is 0.56 m, 10 cm would be
+           -45, and the nearest other rpi here is > 5 m = about -79 dBm. ~19 dB of margin either
+           side, which is what these log lines are meant to confirm on real hardware.
+   NOTES: the planned sequence, for the record - known beacon AND rssi > -60 AND a double press
+       AND not bonded yet -> arm the bond and wait for the pairing window the 10 sec hold opens
+       (60 secs). All of it on the rpi: beaconloop already has the rssi and the decoded button
+       code, BLEconnect already owns the radio and the priority queue, so the job is a
+       temp/BLEconnect.bond beside temp/BLEconnect.beep and nothing goes through the mac.
+       Bonding itself needs a bluez agent (gatttool cannot bond), and bluez stores the keys per
+       ADAPTER mac, so a bond belongs to one radio - if the master moves the BLEconnect role to
+       another dongle the bonds are stale and that has to be reported, not silently fail.
+
+
+v2022.194.27  @ 2026-11-06
+   FIX: A NEWLY ADDED SHELLY BLU BUTTON / DOOR / MOTION GOT NO CHILD DEVICE - the button, the
+       contact or the motion device was simply never created, so the presses arrived from the rpi
+       with nothing to land in. v2022.184.138 (2025-04-10) gave the beacon device the option
+       "enable creation of BLE SENSOR type child" with default DISABLED, and childDefaultEnable()
+       only turned that default back on for correspondingSensorType / correspondingSwitchbotDevice /
+       correspondingBLEConnectSensorType. The shelly tags name their child in a 4th key,
+       correspondingShellyButtonDevice, which was not in that list. It is now, so shelly devices
+       create their child again on the first message, as they did before 2025-04-10.
+       The iTrack / tracker tags stay opt-in on purpose - those were the ones making unwanted
+       children in the first place. Shelly is different: there the beacon alone is of no use.
+       Beacons already carrying an explicit choice keep it, and children that exist were never
+       affected (childExists forces "1").
+   FIX: the help text under that option described a stricter rule than the code has used for a
+       while - it claimed only switchbot bot/curtain create a child by default, while ruuvi and
+       the gatt-read sensors have been doing it too. Now says what actually happens.
+   FIX: 3 TAGS IN knownBeaconTags.json NAMED NO CHILD AT ALL, so they could not create one even
+       with the option enabled - the child device type exists and the rpi decodes the data, the
+       tag just never pointed at it:
+          XiaomiMiBLETempHumSquare -> correspondingBLEConnectSensorType BLEXiaomiMiTempHumSquare
+                 (NOT correspondingSensorType: the square LYWSD03MMC is read by a gatt connect in
+                  BLEconnect.py, it does not broadcast the values the way the round one does -
+                  as a passive sensor child it would have sat there and never updated)
+          BLEsensorbug             -> correspondingSensorType BLEblueradio      (doBLEBLEblueradio)
+          Minew_TH                 -> correspondingSensorType BLEminewS1TH      (doBLEminew)
+       Clock and Round had their key all along, Square did not.
+   OPEN: aprilBeacon and iBSxx cannot be fixed this way - ONE tag covers SEVERAL child types
+       (april ABN01-THL vs ABN03-Accel; iBS01/01T/01RG/03T/03TP/03RG) and a single
+       correspondingSensorType would give the other variants a child with the wrong states.
+       Those need a subtypeOfBeacon/devTypeID map like iSensor has, or one tag per variant.
+       Minew_Acc -> BLEminewAcc is the same one-line omission and is NOT done yet.
+
+
+v2022.194.26  @ 2026-11-06
+   NEW: Contents/dongleTypes.txt - which BLE dongle does what, one line per usb id, fixed space
+       like beaconTypes.txt and BLE-sensorTypes.txt, and printed with them by "BASIC setup HELP..".
+       Built from the measured dongleCatalogue.json: BLE4/s, BLE5/s, how many runs on how many
+       pis, the role each one earned, grouped into BLE4-only / BLE4+BLE5 / BLE5-only / dead.
+   FIX: 0b05:1d70 (ASUS USB-BT500 BT6.0) was listed as delivering nothing in any mode. It measures
+       34 BLE5 reports/s over 4 runs and is a working extended listener - it rejects BLE4 scan with
+       0x0C, same class as Barrot/UGREEN. Only 37ad:0600 is really dead. Added 0b05:1bef,
+       7392:c611 and DC:A6:32, which were measured but never written down.
+
+
+v2022.194.25  @ 2026-11-03
+   PLUGIN: NO PASSWORD ON A COMMAND LINE ANY MORE - "ps -ef" is readable by every user on this
+       mac, and the rpi userid + password were sitting in the expect command line of every ssh
+       and sftp to a pi. Same way the uniFiAP plugin does it: the command line gets 2 empty
+       arguments and the credentials go into the environment of the expect child, which only the
+       same user can read. All 13 .exp scripts take $env(PIBEACON_UID/PWD) when set and still
+       fall back to argv 0/1, so running one by hand works unchanged.
+   PLUGIN: the xattr/quarantine call no longer pipes the indigo password through "echo"; sudo -S
+       reads it from stdin, where it is not visible either.
+
+
+v2022.194.24  @ 2026-11-01
+   PLUGIN: THE PASSWORDS IN THE PREFS ARE STORED ENCRYPTED - the indigo-server password and the
+       wifi password (new file pwCrypt.py, same module the utilities plugin uses). The key comes
+       from the hardware id of this Mac, so a copy of the prefs is useless elsewhere - on another
+       Mac they have to be typed again. New config item "store the passwords encrypted" says
+       whether they are; prefs of an older version keep working and are encrypted at the first
+       start, untick for plain text again. The field shows the stored value: leave it to keep the
+       password, type a new one to replace it.
+   FIX: printConfig printed the indigo password from its 5th character on, now "*****"; the
+       sudo/xattr command written to the log had the password in it, masked now.
+
+
 v2022.194.23  @ 2026-10-19
+   PLUGIN: the state "lastUpdateFromRPI" IS A SETTING NOW, NOT A DEBUG SWITCH - on/off in the config
+       and overridable per DEVICE in the device edit. It is the noisiest state the plugin writes,
+       about a quarter of all writes, and all it says is which rpi a device was last heard by - yet
+       it was gated by the debug area "lastRPI", which is the wrong place for something that is a
+       preference and not a trace: you had to switch on a debug area to get a state, and the state
+       itself read "off, to enable turn debug on".
+       Config ("== Parameters for ALL rPi / plugin"), four choices: on for all devices / off for all
+       devices / let the device decide - default on / let the device decide - default off. The first
+       two ignore the device setting; the other two use it and answer for every device still on
+       "use the plugin-config setting". Default is "let the device decide - default off", which is
+       the behaviour everyone has today.
+       Device edit: a three-way menu (use the plugin-config setting / yes / no) on all 129 device
+       types that carry the state - which is the useful way round, since you leave it off globally
+       and switch it on for the one device you are chasing. The debug area "lastRPI" and its config
+       checkbox are gone, and the off-text names the two places that now control it.
+                        device:   on      off     useDefault
+            allOn                 on      on      on
+            allOff                off     off     off
+            deviceOn              on      off     on
+            deviceOff             on      off     off
+       The value is still tracked internally in self.lastRpiForDev whether the state is written or
+       not, so the fast-down logic is unaffected either way. The per-device answer is cached by
+       dev.id - it is asked on every message from every rpi, and reading pluginProps that often is
+       not free - and that entry is dropped when the device's dialog is saved, the whole cache when
+       the plugin config is saved.
+       ONE DEVICE TYPE DID NOT GET THE FIELD: BLEminewE8 has no ConfigUI block at all, so there is
+       no dialog to put it in. It follows the config setting, like any device left on "useDefault".
    CORRECTION, 2026-10-22: THE "silent for NNN secs - restarting master.py" STORM WAS NOT OURS.
        It was the NetworkScanner plugin on the indigo mac running "sudo arp -d -a" after every
        sweep - every 60 s by default - which deletes the mac's ENTIRE arp cache, right after a ping

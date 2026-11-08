@@ -133,7 +133,7 @@ kDefaultPluginPrefs = {
 				"debugSpecial":									False,
 				"debugDelayedActions":							False,
 				"debugall":										False,
-				"debuglastRPI":									False,
+				"updateLastUpdateFromRPIstate":					"deviceOff",
 				"debugFindMy":									False,
 				"showLoginTest":								True,
 				"execcommandsListAction":						"delete",
@@ -168,8 +168,8 @@ _sqlLoggerIgnoreStates = {"isBeaconDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,
 						, "isSensorDevice":			"displayStatus,status,status_ui,sensorvalue_ui,lastStatusChange"}
 
 
-_debugAreas = ["Logic", "DevMgmt", "BeaconData", "SensorData", "OutputDevice", "UpdateRPI", "OfflineRPI", "BLE", "CAR", "all", "Socket", "StartSocket", "Special", "PlotPositions", "SocketRPI", "BatteryLevel", "SQLlogger", "SQLSuppresslog", "SensorIcon", "Beep", "UpdateTimeAndZone","GarageDoor","DelayedActions","UpdateIndigo","lastRPI","FindMy"]
-_lastRPIoffText = "off, to enable turn debug on"		# shown in state lastUpdateFromRPI while its debug area is off
+_debugAreas = ["Logic", "DevMgmt", "BeaconData", "SensorData", "OutputDevice", "UpdateRPI", "OfflineRPI", "BLE", "CAR", "all", "Socket", "StartSocket", "Special", "PlotPositions", "SocketRPI", "BatteryLevel", "SQLlogger", "SQLSuppresslog", "SensorIcon", "Beep", "UpdateTimeAndZone","GarageDoor","DelayedActions","UpdateIndigo","FindMy"]
+_lastRPIoffText = "off, enable in config or device edit"	# shown in state lastUpdateFromRPI while it is switched off
 
 
 
@@ -1024,6 +1024,9 @@ _addingstates["packetId"]						= {"addTag":False, "States":{"packetId":"Integer"
 _addingstates["currentEvent"]					= {"addTag":False, "States":{"currentEvent":"String"}}
 _addingstates["previousEvent"]					= {"addTag":False, "States":{"previousEvent":"String"}}
 _addingstates["currentEventType"]				= {"addTag":False, "States":{"currentEventType":"String"}}
+# WHICH rpis HOLD A PAIRING with this shelly, as a list like "2,7" - or "not paired". A state needs
+# an entry HERE as well as in _stateListToDevTypes below; with only the latter it never appears.
+_addingstates["bondedToRPI"]					= {"addTag":False, "States":{"bondedToRPI":"String"}}
 _addingstates["previousEventType"]				= {"addTag":False, "States":{"previousEventType":"String"}}
 _addingstates["OUTPUT"]							= {"addTag":False, "States":{"OUTPUT":"String"}}
 _addingstates["status"]							= {"addTag":False, "States":{"status":"String"}}
@@ -1082,6 +1085,9 @@ _stateListToDevTypes["packetId"]				= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BL
 _stateListToDevTypes["currentEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["previousEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["currentEventType"]		= {"BLEShellyButton":1}
+# WHICH rpi IS BONDED to this shelly - "" / "no" until one reports yes. bluez stores the pairing
+# keys per ADAPTER, so only the rpi that holds them can send it a beep or any other write.
+_stateListToDevTypes["bondedToRPI"]				= {"BLEShellyButton":1}
 _stateListToDevTypes["previousEventType"]		= {"BLEShellyButton":1}
 
 _stateListToDevTypes["cmd"]						= {"DF2301Q":1,"FaceGesture":1}

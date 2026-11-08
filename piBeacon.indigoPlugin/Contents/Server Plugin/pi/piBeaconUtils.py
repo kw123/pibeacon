@@ -4789,25 +4789,20 @@ def execSend():
 						logger.log(20, "cBY:{:<20}  data:{} ".format(G.program, data)) 
 
 
-					if	sendAlive == "reboot":
+					# ANY sendAlive TAG IS AN ALIVE MESSAGE. This used to be a list - reboot, alive,
+					# raspi-config, config.txt - and every one of them did exactly the same thing,
+					# while ANY OTHER TAG fell into the else and was sent as a regular data message
+					# with msgType "regular". So a new tag did not just go unhandled, it went to the
+					# wrong place entirely: the plugin routes pi_IN_Alive to updateRPIAlive, where
+					# the msgType handlers live, and a regular message never gets there. Live: the
+					# shelly link test sent sendAlive="shellyLink", the rpi logged its answer, and
+					# nothing ever appeared in the indigo log.
+					# The four names behaved identically apart from reboot's extra flag, so there is
+					# nothing to dispatch on - a tag means "alive", no tag means "regular data".
+					if	sendAlive != "":
 						name = "pi_IN_Alive"
 						data["msgType"] = sendAlive
-						data["reboot"] = True
-						G.lastAliveSend2 = time.time()
-
-					elif  sendAlive == "alive":
-						name = "pi_IN_Alive"
-						data["msgType"] = sendAlive
-						G.lastAliveSend2 = time.time()
-
-					elif  sendAlive == "raspi-config":
-						name = "pi_IN_Alive"
-						data["msgType"] = sendAlive
-						G.lastAliveSend2 = time.time()
-
-					elif  sendAlive == "config.txt":
-						name = "pi_IN_Alive"
-						data["msgType"] = sendAlive
+						if sendAlive == "reboot": data["reboot"] = True
 						G.lastAliveSend2 = time.time()
 
 					else:
@@ -5027,6 +5022,20 @@ def muxTCA9548A(sens,i2c=""):
 	time.sleep(0.01)
 
 	return i2c# G.enableMuxI2C+channel
+
+################################
+def i2cNoAnswer(e):
+	"""True when this exception is the i2c bus saying "nobody answered", not a fault in our code.
+
+	An unanswered i2c transfer raises OSError EIO (5) - the chip did not ACK. ENXIO, ETIMEDOUT and
+	EREMOTEIO are the same thing spelled differently by different kernels and drivers. Every one of
+	them means the sensor is absent, on another address, behind an UNSELECTED TCA9548A channel, or
+	miswired - and a 10 line traceback through smbus2 says none of that. Callers log one sentence
+	for these and keep the traceback for errors that really are unexpected.
+	"""
+	try:	return isinstance(e, (OSError, IOError)) and getattr(e, "errno", 0) in (5, 6, 110, 121)
+	except Exception:	return False
+
 
 ################################
 def muxTCA9548Areset():

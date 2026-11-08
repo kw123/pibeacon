@@ -1068,6 +1068,20 @@ def execCMDS(nextItem):
 				continue
 
 
+			if cmd == "bondBeacon":
+				# RELINK FROM THE DEVICE DIALOG. Same shape as beepBeacon: the whole job dict the
+				# plugin sent is appended for BLEconnect to pick up, which routes it to
+				# doShellyBond -> connect, pair, and buzz the button to confirm.
+				try:
+						U.logger.log(DEBUG, "execcmd. bond -> BLEconnect, write: ={}".format(str(nextItem["device"])[:20]))
+						f = open(G.homeDir+"temp/BLEconnect.bond","a")
+						f.write(nextItem["device"]+"\n")
+						f.close()
+				except Exception as e:
+						U.logger.log(20,"", exc_info=True)
+				continue
+
+
 			if cmd == "beepBeacon":
 				if delayStart > 0 and delayStart < 10000000: 
 					U.logger.log(DEBUG,"{:.2f} delay start by: {}".format(time.time(), delayStart))

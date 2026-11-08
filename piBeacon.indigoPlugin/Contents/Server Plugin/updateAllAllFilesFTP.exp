@@ -1,6 +1,11 @@
 set argsCount [llength $argv]
 set userID [lindex $argv 0 ] 
 set password [lindex $argv 1 ] 
+# the plugin passes empty strings in argv 0/1 and the real credentials in the environment,
+# so they do not show up in the world readable "ps -ef" command line of this process.
+# running this script by hand with userid/password as the first 2 arguments still works.
+if {[info exists env(PIBEACON_UID)]} {set userID   $env(PIBEACON_UID)}
+if {[info exists env(PIBEACON_PWD)]} {set password $env(PIBEACON_PWD)}
 set authKeyOrPassword [lindex $argv 2 ] 
 set ipNumber [lindex $argv 3 ] 
 set ipParms  [lindex $argv 4 ] 

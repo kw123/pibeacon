@@ -86,6 +86,66 @@ _debugBLE5 = False
 iTrackDevTypes = {"0":"0","1":"","2":""   ,"3":"Finder-3","4":"Wallet-4",  "5":"",  "6":"Mini-6",  "7":"",  "8":"Rechargeable-8",   "9":"Glasses-9","A":"A","B":"B","C":"C","D":"D","E":"E","F":"F"}
 		# first step to drive with table, not ready yet
 		# [ name,#of bytes, type, factor]
+# SHELLY BLU BONDING - the trigger lives in doBLEShelly, the bonding in BLEconnect.
+# GATE -65 dBm AND NOT -60, ON PURPOSE: one button event reaches the gate exactly ONCE. The
+# packetId de-duplication above (a repeated packetId returns before the gate) means a "best of 2
+# packets" rule cannot work here - there is only ever one rssi sample per press. Measured on
+# rpi 2, same button, same hand, 5 seconds apart: -42, -44, -50 and -60, an 18 dB spread, and the
+# -60 sample FAILED a "> -60" test. With the tag calibrated -65 dBm at 1 m, -65 is 1.0 m, and the
+# nearest other rpi here is > 5 m = about -79 dBm, so there are still ~14 dB between "in my hand"
+# and "the next rpi". A tighter gate just loses presses.
+shellyBondGate     = -65
+shellyTraceGate    = -60	# a HOLD closer than this dumps the whole decoded frame to the log
+shellyHoldCodes    = ("long_press", "hold_press", "button_hold")	# the gesture that opens pairing mode
+shellyBondArmSecs  = 90		# how long BLEconnect waits for the NEXT press after the double press
+shellyBondCooldown = 150	# do not re-arm straight away: a finished pairing costs a bond slot
+shellyBondArmed    = {}		# mac -> when it was last armed
+# A SEPARATE THROTTLE for the "you are already paired" notice. It must NOT share shellyBondArmed:
+# that would stamp an arming time for a gesture that armed nothing, and a hold right after an
+# unpair would then be turned away by the cooldown - exactly the recovery it is meant to allow.
+shellySaidPaired   = {}		# mac -> when this rpi last said "already paired to me"
+
+
+shellyBondKeyTags = ("[LongTermKey]", "[PeripheralLongTermKey]", "[SlaveLongTermKey]", "[LinkKey]")
+
+
+def reportShellyToIndigo(text):
+	"""Send a shelly pairing note to the INDIGO log, not just this rpi's.
+
+	Same msgType the pair / test / unpair answers use from BLEconnect, so everything about one
+	button's pairing lands in one place. THE DETECTION IS THE HALF THAT WAS MISSING: the result
+	has been reported since the rpi started answering, but nothing said the gesture had been HEARD
+	- and with no pair button in the device dialog any more, a hold that produces no beep and no
+	message is indistinguishable from an rpi that never noticed it, was not ticked for the device,
+	or was out of range.
+	"""
+	try:	U.sendURL(sendAlive="shellyLink", text="{}".format(text), wait=False, squeeze=False)
+	except Exception:	pass
+
+
+def shellyIsBonded(mac):
+	"""True when the radio BLEconnect uses holds real PAIRING KEYS for this device. bluez stores
+	the keys per ADAPTER, so the question is only ever "on that radio".
+
+	THE KEYS, NOT THE DIRECTORY. bluez writes <adapter>/<device>/info for any device it has merely
+	SEEN or connected to - name, address type, Services, and Trusted=true the moment anything
+	trusts it - and a REFUSED pairing leaves exactly that behind. Measured on rpi 2 right after a
+	pairing bluez had rejected with "auth failed with status 0x05": info present, 144 bytes,
+	[General] only, not one key - and the old "does info exist" test called that bonded. The keys
+	live in sections of their own, so that is what is looked for (bluez 5.65+ renamed
+	[SlaveLongTermKey] to [PeripheralLongTermKey], both are accepted)."""
+	try:
+		_cm = "{}".format(hciRoles.get("BLEconnect", {}).get("mac", "")).upper()
+		if _cm == "": return False
+		with open("/var/lib/bluetooth/{}/{}/info".format(_cm, "{}".format(mac).upper())) as _f:
+			_txt = _f.read()
+		for _tag in shellyBondKeyTags:
+			if _tag in _txt: return True
+		return False
+	except Exception:
+		return False
+
+
 shellyTagToProperty = { 
 			"00":{"name":"packetId",		"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
 			"01":{"name":"batteryLevel",	"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"%",		"mapVtoText":{}									},
@@ -459,6 +519,11 @@ EXTSCAN_MAX_RETRY       = 5			# after this many, stop paying the ~8s scan gap pe
 									# to the legacy command set -> extended scanning impossible on the same radio
 extScanZeroMsgRestarts = [0]		# consecutive zero-message stack restarts WITH extended scanning active
 extScanForceLegacy     = [False]	# 2x zero-message restarts = adapter misreports its BT5 support -> stay legacy
+# [frames read, the scan radio mac they were read on]. THE LEGACY DELIVERY PROOF, for free: the
+# reader is already counting what this radio hands over, so a radio whose legacy scan is accepted
+# but MUTE (7392:c611 answers OK and delivers nothing) simply never gets here. The mac is carried
+# with it because the count says nothing about a radio it was not measured on.
+scanMsgsSeen           = [0, ""]
 # Accepting EXTENDED mode for the scan radio is judged by COVERAGE, not by raw report rate.
 # piBeacon listens ~60 s and then summarises (the rssi it keeps is an AVERAGE), so the question is
 # "do I still hear every device often enough", not "do I get as many packets". A BT5 controller in
@@ -475,7 +540,15 @@ extScanForceLegacy     = [False]	# 2x zero-message restarts = adapter misreports
 EXTSCAN_MIN_COVERAGE   = 60.0		# % of the macs the SAME radio hears in BLE4-only mode
 EXTSCAN_MIN_PER_MIN    = 5.0		# reports per mac per 60 s summary window (absolute, see above)
 EXTSCAN_MIN_REPORTS    = 3			# sanity floor only: fewer than this is not a measurement
-extScanLastReported    = [None]		# last scan-mode verdict logged (log only on change, not every BLE restart)
+# ONE SHARED SLOT WAS NOT A THROTTLE. Every verdict in probeExtendedScan compared itself against
+# the same extScanLastReported[0], so two messages printed by the SAME probe took turns
+# overwriting each other's gate and BOTH logged on every run - log-on-change that logs every time.
+# Live on rpi-5-family: "the scan radio hci2 (mac 5C:F3:70:6D:DA:75) has never been proven to
+# deliver BLE4 - measuring it before trusting it" (set near the top, before the fall-through) and
+# "not supported by this adapter -> legacy scanning" (set at the very end of the same call) came
+# out together every 30 s for the life of the program. A gate keyed by the message it guards
+# cannot alternate with another message.
+extScanSaid            = {}			# message kind -> the last text logged for that kind
 lastBLE5Report         = [""]		# last BLE5 verdict text logged (log only on change)
 lastBLE5Reason         = [""]		# why there is no BLE5 reception, from the last probe/role verdict
 ble5Pending            = ["", 0.]	# [candidate BLE5 verdict, when it first appeared] - settle window
@@ -487,6 +560,16 @@ broadcastMAC           = [""]		# BLE mac of the adapter that TRANSMITS our iBeac
 									# the plugin links the rpi device to it and other rpis hear it for
 									# online detection. piMAC in messages must be THIS mac, never the
 									# scanner's (they differ when the extAdv dongle does the scanning)
+
+
+def extScanSay(kind, text, level=20):
+	"""Log `text` only when it CHANGED for this message `kind`. See extScanSaid for why the kind
+	matters: probeExtendedScan runs every ~30 s and prints several different verdicts, so the gate
+	has to be per message, not one slot they all share."""
+	if extScanSaid.get(kind) == "{}".format(text): return False
+	extScanSaid[kind] = "{}".format(text)
+	U.logger.log(level, text)
+	return True
 
 
 def reportBLE5(status):
@@ -552,19 +635,133 @@ def currentAdapterMacs():
 
 
 hciRoles = {"scan":{}, "broadcast":{}, "BLEconnect":{}}		# current radio-role assignment, persisted in beaconloop.hci
+# ---------------------------------------------------------------------------------------------
+# THE MAC IS THE RADIO'S IDENTITY. hciN IS ONLY WHERE THAT RADIO HAPPENS TO BE RIGHT NOW.
+# hci numbering is not stable: a replug, a usb reset or a power cycle renames a radio, and the
+# kernel does not even reuse the freed number (a dongle that was hci1 came back as hci3 while
+# hci1 stayed empty). Roles used to be assigned once at startup and then CAPTURED as an hciN, so
+# after a rename the role pointed at a name that no longer existed and nothing was read at all -
+# beaconloop stayed "alive", kept updating its alive file, and simply received nothing until the
+# no-message timeout eventually threw the process away. Measured on rpi 2: 13 minutes of ble4
+# blindness, twice, with nothing about it reaching indigo.
+# hciRoles[role]["mac"] is the truth. hciRoles[role]["hci"] and the useHCIFor* globals are a
+# CACHE of "where is that mac now", refreshed by resyncRadioRoles(). The two places that already
+# did this - BLEconnect ("FOLLOW THE MAC, NOT THE hci NAME") and execExtListener ("radio hci3
+# re-appeared as hci2 - following it") - are the two that never caused this trouble.
+hciMacCache       = {"ts": 0., "byMac": {}, "byHci": {}}
+lastRoleResync    = [0.]
+lastRoleResyncLog = [""]
+roleResyncRestart = [0.]
+
+
+def hciMapNow(maxAge=5.):
+	"""{mac: hci} / {hci: mac} of the radios present now. Cached: whichHCI() shells out, and the
+	callers ask often."""
+	tt = time.time()
+	if tt - hciMacCache["ts"] < maxAge and hciMacCache["byMac"]:
+		return hciMacCache["byMac"], hciMacCache["byHci"]
+	byMac, byHci = {}, {}
+	try:
+		for _h, _d in U.whichHCI().get("hci", {}).items():
+			_m = "{}".format(_d.get("BLEmac", "")).upper()
+			if _m == "": continue
+			byMac[_m] = _h
+			byHci[_h] = _m
+		hciMacCache["ts"] = tt
+		hciMacCache["byMac"] = byMac
+		hciMacCache["byHci"] = byHci
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+		return hciMacCache["byMac"], hciMacCache["byHci"]
+	return byMac, byHci
+
+
+def hciForMac(mac, maxAge=5.):
+	"""Where that radio is right now, or "" when it is not here."""
+	if "{}".format(mac) == "": return ""
+	byMac, _ = hciMapNow(maxAge)
+	return byMac.get("{}".format(mac).upper(), "")
+
+
+def resyncRadioRoles(force=False):
+	"""Re-derives every role's hciN from the MAC it was assigned to.
+
+	A role whose radio merely got renamed is corrected in place and said so. The SCAN role is the
+	exception: its socket, its scan parameters and the rpi identity mac all hang off it, and
+	reopenScanSocket is explicit that "only startBlueTooth can re-pin the radio, re-derive the
+	roles and the rpi identity mac" - so a moved scan radio takes a restart, promptly, instead of
+	waiting out the no-message timeout with a dead socket.
+
+	Inputs:
+	    force (bool): skip the 15 s throttle
+	Outputs:
+	    bool: True when a role was corrected
+	"""
+	global useHCIForBeacon, useHCIForBeep
+	tt = time.time()
+	if not force and tt - lastRoleResync[0] < 15.: return False
+	lastRoleResync[0] = tt
+	changed = False
+	try:
+		byMac, _ = hciMapNow()
+		if not byMac: return False
+		for role in sorted(hciRoles):
+			rec = hciRoles.get(role, {})
+			mac = "{}".format(rec.get("mac", "")).upper()
+			old = "{}".format(rec.get("hci", ""))
+			if mac == "" or old == "": continue
+			now = byMac.get(mac, "")
+			if now == "" or now == old: continue
+			# the radio is HERE, under a different name
+			if role == "scan":
+				_msg = "scan-{}-{}-{}".format(mac, old, now)
+				if lastRoleResyncLog[0] != _msg:
+					lastRoleResyncLog[0] = _msg
+					U.logger.log(20,"THE SCAN RADIO WAS RENAMED: dongle {} was {} and is {} now. The socket and the rpi identity hang off this role, so this needs a restart - nothing is being received until then".format(mac, old, now))
+				if tt - roleResyncRestart[0] > 120.:
+					roleResyncRestart[0] = tt
+					rec["hci"]       = now		# so the restart, and anything reading the file, start from the truth
+					useHCIForBeacon  = now
+					try:	writeBeaconloopHci()
+					except Exception:	pass
+					U.restartMyself(param="", reason="scan radio renumbered {} -> {}".format(old, now), python3=usePython3)
+				changed = True
+				continue
+			U.logger.log(20,"radio role {} follows its dongle {}: {} -> {}".format(role, mac, old, now))
+			if "{}".format(useHCIForBeep) == old: useHCIForBeep = now
+			rec["hci"] = now
+			changed = True
+		if changed:
+			try:	sendHciStates()
+			except Exception:	pass
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	return changed
+
 # per-channel role PINS from the rpi device dialog ("Pin a role to a specific BLE radio"), shipped in
 # the parameters file as {"hci0":"scanBLE45", "hci2":"bleconnect", ...}. Empty = the auto policy
 # decides everything, which is the default and the recommended setup.
 hciRolesPinned = {}
 hciRolesPinnedSeen = False		# the params file has been read at least once - only THEN is a change a real change
+# A PIN IS ANCHORED TO THE DONGLE'S MAC, NOT TO ITS hciN NAME. hci numbering is not stable: a usb
+# reset renames a radio (seen live: the scan dongle hung, the kernel reset it and it came back as
+# hci3), and then a pin naming hci1 is silently dropped - worse, the NEXT dongle to take the name
+# hci1 inherits a pin that was never meant for it. Both happened on rpi 2 within 20 minutes.
+# {mode: mac} - the mac that was holding this pinned role when the pin was last SET in the dialog.
+hciRolePinAnchors = {}
+hciRolePinLost    = [""]		# a pin that cannot be honoured right now, for the log + the hci state
+hciRolePinAnchorsLoaded = [False]
 lastHciStates  = {}		# last per-radio state strings SENT (hci0..hci3) - send only on change
 
 
 def writeBeaconloopHci():
 	"""Writes beaconloop.hci (+ temp copy) in the CLEAR role format:
 	{"scan":{mac,hci,bus,BLE5[,allMacs]}, "broadcast":{mac,hci}, "BLEconnect":{mac,hci}}
-	scan.BLE5 = the persisted delivery-test verdict; scan.allMacs = the adapter set it
-	was proven with (any change forces a fresh proof)."""
+	scan.BLE5 = the persisted EXTENDED delivery-test verdict and scan.allMacs the adapter set it
+	was proven with; scan.legOK = the LEGACY one and scan.legMacs its own adapter set. Two sets on
+	purpose: allMacs is deleted whenever the BLE5 verdict is negative, which is the normal state of
+	a BLE4-only scan dongle, so a shared one made the legacy verdict unreadable exactly there.
+	Any change to the matching set forces a fresh proof."""
 	try:
 		dd = {"pgm":"beaconloop", "scan": hciRoles["scan"], "broadcast": hciRoles["broadcast"], "BLEconnect": hciRoles["BLEconnect"], "extListener": hciRoles.get("extListener", {})}
 		U.writeFile("temp/beaconloop.hci", json.dumps(dd))
@@ -588,8 +785,33 @@ def loadExtScanVerdict():
 		return False
 
 
-def saveExtScanVerdict(ok):
+def legacyProven():
+	"""Was LEGACY scanning proven to deliver on exactly this hardware?
+	True = yes. False = measured and it delivered nothing. None = never measured.
+
+	A radio whose legacy scan is ACCEPTED but MUTE is a real thing and was not modelled anywhere:
+	7392:c611 on rpi 2 returns OK to the legacy enable, delivers zero reports, and its extended
+	scan does ~22/s at the same time. The code knew only "legacy rejected with 0x0C" (BLE5-only)
+	and "legacy works" - so this radio was handed the scan role and simply received nothing."""
+	try:
+		sc = json.load(open(G.homeDir + "beaconloop.hci")).get("scan", {})
+		if "{}".format(sc.get("mac","")) != "{}".format(myBLEmac): return None
+		if "legOK" not in sc: return None
+		# ITS OWN MAC SET, NOT allMacs. allMacs belongs to the BLE5 verdict and is DELETED whenever
+		# that verdict is negative - which is the normal state of a BLE4-only scan dongle. So this
+		# read compared a stored legOK against a missing allMacs, returned None, and the legacy
+		# verdict could never be read back on exactly the radios it was written for.
+		if sc.get("legMacs",[]) != currentAdapterMacs(): return None
+		return bool(sc["legOK"])
+	except Exception:
+		return None
+
+
+def saveExtScanVerdict(ok, legOK=None):
 	"""Records the delivery-test verdict in the scan role of beaconloop.hci."""
+	if legOK is not None:
+		hciRoles["scan"]["legOK"]   = bool(legOK)
+		hciRoles["scan"]["legMacs"] = currentAdapterMacs()
 	hciRoles["scan"]["BLE5"] = bool(ok)
 	hciRoles["scan"]["testVer"] = 3			# 3 = comparative rate test w/ per-phase HCI reset (v15.4); older verdicts re-prove
 	if ok:	hciRoles["scan"]["allMacs"] = currentAdapterMacs()
@@ -1839,6 +2061,9 @@ def readParams(init=False):
 				if hciRolesPinnedSeen:
 					hciRolesPinned     = _pins
 					hciRolesPinnedSeen = True
+					# the dialog shows each radio's MAC beside its hciN, so a newly saved pin means
+					# the radio called that hciN NOW - drop the old anchors and learn them again
+					clearPinAnchors("the pins were changed in the device dialog")
 					U.restartMyself(param="", reason="radio role pins changed", python3=usePython3)
 			hciRolesPinnedSeen = True
 			hciRolesPinned = _pins
@@ -2891,7 +3116,10 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	#			         00 8A   01		64   05 EC C2 00    2D 01   3F 01 00    C8
 
 	try:
-		doPrint =  False #mac == "60:EF:AB:4B:29:4A"
+		# the standard per-mac debug switch, as every other decoder in here uses - it was a dead
+		# hardcoded mac, so there was no way to see what a shelly actually broadcasts without
+		# editing this line. Prints the raw service data and every tag as it is decoded.
+		doPrint = mac in findMAC
 
 		if mac not in parsedData: return sensor, tx,  ""
 		data16 = parsedData[mac]["analyzed"]["code"].get("16","")
@@ -2985,6 +3213,101 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 			
 
+		# ---- FULL FRAME TRACE WHEN SOMEBODY IS STANDING AT THE BUTTON ----
+		# doPrint cannot cover this on its own: it is decided before the frame is decoded, so the
+		# button code is not known yet, and findMAC has to be edited into the source to use it at
+		# all. A HOLD at close range is the pairing gesture, so it is exactly the moment the frame
+		# is worth having - which tags this device really sends, battery among them, and what the
+		# advertisement looked like. Logged AFTER the decode, so it is the whole picture on one
+		# line instead of per-tag fragments, and only for that gesture at that range, so it costs
+		# nothing the rest of the time.
+		if "{}".format(itemsValues.get("button","")) in shellyHoldCodes and int(rx) > shellyTraceGate:
+			_dec = ", ".join("{}={}".format(_k, itemsValues[_k]) for _k in sorted(itemsValues) if itemsValues[_k] != "")
+			U.logger.log(20, "SHELLY TRACE {} rssi:{} (passes {})  adv:{}  pid:{}  raw16:{}  payload:{}  decoded: {}".format(
+						mac, int(rx), shellyTraceGate, parsedData[mac].get("advType",""), packetId, data16, data, _dec))
+
+		# ---- BOND CANDIDATE INSTRUMENTATION, no bonding happens yet ----
+		# A shelly button event only happens when somebody touches the device, so every one gets
+		# logged. Every writable characteristic on a BLU button is "write bonded" and shelly only
+		# accepts a connection from a paired client, so a BOND is the single thing standing between
+		# this plugin and beep/config on a shelly - unlike the iTrack/Nut trackers, whose control
+		# characteristic takes a write from anybody.
+		# THE SHELLY APP DOES IT WITH SIMPLE PRESSES, NO LONG HOLD: scan - user presses the button -
+		# app lists it - user picks it - app waits for ONE MORE SIMPLE PRESS, and that press
+		# completes the pairing. So what matters here is whether the adv that follows a press is
+		# CONNECTABLE, because that frame IS the bonding window - and a connectable adv for a
+		# watched mac is exactly what watchMAC already notifies BLEconnect about (see watchMACReq).
+		# The adv type comes from parsedData, like every other field this decoder uses - it is
+		# stored by parsePackage for the same packet (00=ADV_IND, 01=ADV_DIRECT, both connectable).
+		# rssi is logged against the planned gate of -60: the tag is calibrated -65 dBm at 1 m, so
+		# -60 is 0.56 m, 10 cm would be -45, and the nearest other rpi here is > 5 m = about -79.
+		try:
+			_btn = "{}".format(itemsValues.get("button",""))
+			if _btn not in ["", "None", "xxx"]:
+				_advT = "{}".format(parsedData[mac].get("advType",""))
+				# ONLY WHILE THERE IS STILL A BOND TO MAKE. The whole point of this line is to show
+				# whether the adv that follows a press is connectable - whether a bonding window is
+				# open - and once this rpi holds the keys there is nothing left to decide, so it
+				# would be one line per button press for ever on a device that is already done.
+				# Read once and reused by the arming test below, which asked the same question again.
+				_bonded = shellyIsBonded(mac)
+				if not _bonded:
+					U.logger.log(20, "SHELLY BUTTON {} {}  code>{}<  rssi:{} {}  adv:{} {}  sensor:{}".format(
+								mac, datetime.datetime.now().strftime("%H:%M:%S.%f")[:-5], _btn, int(rx),
+								"PASSES -60" if int(rx) > -60 else "below -60",
+								_advT, "CONNECTABLE = bondable window" if _advT in ("00","01") else "NOT connectable",
+								sensor))
+				# ---- ARM A BOND ON THE DOUBLE PRESS ----
+				# The double press stands in for "the user picks the device in the shelly app" - an
+				# rpi has no UI to pick with. BLEconnect then waits for the NEXT simple press, whose
+				# connectable adv is the window the pairing rides on, and beeps the device when the
+				# bond worked. Everything stays on this rpi: the mac is only armed here if THIS rpi
+				# hears the press close up, and with the rpis > 5 m apart only one of them can.
+				# EITHER GESTURE ARMS IT, and the double press is the one to rely on.
+				# Shelly: "Connection is only possible from a paired devices, or if pairing mode is
+				# active" - and pairing mode is entered by HOLDING the button ~10 s, open for a
+				# minute. A button already claimed in the shelly app is paired to the PHONE, so an
+				# rpi has no standing to connect until that window is open. That is what every
+				# earlier attempt was missing: bluez paired, ran discovery with no real session,
+				# found nothing, and removed the device and its keys again.
+				# SO WHY NOT TRIGGER ON THE HOLD ALONE? Because it is not known whether the FULL
+				# 10 s hold is still advertised - the codes seen so far could have come from a
+				# shorter long press, and a device that goes quiet when it enters pairing mode
+				# would never arm the rpi at all. The double press has no such dependency: it is a
+				# plain broadcast event, so it is the reliable arming signal. The hold is accepted
+				# too, for when one gesture is more convenient.
+				# The user sequence is: double press (arms) -> hold past 10 s (opens the window on
+				# the device) -> one press (the bond rides on it).
+				if _btn in ("double_press", "long_press", "hold_press", "button_hold") and int(rx) > shellyBondGate and _advT in ("00","01"):
+					_now = time.time()
+					# ALL THREE OUTCOMES REPORT, and to indigo, not only to this rpi's log. Holding
+					# the button IS the whole procedure now, so "I held it and nothing happened" has
+					# to be answerable - and the three answers are completely different: it armed,
+					# it is still in its cooldown, or this rpi already holds the keys.
+					if _bonded:
+						if _btn in shellyHoldCodes and _now - shellySaidPaired.get(mac, 0.) > shellyBondCooldown:
+							shellySaidPaired[mac] = _now
+							_t = "shelly {}: pairing gesture seen (rssi {}, {}), but this rPi is ALREADY paired to it - nothing to do. To pair it afresh use 'unpair' in the device dialog first, then hold it again".format(mac, int(rx), _btn)
+							U.logger.log(20, _t)
+							reportShellyToIndigo(_t)
+					elif _now - shellyBondArmed.get(mac, 0.) < shellyBondCooldown:
+						_t = "shelly {}: pairing gesture seen (rssi {}, {}), but this rPi armed {:.0f}s ago already - waiting out the {}s cooldown (a finished pairing costs one of the button's bond slots), then hold it again".format(mac, int(rx), _btn, _now - shellyBondArmed.get(mac, 0.), shellyBondCooldown)
+						U.logger.log(20, _t)
+						reportShellyToIndigo(_t)
+					else:
+						shellyBondArmed[mac] = _now
+						try:
+							f = open(G.homeDir+"temp/BLEconnect.bond","w")
+							f.write(json.dumps({mac: {"until": _now + shellyBondArmSecs, "beep": True}}))
+							f.close()
+							_t = "shelly {}: PAIRING GESTURE SEEN by this rPi (rssi {} passes {}, code {}) - pairing now, trying for {}s. It BEEPS when it worked, and the result is logged here either way".format(mac, int(rx), shellyBondGate, _btn, shellyBondArmSecs)
+							U.logger.log(20, _t)
+							reportShellyToIndigo(_t)
+						except Exception:
+							U.logger.log(20,"", exc_info=True)
+		except Exception:
+			pass
+
 		# button is special case, needs to be reset
 		if tryDeltaTime(BLEsensorMACs[mac]["lastUpdate"]) > 2 and  BLEsensorMACs[mac].get("button","None") != "None":  BLEsensorMACs[mac]["button"] = "xxx"
 
@@ -2996,7 +3319,11 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 		dd = {   # the data dict to be send 
 						"mac": 			mac,
-						"rssi":			int(rx)
+						"rssi":			int(rx),
+						# IS THIS RPI BONDED TO IT? bluez keeps the keys per ADAPTER, so "paired"
+						# is only ever "paired to THIS rpi" - the plugin records which rpi said yes
+						# and offers only that one for a beep. Cheap: one isfile() per sent message.
+						"shellyBonded":	("yes" if shellyIsBonded(mac) else "no")
 				}
 
 
@@ -8674,13 +9001,17 @@ def testComplexTag(hexstring, tag, mac, macplain, macplainReverse,  tagPos="", t
 
 
 #################################
-def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
+def parsePackage(mac, hexstring, logData=False, advType=""): # hexstring starts after mac#
 	"""Parses a BLE advertising hex packet (after the MAC) into its AD structures, decoding section lengths/types, converting name sections (08/09) to ASCII mfg_info, extracting iBeacon and Eddystone TLM service data, and storing the analyzed code/text dictionaries into the global parsedData for the MAC.
 
 	Inputs:
 	    mac (str): Device MAC address used as key in parsedData
 	    hexstring (str): Advertising payload hex string starting after the MAC
 	    logData (bool): If True, write parsed name sections to the track-MAC log
+	    advType (str): the adv/PDU type byte of THIS packet ("00"=ADV_IND, "01"=ADV_DIRECT, both
+	        connectable, "03"=ADV_NONCONN_IND). It sits in the hci header BEFORE hexstring, so it
+	        cannot be recovered here - the caller passes it and it is stored with the sections of
+	        the same packet, which is why it belongs in this dict and not read from raw hex later.
 	Outputs:
 	    dict: Always an empty dict; results are written into global parsedData[mac]
 	"""
@@ -8710,7 +9041,7 @@ def parsePackage(mac, hexstring, logData=False): # hexstring starts after mac#
 		totalLength = int(hexstring[0:2],16)
 
 		if totalLength < 6: return {}
-		parsedData[mac] = {"len": totalLength, "sections":[], "analyzed":{"code":{},"text":{}}, "posFound":-1, "dPos":100, "subtypeOfBeacon":"", "testTag":""}
+		parsedData[mac] = {"len": totalLength, "sections":[], "analyzed":{"code":{},"text":{}}, "posFound":-1, "dPos":100, "subtypeOfBeacon":"", "testTag":"", "advType": advType}
 		analyzed = {"text":{},"code":{}}
 		startOfSection = 0
 		lenSection = 0
@@ -9873,7 +10204,11 @@ def dropIgnoredRadios(HCIsIn):
 	"""
 	try:
 		if not hciRolesPinned or not isinstance(HCIsIn, dict) or "hci" not in HCIsIn:	return HCIsIn
-		drop = [h for h in HCIsIn["hci"] if "{}".format(hciRolesPinned.get(h,"")) == "ignore"]
+		# THROUGH THE RESOLVER, not the raw dict: an "ignore" keyed to a bare hciN disables whatever
+		# holds that NAME today, which after a renumber is a different - possibly perfectly good -
+		# dongle, while the one the user meant to ignore quietly comes back into play.
+		_eff = resolvePinnedRadios(HCIsIn["hci"])
+		drop = [h for h in HCIsIn["hci"] if "{}".format(_eff.get(h,"")) == "ignore"]
 		if not drop:	return HCIsIn
 		keep = [h for h in HCIsIn["hci"] if h not in drop]
 		if not keep:
@@ -9887,6 +10222,101 @@ def dropIgnoredRadios(HCIsIn):
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
 	return HCIsIn
+
+
+def pinAnchorFile():
+	return G.homeDir + "temp/hciRolePins.anchors"
+
+
+def loadPinAnchors():
+	"""Reads the {mode: mac} anchors written by resolvePinnedRadios()."""
+	global hciRolePinAnchors
+	try:
+		if os.path.isfile(pinAnchorFile()):
+			f = open(pinAnchorFile(), "r")
+			hciRolePinAnchors = json.loads(f.read())
+			f.close()
+		if not isinstance(hciRolePinAnchors, dict): hciRolePinAnchors = {}
+	except Exception:
+		hciRolePinAnchors = {}
+
+
+def savePinAnchors():
+	try:
+		f = open(pinAnchorFile(), "w")
+		f.write(json.dumps(hciRolePinAnchors))
+		f.close()
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+
+
+def clearPinAnchors(why=""):
+	"""Forgets the anchors. Called when the pins CHANGE in the device dialog: the dialog lists each
+	radio's mac next to its hciN, so a freshly saved pin means "the radio that is called hciN now"."""
+	global hciRolePinAnchors
+	hciRolePinAnchors = {}
+	hciRolePinAnchorsLoaded[0] = True		# the file is gone on purpose - do not read it back
+	try:	U.removeFile(pinAnchorFile())
+	except Exception:	pass
+	if why: U.logger.log(20,"radio role pin anchors cleared - {}".format(why))
+
+
+def resolvePinnedRadios(HCIdict):
+	"""The pins as hciN names that are valid RIGHT NOW: {hci: mode}.
+
+	A pin's key may be an hciN (what the dialog writes) or a mac. Either way the role is anchored to
+	the MAC of the radio that held it when the pin was set, so a renumbered dongle keeps its pin and
+	a different dongle arriving on the old name does NOT inherit it.
+
+	Inputs:
+	    HCIdict (dict): HCIs["hci"] - the radios present now
+	Outputs:
+	    dict: {hci: mode} for the pins that can be honoured; unusable ones are logged, not returned
+	"""
+	global hciRolePinAnchors
+	eff   = {}
+	lost  = []
+	dirty = False
+	if not hciRolePinAnchorsLoaded[0]:
+		loadPinAnchors()
+		hciRolePinAnchorsLoaded[0] = True
+	try:
+		macNow = {}
+		for _h in HCIdict:
+			_m = "{}".format(HCIdict[_h].get("BLEmac", "")).upper()
+			if _m != "": macNow[_m] = _h
+		for key in sorted(hciRolesPinned):
+			mode = "{}".format(hciRolesPinned[key])
+			if mode in ("", "auto"): continue
+			anchorMac = "{}".format(hciRolePinAnchors.get(mode, "")).upper()
+			hci       = ""
+			if anchorMac != "" and anchorMac in macNow:
+				hci = macNow[anchorMac]						# follow the dongle, wherever it is now
+				if hci != key:
+					U.logger.log(20,"radio role pin {}={} follows its dongle {} - that radio is {} now, not {}".format(key, mode, anchorMac, hci, key))
+			elif anchorMac != "":
+				lost.append("{}={} (dongle {} not present)".format(key, mode, anchorMac))
+				continue
+			elif "{}".format(key).upper() in macNow:		# pin already written as a mac
+				hci = macNow["{}".format(key).upper()]
+				hciRolePinAnchors[mode] = "{}".format(key).upper(); dirty = True
+			elif key in HCIdict:							# first use: anchor it to what is there now
+				_m = "{}".format(HCIdict[key].get("BLEmac", "")).upper()
+				hci = key
+				if _m != "":
+					hciRolePinAnchors[mode] = _m; dirty = True
+					U.logger.log(20,"radio role pin {}={} anchored to dongle {} - it keeps the role if the hci numbering changes".format(key, mode, _m))
+			else:
+				lost.append("{}={} (no radio called {}, and no anchor yet)".format(key, mode, key))
+				continue
+			if hci != "": eff[hci] = mode
+		if dirty: savePinAnchors()
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	hciRolePinLost[0] = "; ".join(lost)
+	if lost:
+		U.logger.log(20,"RADIO ROLE PIN CANNOT BE HONOURED: {} - the rpi auto-picks that role instead, which may be a worse radio. Re-save the pin in the device dialog to point it at a radio that is here.".format(hciRolePinLost[0]))
+	return eff
 
 
 def pinnedRadio(modes, HCIdict, taken=()):
@@ -9905,16 +10335,17 @@ def pinnedRadio(modes, HCIdict, taken=()):
 	    str: hci name, or ""
 	"""
 	try:
-		for hci in sorted(hciRolesPinned):
-			if "{}".format(hciRolesPinned[hci]) not in modes:	continue
+		_eff = resolvePinnedRadios(HCIdict)
+		for hci in sorted(_eff):
+			if "{}".format(_eff[hci]) not in modes:	continue
 			if hci not in HCIdict:
-				U.logger.log(20,"radio role pin {}={} ignored - that radio is not present".format(hci, hciRolesPinned[hci]))
+				U.logger.log(20,"radio role pin {}={} ignored - that radio is not present".format(hci, _eff[hci]))
 				continue
 			if "{}".format(HCIdict[hci].get("upDown","")).upper() != "UP":
-				U.logger.log(20,"radio role pin {}={} ignored - that radio is DOWN".format(hci, hciRolesPinned[hci]))
+				U.logger.log(20,"radio role pin {}={} ignored - that radio is DOWN".format(hci, _eff[hci]))
 				continue
 			if hci in taken:
-				U.logger.log(20,"radio role pin {}={} ignored - that radio already holds another role".format(hci, hciRolesPinned[hci]))
+				U.logger.log(20,"radio role pin {}={} ignored - that radio already holds another role".format(hci, _eff[hci]))
 				continue
 			return hci
 	except Exception:
@@ -9975,6 +10406,11 @@ def hciStateStrings():
 			if hciX == "{}".format(hciRoles.get("BLEconnect", {}).get("hci", "")):	fun.append("connect")
 			if hciX == "{}".format(hciRoles.get("broadcast", {}).get("hci", "")):	fun.append("BC")
 			if hciX == "{}".format(useHCIForBeep):									fun.append("beep")
+			# a pin that could not be honoured is a SILENT config failure otherwise: it cost 13 min
+			# of ble4 blindness on rpi 2 and nothing about it ever reached indigo. Mark the radio
+			# that took the role instead, so the device list shows it.
+			if hciRolePinLost[0] != "" and hciX == "{}".format(hciRoles.get("scan", {}).get("hci", "")):
+				fun.append("pinLost")
 			out[hciX] = "{}/{}/{}/{}/{}/{}".format(
 							hh.get("BLEmac", "?"), hh.get("bus", "?"), hh.get("usbId", "") or "none",
 							hh.get("upDown", "?"), cap, "+".join(fun) if fun else "-")
@@ -10019,9 +10455,7 @@ def probeExtendedScan(sock):
 	# an explicit pin on the SCAN radio decides the mode outright - that is what pinning is for
 	_pinMode = "{}".format(hciRolesPinned.get(useHCIForBeacon, ""))
 	if _pinMode == "scanBLE4":
-		if extScanLastReported[0] != "pinned BLE4":
-			extScanLastReported[0] = "pinned BLE4"
-			U.logger.log(20,"BLE4-only scanning on {} - pinned to 'scanner BLE4' in the device dialog".format(useHCIForBeacon))
+		extScanSay("pinnedBLE4", "BLE4-only scanning on {} - pinned to 'scanner BLE4' in the device dialog".format(useHCIForBeacon))
 		reportBLE5("no - scan radio pinned to BLE4 only")
 		return
 	try:
@@ -10031,13 +10465,31 @@ def probeExtendedScan(sock):
 		if _pinMode == "scanBLE45":	_lHci = ""
 		if _lHci != "" and _lHci != useHCIForBeacon:
 			# log-on-change only: this probe runs every ~30 s and the verdict is stable - the same
-			# sentence 2,900x a day is noise (extScanLastReported is the throttle the other verdicts use)
-			_msg = "not needed - {} is the dedicated BLE5 listener".format(_lHci)
-			if extScanLastReported[0] != _msg:
-				extScanLastReported[0] = _msg
-				U.logger.log(20,"BT5 extended-advertising scan on the scan radio {}: {} - the scanner keeps its full BLE4 rate".format(useHCIForBeacon, _msg))
-			reportBLE5("yes - dedicated BLE5 listener on {}".format(_lHci))
-			return
+			# sentence 2,900x a day is noise (extScanSay is the per-message throttle the verdicts use)
+			# ONLY IF THIS SCANNER CAN ACTUALLY DO BLE4. This shortcut gives the BLE5 job to the
+			# listener and drops the scanner to legacy - correct, unless the scanner's legacy scan
+			# delivers nothing. Then it returns BEFORE any delivery test and the rpi receives
+			# nothing at all: measured on rpi 2, scan radio 7392:c611, 2 hci events in 8 seconds
+			# while the listener did 179. None = never measured -> fall through once and let the
+			# comparative probe below answer it; the verdict is cached per adapter set.
+			_legProven = legacyProven()
+			if _legProven is True:
+				extScanSay("roleShortcut", "BT5 extended-advertising scan on the scan radio {}: not needed - {} is the dedicated BLE5 listener - the scanner keeps its full BLE4 rate".format(useHCIForBeacon, _lHci))
+				reportBLE5("yes - dedicated BLE5 listener on {}".format(_lHci))
+				return
+			# TWO DIFFERENT MESSAGES, NOT ONE WITH A SWAPPED TAIL. "...is the dedicated BLE5
+			# listener, BUT the scan radio has never been proven to deliver BLE4" read as a
+			# complaint about a conflict, and there is none: the listener being there is exactly
+			# why the scanner only has to do BLE4, and "not proven" at this point just means not
+			# measured yet - which is always true for the first half-minute after a start. The
+			# other case, a radio MEASURED delivering nothing, is a real fault and is the only one
+			# that gets a "but".
+			if _legProven is None:
+				extScanSay("legUnproven", "BT5: {} is the dedicated BLE5 listener, so the scan radio {} (mac {}) only has to do BLE4 - confirming that it delivers BLE4 before leaving that to it alone (not measured yet, that is all)".format(
+							_lHci, useHCIForBeacon, myBLEmac))
+			else:
+				extScanSay("legUnproven", "BT5: {} is the dedicated BLE5 listener, but the scan radio {} (mac {}) was measured delivering NO BLE4 AT ALL - BLE4 is not being left to it, re-testing".format(
+							_lHci, useHCIForBeacon, myBLEmac))
 	except Exception:	pass
 	# NOT FREE, AND NOT ONCE PER STARTUP. setupSOCKET calls this on every socket setup, and the
 	# main loop sets the socket up again every couple of seconds - measured on rpi#2: probes at
@@ -10054,18 +10506,12 @@ def probeExtendedScan(sock):
 	# BOTH OF THESE ARE LOG-ON-CHANGE. They are cached verdicts, so the sentence never
 	# differs - and this function is called on every socket setup, which printed the same
 	# line once a minute for the life of the program. The verdict is worth stating once,
-	# and extScanLastReported is the throttle the other verdicts in here already use.
+	# and extScanSay is the per-message throttle the other verdicts in here already use.
 	if extScanBlockedByAdv[0]:
-		_msg = "blocked-{}".format(useHCIForBeacon)
-		if extScanLastReported[0] != _msg:
-			extScanLastReported[0] = _msg
-			if _debugBLE5: U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): blocked - not enough radios / broadcast shares this adapter (legacy adv cmds lock the command set) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
+		if _debugBLE5: extScanSay("blocked", "BT5 extended-advertising scan on {} (mac {}): blocked - not enough radios / broadcast shares this adapter (legacy adv cmds lock the command set) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
 		return
 	if extScanForceLegacy[0]:
-		_msg = "forcedLegacy-{}".format(useHCIForBeacon)
-		if extScanLastReported[0] != _msg:
-			extScanLastReported[0] = _msg
-			if _debugBLE5: U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): disabled earlier this session (see the delivery-test line above) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
+		if _debugBLE5: extScanSay("forcedLegacy", "BT5 extended-advertising scan on {} (mac {}): disabled earlier this session (see the delivery-test line above) -> legacy scanning".format(useHCIForBeacon, myBLEmac))
 		return
 	supported = False
 	try:
@@ -10088,6 +10534,30 @@ def probeExtendedScan(sock):
 		st, ev = cmdComplete(0x0003, b"")
 		if st == 0 and len(ev) >= 15:
 			supported = bool(ev[8] & 0x10)					# feats byte1 bit4 = LE feature bit 12
+		if not supported and st == 0:
+			# NO BLE5 ON THIS RADIO - AND A FEATURE BIT DOES NOT GROW BACK. Two things were wrong.
+			# The probe asked again every 30 s, and asking is NOT free: cmdComplete reads the scan
+			# socket for up to 1.2 s hunting for its command-complete and discards every
+			# advertising report it meets on the way, so a radio that can never do BLE5 was losing
+			# a window of beacons twice a minute for the life of the program.
+			# And it cached nothing, so legacyProven() stayed None for ever - and that is the
+			# verdict the role shortcut at the top needs before it will give BLE5 to the dedicated
+			# listener and leave this radio at its full BLE4 rate. Live on rpi-5-family (hci0 the
+			# listener, hci1 the scanner): "the scan radio hci1 has never been proven to deliver
+			# BLE4 - measuring it before trusting it" every time, while nothing ever measured it -
+			# the only code that writes legOK is the comparative test, and that test only runs on a
+			# radio that HAS the feature bit.
+			# THE PROOF IS THE TRAFFIC ITSELF, so there is nothing to measure: the legacy scan is
+			# running and scanMsgsSeen counts what it delivers. 20 frames on this mac IS legacy
+			# delivery - and it is exactly the evidence an accepted-but-mute radio cannot produce.
+			# st == 0 is required: a timed-out feature read (-1) says nothing about the hardware.
+			if legacyProven() is not True and scanMsgsSeen[1] == "{}".format(myBLEmac) and scanMsgsSeen[0] > 20:
+				saveExtScanVerdict(False, legOK=True)
+				U.logger.log(20,"BT5: the SCAN radio {} (mac {}) has no BLE5 feature bit, and its legacy scan has delivered {} frames - recorded as BLE4-proven, so the probe stops re-asking".format(
+							useHCIForBeacon, myBLEmac, scanMsgsSeen[0]))
+			# only latch once the proof is in: latching earlier would make this branch unreachable
+			# and the proof would never be written
+			if legacyProven() is True: extScanForceLegacy[0] = True
 		if supported:
 			# 2. REALITY CHECK - live testing showed the feature bit alone means nothing:
 			#    run A: params+enable status 0 but ZERO reports (the LE EVENT MASK bit 12
@@ -10211,7 +10681,16 @@ def probeExtendedScan(sock):
 				# ACCEPTED: there is then no baseline, so the comparative test cannot run at all. An
 				# explicit pin to "scanner BLE4 + BLE5" / "scanner BLE5" says the operator does not want
 				# a comparison - that overrules it, the same way a scanBLE4 pin returns outright above.
-				if (nExt == 0 and nLeg == 0) or (nLeg == 0 and not _legRejected and not _pinWantsExt):
+				# LEGACY ACCEPTED BUT MUTE. nLeg == 0 used to be read as "a failed measurement", so a
+				# radio that simply cannot deliver BLE4 was declared INCONCLUSIVE for ever: it stayed
+				# on BLE4, re-probed every cycle and received nothing, and after the retry budget it
+				# gave up on EXTENDED - the one mode that did work. Distinguish it now: nothing at all
+				# is still inconclusive, but "extended delivers and legacy does not" is a verdict.
+				_legMute = (nLeg == 0 and nExt >= EXTSCAN_MIN_REPORTS)
+				if _legMute:
+					U.logger.log(20,"BT5 on {} (mac {}): LEGACY SCAN IS ACCEPTED BUT MUTE - {} extended reports from {} macs and NOT ONE legacy report. This radio cannot be a BLE4 scanner; using extended scanning for everything on it".format(
+								useHCIForBeacon, myBLEmac, nExt, _uE))
+				if (nExt == 0 and nLeg == 0) or (nLeg == 0 and not _legMute and not _legRejected and not _pinWantsExt):
 					extScanInconclusive[0] += 1
 					if extScanInconclusive[0] <= EXTSCAN_MAX_RETRY:
 						U.logger.log(20,"BT5 extended advertising on {}: delivery test INCONCLUSIVE ({} of {}) -"
@@ -10230,7 +10709,7 @@ def probeExtendedScan(sock):
 					reportBLE5("no - delivery test never saw any traffic")
 					return
 				if (nExt >= EXTSCAN_MIN_REPORTS and _perMinE >= EXTSCAN_MIN_PER_MIN
-						and (_pinWantsExt or _legRejected or _coverage >= EXTSCAN_MIN_COVERAGE)):
+						and (_pinWantsExt or _legRejected or _legMute or _coverage >= EXTSCAN_MIN_COVERAGE)):
 					# extended wins -> DOWN+UP again and restore the full extended setup. This is the one
 					# that cost a whole evening on a COMBINED (scanBLE45) radio: a plain reset here left
 					# the controller mute and the extended scan was then armed on a radio that delivers
@@ -10247,7 +10726,7 @@ def probeExtendedScan(sock):
 				else:
 					# legacy wins - leave it RUNNING (params+enable already active)
 					extScanForceLegacy[0] = True
-					saveExtScanVerdict(False)
+					saveExtScanVerdict(False, legOK=(nLeg > 0))
 					U.logger.log(20,"BT5 extended advertising on {}: delivery test FAILED - BLE5 mode reaches {} macs ({}) at {:.0f} reports per mac per minute, against {} macs in BLE4 mode (need {:.0f}% and {:.0f}/min) -> BLE4 scanning".format(
 									useHCIForBeacon, _uE, _cmpTxt, _perMinE, _uL, EXTSCAN_MIN_COVERAGE, EXTSCAN_MIN_PER_MIN))
 					reportBLE5("no - BLE5 mode reaches only {} of {} macs".format(_uE, _uL))
@@ -10261,11 +10740,11 @@ def probeExtendedScan(sock):
 					extScanInconclusive[0] = 0
 					if _debugBLE5: U.logger.log(20,"BT5 extended-advertising scan on {} (mac {}): VERIFIED - {} extended report(s) in the probe window (eventMask status:0x{:02X}) - scan stays ON".format(useHCIForBeacon, myBLEmac, nRep, stM & 0xFF))
 					reportBLE5("yes - active, delivery verified")
-					saveExtScanVerdict(True)		# remember: same adapters -> no proof window next time
+					saveExtScanVerdict(True, legOK=(nLeg > 0))	# remember: same adapters -> no proof window next time
 				else:
 					cmdComplete(0x0042, struct.pack("<BBHH", 0x00, 0x00, 0x0000, 0x0000))	# off - the legacy flow enables its own scan
 					extScanForceLegacy[0] = True	# cache the verdict - no 2.5s probe window on every socket setup
-					saveExtScanVerdict(False)		# stale trust would mask a now-broken setup
+					saveExtScanVerdict(False, legOK=(nLeg > 0))	# stale trust would mask a now-broken setup
 					if _debugBLE5: U.logger.log(20,"BT5 extended advertising on {} (mac {}): scan enabled OK (eventMask status:0x{:02X}) but NO extended reports arrived within 2.5s - the controller does not deliver them -> legacy scanning".format(useHCIForBeacon, myBLEmac, stM & 0xFF))
 					reportBLE5("no - adapter claims BLE5 but failed the delivery test")
 					return
@@ -10275,6 +10754,23 @@ def probeExtendedScan(sock):
 				U.logger.log(20,"BT5 extended advertising on {} (mac {}): feature bit SET but the extended scan commands are rejected (eventMask status:0x{:02X}, set-params status:0x{:02X}, enable status:0x{:02X}; 0x0C=Command Disallowed) -> legacy scanning".format(useHCIForBeacon, myBLEmac, stM & 0xFF, stP & 0xFF, stE & 0xFF))
 				reportBLE5("no - adapter claims BLE5 but rejects the scan commands")
 				return
+	except (pySocket.error, OSError, IOError) as e:
+		# AN ABSENT RADIO, NOT A BUG AND NOT A CAPABILITY VERDICT. hci_open_dev can succeed on a
+		# stale device node while the radio is already gone or re-enumerating, and the first send
+		# then fails - broken pipe, or "network is down". execExtListener's ext-scan setup already
+		# decided how to treat exactly this: "That is an absent adapter, not a bug: retry quietly
+		# instead of dumping a traceback." This path used to dump the traceback anyway.
+		# IT MUST NOT FALL THROUGH to "no BLE5 capable adapter": that sentence is a claim about the
+		# HARDWARE, and a dead socket says nothing about what the adapter supports. Seen live: the
+		# scan radio was hci1/B0:82:E2:1F:77:37, the roles moved to hci2/08:BE:AC:1A:A3:53, and the
+		# probe on the old socket raised BrokenPipeError - which then reported the new adapter as
+		# having no BLE5. Nothing is cached here (no saveExtScanVerdict / extScanForceLegacy), so
+		# the next probe decides afresh once the radio is back.
+		# LOG ON CHANGE ONLY: this probe runs every couple of seconds (see the note above), so one
+		# line per occurrence is a flood. Same per-message throttle the other verdicts use.
+		extScanSay("radioGone", "BT5 extended-advertising probe on the SCAN radio {} (mac {}): radio did not answer ({}: {}) - absent or re-enumerating, will retry. This is NOT a verdict on what the adapter supports".format(useHCIForBeacon, myBLEmac, e.__class__.__name__, e))
+		reportBLE5("unknown - scan radio {} did not answer the probe".format(useHCIForBeacon))
+		return
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
 	if not scanExtendedMode: reportBLE5("no - no BLE5 capable adapter")
@@ -10285,9 +10781,7 @@ def probeExtendedScan(sock):
 	# announces itself separately). The adapter is part of the change gate too, so swapping the
 	# scan dongle re-states the verdict for the new hardware instead of staying silent.
 	_scanMacNow = "{}".format(hciRoles.get("scan", {}).get("mac", "") or myBLEmac)
-	if extScanLastReported[0] != (scanExtendedMode, useHCIForBeacon, _scanMacNow):
-		extScanLastReported[0] = (scanExtendedMode, useHCIForBeacon, _scanMacNow)
-		U.logger.log(20,"BT5 extended-advertising scan on the SCAN radio {} (mac {}): {}".format(useHCIForBeacon, _scanMacNow,
+	extScanSay("scanMode", "BT5 extended-advertising scan on the SCAN radio {} (mac {}): {}".format(useHCIForBeacon, _scanMacNow,
 			"ACTIVE -> using extended scanning (receives Ruuvi Air E1 etc.)" if scanExtendedMode else "not supported by this adapter -> legacy scanning"))
 
 
@@ -10772,6 +11266,11 @@ def getSocketData(sock):
 	    list: List of uppercased hex-string messages, or empty list on error
 	"""
 	Msgs = []
+	# IS EACH ROLE STILL WHERE WE LEFT IT? Throttled to one timestamp compare per call; it only
+	# does real work every 15 s. This is what turns the mac into the index: the useHCIFor*
+	# globals and hciRoles[..]["hci"] are refreshed from the mac rather than trusted from startup.
+	try:	resyncRadioRoles()
+	except Exception:	pass
 	try:
 		pkt = sock.recv(512)
 		hdr = bytearray(pkt[:4])
@@ -10916,6 +11415,14 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 			if tt - timeAtLoopStart	 > sendAfter: 
 				#U.logger.log(20,  "dt inner :{:.1f} limit:{},  ".format(tt - timeAtLoopStart, sendAfter))
 				break # send curl msgs after collecting for xx seconds
+			# ADV/PDU TYPE, AND IT HAS TO BE TAKEN NOW: the raw frame is
+			#   04 3E len 02 01 <evtLegacy> <addrType> <macRev x6> <dataLen> <data..> <rssi>
+			# so the type byte is at [10:12] (same place fillHCIdump tests it for watchMAC, and
+			# the place extendedToLegacy writes evtLegacy for a BT5 extended report). fillHCIdump
+			# returns hexstr[14:] = "start w the MAC#, skip the preamble", and from then on
+			# [10:12] is the last byte of the reversed mac - ie the FIRST byte of the real mac.
+			# 00=ADV_IND, 01=ADV_DIRECT (both connectable), 03=ADV_NONCONN_IND, 04=scan response.
+			advTypeThisMsg = hexstr[10:12]
 			hexstr = fillHCIdump(hexstr)
 			nCharThisMessage	= len(hexstr)
 			#dtinner[4][1] = max(dtinner[1], tryDeltaTime( startofInnerLoop, oneDigit=True ))
@@ -10945,6 +11452,9 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 	
 			#dtinner[4][2] = max(dtinner[2], tryDeltaTime( startofInnerLoop, oneDigit=True ))
 			lastMSGwithDataPlain = time.time()
+			# counts toward the legacy delivery proof - see scanMsgsSeen
+			if scanMsgsSeen[1] != "{}".format(myBLEmac):	scanMsgsSeen[0], scanMsgsSeen[1] = 0, "{}".format(myBLEmac)
+			scanMsgsSeen[0] += 1
 
 
 			rssi, txPower, macplainReverse, macplain, mac  = getStdIbeacon(hexstr)
@@ -10983,7 +11493,7 @@ def loopThroughMessagesInThisSet(Msgs, timeAtLoopStart, sendAfter, tt):
 			# with acceptance OFF are skipped - which stops the "bad string" noise the old always-true
 			# "acceptNewiBeacons > -200" (true for the 999 = off sentinel) produced.
 			if mac in BLEsensorMACs or mac in onlyTheseMAC or rssi > acceptNewBeaconsMinSIgnal or acceptNewBeaconMAC != "" or acceptNewTagiBeacons != "off" or acceptNewMFGNameBeacons not in ["","off"]:
-				try:  parsePackage(mac, hexstr[12:], logData=False)
+				try:  parsePackage(mac, hexstr[12:], logData=False, advType=advTypeThisMsg)
 				except: continue
 
 
@@ -11753,6 +12263,27 @@ def execbeaconloop(test):
 						maxLoopCount = 20
 						restartCount += 1
 						if restartCount > 0:
+							# WHY there are no messages, before throwing the process away. The roles are
+							# assigned ONCE at startup and keyed to an hciN; if the scan dongle has since
+							# been renumbered (a replug, a usb reset) the role points at a name that is
+							# not there any more and no amount of stack restarting will help. The
+							# extended listener already follows its radio by mac ("radio hci3 re-appeared
+							# as hci2 - following it"); the scan role does not, so say so plainly - the
+							# restart below re-derives the roles from the radios that are actually here.
+							try:
+								_sm = "{}".format(hciRoles.get("scan", {}).get("mac", "")).upper()
+								_sh = "{}".format(hciRoles.get("scan", {}).get("hci", ""))
+								if _sm != "":
+									_now = U.whichHCI().get("hci", {})
+									_at  = ""
+									for _h in _now:
+										if "{}".format(_now[_h].get("BLEmac","")).upper() == _sm: _at = _h
+									if _at == "":
+										U.logger.log(20,"no messages: the SCAN dongle {} (was {}) is not present at all - restarting to pick a radio that is".format(_sm, _sh))
+									elif _at != _sh:
+										U.logger.log(20,"no messages BECAUSE THE SCAN RADIO MOVED: dongle {} was {} and is {} now - the role was pinned to the NAME, so nothing was being read. Restarting to re-derive the roles".format(_sm, _sh, _at))
+							except Exception:
+								pass
 							U.logger.log(20, "restarting beaconloop  due to no messages " )
 							time.sleep(0.5)
 							U.restartMyself(param="", reason="too long a time w/o message", python3=usePython3)

@@ -185,14 +185,20 @@ def startHCI():
 			U.logger.log(20, "BLE(long)connect: beconloop uses: {}".format(hciBeaconloopUsed))
 			# role format {"scan":{mac,hci,bus,..},..}; old flat format still read
 			sc = hciBeaconloopUsed.get("scan", {})
-			doNotUseHCI 		= sc.get("hci", hciBeaconloopUsed.get("usedHCI",""))
+			# THE RADIOS TO AVOID ARE IDENTIFIED BY MAC, NOT BY THE NAME IN THE FILE. beaconloop
+			# publishes both; the name goes stale the moment a dongle is renumbered, and then this
+			# excluded the WRONG radio - leaving our own connects free to grab beaconloop's scan
+			# dongle (or the ext listener, whose extended scan a connect knocks back to legacy ->
+			# Ruuvi Air E1 dropouts) while pointlessly refusing whatever took the old name.
+			doNotUseHCI 		= hciOfMac(sc.get("mac",""))  or sc.get("hci", hciBeaconloopUsed.get("usedHCI",""))
 			BusUsedByBeaconloop = sc.get("bus", hciBeaconloopUsed.get("usedBus",""))
 			# the BLE5 extended-listener radio is OFF LIMITS as well: we hciconfig-reset our
 			# own adapter (connect ladder), and doing that to the ext listener kills its
 			# extended scan -> Ruuvi Air E1 dropouts. Excluding only beaconloop's SCAN radio
 			# was not enough: whenever the master role was momentarily unusable we fell back
 			# to a local pick that could land right on the ext-listener dongle.
-			doNotUseExtListener = hciBeaconloopUsed.get("extListener", {}).get("hci", "")
+			_el = hciBeaconloopUsed.get("extListener", {})
+			doNotUseExtListener = hciOfMac(_el.get("mac","")) or _el.get("hci", "")
 			if doNotUseHCI == "" or BusUsedByBeaconloop == "": continue
 			break
 
@@ -381,6 +387,9 @@ def checkSwitchBotPrio(thisMAC):
 	global nonSwitchBotActive
 
 	verbose = True
+	if bondPending():
+		# a shelly bond rides on ONE button press - yield the radio now or the window is gone
+		return True
 	if beaconBeepPending():
 		# a beacon beep is queued = highest priority within BLEconnect:
 		# abort/yield the sensor operation so the main loop can execute the beep right away
@@ -880,6 +889,7 @@ def resumeBeaconloop():
 		if os.path.isfile(G.homeDir+"temp/beaconloop.pause"): os.remove(G.homeDir+"temp/beaconloop.pause")
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
+lastSeenAdvRssi = [None]		# rssi of the adv that waitForAdvBeaconloop last reported
 lastBeepPendingCheck = [0., False]	# [last file check time, result] - throttled beep-pending flag
 
 
@@ -1225,7 +1235,9 @@ def waitForAdvBeaconloop(mac, maxWait=20):
 				rssiTxt = ""
 				try:
 					dd = json.load(open(seen))
-					if isinstance(dd, dict) and "rssi" in dd: rssiTxt = " (rssi {})".format(dd["rssi"])
+					if isinstance(dd, dict) and "rssi" in dd:
+						rssiTxt = " (rssi {})".format(dd["rssi"])
+						lastSeenAdvRssi[0] = int(dd["rssi"])
 				except Exception: pass
 				U.logger.log(20,"{} CONNECTABLE adv reported by beaconloop after {:.1f}s{} - connecting NOW".format(mac, time.time()-t0, rssiTxt))
 				try:	os.remove(seen)
@@ -1442,6 +1454,725 @@ def doBeaconGattBeep(mac, params):
 
 
 #################################
+# SHELLY BLU BONDING
+# A shelly BLU button accepts a connection only from a PAIRED client, and every writable
+# characteristic on it is "write bonded" (shelly's own BLE api docs). So without a bond there is
+# no beep, no config, nothing - which is why this plugin can beep an iTrack/Nut tracker (their
+# control characteristic takes a write from anybody) and cannot beep a shelly.
+# The shelly APP pairs with simple presses only, no long hold: it scans, the user presses, the app
+# lists the device, the user picks it, and the app waits for ONE MORE SIMPLE PRESS which completes
+# the pairing. Here the DOUBLE PRESS replaces "the user picks it" - an rpi has no UI to pick with -
+# and the next press is the one the bond rides on. Measured on rpi 2: every button event
+# (press/double/tripple/hold/long) advertises as ADV_IND 00 = CONNECTABLE, so that frame is the
+# bonding window, and it is exactly what watchMAC already reports.
+# gatttool CANNOT bond, so this goes through bluez: an agent + pair, which stores the keys under
+# /var/lib/bluetooth/<ADAPTER mac>/<device mac>/. A BOND BELONGS TO ONE RADIO. If the master moves
+# the BLEconnect role to another dongle the bond is not there any more - that is reported, not
+# silently retried, because re-pairing costs one of the device's bond slots every time.
+shellyBeaconModeUUID = "cb9e957e-952d-4761-a7e1-4416494a5bfa"	# must be ON for the buzzer to work
+shellyBuzzerUUID     = "5b026510-4088-c297-46d8-be6c736a087b"	# 01 = start, 00 = stop (self-stops after 30s)
+
+
+def bluezBondDir(deviceMac):
+	"""Where bluez keeps the keys for this device ON THE RADIO WE CONNECT WITH."""
+	return "/var/lib/bluetooth/{}/{}".format("{}".format(myBLEmac).upper(), "{}".format(deviceMac).upper())
+
+
+shellyBondKeyTags = ("[LongTermKey]", "[PeripheralLongTermKey]", "[SlaveLongTermKey]", "[LinkKey]")
+
+
+def isBonded(deviceMac):
+	"""True when THIS radio holds real PAIRING KEYS for that device. Per adapter on purpose: the
+	keys are stored per adapter and a bond made on another dongle is of no use to us.
+
+	THE KEYS, NOT THE DIRECTORY. This used to ask whether the info file EXISTS, and that is not the
+	same question: bluez writes <adapter>/<device>/info for any device it has merely SEEN or
+	connected to, and Trusted=true goes in there the moment anything trusts it - so a pairing bluez
+	had REFUSED still left a file behind and this reported a bond that was never made. Measured on
+	rpi 2 after "auth failed with status 0x05": 144 bytes, [General] only, no key section, while
+	the attributes cache beside it held the five service declarations and NOT ONE characteristic -
+	which is all this device shows a peer it has not bonded with, and exactly why every write came
+	back "no such attribute". That one wrong answer also hid itself three ways over: it reported
+	pairing as WORKED, it ended the retry loop on the first attempt so the hold never had a chance,
+	and it made the next attempt say "already bonded - nothing to do".
+	The keys live in sections of their own (bluez 5.65+ renamed [SlaveLongTermKey] to
+	[PeripheralLongTermKey], both are accepted). Runs as root, so the file is readable."""
+	try:
+		with open(bluezBondDir(deviceMac) + "/info") as f: txt = f.read()
+	except Exception:	return False
+	for tag in shellyBondKeyTags:
+		if tag in txt: return True
+	return False
+
+
+def dropStaleShellyRecord(mac, why="leftover"):
+	"""Clears a KEYLESS device record and its gatt cache for this mac on our radio. Quiet, and a
+	no-op when real keys are there, so it can never cost a bond.
+
+	This is NOT an unpair - there is nothing to unpair, that is the point. It removes what a
+	refused pairing leaves: the [General]-only info file, Trusted=true, and an attributes cache
+	holding five service declarations and no characteristic. Left in place bluez re-uses that cache
+	on the next connect and every gatt write lands on "no such attribute", which looks exactly like
+	a device that has gone away."""
+	if isBonded(mac):	return False
+	if not os.path.isdir(bluezBondDir(mac)):	return False
+	try:
+		runShell("/usr/bin/sudo /usr/bin/gdbus call --system --dest org.bluez --object-path /org/bluez/{} --method org.bluez.Adapter1.RemoveDevice \"objectpath '/org/bluez/{}/dev_{}'\"".format(
+					useHCI, useHCI, "{}".format(mac).upper().replace(":", "_")))
+		runShell("/usr/bin/sudo /bin/rm -rf '{}'".format(bluezBondDir(mac)))
+		shellyCharPaths.pop("{}".format(mac).upper(), None)
+		U.logger.log(20,"shelly bond {}: cleared a keyless {} record on radio {} - there were no keys in it to lose".format(mac, why, myBLEmac))
+		return True
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	return False
+
+
+def doShellyBond(mac, params):
+	"""Pairs with a shelly BLU device and, when that worked, beeps it as the confirmation.
+
+	Runs bluez with a NoInputNoOutput agent (the device has no keyboard or display, so "just
+	works"), on the radio this program connects with. The device only accepts the connection while
+	it is awake from a press, so the caller has already asked beaconloop to watch for a connectable
+	adv of this mac - we wait for that and pair inside the window.
+
+	Inputs:
+	    mac (str): the shelly's mac
+	    params (dict): "until" (unix time the arming expires), "beep" (bool, beep on success)
+	Outputs:
+	    bool: True when the device is bonded afterwards
+	"""
+	# FORCE = RELINK. The "relink" button in the device dialog sends this, and it is the only way
+	# out of a one-sided pairing: factory-resetting the button clears ITS keys, ours stay, and
+	# isBonded() then reports a pairing the device knows nothing about - so nothing would be done
+	# and nothing would work. Removing our side first makes the pair below a real one again.
+	if params.get("force", False) and isBonded(mac):
+		U.logger.log(20,"shelly bond {}: RELINK requested - dropping the existing pairing on this radio ({}) first".format(mac, myBLEmac))
+		removeShellyBond(mac)
+	if isBonded(mac):
+		_t = "shelly bond {}: already bonded on this radio ({}) - nothing to do. Use relink in the device dialog to pair again".format(mac, myBLEmac)
+		U.logger.log(20, _t)
+		reportShellyToIndigo(_t, mac=mac, bonded=True)		# the dialog asked, so it gets an answer
+		return True
+	# START FROM NOTHING, NOT FROM A REFUSED ATTEMPT. See dropStaleShellyRecord: a rejected pairing
+	# leaves a keyless record and a characteristic-less attributes cache, and bluez pairs against
+	# that cache on the next try.
+	dropStaleShellyRecord(mac)
+	until = float(params.get("until", time.time() + 120.))		# long enough to walk over and hold it
+	U.logger.log(20,"shelly bond {}: ARMED on {} (radio {}) for {:.0f}s - NOW HOLD THE BUTTON PAST 10 SECONDS so it enters pairing mode; it buzzes when the pairing worked".format(mac, useHCI, myBLEmac, until - time.time()))
+	ok    = False
+	_txt  = ""
+	_hint = "hold the button past 10 s while it is armed, then try again"
+	try:
+		# NO watchMAC WAIT HERE ANY MORE. Waiting for the connectable adv first and only THEN
+		# starting bluetoothctl spent the window: by the time bluetoothd began scanning the device
+		# was asleep again, so it never saw it ("Device <mac> not available") and the user needed a
+		# third press. bluetoothd's OWN scan is both the wait and the discovery - it has to be
+		# running when the device advertises anyway - so btctlPair does the waiting now and the
+		# next press does double duty: it wakes the device and lands in that scan.
+		pauseBeaconloopForGatt()
+		# KEEP TRYING UNTIL THE PAIRING WINDOW OPENS. Beeping a BONDED device works whenever it
+		# advertises, but PAIRING needs it to accept a connection from a peer it does not know yet,
+		# and shelly only allows that "from a paired device, or if pairing mode is active" - pairing
+		# mode being the ~10 SECOND HOLD, good for a minute. So "just pair now" cannot work on its
+		# own: somebody has to hold the button. One attempt would have to be lucky, so this retries
+		# for the whole arming window and whichever attempt lands inside the window succeeds.
+		out = ""
+		ok  = False
+		_n  = 0
+		while time.time() < until and not ok:
+			_n  += 1
+			_wait = max(6., min(20., until - time.time()))
+			out   = btctlPair(mac, scanSecs=_wait)
+			ok    = isBonded(mac)
+			if ok: break
+			if time.time() >= until: break
+			U.logger.log(20,"shelly bond {}: attempt {} did not pair ({}) - HOLD THE BUTTON PAST 10 SECONDS to open pairing mode, retrying for another {:.0f}s".format(mac, _n, out, until - time.time()))
+			dropStaleShellyRecord(mac, why="refused-attempt")	# or the next attempt inherits its cache
+			time.sleep(1.0)
+		if _n > 1: out = "{} attempts | {}".format(_n, out)
+		_txt = "{}".format(out)
+		U.logger.log(20,"shelly bond {}: bluez says >{}<  -> bonded:{}".format(mac, _txt.replace("\n"," ")[-220:], ok))
+		if not ok:
+			# NAME THE REFUSAL. "auth failed with status 0x05" is the device saying no, not a radio
+			# problem and not a weak signal: shelly only accepts a pairing from a peer it does not
+			# know while PAIRING MODE is open. It is the normal answer after an unpair, because the
+			# button keeps ITS copy of the key - our side is gone, its side is not - so the 10 s
+			# hold is not optional there, it is the only way back in.
+			if "0x05" in _txt or "uthentication" in _txt or "auth failed" in _txt:
+				_hint = "the BUTTON REFUSED the pairing (auth failed / status 0x05) - it only accepts a new pairing while pairing mode is open, and after an unpair it still holds its own key, so HOLD THE BUTTON PAST 10 SECONDS and keep holding until it signals, then it pairs. If it keeps refusing, check that the button is COMPLETELY set up in the shelly phone app - one that was never finished there usually refuses outright"
+			else:
+				_hint = "either the press window closed before bluez got there, or the device was asleep again - press once, then hold past 10 s while it is armed"
+			U.logger.log(20,"shelly bond {}: NOT bonded - {}".format(mac, _hint))
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	finally:
+		resumeBeaconloop()
+	_t = "shelly pairing {}: {} on radio {}{}".format(mac, "WORKED - the keys are stored" if ok else "did NOT work", myBLEmac,
+				"" if ok else " - " + _hint)
+	U.logger.log(20, _t)
+	reportShellyToIndigo(_t, mac=mac, bonded=ok)
+	if ok and params.get("beep", True):
+		# IT HAS USUALLY BUZZED ALREADY. btctlPair beeps inside the pairing session, on the link
+		# the pairing itself just made - that is the one that has always worked. A second beep from
+		# here means waiting for another advertisement and another connect and discovery: measured
+		# at 10 s, which is 10 s of the user standing there wondering, after the button had already
+		# buzzed. So it is only done when the in-session beep did NOT go out.
+		if "buzzer=on -> sent" in _txt:
+			reportShellyToIndigo("shelly pairing {}: it buzzed during the pairing itself".format(mac), mac=mac, bonded=True)
+		else:
+			# REPORT THE BEEP TOO, it is the only part the user can hear. The pairing message used
+			# to promise "it should have buzzed" and then say nothing more, so a silent button left
+			# no way of telling a failed beep from a failed pairing.
+			_b = doShellyBeep(mac, 1.0)
+			reportShellyToIndigo("shelly pairing {}: the confirmation beep {}".format(mac,
+						"was sent - it should have buzzed" if _b else "could NOT be sent - the pairing is there, see the rpi log for why the beep failed"), mac=mac, bonded=True)
+	return ok
+
+
+shellyCharPaths = {}		# mac -> {uuid: dbus object path}, discovered once per mac
+
+
+def gdbus(path, method, *args):
+	"""One gdbus call on org.bluez. Returns the reply text, "" on failure.
+
+	NON-INTERACTIVE ON PURPOSE. Everything else tried for this parsed a CLI prompt and each
+	attempt broke differently: gatttool cannot write by uuid (--uuid is read-only), it cannot
+	discover this device at all, and bluetoothctl's default device silently drifts to whatever
+	last changed state - an iPhone connecting on this same radio was enough to point a write at
+	the wrong device ("No device connected"). gdbus addresses the object directly.
+	"""
+	cmd = "/usr/bin/timeout 20 /usr/bin/sudo /usr/bin/gdbus call --system --dest org.bluez --object-path {} --method {}".format(path, method)
+	for a in args: cmd += " {}".format(a)
+	out = "{}".format(runShell(cmd))
+	if "Error" in out: return ""
+	return out.strip()
+
+
+def reportShellyToIndigo(text, mac="", bonded=None):
+	"""Send a pair / test / unpair result to the INDIGO log, not just this rpi's, and with it this
+	rpi's answer to "do I hold the keys for that device".
+
+	All three run here, so their answer used to be visible only in /var/log/pibeacon - which meant
+	an ssh session to find out whether a button press had worked. The plugin logs msgType
+	"shellyLink" as a plain line against this rpi number.
+	AND THE STATE WITH IT. The plugin built its paired-rpi list purely out of the shelly's own
+	messages, which only arrive on a BUTTON PRESS - so a pairing that had just succeeded still
+	read "not paired" in indigo, and the beep menu still would not offer the rpi that had just
+	been paired, until somebody pressed the button again. Sending it here closes that gap: these
+	three are the only things that ever CHANGE the pairing, so they are exactly the right place to
+	report it from.
+	"""
+	try:
+		data = {}
+		if "{}".format(mac) != "" and bonded is not None:
+			data = {"shellyBondMac": "{}".format(mac).upper(), "shellyBonded": ("yes" if bonded else "no")}
+		U.sendURL(data=data, sendAlive="shellyLink", text="{}".format(text), wait=False, squeeze=False)
+	except Exception:	pass
+
+
+def removeShellyBond(mac):
+	"""Drops THIS radio's pairing with a shelly: tells bluez to forget the device, then clears the
+	key directory in case anything is left behind.
+
+	ONE SIDE ONLY, and that is worth knowing before using it: the button keeps its own copy of the
+	key, so afterwards it still believes it is paired with this rpi while the rpi has nothing. That
+	is harmless for pairing again (the next pair writes fresh keys on both sides) but it does spend
+	one of the device's bond slots until the button itself is reset.
+	Used by "unpair" and by a relink, which has to clear a stale pairing before making a new one.
+	"""
+	had = isBonded(mac)
+	try:
+		runShell("/usr/bin/sudo /usr/bin/gdbus call --system --dest org.bluez --object-path /org/bluez/{} --method org.bluez.Adapter1.RemoveDevice \"objectpath '/org/bluez/{}/dev_{}'\"".format(
+					useHCI, useHCI, "{}".format(mac).upper().replace(":", "_")))
+		runShell("/usr/bin/sudo /bin/rm -rf '{}'".format(bluezBondDir(mac)))
+		shellyCharPaths.pop("{}".format(mac).upper(), None)		# the handles are re-read after a re-pair
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	gone = not isBonded(mac)
+	_t = "shelly {}: {}".format(mac,
+				"PAIRING REMOVED on radio {}".format(myBLEmac) if (had and gone) else
+				("there was no pairing on radio {} to remove".format(myBLEmac) if not had else
+				 "unpair FAILED on radio {} - the keys are still there".format(myBLEmac)))
+	U.logger.log(20, _t)
+	reportShellyToIndigo(_t, mac=mac, bonded=(not gone))
+	return gone
+
+
+def checkShellyLink(mac):
+	"""Is this rpi's pairing with a shelly actually usable? Reports, writes nothing, no buzzer.
+
+	Three things can be wrong and they look identical from indigo: no pairing at all, a ONE-SIDED
+	pairing (the button was factory reset, our keys are still here, so isBonded() says yes and
+	nothing works), and a pairing that is fine but the device is not answering right now. This
+	tells them apart: keys present? connect? services resolved? buzzer characteristic reachable?
+	"""
+	MAC  = "{}".format(mac).upper()
+	dev  = "/org/bluez/{}/dev_{}".format(useHCI, MAC.replace(":", "_"))
+	out  = []
+	ok   = False
+	try:
+		if not isBonded(mac):
+			_t = "shelly link test {}: NO PAIRING on radio {} - use 'pair this rPi' in the device dialog".format(mac, myBLEmac)
+			U.logger.log(20, _t)
+			reportShellyToIndigo(_t, mac=mac, bonded=False)
+			return False
+		out.append("keys present")
+		if gdbus(dev, "org.bluez.Device1.Connect") == "":
+			out.append("connect FAILED - either the device is not on air just now, or it no longer knows this pairing (was it factory reset? then relink)")
+		else:
+			out.append("connect ok")
+			for _i in range(12):
+				if "true" in gdbus(dev, "org.freedesktop.DBus.Properties.Get", "org.bluez.Device1", "ServicesResolved").lower():
+					break
+				time.sleep(0.5)
+			tree = "{}".format(runShell("/usr/bin/sudo /usr/bin/busctl tree org.bluez 2>/dev/null"))
+			for cp in sorted(set(re.findall(r"/org/bluez/" + re.escape(useHCI) + r"/dev_" + re.escape(MAC.replace(":", "_")) + r"/service[0-9a-f]+/char[0-9a-f]+", tree))):
+				mm = re.search(r"([0-9a-fA-F-]{36})", gdbus(cp, "org.freedesktop.DBus.Properties.Get", "org.bluez.GattCharacteristic1", "UUID"))
+				if mm and mm.group(1).lower() == shellyBuzzerUUID.lower():
+					ok = True
+					break
+			out.append("buzzer characteristic " + ("REACHABLE - the link is good" if ok else "not reachable"))
+	except Exception as e:
+		out.append("{}: {}".format(type(e).__name__, e))
+	_t = "shelly link test {} on radio {}: {}".format(mac, myBLEmac, " | ".join(out))
+	U.logger.log(20, _t)
+	# THE KEYS, NOT THE REACHABILITY. "bonded" is the state question and the keys are still here
+	# even when the device is asleep and the test could not reach it - reporting the test's verdict
+	# instead would drop this rpi out of the paired list every time the button happened to be quiet.
+	reportShellyToIndigo(_t, mac=mac, bonded=isBonded(mac))
+	return ok
+
+
+def dbusShellyBeep(mac, seconds=1.0):
+	"""Buzzes a BONDED shelly BLU over bluez's D-Bus API. Verified live: the button rang.
+
+	bluetoothd holds every characteristic as a D-Bus object once the device is connected and its
+	services are resolved, and WriteValue goes out over the bonded, encrypted link without
+	anything having to ask for encryption. All four documented characteristics are there, exactly
+	as shelly publishes them:
+	    service0015/char0016  5b026510-..  Activate Buzzer      (01 on, 00 off)
+	    service0015/char001e  cb9e957e-..  Beacon mode enabled  (required for the buzzer)
+	    service0015/char002a  dd78bf35-..  Buzzer enabled
+	    service0015/char002e  35c8a5e2-..  Multiclick speed
+	gatttool never saw one of them: "Discover all characteristics failed: Request attribute has
+	encountered an unlikely error" (ATT 0x0E) on EVERY handle range, standard services included,
+	with and without --sec-level=high, and --char-desc fails the same way. That is gatttool, not
+	the device - bluez reads the same device over D-Bus without complaint.
+	Needs no extra package: gdbus is glib2 and busctl is systemd, both already on the rpi.
+	The object paths are stable per firmware, so they are found once per mac and cached.
+	"""
+	MAC  = "{}".format(mac).upper()
+	devP = "dev_{}".format(MAC.replace(":", "_"))
+	dev  = "/org/bluez/{}/{}".format(useHCI, devP)
+	out  = []
+	try:
+		if gdbus(dev, "org.bluez.Device1.Connect") == "":
+			out.append("connect -> failed")
+			return "beep[" + ", ".join(out) + "]"
+		out.append("connect -> ok")
+		for _i in range(12):		# the char objects exist once the services are resolved
+			if "true" in gdbus(dev, "org.freedesktop.DBus.Properties.Get", "org.bluez.Device1", "ServicesResolved").lower():
+				break
+			time.sleep(0.5)
+		paths = shellyCharPaths.get(MAC, {})
+		if shellyBuzzerUUID.lower() not in paths or shellyBeaconModeUUID.lower() not in paths:
+			paths = {}
+			tree = "{}".format(runShell("/usr/bin/sudo /usr/bin/busctl tree org.bluez 2>/dev/null"))
+			for cp in sorted(set(re.findall(r"/org/bluez/" + re.escape(useHCI) + r"/" + re.escape(devP) + r"/service[0-9a-f]+/char[0-9a-f]+", tree))):
+				mm = re.search(r"([0-9a-fA-F-]{36})", gdbus(cp, "org.freedesktop.DBus.Properties.Get", "org.bluez.GattCharacteristic1", "UUID"))
+				if mm: paths[mm.group(1).lower()] = cp
+			shellyCharPaths[MAC] = paths
+			out.append("{} characteristics discovered".format(len(paths)))
+		pBuzz   = paths.get(shellyBuzzerUUID.lower(), "")
+		pBeacon = paths.get(shellyBeaconModeUUID.lower(), "")
+		if pBuzz == "" or pBeacon == "":
+			# NO CHARACTERISTICS AT ALL means the link is not encrypted: this device publishes its
+			# custom services to anyone but hands out their characteristics only to a bonded peer.
+			# So it is a pairing answer, not a radio one - say so rather than listing nothing.
+			out.append("buzzer uuid NOT present - uuids seen: {}".format(", ".join(sorted(paths)[:6]) if paths else
+						"NONE AT ALL, which means this is not a working pairing - the device only shows its characteristics to a bonded peer, so relink this rpi"))
+			return "beep[" + ", ".join(out) + "]"
+		# beacon mode must be on for the buzzer to work at all (shelly's docs)
+		for pp, val, what in ((pBeacon, "[1]", "beaconMode=on"), (pBuzz, "[1]", "buzzer=on")):
+			ok = gdbus(pp, "org.bluez.GattCharacteristic1.WriteValue", '"{}"'.format(val), '"{}"') != ""
+			out.append("{} -> {}".format(what, "written" if ok else "REFUSED"))
+		time.sleep(max(0.2, float(seconds)))
+		gdbus(pBuzz, "org.bluez.GattCharacteristic1.WriteValue", '"[0]"', '"{}"')	# it stops itself after 30s anyway
+	except Exception as e:
+		out.append("{}: {}".format(type(e).__name__, e))
+	return "beep[" + ", ".join(out) + "]"
+
+
+def gattShellyBeep(mac, seconds=1.0):
+	"""Buzzes a BONDED shelly over an ENCRYPTED gatttool session, writing by discovered handle.
+
+	WHY NOT bluetoothctl HERE: it cannot set a security level, so a fresh connect on a stored bond
+	stays unencrypted - and the shelly will not hand out the characteristics of its custom services
+	over an unencrypted link. Measured: connect ok, "ServicesResolved: yes" in 2 s, and
+	/var/lib/bluetooth then holds 5 service declarations (00002800) and ZERO characteristic
+	declarations (00002803), at rssi -36 as readily as at -90, so it was never a signal problem.
+	The one beep that ever worked rode the connection the PAIRING had just made, which is
+	encrypted and authenticated by definition.
+	gatttool --sec-level=high forces exactly that on the stored bond. It cannot write by uuid
+	(--uuid is read-only), so the handles are discovered first with "characteristics" and the
+	writes go to the handle - which is how every other beep in this program already works.
+	"""
+	MAC   = "{}".format(mac).upper()
+	out   = []
+	child = None
+	try:
+		cmd = "/usr/bin/sudo /usr/bin/gatttool -i {} -b {} --sec-level=high -I".format(useHCI, MAC)
+		child = pexpect.spawn(cmd, timeout=8, encoding="utf_8", codec_errors="replace")
+		child.expect([r"\[LE\]>", pexpect.TIMEOUT], timeout=6)
+		child.sendline("connect")
+		ic = child.expect(["Connection successful", "Function not implemented",
+							"connect error", pexpect.TIMEOUT], timeout=20)
+		out.append("connect -> {}".format(["ok","not implemented","error","timeout"][ic]))
+		if ic != 0: return "beep[" + ", ".join(out) + "]"
+		# DISCOVER THE HANDLES, READING AS THEY STREAM IN. gatttool is asynchronous: it prints its
+		# "[LE]>" prompt the instant the command is accepted and the results arrive afterwards, so
+		# expecting the prompt and then reading child.before returned nothing but the echoed
+		# command - "0 characteristics found" with an empty uuid list. Match the result LINES
+		# instead, and stop when they stop coming.
+		child.sendline("characteristics")
+		handles = {}
+		_pat = r"char value handle\s*=\s*(0x[0-9a-fA-F]+)\s*,\s*uuid\s*=\s*([0-9a-fA-F-]{36})"
+		_t0 = time.time()
+		while time.time() - _t0 < 20:
+			kk = child.expect([_pat, pexpect.TIMEOUT], timeout=2.5)
+			if kk == 1:
+				if handles: break			# they have stopped arriving
+				continue
+			try:	handles["{}".format(child.match.group(2)).lower()] = child.match.group(1)
+			except Exception:	pass
+		out.append("{} characteristics found".format(len(handles)))
+		hBeacon = handles.get(shellyBeaconModeUUID.lower(), "")
+		hBuzz   = handles.get(shellyBuzzerUUID.lower(), "")
+		if hBeacon == "" or hBuzz == "":
+			out.append("buzzer uuid NOT among them - uuids seen: {}".format(", ".join(sorted(handles)[:8])))
+			return "beep[" + ", ".join(out) + "]"
+		out.append("handles beaconMode={} buzzer={}".format(hBeacon, hBuzz))
+		for hh, val, what in ((hBeacon, "01", "beaconMode=on"), (hBuzz, "01", "buzzer=on")):
+			child.sendline("char-write-req {} {}".format(hh, val))
+			jj = child.expect(["Characteristic value was written successfully", "Error", "Invalid",
+								pexpect.TIMEOUT], timeout=10)
+			out.append("{} -> {}".format(what, ["written","error","invalid","timeout"][jj]))
+		time.sleep(max(0.2, float(seconds)))
+		child.sendline("char-write-req {} 00".format(hBuzz))
+		child.expect([r"\[LE\]>", pexpect.TIMEOUT], timeout=8)
+	except Exception as e:
+		out.append("{}: {}".format(type(e).__name__, e))
+	finally:
+		try:
+			child.sendline("disconnect"); child.sendline("exit")
+			child.close(force=True)
+		except Exception:
+			pass
+	return "beep[" + ", ".join(out) + "]"
+
+
+def btctlGattBeep(child, MAC, seconds=1.0):
+	"""Buzzes the shelly over an OPEN bluetoothctl session, through its gatt menu.
+
+	NOT gatttool: its --char-write-req takes a HANDLE, never a --uuid (that option is read-only),
+	so the uuid writes came back "A valid handle is required". Handles are firmware specific and
+	the uuids are published, so bluetoothctl's gatt menu - which selects by uuid - is the right
+	tool, and it reuses the connection and the bond we already have.
+	Beacon mode must be on for the buzzer to work (shelly's docs); the device stops the buzzer
+	itself after 30 s, so the 00 only cuts it short.
+	"""
+	out = []
+	dumped = [False]
+	try:
+		child.sendline("menu gatt")
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+		for uuid, val, what in ((shellyBeaconModeUUID, "0x01", "beaconMode=on"),
+								(shellyBuzzerUUID,     "0x01", "buzzer=on")):
+			child.sendline("select-attribute {}".format(uuid))
+			child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+			child.sendline("write {}".format(val))
+			jj = child.expect(["Attempting to write", "Invalid", "No attribute selected",
+								"Failed", pexpect.TIMEOUT], timeout=8)
+			out.append("{} -> {}".format(what, ["sent","invalid","no such attribute","failed","timeout"][jj]))
+			if jj == 2 and not dumped[0]:
+				# DUMP WHAT IS ACTUALLY THERE, once. "no such attribute" with no further detail
+				# costs a whole round trip to find out whether discovery failed or the uuid is
+				# simply not on this firmware - the answer is in list-attributes.
+				dumped[0] = True
+				child.sendline("list-attributes")
+				child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=6)
+				try:	out.append("attributes present: {}".format("{}".format(child.before).replace("\r"," ").replace("\n"," ")[:400].strip()))
+				except Exception:	pass
+		time.sleep(max(0.2, float(seconds)))
+		child.sendline("select-attribute {}".format(shellyBuzzerUUID))
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+		child.sendline("write 0x00")
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+		child.sendline("back")
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=2)
+	except Exception as e:
+		out.append("{}: {}".format(type(e).__name__, e))
+	return "beep[" + ", ".join(out) + "]"
+
+
+def btctlPair(mac, scanSecs=12., doBeep=True):
+	"""Pairs with `mac` through bluetoothd, driving bluetoothctl interactively.
+
+	WHY A SESSION AND NOT A PIPED LIST OF COMMANDS: the first version piped
+	"select/agent/default-agent/pair/trust/quit" into bluetoothctl and bluez answered
+	"Device <mac> not available" - live on rpi 2. bluetoothctl can only pair with a device
+	bluetoothD already knows, and bluetoothd learns devices from ITS OWN discovery. beaconloop
+	scans with a raw HCI socket, which never touches bluetoothd's object registry, so as far as
+	bluetoothd was concerned the shelly did not exist. "scan on" has to run first - and it has to
+	still be running when the device advertises, which is why the commands are paced instead of
+	dumped in one go. pexpect is already a dependency of this program.
+
+	The scan runs on OUR adapter (the connect role), not beaconloop's, so it does not disturb the
+	beacon scan on a multi-radio rpi; on a single-radio one the caller has already paused it.
+	No credentials anywhere: NoInputNoOutput is "just works", which is all the device supports.
+	"""
+	MAC = "{}".format(mac).upper()
+	log = []
+	child = None
+	try:
+		child = pexpect.spawn("/usr/bin/sudo /usr/bin/bluetoothctl", timeout=6, encoding="utf_8", codec_errors="replace")
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+		# SETUP MUST BE FAST, IT IS INSIDE THE WINDOW. Each of these used to wait up to 4 s for a
+		# "#", and bluetoothctl prints NOTHING after "select" - no new prompt to match - so every
+		# one of them burned its full timeout. Live on rpi 2 that spent 17 seconds before the scan
+		# wait even began, and the device was asleep long before the connect: the scan then matched
+		# the mac "after 0.0s", which is the giveaway - it had been sitting there the whole time.
+		# The prompt is "[bluetooth]#", so match "]#", keep the wait short and treat a timeout as
+		# normal: these commands do not fail, they just do not always answer.
+		for cc in ("select {}".format("{}".format(myBLEmac).upper()),
+					"agent NoInputNoOutput", "default-agent", "scan on"):
+			child.sendline(cc)
+			child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=1.2)
+			log.append(cc)
+		# WAIT FOR BLUETOOTHD TO SEE IT. The device advertises when the button is pressed, so this
+		# is where the user's next press lands. "Device <mac>" in the scan output means bluetoothd
+		# has an object for it and pair can address it.
+		seen = False
+		t0 = time.time()
+		while time.time() - t0 < scanSecs:
+			ii = child.expect([MAC, pexpect.TIMEOUT], timeout=2)
+			if ii == 0:
+				seen = True
+				break
+		U.logger.log(20,"shelly bond {}: bluetoothd {} after {:.1f}s of scanning{}".format(
+					mac, "SAW the device" if seen else "did NOT see the device",
+					time.time()-t0, "" if seen else " - press the button again while it is armed"))
+		# CONNECT FIRST, THEN PAIR ON THE LIVE LINK. Pairing straight off the advertisement
+		# completed the bond and bluez then threw it away again: live on rpi 2 isBonded() was True
+		# inside this session (trust and the beep both ran) and False a moment later in the caller,
+		# and the beep had reported "no such attribute" for both uuids. Both symptoms are the same
+		# cause - bluez pairs, then runs service discovery, and the shelly had already gone back to
+		# sleep, so discovery found nothing, bluetoothd removed the device object and the keys went
+		# with it. An explicit connect gives discovery a live ACL link to work on and fills the
+		# attribute cache the gatt writes need.
+		child.sendline("connect {}".format(MAC))
+		ic = child.expect(["Connection successful", "Failed to connect", "not available", pexpect.TIMEOUT], timeout=25)
+		log.append("connect -> {}".format(["ok","failed","not available","timeout"][ic]))
+		if ic != 0:
+			U.logger.log(20,"shelly bond {}: could not CONNECT - the device accepts a connection only for a moment after a press. Press once more while it is armed".format(mac))
+			return " | ".join(log)
+		# services have to be resolved before pair, or pair's own discovery is what fails
+		child.expect(["ServicesResolved: yes", pexpect.TIMEOUT], timeout=12)
+		child.sendline("pair {}".format(MAC))
+		ii = child.expect(["Pairing successful", "Failed to pair", "not available",
+							"AuthenticationFailed", "Already paired", pexpect.TIMEOUT], timeout=25)
+		log.append("pair -> {}".format(["successful","failed","not available","auth failed","already paired","timeout"][ii]))
+		if ii in (1, 3, 5):
+			try:	log.append("bluez said: {}".format("{}".format(child.before).replace("\r"," ").replace("\n"," ")[-180:].strip()))
+			except Exception:	pass
+		# TRUST THE KEY STORE, NOT THE MESSAGE. Live on rpi 2 bluetoothctl said "Failed to pair"
+		# while /var/lib/bluetooth already held the keys and isBonded() was True: bluez bonds
+		# first and then runs service discovery, and on a sleepy BLE device that discovery often
+		# times out - which is what it reports, even though the bond is done and persisted.
+		if isBonded(mac):
+			child.sendline("trust {}".format(MAC))
+			child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=2)
+			log.append("trust")
+			# BEEP NOW, IN THIS SESSION. The device is still connected from the pairing; the
+			# previous version came back with a fresh gatttool afterwards and found it asleep
+			# ("Connection reset by peer (104)", then "Cannot allocate memory (12)").
+			if doBeep:
+				log.append(btctlGattBeep(child, MAC))
+	except Exception as e:
+		log.append("{}: {}".format(type(e).__name__, e))
+	finally:
+		try:
+			child.sendline("disconnect {}".format(MAC))
+			child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+		except Exception:
+			pass
+		try:
+			child.sendline("scan off"); child.sendline("quit")
+			child.close(force=True)
+		except Exception:
+			pass
+	return " | ".join(log)
+
+
+def doShellyBeep(mac, seconds=1.0, pressWait=40.):
+	"""Buzzes a BONDED shelly BLU button - the audible confirmation that the bond works.
+
+	Waits for a button press (the device only accepts a connection for a moment after one), then
+	hands over to gattShellyBeep, which connects with --sec-level=high. The encryption is the
+	point: on an unencrypted link this device never yields the characteristics of its custom
+	services, so there is nothing to write to.
+	"""
+	if not isBonded(mac):
+		U.logger.log(20,"shelly beep {}: not bonded on this radio - the write would be refused".format(mac))
+		return False
+	MAC = "{}".format(mac).upper()
+	child = None
+	try:
+		# JUST CONNECT. NO BUTTON PRESS NEEDED. An earlier version waited for a press before
+		# connecting, on the theory that a BLU button is only reachable for a moment after one.
+		# That was a workaround for the wrong problem: the connects were failing because the link
+		# was never encrypted (see gattShellyBeep), not because the device was asleep. It
+		# advertises periodically - that is how this plugin tracks its presence at all, and
+		# "beacon mode" IS periodic broadcast - so a bonded peer can connect whenever it catches
+		# one, which is exactly what the phone app does.
+		# CATCH IT ON AN ADVERTISEMENT FIRST. Measured: a cold Connect fails and then succeeds
+		# immediately after an adv - the device is not continuously connectable. beaconloop is
+		# scanning anyway and reported one in 0.2 s, so asking it first costs nothing and saves
+		# the ~5 s a doomed Connect spends timing out. NO BUTTON PRESS IS NEEDED: the device
+		# advertises by itself (that is how this plugin tracks its presence); a press only brings
+		# the next one forward.
+		if waitForAdvBeaconloop(mac, maxWait=12) is False:
+			U.logger.log(20,"shelly beep {}: no advertisement in 12s - trying anyway".format(mac))
+		res = dbusShellyBeep(mac, seconds)
+		if "connect -> ok" not in res:
+			U.logger.log(20,"shelly beep {}: {} - not connectable yet, waiting up to {:.0f}s for the next advertisement (pressing the button brings one straight away)".format(mac, res, pressWait))
+			if waitForAdvBeaconloop(mac, maxWait=int(pressWait)) is not False:
+				res = dbusShellyBeep(mac, seconds)
+		U.logger.log(20,"shelly beep {}: {}".format(mac, res))
+		return "connect -> ok" in res
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	return False
+
+
+def doShellyBeepOldBtctl(mac, seconds=1.0):
+	"""kept for reference: the bluetoothctl path. It can select an attribute by UUID but cannot
+	set a security level, so on a stored bond it never gets the characteristics at all."""
+	MAC = "{}".format(mac).upper()
+	child = None
+	try:
+		child = pexpect.spawn("/usr/bin/sudo /usr/bin/bluetoothctl", timeout=6, encoding="utf_8", codec_errors="replace")
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+		child.sendline("select {}".format("{}".format(myBLEmac).upper()))
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=1.2)
+		child.sendline("connect {}".format(MAC))
+		ii = child.expect(["Connection successful", "Failed to connect", pexpect.TIMEOUT], timeout=20)
+		if ii != 0:
+			U.logger.log(20,"shelly beep {}: could not connect ({}) - the device only accepts a connection for a moment after a button press".format(mac, ["ok","refused","timeout"][ii]))
+			return False
+		# WAIT FOR THE ATTRIBUTES, exactly as btctlPair does. Without this select-attribute runs
+		# before bluez has finished discovering the services and every uuid comes back "no such
+		# attribute" - which is what this path did on its first run while the in-session beep
+		# worked, because that one inherited a connection whose discovery had already completed.
+		jj = child.expect(["ServicesResolved: yes", pexpect.TIMEOUT], timeout=15)
+		if jj != 0:
+			U.logger.log(20,"shelly beep {}: connected but the services did not resolve within 15s - the writes will not find their attributes".format(mac))
+		# A WEAK LINK RESOLVES THE SERVICES AND STILL FAILS THE CHARACTERISTIC WALK. Service
+		# discovery is a short exchange; enumerating the characteristics inside 5 services is many
+		# more round trips, and on a marginal link it comes back empty - bluez then caches 5
+		# service declarations and ZERO characteristics (checked in /var/lib/bluetooth), so
+		# select-attribute has nothing to select and every uuid reads "no such attribute".
+		# Live: bonded and buzzed at rssi -34..-42, three failures in a row at -78, -84 and -90.
+		if lastSeenAdvRssi[0] is not None and lastSeenAdvRssi[0] < -72:
+			U.logger.log(20,"shelly beep {}: WEAK LINK, rssi {} - the services may resolve and the characteristic discovery still come back empty. Press the button close to this rpi (it worked at -34..-42)".format(mac, lastSeenAdvRssi[0]))
+		U.logger.log(20,"shelly beep {}: {}".format(mac, btctlGattBeep(child, MAC, seconds)))
+		child.sendline("disconnect {}".format(MAC))
+		child.expect([r"\](?:#|>)", pexpect.TIMEOUT], timeout=3)
+		return True
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	finally:
+		try:	child.sendline("quit"); child.close(force=True)
+		except Exception:	pass
+	return False
+
+
+def runShell(cmd):
+	"""One shell command, output as text - no credentials are ever put on these command lines."""
+	try:
+		pp = subprocess.Popen(cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
+		out, _ = pp.communicate()
+		try:	return out.decode("utf_8", "replace")
+		except Exception:	return "{}".format(out)
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+	return ""
+
+
+def bondPending():
+	"""True when a shelly bond job is queued - same priority as a beep: it is user initiated and
+	its window is one button press wide."""
+	try:	return os.path.isfile(G.homeDir+"temp/BLEconnect.bond")
+	except Exception:	return False
+
+
+def processBondQueueBLEconnect():
+	"""Executes queued shelly bonds (temp/BLEconnect.bond, written by beaconloop on a double
+	press). Mirrors processBeepQueueBLEconnect. Returns True if any bond was attempted."""
+	fn = G.homeDir+"temp/BLEconnect.bond"
+	if not os.path.isfile(fn): return False
+	if switchbotActive == "active": return False
+	try:
+		f = open(fn,"r"); lines = f.read().strip("\n").split("\n"); f.close()
+		os.remove(fn)
+	except Exception:
+		U.logger.log(20,"", exc_info=True)
+		return False
+	did = False
+	for line in lines:
+		if line == "": continue
+		try:	devices = json.loads(line)
+		except Exception: continue
+		for mac in devices:
+			try:
+				if   devices[mac].get("check", False):
+					_ok = checkShellyLink(mac)
+					# "test AND beep": the silent test covers everything up TO the write - keys,
+					# connect, services resolved, buzzer characteristic reachable. Hearing the
+					# button is what covers the rest, the write itself and the buzzer being
+					# enabled on the device, so it is offered beside the silent one, not instead.
+					if devices[mac].get("beep", False):
+						if _ok:
+							_b = doShellyBeep(mac, 1.0)
+							reportShellyToIndigo("shelly link test {}: the beep {}".format(mac,
+										"was sent - it should have buzzed" if _b else "could NOT be sent, see this rpi's log"), mac=mac, bonded=isBonded(mac))
+						else:
+							reportShellyToIndigo("shelly link test {}: NOT beeping - the link test did not pass, see the line above".format(mac), mac=mac, bonded=isBonded(mac))
+				elif devices[mac].get("unpair", False):	removeShellyBond(mac)
+				else:									doShellyBond(mac, devices[mac])
+				did = True
+			except Exception:
+				U.logger.log(20,"", exc_info=True)
+	return did
+
+
+#################################
+def hciOfMac(mac):
+	"""Where that radio is RIGHT NOW, by its mac - "" when it is not here or no mac was given.
+	hci numbering is not stable (a replug or usb reset renames a radio), so any hciN read out of a
+	file written earlier has to be re-resolved through the mac before it is believed."""
+	try:
+		if "{}".format(mac).strip() == "": return ""
+		_want = "{}".format(mac).strip().upper()
+		for _h, _d in U.whichHCI().get("hci", {}).items():
+			if "{}".format(_d.get("BLEmac","")).upper() == _want: return _h
+	except Exception:
+		pass
+	return ""
+
+
+#################################
 def processBeepQueueBLEconnect():
 	"""HIGHEST priority: executes all queued beacon beeps (temp/BLEconnect.beep, written by
 	receiveCommands.py) immediately. Returns True if any beep was processed."""
@@ -1463,7 +2194,13 @@ def processBeepQueueBLEconnect():
 		except Exception: continue
 		for mac in devices:
 			try:
-				doBeaconGattBeep(mac, devices[mac])
+				# A SHELLY NEEDS THE BONDED PATH, NOT gatttool. Its characteristics are all
+				# write-bonded and gatttool cannot write by UUID at all, so the whole beep goes
+				# through bluetoothctl's gatt menu on the bond this radio holds.
+				if "{}".format(devices[mac].get("type","")) == "BLEbonded":
+					doShellyBeep(mac, float(devices[mac].get("beepTime", 1.0) or 1.0))
+				else:
+					doBeaconGattBeep(mac, devices[mac])
 				did = True
 			except Exception:
 				U.logger.log(20,"", exc_info=True)
@@ -1740,6 +2477,7 @@ def checkBeaconGattQueues():
 	battery read per main-loop pass."""
 	try:
 		if processBeepQueueBLEconnect(): return
+		if processBondQueueBLEconnect(): return
 		# battery is LOWEST priority: only read one when no regular sensor read
 		# (humidity/temp etc. from macList) is currently due
 		try:
