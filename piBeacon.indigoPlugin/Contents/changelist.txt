@@ -1,3 +1,116 @@
+2022.194.120 @ 2026-11-23:   (covers .106 - .120, the version each item landed in is in brackets)
+
+   NEW:       ACTION "Send a BEEP to a shelly BLU button" (.120) - the buzzer from a trigger, a schedule,
+              an action group or a control page, where before it needed somebody to open the device dialog.
+              The rPi is picked automatically: the CLOSEST one that is also PAIRED, re-decided on every run,
+              so carrying the button to another room needs no change. Only paired rPis are offered in the
+              menu - no other one can connect to the device - and each line says whether it is hearing the
+              button right now. An rPi named by hand that is not paired is overridden with one that is, and
+              the substitution is logged. Beep length 0.3 - 30 s (the button stops its buzzer itself at
+              30 s); an rPi still on older programs ignores the length and buzzes 1 s.
+   NEW:       WS90 WEATHER STATION "powered by shelly": device type BLE-Shelly WS90 (.113), read from its
+              plain BTHome v2 broadcast - wind speed and gust, direction, rain, UV index, dewpoint,
+              illuminance, temperature, humidity, pressure. The station splits one reading over two
+              advertisements; they are merged into ONE message to the plugin (checkIfDelaySend, mergeOnly)
+              rather than being sent as two, and the trigger reasons add up. No timer and no completeness
+              test: both frames arrive milliseconds apart and land in the same read cycle by themselves,
+              and if one is lost the other still goes out at the next flush.
+              STILL UNVERIFIED against a real frame: the advertised-name matcher (SBWS prefix) and which of
+              the two speed values is the gust.
+   NEW:       REPORT CONTROL ON ALL 5 DISTANCE SENSORS (.111) - ultrasound, vl53l0x, vl53l1x, vl6180x,
+              vcnl4010, one shared implementation. Four knobs, in order of precedence:
+              no report more often than 1-10 s (default 5) - this wins over everything;
+              report at least every 10-120 s (default 90);
+              report a change of 1-10 % (default 5) AND of 1-30 cm (default 10), so a 1 cm wobble at 2 cm
+              distance is ignored while the same 1 cm at 2 m is not. vl6180x measures in mm and reaches
+              only 25.5 cm, so its absolute default is 2 cm.
+   NEW:       the hciN device state names the dongle (.119): mac/bus/MAKER PRODUCT/up/capability/role/vid:pid
+              eg  58:11:22:53:8C:D5/USB/ASUS USB-BT500/UP/BLE4+5/scan4+5/0b05:190e
+              "33fa:0012" said nothing to anybody, so the maker and product name read out of sysfs took its
+              place and the usb id moved to the end; a UART radio reads "onboard". The radio-pin menu labels
+              each row with the product name too. An rPi still running older programs keeps sending the old
+              6-field layout and is read transparently.
+
+   CHANGED:   SHELLY BLU PAIRING IS NOW THE SAME GESTURE ON BOTH GENERATIONS (.106, .107): next to the rPi
+              hold the button about 4 s and LET GO - that arms the rPi - then the 4 fast clicks straight
+              after. The older BLU Button 1 is unchanged: the 10 s hold alone, no clicks. So the common half
+              is "hold it", and shellyArmHoldSecs is one constant that every message follows.
+              Measured on a Button Tough: the 4 clicks open the DEVICE's pairing window and are not in its
+              advertisement at all - the packetId advances but no button object is sent - so the clicks can
+              never arm an rPi and nothing can count them. The hold has to do the arming.
+   CHANGED:   RADIO ROLES: THE UART RADIO KEEPS BROADCAST, BLEconnect AND iphone CONTACT, and the scanning
+              goes to another radio (.110). Only if that absolutely cannot work is the rule broken, and if
+              it worked before the change is a WARNING, not a silent switch. The reason is bluez: pairing
+              keys are stored per adapter, so moving the connect role to a different radio orphans every
+              shelly pairing on that rPi - the keys are now counted before the role is moved. A BLE5-only
+              dongle is never given the connect role.
+   CHANGED:   RADIO ROLE PINS ARE STORED PER RADIO MAC, NOT PER hci SLOT (.112, .118). hciN is only the
+              number the kernel handed out at boot: re-plug a dongle, add or remove one, or just reboot, and
+              the same name can belong to different hardware - so a pin stayed with the socket and the role
+              flipped to another radio (seen on rPi 11, where the pin read hci0 = internal and resolved to a
+              dongle later). Everything else in the radio code already followed the mac. Pins stored by the
+              older versions are still honoured, applied to whatever holds that slot now, and saving the
+              dialog once converts that rPi's pins to the per-radio form and retires the old ones.
+              The broadcast radio also keeps its identity across a renumbering, on every rPi, so the rPi's
+              BLE-MAC - which is the broadcast radio's - does not change under the plugin.
+   CHANGED:   THE RADIO-ROLE LOG MESSAGES WERE REWRITTEN (.114 - .117): one message per rPi instead of one
+              paragraph per pin, the pin modes and role flags are translated into the dialog's own wording
+              instead of printing raw internals, "a radio is gone" looks the mac up in the same message and
+              says which slot it moved to instead of speculating, and each line is logged once per actual
+              change rather than once per message that arrives before the state is flushed.
+
+   FIXES:     THE rPi MENU OF EVERY GPIO INPUT DEVICE WAS EMPTY (.120) - it offered nothing but "off", so no
+              GPIO input device could be assigned to an rPi at all. GPIO OUTPUT was never affected, it uses
+              a different list. The 12 dialogs concerned - INPUT-GPIO max 1/4/8/26 pins, INPUT-pulse, the 2
+              rotary switches and 5 more - carry filter="" because they used to call filterPiI, which
+              ignored the filter; when they were switched to filterPiD, which reads it, the list collapsed
+              to the trailing entry. The xml now says filter="blue,sensor", AND an empty or unrecognised
+              filter means "both lists" instead of "neither", so a missing filter can never empty one of
+              these menus again.
+              Same cause, same fix: "Debug...which RPI" in the plugin config and the rPi field of the
+              "Calibration of sensors" action.
+   FIXES:     the 5 "select the iBeacon.." menus of the CAR device (battery / USB / key 1-3) were empty
+              (.120): filterBeacons built its list and never returned it. The ids are strings now too, so
+              the dialog can pre-select what is already stored, and the "delete" entry no longer makes
+              readCARS warn "please remove beacon ID:0" on every read.
+   FIXES:     "Set relay (switchbot) to on/off or pulses" threw an error every time such an action dialog
+              was opened (.108): dynamicCallbackSetSwitchbotactionsFields() takes 2 positional arguments but
+              4 were given. refreshCallbackMethod is a hidden textfield, so a value stored in an action's
+              props overrides the current xml default - 5 saved actions still carried the name of a method
+              that was later given the plain signature. It takes the dialog signature again.
+              An audit of every other config-UI callback found one more that had always raised the same way
+              (the CONFIRM button of a switchbot device-id dialog) and one latent case; both fixed.
+   FIXES:     a ServerCommunicationError timeout while building the parameters file silently dropped EVERY
+              device of one sensor type from what was sent to that rPi (.109). The build now abandons
+              cleanly and says so instead of writing an incomplete file. The call that timed out was
+              handing indigo back the same props it had just read - once per enabled sensor device, per rPi,
+              on every build - and is skipped when nothing changed.
+   FIXES:     the distance dialogs' "no report more often than" setting never reached the rPi (.111) -
+              minSendSecs was missing from the list of parameters sent, so the 10/30/60 s and "no limit"
+              choices did nothing at all.
+   FIXES:     two sensor frames from the same device arriving before a flush: the second REPLACED the first
+              whole, taking every field the second did not carry (.113). Fields are merged one by one now.
+              Harmless while every frame of a device carried the same fields - fatal for a device that
+              splits one reading over two frames, like the WS90.
+   FIXES:     an ENCRYPTED BTHome broadcast was decoded as if it were plain data, producing nonsense states
+              (.113). The device-info byte is checked; an encrypted device is reported once an hour with a
+              line saying piBeacon has no key support, and nothing is decoded.
+
+2022.194.112 @ 2026-11-16:
+   NEW:       device tags (Indigo 2026.1 / API 3.9, deviceTags.py): new plugin-config section "== Device tags =="
+              with checkbox "Add a tag to all devices of this plugin" (tagsEnabled), a tag name (tagName,
+              default "pibeacon") and a color menu (tagColor, default blue). When enabled, every plugin device
+              gets the tag at device start and all devices get it when the config is saved; the tag is created
+              in the Indigo tag library if missing and its color set/kept. The plugin never removes a tag.
+              Silently inactive on Indigo older than 2026.1. shared module across the author's plugins.
+   NEW:       option "statistics states into the SQL logger": plugin config checkbox "do not write statistics states into the SQL logger"
+              (default off = no change) and in every device edit "default (as set in plugin config) / not written / written".
+              statistics states = min / max / ave today / yesterday (+ At), measurements, today, yesterday, day-x, this / last week,
+              month, year, switchpoints (At0). they are put into / taken out of the device's sqlLoggerIgnoreStates, other entries stay.
+              applied at device start, after the device edit is saved and when the plugin config default changes (statsSqlIgnore.py)
+   CHANGED:   switching SQL logging of devices on / off adds / removes only the plugin's own entries of
+              sqlLoggerIgnoreStates (it cleared the whole list before)
+
 SINCE v2022.194.23 - in short:
    NEW:       Shelly BLU button can be PAIRED to an rPi and BEEPED from indigo - hold the
               button next to the rPi past 10 s, it beeps when it worked. Per rPi (several
@@ -24,6 +137,318 @@ SINCE v2022.194.4 - in short:
               Apple Find My tags, report state+props tables per rpi
 
 
+
+v2022.194.105
+   docs, from measurement on a real RC Button 4: a HOLD IS NOT USABLE on these models.
+   The hold event is only broadcast when the button is RELEASED after roughly 2-3 s, and
+   holding it longer - exactly what "hold past 10 s" asks for - produces no advertisement
+   at all, so the rPi never hears it and nothing can arm. The device also picks its own
+   code: of 15 holds in one session 13 arrived as hold_press, one as long_press and one as
+   long_double_press (so 0x04 and 0x05 DO occur on these units, contrary to an earlier
+   note). All of them arm, so the code is irrelevant - the timing is what defeats it.
+   The dialog now says four clicks are the only gesture worth using on these models, with
+   a quick double press right after the clicks as the fallback: the clicks open the
+   pairing window on the device, the double press arms the rPi (and double_press arms on
+   .102 already, so that combination needs no program push).
+   The 10 s hold is still the gesture for the older BLU Button 1 (SBBT-002C).
+
+v2022.194.104
+   an EMPTY findMAC list from the plugin no longer clears a hand-set one. Editing the
+   findMAC literal at the bottom of beaconloop.py and restarting is the way to trace ONE
+   rPi - the plugin's list is global, so using it for a chatty device prints on every rPi
+   in the house - and since .98 the first parameter read (within ~8 s) replaced the
+   hand-set list with the plugin's empty one, so the edit looked like it did nothing. The
+   plugin can still switch tracing on and off: once it has sent a non-empty list it owns
+   the list, and a later empty one clears it.
+
+v2022.194.103
+   FOUR CLICKS NOW ARM A PAIRING. The shelly phone app asks for 4 presses of any button
+   on both the BLU RC Button 4 (SBBT-104C..) and the Button Tough (SBBT-102C), and until
+   now a plain press armed nothing at all - only double_press / long_press / hold_press /
+   button_hold did - so the gesture the vendor documents did nothing here. BTHome has no
+   code for four presses (the button event stops at triple), so they arrive as four
+   separate press events and are COUNTED per mac: 4 inside 6 s, rssi past -65, on a
+   connectable advertisement. Any of the four buttons counts and they may be different
+   ones. A 5th click cannot re-arm (the count is consumed), and the 10s hold still works
+   everywhere, so either gesture pairs.
+   every outcome line now names what was actually done ("4 clicks" / "hold_press") and
+   the "already paired" notice is reachable from a 4-click gesture too - it tested only
+   the hold codes, so clicking four times at an already-paired rPi answered nothing.
+   the device dialog said four clicks do NOT arm the rPi and to use the two-button hold
+   instead. That was wrong for these models; it now leads with the four clicks.
+
+v2022.194.102
+   FIX, from real Button Tough frames: its SHORT idle advertisement carries TWO BTHome
+   device-info bytes - "40 44 00 <packetId>" - and only the first was skipped, so the walk
+   began on the second and read 0x44 as an object id. 0x44 is speed, 2 bytes, so every
+   idle frame decoded as a speed in m/s made out of the packet id ("40 44 00 1F" ->
+   79.36 m/s) - and since the value follows the packet id it CHANGED every frame, so each
+   one passed the "something changed" test and sent a message to indigo. That device
+   advertises 80 msgs/10s with a third of them this shape. A second device-info byte is
+   now skipped when the byte after it is 00 (the packet id, the lowest object id, which
+   the spec's ascending order puts first) - so a genuine 0x40-0x47 object is not eaten.
+   Those frames now decode as packetId only, which the duplicate-packetId test drops.
+   FIX: the NAME matcher ignored the X wildcard although the docstring has always said it
+   honours one, and the hex matcher always has. Matchers are AND-ed, so a second NAME
+   entry cannot mean "either" - which left the Button Tough (SBBT-102C) with no tag while
+   SBBT-002C had one. ShellyButton now matches "SBBT-X02C" and covers both 1-button
+   models; SBBT-104C still goes to ShellyButton4. Verified against all six shelly names.
+   triple_press, hold_press (0x80), press and double_press all confirmed against the real
+   frames of C0:2C:ED:49:8F:29.
+
+v2022.194.101
+   an auto-created device now logs HOW STRONG the signal was and WHICH rule let it in.
+   The accept rules are an OR: "Accept new iBeacons of type: X" admits a matching tag at
+   ANY distance and does not consult the minimum-signal setting at all - so a shelly BLU
+   button carried or driven past the house created a device at -79/-88/-96 dBm while the
+   minimum signal read 999, which means accept nothing. The signal is the one number that
+   separates "mine" from "a passer-by", and it was not printed anywhere; reconstructing it
+   meant digging in the beacons file. The line also names the setting to turn off.
+
+v2022.194.100
+   five messages still told the user to "use relink in the device dialog" - and there is
+   no relink button: the "pair this rPi" button went in .70, because somebody still had
+   to walk over and hold the button, which is the part that cannot be skipped. They now
+   say what actually works: unpair here, then hold the button next to that rPi past 10s.
+   The one-sided-pairing message ("no characteristics at all") and the connect-FAILED
+   message say it too, and the latter now also names a FULL BOND SLOT as a cause - a BLU
+   keeps only a few, an unpair here does not free the button's side, and when they are
+   gone only a factory reset of the button will.
+
+v2022.194.99
+   the BLE4 scan role is judged against the BEST radio on that rpi now, at 60% (was 65%
+   of the UNION of what all radios heard). The union is not a reachable target: it counts
+   every mac ANY radio caught, so even the best radio scores well under 100% and the bar
+   moves with how many dongles are plugged in and how lucky each one was that minute.
+   Measured on rpi 5, two runs minutes apart on identical hardware: against the union its
+   Broadcom scored 64.9% then 65.9%, straddling the old bar, so the same radio changed
+   role between runs. Against the best radio it is 70.6% and 71.1% - same radio, same
+   answer, which is the point. The best radio is 100% by definition and every other one is
+   scored on what it would actually deliver if it took the scan role. The printed coverage
+   section still shows the union; only the verdict changed, and it says which it used.
+
+v2022.194.98
+   FIX: the dongle-qualification CONNECT TEST never ran, whatever was typed in the menu.
+   receiveCommands parsed the mac and the attempt count out of the menu parameters, and
+   even logged "connect test to <mac> x<n>", but the command it then built forwarded only
+   the seconds - so qualifyDongle always ran without connect= and the connect role of
+   every radio stayed an inference from the ACL MTU. It now appends
+   "connect=<MAC> tries=<N>" as the tool documents. Found while chasing why rpi 5 cannot
+   beep a shelly: the connect role is exactly what a beep depends on, and on rpi 5 that
+   role sits on a radio whose connect ability has never once been measured.
+
+v2022.194.97
+   qualifyDongle printed the scan-coverage verdict with no decimals, so a NEAR MISS read
+   as a contradiction: rpi 5's Broadcom measured 24/37 = 64.86% and the line said
+   "= 65% (need 65%)", which looks like a broken comparison rather than a miss by 0.14 of
+   a point. One decimal now, and it also says how many more macs would pass ("1 more mac
+   would pass") - because that is the actionable part: one extra mac heard and the dongle
+   takes the scan role, which frees the internal radio for BLEconnect.
+
+v2022.194.96
+   BLEconnect now says at startup when shelly pairing KEYS SIT ON A RADIO IT IS NOT
+   USING. The radio roles are picked fresh at every start (scan takes the best receiver,
+   connect gets what is left and prefers the internal one), so a dongle appearing,
+   disappearing or being renumbered moves the connect role - and bluez keeps the keys per
+   ADAPTER. The pairing is then intact in a directory nobody reads: link test says NO
+   PAIRING, beeps never work, nothing says why. It now names both radio addresses and the
+   two ways out (pin the role back, or re-pair on the radio in use), once per run.
+   This is the failure that cost rpi 11 three pairings on 11-08.
+
+v2022.194.95
+   the shelly link test no longer claims "the device is not on air just now" when a
+   connect fails - the rPi cannot tell: a failed connect says nothing about whether the
+   device is advertising, and the guess was wrong every time the button sat right next to
+   the rPi. The plugin appends what it alone knows, from Pi_nn_Time: "[plugin: rPi#5 in
+   reach, -46 dBm, 12 s ago]" or "NOT heard for 2.3 h". That separates the three real
+   causes - out of range / keys no longer honoured / a radio that cannot hold an
+   authenticated connection - and the rPi's own text now names the radio option too.
+
+v2022.194.94
+   version bump only - reload the .92/.93 changes into indigo.
+
+v2022.194.93
+   NEW: SHELLY PAIRINGS SURVIVE AN SD CARD REPLACEMENT. /var/lib/bluetooth is on the
+   card, so replacing it used to lose every pairing an rPi held, and each one could only
+   be remade by standing next to the button and holding it past 10s - one at a time, 90s
+   apart. The rPi now sends the bluez info file (which IS the pairing: its key sections
+   are what the device checks) with every pair/test/unpair report, plus a one-off sweep
+   of the pairings it already holds at BLEconnect start, so pairings made before this
+   build are protected too. The plugin keeps them in <prefs>/shellyBonds.json, keyed by
+   device and then by RADIO, and offers each rPi its own back in the parameters file.
+   BLEconnect writes them, restarts bluetooth so bluez re-reads the bond table and exits
+   for master.py to relaunch it. An sd card swap is a config push now, not a walk round
+   the house. LIMITS, both deliberate: the adapter mac has to match, because a key is
+   stored against the central's identity address and the device refuses it from any other
+   radio; and an unpair DROPS the stored copy, or the next config push would hand the
+   keys straight back and undo the unpair. A restored pairing is written, not proven -
+   use "test this rPi's link" to confirm it connects, and the message says so.
+   backups are kept only for macs that have a shelly button device here, so a radio
+   bonded to something unrelated is neither stored nor warned about.
+   FIX: tag Minew_Acc had no correspondingSensorType, so a Minew xyz-accel beacon was
+   recognised but never got its BLEminewAcc sensor device - it fell out of the "is a new
+   sensor device needed" test before reaching it.
+   the setup help now ends with a GENERATED list of every tag the plugin knows, what
+   device it creates and whether it can beep. beaconTypes.txt and BLE-sensorTypes.txt
+   are hand-written and had fallen behind - neither mentions shelly, ruuvi air, find my,
+   thermopro or tempspike. The generated part cannot fall behind; the files stay for the
+   form factor / battery / app notes, which are not in the json.
+
+v2022.194.92
+   NEW: 4-BUTTON SHELLY SUPPORT (BLU RC Button 4 / Wall Switch 4, SBBT-104C..). BTHome
+   repeats object 3A once per button at a fixed position, all four in every packet, 00
+   for the ones that did nothing - and itemsValues is keyed by NAME, so all four used to
+   collapse onto one "button" and the LAST one won. The last button is idle in almost
+   every frame, so such a device reported NO presses at all. Repeated objects are now
+   indexed: button, button2, button3, button4 (occurrence 1 keeps the plain name, so
+   every 1-button device, its states and its triggers are untouched). Generic - the spec
+   allows it for sensors too, eg temp + temp2.
+   new tag entry ShellyButton4, NAME match SBBT-104C with no lenBytes, and two new
+   states on BLEShellyButton: buttonNumber (which button fired) and buttonsPressed
+   ("1,3" when several did). The event code stays in currentEventType as before.
+   the pairing gesture now looks at ALL FOUR: a 4-button shelly enters pairing mode on a
+   10s hold of ANY TWO buttons, which arrives as eg button2+button3 with "button" itself
+   at None - reading only the first one would never have armed the rPi on exactly the
+   devices that need it. A hold wins over a press in the same frame.
+   every button is reset after a send, not just the first, or the same code pressed again
+   looked unchanged and never triggered. The trigger string names all changed values now
+   ("button/button3"), but still REPLACES a "Time" trigger rather than appending to it -
+   checkIfDelaySend buffers anything containing "time", so a press must not read as
+   "Time/button" or it would wait for the next batch instead of going out at once.
+   tripple_press -> triple_press, as the spec and shelly both spell it. It is the
+   decoded value, so an indigo trigger matching the old literal has to be changed too.
+   findMAC (the per-mac raw-frame trace every rPi decoder has) is no longer hardcoded in
+   beaconloop.py: it follows the plugin's "log one beacon" menu, so switching that on now
+   traces both halves - what the rPi decoded and what the plugin did with it.
+
+v2022.194.91
+   shellyTagToProperty holds the COMPLETE published BTHome v2 set now, 95 object ids
+   (was 31): all numeric sensors, all 28 binary sensors, the command and dimmer events,
+   device type id, firmware version, timestamp, text and raw. An unknown id has no known
+   length, so the walk could only step 1 byte and then read a VALUE as the next id and
+   the rest of that frame decoded into nonsense - completeness is what prevents it.
+   WRONG ROWS CORRECTED against the spec: temp 02 is 2 bytes not 3, illuminance 05 is
+   x0.01 not x0.001 (10x too low), CO2 12 is x1 not x0.1 (10x too low), pm2.5 0D and
+   pm10 0E are 2 bytes not 3, dewpoint 08 is SIGNED, tvoc is id 13 - id 44 is speed,
+   pressure is id 04 - the commented-out alternates had it as 03, and distance 40/41
+   had a trailing space in the name.
+   signedintfromhexR subtracted 2**(n*8-1)+2 instead of 2**(n*8), so EVERY negative
+   value read as a large positive one: FFFF gave +32765, not -1. A shelly H+T at -1 C
+   was reporting +326.7 C. Only the shelly decoder uses it.
+   decoder additions: value-dependent length (the steps byte of command/dimmer),
+   variable length (text 53 / raw 54, length byte first) and the dotted firmware
+   version (F1/F2). The dimmer is an event code + dimmerSteps now, not a signed int.
+
+v2022.194.90
+   the shelly device dialog now says the 90s rule outright - one button at a time, wait
+   for its result line in the indigo log before holding the next - in the green header
+   and in the 'how to', incl. the 150s per-button cooldown after a pairing HAS worked.
+   both rPi menus (beep menu and the test/unpair one in the device dialog) now say
+   whether each rPi is HEARING the button right now, e.g. 'rPi 11 (paired) - in reach,
+   -41 dBm, 12 s ago' or 'NOT heard for 2.3 h'. Paired but out of range is the commonest
+   way for a beep or a link test to fail and from the dialog it looked identical to a
+   dead pairing.
+
+v2022.194.89
+   holding several shelly buttons in quick succession silently failed for all but the
+   first: bond jobs run one at a time and one owns the radio for up to 90s, by which
+   time the other buttons' own ~1 minute pairing windows had shut. A gesture arriving
+   while a job is in flight is now answered with 'this rPi is busy, do them ONE at a
+   time' and costs no cooldown, and the failure line names that cause.
+
+v2022.194.88
+   a shelly pairing made on one radio of an rPi, found later from another, was reported
+   as 'NO PAIRING' - it is in a per-adapter directory nobody reads once the connect role
+   moves (a usb reset renumbers dongles). The link test and unpair now scan the rPi's
+   other adapters and name the radio that really holds the keys, with both ways out.
+   The old advice in that message pointed at the 'pair this rPi' button removed in .70.
+
+v2022.194.87
+   the shelly device dialog and the beep rPi list read the paired set from memory only,
+   so right after a plugin start they said 'not paired' for every rPi - and the beep
+   list 'none is paired' - while bondedToRPI in the device held the truth. They now fall
+   back to that state until the rPis have reported in this run.
+
+v2022.194.86
+   FIX: a shelly button's paired rPis were forgotten on every plugin reload. The set
+   lived in memory only, so the first rPi to report afterwards rewrote bondedToRPI to
+   just itself - an rPi that had really paired but cannot hear that button never got
+   back in. It is now seeded from the device state on the first message after a start.
+
+v2022.194.85
+   the received signal Pi_nn_Signal follows the same rule: written only when it moves
+   more than 6 dBm from the value the state holds. closestRPI and the distance
+   calculation are unaffected - both read the in-memory signal, which is still updated
+   on every message. Pi_nn_Distance is NOT gated yet, it still follows every message.
+
+v2022.194.84
+   TxPowerReceived is written only when it moves more than 6 dBm away from the stored
+   value - absolute now, for every device type. Replaces the 10%-or-every-5-minutes
+   rule, which was 2.5 dB at one end of the range and 8.5 at the other and wrote once
+   every 5 min per device even when nothing had changed. A slow drift still lands: the
+   test is always against the STORED state, so it reports once it passes 6 dB.
+
+v2022.194.83  @ 2026-11-09
+   FIX: THE ULTRASOUND RATE CAP NOW APPLIES BY ITSELF - .80 added it to the rpi program but
+       defaulted it to 0 = no limit, which meant it did nothing for exactly the sensors that
+       needed it: the ones already running. A device whose dialog has not been saved since the
+       setting existed carries no minSendSecs at all, so every one of them kept reporting on
+       almost every measurement and the plugin kept getting 30+ messages a minute from it.
+       The rpi program now has its own default (minSendDefault = 5 s) and uses it whenever the
+       device config has no value of its own. An explicit 0 from the dialog still means no limit,
+       because that is the user asking for it; the dialog's own default moved to 5 s to match, so
+       saving a device does not silently switch the floor back off.
+       Nothing else changed about it: the reading still has to pass both delta tests, lastDist is
+       still only updated on a real report so the next one carries the full change, and the 55 s
+       keep-alive and the distance/region EVENTS are still never delayed. 34 reports a minute
+       becomes 12.
+       Each device also logs its effective cap when the config is read, so "what is this sensor
+       actually doing" is answerable from the rpi log without working it out from the props.
+
+v2022.194.82  @ 2026-11-09
+   FIX: TxPowerReceived IS WRITTEN ON A 10% / 5 MINUTE RULE NOW, not on every message that moves
+       it. It is ~constant per beacon - the beacon advertises its calibrated power and what
+       differs between messages is measurement jitter - and it was gated on an ABSOLUTE delta of
+       5 dB, which is the wrong shape: the plausible span runs from about -20 to -90 dBm, so 5 dB
+       is a quarter of the value at one end and a twentieth at the other. Jitter at the far end
+       went on writing.
+       Now: write when it moved by more than 10% of the value being held (about 6 dB on a typical
+       -59), or when nothing has been written for 5 minutes - the second one lets a slow drift
+       land eventually and is what puts a value on a device that has none yet.
+       One rule in one place (txPowerWorthWriting) feeding all three write sites, which had three
+       copies of the old test between them. The 5-minute clock is per device and in memory, so
+       after a plugin reload the first message per beacon writes once, which is wanted anyway.
+
+v2022.194.81  @ 2026-11-09
+   REMOVED: the state "measuredNumber" is gone from the three distance devices that had it -
+       ultrasound, vcnl4010 and vl6180x. It carried `raw`, which is the same number distanceRaw
+       already carries in any configuration without cutMin/cutMax, so it was a second copy of the
+       same reading written on every single report. One of the 7 writes per report on a device
+       that was doing 34 reports a minute.
+       Both halves are gone, not just the write: the <State> declaration was dropped from all
+       three device types as well, rather than leaving a state that exists and never updates.
+       WORTH KNOWING BEFORE UPGRADING: a trigger or control page element that refers to
+       measuredNumber on one of those devices has to be pointed at distanceRaw instead - the state
+       disappears when indigo next rebuilds the device's state list.
+
+v2022.194.80  @ 2026-11-09
+   NEW: AN ULTRASOUND SENSOR CAN BE RATE LIMITED - "but not more often than" in its device dialog
+       (minSendSecs, default 0 = off = unchanged). The two existing settings decide whether the
+       distance MOVED; neither of them says anything about how OFTEN, so a sensor watching
+       something that really is moving reports on nearly every measurement. Measured with the
+       utilities plugin's state-change report: s-10-ultrasound-13/6 at 34 reports a minute, and
+       every report writes SEVEN states on that device - distance, distanceRaw, measuredNumber,
+       sensorValue, status, speed, lastSensorChange - so one sensor was producing about 14,000
+       state writes an hour, the top 7 entries in the whole ranking.
+       The cap goes under the thresholds, not instead of them: a reading still has to pass both
+       delta tests, it just is not reported again this soon, and because lastDist is only updated
+       on a real send the next report still carries the FULL change since the last one (and speed
+       becomes the average over that interval, which is more honest than over one measurement).
+       NOT delayed by it, deliberately: the 55 s keep-alive, the quick flag, and the distance /
+       region EVENTS. The keep-alive is what stops the device going stale and the events are what
+       actions are built on - capping either would change behaviour rather than just the rate.
+       At 10 s the sensor above drops from 34 reports/min to 6, i.e. ~2400 state writes an hour
+       instead of ~14,000, with no change to what any trigger sees.
 
 v2022.194.79  @ 2026-11-07
    NEW: "test this rPi's link AND BEEP the button" beside the silent test in the shelly button

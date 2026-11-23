@@ -30,6 +30,16 @@ minutes in between, every rPi is still sending the old format and none of its me
 parsed: the plugin says so at info level, naming the rPi, and does not count it as an error for the
 first 3 minutes.
 
+## Device tags (Indigo 2026.1)
+
+On Indigo **2026.1 (API 3.9) or newer**, the plugin config has a **== Device tags ==** section that can tag every device this plugin owns, so they are easy to find and filter in Indigo.
+
+- **Add a tag to all devices of this plugin** (`tagsEnabled`) — when on, each device gets the tag at device start, and all devices get it when you save the config dialog.
+- **Name of the tag** (`tagName`) — default `pibeacon`.
+- **Color of the tag** (`tagColor`) — default **blue**; the plugin sets the tag to this color in the Indigo tag library and keeps it there.
+
+The tag is created in the Indigo tag library if it does not exist. The plugin only ever *adds* its tag and sets the color — it never removes a tag, so after a rename the old tag stays on the devices until you delete it in Indigo. On older Indigo versions the feature is silently inactive. (Shared `deviceTags.py` module, common to the author's plugins.)
+
 ## How the communication works
 
 ```

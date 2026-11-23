@@ -877,7 +877,15 @@ def runQualifyDongle(params):
 		# stop=no: WE stopped piBeacon above and WE restart it in the finally below. Without it the
 		# tool would restart master.sh when it finishes, master.py would wipe temp/ on startup, and
 		# temp/qualifyDongle.json would be gone before the lines below could read it.
+		# THE CONNECT TEST HAS TO BE PASSED ON. The menu's mac and tries were parsed above and even
+		# logged ("connect test to .. x.."), and then never reached the tool: this line only ever
+		# forwarded secs, so qualifyDongle ran without connect= and the connect role of every
+		# radio stayed a guess from the ACL MTU. Measured on rpi 5, 2026-11-10: two runs launched
+		# with a mac in the dialog, both reporting "will run: qualifyDongle.py 10", neither
+		# producing a single connect verdict - and the connect role is exactly what a shelly beep
+		# depends on. qualifyDongle takes them as "connect=<MAC>" and "tries=N" (see its header).
 		cmd = "sudo python3 -u {}qualifyDongle.py {} catalogue=none stop=no".format(G.homeDir, secs)
+		if mac != "":	cmd += " connect={} tries={}".format(mac, tries)
 		if mac != "":	cmd += " connect={} tries={}".format(mac, tries)
 		U.logger.log(20, "qualifyDongle: running: {} > {} 2>&1".format(cmd, outFile))
 		proc = subprocess.Popen("{} > {} 2>&1".format(cmd, outFile), shell=True)

@@ -69,6 +69,12 @@ version = 2.3
 # ===========================================================================
 
 #################################		
+# THE FOUR REPORT KNOBS AND WHAT THEY MEAN live in piBeaconUtils (distReportParams) - all five
+# distance sensors share them, so they are defined once there rather than five times here.
+minSendSecs		= {}		# devId -> the floor, secs
+sendEverySecs	= {}		# devId -> the keep-alive, secs
+
+
 def readParams():
 	"""Reads the latest sensor configuration via U.doRead, updates module globals (sensors, output, distanceUnits, deltaDist thresholds, display settings), starts/stops GPIO or PIGPIO trigger/echo pins when the sensor config changes, and exits if this ultrasound sensor is no longer enabled.
 
@@ -150,11 +156,10 @@ def readParams():
 			except: pass
 
 
-			try:	deltaDist[devId] = float(sensors[sensor][devId].get("deltaDist",10))/100. # its in %
-			except: deltaDist[devId] = 0.1
-
-			try:	deltaDistAbs[devId] = float(sensors[sensor][devId].get("deltaDistAbs",10)) # its in cm 
-			except: deltaDistAbs[devId] = 10.
+			# THE FOUR REPORT KNOBS - this sensor measures in CENTIMETRES, so cmFactor is 1.
+			deltaDist[devId], deltaDistAbs[devId], minSendSecs[devId], sendEverySecs[devId] = U.distReportParams(sensors[sensor][devId])
+			U.logger.log(20, "devId:{} reports at most every {:.0f}s, at least every {:.0f}s, in between only when BOTH >{:.1f}cm and >{:.0f}% - an explicit read-now and the distance/region events are never delayed".format(
+						devId, minSendSecs[devId], sendEverySecs[devId], deltaDistAbs[devId], deltaDist[devId]*100.))
 
 			try:
 				if "units" in sensors[sensor][devId]:
@@ -439,7 +444,10 @@ def execMain():
 	quick						= False
 	mode						= 0
 	output						= {}
-	sendEvery					= 55. # send at least every xx secs msg to indigo even if no trigger
+	# THE PER-DEVICE REPORT KNOBS LIVE IN THESE DICTS, filled by readParams (the fixed 55 s
+	# keep-alive that used to sit here is now sendMSGEverySecs, 10-120 s, default 90). Created
+	# here as well so that a readParams which throws on its very first call cannot leave the
+	# main loop reading a name that does not exist yet.
 	U.setLogging()
 	
 	U.logger.log(20,"{} version:{} started with use GPIO:{}, backend:{}".format(G.program, version, useGPIO,
@@ -508,8 +516,28 @@ def execMain():
 	
 					trigDD 	= deltaN > deltaDist[devId]
 					trigDDa	= deltaA > deltaDistAbs[devId]
-					trigDT	= tt - sendEvery > lastTime[devId] 
+					trigDT	= tt - sendEverySecs.get(devId, U.distHeartbeatDefault) > lastTime[devId]
 					trigQi	= quick
+					# A FLOOR UNDER THE SEND RATE. The two delta tests above say whether the
+					# distance MOVED; neither says anything about how OFTEN. So a sensor watching
+					# something that really is moving sends on nearly every measurement - one
+					# device measured 34 messages a minute, and each message writes 7 device states
+					# in indigo (distance, distanceRaw, sensorValue, status, speed and
+					# lastSensorChange), which was about 14,000 state writes an hour from one
+					# sensor. minSendSecs puts a floor under the interval WITHOUT touching the
+					# thresholds: the reading still has to pass both of them, it just cannot be
+					# sent again this soon, and because lastDist is only updated on a real send the
+					# next one still reports the full change since the last report.
+					# THE FLOOR COMES FIRST, INCLUDING OVER THE KEEP-ALIVE: "no reports closer
+					# together than this" is the whole point of the setting, and with the floor at
+					# most 10 s and the keep-alive at least 10 s the two can only ever collide when
+					# both are set to 10. NOT CAPPED, DELIBERATELY: the quick flag (an explicit
+					# read-now from the plugin) and the region/distance EVENTS, which is what
+					# actions are built on - delaying either would change behaviour, not the rate.
+					if minSendSecs.get(devId, 0.) > 0. and (tt - lastTime[devId]) < minSendSecs[devId]:
+						trigDD  = False
+						trigDDa = False
+						trigDT  = False
 					#U.logger.log(20,"devId:{}, dist:{}, deltaA:{:.2}, deltaDistAbs:{}, deltaN:{:.2}, deltaDist:{} trDD:{}, DDa:{}".format(devId, dist, deltaA, deltaDistAbs[devId], deltaN, deltaDist[devId], trigDD, trigDDa))
 					if ( trigDD and trigDDa ) or trigDT or trigQi or regionEvents[2]: 
 								trig = ""

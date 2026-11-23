@@ -3982,6 +3982,50 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 
 
 
+    <Action id="beepShelly">
+		<Name>Send a BEEP to a shelly BLU button</Name>
+		<CallbackMethod>beepShellyCALLBACKaction</CallbackMethod>
+		<ConfigUI>
+			<Field id="infoLabelShellyBeep" type="label">
+				<Label>Buzzes a shelly BLU button - to find it, or as a confirmation from a trigger or a schedule.
+The button has to be PAIRED to at least one rPi: the buzzer is write-protected, so only an rPi that holds the pairing keys can reach it. Pair it in the button's own device dialog.
+No button press is needed. The rPi connects on one of the advertisements the button sends anyway; pressing it only brings the next one forward, so a beep can take a few seconds.
+The result is written to the indigo log - an action dialog has nowhere to show it.</Label>
+			</Field>
+
+			<Field id="shellyBeepDev" type="menu" defaultValue="-1">
+				<Label>shelly button to beep:</Label>
+				<List class="self" filter="" method="filterShellyBeepDevices" dynamicReload="false"/>
+			</Field>
+
+			<Field id="shellyPickRPI" type="menu" defaultValue="-1" tooltip="auto picks the closest rPi that is paired to this button - which is what you want unless you are testing one particular rPi">
+				<Label>rPi that sends the beep:</Label>
+				<List class="self" filter="" method="filterShellyBeepRPIs" dynamicReload="true"/>
+			</Field>
+
+			<Field id="beepSecs" type="menu" defaultValue="1">
+				<Label>beep for:</Label>
+				<List>
+					<Option value="0.3">0.3 sec - short chirp</Option>
+					<Option value="1"  >1 sec</Option>
+					<Option value="2"  >2 sec</Option>
+					<Option value="3"  >3 sec</Option>
+					<Option value="5"  >5 sec</Option>
+					<Option value="10" >10 sec</Option>
+					<Option value="20" >20 sec</Option>
+					<Option value="30" >30 sec - the button stops the buzzer itself at 30 sec</Option>
+				</List>
+			</Field>
+
+			<Field id="labelShellyBeepRPI" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>"auto" is re-decided every time the action runs, so carrying the button to another
+room needs no change here. A named rPi that is not paired to the button is
+overridden with a paired one and the substitution is logged.</Label>
+			</Field>
+		</ConfigUI>
+    </Action>
+
+
     <Action id="newCalibration">
 		<Name>Calibration of sensors on  rPi sensors</Name>
 		<CallbackMethod>startCalibrationCALLBACKaction</CallbackMethod>
@@ -3989,7 +4033,7 @@ During the time of beeping the regular ibeacon process is suspended. Very long b
 			 <Label>Calibration of sensors</Label>
 			 <Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="" >
 			    <Label>select rPi #</Label>
-			    <List class="self" filter="" method="filterPiDInclAll" dynamicReload="False"/>
+			    <List class="self" filter="blue,sensor" method="filterPiDInclAll" dynamicReload="False"/>
 			 </Field>
 			 <Field id="typeId"   type="menu" defaultValue="all" tooltip="" >
 			  <List>

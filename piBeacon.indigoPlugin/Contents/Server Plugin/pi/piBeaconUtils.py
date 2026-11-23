@@ -388,13 +388,22 @@ def removeFile(fname, verbose=False, keep=None):
 
 
 #################################
-def copyFile(src, dst, verbose=False):
+def copyFile(src, dst, verbose=False, atomic=False):
 	"""cp - metadata preserved (cp default), directories copied recursively.
 
 	Inputs:
 	    src (str): source path or glob
 	    dst (str): destination file or directory
 	    verbose (bool): log failures
+	    atomic (bool): A READER MUST NEVER SEE A HALF-WRITTEN FILE. shutil.copy2 opens the
+	                   destination with "wb" - which TRUNCATES IT TO ZERO and then fills it - so a
+	                   program reading at that moment gets an empty or partial file. Live on rpi 2,
+	                   2026-11-11: "readJson .. Expecting value: line 1 column 1, fname:
+	                   temp/parameters, data:><" while the parameter mirror was running. With
+	                   atomic=True the copy goes to a temp name in the SAME directory and is then
+	                   renamed over the destination, which is one indivisible step on one
+	                   filesystem: a reader sees the old file or the new one, never a torn one.
+	                   Plain files only - a directory copy is not made atomic.
 	Outputs:
 	    bool: True when everything asked for was copied
 	"""
@@ -403,14 +412,24 @@ def copyFile(src, dst, verbose=False):
 		files = glob.glob(src)
 		if not files:	files = [src]
 		for ff in files:
+			_tmp = ""
 			try:
 				if os.path.isdir(ff):
 					target = dst if not os.path.isdir(dst) else os.path.join(dst, os.path.basename(ff.rstrip("/")))
 					if os.path.exists(target):	shutil.rmtree(target)
 					shutil.copytree(ff, target)
+				elif atomic:
+					_dst = os.path.join(dst, os.path.basename(ff)) if os.path.isdir(dst) else dst
+					_tmp = "{}.tmp{}".format(_dst, os.getpid())
+					shutil.copy2(ff, _tmp)
+					os.replace(_tmp, _dst)			# same directory = same filesystem = atomic
+					_tmp = ""
 				else:
 					shutil.copy2(ff, dst)
 			except Exception as e:
+				if _tmp != "":						# a failed atomic copy must not leave its temp behind
+					try:	os.remove(_tmp)
+					except Exception:	pass
 				if subprocess.call(["/usr/bin/sudo", "cp", "-a", ff, dst]) != 0:
 					ok = False
 					if verbose:	logger.log(20, "cBY:{:<20} could not copy {} -> {} ({})".format(G.program, ff, dst, e))
@@ -444,7 +463,15 @@ def copyParamsToTemp(timeLastFile):
 		touch  = G.homeDir + "temp/touchFile"
 		doCopy = 0
 		if os.path.isfile(touch):
-			if timeLastFile != os.path.getmtime(touch):		doCopy = 1
+			# THE FILE CAN VANISH BETWEEN THESE TWO CALLS. temp/ is a tmpfs that gets cleared and
+			# rebuilt (a reboot, a remount, a sweep), so isfile() saying yes is no promise that
+			# getmtime() will still find it - live traceback on rpi 2, 2026-11-11, which took the
+			# whole pass down. A touchFile that is gone is not an error, it is the "fresh tmpfs"
+			# case right below, so it is handled the same way.
+			try:	_mt = os.path.getmtime(touch)
+			except Exception:	_mt = None
+			if   _mt is None:				doCopy = 2; touchFile(touch)
+			elif timeLastFile != _mt:		doCopy = 1
 		elif os.path.isdir(G.homeDir + "temp"):
 			doCopy = 2
 			touchFile(touch)
@@ -454,7 +481,8 @@ def copyParamsToTemp(timeLastFile):
 		logger.log(10, "copying parameter files to temp, reason:{}, files:{}".format(doCopy, G.parameterFileList))
 		for fileName in G.parameterFileList:
 			if os.path.isfile(G.homeDir + fileName):
-				copyFile(G.homeDir + fileName, G.homeDir + "temp/" + fileName)
+				# ATOMIC: every pi program reads these out of temp/ while this runs - see copyFile
+				copyFile(G.homeDir + fileName, G.homeDir + "temp/" + fileName, atomic=True)
 		try:	timeLastFile = os.path.getmtime(touch)
 		except Exception:	timeLastFile = -10
 		# WRITTEN BY ROOT, READ BY pi. master runs as root and so did copyToTemp.py, so a plain
@@ -4080,6 +4108,71 @@ def getSerialDEV():
 
 
 #### selct the proper hci bus: if just one take that one, if 2, use bus="uart", if no uart use hci0
+# WHEN A DISTANCE SENSOR REPORTS - the same four knobs on all five of them (ultrasound, vl53l0x,
+# vl53l1x, vl6180x, vcnl4010), in this order of precedence:
+#   1. minSendSecs       THE FLOOR, and it has priority: no report may follow another sooner,
+#                        whatever else says. The two delta tests say whether the distance MOVED
+#                        and neither says anything about how OFTEN, so a sensor watching something
+#                        that genuinely moves passes them on almost every measurement - one
+#                        measured 34 reports a minute, each writing 6 states in indigo, about
+#                        14,000 state writes an hour from a single sensor.
+#   2. sendMSGEverySecs  the keep-alive: one report at least this often even when nothing moved,
+#                        so the device cannot go stale. Also subject to the floor, which can only
+#                        bite when both are set to 10.
+#   3. deltaDist AND deltaDistAbs   a report in between needs BOTH - more than this percentage of
+#                        the distance AND more than this many cm. The AND is the whole point: 1 cm
+#                        at 2 cm away is a 50% change but only 1 cm, which is noise, not a move.
+# NOT subject to the floor, deliberately: an explicit "read now" from the plugin, and the
+# region/distance EVENTS that actions are built on - delaying either changes behaviour, not rate.
+distMinSendRange   = (1.,  10.)		# secs between two reports
+distHeartbeatRange = (10., 120.)	# secs, the keep-alive
+distDeltaPctRange  = (1.,  10.)		# percent of the current distance
+distDeltaAbsRange  = (1.,  30.)		# CENTIMETRES, absolute
+distMinSendDefault   = 5.
+distHeartbeatDefault = 90.
+distDeltaPctDefault  = 5.
+distDeltaAbsDefault  = 10.
+
+
+def clampParam(value, lo, hi, dflt):
+	"""One setting from a device dialog, forced into the range the sensor accepts.
+
+	A value can arrive empty (a field never saved), as text, or out of range - an option an older
+	dialog offered and this one no longer does, e.g. "no limit" (0) as a report floor, or 60 s.
+	Clamping rather than rejecting keeps such a config working at the nearest sane setting instead
+	of jumping to a default that may be further from what was meant.
+
+	Inputs:
+	    value (str or float): whatever the config carries
+	    lo, hi (float): the accepted range, inclusive
+	    dflt (float): used only when value cannot be read as a number at all
+	Outputs:
+	    float: lo <= result <= hi
+	"""
+	try:	return min(hi, max(lo, float(value)))
+	except Exception:	return dflt
+
+
+def distReportParams(cfg, cmFactor=1., absDefault=None):
+	"""The four report knobs of one distance sensor device, clamped - see the block above.
+
+	Inputs:
+	    cfg (dict): that device's entry out of the sensors config
+	    cmFactor (float): native distance units per CENTIMETRE, because the absolute threshold is
+	                      set in cm but compared against whatever the sensor measures in: 1 for
+	                      the sensors that work in cm, 10 for the vl6180x, which works in mm.
+	    absDefault (float): cm to use when the device has no deltaDistAbs at all; None = 10 cm.
+	                        The vl6180x passes a smaller one - its whole range is 25.5 cm.
+	Outputs:
+	    tuple: (deltaFraction, deltaAbsInNativeUnits, minSendSecs, heartbeatSecs)
+	"""
+	_ad = distDeltaAbsDefault if absDefault is None else absDefault
+	return (clampParam(cfg.get("deltaDist", distDeltaPctDefault), distDeltaPctRange[0], distDeltaPctRange[1], distDeltaPctDefault) / 100.,
+			clampParam(cfg.get("deltaDistAbs", _ad), distDeltaAbsRange[0], distDeltaAbsRange[1], _ad) * cmFactor,
+			clampParam(cfg.get("minSendSecs", distMinSendDefault), distMinSendRange[0], distMinSendRange[1], distMinSendDefault),
+			clampParam(cfg.get("sendMSGEverySecs", distHeartbeatDefault), distHeartbeatRange[0], distHeartbeatRange[1], distHeartbeatDefault))
+
+
 def selectHCI(HCIs, useDev, defaultBus, doNotUseHCI="", tryBLEmac="", doNotUseHCI2="", role="", quiet=False):
 	# default is UART or USB, used if no other choice selected
 	# useDev  is UART or USB, used if available
@@ -4381,19 +4474,25 @@ def ble4ScanSupported(devId, mac=""):
 
 
 #################################
-def usbIdOfHCI(hciName):
-	"""VID:PID of the usb dongle behind hciN, e.g. "0b05:190e" - "" for onboard/uart radios.
+def usbInfoOfHCI(hciName):
+	"""VID:PID and the MAKER'S OWN NAME for the usb dongle behind hciN - ("", "") for uart radios.
 
 	Walks THIS adapter's own sysfs path up to the usb device carrying idVendor/idProduct. lsusb is
 	useless here: it lists devices in bus order with no link to an hci number, so it reported the
 	FIRST dongle for every adapter (the live report once showed two different dongles both as
 	"33fa:0012 UGREEN").
+	THE NAME COMES FROM THE SAME DIRECTORY, files "manufacturer" and "product" - no extra lookup
+	and no catalogue needed. "0b05:190e" means nothing to anybody reading a device state; "ASUS
+	USB-BT500" does. "/" is replaced in it, because the hciN state packs its fields with that
+	separator and a product string containing one would corrupt the whole state.
 
 	Inputs:
 	    hciName (str): "hci0" ...
 	Outputs:
-	    str: "vvvv:pppp" or ""
+	    tuple: ("vvvv:pppp", "Maker Product") - either part "" when it cannot be read
 	"""
+	_id = ""
+	_nm = ""
 	try:
 		base = os.path.realpath("/sys/class/bluetooth/{}/device".format(hciName))
 		for _ in range(6):
@@ -4402,11 +4501,33 @@ def usbIdOfHCI(hciName):
 			if os.path.isfile(vid) and os.path.isfile(pid):
 				f = open(vid); v = f.read().strip(); f.close()
 				f = open(pid); d = f.read().strip(); f.close()
-				return "{}:{}".format(v, d)
+				_id = "{}:{}".format(v, d)
+				for _part in ("manufacturer", "product"):
+					try:
+						_f = os.path.join(base, _part)
+						if os.path.isfile(_f):
+							f = open(_f); _t = f.read().strip(); f.close()
+							if _t != "" and _t.lower() not in _nm.lower():
+								_nm = (_nm + " " + _t).strip()
+					except Exception:	pass
+				break
 			base = os.path.dirname(base)
 	except Exception:
 		pass
-	return ""
+	_nm = " ".join("{}".format(_nm).replace("/", "-").split())[:30]
+	return _id, _nm
+
+
+def usbIdOfHCI(hciName):
+	"""VID:PID of the usb dongle behind hciN, e.g. "0b05:190e" - "" for onboard/uart radios.
+	Kept as its own call because several places want only the id; see usbInfoOfHCI for the walk.
+
+	Inputs:
+	    hciName (str): "hci0" ...
+	Outputs:
+	    str: "vvvv:pppp" or ""
+	"""
+	return usbInfoOfHCI(hciName)[0]
 
 
 #################################
@@ -4571,8 +4692,10 @@ def whichHCI():
 			if lines[ll].find("hci") == 0: # finds :  #hci1:	Type: Primary  Bus: UART
 				bus = lines[ll].split("Bus: ")[1]
 				hciNo = lines[ll].split(":")[0]
+				# ONE sysfs walk for both: the vid:pid and the maker's own name for the dongle
+				_usbId, _usbName = usbInfoOfHCI(hciNo)
 				hci["hci"][hciNo] = {"bus":bus, "numb":int(hciNo[-1]),"upDown":"DOWN","BLEmac":"0","aclMTU":0,"extAdv":False,"ble4":True,
-										"usbId":usbIdOfHCI(hciNo)}
+										"usbId":_usbId, "usbName":_usbName}
 				if lines[ll+1].find("BD Address:") >- 1: # finds: BD Address: B8:27:EB:D4:E3:35  ACL MTU: 1021:8	SCO MTU: 64:1
 					mm=lines[ll+1].strip().split("BD Address: ")[1]
 					mm=mm.split(" ")

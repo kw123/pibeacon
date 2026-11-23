@@ -171,6 +171,28 @@ _sqlLoggerIgnoreStates = {"isBeaconDevice":			"Pi_00_Time,Pi_01_Time,Pi_02_Time,
 _debugAreas = ["Logic", "DevMgmt", "BeaconData", "SensorData", "OutputDevice", "UpdateRPI", "OfflineRPI", "BLE", "CAR", "all", "Socket", "StartSocket", "Special", "PlotPositions", "SocketRPI", "BatteryLevel", "SQLlogger", "SQLSuppresslog", "SensorIcon", "Beep", "UpdateTimeAndZone","GarageDoor","DelayedActions","UpdateIndigo","FindMy"]
 _lastRPIoffText = "off, enable in config or device edit"	# shown in state lastUpdateFromRPI while it is switched off
 
+# TxPowerReceived is ~constant per beacon - only measurement jitter varies between
+# messages - so it is written only when it moves this many dBm away from the STORED
+# state. Absolute, not relative: 6 dB means the same at -25 as at -85.
+_GlobalConst_txPowerMinDelta = 6
+
+# Same step for the received signal (Pi_nn_Signal). RSSI jitters by a few dB while
+# nothing moves, and the states it feeds are read for distance, not for 1 dB detail,
+# so it is written only when it moves this far from the value the state is holding.
+_GlobalConst_rssiMinDelta = 6
+
+# An rPi can only beep / test / pair a shelly BLU while it is actually HEARING it advertise, so
+# the rPi menus of those dialogs say whether each rPi heard this device within this many seconds.
+# Generous on purpose: an rPi collects its messages for up to sendAfterSeconds (60) before it
+# sends them, so a device heard 10 seconds ago can legitimately look 70 seconds old from here.
+_GlobalConst_shellyReachMaxAge = 150
+
+# WHAT MAKES A bluez info FILE A REAL PAIRING: one of these key sections. bluez writes an info
+# file for a device it has merely SEEN, so the file existing proves nothing - and a backup of one
+# of those would promise a restore that cannot work. bluez 5.65+ renamed [SlaveLongTermKey] to
+# [PeripheralLongTermKey]; both are accepted. Same list as shellyBondKeyTags in pi/BLEconnect.py.
+_GlobalConst_shellyBondKeyTags = ("[LongTermKey]", "[PeripheralLongTermKey]", "[SlaveLongTermKey]", "[LinkKey]")
+
 
 
 _GlobalConst_emptyBeacon = {
@@ -432,7 +454,7 @@ _GlobalConst_beaconPlotSymbols = [
 
 
 _BLEsensorTypes =["BLERuuviTag", "BLERuuviAir",
-				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG", "BLEiTrackButton", "BLEShellyButton","BLEShellyMotion","BLEShellyDoor",
+				"BLEiBS01", "BLEiBS01T", "BLEiBS01RG", "BLEiBS03T", "BLEiBS03TP", "BLEiBS03RG", "BLEiTrackButton", "BLEShellyButton","BLEShellyMotion","BLEShellyDoor","BLEShellyWS90",
 				"BLEaprilAccel", "BLEaprilTHL", "BLEThermopro", "BLETempspike",
 				"BLEminewE8", "BLEminewS1TH", "BLEminewS1Plus", "BLEminewAcc",
 				"BLEiSensor-on", "BLEiSensor-onOff", "BLEiSensor-RemoteKeyFob", "BLEiSensor-TempHum",
@@ -1021,6 +1043,17 @@ for ii in range(_GlobalConst_numberOfiBeaconRPI):
 _addingstates["findMyGroupPerRpi"]				= {"addTag":False, "States":_devtypesToStates["findMyGroupPerRpi"]}
 
 _addingstates["packetId"]						= {"addTag":False, "States":{"packetId":"Integer"}}
+# ---- WEATHER STATION STATES (ecowitt WS90 powered by shelly, BTHome over FCD2) ----------------
+# The state NAMES are the names the BTHome decoder produces (shellyTagToProperty in beaconloop),
+# so what arrives in the message is what lands in the state - no translation layer to keep in
+# step. BTHome has no "wind" and no "gust": both are object 0x44 "speed", sent twice in the same
+# frame, and the only thing that tells them apart is their ORDER. The decoder names repeats by
+# occurrence, so the first is "speed" and the second "speed2" - see seenName in doBLEShelly.
+_addingstates["WindSpeed"]						= {"addTag":False, "States":{"speed":"Real", "speed2":"Real"}}
+_addingstates["WindDirection"]					= {"addTag":False, "States":{"direction":"Real"}}
+_addingstates["Rain"]							= {"addTag":False, "States":{"precipitation":"Real", "moistureDetected":"String"}}
+_addingstates["UVindex"]						= {"addTag":False, "States":{"UVindex":"Real"}}
+_addingstates["Dewpoint"]						= {"addTag":False, "States":{"dewpoint":"Real"}}
 _addingstates["currentEvent"]					= {"addTag":False, "States":{"currentEvent":"String"}}
 _addingstates["previousEvent"]					= {"addTag":False, "States":{"previousEvent":"String"}}
 _addingstates["currentEventType"]				= {"addTag":False, "States":{"currentEventType":"String"}}
@@ -1028,6 +1061,13 @@ _addingstates["currentEventType"]				= {"addTag":False, "States":{"currentEventT
 # an entry HERE as well as in _stateListToDevTypes below; with only the latter it never appears.
 _addingstates["bondedToRPI"]					= {"addTag":False, "States":{"bondedToRPI":"String"}}
 _addingstates["previousEventType"]				= {"addTag":False, "States":{"previousEventType":"String"}}
+# 4 BUTTON SHELLYS (RC Button 4 / Wall Switch 4). The event CODE stays in currentEventType as it
+# always has - these two say WHICH button it came from, so a 1-button device is unaffected and a
+# trigger reads "onOffState became true" + currentEventType + buttonNumber as before, plus one
+# condition. buttonNumber is the lowest button that fired (1 on every 1-button device),
+# buttonsPressed lists all of them because the hardware does allow a combination, eg "1,3".
+_addingstates["buttonNumber"]					= {"addTag":False, "States":{"buttonNumber":"Integer"}}
+_addingstates["buttonsPressed"]					= {"addTag":False, "States":{"buttonsPressed":"String"}}
 _addingstates["OUTPUT"]							= {"addTag":False, "States":{"OUTPUT":"String"}}
 _addingstates["status"]							= {"addTag":False, "States":{"status":"String"}}
 _addingstates["actualStatus"]					= {"addTag":False, "States":{"actualStatus":"String"}}
@@ -1081,7 +1121,7 @@ _stateListToDevTypes["findMyGroupPerRpi"]		= {"BLEfindMyGroup":1}
 
 _stateListToDevTypes["BLEfindMyMember"]			= {"BLEfindMyMember":1}
 _stateListToDevTypes["findMyPerRpi"]			= {"BLEfindMyMember":1}
-_stateListToDevTypes["packetId"]				= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
+_stateListToDevTypes["packetId"]				= {"BLEShellyWS90":1, "BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["currentEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["previousEvent"]			= {"BLEShellyDoor":1,"BLEShellyMotion":1,"BLEShellyButton":1}
 _stateListToDevTypes["currentEventType"]		= {"BLEShellyButton":1}
@@ -1089,6 +1129,13 @@ _stateListToDevTypes["currentEventType"]		= {"BLEShellyButton":1}
 # keys per ADAPTER, so only the rpi that holds them can send it a beep or any other write.
 _stateListToDevTypes["bondedToRPI"]				= {"BLEShellyButton":1}
 _stateListToDevTypes["previousEventType"]		= {"BLEShellyButton":1}
+_stateListToDevTypes["buttonNumber"]			= {"BLEShellyButton":1}
+_stateListToDevTypes["buttonsPressed"]			= {"BLEShellyButton":1}
+_stateListToDevTypes["WindSpeed"]				= {"BLEShellyWS90":1}
+_stateListToDevTypes["WindDirection"]			= {"BLEShellyWS90":1}
+_stateListToDevTypes["Rain"]					= {"BLEShellyWS90":1}
+_stateListToDevTypes["UVindex"]					= {"BLEShellyWS90":1}
+_stateListToDevTypes["Dewpoint"]				= {"BLEShellyWS90":1}
 
 _stateListToDevTypes["cmd"]						= {"DF2301Q":1,"FaceGesture":1}
 _stateListToDevTypes["cmdAt"]					= {"DF2301Q":1,"FaceGesture":1}
@@ -1114,7 +1161,7 @@ _stateListToDevTypes["Conductivity"]			= {"BLEXiaomiMiVegTrug":1 }
 _stateListToDevTypes["Moisture"]				= {"BLEXiaomiMiVegTrug":1, "moistureSensor":1 }
 _stateListToDevTypes["speed"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["distanceEvent"]			= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
-_stateListToDevTypes["trigger"]					= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEthermoBeacon":1, "BLEinkBirdPool01B":1, "BLEShellyDoor":1, "BLEShellyMotion":1, "BLEShellyButton":1}
+_stateListToDevTypes["trigger"]					= {"BLEShellyWS90":1, "vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEthermoBeacon":1, "BLEinkBirdPool01B":1, "BLEShellyDoor":1, "BLEShellyMotion":1, "BLEShellyButton":1}
 _stateListToDevTypes["distance"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["distanceRaw"]				= {"vcnl4010Distance":1, "vl6180xDistance":1, "ultrasoundDistance":1, "vl503l1xDistance":1, "vl503l0xDistance":1}
 _stateListToDevTypes["rotation"]				= {"BLEShellyDoor":1}
@@ -1132,12 +1179,12 @@ _stateListToDevTypes["Green"]					= {"i2cTCS34725":1, "apds9960":1,"i2cVEML6040"
 _stateListToDevTypes["Blue"]					= {"i2cTCS34725":1, "apds9960":1,"i2cVEML6040":1, "as726x":1}
 _stateListToDevTypes["White"]					= {"i2cVEML7700":1, "i2cVEML6030":1,"i2cVEML6040":1,"apds9960":1}
 _stateListToDevTypes["AmbientLight"]			= {"i2cTSL2561":1,"i2cVEML7700":1,"i2cVEML6030":1}
-_stateListToDevTypes["Illuminance"]				= {"apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1,"BLEShellyDoor":1,"BLEShellyMotion":1, "BLERuuviAir":1}
-_stateListToDevTypes["Temperature"]				= {"BLEKKMsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotHumidifierEvap":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "tmp117":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
+_stateListToDevTypes["Illuminance"]				= {"BLEShellyWS90":1, "apds9960":1, "BLEXiaomiMiVegTrug":1, "BLEaprilTHL":1, "i2cTCS34725":1, "MAX44009":1, "as726x":1, "i2cOPT3001":1, "i2cTSL2561":1, "moistureSensor":1, "vcnl4010Distance":1, "vl6180xDistance":1,"BLEShellyDoor":1,"BLEShellyMotion":1, "BLERuuviAir":1}
+_stateListToDevTypes["Temperature"]				= {"BLEShellyWS90":1, "BLEKKMsensor":1,"DHT":1, "mlx90614":1, "BLERuuviTag":1, "BLERuuviAir":1, "BLEiBS01T":1, "BLEiBS01T":1, "BLEiBS03T":1, "BLEiBS03TP":1, "BLEminewS1TH":1, "BLEthermoBeacon":1, "BLEXiaomiMiVegTrug":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotHumidifierEvap":1, "Wire18B20":1, "i2cTMP102":1, "i2cMCP9808":1, "i2cLM35A":1, "ccs811":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1, "tmp006":1, "tmp007":1, "tmp117":1, "max31865":1, "sensirionscd30":1, "sensirionscd40":1, "rPI":1, "rPI-Sensor":1}
 _stateListToDevTypes["AmbientTemperature"]		= {"mlx90614":1, "tmp006":1, "tmp007":1, "BLEiBS03TP":1, "amg88xx":1}
-_stateListToDevTypes["Humidity"]				= {"BLEKKMsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1,  "BLERuuviAir":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotHumidifierEvap":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
+_stateListToDevTypes["Humidity"]				= {"BLEShellyWS90":1, "BLEKKMsensor":1,"BLEiBS01T":1, "DHT":1, "BLERuuviTag":1,  "BLERuuviAir":1, "BLEminewS1TH":1, "BLEXiaomiMiformaldehyde":1, "BLEthermoBeacon":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewS1Plus":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLESatech":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotHumidifierEvap":1, "i2cSHT21":1, "i2cAM2320":1, "i2cBMExx":1, "bme680":1, "si7021":1,  "sensirionscd30":1, "sensirionscd40":1}
 _stateListToDevTypes["CO2"]						= {"BLERuuviAir":1, "sensirionscd30":1, "sensirionscd40":1, "sgp30":1, "mhzCO2":1, "ccs811":1, "BLEswitchbotTempHumCO2":1}
-_stateListToDevTypes["Pressure"]				= {"BLERuuviTag":1,  "BLERuuviAir":1,  "BLEiBS01T":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
+_stateListToDevTypes["Pressure"]				= {"BLEShellyWS90":1, "BLERuuviTag":1,  "BLERuuviAir":1,  "BLEiBS01T":1, "i2cT5403":1, "i2cMS5803":1, "i2cBMPxx":1, "i2cBMP280":1, "bmp388":1, "i2cBMExx":1, "bme680":1 }
 _stateListToDevTypes["VOC"]						= {"BLERuuviAir":1, "sgp30":1, "sgp40":1, "ccs811":1, "bmp388":1}
 _stateListToDevTypes["AirQuality"]				= {"bme680":1}
 _stateListToDevTypes["Formaldehyde"]			= {"BLEXiaomiMiformaldehyde":1 }
@@ -1148,7 +1195,7 @@ _stateListToDevTypes["rPI"]						= {"rPI":1}
 _stateListToDevTypes["beacon"]					= {"beacon":1}
 _stateListToDevTypes["BLEconnect"]				= {"BLEconnect":1}
 _stateListToDevTypes["beaconOn"]				= {"BLEiSensor-onOff":1, "BLEmeeblue-on":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEswitchbotMotion":1, "BLEswitchbotMMWaveMotion":1, "BLEswitchbotContact":1}
-_stateListToDevTypes["beaconSensorStates"]		= {"BLERuuviTag":1,  "BLERuuviAir":1, "BLEmeeblue-on":1, "BLEthermoBeacon":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotMotion":1, "BLEswitchbotMMWaveMotion":1, "BLEswitchbotContact":1}
+_stateListToDevTypes["beaconSensorStates"]		= {"BLEShellyWS90":1, "BLERuuviTag":1,  "BLERuuviAir":1, "BLEmeeblue-on":1, "BLEthermoBeacon":1, "BLEiBS03T":1, "BLEmyBLUEt":1, "BLEiBS03TP":1, "BLEiBS01T":1, "BLEblueradio":1, "BLEminewS1TH":1, "BLEXiaomiMiTempHumClock":1, "BLEXiaomiMiformaldehyde":1, "BLEXiaomiMiTempHumRound":1, "BLEXiaomiMiTempHumSquare":1, "BLEgoveeTempHum":1, "BLEminewAcc":1, "BLEminewS1Plus":1, "BLEinkBirdPool01B":1, "BLEaprilAccel":1, "BLEaprilTHL":1, "BLEThermopro":1, "BLETempspike":1, "BLEiBS03RG":1, "BLEiBS01RG":1, "BLEiBS01":1, "BLESatech":1, "BLEiSensor-onOff":1, "BLEiSensor-on":1, "BLEiSensor-RemoteKeyFob":1, "BLEiSensor-TempHum":1, "BLEswitchbotTempHum":1, "BLEswitchbotTempHumCO2":1, "BLEswitchbotMotion":1, "BLEswitchbotMMWaveMotion":1, "BLEswitchbotContact":1}
 _stateListToDevTypes["rpiAndBeaconAndBLEconnect"] = {"beacon":1, "rPI":1, "BLEconnect":1}
 _stateListToDevTypes["accelerationVectorDelta"]	 = {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}
 _stateListToDevTypes["accelerationX"]	 		= {"BLERuuviTag":1,"BLEminewAcc":1,"BLEminewS1Plus":1,"BLEKKMsensor":1,"BLEaprilAccel":1,"BLEiBS03RG":1,"BLEiBS01RG":1,"BLESatech":1}

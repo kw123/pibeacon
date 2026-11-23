@@ -915,6 +915,7 @@ attBadMac   = {}		# mac -> 1 for an adapter that refused create-connection (ENOS
 attFailMac  = {}		# mac -> consecutive failures to get ANY link; 2+ and a proven radio is used instead
 roleCheckLast = [0.]	# throttle for checkRoleChanged()
 GOODRADIOFILE = "temp/BLEconnect.goodRadio"	# survives a restart: see rememberGoodRadio()
+shellyBondBusyFile = "temp/BLEconnect.bondBusy"	# exists while a shelly bond/test job owns the radio
 ENOSYS_RETRIES = 5		# ATT connect: retry an intermittent ENOSYS (adapter refuses create-connection) this many times, 1s apart
 knownBeaconTags = {}	# switchbot device-type definitions from temp/knownBeaconTags - MUST exist even when the file is missing (NameError killed readParams before)
 lastLoggedGattEngine = [""]	# log the engine decision once per change (list: no global decl needed)
@@ -1463,7 +1464,7 @@ def doBeaconGattBeep(mac, params):
 # lists the device, the user picks it, and the app waits for ONE MORE SIMPLE PRESS which completes
 # the pairing. Here the DOUBLE PRESS replaces "the user picks it" - an rpi has no UI to pick with -
 # and the next press is the one the bond rides on. Measured on rpi 2: every button event
-# (press/double/tripple/hold/long) advertises as ADV_IND 00 = CONNECTABLE, so that frame is the
+# (press/double/triple/hold/long) advertises as ADV_IND 00 = CONNECTABLE, so that frame is the
 # bonding window, and it is exactly what watchMAC already reports.
 # gatttool CANNOT bond, so this goes through bluez: an agent + pair, which stores the keys under
 # /var/lib/bluetooth/<ADAPTER mac>/<device mac>/. A BOND BELONGS TO ONE RADIO. If the master moves
@@ -1505,6 +1506,198 @@ def isBonded(deviceMac):
 	return False
 
 
+def shellyKeysOnOtherRadios(deviceMac):
+	"""Which OTHER adapters of this rpi hold real keys for this device.
+
+	bluez keeps keys per ADAPTER and BLEconnect does not always use the same one: a usb reset
+	renumbers the dongles, and a spell with only one working radio moves the connect role - a bond
+	made on the old radio then sits in a directory nobody reads. Measured on rpi 11: four buttons
+	paired on dongle 58:11:22:53:8C:D5 on 11-08, BLEconnect later back on the internal
+	B8:27:EB:56:9C:BB, and "NO PAIRING" was reported for four pairings that were perfectly intact.
+	The keys CANNOT just be moved over: the button stored our adapter's identity address alongside
+	them and rejects the same keys presented from a different address. So this exists only to NAME
+	the radio, so the answer reads "connect has changed radios" instead of "you never paired".
+	Same key-section test as isBonded() - an info file alone proves nothing.
+
+	Inputs:
+	    deviceMac (str): the shelly's mac
+	Outputs:
+	    list: adapter macs that hold keys for it, THIS radio excluded, sorted
+	"""
+	out = []
+	try:
+		_me = "{}".format(myBLEmac).upper()
+		_dv = "{}".format(deviceMac).upper()
+		for _ad in os.listdir("/var/lib/bluetooth"):
+			_adU = "{}".format(_ad).upper()
+			if _adU == _me or len(_adU) != 17 or _adU.count(":") != 5: continue	# skip ourselves and cache/ etc
+			try:
+				with open("/var/lib/bluetooth/{}/{}/info".format(_ad, _dv)) as f: txt = f.read()
+			except Exception:	continue
+			for tag in shellyBondKeyTags:
+				if tag in txt:
+					out.append(_adU)
+					break
+	except Exception:
+		pass
+	return sorted(out)
+
+
+shellyBondBackupSent = False	# the sweep below runs once per run of this program
+
+
+def backupShellyBondsOnThisRadio():
+	"""Hand the plugin a copy of EVERY real pairing this radio already holds, once per run.
+
+	Without this the backup would only ever contain pairings that happen to be made, tested or
+	unpaired after the upgrade - so the pairings that exist right now, which are exactly the ones
+	worth protecting against an sd card failure, would be missing from it until somebody thought
+	to run a link test on each device. Reads the bond directory of our own adapter, which is the
+	only place our keys can be, and skips anything without a real key section (bluez leaves an
+	info file behind for a device it has merely seen).
+	Sent with an EMPTY text so it does not put a line in the indigo log per device - it is
+	housekeeping, not a result the user asked for. The plugin stores it and says so once.
+	"""
+	global shellyBondBackupSent
+	if shellyBondBackupSent: return
+	try:
+		me = "{}".format(myBLEmac).upper()
+		if len(me) != 17 or me.count(":") != 5: return	# our radio is not known yet - try again next read
+		shellyBondBackupSent = True
+		_n = 0
+		for _dev in sorted(os.listdir("/var/lib/bluetooth/{}".format(me))):
+			_devU = "{}".format(_dev).upper()
+			if len(_devU) != 17 or _devU.count(":") != 5: continue		# cache/, settings, ..
+			try:
+				with open("/var/lib/bluetooth/{}/{}/info".format(me, _dev)) as f:	_txt = f.read()
+			except Exception:	continue
+			if not any(_t in _txt for _t in shellyBondKeyTags): continue
+			U.sendURL(data={"shellyBondMac":_devU, "shellyBonded":"yes", "shellyBondAdapter":me, "shellyBondInfo":_txt},
+						sendAlive="shellyLink", text="", wait=False, squeeze=False)
+			_n += 1
+		if _n:	U.logger.log(20,"sent {} existing pairing(s) of radio {} to the plugin as a backup - an sd card replacement can be restored from it".format(_n, me))
+
+		# ---- KEYS SITTING ON A RADIO WE ARE NOT USING ----
+		# This is the failure with no symptom: the radio roles are picked fresh at every startup
+		# (scan takes the best receiver, connect gets what is left and prefers the internal one),
+		# so a dongle appearing, disappearing or being renumbered can move the connect role to a
+		# different adapter - and bluez keeps pairing keys PER ADAPTER. The pairing is then
+		# perfectly intact in a directory nobody reads: the link test says NO PAIRING, a beep
+		# never works, and nothing anywhere says why. Said out loud at startup now, with both
+		# radio addresses and the two ways out, instead of waiting for somebody to wonder why a
+		# button is silent. Keys cannot be copied across - the device refuses them from another
+		# adapter address - so it is either a role pin or a re-pair.
+		_elsewhere = {}
+		for _ad in os.listdir("/var/lib/bluetooth"):
+			_adU = "{}".format(_ad).upper()
+			if _adU == me or len(_adU) != 17 or _adU.count(":") != 5: continue
+			try:	_devs = os.listdir("/var/lib/bluetooth/{}".format(_ad))
+			except Exception:	continue
+			for _dv in _devs:
+				_dvU = "{}".format(_dv).upper()
+				if len(_dvU) != 17 or _dvU.count(":") != 5: continue
+				if isBonded(_dvU): continue					# we hold keys for it too - nothing orphaned
+				try:
+					with open("/var/lib/bluetooth/{}/{}/info".format(_ad, _dv)) as f:	_t = f.read()
+				except Exception:	continue
+				if any(_k in _t for _k in shellyBondKeyTags):	_elsewhere.setdefault(_dvU, []).append(_adU)
+		if _elsewhere:
+			_t = ("BLEconnect is using radio {} and pairing keys for {} device(s) are on ANOTHER radio of this rPi: {}."
+				  " Those pairings cannot be used from here and a beep or link test on them will fail, although nothing is"
+				  " broken - the connect role has moved radios. Either pin BLEconnect back to that radio in the rPi device"
+				  " edit, or pair each device on the radio in use now: " + shellyPairByHandHint + ". The keys cannot"
+				  " be copied across: the device refuses them from a different adapter address").format(
+					me, len(_elsewhere), "; ".join("{} on {}".format(_m, ",".join(_elsewhere[_m])) for _m in sorted(_elsewhere)))
+			U.logger.log(20, _t)
+			reportShellyToIndigo(_t)
+	except Exception:
+		pass
+
+
+shellyBondRestoreTried = set()	# device macs this run has already handled, so nothing is retried in a loop
+
+
+def restoreShellyBonds(restore):
+	"""Put pairing keys the plugin saved back onto THIS radio - the sd-card-replacement path.
+
+	/var/lib/bluetooth is on the card. Replace it and every shelly pairing this rPi held is gone,
+	and the only way to make one by hand is to stand next to the device and repeat the pairing
+	gesture, one button at a time, 90 s apart. The plugin keeps a copy of each info file (see
+	storeShellyBondBackup) and offers it back in the parameters file, so a card swap becomes a
+	config push instead of a walk round the house.
+
+	THE ADAPTER MAC HAS TO MATCH, and that is not a precaution, it is the whole limit of this: a
+	pairing key is stored against the central's identity address, so the device refuses the same
+	key presented by a different adapter. An entry for another radio is skipped, not adapted.
+	IT NEVER OVERWRITES A LIVE PAIRING - isBonded() first, always.
+	bluetoothd reads the bond table at startup and caches it, so a file written underneath it is
+	invisible until it restarts; that is done once for the whole batch, and BLEconnect then exits
+	so master.py relaunches it against a freshly started stack instead of stale radio handles.
+	NOTHING HERE PROVES THE DEVICE WILL ACCEPT THE KEYS - isBonded() only reads our own file, so
+	it says yes the moment the file is written. The link test in the device dialog is the check
+	that connects, and the message says so.
+
+	Inputs:
+	    restore (dict): {deviceMAC: {"adapter":.., "info":.., "savedAt":..}} from the parameters file
+	Outputs:
+	    None: writes the key files, restarts bluetooth and exits the program when it wrote any
+	"""
+	if not isinstance(restore, dict) or restore == {}: return
+	me = "{}".format(myBLEmac).upper()
+	if len(me) != 17 or me.count(":") != 5: return		# our radio is not known yet - try again next read
+
+	wrote = []
+	for mac in restore:
+		macU = "{}".format(mac).upper()
+		if macU in shellyBondRestoreTried: continue
+		ent = restore[mac]
+		if not isinstance(ent, dict): continue
+		if "{}".format(ent.get("adapter","")).upper() != me: continue
+		info = "{}".format(ent.get("info",""))
+		if not any(_t in info for _t in shellyBondKeyTags):
+			U.logger.log(20,"shelly {}: the saved pairing has no key section in it - not restored".format(macU))
+			shellyBondRestoreTried.add(macU)
+			continue
+		shellyBondRestoreTried.add(macU)
+		if isBonded(macU): continue						# the keys are already here, leave them alone
+		_d = bluezBondDir(macU)
+		try:
+			if not os.path.isdir(_d):	os.makedirs(_d)
+			os.chmod(_d, 0o700)
+			with open(_d + "/info", "w") as f:	f.write(info)
+			os.chmod(_d + "/info", 0o600)
+			wrote.append(macU)
+			U.logger.log(20,"shelly {}: saved pairing (from {}) written to {}".format(macU, ent.get("savedAt","?"), _d))
+		except Exception:
+			U.logger.log(20,"shelly {}: could NOT write the saved pairing to {} - is this running as root?".format(macU, _d), exc_info=True)
+
+	if wrote == []: return
+	_t = ("shelly: restored the saved pairing(s) for {} on radio {} of this rPi - no button holding needed."
+		  " bluetooth is being restarted so bluez picks them up, and BLEconnect restarts with it."
+		  " Run \"test this rPi's link\" in the device dialog to confirm each one actually connects:"
+		  " these keys were only written back, the device has not been asked yet").format(",".join(wrote), me)
+	U.logger.log(20, _t)
+	for _m in wrote:	reportShellyToIndigo(_t, mac=_m, bonded=True)
+	runShell("/usr/bin/sudo /bin/systemctl restart bluetooth")
+	# master.py relaunches us: a restarted bluetoothd leaves our radio handles stale, and coming
+	# back fresh is both simpler and safer than trying to re-attach to them. Same two lines the
+	# normal end of the program uses, so the send thread is not left running.
+	try:	G.sendThread["run"] = False; time.sleep(1)
+	except Exception:	pass
+	sys.exit(0)
+
+
+def shellyOtherRadioHint(deviceMac):
+	"""The sentence that names the other radio holding the keys, or "" when there is none."""
+	_other = shellyKeysOnOtherRadios(deviceMac)
+	if not _other: return ""
+	return (" - BUT KEYS FOR IT ARE ON RADIO {} OF THIS rPi, so this is not a missing pairing:"
+			" BLEconnect has changed radios since that pairing was made. Either pin connect back to"
+			" that radio in the rPi device edit, or pair on the radio in use now: " + shellyPairByHandHint +
+			". The keys cannot be copied across - the button rejects"
+			" them when they come from a different adapter address").format(", ".join(_other))
+
+
 def dropStaleShellyRecord(mac, why="leftover"):
 	"""Clears a KEYLESS device record and its gatt cache for this mac on our radio. Quiet, and a
 	no-op when real keys are there, so it can never cost a bond.
@@ -1542,7 +1735,9 @@ def doShellyBond(mac, params):
 	Outputs:
 	    bool: True when the device is bonded afterwards
 	"""
-	# FORCE = RELINK. The "relink" button in the device dialog sends this, and it is the only way
+	# FORCE = RELINK. No button in the device dialog sends this any more - the "pair this rPi"
+	# button went in .70 because somebody still had to walk over and hold the button. Kept as the
+	# rpi-side command, and it is the only way
 	# out of a one-sided pairing: factory-resetting the button clears ITS keys, ours stay, and
 	# isBonded() then reports a pairing the device knows nothing about - so nothing would be done
 	# and nothing would work. Removing our side first makes the pair below a real one again.
@@ -1550,7 +1745,7 @@ def doShellyBond(mac, params):
 		U.logger.log(20,"shelly bond {}: RELINK requested - dropping the existing pairing on this radio ({}) first".format(mac, myBLEmac))
 		removeShellyBond(mac)
 	if isBonded(mac):
-		_t = "shelly bond {}: already bonded on this radio ({}) - nothing to do. Use relink in the device dialog to pair again".format(mac, myBLEmac)
+		_t = "shelly bond {}: already bonded on this radio ({}) - nothing to do. To pair it afresh use unpair in the device dialog, then {}".format(mac, myBLEmac, shellyPairGestureText(params.get("model","")))
 		U.logger.log(20, _t)
 		reportShellyToIndigo(_t, mac=mac, bonded=True)		# the dialog asked, so it gets an answer
 		return True
@@ -1559,10 +1754,13 @@ def doShellyBond(mac, params):
 	# that cache on the next try.
 	dropStaleShellyRecord(mac)
 	until = float(params.get("until", time.time() + 120.))		# long enough to walk over and hold it
-	U.logger.log(20,"shelly bond {}: ARMED on {} (radio {}) for {:.0f}s - NOW HOLD THE BUTTON PAST 10 SECONDS so it enters pairing mode; it buzzes when the pairing worked".format(mac, useHCI, myBLEmac, until - time.time()))
+	_gest = shellyPairGestureText(params.get("model",""))		# the instruction for THIS model
+	_buzz = params.get("beep", True)							# False = a model with no buzzer
+	U.logger.log(20,"shelly bond {}: ARMED on {} (radio {}) for {:.0f}s - NOW {}.{}".format(mac, useHCI, myBLEmac, until - time.time(), _gest,
+				" It buzzes when the pairing worked." if _buzz else " This model has no buzzer, so watch for the result line instead."))
 	ok    = False
 	_txt  = ""
-	_hint = "hold the button past 10 s while it is armed, then try again"
+	_hint = "{} while it is armed, then try again".format(_gest)
 	try:
 		# NO watchMAC WAIT HERE ANY MORE. Waiting for the connectable adv first and only THEN
 		# starting bluetoothctl spent the window: by the time bluetoothd began scanning the device
@@ -1583,11 +1781,11 @@ def doShellyBond(mac, params):
 		while time.time() < until and not ok:
 			_n  += 1
 			_wait = max(6., min(20., until - time.time()))
-			out   = btctlPair(mac, scanSecs=_wait)
+			out   = btctlPair(mac, scanSecs=_wait, doBeep=_buzz)
 			ok    = isBonded(mac)
 			if ok: break
 			if time.time() >= until: break
-			U.logger.log(20,"shelly bond {}: attempt {} did not pair ({}) - HOLD THE BUTTON PAST 10 SECONDS to open pairing mode, retrying for another {:.0f}s".format(mac, _n, out, until - time.time()))
+			U.logger.log(20,"shelly bond {}: attempt {} did not pair ({}) - {}, retrying for another {:.0f}s".format(mac, _n, out, _gest, until - time.time()))
 			dropStaleShellyRecord(mac, why="refused-attempt")	# or the next attempt inherits its cache
 			time.sleep(1.0)
 		if _n > 1: out = "{} attempts | {}".format(_n, out)
@@ -1600,19 +1798,24 @@ def doShellyBond(mac, params):
 			# button keeps ITS copy of the key - our side is gone, its side is not - so the 10 s
 			# hold is not optional there, it is the only way back in.
 			if "0x05" in _txt or "uthentication" in _txt or "auth failed" in _txt:
-				_hint = "the BUTTON REFUSED the pairing (auth failed / status 0x05) - it only accepts a new pairing while pairing mode is open, and after an unpair it still holds its own key, so HOLD THE BUTTON PAST 10 SECONDS and keep holding until it signals, then it pairs. If it keeps refusing, check that the button is COMPLETELY set up in the shelly phone app - one that was never finished there usually refuses outright"
+				_hint = ("the BUTTON REFUSED the pairing (auth failed / status 0x05) - it only accepts a new pairing while"
+							" pairing mode is open, and after an unpair it still holds its own key, so pairing mode is not"
+							" optional there: {}. If it keeps refusing, check that the button is COMPLETELY set up in the"
+							" shelly phone app - one that was never finished there usually refuses outright").format(_gest)
 			else:
-				_hint = "either the press window closed before bluez got there, or the device was asleep again - press once, then hold past 10 s while it is armed"
+				_hint = "either the pairing window closed before bluez got there, or the device was asleep again - {}, and do it straight after the arming gesture, not 30s later".format(_gest)
 			U.logger.log(20,"shelly bond {}: NOT bonded - {}".format(mac, _hint))
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
 	finally:
 		resumeBeaconloop()
-	_t = "shelly pairing {}: {} on radio {}{}".format(mac, "WORKED - the keys are stored" if ok else "did NOT work", myBLEmac,
+	# "did NOT work" has one cause that is entirely in the user's hands and invisible otherwise:
+	# several buttons held in quick succession. Only the first gets its window - say so here.
+	_t = "shelly pairing {}: {} on radio {}{}".format(mac, "WORKED - the keys are stored" if ok else "did NOT work (if you held SEVERAL buttons in quick succession only the first one can work - do them ONE at a time, waiting for this line each time)", myBLEmac,
 				"" if ok else " - " + _hint)
 	U.logger.log(20, _t)
 	reportShellyToIndigo(_t, mac=mac, bonded=ok)
-	if ok and params.get("beep", True):
+	if ok and _buzz:
 		# IT HAS USUALLY BUZZED ALREADY. btctlPair beeps inside the pairing session, on the link
 		# the pairing itself just made - that is the one that has always worked. A second beep from
 		# here means waiting for another advertisement and another connect and discovery: measured
@@ -1628,6 +1831,44 @@ def doShellyBond(mac, params):
 			reportShellyToIndigo("shelly pairing {}: the confirmation beep {}".format(mac,
 						"was sent - it should have buzzed" if _b else "could NOT be sent - the pairing is there, see the rpi log for why the beep failed"), mac=mac, bonded=True)
 	return ok
+
+
+# THE GESTURE, FOR THE MESSAGES THAT DO NOT KNOW THE MODEL. "hold it past 10 s" was in all of
+# them and on its own it is only right on the BLU Button 1: on everything newer the shelly app
+# asks for 4 fast clicks to open pairing mode, and arming and opening are two separate steps - see
+# shellyPairGestureText and the arming block in beaconloop - so both have to be named.
+# ONE PROCEDURE ACROSS THE MODELS: a HOLD is what arms an rPi, everywhere. It has to be LET GO
+# after 2-3 s to be broadcast at all (kept down, a measured RC Button 4 sent nothing), so every
+# message asks for "hold ~4s and let go"; on a BLU Button 1 that same hold, kept to 10 s, is the
+# whole procedure. A double or triple press is the fallback when a hold does not arm.
+shellyArmHoldSecs    = 4	# the hold every message asks for: press, hold ~4s, LET GO
+shellyPairByHandHint = ("hold it next to the rPi for about {}s and LET GO to arm that rPi, then do the 4 FAST"
+						" CLICKS straight after - a double or triple press arms it too (on an older BLU"
+						" Button 1 the 10 s hold is the whole procedure, there are no clicks)").format(shellyArmHoldSecs)
+
+
+def shellyPairGestureText(model):
+	"""HOW PAIRING MODE IS OPENED ON THIS MODEL, in the words the user needs - the instruction
+	differs per model and a wrong one wastes the whole arming window.
+
+	Measured on a Button Tough (SBBT-102C) next to rpi 2, 2026-11-11: four fast clicks make it
+	beep, open pairing mode, and beep again about 20 SECONDS later when the window closes - and
+	it broadcasts nothing at all in between. So the clicks are only ever the "open the device"
+	half, and beaconloop has to be armed by a separate gesture before them: a hold, LET GO after
+	2-3 s (see shellyArmHoldSecs), or a double/triple press as the fallback.
+
+	Inputs:
+	    model (str): the device's local name, eg "SBBT-102C" - "" when it is not known here
+	Outputs:
+	    str: an imperative phrase, eg "do the 4 FAST CLICKS .."
+	"""
+	_m = "{}".format(model).upper()
+	if "SBBT-002" in _m or "SBBT-003" in _m:				# BLU Button 1 and relatives: the hold
+		return "HOLD THE BUTTON PAST 10 SECONDS to open pairing mode"
+	_t = ("do the 4 FAST CLICKS the shelly app asks for - the button beeps when pairing mode opens and beeps"
+		" again about 20s later when it closes, so the pairing has to land in between")
+	if _m == "":	_t += " (on an older BLU Button 1 there are no clicks: the 10 s hold is the whole procedure)"
+	return _t
 
 
 shellyCharPaths = {}		# mac -> {uuid: dbus object path}, discovered once per mac
@@ -1666,7 +1907,19 @@ def reportShellyToIndigo(text, mac="", bonded=None):
 	try:
 		data = {}
 		if "{}".format(mac) != "" and bonded is not None:
-			data = {"shellyBondMac": "{}".format(mac).upper(), "shellyBonded": ("yes" if bonded else "no")}
+			data = {"shellyBondMac": "{}".format(mac).upper(), "shellyBonded": ("yes" if bonded else "no"),
+					"shellyBondAdapter": "{}".format(myBLEmac).upper()}
+			# AND THE KEYS THEMSELVES, SO A NEW SD CARD DOES NOT MEAN WALKING ROUND THE HOUSE AGAIN.
+			# /var/lib/bluetooth is on the card: replace it and every pairing on this rPi is gone,
+			# and each one can only be remade by standing next to the button and holding it. The
+			# info file IS the pairing - the key sections in it are what the device checks - so the
+			# plugin keeps a copy per device per adapter and can hand it back (see shellyBondRestore).
+			# Only the info file: the "attributes" cache beside it is a GATT cache that bluez
+			# rebuilds on the next connect, and it is NOT part of the bond.
+			if bonded:
+				try:
+					with open(bluezBondDir(mac) + "/info") as f:	data["shellyBondInfo"] = f.read()
+				except Exception:	pass
 		U.sendURL(data=data, sendAlive="shellyLink", text="{}".format(text), wait=False, squeeze=False)
 	except Exception:	pass
 
@@ -1692,7 +1945,7 @@ def removeShellyBond(mac):
 	gone = not isBonded(mac)
 	_t = "shelly {}: {}".format(mac,
 				"PAIRING REMOVED on radio {}".format(myBLEmac) if (had and gone) else
-				("there was no pairing on radio {} to remove".format(myBLEmac) if not had else
+				("there was no pairing on radio {} to remove{}".format(myBLEmac, shellyOtherRadioHint(mac)) if not had else
 				 "unpair FAILED on radio {} - the keys are still there".format(myBLEmac)))
 	U.logger.log(20, _t)
 	reportShellyToIndigo(_t, mac=mac, bonded=(not gone))
@@ -1713,13 +1966,23 @@ def checkShellyLink(mac):
 	ok   = False
 	try:
 		if not isBonded(mac):
-			_t = "shelly link test {}: NO PAIRING on radio {} - use 'pair this rPi' in the device dialog".format(mac, myBLEmac)
+			_hint = shellyOtherRadioHint(mac)
+			_t = "shelly link test {}: NO PAIRING on radio {}{}".format(mac, myBLEmac,
+						_hint if _hint else " - to pair it, " + shellyPairByHandHint)
 			U.logger.log(20, _t)
 			reportShellyToIndigo(_t, mac=mac, bonded=False)
 			return False
 		out.append("keys present")
 		if gdbus(dev, "org.bluez.Device1.Connect") == "":
-			out.append("connect FAILED - either the device is not on air just now, or it no longer knows this pairing (was it factory reset? then relink)")
+			# DO NOT CLAIM "not on air" FROM HERE - this radio cannot tell the difference. A connect
+			# failing says only that THIS radio got no usable connection: the device may be sitting
+			# right there and advertising happily, as it was on rpi 2, while the connect still
+			# fails because of the radio or because the device no longer honours these keys. The
+			# plugin knows whether the rPi is hearing it (Pi_nn_Time, see shellyReachTextForRPI)
+			# and appends that to this line, which is what actually separates the three causes.
+			out.append("connect FAILED on this radio - the keys are here but the device did not accept or answer a connection."
+						" Either it no longer honours this pairing (factory reset, or its bond slots are full - then unpair here and pair it again), or this radio cannot hold"
+						" an authenticated connection to it - try pinning BLEconnect to another radio in the rPi device edit")
 		else:
 			out.append("connect ok")
 			for _i in range(12):
@@ -1791,7 +2054,7 @@ def dbusShellyBeep(mac, seconds=1.0):
 			# custom services to anyone but hands out their characteristics only to a bonded peer.
 			# So it is a pairing answer, not a radio one - say so rather than listing nothing.
 			out.append("buzzer uuid NOT present - uuids seen: {}".format(", ".join(sorted(paths)[:6]) if paths else
-						"NONE AT ALL, which means this is not a working pairing - the device only shows its characteristics to a bonded peer, so relink this rpi"))
+						"NONE AT ALL, which means this is not a working pairing - the device only shows its characteristics to a bonded peer. Unpair this rPi in the device dialog, then " + shellyPairByHandHint))
 			return "beep[" + ", ".join(out) + "]"
 		# beacon mode must be on for the buzzer to work at all (shelly's docs)
 		for pp, val, what in ((pBeacon, "[1]", "beaconMode=on"), (pBuzz, "[1]", "buzzer=on")):
@@ -2135,6 +2398,15 @@ def processBondQueueBLEconnect():
 		try:	devices = json.loads(line)
 		except Exception: continue
 		for mac in devices:
+			# A JOB OWNS THE RADIO WHILE IT RUNS, and they run one after another - doShellyBond
+			# alone holds it for up to shellyBondArmSecs. The device's own pairing window is about
+			# ONE MINUTE from the hold, so a second gesture arriving while this is busy queues a
+			# job whose window has closed long before it gets the radio. Measured on rpi 11: three
+			# buttons held inside 41 seconds, the first paired, the other two reported "the press
+			# window closed before bluez got there". The marker lets beaconloop say "busy, wait"
+			# instead of arming into a failure - see shellyBondJobPending() there.
+			try:	U.writeFile(shellyBondBusyFile, "{}".format(mac))
+			except Exception:	pass
 			try:
 				if   devices[mac].get("check", False):
 					_ok = checkShellyLink(mac)
@@ -2144,7 +2416,12 @@ def processBondQueueBLEconnect():
 					# enabled on the device, so it is offered beside the silent one, not instead.
 					if devices[mac].get("beep", False):
 						if _ok:
-							_b = doShellyBeep(mac, 1.0)
+							# beepSecs comes from the indigo BEEP ACTION; the device dialog's own
+							# button sends no length and keeps the 1s confirmation buzz. The device
+							# stops the buzzer by itself at 30s, so there is no point going past it.
+							try:	_secs = max(0.2, min(30., float(devices[mac].get("beepSecs", 1.0))))
+							except Exception:	_secs = 1.0
+							_b = doShellyBeep(mac, _secs)
 							reportShellyToIndigo("shelly link test {}: the beep {}".format(mac,
 										"was sent - it should have buzzed" if _b else "could NOT be sent, see this rpi's log"), mac=mac, bonded=isBonded(mac))
 						else:
@@ -2154,6 +2431,9 @@ def processBondQueueBLEconnect():
 				did = True
 			except Exception:
 				U.logger.log(20,"", exc_info=True)
+			try:
+				if os.path.isfile(G.homeDir + shellyBondBusyFile):	os.remove(G.homeDir + shellyBondBusyFile)
+			except Exception:	pass
 	return did
 
 
@@ -3790,6 +4070,15 @@ def readParams():
 				U.logger.log(20," no BLEconnect devices / switchbots in parameters - continuing as gatt service only (beep/battery for beacon tags, routed by receiveCommands)")
 
 
+
+			# AFTER AN SD CARD REPLACEMENT the plugin offers this rPi's saved shelly pairings back
+			# here, so they do not all have to be made again by hand. No-op once they are in place.
+			try:	restoreShellyBonds(inp.get("shellyBondRestore", {}))
+			except SystemExit:	raise
+			except Exception:	U.logger.log(20,"", exc_info=True)
+			# and the other direction: back up what is already here, once
+			try:	backupShellyBondsOnThisRadio()
+			except Exception:	U.logger.log(20,"", exc_info=True)
 
 			if "restartBLEifNoConnect"	in inp:	 restartBLEifNoConnect=		  (inp["restartBLEifNoConnect"])
 			if "sensorList"				in inp:	 sensorList=				  (inp["sensorList"])

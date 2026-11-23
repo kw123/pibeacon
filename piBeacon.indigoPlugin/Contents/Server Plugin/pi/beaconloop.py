@@ -96,14 +96,66 @@ iTrackDevTypes = {"0":"0","1":"","2":""   ,"3":"Finder-3","4":"Wallet-4",  "5":"
 # and "the next rpi". A tighter gate just loses presses.
 shellyBondGate     = -65
 shellyTraceGate    = -60	# a HOLD closer than this dumps the whole decoded frame to the log
-shellyHoldCodes    = ("long_press", "hold_press", "button_hold")	# the gesture that opens pairing mode
-shellyBondArmSecs  = 90		# how long BLEconnect waits for the NEXT press after the double press
+shellyHoldCodes    = ("long_press", "hold_press", "button_hold")	# a hold, as the device reports it
+# WHAT CAN ARM THIS rPi: ONLY A GESTURE THE rPi ACTUALLY RECEIVES. The four clicks the shelly
+# phone app asks for are NOT one - measured on the Button Tough next to rpi 2, 2026-11-11: four
+# clicks produce NO advertisement at all, so there is nothing to count and nothing to arm on. So
+# arming and opening are two separate gestures: arm this rPi first, then open the device with the
+# clicks inside the armed period.
+# THE DOCUMENTED ARMING GESTURE IS A HOLD, so that one procedure covers every model: the older
+# BLU Button 1 (SBBT-002C) pairs with a 10 s hold and nothing else, so arming the newer ones with
+# a hold too makes both read the same - "hold it, and on the newer models 4 fast clicks after".
+# IT HAS TO BE LET GO, and that is the whole trick: the hold event is broadcast when the button is
+# RELEASED after roughly 2-3 s. Held and kept down, a measured RC Button 4 sent nothing at all, so
+# every message here asks for "hold about shellyArmHoldSecs seconds and LET GO".
+# A DOUBLE OR TRIPLE PRESS STILL ARMS IT and stays in the list as the fallback: it is the one
+# event that is always broadcast whatever the firmware does with holds (it is how a Button Tough
+# was paired on rpi 2, 2026-11-11), so it is what to fall back on if a hold does not arm this rPi.
+shellyArmHoldSecs  = 4		# the hold every message asks for: press, hold ~4s, LET GO
+shellyArmCodes     = ("long_press", "hold_press", "button_hold", "double_press", "triple_press")
+shellyBondArmSecs  = 90		# how long BLEconnect waits for the clicks after the arming gesture
 shellyBondCooldown = 150	# do not re-arm straight away: a finished pairing costs a bond slot
 shellyBondArmed    = {}		# mac -> when it was last armed
 # A SEPARATE THROTTLE for the "you are already paired" notice. It must NOT share shellyBondArmed:
 # that would stamp an arming time for a gesture that armed nothing, and a hold right after an
 # unpair would then be turned away by the cooldown - exactly the recovery it is meant to allow.
 shellySaidPaired   = {}		# mac -> when this rpi last said "already paired to me"
+shellySaidEncrypted   = {}		# mac -> when the "its broadcasts are encrypted" notice last went out
+shellyEncryptedCooldown = 3600.	# secs; it is a device setting, so saying it once an hour is plenty
+
+# COUNTING THE FOUR CLICKS: KEPT, BUT IT IS A FALLBACK, NOT THE PROCEDURE. The shelly app asks
+# for 4 presses on both the BLU RC Button 4 (SBBT-104C..) and the Button Tough (SBBT-102C), and
+# BTHome has no code for that gesture - the button event stops at triple_press - so the hope was
+# that it arrives as FOUR SEPARATE press events to be counted here. IT DOES NOT: the Button Tough
+# broadcasts NOTHING while those four clicks are made (rpi 2, 2026-11-11), which is why the
+# documented procedure arms on a double/triple press instead (see shellyArmCodes). This stays in
+# because it costs nothing and a model that does broadcast them would then work in one gesture.
+shellyClickWindow  = 6.0	# seconds the four clicks have to fall inside
+shellyClickNeeded  = 4		# presses that would make it the pairing gesture
+shellyClickTimes   = {}		# mac -> timestamps of the recent distinct press events
+
+# WHICH MODELS CAN CONFIRM A PAIRING BY SOUND. The buzzer is the only part of a pairing the user
+# can hear, and every message here used to promise it. The BLU RC Button 4 and the wall switches
+# HAVE NO BUZZER: pairing them gains nothing at all - their presses arrive from the advertisement,
+# which needs no pairing - and the beep write would just fail and read like a failed pairing.
+# Matched against the device's own local name (SBBT-104CUS, SBBT-102C ..), remembered per mac from
+# the name frames, because the data frames that carry the button events contain no name.
+shellyNoBuzzerModels = ("SBBT-104", "SBBT-105", "SBBT-204", "SBBT-205")	# RC/wall 4-button, no buzzer
+
+
+def shellyHasBuzzer(mac):
+	"""Can this shelly confirm a pairing by sound? Unknown models are assumed to have a buzzer.
+
+	Inputs:
+	    mac (str): the shelly's mac
+	Outputs:
+	    bool: False only for a model that is known to have none
+	"""
+	try:
+		_nm = "{}".format(BLEsensorMACs.get(mac,{}).get("mfg_info","")).upper()
+		return not any(_m in _nm for _m in shellyNoBuzzerModels)
+	except Exception:
+		return True
 
 
 shellyBondKeyTags = ("[LongTermKey]", "[PeripheralLongTermKey]", "[SlaveLongTermKey]", "[LinkKey]")
@@ -121,6 +173,21 @@ def reportShellyToIndigo(text):
 	"""
 	try:	U.sendURL(sendAlive="shellyLink", text="{}".format(text), wait=False, squeeze=False)
 	except Exception:	pass
+
+
+def shellyBondJobPending():
+	"""Is a shelly bond/test job queued on this rpi, or running right now?
+
+	Two files, two states: BLEconnect.bond is written here and deleted the moment BLEconnect picks
+	the batch up, BLEconnect.bondBusy exists while a job actually owns the radio. Either one means
+	a new gesture must not be armed - the jobs run one at a time and one can hold the radio for 90s,
+	by which time this button's own pairing window (about a minute) is shut.
+	"""
+	try:
+		if os.path.isfile(G.homeDir + "temp/BLEconnect.bond"):		return True
+		if os.path.isfile(G.homeDir + "temp/BLEconnect.bondBusy"):	return True
+	except Exception:	pass
+	return False
 
 
 def shellyIsBonded(mac):
@@ -146,38 +213,153 @@ def shellyIsBonded(mac):
 		return False
 
 
-shellyTagToProperty = { 
-			"00":{"name":"packetId",		"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"01":{"name":"batteryLevel",	"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"%",		"mapVtoText":{}									},
-			"03":{"name":"hum",				"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
-			"2E":{"name":"hum",				"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
-			"08":{"name":"dewpoint",		"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"C",		"mapVtoText":{}									},
-			"06":{"name":"mass",			"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.01,	"unit":"Kg",	"mapVtoText":{}									},
-			"07":{"name":"mass",			"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"lbs",	"mapVtoText":{}									}, 
-			"14":{"name":"moisture",		"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									}, 
-			"2F":{"name":"moisture",		"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.01,	"unit":"%",		"mapVtoText":{}									},
-			"02":{"name":"temp",			"bytes":3,	"type":"sint",		"typeFinal":"float,1",	"factor":0.01,	"trigValue":0.03,	"unit":"C",		"mapVtoText":{}									},
-			"0D":{"name":"pm25",			"bytes":3,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"ug/m3",	"mapVtoText":{}									},
-			"0E":{"name":"pm10",			"bytes":3,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"ug/m3",	"mapVtoText":{}									},
-			"45":{"name":"temp",			"bytes":2,	"type":"sint",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.03,	"unit":"C",		"mapVtoText":{}									},
-			#"03":{"name":"press",			"bytes":3,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.03,	"unit":"hPa",	"mapVtoText":{}									},
-			"40":{"name":"distance ",		"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.03,	"unit":"mm",	"mapVtoText":{}									},
-			"41":{"name":"distance ",		"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":0.1,	"trigValue":0.03,	"unit":"m",		"mapVtoText":{}									},
-			"12":{"name":"CO2",				"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.03,	"unit":"ppm",	"mapVtoText":{}									},
-			"43":{"name":"current",			"bytes":2,	"type":"int",		"typeFinal":"float,3",	"factor":0.001,	"trigValue":0.02,	"unit":"A",		"mapVtoText":{}									},
-			"0C":{"name":"voltage",			"bytes":2,	"type":"int",		"typeFinal":"float,3",	"factor":0.001,	"trigValue":0.02,	"unit":"V",		"mapVtoText":{}									},
-			"4A":{"name":"voltage",			"bytes":2,	"type":"int",		"typeFinal":"float,1",	"factor":0.1,	"trigValue":0.02,	"unit":"V",		"mapVtoText":{}									},
-			"44":{"name":"tvoc",			"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0.02,	"unit":"ug/m3",	"mapVtoText":{}									},
-			#"44":{"name":"speed",			"bytes":2,	"type":"int",		"typeFinal":"float,2",	"factor":0.01,	"trigValue":0.02,	"unit":"m/s",	"mapVtoText":{}									},
-			"05":{"name":"Illuminance",		"bytes":3,	"type":"int",		"typeFinal":"float,1",	"factor":0.001,	"trigValue":0.05,	"unit":"Lux",	"mapVtoText":{}									},
-			"3F":{"name":"rotation",		"bytes":2,	"type":"sint",		"typeFinal":"int",		"factor":0.1,	"trigValue":0.02,	"unit":"D",		"mapVtoText":{}									},
-			"09":{"name":"count",			"bytes":1,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"3D":{"name":"count",			"bytes":2,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"3E":{"name":"count",			"bytes":4,	"type":"int",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									},
-			"3C":{"name":"dimmer",			"bytes":2,	"type":"intLR",		"typeFinal":"int",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{}									}, # need to fix
-			"21":{"name":"motion",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"motion"}		},
-			"2D":{"name":"isOpen",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"isClosed","01":"isOpen"}	},
-			"3A":{"name":"button",			"bytes":1,	"type":"char",		"typeFinal":"char",		"factor":1,		"trigValue":0,		"unit":"",		"mapVtoText":{"00":"None","01":"press","02":"double_press","03":"tripple_press","04":"long_press","05":"long_double_press","06":"long_triple_press","80":"hold_press","FE":"button_hold"}	}
+# ---------------------------------------------------------------------------------------------
+# BTHome v2 OBJECT IDS - the complete published set, https://bthome.io/format/
+#
+# A BTHome advertisement is service data under uuid FCD2:
+#      D2FC  <devInfo>  <id> <value..>  <id> <value..> ...
+# <devInfo> is ONE byte of flags, not an object id, and is skipped by the decoder:
+#      bit 0     1 = payload is encrypted (AES-CCM; NOT decoded here - the frame is unusable)
+#      bit 2     1 = trigger based device, ie it broadcasts on an event, not on a timer
+#      bits 5-7  BTHome version, 010 = v2
+#   so 0x40 = v2 plain, 0x41 = v2 encrypted, 0x44 = v2 plain + trigger based (what shelly sends).
+# The spec asks senders to emit ids in NUMERICAL ORDER, which is what lets a receiver walk past
+# the ids it does not know - and why this table being complete matters: an unknown id has no
+# known length, so the walk below can only step 1 byte and then reads a VALUE as the next id,
+# and the rest of that frame decodes into nonsense. Anything in here is stepped over correctly
+# even when nothing consumes it.
+#
+# COLUMNS
+#   bytes       the uintN/sintN width from the spec; 0 = variable, length byte first (text, raw)
+#   type        how to read it: int = little endian unsigned, sint = little endian signed,
+#               char = one code byte looked up in mapVtoText, var = length byte then payload,
+#               ver  = little endian bytes shown most significant first, eg "4.2.1.0"
+#   typeFinal   int / "float,N" = round to N decimals / char / text / hex / ver
+#   factor      spec multiplier. trigValue is OURS, not the spec: see the trigger block below -
+#               it is only consulted for rotation and Illuminance, both as a RELATIVE change.
+#   unit        for the log and the plugin side; not sent as part of the value
+#
+# SEVERAL IDS SHARE ONE name ON PURPOSE - temp is 02/45/57/58, count is 09/3D/3E/59/5A/5B, and
+# open/closed is 11 (opening), 1A (door) and 2D (window) - because a device sends exactly one of
+# each and the plugin should not need a state per encoding. itemsValues is keyed by NAME, so if a
+# device ever sent two of a group in one frame the last one in the frame would win.
+# WHERE A VENDOR DOC AND THE SPEC DISAGREE, THE SPEC WINS. Shelly's own BLU Wall Switch 4 page
+# lists the button object 3A as uint16; it is uint8, as the spec says and as the example on that
+# same page proves - it shows FOUR 3A objects in eight bytes, one value byte each. Reading it as
+# 2 bytes does not just lose the button: the walk swallows the next 3A as part of the value and
+# then decodes the bytes after it as a FAKE packetId and batteryLevel, so presses get dropped by
+# the duplicate-packetId test and the battery state is overwritten with nonsense.
+# A 4-BUTTON DEVICE REPEATS 3A ONCE PER BUTTON, at a fixed position, all four in every packet,
+# with code 00 for the ones that did nothing: "3A01 3A00 3A01 3A00" = buttons 1 and 3 pressed.
+# itemsValues is keyed by name, so today all four collapse to the LAST one - which is idle in
+# almost every frame, so such a device reports no button events at all. Indexing them (button,
+# button2, button3, button4) is the open work item, not a decode-length problem.
+# NOT IN THE SPEC, KEPT ANYWAY: button code FE ("button_hold"), which shelly does send.
+# 03 WAS SPELLED "tripple_press" HERE AND IS NOW "triple_press", as the spec and shelly both
+# spell it. It is the decoded VALUE, so it lands in the status / currentEventType states: an
+# indigo trigger or condition that matches the old literal has to be changed to match too.
+# ---------------------------------------------------------------------------------------------
+shellyTagToProperty = {
+			# ---- MISC ----
+			"00":{"name":"packetId",         "bytes":1, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			# ---- SENSOR DATA, numeric.  bytes = uintN/sintN width from the spec, factor as published ----
+			"01":{"name":"batteryLevel",     "bytes":1, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"%",     "mapVtoText":{}	},
+			"02":{"name":"temp",             "bytes":2, "type":"sint", "typeFinal":"float,1", "factor":0.01,      "trigValue":0.03,  "unit":"C",     "mapVtoText":{}	},
+			"03":{"name":"hum",              "bytes":2, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.01,  "unit":"%",     "mapVtoText":{}	},
+			"04":{"name":"press",            "bytes":3, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.03,  "unit":"hPa",   "mapVtoText":{}	},
+			"05":{"name":"Illuminance",      "bytes":3, "type":"int",  "typeFinal":"float,1", "factor":0.01,      "trigValue":0.05,  "unit":"Lux",   "mapVtoText":{}	},
+			"06":{"name":"mass",             "bytes":2, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.01,  "unit":"Kg",    "mapVtoText":{}	},
+			"07":{"name":"mass",             "bytes":2, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.01,  "unit":"lbs",   "mapVtoText":{}	},
+			"08":{"name":"dewpoint",         "bytes":2, "type":"sint", "typeFinal":"float,2", "factor":0.01,      "trigValue":0.01,  "unit":"C",     "mapVtoText":{}	},
+			"09":{"name":"count",            "bytes":1, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"0A":{"name":"energy",           "bytes":3, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.01,  "unit":"kWh",   "mapVtoText":{}	},
+			"0B":{"name":"power",            "bytes":3, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.02,  "unit":"W",     "mapVtoText":{}	},
+			"0C":{"name":"voltage",          "bytes":2, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"V",     "mapVtoText":{}	},
+			"0D":{"name":"pm25",             "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.03,  "unit":"ug/m3", "mapVtoText":{}	},
+			"0E":{"name":"pm10",             "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.03,  "unit":"ug/m3", "mapVtoText":{}	},
+			"12":{"name":"CO2",              "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.03,  "unit":"ppm",   "mapVtoText":{}	},
+			"13":{"name":"tvoc",             "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.02,  "unit":"ug/m3", "mapVtoText":{}	},
+			"14":{"name":"moisture",         "bytes":2, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.01,  "unit":"%",     "mapVtoText":{}	},
+			"2E":{"name":"hum",              "bytes":1, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.01,  "unit":"%",     "mapVtoText":{}	},
+			"2F":{"name":"moisture",         "bytes":1, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.01,  "unit":"%",     "mapVtoText":{}	},
+			"3D":{"name":"count",            "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"3E":{"name":"count",            "bytes":4, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"3F":{"name":"rotation",         "bytes":2, "type":"sint", "typeFinal":"int",     "factor":0.1,       "trigValue":0.02,  "unit":"D",     "mapVtoText":{}	},
+			"40":{"name":"distance",         "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.03,  "unit":"mm",    "mapVtoText":{}	},
+			"41":{"name":"distance",         "bytes":2, "type":"int",  "typeFinal":"float,1", "factor":0.1,       "trigValue":0.03,  "unit":"m",     "mapVtoText":{}	},
+			"42":{"name":"duration",         "bytes":3, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"s",     "mapVtoText":{}	},
+			"43":{"name":"current",          "bytes":2, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"A",     "mapVtoText":{}	},
+			"44":{"name":"speed",            "bytes":2, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.02,  "unit":"m/s",   "mapVtoText":{}	},
+			"45":{"name":"temp",             "bytes":2, "type":"sint", "typeFinal":"float,1", "factor":0.1,       "trigValue":0.03,  "unit":"C",     "mapVtoText":{}	},
+			"46":{"name":"UVindex",          "bytes":1, "type":"int",  "typeFinal":"float,1", "factor":0.1,       "trigValue":0.02,  "unit":"",      "mapVtoText":{}	},
+			"47":{"name":"volume",           "bytes":2, "type":"int",  "typeFinal":"float,1", "factor":0.1,       "trigValue":0.02,  "unit":"L",     "mapVtoText":{}	},
+			"48":{"name":"volume",           "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.02,  "unit":"mL",    "mapVtoText":{}	},
+			"49":{"name":"volumeFlowRate",   "bytes":2, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"m3/hr", "mapVtoText":{}	},
+			"4A":{"name":"voltage",          "bytes":2, "type":"int",  "typeFinal":"float,1", "factor":0.1,       "trigValue":0.02,  "unit":"V",     "mapVtoText":{}	},
+			"4B":{"name":"gas",              "bytes":3, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"m3",    "mapVtoText":{}	},
+			"4C":{"name":"gas",              "bytes":4, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"m3",    "mapVtoText":{}	},
+			"4D":{"name":"energy",           "bytes":4, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"kWh",   "mapVtoText":{}	},
+			"4E":{"name":"volume",           "bytes":4, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"L",     "mapVtoText":{}	},
+			"4F":{"name":"water",            "bytes":4, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"L",     "mapVtoText":{}	},
+			"50":{"name":"timestamp",        "bytes":4, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"epoch", "mapVtoText":{}	},
+			"51":{"name":"acceleration",     "bytes":2, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"m/s2",  "mapVtoText":{}	},
+			"52":{"name":"gyroscope",        "bytes":2, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"D/s",   "mapVtoText":{}	},
+			"53":{"name":"text",             "bytes":0, "type":"var",  "typeFinal":"text",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"54":{"name":"raw",              "bytes":0, "type":"var",  "typeFinal":"hex",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"55":{"name":"volumeStorage",    "bytes":4, "type":"int",  "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"L",     "mapVtoText":{}	},
+			"56":{"name":"conductivity",     "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.02,  "unit":"uS/cm", "mapVtoText":{}	},
+			"57":{"name":"temp",             "bytes":1, "type":"sint", "typeFinal":"int",     "factor":1,         "trigValue":1,     "unit":"C",     "mapVtoText":{}	},
+			"58":{"name":"temp",             "bytes":1, "type":"sint", "typeFinal":"float,2", "factor":0.35,      "trigValue":0.35,  "unit":"C",     "mapVtoText":{}	},
+			"59":{"name":"count",            "bytes":1, "type":"sint", "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"5A":{"name":"count",            "bytes":2, "type":"sint", "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"5B":{"name":"count",            "bytes":4, "type":"sint", "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"5C":{"name":"power",            "bytes":4, "type":"sint", "typeFinal":"float,2", "factor":0.01,      "trigValue":0.02,  "unit":"W",     "mapVtoText":{}	},
+			"5D":{"name":"current",          "bytes":2, "type":"sint", "typeFinal":"float,3", "factor":0.001,     "trigValue":0.02,  "unit":"A",     "mapVtoText":{}	},
+			"5E":{"name":"direction",        "bytes":2, "type":"int",  "typeFinal":"float,2", "factor":0.01,      "trigValue":0.02,  "unit":"D",     "mapVtoText":{}	},
+			"5F":{"name":"precipitation",    "bytes":2, "type":"int",  "typeFinal":"float,1", "factor":0.1,       "trigValue":0.02,  "unit":"mm",    "mapVtoText":{}	},
+			"60":{"name":"channel",          "bytes":1, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"61":{"name":"rotationalSpeed",  "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0.02,  "unit":"rpm",   "mapVtoText":{}	},
+			"62":{"name":"speed",            "bytes":4, "type":"sint", "typeFinal":"float,6", "factor":0.000001,  "trigValue":0.02,  "unit":"m/s",   "mapVtoText":{}	},
+			"63":{"name":"acceleration",     "bytes":4, "type":"sint", "typeFinal":"float,6", "factor":0.000001,  "trigValue":0.02,  "unit":"m/s2",  "mapVtoText":{}	},
+			"64":{"name":"lightLevel",       "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"dark","01":"twilight","02":"bright"}	},
+			"65":{"name":"settingsRevision", "bytes":1, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			# ---- BINARY SENSOR DATA, all uint8: 00 = first word, 01 = second ----
+			"0F":{"name":"genericBoolean",   "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"off","01":"on"}	},
+			"10":{"name":"powerOn",          "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"off","01":"on"}	},
+			"11":{"name":"isOpen",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"isClosed","01":"isOpen"}	},
+			"15":{"name":"batteryLow",       "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"normal","01":"low"}	},
+			"16":{"name":"batteryCharging",  "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"notCharging","01":"charging"}	},
+			"17":{"name":"carbonMonoxide",   "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"clear","01":"detected"}	},
+			"18":{"name":"cold",             "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"normal","01":"cold"}	},
+			"19":{"name":"connectivity",     "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"disconnected","01":"connected"}	},
+			"1A":{"name":"isOpen",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"isClosed","01":"isOpen"}	},
+			"1B":{"name":"garageDoor",       "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"isClosed","01":"isOpen"}	},
+			"1C":{"name":"gasDetected",      "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"clear","01":"detected"}	},
+			"1D":{"name":"heat",             "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"normal","01":"hot"}	},
+			"1E":{"name":"lightDetected",    "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"noLight","01":"light"}	},
+			"1F":{"name":"lock",             "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"locked","01":"unlocked"}	},
+			"20":{"name":"moistureDetected", "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"dry","01":"wet"}	},
+			"21":{"name":"motion",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"None","01":"motion"}	},
+			"22":{"name":"moving",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"notMoving","01":"moving"}	},
+			"23":{"name":"occupancy",        "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"clear","01":"detected"}	},
+			"24":{"name":"plug",             "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"unplugged","01":"pluggedIn"}	},
+			"25":{"name":"presence",         "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"away","01":"home"}	},
+			"26":{"name":"problem",          "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"OK","01":"problem"}	},
+			"27":{"name":"running",          "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"notRunning","01":"running"}	},
+			"28":{"name":"safety",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"unsafe","01":"safe"}	},
+			"29":{"name":"smoke",            "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"clear","01":"detected"}	},
+			"2A":{"name":"sound",            "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"clear","01":"detected"}	},
+			"2B":{"name":"tamper",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"off","01":"on"}	},
+			"2C":{"name":"vibration",        "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"clear","01":"detected"}	},
+			"2D":{"name":"isOpen",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"isClosed","01":"isOpen"}	},
+			# ---- EVENTS.  command/dimmer carry an extra >steps< byte for some codes - see bytesByValue ----
+			"3A":{"name":"button",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"None","01":"press","02":"double_press","03":"triple_press","04":"long_press","05":"long_double_press","06":"long_triple_press","80":"hold_press","81":"hold_release","FE":"button_hold"}	},
+			"3B":{"name":"command",          "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"off","01":"on","02":"toggle","03":"step_up","04":"step_down"}, "bytesByValue":{"03":2,"04":2}	},
+			"3C":{"name":"dimmer",           "bytes":1, "type":"char", "typeFinal":"char",    "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{"00":"None","01":"rotate_left","02":"rotate_right"}, "bytesByValue":{"01":2,"02":2}	},
+			# ---- DEVICE INFORMATION ----
+			"F0":{"name":"deviceTypeId",     "bytes":2, "type":"int",  "typeFinal":"int",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"F1":{"name":"firmwareVersion",  "bytes":4, "type":"ver",  "typeFinal":"ver",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
+			"F2":{"name":"firmwareVersion",  "bytes":3, "type":"ver",  "typeFinal":"ver",     "factor":1,         "trigValue":0,     "unit":"",      "mapVtoText":{}	},
 		}
 
 
@@ -362,7 +544,13 @@ def signedintfromhexR(string, n): # eg aabbccdd, 4
 			ss += string[(n-i-1)*2:(n-i)*2]
 
 		intNumber = int(ss,16)
-		if intNumber > 2**(n*8-1)-1: intNumber -= (2**(n*8-1) +2)
+		# TWO'S COMPLEMENT: subtract the FULL range, 2**(n*8). It used to subtract
+		# 2**(n*8-1)+2, which is not a sign convention of any kind - for 2 bytes it turned
+		# FFFF (-1) into +32765 and FF9C (-100) into +32666, so every NEGATIVE value read as a
+		# large positive one. The only caller is the shelly BTHome decoder below, where it
+		# reads sint8/sint16/sint32, ie temp 02/45/57/58, dewpoint 08 and rotation 3F: a
+		# shelly H+T at -1 C was reporting +326.7 C. Nothing else in this file uses it.
+		if intNumber >= 2**(n*8-1): intNumber -= 2**(n*8)
 	except Exception :
 		U.logger.log(20,"", exc_info=True)
 		return 0
@@ -751,6 +939,26 @@ hciRolesPinnedSeen = False		# the params file has been read at least once - only
 hciRolePinAnchors = {}
 hciRolePinLost    = [""]		# a pin that cannot be honoured right now, for the log + the hci state
 hciRolePinAnchorsLoaded = [False]
+hciRolePinEffective = [{}]		# the last {hci: mode} resolvePinnedRadios() worked out - see pinnedModeOf
+
+
+def pinnedModeOf(hci):
+	"""The dialog's pin mode for the radio that is called `hci` right now, "" when it has none.
+
+	ALWAYS THROUGH THE RESOLVED MAP, never through hciRolesPinned directly: a pin is keyed by the
+	radio's MAC now (the plugin translates the dialog's hciRole_hciN prop to the mac of that radio
+	before sending it, because hciN is only the slot the kernel handed out at boot and can belong
+	to a different radio after a reboot or a re-plug). A raw lookup by hci name therefore misses
+	every pin and silently reads as "not pinned" - which would, for instance, turn a "scanner BLE4"
+	pin into no pin at all. The map is refreshed on every adapter enumeration.
+
+	Inputs:
+	    hci (str): hci name, e.g. "hci1"
+	Outputs:
+	    str: the pinned mode, or ""
+	"""
+	try:	return "{}".format(hciRolePinEffective[0].get("{}".format(hci), ""))
+	except Exception:	return ""
 lastHciStates  = {}		# last per-radio state strings SENT (hci0..hci3) - send only on change
 
 
@@ -1341,7 +1549,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			_pinScan = pinnedRadio(("scanBLE4", "scanBLE45"), HCIs["hci"])
 			if _pinScan != "":
 				trymyBLEmac = "{}".format(HCIs["hci"][_pinScan].get("BLEmac",""))
-				U.logger.log(20,"scan role PINNED to {} ({}, {}) by the device dialog".format(_pinScan, trymyBLEmac, hciRolesPinned.get(_pinScan,"")))
+				U.logger.log(20,"scan role PINNED to {} ({}, {}) by the device dialog".format(_pinScan, trymyBLEmac, pinnedModeOf(_pinScan)))
 			useHCIForBeacon,  myBLEmac, devId, bus = U.selectHCI(HCIs["hci"], "-1","USB", tryBLEmac=trymyBLEmac, role="scan")
 
 			# if a specific dongle (pinned BLE mac from beaconloop.hci) was requested but not found -
@@ -1358,6 +1566,32 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 						if "{}".format(myBLEmac).upper() == "{}".format(trymyBLEmac).upper(): break
 				if "{}".format(myBLEmac).upper() != "{}".format(trymyBLEmac).upper():
 					U.logger.log(20,"pinned BLE mac {} still not found after retries, switching to {} on {}".format(trymyBLEmac, myBLEmac, useHCIForBeacon))
+			# ---- THE RADIO RULE: UART = BROADCAST + CONNECT, A DONGLE SCANS (see uartRadio) ----
+			# selectHCI's scan order already puts the internal radio near the bottom, but it can
+			# only rank what it is handed: a delivery verdict rating the dongle "weak" (rpi 5:
+			# 45 msg/s against the internal's 60) was enough to give the scan role to the internal,
+			# and that takes the connect role off the one adapter that holds the pairing keys. So
+			# the rule is applied here, where the scan radio is finally known.
+			_uartHCI = uartRadio(HCIs["hci"])
+			_canScan = canScanBLE4(HCIs["hci"], notThese=(_uartHCI,))
+			if _uartHCI != "" and "{}".format(useHCIForBeacon) == _uartHCI:
+				if _pinScan != "" and _pinScan == _uartHCI:
+					# AN EXPLICIT PIN IS THE USER SPEAKING - honoured. But it contradicts the rule
+					# and its consequence is invisible (connect and the keys part company), so it
+					# is said out loud once per start.
+					if _canScan:
+						U.logger.log(30,"WARNING the scan role is PINNED to the INTERNAL (uart) radio {} in the device dialog while {} could scan instead. By rule the internal carries broadcast + connect and a dongle scans: with the internal scanning, connect has to move to a dongle, and pairing keys cannot follow it to another adapter".format(_uartHCI, ", ".join(_canScan)))
+				elif _canScan:
+					_alt = U.selectHCI(HCIs["hci"], "-1", "USB", role="scan", doNotUseHCI=_uartHCI, quiet=True)
+					if "{}".format(_alt[0]) in HCIs["hci"]:
+						U.logger.log(20,"scan role MOVED off the internal radio {} to {} ({}) - the rule is uart = broadcast + connect, a dongle scans. The internal keeps the connect role, which is where this rpi's pairing keys live, and they cannot be moved to another adapter".format(myBLEmac, _alt[0], _alt[1]))
+						useHCIForBeacon,  myBLEmac, devId, bus = _alt
+				else:
+					# THE ONE CASE THE RULE ALLOWS: nothing else here can scan BLE4 at all. Never
+					# silent - with the internal scanning, connect and broadcast have to share it
+					# or move to a dongle, so the dongles are worth a look.
+					U.logger.log(30,"WARNING the INTERNAL (uart) radio {} is doing the SCANNING: no other radio on this rpi can scan BLE4, so this is the fallback and not the intended setup (uart = broadcast + connect, dongle = scan). CHECK THE BLE DONGLES ON THIS rPi: {}".format(
+									myBLEmac, "; ".join("{}={}/{}/{}{}".format(_h, HCIs["hci"][_h].get("BLEmac",""), HCIs["hci"][_h].get("bus",""), HCIs["hci"][_h].get("upDown",""), "" if HCIs["hci"][_h].get("ble4",True) else "/BLE5-only, cannot scan BLE4") for _h in sorted(HCIs["hci"])) if len(HCIs["hci"]) > 1 else "this rpi has only the one radio"))
 			# beaconloop.hci role format: {"scan":{mac,hci,bus,BLE5[,allMacs]},"broadcast":{..},"BLEconnect":{..}}
 			hciRoles["scan"] = {"mac": myBLEmac, "hci": useHCIForBeacon, "bus": bus, "BLE5": False}
 			try:	# carry the persisted BLE5 delivery-test verdict over (same scan mac only; old flat format understood too)
@@ -1423,6 +1657,48 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 					# BLEconnect with no radio at all ("BLE STACK is not UP" - seen on pi#15).
 					connectPick = "{}".format(U.selectHCI(HCIs["hci"], "-1", "USB", role="connect")[0])
 			except Exception:	pass
+			# THE CONNECT ROLE BELONGS ON THE UART (see uartRadio). selectHCI prefers it already,
+			# but again only among the radios it was given: with the internal scanning, or after a
+			# verdict reshuffled the order, connect lands on a dongle - on rpi 5 it landed on the
+			# BLE5-ONLY one. Keys are per adapter, so this is settled explicitly here rather than
+			# left to a ranking, and a device-dialog pin below still overrides it.
+			if _uartHCI != "" and connectPick != _uartHCI:
+				if _uartHCI != "{}".format(useHCIForBeacon):
+					U.logger.log(20,"connect role -> {} (the internal/uart radio, mac {}) instead of {} - uart = broadcast + connect by rule, and a pairing can only be used from the adapter that holds its keys".format(
+									_uartHCI, HCIs["hci"].get(_uartHCI,{}).get("BLEmac",""), connectPick if connectPick else "?"))
+					connectPick = _uartHCI
+				else:
+					# THE INTERNAL IS SCANNING (pinned, or nothing else can scan BLE4), so the rule
+					# cannot be followed to the letter and the question is where the KEYS are. A
+					# dedicated dongle normally wins - connecting on the scan radio stalls the scan
+					# - but a dongle that holds no keys cannot use a single existing pairing, so if
+					# the internal is the one holding them, connect SHARES it and the pause
+					# handshake arbitrates. That is the documented 1-radio behaviour.
+					_kU = pairingKeysOn(HCIs["hci"].get(_uartHCI,{}).get("BLEmac",""))
+					_kP = pairingKeysOn(HCIs["hci"].get(connectPick,{}).get("BLEmac","")) if connectPick != "" else -1
+					if _kU > 0 and _kP == 0:
+						U.logger.log(30,"WARNING the internal/uart radio {} is BOTH scanning and taking the connect role: it holds the pairing keys for {} device(s) and {} holds none, and bluez keys cannot be moved to another adapter - sharing costs some scan time, a connect radio without keys costs every beep and link test. Free the internal from scanning (a dongle should scan) to end the sharing".format(
+										_uartHCI, _kU, connectPick if connectPick else "the alternative"))
+						connectPick = _uartHCI
+					elif _kU > 0 and _kP > 0:
+						U.logger.log(20,"connect role stays on {} - it holds keys for {} device(s) of its own ({} holds {}), so nothing is orphaned by leaving the internal radio to its scanning".format(
+										connectPick, _kP, _uartHCI, _kU))
+			# NEVER A BLE5-ONLY RADIO FOR CONNECT while anything else is UP: it answers 0x0C to the
+			# BLE4 scan commands, its ACL MTU is short of a full controller, and a connect on it
+			# ends in a 40 s create-connection timeout. SHARING the scan radio is better than that
+			# - the pause handshake arbitrates it - which is why the scan radio is the last
+			# candidate here instead of being excluded.
+			if connectPick != "" and not HCIs["hci"].get(connectPick,{}).get("ble4", True):
+				# the uart first even when it is the scan radio (sharing beats a radio that
+				# cannot connect at all), then any other BLE4-capable radio, then the scan radio.
+				_altC = ([_h for _h in (_uartHCI,) if _h != ""]
+						+ [_h for _h in canScanBLE4(HCIs["hci"]) if _h != "{}".format(useHCIForBeacon)]
+						+ ["{}".format(useHCIForBeacon)])
+				_altC = [_h for _h in _altC if _h in HCIs["hci"] and _h != connectPick]
+				if _altC:
+					U.logger.log(30,"WARNING the connect role was about to go to {} ({}), a BLE5-ONLY radio that cannot originate a link - moved to {}. A BLE5-only dongle is the extended-listener radio and nothing else".format(
+									connectPick, HCIs["hci"][connectPick].get("BLEmac",""), _altC[0]))
+					connectPick = _altC[0]
 			_pinConn = pinnedRadio(("bleconnect",), HCIs["hci"], taken=(useHCIForBeacon,))
 			if _pinConn != "" and _pinConn != connectPick:
 				U.logger.log(20,"BLEconnect role PINNED to {} by the device dialog (auto pick was {})".format(_pinConn, connectPick if connectPick else "?"))
@@ -1432,7 +1708,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 			# read "radio roles: scan(EXTENDED):hci1" one line above "BLE4-only scanning on hci1 -
 			# pinned to scanner BLE4" - and the broadcast left the scan radio for no reason, which
 			# also contradicts the strategy above (the internal is meant to stay free for connect).
-			_pinScanMode = "{}".format(hciRolesPinned.get(useHCIForBeacon, ""))
+			_pinScanMode = pinnedModeOf(useHCIForBeacon)
 			_wantExt     = (HCIs["hci"].get(useHCIForBeacon,{}).get("extAdv", False)
 				and _pinScanMode != "scanBLE4" and not extScanForceLegacy[0])
 			if _wantExt:
@@ -1455,6 +1731,44 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 					extScanBlockedByAdv[0] = True
 					U.logger.log(20,"extended scanning NOT enabled: no non-BLE5 radio free to carry the iBeacon broadcast, it would have to stay on the scan radio {} and lock it into the legacy command family -> everything BLE4 as before".format(useHCIForBeacon))
 					reportBLE5("no - no radio free to take the broadcast off the BLE5 scan radio")
+			# THE BROADCAST MAC IS THIS rPi'S IDENTITY, so CONTINUITY COMES FIRST - on every rpi.
+			# piMAC in every message is this radio's mac: it is what the other rpis hear for online
+			# detection and what the plugin links the rpi device to, so moving the broadcast
+			# RE-IDENTIFIES the rpi ("has new MAC# .. changing to new BLE-MAC number" in the indigo
+			# log, and the device is relinked).
+			# THIS TEST USED TO SIT BEHIND "the rpi has a uart radio", which is why it did not help
+			# the one machine that needed it most: rpi 1 is a model 2 with NO internal radio at all
+			# (bluetooth arrived with the model 3), three usb dongles and nothing to anchor the
+			# roles to - so the whole block was skipped and its identity could move freely. On
+			# 2026-11-22 it moved from the ASUS to the broadcom dongle.
+			_prevBC = ""
+			try:	_prevBC = "{}".format(json.load(open(G.homeDir+"beaconloop.hci")).get("broadcast",{}).get("mac","")).upper()
+			except Exception:	pass
+			_prevHH = ""
+			if _prevBC != "":
+				for _h in HCIs["hci"]:
+					if ("{}".format(HCIs["hci"][_h].get("BLEmac","")).upper() == _prevBC
+							and HCIs["hci"][_h].get("upDown","") == "UP"):
+						_prevHH = _h
+						break
+			# ONE THING OUTRANKS CONTINUITY: a legacy advertising command locks a controller into
+			# the legacy command family, so the broadcast cannot stay on a radio that is about to
+			# do EXTENDED scanning - that is the whole reason the block above moves it. Then the
+			# identity does have to change, and it is said out loud with the reason instead of just
+			# happening.
+			_mustLeave = (_wantExt and not extScanBlockedByAdv[0] and _prevHH != "" and _prevHH == "{}".format(useHCIForBeacon))
+			if _prevHH != "" and not _mustLeave:
+				if _prevHH != broadcastHCI:
+					U.logger.log(20,"broadcast role stays on {} ({}) - that is what this rpi was already broadcasting from and the radio is still up. Its mac is the rpi's identity (piMAC), so it is not moved while the radio holding it is here{}".format(
+									_prevHH, _prevBC,
+									" - by rule it would be the internal/uart radio {}, pin it in the device dialog if it really should move".format(_uartHCI) if _uartHCI not in ("", _prevHH) else ""))
+				broadcastHCI = _prevHH
+			elif _uartHCI != "" and broadcastHCI != _uartHCI and _uartHCI != "{}".format(useHCIForBeacon):
+				U.logger.log(20,"broadcast role -> {} (the internal/uart radio) - uart = broadcast + connect by rule, which also keeps the scan dongle clear of legacy advertising commands".format(_uartHCI))
+				broadcastHCI = _uartHCI
+			if _mustLeave:
+				U.logger.log(30,"WARNING this rpi's IDENTITY mac is changing: the broadcast moves off {} ({}) onto {} ({}), because that radio is doing EXTENDED scanning now and a legacy advertising command would lock it out of extended mode. The plugin relinks the rpi device to the new mac. To keep the old identity instead, pin the scan radio to 'scanner BLE4' in the device dialog".format(
+								useHCIForBeacon, _prevBC, broadcastHCI, HCIs["hci"].get(broadcastHCI,{}).get("BLEmac","")))
 			# ONE roles line, after everything is settled, saying which scan mode it actually is.
 			U.logger.log(20,"radio roles: scan({}):{}  connect:{}  broadcast:{}".format(
 				"EXTENDED" if (_wantExt and not extScanBlockedByAdv[0]) else "BLE4",
@@ -1496,7 +1810,7 @@ def startBlueTooth(pi, reUse=False, thisHCI="", trymyBLEmac="", hardreset=False)
 				# NAME THE IGNORED ONES. "only 2 radio(s) UP" sat directly above an hciconfig dump
 				# showing THREE radios UP and read like a contradiction: the third was UP and
 				# "ignore"-pinned, so beaconloop had dropped it before counting.
-				_ign = [h for h in sorted(hciRolesPinned) if "{}".format(hciRolesPinned[h]) == "ignore"]
+				_ign = [h for h in sorted(hciRolePinEffective[0]) if "{}".format(hciRolePinEffective[0][h]) == "ignore"]
 				_extReasons.append("only {} radio(s) usable, BLE5 needs 3 - the 2nd one belongs to BLEconnect{}".format(
 					len(_upRadios), " ({} pinned to ignore)".format(", ".join(_ign)) if _ign else ""))
 				reportBLE5("no - only {} radios, BLE5 needs 3 (BLEconnect gets the 2nd)".format(len(_upRadios)))
@@ -2007,6 +2321,7 @@ def readParams(init=False):
 	global batteryLevelUUID
 	global fastBLEReaction, output
 	global ignoreBeaconsIfRssiLessThan
+	global findMAC
 
 	if init:
 		collectMsgs			= 10  # in parse loop collect how many messages max	  ========	all max are an "OR" : if one hits it stops
@@ -2226,6 +2541,34 @@ def readParams(init=False):
 		signalDelta		 = InParams.get("signalDelta", {})
 		batteryLevelUUID = InParams.get("batteryLevelUUID", {})
 		fastBLEReaction	 = InParams.get("fastBLEReaction", {})
+
+		# PER-MAC TRACING, SET FROM THE PLUGIN. Every decoder in here has "doPrint = mac in
+		# findMAC", which dumps the raw service data and each tag as it is decoded - and the list
+		# used to be HARDCODED at the bottom of this file, so switching it on meant editing and
+		# restarting the program on the rPi, which is exactly the moment one does not want to.
+		# It follows the plugin's "log one beacon" menu now, and clearing that menu clears this.
+		# Read here and not from the parameters file: the plugin puts it in beacon_parameters,
+		# beside ignoreMAC, because it is one global list and not a per-rPi setting.
+		_fm = InParams.get("findMAC", [])
+		if not isinstance(_fm, list):	_fm = ["{}".format(_fm)] if _fm else []
+		_fm = ["{}".format(_x).strip().upper() for _x in _fm if "{}".format(_x).strip() != ""]
+		# AN EMPTY LIST FROM THE PLUGIN DOES NOT CLEAR A LOCALLY SET ONE. Editing the findMAC
+		# literal at the bottom of this file and restarting is the normal way to trace ONE rPi -
+		# the plugin's list is global, so using it to watch a chatty device would print on every
+		# rPi in the house. Before this, the first parameter read (within ~8 s) replaced the
+		# hand-set list with the plugin's empty one, so the edit appeared to do nothing at all.
+		# The plugin can still switch tracing on AND off: once it has sent a non-empty list it
+		# owns the list, and a later empty one clears it.
+		global findMACfromPlugin
+		if _fm:
+			if _fm != findMAC:
+				findMAC = _fm
+				findMACfromPlugin = True
+				U.logger.log(20,"per-mac trace list from the plugin: {}".format(",".join(findMAC)))
+		elif findMACfromPlugin:
+			findMAC = []
+			findMACfromPlugin = False
+			U.logger.log(20,"per-mac trace list cleared by the plugin")
 	except: pass
 
 
@@ -3105,7 +3448,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 	#                                          		   3A button press event
 	#                                           		  01 = press
 	#                                           		  02 = double press
-	#                                           		  03 = tripple press
+	#                                           		  03 = triple press
 	#                                           		  04 = long press
 	#                                           		  FE = button Hold
 	
@@ -3122,12 +3465,70 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		doPrint = mac in findMAC
 
 		if mac not in parsedData: return sensor, tx,  ""
+
+		# REMEMBER THE MODEL - this is the only place it ever arrives. The NAME frame (AD type 08
+		# plus the FF manufacturer section) and the BTHome DATA frame (flags plus FCD2 service
+		# data) are two SEPARATE advertisements, and parsedData is rebuilt for every one of them,
+		# so the frame that carries a button event never carries the name. Kept per mac, so
+		# shellyHasBuzzer() can tell an RC Button 4 (no buzzer) from a Button Tough later on.
+		try:
+			_mdl = parsedData[mac]["analyzed"]["text"].get("mfg_info","")
+			if _mdl != "" and mac in BLEsensorMACs and BLEsensorMACs[mac].get("mfg_info","") != _mdl:
+				BLEsensorMACs[mac]["mfg_info"] = _mdl
+		except Exception:
+			pass
+
 		data16 = parsedData[mac]["analyzed"]["code"].get("16","")
 		if  doPrint: U.logger.log(20, "mac:{}, hexdata:{}".format(mac, data16))
 		if data16 == "": return sensor, tx,  ""
 		start = data16.find("D2FC")
 		if start < 0: return sensor, tx,  ""
+		# ENCRYPTION: bit 0 OF THE DEVICE-INFO BYTE, and it has to be TESTED, not just documented.
+		# A BTHome payload can be AES-CCM encrypted (optional, per device, switched on in the
+		# shelly app) and there is no key support here. The byte was skipped unconditionally, so an
+		# encrypted frame had its CIPHERTEXT walked as if it were an object stream: random bytes
+		# read as object ids and values, a different result on every frame, so every frame passed
+		# the "something changed" test and sent nonsense to indigo - temperatures, speeds, whatever
+		# the bytes happened to spell - with nothing anywhere saying why. Drop the frame instead,
+		# and say so once in a while: it is a setting on the device, nobody can guess it from the
+		# numbers it produces.
+		_devInfo = data16[start+4:start+6]
+		try:	_enc = (int(_devInfo, 16) & 0x01) == 0x01
+		except Exception:	_enc = False
+		if _enc:
+			if time.time() - shellySaidEncrypted.get(mac, 0.) > shellyEncryptedCooldown:
+				shellySaidEncrypted[mac] = time.time()
+				_t = ("shelly {}: its BTHome broadcasts are ENCRYPTED (device-info byte {}) and cannot be read here -"
+					" piBeacon has no key support. Switch the encryption off for this device in the shelly app;"
+					" until then nothing from it can be decoded. Nothing is broken on the rPi.").format(mac, _devInfo)
+				U.logger.log(20, _t)
+				reportShellyToIndigo(_t)
+			return sensor, tx,  ""
+		# TRIGGER BASED? bit 2. A button or door sensor broadcasts on an EVENT and its message must
+		# go out at once; a weather station broadcasts on a TIMER and splits one reading over
+		# several frames, which is what may be merged into one message - see the send below.
+		try:	_triggerBased = (int(_devInfo, 16) & 0x04) == 0x04
+		except Exception:	_triggerBased = True		# unknown -> treat as an event device, never delay
 		data = data16[start+6:] # = 44 00 32 01 64 3A 02 
+
+		# A SECOND DEVICE-INFO BYTE. find("D2FC")+6 skips the uuid and ONE byte, the BTHome
+		# device-info flags - right for the frames that carry data. The Button Tough (SBBT-102C)
+		# also sends a short idle advertisement whose service data is "40 44 00 <packetId>": TWO
+		# bytes with the v2 device-info signature (bits 5-7 = 010; 0x40 = plain, 0x44 = trigger
+		# based), then the packet id and nothing else. Only the first was skipped, so the walk
+		# began on the second and read 0x44 as an OBJECT ID - which is "speed", 2 bytes - so every
+		# such frame decoded as a speed in m/s built out of the packet id. Measured on
+		# C0:2C:ED:49:8F:29, 2026-11-11: "40 44 00 1F" -> 79.36 m/s. And because the value follows
+		# the packet id it CHANGED on every frame, so each one passed the "something changed" test
+		# and sent a message to indigo: that device advertises 80 msgs/10s, a third of this shape.
+		# ONLY WHEN THE NEXT BYTE IS 00, the packet id: that is the lowest object id and the spec
+		# asks for ascending order, so a real object stream starts there. Without that condition
+		# this would eat a genuine first object in 0x40-0x47 (distance, speed, temp, voltage..).
+		try:
+			if len(data) >= 6 and (int(data[0:2], 16) & 0xE0) == 0x40 and data[2:4] == "00":
+				data = data[2:]
+		except Exception:
+			pass
 
 
 
@@ -3135,6 +3536,18 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 		jj = 0
 		itemsValues = {"batteryLevel":""}
+		# HOW OFTEN EACH NAME HAS BEEN SEEN IN THIS FRAME. BTHome says a device with several of the
+		# same thing just REPEATS the object id, at a fixed position, in every advertisement - and
+		# the receiver tells them apart by that position alone, there is no index in the data. The
+		# 4 button shellys (RC Button 4 / Wall Switch 4, SBBT-104C..) send FOUR 3A objects every
+		# time, using code 00 for the buttons that did nothing: "3A01 3A00 3A01 3A00" = buttons 1
+		# and 3 pressed. itemsValues is keyed by name, so without this they all collapsed onto one
+		# "button" and the LAST one won - which is idle in almost every frame, so a 4 button device
+		# reported no presses at all. Now occurrence 1 keeps the plain name (so every 1 button
+		# device, its states and its triggers are untouched) and 2..n get the number appended:
+		# button, button2, button3, button4. Generic on purpose - the spec allows the same for
+		# sensors, eg two temperatures as temp + temp2.
+		seenName = {}
 		trigValue = {}
 		packetId = -99
 		trig = ""
@@ -3150,68 +3563,150 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 
 			ii = jj + 2
 			nn = tag["bytes"] *2
-			if tag["name"] not in BLEsensorMACs[mac]: 
-				BLEsensorMACs[mac][tag["name"]] = -99999
-			if tag["name"] not in trigValue: 
-				trigValue[tag["name"]] =  0
+			# VALUE DEPENDENT LENGTH: the command (3B) and dimmer (3C) events carry an extra
+			# "number of steps" byte, but only for some of their codes - step up/down, rotate
+			# left/right. Consuming the wrong number of bytes does not just lose one value, it
+			# shifts everything after it, so the length has to come from the code itself.
+			if "bytesByValue" in tag:	nn = tag["bytesByValue"].get(data[ii:ii+2], tag["bytes"]) *2
+
+			seenName[tag["name"]] = seenName.get(tag["name"], 0) + 1
+			_nm = tag["name"] if seenName[tag["name"]] == 1 else "{}{}".format(tag["name"], seenName[tag["name"]])
+
+			if _nm not in BLEsensorMACs[mac]: 
+				BLEsensorMACs[mac][_nm] = -99999
+			if _nm not in trigValue: 
+				trigValue[_nm] =  0
 
 
 			if  tag["type"] == "char":
-					itemsValues[tag["name"]] = tag["mapVtoText"].get(data[ii:ii+nn],"None")
-					trigValue[tag["name"]] =  tag["trigValue"]
+					_cn = tag["bytes"] *2															# the code itself
+					_cv = data[ii:ii+_cn]
+					itemsValues[_nm] = tag["mapVtoText"].get(_cv,"None")
+					# AN UNDOCUMENTED CODE MUST STAY VISIBLE. get(..,"None") turned every code the
+					# map does not list into "None", which is also the real idle value - so it was
+					# dropped by the button tests, never logged, never sent, and a gesture the
+					# vendor added after the spec was simply invisible. THIS IS NOT HYPOTHETICAL:
+					# the 4-click pairing gesture has no BTHome code, and the question "does the
+					# device broadcast anything for it" could not be answered because an answer
+					# outside the map could not be seen. Now it reads code_XX - the raw byte, so
+					# it shows up in the trace, in the states and in the arming test below.
+					if _cv != "" and _cv not in tag["mapVtoText"]:	itemsValues[_nm] = "code_" + _cv
+					if nn > _cn:																	# a steps tail (3B/3C)
+						_sn = _nm + "Steps"
+						if _sn not in BLEsensorMACs[mac]:	BLEsensorMACs[mac][_sn] = -99999		# or the trigger test below throws
+						trigValue[_sn] = 0
+						itemsValues[_sn] = intfromhexR(data[ii+_cn:], (nn - _cn)//2)
+					trigValue[_nm] =  tag["trigValue"]
 					jj =  ii + nn 
 					continue
 
+			if  tag["type"] == "var":
+					# 53 text / 54 raw: a LENGTH byte follows the id, then that many bytes. The
+					# length is the only thing that says where the next id starts, so an
+					# unreadable one means the rest of the frame cannot be trusted - stop there
+					# rather than decode garbage.
+					try:	_ln = int(data[ii:ii+2], 16)
+					except Exception:	break
+					_pl = data[ii+2:ii+2+_ln*2]
+					if len(_pl) < _ln*2:	break												# truncated frame
+					itemsValues[_nm] = hex2str(_pl, logLevel=0) if tag["typeFinal"] == "text" else _pl
+					trigValue[_nm] =  tag["trigValue"]
+					jj = ii + 2 + _ln*2
+					continue
+
+			if  tag["type"] == "ver":
+					# F1 (4 bytes) / F2 (3 bytes) firmware version: little endian like every other
+					# value here, but it is not ONE number - each byte is a part, shown most
+					# significant first, ie 00 01 02 04 reads "4.2.1.0".
+					_h = data[ii:ii+nn]
+					try:	itemsValues[_nm] = ".".join("{}".format(int(_h[_q:_q+2],16)) for _q in range(len(_h)-2, -1, -2))
+					except Exception:	itemsValues[_nm] = ""
+					trigValue[_nm] =  tag["trigValue"]
+					jj =  ii + nn
+					continue
+
 			if  tag["type"] == "int":
-					itemsValues[tag["name"]] = intfromhexR( data[ii:], tag["bytes"])
-					if tag["name"] == "packetId": 
-						packetId = itemsValues[tag["name"]] 
-						if packetId ==  BLEsensorMACs[mac]["packetId"]:  
+					itemsValues[_nm] = intfromhexR( data[ii:], tag["bytes"])
+					if _nm == "packetId": 
+						packetId = itemsValues[_nm] 
+						# ONE PACKET ID, TWO DIFFERENT PAYLOADS. This de-dup is here because a
+						# shelly repeats the same advertisement ~80 times in 10 s and only the
+						# first copy is worth decoding. But the id is NOT unique to one payload:
+						# the Button Tough sends a SHORT "4400<pid>" frame and a LONG
+						# "4400<pid> 0164 F01700 F20C0201" frame - battery, device type and
+						# firmware - under the SAME id (measured on C0:2C:ED:49:8F:29,
+						# 2026-11-11). On the id alone whichever shape arrived first won and the
+						# other was thrown away, so a cycle that led with the short frame lost
+						# the battery reading entirely. The payload is part of the key now:
+						# identical repeats are still dropped, a different payload under the same
+						# id is decoded. No extra traffic - packetId is excluded from the change
+						# test below, so a short frame on its own still reports nothing.
+						if packetId ==  BLEsensorMACs[mac]["packetId"] and data == BLEsensorMACs[mac].get("shellyPayload",""):
 							return sensor, tx,  ""	
 
-					if tag["factor"] != 1: itemsValues[tag["name"]]  = itemsValues[tag["name"]] * tag["factor"] 
+					if tag["factor"] != 1: itemsValues[_nm]  = itemsValues[_nm] * tag["factor"] 
 
 					if tag["typeFinal"].find("float,") == 0:
 						roundvalue = int(tag["typeFinal"].split(",")[1])
-						itemsValues[tag["name"]] = round(itemsValues[tag["name"]], roundvalue)
+						itemsValues[_nm] = round(itemsValues[_nm], roundvalue)
 
 					elif tag["typeFinal"].find("int") == 0:
-						itemsValues[tag["name"]] = int(itemsValues[tag["name"]])
+						itemsValues[_nm] = int(itemsValues[_nm])
 
-					trigValue[tag["name"]] =  tag["trigValue"]
+					trigValue[_nm] =  tag["trigValue"]
 					jj =  ii + nn 
 					continue
 
 			if  tag["type"] == "intLR":
-					itemsValues[tag["name"]] = intFrom8(data[ii+2:],0)
-					if data[ii:ii+2] == "02": itemsValues[tag["name"]] = -itemsValues[tag["name"]]
+					# NO ID USES THIS ANY MORE. It was the dimmer (3C), read as a signed step count
+					# with "rotate right" as the negative direction - which is not what the spec
+					# says the field is: an event code plus a step count, like the command event.
+					# 3C is a "char" with bytesByValue now, so it reports rotate_left/rotate_right
+					# and dimmerSteps. Kept because the shape (code byte + payload, signed by the
+					# code) is a real one and the next tracker decoder may want it.
+					itemsValues[_nm] = intFrom8(data[ii+2:],0)
+					if data[ii:ii+2] == "02": itemsValues[_nm] = -itemsValues[_nm]
 
-					if tag["factor"] != 1: itemsValues[tag["name"]]  = itemsValues[tag["name"]] * tag["factor"] 
+					if tag["factor"] != 1: itemsValues[_nm]  = itemsValues[_nm] * tag["factor"] 
 
-					trigValue[tag["name"]] =  tag["trigValue"]
+					trigValue[_nm] =  tag["trigValue"]
 					jj =  ii + nn 
 					continue
 
 
 			if  tag["type"] == "sint":
-					itemsValues[tag["name"]] = signedintfromhexR(data[ii:], tag["bytes"])
+					itemsValues[_nm] = signedintfromhexR(data[ii:], tag["bytes"])
 
-					if tag["factor"] != 1: itemsValues[tag["name"]]  = itemsValues[tag["name"]] * tag["factor"] 
+					if tag["factor"] != 1: itemsValues[_nm]  = itemsValues[_nm] * tag["factor"] 
 
 					if tag["typeFinal"].find("float,") == 0:
 						roundvalue = int(tag["typeFinal"].split(",")[1])
-						itemsValues[tag["name"]] = round(itemsValues[tag["name"]],roundvalue)
+						itemsValues[_nm] = round(itemsValues[_nm],roundvalue)
 
 					elif tag["typeFinal"].find("int") > -1:
-						itemsValues[tag["name"]] = int(itemsValues[tag["name"]])
-					if doPrint and  tag["name"] == "rotation": U.logger.log(20, "mac:{}, jj:{}, code:{}, name:{:12s}, ll:{},  data:{}, value:{}".format(mac,  jj, data[jj:jj+2] , tag["name"] ,  len(data),  data[jj+2:jj+6] , itemsValues[tag["name"]]  ))
+						itemsValues[_nm] = int(itemsValues[_nm])
+					if doPrint and  _nm == "rotation": U.logger.log(20, "mac:{}, jj:{}, code:{}, name:{:12s}, ll:{},  data:{}, value:{}".format(mac,  jj, data[jj:jj+2] , _nm ,  len(data),  data[jj+2:jj+6] , itemsValues[_nm]  ))
 
-					trigValue[tag["name"]] =  tag["trigValue"]
+					trigValue[_nm] =  tag["trigValue"]
 					jj =  ii + nn 
 					continue
 
 
 			
+
+		# ---- WHICH BUTTON EVENT THIS FRAME CARRIES, ACROSS ALL FOUR ----
+		# A 4 button shelly enters pairing mode on a 10s hold of ANY TWO buttons, and with the
+		# repeated 3A objects indexed that hold arrives as eg button2 + button3 with "button"
+		# itself sitting at None. Reading only the first one would then never arm the rPi on
+		# exactly the devices that need two buttons held - and never trace the frame either.
+		# A HOLD WINS over a plain press when both are in the same frame: the hold is the gesture
+		# that opens the device's pairing window, a press is not.
+		_btnAll = ["{}".format(itemsValues.get(_k,"")) for _k in ("button","button2","button3","button4")]
+		_btnAll = [_v for _v in _btnAll if _v not in ("", "None", "xxx")]
+		_btnAny = ""
+		for _v in _btnAll:
+			if _v in shellyHoldCodes:	_btnAny = _v; break
+		if _btnAny == "" and _btnAll:	_btnAny = _btnAll[0]
 
 		# ---- FULL FRAME TRACE WHEN SOMEBODY IS STANDING AT THE BUTTON ----
 		# doPrint cannot cover this on its own: it is decided before the frame is decoded, so the
@@ -3221,7 +3716,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		# advertisement looked like. Logged AFTER the decode, so it is the whole picture on one
 		# line instead of per-tag fragments, and only for that gesture at that range, so it costs
 		# nothing the rest of the time.
-		if "{}".format(itemsValues.get("button","")) in shellyHoldCodes and int(rx) > shellyTraceGate:
+		if _btnAny in shellyHoldCodes and int(rx) > shellyTraceGate:
 			_dec = ", ".join("{}={}".format(_k, itemsValues[_k]) for _k in sorted(itemsValues) if itemsValues[_k] != "")
 			U.logger.log(20, "SHELLY TRACE {} rssi:{} (passes {})  adv:{}  pid:{}  raw16:{}  payload:{}  decoded: {}".format(
 						mac, int(rx), shellyTraceGate, parsedData[mac].get("advType",""), packetId, data16, data, _dec))
@@ -3242,7 +3737,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		# rssi is logged against the planned gate of -60: the tag is calibrated -65 dBm at 1 m, so
 		# -60 is 0.56 m, 10 cm would be -45, and the nearest other rpi here is > 5 m = about -79.
 		try:
-			_btn = "{}".format(itemsValues.get("button",""))
+			_btn = _btnAny							# any of the four, hold preferred - see above
 			if _btn not in ["", "None", "xxx"]:
 				_advT = "{}".format(parsedData[mac].get("advType",""))
 				# ONLY WHILE THERE IS STILL A BOND TO MAKE. The whole point of this line is to show
@@ -3257,50 +3752,111 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 								"PASSES -60" if int(rx) > -60 else "below -60",
 								_advT, "CONNECTABLE = bondable window" if _advT in ("00","01") else "NOT connectable",
 								sensor))
-				# ---- ARM A BOND ON THE DOUBLE PRESS ----
-				# The double press stands in for "the user picks the device in the shelly app" - an
-				# rpi has no UI to pick with. BLEconnect then waits for the NEXT simple press, whose
-				# connectable adv is the window the pairing rides on, and beeps the device when the
-				# bond worked. Everything stays on this rpi: the mac is only armed here if THIS rpi
-				# hears the press close up, and with the rpis > 5 m apart only one of them can.
-				# EITHER GESTURE ARMS IT, and the double press is the one to rely on.
-				# Shelly: "Connection is only possible from a paired devices, or if pairing mode is
-				# active" - and pairing mode is entered by HOLDING the button ~10 s, open for a
-				# minute. A button already claimed in the shelly app is paired to the PHONE, so an
-				# rpi has no standing to connect until that window is open. That is what every
-				# earlier attempt was missing: bluez paired, ran discovery with no real session,
-				# found nothing, and removed the device and its keys again.
-				# SO WHY NOT TRIGGER ON THE HOLD ALONE? Because it is not known whether the FULL
-				# 10 s hold is still advertised - the codes seen so far could have come from a
-				# shorter long press, and a device that goes quiet when it enters pairing mode
-				# would never arm the rpi at all. The double press has no such dependency: it is a
-				# plain broadcast event, so it is the reliable arming signal. The hold is accepted
-				# too, for when one gesture is more convenient.
-				# The user sequence is: double press (arms) -> hold past 10 s (opens the window on
-				# the device) -> one press (the bond rides on it).
-				if _btn in ("double_press", "long_press", "hold_press", "button_hold") and int(rx) > shellyBondGate and _advT in ("00","01"):
+				# ---- ARM A BOND ON A DOUBLE OR TRIPLE PRESS ----
+				# TWO DIFFERENT JOBS, AND ONLY ONE OF THEM IS VISIBLE TO AN rPi:
+				#   ARM THIS rPi      - it stands in for "the user picks the device in the shelly
+				#                       app"; an rPi has no UI to pick with, so a button event has
+				#                       to do it, and it has to be an event the rPi RECEIVES.
+				#   OPEN THE DEVICE   - shelly: "Connection is only possible from a paired device,
+				#                       or if pairing mode is active". A button claimed in the
+				#                       shelly app is paired to the PHONE, so this rPi has no
+				#                       standing to connect until that window is open. That is what
+				#                       every earlier attempt was missing: bluez paired, ran
+				#                       discovery with no real session, found nothing, and removed
+				#                       the device and its keys again.
+				# WHAT THE DEVICE ACTUALLY BROADCASTS, measured on the Button Tough next to rpi 2,
+				# 2026-11-11:
+				#   4 fast clicks   the gesture the shelly app asks for. The button BEEPS, its
+				#                   pairing mode opens, and about 20 SECONDS later it beeps again
+				#                   to say the window has closed - and IT BROADCASTS NOTHING AT ALL
+				#                   in between. So the four clicks can neither be counted nor armed
+				#                   on; they are purely the "open the device" half.
+				#   a hold          broadcast when the button is LET GO after 2-3 s; kept down it
+				#                   stays silent. THIS IS THE ARMING SIGNAL - "hold ~4s, let go" -
+				#                   because it is also the one gesture a BLU Button 1 pairs with,
+				#                   so the procedure reads the same on every model.
+				#   double/triple   always broadcast, whatever the firmware does with holds. The
+				#                   fallback if a hold does not arm this rPi.
+				# SO THE ORDER MATTERS AND IT IS NOT NEGOTIABLE: the ARMING GESTURE FIRST, so
+				# this rPi is armed and BLEconnect is already scanning, THEN the 4 fast clicks. The
+				# device's window is only ~20 s wide, and BLEconnect needs the radio and a running
+				# bluetoothd scan before it opens - it picks the job up within about a second, so
+				# clicking right after the arming press is exactly right.
+				# Everything stays on this rPi: the mac is only armed if THIS rPi hears the gesture
+				# close up (> shellyBondGate), and with the rPis > 5 m apart only one of them can.
+				# THE CLICK COUNTER BELOW IS A FALLBACK ONLY - see shellyClickNeeded. It cannot fire
+				# on a Tough or an RC Button 4 because those broadcast nothing while being clicked,
+				# but it costs nothing and a model that does broadcast them pairs in one gesture.
+				_clicks = 0
+				if _btn == "press":
+					_ct = [_t for _t in shellyClickTimes.get(mac, []) if time.time() - _t < shellyClickWindow]
+					_ct.append(time.time())
+					shellyClickTimes[mac] = _ct
+					_clicks = len(_ct)
+					if _clicks >= shellyClickNeeded:
+						shellyClickTimes[mac] = []		# consumed - a 5th click must not arm again
+						U.logger.log(20,"shelly {}: {} clicks inside {:.0f}s - that is the pairing gesture the shelly app asks for on the RC Button 4 and the Button Tough".format(mac, _clicks, shellyClickWindow))
+				# AN UNDOCUMENTED CODE ARMS IT TOO (code_XX, see the char decoder above). If a
+				# model ever does broadcast something for its pairing gesture it will be a code
+				# BTHome has no name for - that frame is then exactly the moment to arm, and the
+				# message says which code it was, so the map can be filled in afterwards.
+				if (_btn in shellyArmCodes or _btn[:5] == "code_"
+						or _clicks >= shellyClickNeeded) and int(rx) > shellyBondGate and _advT in ("00","01"):
 					_now = time.time()
 					# ALL THREE OUTCOMES REPORT, and to indigo, not only to this rpi's log. Holding
 					# the button IS the whole procedure now, so "I held it and nothing happened" has
 					# to be answerable - and the three answers are completely different: it armed,
 					# it is still in its cooldown, or this rpi already holds the keys.
+					# WHAT THE USER ACTUALLY DID, for the messages: "press" on its own says nothing,
+					# and after four of them it is the gesture the shelly app asks for.
+					_gest = "{} clicks".format(_clicks) if _clicks >= shellyClickNeeded else _btn
+					_again = "hold it about {}s next to this rPi and LET GO to arm it, then the 4 fast clicks straight after (a double or triple press arms it too)".format(shellyArmHoldSecs)
+					# WHAT THIS MODEL CAN AND CANNOT DO. The buzzer is the only part of a pairing
+					# the user can hear, and these messages used to promise it on every model - the
+					# RC Button 4 and the wall switches have none, so there the result line in the
+					# log is the whole answer. Pairing them gains nothing either: their presses
+					# arrive from the advertisement, which needs no pairing at all.
+					_buzz = shellyHasBuzzer(mac)
 					if _bonded:
-						if _btn in shellyHoldCodes and _now - shellySaidPaired.get(mac, 0.) > shellyBondCooldown:
+						# A 4-CLICK GESTURE HAS TO REACH THIS NOTICE TOO. It used to test only the
+						# hold codes, so somebody clicking four times at an already-paired rPi got
+						# no answer at all - and 4 clicks is the gesture the app documents.
+						if (_btn in shellyHoldCodes or _btn == "triple_press" or _btn[:5] == "code_"
+								or _clicks >= shellyClickNeeded) and _now - shellySaidPaired.get(mac, 0.) > shellyBondCooldown:
 							shellySaidPaired[mac] = _now
-							_t = "shelly {}: pairing gesture seen (rssi {}, {}), but this rPi is ALREADY paired to it - nothing to do. To pair it afresh use 'unpair' in the device dialog first, then hold it again".format(mac, int(rx), _btn)
+							_t = "shelly {}: pairing gesture seen (rssi {}, {}), but this rPi is ALREADY paired to it - nothing to do. To pair it afresh use 'unpair' in the device dialog first, then {}".format(mac, int(rx), _gest, _again)
 							U.logger.log(20, _t)
 							reportShellyToIndigo(_t)
 					elif _now - shellyBondArmed.get(mac, 0.) < shellyBondCooldown:
-						_t = "shelly {}: pairing gesture seen (rssi {}, {}), but this rPi armed {:.0f}s ago already - waiting out the {}s cooldown (a finished pairing costs one of the button's bond slots), then hold it again".format(mac, int(rx), _btn, _now - shellyBondArmed.get(mac, 0.), shellyBondCooldown)
+						_t = "shelly {}: pairing gesture seen (rssi {}, {}), but this rPi armed {:.0f}s ago already - waiting out the {}s cooldown (a finished pairing costs one of the button's bond slots), then {}".format(mac, int(rx), _gest, _now - shellyBondArmed.get(mac, 0.), shellyBondCooldown, _again)
+						U.logger.log(20, _t)
+						reportShellyToIndigo(_t)
+					elif shellyBondJobPending():
+						# DO NOT ARM INTO A CLOSED WINDOW, and do not spend the cooldown either:
+						# BLEconnect runs bond jobs one at a time and one can hold the radio for 90s,
+						# while the button's own pairing window is about a minute. Arming now would
+						# queue a job that is already too late - which is what made two of three
+						# buttons fail on rpi 11 when they were held inside 41 seconds.
+						_t = "shelly {}: pairing gesture seen (rssi {}, {}), but this rPi is still busy with another shelly job - do them ONE at a time: wait for its result line, then repeat the gesture on this one".format(mac, int(rx), _gest)
 						U.logger.log(20, _t)
 						reportShellyToIndigo(_t)
 					else:
 						shellyBondArmed[mac] = _now
 						try:
 							f = open(G.homeDir+"temp/BLEconnect.bond","w")
-							f.write(json.dumps({mac: {"until": _now + shellyBondArmSecs, "beep": True}}))
+							# THE MODEL TRAVELS WITH THE JOB. BLEconnect never sees an advertisement
+							# - beaconloop owns the scan radio - so the name it needs for the buzzer
+							# decision and for the instructions it prints can only come from here.
+							f.write(json.dumps({mac: {"until": _now + shellyBondArmSecs, "beep": _buzz,
+										"model": "{}".format(BLEsensorMACs.get(mac,{}).get("mfg_info",""))}}))
 							f.close()
-							_t = "shelly {}: PAIRING GESTURE SEEN by this rPi (rssi {} passes {}, code {}) - pairing now, trying for {}s. It BEEPS when it worked, and the result is logged here either way".format(mac, int(rx), shellyBondGate, _btn, shellyBondArmSecs)
+							_t = ("shelly {}: ARMED by this rPi (rssi {} passes {}, {}) for {}s - NOW DO THE 4 FAST CLICKS,"
+								" the gesture the shelly app asks for: that is what opens the device's own pairing mode."
+								" The button beeps when it opens and beeps again about 20s later when it closes, and the"
+								" pairing has to land in between - so click NOW, do not wait. {}").format(
+								mac, int(rx), shellyBondGate, _gest, shellyBondArmSecs,
+								"It BEEPS when the pairing worked, and the result is logged here either way." if _buzz else
+								"This model has NO BUZZER, so the result line here is the only confirmation - and pairing it gains nothing anyway, its presses arrive from the advertisement.")
 							U.logger.log(20, _t)
 							reportShellyToIndigo(_t)
 						except Exception:
@@ -3308,13 +3864,18 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		except Exception:
 			pass
 
-		# button is special case, needs to be reset
-		if tryDeltaTime(BLEsensorMACs[mac]["lastUpdate"]) > 2 and  BLEsensorMACs[mac].get("button","None") != "None":  BLEsensorMACs[mac]["button"] = "xxx"
+		# BUTTONS ARE A SPECIAL CASE, they need to be reset. The trigger test below compares the new
+		# value against the STORED one, so once a press has been reported, the very same code
+		# pressed again looks unchanged and would never trigger. "xxx" is a value no code can be.
+		# ALL OF THEM, not only the first: a 4 button device has button, button2, button3, button4.
+		if tryDeltaTime(BLEsensorMACs[mac]["lastUpdate"]) > 2:
+			for _bk in [_k for _k in BLEsensorMACs[mac] if _k == "button" or (_k[:6] == "button" and _k[6:].isdigit())]:
+				if BLEsensorMACs[mac].get(_bk,"None") != "None":	BLEsensorMACs[mac][_bk] = "xxx"
 
 		if tryDeltaTime(BLEsensorMACs[mac]["lastUpdate"])   > BLEsensorMACs[mac]["updateIndigoTiming"]: trig = "Time/" 			# send min every xx secs
 
-		# if same packet id and not time update, return 
-		if packetId ==  BLEsensorMACs[mac]["packetId"] and trig == "":  
+		# if same packet id AND the same payload and not time update, return - see the de-dup above
+		if packetId ==  BLEsensorMACs[mac]["packetId"] and data == BLEsensorMACs[mac].get("shellyPayload","") and trig == "":  
 			return sensor, tx,  itemsValues["batteryLevel"]
 
 		dd = {   # the data dict to be send 
@@ -3327,10 +3888,18 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 				}
 
 
+		_changed = []
 		for tt in itemsValues:
 			if tt in ["packetId","rotation", "Illuminance"]: continue
 			if itemsValues[tt] != "" and itemsValues[tt] != BLEsensorMACs[mac][tt]:
-				trig = tt+"/"
+				_changed.append(tt)
+		# IT REPLACES whatever trig held, it does not append to it - checkIfDelaySend BUFFERS any
+		# packet whose trigger contains "time", so reporting a real change as "Time/button" would
+		# make a button press wait for the next batch instead of going out at once. That is what
+		# the single assignment here was doing, and it has to stay that way.
+		# All the changed names now, not just the last one: a simultaneous press of buttons 1 and
+		# 3 on a 4 button shelly is "button/button3". Sorted so it does not depend on dict order.
+		if _changed:	trig = "/".join(sorted(_changed)) + "/"
 
 
 		if trig.find("isOpen") > -1: 
@@ -3348,6 +3917,7 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 				dd[tt] = itemsValues[tt]
 
 		BLEsensorMACs[mac]["packetId"]   		= packetId
+		BLEsensorMACs[mac]["shellyPayload"]		= data
 
 		trig = trig.replace("None","").replace("//","/")
 
@@ -3363,8 +3933,17 @@ def doBLEShelly(mac, macplain, macplainReverse, rx, tx, hexData, sensor):
 		if doPrint: U.logger.log(20, "mac:{}, dd:{}, data:{}".format(mac,dd,  data))
 
 		if  trig != "":
-					# compose complete message
-					checkIfDelaySend({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}})
+					# ONE READING, ONE MESSAGE. A timer-based device that splits its reading over
+					# several advertisements (the WS90: light/rain/wind/gust/UV/direction in one
+					# frame, battery/pressure/dewpoint/humidity/temperature/rain-total in the next)
+					# is buffered so the frames merge into a single message - see checkIfDelaySend.
+					# Only when the frame holds NO EVENT: a button press, a door, a command or a
+					# dimmer step has to go out immediately, and a device that says "trigger based"
+					# in its device-info byte is never delayed at all.
+					_mergeFrames = (not _triggerBased
+									and not any(_e in dd for _e in ("button", "isOpen", "command", "dimmer", "motion"))
+									and len([_k for _k in dd if _k not in ("trigger", "packetId")]) > 0)
+					checkIfDelaySend({"sensors":{sensor:{BLEsensorMACs[mac]["devId"]:dd}}}, mergeOnly=_mergeFrames)
 					# remember last values
 					if  doPrint: U.logger.log(20, "mac:{}---------- send".format( mac)  )
 					BLEsensorMACs[mac]["lastUpdate"] 	= time.time()
@@ -7469,11 +8048,26 @@ and this for mfg info, not done here
 
 #################################
 
-def checkIfDelaySend(packet):
+def checkIfDelaySend(packet, mergeOnly=False):
 	"""Decides whether a sensor data packet should be sent to Indigo immediately or buffered; packets without sensors, without a trigger, or triggered by non-time reasons (or with remote/force) are sent at once via sendURL, while time-only updates are stored in dataFromSensors for later batched sending.
+
+	mergeOnly=True ALSO buffers a packet that reports a real change, which is how a device that
+	splits one reading over SEVERAL advertisements ends up as ONE message to the plugin. The
+	Ecowitt WS90 powered by shelly does that: one frame carries light, rain, wind, gust, UV and
+	direction, the next carries battery, pressure, dew point, humidity, temperature and rain
+	total. Sent as they arrive that is two messages per cycle, each writing its own half of the
+	states; buffered they merge into one.
+	THERE IS NOTHING TO WAIT FOR, which is the point of using this buffer rather than a timer: the
+	main loop flushes dataFromSensors once per read cycle (see the sendURL of dataFromSensors in
+	the loop), and the two frames of one reading arrive milliseconds apart, so they land in the
+	same cycle by themselves. If one of them is lost - normal at range - the other still goes out
+	on the next flush instead of waiting for a partner that will never come. Worst case the pair
+	straddles a flush boundary and it is two messages, exactly as it is today.
+	NEVER use it for an EVENT (a button press, a door opening): those must go out at once.
 
 	Inputs:
 	    packet (dict): Sensor data packet to send or delay
+	    mergeOnly (bool): True = buffer and merge even when values changed (multi-frame devices)
 	Outputs:
 	    bool: True if sent immediately, False if buffered for delayed send
 	"""
@@ -7490,7 +8084,7 @@ def checkIfDelaySend(packet):
 					U.sendURL(packet)
 					return True
 
-				if packet["sensors"][sensor][devId]["trigger"].lower().find("time") == -1:
+				if not mergeOnly and packet["sensors"][sensor][devId]["trigger"].lower().find("time") == -1:
 					U.sendURL(packet)
 					return True
 
@@ -7513,7 +8107,23 @@ def checkIfDelaySend(packet):
 					dataFromSensors[sensor][devId] = {}
 					
 				waitforcheckIfDelaySend = True
-				dataFromSensors[sensor][devId] = packet["sensors"][sensor][devId]
+				# MERGE, DO NOT REPLACE. This was a plain assignment, so when the same device
+				# buffered twice before the next flush the first dict was dropped whole - and with
+				# it every field the second frame did not happen to carry. Harmless while each
+				# frame carried the same fields; fatal for a device that splits one reading over
+				# two frames, where it would lose one half every time.
+				_cur = dataFromSensors[sensor][devId]
+				_new = packet["sensors"][sensor][devId]
+				for _k in _new:
+					if _k == "trigger" and _k in _cur:
+						# the REASONS add up - "temp/hum" plus "speed" is one message triggered by
+						# all three. Order kept, duplicates dropped.
+						_rs = []
+						for _r in "{}/{}".format(_cur[_k], _new[_k]).split("/"):
+							if _r != "" and _r not in _rs:	_rs.append(_r)
+						_cur[_k] = "/".join(_rs)
+					else:
+						_cur[_k] = _new[_k]			# a newer reading of the same field wins
 				waitforcheckIfDelaySend = False
 
 					#U.logger.log(20, "checkIfDelaySend sensor:{}, devId:{}, data:{} ".format(sensor, devId, packet["sensors"][sensor][devId]))
@@ -9513,7 +10123,17 @@ def testAdvMatch(mac, tag, macplain, macplainReverse):
 				else:
 					patN = m.get("startsWith", m.get("prefix",""))
 					if patN == "" and lenB == 0: return False	# empty/unreadable matcher must NEVER match-all (schema mismatch protection)
-					if not name.startswith(patN): return False
+					# X IS A WILDCARD HERE TOO. The docstring above has always said so ("ascii for
+					# NAME; may contain X wildcards") and the hex branch below has always done it,
+					# but this one was a plain startswith - so one tag could not cover two model
+					# names differing in a single character, and matchers are AND-ed, so a second
+					# NAME entry cannot express "either". That is what left the shelly Button Tough
+					# (SBBT-102C) with no tag at all while SBBT-002C had one: now "SBBT-X02C"
+					# covers both. A literal X in a name would stop being matchable, which no
+					# shelly/minew/ruuvi model name here contains.
+					if len(name) < len(patN): return False
+					for ii in range(len(patN)):
+						if patN[ii] != "X" and patN[ii] != name[ii]: return False
 			else:
 				sec = code.get(tp,"")
 				if sec == "": return False
@@ -10288,7 +10908,11 @@ def resolvePinnedRadios(HCIdict):
 		for key in sorted(hciRolesPinned):
 			mode = "{}".format(hciRolesPinned[key])
 			if mode in ("", "auto"): continue
-			anchorMac = "{}".format(hciRolePinAnchors.get(mode, "")).upper()
+			# ANCHORED PER PIN KEY, NOT PER MODE. Keyed by mode, two pins of the same mode shared
+			# one anchor and re-pinning a mode could not take effect while the old radio was
+			# present. The key is what the dialog wrote, so each pin now keeps its own anchor.
+			# (Legacy path: only an hciN-keyed pin from an older plugin still needs one at all.)
+			anchorMac = "{}".format(hciRolePinAnchors.get("{}".format(key), hciRolePinAnchors.get(mode, ""))).upper()
 			hci       = ""
 			if anchorMac != "" and anchorMac in macNow:
 				hci = macNow[anchorMac]						# follow the dongle, wherever it is now
@@ -10298,13 +10922,17 @@ def resolvePinnedRadios(HCIdict):
 				lost.append("{}={} (dongle {} not present)".format(key, mode, anchorMac))
 				continue
 			elif "{}".format(key).upper() in macNow:		# pin already written as a mac
+				# A MAC IS ALREADY ABSOLUTE - it names the radio itself, so it needs no anchor and
+				# must not create one. Writing an anchor here used to make the MODE sticky to that
+				# mac: a later pin of the same mode onto a different radio was then overruled by
+				# the anchor for as long as the old radio was still plugged in, and the dialog
+				# looked like it did nothing. The plugin sends macs now, so this is the normal path.
 				hci = macNow["{}".format(key).upper()]
-				hciRolePinAnchors[mode] = "{}".format(key).upper(); dirty = True
 			elif key in HCIdict:							# first use: anchor it to what is there now
 				_m = "{}".format(HCIdict[key].get("BLEmac", "")).upper()
 				hci = key
 				if _m != "":
-					hciRolePinAnchors[mode] = _m; dirty = True
+					hciRolePinAnchors["{}".format(key)] = _m; dirty = True
 					U.logger.log(20,"radio role pin {}={} anchored to dongle {} - it keeps the role if the hci numbering changes".format(key, mode, _m))
 			else:
 				lost.append("{}={} (no radio called {}, and no anchor yet)".format(key, mode, key))
@@ -10313,10 +10941,88 @@ def resolvePinnedRadios(HCIdict):
 		if dirty: savePinAnchors()
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
+	hciRolePinEffective[0] = eff			# pinnedModeOf() reads this - see there
 	hciRolePinLost[0] = "; ".join(lost)
 	if lost:
 		U.logger.log(20,"RADIO ROLE PIN CANNOT BE HONOURED: {} - the rpi auto-picks that role instead, which may be a worse radio. Re-save the pin in the device dialog to point it at a radio that is here.".format(hciRolePinLost[0]))
 	return eff
+
+
+def uartRadio(HCIdict):
+	"""The INTERNAL (uart) radio of this rpi, "" when none is UP.
+
+	THE RADIO RULE: the INTERNAL radio carries the BROADCAST and the CONNECT role (beep, iphone
+	contact, switchbot), and a DONGLE does the SCANNING. Deviate only when it absolutely cannot
+	work - no other radio can scan BLE4 at all - and SAY SO in the log instead of quietly
+	rearranging the rpi; where something was already working, warn and leave it.
+	WHY IT OUTRANKS ANY SCAN-RATE MEASUREMENT: bluez stores pairing keys PER ADAPTER and a device
+	refuses them from a different adapter address, so moving the connect role moves it away from
+	every pairing this rpi holds. Live on rpi 5 (2026-11-11): the external dongle measured "weak"
+	(45 msg/s against the internal's 60), the scan role moved onto the internal radio, and connect
+	landed on a UGREEN/Barrot BLE5-ONLY dongle - "BLE4 scan commands REJECTED", "connect not
+	assumed" in its own catalogue entry - while all 5 shelly pairings sat unreachable on the
+	internal radio. A 25% scan-rate gain does not pay for breaking every pairing on the rpi.
+
+	Inputs:
+	    HCIdict (dict): HCIs["hci"] - name -> {bus, BLEmac, upDown, ..}
+	Outputs:
+	    str: hci name of the internal radio, "" if none is UP
+	"""
+	try:
+		for hh in sorted(HCIdict, key=lambda x: "{}".format(HCIdict[x].get("BLEmac","")).upper()):
+			if "{}".format(HCIdict[hh].get("bus","")).upper() == "UART" and HCIdict[hh].get("upDown","") == "UP":
+				return hh
+	except Exception:	pass
+	return ""
+
+
+def pairingKeysOn(adapterMac):
+	"""How many devices this ADAPTER holds bluez pairing keys for. -1 = cannot tell.
+
+	THE TIE-BREAKER FOR THE CONNECT ROLE. bluez stores a bond under
+	/var/lib/bluetooth/<adapter mac>/<device mac>/ and the device refuses that key from any other
+	adapter address, so a connect role on a radio that holds no keys cannot use ANY existing
+	pairing: every beep and link test fails while nothing looks broken anywhere. That is worth
+	more than a dedicated radio, which is why this is asked before the role is handed out.
+	The directory is root-only, so it is read through sudo; any failure answers -1 and the caller
+	keeps its normal preference rather than acting on a guess.
+
+	Inputs:
+	    adapterMac (str): the radio's own BLE mac, as whichHCI reports it
+	Outputs:
+	    int: number of device directories, 0 for none, -1 when it could not be read
+	"""
+	try:
+		_m = "{}".format(adapterMac).upper()
+		if len(_m) != 17 or _m.count(":") != 5:	return -1
+		# readPopen hands back a (stdout, stderr) TUPLE - formatting the tuple itself would give
+		# its repr, with the newlines escaped, and nothing would ever match below.
+		_out = readPopen("sudo /bin/ls -1 /var/lib/bluetooth/{} 2>/dev/null".format(_m))
+		_r   = "{}".format(_out[0]) if _out else ""
+		if "{}".format(_out[1] if _out else "").find("ermission") > -1:	return -1
+		return len([_l for _l in _r.split("\n") if len(_l.strip()) == 17 and _l.count(":") == 5])
+	except Exception:
+		return -1
+
+
+def canScanBLE4(HCIdict, notThese=()):
+	"""The radios that can actually SCAN BLE4 - "is there a dongle to take the scan role?".
+
+	A BLE5-ONLY dongle (Barrot/UGREEN 33fa:0012) answers 0x0C to the BLE4 scan commands and
+	receives nothing at all, so ble4 is False for it - measured by ble4ScanSupported, never
+	assumed from a feature bit. Such a radio is no scan candidate, which is exactly why reserving
+	it for extended listening takes nothing away from the other roles.
+
+	Inputs:
+	    HCIdict (dict): HCIs["hci"]
+	    notThese (tuple): hci names to leave out, e.g. the internal radio
+	Outputs:
+	    list: hci names, sorted by mac so the answer is deterministic across reboots
+	"""
+	try:
+		return [hh for hh in sorted(HCIdict, key=lambda x: "{}".format(HCIdict[x].get("BLEmac","")).upper())
+				if hh not in notThese and HCIdict[hh].get("upDown","") == "UP" and HCIdict[hh].get("ble4", True)]
+	except Exception:	return []
 
 
 def pinnedRadio(modes, HCIdict, taken=()):
@@ -10360,16 +11066,23 @@ def hciStateStrings():
 	each named the radio of ONE role - so answering "what is hci1 doing" meant reading all five and
 	cross-referencing macs. Now every radio has its own state and carries everything about itself:
 
-	    58:11:22:53:8C:D5/USB/0b05:190e/UP/BLE4+5/scan4+5
+	    58:11:22:53:8C:D5/USB/ASUS USB-BT500/UP/BLE4+5/scan4+5/0b05:190e
 
 	    mac         its BLE mac - FIRST because it is fixed width, so the states of the four
 	                radios line up under each other in the device list
 	    bus         USB or UART (UART = the onboard radio)
-	    usb-id      vendor:product of the dongle, "none" for onboard radios
+	    name        THE MAKER'S OWN NAME for the dongle, from its usb descriptors (sysfs
+	                manufacturer + product), "onboard" for a uart radio. It sat at the END of this
+	                string as a bare "0b05:190e", which tells a reader nothing - the name is what
+	                identifies a dongle you can walk over and look at, so it took that place and
+	                the vid:pid moved to the end for the cases where the exact model matters.
 	    up-down     UP or DOWN
 	    capability  what it CAN do: BLE4, BLE5 (extended only), BLE4+5 - measured, not claimed
 	    function    what it IS doing, "+"-joined: scan4 / scan4+5 / scan5 / connect / BC (the
 	                iBeacon broadcast) / beep, or "-" when it holds no role
+	    usb-id      vendor:product of the dongle, "none" for onboard radios - LAST, and the plugin
+	                tells the two layouts apart by looking at field 3: a vid:pid there means an
+	                rPi running older programs, which still sends the old order.
 
 	Inputs:
 	    None (reads HCIs, hciRoles, scanExtendedMode, useHCIForBeep).
@@ -10411,9 +11124,11 @@ def hciStateStrings():
 			# that took the role instead, so the device list shows it.
 			if hciRolePinLost[0] != "" and hciX == "{}".format(hciRoles.get("scan", {}).get("hci", "")):
 				fun.append("pinLost")
-			out[hciX] = "{}/{}/{}/{}/{}/{}".format(
-							hh.get("BLEmac", "?"), hh.get("bus", "?"), hh.get("usbId", "") or "none",
-							hh.get("upDown", "?"), cap, "+".join(fun) if fun else "-")
+			out[hciX] = "{}/{}/{}/{}/{}/{}/{}".format(
+							hh.get("BLEmac", "?"), hh.get("bus", "?"),
+							hh.get("usbName", "") or ("onboard" if "{}".format(hh.get("bus","")).upper() == "UART" else hh.get("usbId", "") or "?"),
+							hh.get("upDown", "?"), cap, "+".join(fun) if fun else "-",
+							hh.get("usbId", "") or "none")
 	except Exception:
 		U.logger.log(20,"", exc_info=True)
 	return out
@@ -10453,7 +11168,7 @@ def probeExtendedScan(sock):
 	# (2-radio rpi), not as an extra on top of one. So: listener present -> the scanner stays BLE4
 	# and keeps its full rate.
 	# an explicit pin on the SCAN radio decides the mode outright - that is what pinning is for
-	_pinMode = "{}".format(hciRolesPinned.get(useHCIForBeacon, ""))
+	_pinMode = pinnedModeOf(useHCIForBeacon)
 	if _pinMode == "scanBLE4":
 		extScanSay("pinnedBLE4", "BLE4-only scanning on {} - pinned to 'scanner BLE4' in the device dialog".format(useHCIForBeacon))
 		reportBLE5("no - scan radio pinned to BLE4 only")
@@ -12302,7 +13017,10 @@ def execbeaconloop(test):
 
 debugRestarts = True
 
-findMAC = [] # debug list, e.g. ["CB:25:B7:8F:BA:BE"]
+findMACfromPlugin = False	# True once the plugin has sent a non-empty list: only then may it clear one
+findMAC = []	# per-mac raw-frame trace. SET FROM THE PLUGIN now - its "log one beacon" menu, read
+				# in readParams out of beacon_parameters - so it no longer needs editing here. A mac put
+				# in this literal is still honoured until the first parameter read replaces the list.
 #["D0:EF:76:6F:18:96","D0:EF:76:6E:FC:5E"]# ["CB:25:B7:8F:BA:BE"] #["E4:88:7D:0D:4D:7A"] # ["E9:DD:2E:0E:3B:54"] # ["DD:53:FB:BF:03:40"] #["00:81:F9:86:3E:A0"] # ["CC:48:72:06:40:52","F0:66:AF:D4:9F:C1"] #["EC:44:51:19:C9:44"] # [,"E9:DD:2E:0E:3B:54","F0:D3:EF:76:A1:74"]
 trackmacFilter = ""
 U.echoLastAlive(G.program)

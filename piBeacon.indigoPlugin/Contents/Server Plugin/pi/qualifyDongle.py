@@ -89,10 +89,17 @@ HCI_EVENT_PKT = 0x04
 #   109/s pi onboard broadcom | 92/s good USB | 56/s CSR clone | 24/s ASUS extended | 2.6/s Barrot
 SCAN_GOOD      = 80.0		# reports/s: full-time scanner
 SCAN_OK        = 40.0		# reports/s: usable scanner - FALLBACK ONLY, see COVERAGE_* below
-COVERAGE_GOOD  = 85.0		# % of the macs ANY radio on this rpi heard: full-time scanner
-COVERAGE_OK    = 65.0		# % ditto: usable scanner. Two live runs on rpi#2 moved each radio
-							# by ~5 points (ASUS 94.3/89.0, onboard 74.3/78.1, UB500 71.4/67.1),
-							# so the bands are set wide enough that nobody changes role between runs
+# COVERAGE IS MEASURED AGAINST THE BEST RADIO ON THIS rpi, not against the union of what all of
+# them heard. The union is not a reachable target: it includes every mac that ANY radio caught,
+# so the best radio itself scores well under 100% and the bar silently moves with how many radios
+# are plugged in and how lucky each one was. Against the best radio the best one is 100% by
+# definition and every other radio is scored on the only question that matters - how much of the
+# achievable traffic it would deliver if it took the scan role.
+# Measured on rpi 5, 2026-11-10, two runs minutes apart: against the union the Broadcom scored
+# 64.9% and then 65.9%, straddling the old 65% bar, so it changed role between two runs of the
+# same hardware. Against the best radio it is 70.6% and 71.1% - the same radio, the same answer.
+COVERAGE_GOOD  = 85.0		# % of what the BEST radio here heard: full-time scanner
+COVERAGE_OK    = 60.0		# % ditto: usable scanner
 EXT_MIN_RATE   = 1.0		# reports/s in extended mode to call extended reception WORKING
 EXT_MIN_MACS   = 5			# ... and it has to hear more than one talkative neighbour
 CLONE_ACL_MTU  = 400		# ACL MTU <= this = CSR8510 clone: scans fine, unreliable for connects
@@ -738,12 +745,18 @@ def verdict(res, secs):
 	elif cov is not None:
 		if cov >= COVERAGE_OK:
 			roles.append("scan-BLE4" + ("" if cov >= COVERAGE_GOOD else "(weak)"))
-			why.append("scan judged on COVERAGE: heard {}/{} of the macs any radio here heard = {:.0f}%"
-				" at {:.1f} reports/s".format(res.get("covHeard", 0), res["covTotal"], cov, rLeg))
+			why.append("scan judged on COVERAGE: heard {}/{} of the macs the BEST radio here heard"
+				" = {:.1f}% at {:.1f} reports/s".format(res.get("covHeard", 0), res.get("covBest", 0), cov, rLeg))
 		else:
-			why.append("scan coverage too low: heard only {}/{} macs = {:.0f}% (need {:.0f}%),"
-				" even at {:.1f} reports/s".format(res.get("covHeard", 0), res["covTotal"],
-				cov, COVERAGE_OK, rLeg))
+			# ONE DECIMAL, NOT ZERO. The test is >=, and 24/37 is 64.86% - which printed as
+			# "= 65% (need 65%)" and read like a bug in the comparison rather than a near miss
+			# of 0.14 of a point. Measured on rpi 5, 2026-11-10. It also matters that a near
+			# miss is recognisable as one: one more mac heard (25/37 = 67.6%) and it passes.
+			_cb = res.get("covBest", 0) or 1
+			why.append("scan coverage too low: heard only {}/{} of what the BEST radio here heard"
+				" = {:.1f}% (need {:.1f}%, {} more mac(s) would pass), even at {:.1f} reports/s".format(
+				res.get("covHeard", 0), res.get("covBest", 0), cov, COVERAGE_OK,
+				max(1, int(_cb * COVERAGE_OK / 100.0) + 1 - res.get("covHeard", 0)), rLeg))
 	elif rLeg >= SCAN_OK:
 		roles.append("scan-BLE4" + ("" if rLeg >= SCAN_GOOD else "(weak)"))
 	else:
@@ -1007,11 +1020,16 @@ def coverageIntoEntries(entries):
 	"""
 	_obs, ref, total, _nRot = _coverageData(entries)
 	for res in entries:
-		res["covTotal"] = total
-		if total:
+		res["covTotal"] = total					# the UNION, kept for the printed coverage section
+		# the best radio's count is the yardstick for the VERDICT - see COVERAGE_OK
+		best = 0
+		for _r in entries:
+			best = max(best, len(_r.get("_covHeard", {}) or {}))
+		res["covBest"] = best
+		if total and best:
 			heard = len(res.get("_covHeard", {}) or {})
 			res["covHeard"] = heard
-			res["covPct"]   = round(100.0 * heard / float(total), 1)
+			res["covPct"]   = round(100.0 * heard / float(best), 1)
 
 
 def macCoverage(entries, secs):

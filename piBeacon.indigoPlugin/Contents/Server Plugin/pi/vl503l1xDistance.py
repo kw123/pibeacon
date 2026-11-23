@@ -419,6 +419,10 @@ class VL53L1X:
 # ===========================================================================
 
 #################################		
+minSendSecs		= {}		# devId -> the report floor, secs (see U.distReportParams)
+sendEverySecs	= {}		# devId -> the keep-alive, secs
+
+
 def readParams():
 	"""Reads the plugin parameter file and, if it has changed, parses global/sensor config, populates per-device settings (timing budget, mode, xShut pin, deltas, refresh rate), and starts or stops the sensor as needed.
 
@@ -497,11 +501,11 @@ def readParams():
 			try:	restartAfterNones[devId] = int(sensors[sensor][devId].get("restartAfterNones",10))
 			except: restartAfterNones[devId] = 10
 
-			try:	deltaDist[devId] = float(sensors[sensor][devId].get("deltaDist",10))/100.
-			except: deltaDist[devId] = 0.1
-
-			try:	deltaDistAbs[devId] = float(sensors[sensor][devId].get("deltaDistAbs",10))
-			except: deltaDistAbs[devId] = 10.
+			# THE FOUR REPORT KNOBS, shared by every distance sensor - see U.distReportParams.
+			# THIS SENSOR MEASURES IN CENTIMETRES, so the cm threshold needs no conversion.
+			deltaDist[devId], deltaDistAbs[devId], minSendSecs[devId], sendEverySecs[devId] = U.distReportParams(sensors[sensor][devId])
+			U.logger.log(20, "devId:{} reports at most every {:.0f}s, at least every {:.0f}s, in between only when BOTH >{:.1f}cm and >{:.0f}% - an explicit read-now and the distance/region events are never delayed".format(
+						devId, minSendSecs[devId], sendEverySecs[devId], deltaDistAbs[devId], deltaDist[devId]*100.))
 
 			try:	distanceUnits = sensors[sensor][devId].get("dUnits","cm")
 			except:	distanceUnits = "cm"
@@ -973,7 +977,6 @@ def execVL503I1():
 	badSensor					= 0
 	sensorActive				= False
 
-	sendEvery					= 30.
 
 	U.setLogging()
 
@@ -1068,11 +1071,21 @@ def execVL503I1():
 					#U.logger.log(20, "devId{}; dist {}, regionEvents:{}".format(devId, dist, regionEvents) )	
 					trigDD 	= deltaN > deltaDist[devId]
 					trigDDa	= deltaA > deltaDistAbs[devId]
-					trigDT	= tt - sendEvery > lastTime[devId]	
+					trigDT	= tt - sendEverySecs.get(devId, U.distHeartbeatDefault) > lastTime[devId]	
 					trigQi	= quick
 					#U.logger.log(20, "dd{}, da:{},dT:{}, reg:{}".format(trigDD, trigDDa, trigDT, changeRegion) )	
 					if devId in i2cNumbers: 	i2cText= "0x{:x}".format(i2cNumbers[devId])
 					else:						i2cText = "off"
+					# THE FLOOR HAS PRIORITY, the keep-alive included: "no two reports closer together
+					# than this" is the whole point of the setting. With the floor at most 10 s and the
+					# keep-alive at least 10 s the two can only collide when both are set to 10. NOT
+					# capped: an explicit read-now (trigQi) and the region/distance EVENTS, which is what
+					# actions are built on - delaying those changes behaviour, not just the rate. lastDist
+					# is only updated on a real report, so the next one carries the whole change since it.
+					if minSendSecs.get(devId, 0.) > 0. and (tt - lastTime[devId]) < minSendSecs[devId]:
+						trigDD  = False
+						trigDDa = False
+						trigDT  = False
 					if ( trigDD and trigDDa ) or trigDT or trigQi or regionEvents[2]: 
 								trig = ""
 								if trigDD or trigDDa:		trig +="Dist;"

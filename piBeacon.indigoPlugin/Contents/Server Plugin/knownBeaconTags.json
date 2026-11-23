@@ -702,6 +702,7 @@
     "batteryLevel": {}
    },
    "comment": "",
+   "correspondingSensorType": "BLEminewAcc",
    "correspondingSwitchbotDevice": "",
    "dBm": "-61",
    "hexCode": "1AXXXXXXXXXXXXXX1216E1FFA103XXXXXXXXXXXXXXRMAC########-",
@@ -1431,7 +1432,7 @@
    "advMatch": [
     {
      "lenBytes": 9,
-     "startsWith": "SBBT-002C",
+     "startsWith": "SBBT-X02C",
      "type": "NAME"
     },
     {
@@ -1449,7 +1450,7 @@
      "type": "BLEbonded"
     }
    },
-   "comment": "",
+   "comment": "NAME matcher SBBT-X02C covers both 1-button models: SBBT-002C (BLU Button 1) and SBBT-102C (BLU Button Tough 1 ZB). Both send ONE BTHome 3A object per frame. The Tough also sends a short idle advertisement with TWO device-info bytes (40 44 00 <packetId>) - see doBLEShelly.",
    "correspondingShellyButtonDevice": "BLEShellyButton",
    "correspondingSwitchbotDevice": "",
    "dBm": "-65",
@@ -1461,7 +1462,77 @@
    "sensorFunctions": "",
    "sequence": 0,
    "subType": {},
-   "text": "Shelly BLE button, use shelly BLEdebug app to set BC on",
+   "text": "Shelly BLE button: BLU Button1 SBBT-002C and Button Tough1 SBBT-102C, use shelly BLEdebug app to set BC on",
+   "textForMenu": "",
+   "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
+  "ShellyButton4": {
+   "Maj": "",
+   "Min": "",
+   "advMatch": [
+    {
+     "startsWith": "SBBT-104C",
+     "type": "NAME"
+    },
+    {
+     "lenBytes": 15,
+     "startsWith": "A90BXXXXXXXXXXXXXXRMAC########",
+     "type": "FF"
+    }
+   ],
+   "commands": {
+    "beep": {
+     "beaconModeUUID": "cb9e957e-952d-4761-a7e1-4416494a5bfa",
+     "buzzerUUID": "5b026510-4088-c297-46d8-be6c736a087b",
+     "comment": "shelly BLU buzzer. NOT gatttool: every writable characteristic on this device is write-bonded, so it needs a real bluez bond and the write goes through bluetoothctl gatt by UUID. Beacon mode must be ON for the buzzer to work; the device stops it after 30s by itself.",
+     "random": "randomON",
+     "type": "BLEbonded"
+    }
+   },
+   "comment": "4 buttons. BTHome repeats object 3A once per button at a fixed position, all four in every packet, code 00 for the ones that did nothing - so 3A01 3A00 3A01 3A00 is buttons 1 and 3 pressed. beaconloop indexes them button, button2, button3, button4. Pairing: 4 clicks on any button, or hold any two for 10s (firmware before 1.0.22: one button past 10s). The buzzer UUIDs are inherited from the 1-button BLU and are NOT verified on this model - the link test will say if it has one. PAIRING: four clicks of any button - the hold is NOT usable on this model, it only broadcasts when released after ~2-3s and sends nothing when held longer (measured 2026-11-11). It does emit long_press (0x04) and long_double_press (0x05) as well as hold_press (0x80), but which one is up to the device.",
+   "correspondingShellyButtonDevice": "BLEShellyButton",
+   "correspondingSwitchbotDevice": "",
+   "dBm": "-65",
+   "hexCode": "",
+   "hexCode2": "",
+   "identMethod": "shadow",
+   "pos": 2,
+   "posDelta": 0,
+   "sensorFunctions": "",
+   "sequence": 0,
+   "subType": {},
+   "text": "Shelly BLU RC Button 4 / Wall Switch 4 (SBBT-104C..): FOUR buttons, states buttonNumber + buttonsPressed. use shelly BLEdebug app to set BC on",
+   "textForMenu": "",
+   "useOnlyThisTagToAcceptBeaconMsgDefault": 0
+  },
+  "ShellyWS90": {
+   "Maj": "",
+   "Min": "",
+   "advMatch": [
+    {
+     "startsWith": "SBWS",
+     "type": "NAME"
+    },
+    {
+     "lenBytes": 15,
+     "startsWith": "A90BXXXXXXXXXXXXXXRMAC########",
+     "type": "FF"
+    }
+   ],
+   "commands": {},
+   "comment": "NAME matcher is the PREFIX SBWS, not a full model string like the other shelly entries: the exact advertised local name of this station has not been seen here yet (the model is SBWS-90CM), and a prefix matches whatever the suffix turns out to be while still being unique to this family. CONFIRM IT from a trace (set track mac in the menu) and tighten it if wanted. dBm is -95, not the -65 the hand-held shellys use: this one sits outdoors at 20-30 m, so a close-up signal must not be the condition for accepting it.",
+   "correspondingShellyButtonDevice": "BLEShellyWS90",
+   "correspondingSwitchbotDevice": "",
+   "dBm": "-95",
+   "hexCode": "",
+   "hexCode2": "",
+   "identMethod": "shadow",
+   "pos": 2,
+   "posDelta": 0,
+   "sensorFunctions": "",
+   "sequence": 0,
+   "subType": {},
+   "text": "Ecowitt WS90 7-in-1 weather station Powered by Shelly (SBWS-90CM): BTHome over FCD2, broadcasts on a timer and splits one reading over two frames - temp, hum, pressure, dewpoint, light, UV, wind, gust, direction, rain total and rain detected. Use the shelly BLEdebug app to set BC on, and leave its broadcast ENCRYPTION OFF - there is no key support here.",
    "textForMenu": "",
    "useOnlyThisTagToAcceptBeaconMsgDefault": 0
   },

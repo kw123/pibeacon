@@ -1001,6 +1001,15 @@ Write MAC address of new BLE dongle here. This will then ONLY replace the BLE-MA
 				<Option value="off"       >no, not for this device</Option>
 			</List>
 		</Field>
+		<Field id="sepSqlNoStats" type="separator"/>
+		<Field id="sqlNoStats" type="menu" defaultValue="default">
+			<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+			<List>
+				<Option value="default">default (as set in plugin config)</Option>
+				<Option value="no">not written</Option>
+				<Option value="yes">written</Option>
+			</List>
+		</Field>
 	</ConfigUI>
 
 		<States>
@@ -1832,6 +1841,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2296,6 +2314,15 @@ You can use this also to create a new iBeacon device...BUT do NOT use a MAC numb
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2536,6 +2563,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -2645,6 +2681,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Option value="useDefault">use the plugin-config setting</Option>
 			<Option value="on"        >yes, for this device</Option>
 			<Option value="off"       >no, not for this device</Option>
+		</List>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
 		</List>
 	</Field>
 </ConfigUI>
@@ -2979,6 +3024,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -3414,6 +3468,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3546,6 +3609,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -3795,6 +3867,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -3980,6 +4061,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -4189,6 +4279,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -4388,6 +4487,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -4619,6 +4727,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -4863,6 +4980,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5082,6 +5208,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5276,6 +5411,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -5539,6 +5683,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5742,6 +5895,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -5920,6 +6082,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -6176,6 +6347,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6351,6 +6531,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -6530,6 +6719,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -6774,6 +6972,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -6984,6 +7191,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -7255,6 +7471,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7419,6 +7644,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -7619,6 +7853,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -7789,6 +8032,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -7967,6 +8219,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8121,6 +8382,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Option value="useDefault">use the plugin-config setting</Option>
 			<Option value="on"        >yes, for this device</Option>
 			<Option value="off"       >no, not for this device</Option>
+		</List>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
 		</List>
 	</Field>
 </ConfigUI>
@@ -8392,6 +8662,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8410,6 +8689,147 @@ xx_Count_groupname_ .. Home, Away</Label>
 		</States>
 	</Device>
 
+
+	<Device type="sensor" id="BLEShellyWS90">     	<Name>BLE-Shelly WS90 weather station</Name>
+
+		<ConfigUI>
+			<Field id="isSensorDevice"     type="checkbox"     defaultValue="false" hidden="true"> </Field>
+			<Field id="SupportsSensorValue" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsOnState" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="SupportsStatusRequest" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowOnStateChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="AllowSensorValueChange" type="checkbox" defaultValue="false" hidden="true"></Field>
+			<Field id="SupportsBatteryLevel" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="noI2cCheck" type="checkbox" defaultValue="true" hidden="true"></Field>
+			<Field id="isBLESensorDevice" 		type="checkbox" defaultValue="true" hidden="true"> </Field>
+
+			<Field id="MSG" type="textfield"     defaultValue=""> <Label>message from plugin:</Label></Field>
+
+			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
+				<Label> Ecowitt WS90 7-in-1 weather station POWERED BY SHELLY (SBWS-90CM)
+Accept new beacons: type shelly WS90.  This is NOT the normal ecowitt WS90: that one transmits on
+868 MHz to an ecowitt gateway and an rPi cannot hear it at all. Only the shelly version, which
+sends BTHome over bluetooth, works here - look for the bluetooth/zigbee symbols on the battery
+cover. No shelly gateway is needed: the rPi reads the broadcasts directly.
+Download Shelly BLE debug from the appstore / launch / connect / set beacon on, so that it
+broadcasts regularly.
+LEAVE ITS BROADCAST ENCRYPTION OFF. Shelly BLU devices can encrypt their BTHome payload and
+there is no key support here - an encrypted station is reported in the log and nothing else.
+
+THE STATES, and the BTHome object each one comes from:
+   temp 02 / hum 03 / press 04 / dewpoint 08 / Illuminance 05 / batteryLevel 01
+   speed 44       the WIND speed, m/s
+   speed2 44      the GUST, m/s - BTHome has no separate object for it, the station simply sends
+                  "speed" twice in one frame and only the ORDER tells them apart. If the two turn
+                  out to be swapped on your station, that is the one thing to check first.
+   direction 5E   wind direction in degrees
+   precipitation 5F   rain total in mm
+   moistureDetected 20   rain right now: dry / wet
+ONE READING ARRIVES AS TWO BROADCASTS (light, rain, wind, gust, UV, direction in one, battery,
+pressure, dewpoint, humidity, temperature, rain total in the other). The rPi merges them into one
+message, so all the states update together - nothing to set up for that.
+</Label>
+			</Field>
+
+			<Field id="mac" type="textfield"     defaultValue=""  >
+				<Label>Enter MAC number of the station: </Label>
+			</Field>
+
+			<Field id="labelRPI"   type="label" fontColor="green">
+				<Label>==== Select RPIs that should monitor this sensor. Use as few as possible,
+ In most cases one is fine, only if they move around or are fare away use more
+   check only RPIs that are installed, checked RPi that do not exist will be ignored
+ if you use many, set the "Send sensor .. at least"  to a larger number</Label>
+			</Field>
+
+			<Field id="RPI_ENABLE_BLOCK" type="label" hidden="true"> <Label> </Label> </Field>
+			<Field id="GROUP_MEMBER_BLOCK" type="label" hidden="true"> <Label> </Label> </Field>
+			<Field id="labelgroup2"		type="label" 		alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>Adding a device to a group
+will add this device to variable for
+xx_Count_groupname_ .. Home, Away</Label>
+			</Field>
+
+			<Field id="labelenableMinmax"   type="label"  fontColor="green" >
+				<Label>==== Enable min/max/average states and, separately, the changed-values + trend states (8x,4x,2x,x% up/down/const in last xx minutes)</Label>
+			</Field>
+			<Field id="Illuminance_EnableMinMax" type="checkbox" defaultValue="true" > <Label>Illuminance - min/max/average:</Label> </Field>
+			<Field id="Illuminance_EnableChanges" type="checkbox" defaultValue="true" > <Label>Illuminance - changes + trend:</Label> </Field>
+			<Field id="Illuminance_trendTimeDeltaMin" type="menu"  defaultValue="600" visibleBindingId="Illuminance_EnableChanges" visibleBindingValue="true">  <Label>... trend min  delta time:</Label>
+				<List>
+					<Option value="300"   > 5 minutes</Option>
+					<Option value="600"   > 10 minutes</Option>
+					<Option value="1200"  > 20 minutes</Option>
+					<Option value="3600"  > 1 hour</Option>
+					<Option value="7200"  > 2 hour</Option>
+					<Option value="21600" > 6 hour</Option>
+					<Option value="43200" > 12 hour</Option>
+					<Option value="86400" > 24 hour</Option>
+				</List>
+			</Field>
+			<Field id="Illuminance_trendDelta" type="menu"  defaultValue="100" visibleBindingId="Illuminance_EnableChanges" visibleBindingValue="true" >  <Label>... trend delta value to trigger up/down:</Label>
+				<List>
+					<Option value="10"    > 0.1 %</Option>
+					<Option value="20"    > 0.2 %</Option>
+					<Option value="30"    > 0.3 %</Option>
+					<Option value="50"    > 0.5 %</Option>
+					<Option value="100"   > 1 %</Option>
+					<Option value="150"   > 1.5 %</Option>
+					<Option value="200"   > 2 %</Option>
+					<Option value="300"   > 3 %</Option>
+					<Option value="500"   > 5 %</Option>
+					<Option value="1000"  > 10 %</Option>
+					<Option value="2000"  > 20 %</Option>
+					<Option value="3000"  > 30 %</Option>
+					<Option value="5000"  > 50 %</Option>
+				</List>
+			</Field>
+
+
+		
+			<Field id="secOnOffText" type="label" fontColor="green"> <Label>==== Text shown in the status column for on / off:</Label> </Field>
+			<Field id="onOffSetting"    type="menu"     defaultValue="on=red,off=grey" hidden="no" >
+				<Label>How to show A True signal (=event) happened:</Label>
+				<List>
+					<Option value="on=green,off=grey" >show True as green, off = Grey</Option>
+					<Option value="on=red,off=grey"   >show True as red,   off = Grey</Option>
+					<Option value="on=green,off=red"  >show True as green, off = Red</Option>
+					<Option value="on=red,off=green"  >show True as red,   off = Green</Option>
+					<Option value="on=grey,off=red"   >show True as grey,  off = Red</Option>
+					<Option value="on=grey,off=green" >show True as grey,  off = Green</Option>
+					<Option value="off"               >do not set the image - use indigo's default</Option>
+				</List>
+			</Field>
+			<Field id="onOffuiTrue"		type="textfield"	defaultValue="on">	<Label>show what string in status if on (empty = let indigo show the state):</Label>	</Field>
+			<Field id="onOffuiFalse"	type="textfield"	defaultValue="off">	<Label>show what string in status if off (empty = let indigo show the state):</Label>	</Field>
+
+			<Field id="printPropsSeparator" type="separator"></Field>
+			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
+				<Label>Debug:</Label>
+				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="lastUpdateFromRPImode" type="menu" defaultValue="useDefault" tooltip="the state lastUpdateFromRPI names the rPi this device was last heard by. It is the noisiest state the plugin writes - about a quarter of all writes - so it is off by default and best switched on for one device at a time">
+				<Label>write the state "lastUpdateFromRPI":</Label>
+				<List>
+					<Option value="useDefault">use the plugin-config setting</Option>
+					<Option value="on"        >yes, for this device</Option>
+					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
+		</ConfigUI>
+
+		<States>
+		</States>
+	</Device>
 
 	<Device type="sensor" id="BLEShellyDoor">     	<Name>BLE-Shelly Door</Name>
 
@@ -8521,6 +8941,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8545,7 +8974,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="label0"   type="label"  alignText="left" fontColor="orange">
 				<Label> To setup one of these Button BLE sensor types:
 Accept new beacons, type shelly BLE button.
-This sensor reacts to a single / double / tripple / long press. onOffState is True/On for 2 secs after a press.
+This sensor reacts to a single / double / triple / long press. onOffState is True/On for 2 secs after a press.
 Install the Shelly BLE debug app / launch / press the button / connect / switch beacon mode ON. That enables the
 regular broadcasts this plugin needs to see the device at all.</Label>
 			</Field>
@@ -8570,8 +8999,21 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="labelPairDo"   type="label" fontColor="green">
-				<Label>==== TO PAIR:  tick the rPi above - SAVE this dialog - then HOLD the button next to
-that rPi, past 10 SECONDS.  It worked when the BUTTON BEEPS.      (details: tick "how to" below)</Label>
+				<Label>==== TO PAIR - TWO GESTURES, IN THIS ORDER, next to the rPi you ticked above
+(tick it, SAVE this dialog, then go to the button):
+   1. HOLD it about 4 s, LET GO  this ARMS the rPi. It is the only half the rPi can hear, and
+                                 the event only goes out when you LET GO - so do not keep it down.
+   2. the 4 FAST CLICKS, at once this opens the BUTTON's own pairing mode - it beeps, and about
+                                 20 SECONDS later it beeps again to say the window has shut.
+Do step 2 IMMEDIATELY after step 1; that ~20 s window is all there is. On an older BLU Button 1
+(SBBT-002C) the 10 s hold is the WHOLE procedure - step 1 only, no clicks.
+If a hold does not arm the rPi (nothing in the indigo log), a DOUBLE or TRIPLE PRESS arms it too
+and is always broadcast - use that for step 1 instead.
+IT WORKED WHEN THE BUTTON BEEPS - except on an RC Button 4 / Wall Switch 4, which has no buzzer at
+all: there the indigo log is the only answer, and pairing one gains nothing anyway (its presses
+arrive from the advertisement).   See "how to" below.
+==== ONE BUTTON AT A TIME:  WAIT UP TO 90 SECONDS for the result line in the indigo log before
+starting on the next button - an rPi can only pair with one of them at a time.</Label>
 			</Field>
 			<Field id="showShellyHelp" type="checkbox" defaultValue="false">
 				<Label>how to:</Label>
@@ -8598,33 +9040,95 @@ TWO THINGS HAVE TO BE TRUE BEFORE ANY OF THIS:
      simply is not listening for this button, and nothing appears in any log either, which makes
      it the one failure with no symptom at all to go on.
 
-THE WHOLE PROCEDURE IS ONE GESTURE:  hold the button next to that rPi, past 10 SECONDS.
+TWO JOBS, AND THE rPi CAN ONLY SEE ONE OF THEM:
+  ARM THIS rPi      stands in for "pick the device in the shelly app" - an rPi has no UI to pick
+                    with, so a BUTTON EVENT has to do it, and it has to be an event the rPi
+                    actually receives. A HOLD of about 4 s, LET GO again, closer than -65 dBm arms
+                    it for 90 s - the same gesture a BLU Button 1 pairs with, which is why it is
+                    the one asked for here. The event goes out ON RELEASE: keep the button down
+                    and nothing is broadcast at all. A double or triple press arms it as well and
+                    is the fallback if a hold does not. (Every rPi here is > 5 m from the next one, about -79 dBm, so only the
+                    one in your hand can arm.)
+  OPEN THE DEVICE   shelly only accepts a pairing "from a paired device, or while pairing mode is
+                    active", and a button claimed in the shelly app is paired to the PHONE - so
+                    this rPi has no standing to connect until that window is open. The 4 FAST
+                    CLICKS open it. THE rPi CANNOT SEE THIS HALF AT ALL: measured on a Button
+                    Tough, the four clicks make it beep and broadcast NOTHING - its advertisement
+                    carries only packet id, battery, device type and firmware while the window is
+                    open, with no button event in it - and about 20 SECONDS later it beeps again
+                    to say the window has shut.
+SO: the HOLD FIRST (and let go), then the four clicks STRAIGHT AFTER, with no pause. The rPi has
+to be armed and already scanning when that ~20 s window opens, and it picks the job up within
+about a second, so clicking immediately is exactly right. Clicking first and arming afterwards
+cannot work - by then the window is shutting.
 NOTHING IS STARTED FROM THIS DIALOG and there is no reason to keep it open - save it and close it.
 There used to be a "pair this rPi" button here and it bought nothing: somebody still had to walk
-over and hold the button to open its pairing mode, which is the part that cannot be skipped. The
-hold does both jobs at once: it opens the BUTTON's pairing mode (open about a minute, and it makes a sound when
-you let go), and the rPi that hears that hold closer than -65 dBm arms itself for 90 s and pairs
-inside the window. Clicks never pair anything; a double press arms an rPi just as well, but it
-does not open pairing mode, so the hold is the one that cannot be skipped.
+over and open the button's pairing mode, which is the part that cannot be skipped.
 IT WORKED WHEN THE BUTTON BEEPS - and the beep means more than "keys written": the rPi buzzes the
-button over the pairing it has just made, so a beep says the pairing is there AND usable. A few
-refusals in the rPi log before the hold lands are normal ("auth failed with status 0x05" is the
-button saying no while pairing mode is shut); the rPi keeps retrying for about 2 minutes and
-whichever attempt falls inside the window wins.
-WATCH THE INDIGO LOG - the rPi reports both halves there. First that it HEARD the gesture ("PAIRING
-GESTURE SEEN by this rPi .. pairing now"), then how it went. No line at all means no rPi heard it:
-not ticked for this device, the edit not saved, or too far away.
+button over the pairing it has just made, so a beep says the pairing is there AND usable. (An RC
+Button 4 / Wall Switch 4 has no buzzer - see below.) A few refusals in the rPi log before an
+attempt lands are normal ("auth failed with status 0x05" is the button saying no while pairing
+mode is shut); the rPi keeps retrying for the whole 90 s and whichever attempt falls inside the
+window wins.
+WATCH THE INDIGO LOG - the rPi reports both halves there. First that it ARMED ("ARMED by this rPi
+.. NOW DO THE 4 FAST CLICKS"), then how the pairing went. No line at all means no rPi heard the
+arming gesture: the hold was never let go, or it is not ticked for this device, or the edit was
+not saved, or it is too far away. Try a double or triple press - if THAT arms it, the hold was the
+problem, not the setup.
 
-THREE SITUATIONS, SAME GESTURE:
-  1. NEW PAIRING               hold it next to the rPi. Nothing else.
+ONE BUTTON AT A TIME - WAIT 90 SECONDS BETWEEN TWO PAIRINGS:
+an rPi pairs with ONE button at a time. The moment it has heard a hold it owns its radio for up to
+90 seconds trying to pair, and a hold on a SECOND button during those seconds cannot be served -
+by the time the radio is free again that second button's own pairing mode (about a minute) has
+already shut. So: hold one button, WAIT FOR ITS RESULT LINE in the indigo log ("WORKED" or "did
+NOT work"), and only then hold the next one.
+Holding several in quick succession costs nothing except the walk back: only the first can pair,
+and the others report "this rPi is still busy with another shelly job" and are not penalised -
+hold them again, one by one. The test and unpair buttons below share that same radio, so they
+queue behind a pairing in exactly the same way.
+After a pairing HAS finished, that one button is then left alone for 150 seconds - holding it
+again straight away does nothing. Each bond uses up one of the button's few bond slots, so it is
+deliberately not re-paired on a whim. Different buttons are unaffected by it.
 
-  2. AFTER AN "unpair" HERE    same, and the hold really is not optional: the button kept ITS OWN
-                               copy of the key and refuses a new pairing until pairing mode is
-                               open.
+WHY THE FOUR CLICKS CANNOT ARM AN rPi BY THEMSELVES:
+on an RC Button 4 / Wall Switch 4 (SBBT-104C..) and on a Button Tough (SBBT-102C) the shelly phone
+app asks for FOUR PRESSES, and that is still what opens pairing mode here. But the device does not
+broadcast them. Measured on a Button Tough next to an rPi, with the full packet trace: four fast
+clicks produce a beep and NOT ONE button event - the packet id moves on, the payload stays
+"battery, device type, firmware" - and the same is true of the single press that follows while the
+window is open. There is nothing there to count, so the arming has to come from a gesture made
+BEFORE the clicks - and the one asked for is a HOLD, because that is what a BLU Button 1 pairs
+with and it keeps the procedure the same on every model.
+THE HOLD HAS TO BE LET GO - about 4 s is right. Measured on an RC Button 4: the hold event is only
+broadcast when the button is RELEASED after roughly 2-3 s, and keeping it down much longer -
+exactly what "hold past 10 s" asks for - produced NO advertisement at all on that model. Which
+code arrives is up to the device: of 15 holds in one session, 13 came through as hold_press, one
+as long_press and one as long_double_press. All of them arm, so the code does not matter; the
+timing does. On the older BLU Button 1 (SBBT-002C) the long 10 s hold is reliable AND is the whole
+procedure there - it opens that model's pairing mode by itself, with no clicks to follow.
+IF A HOLD DOES NOT ARM THE rPi, USE A DOUBLE OR TRIPLE PRESS: that is broadcast whatever the
+firmware does with holds (it is how a Button Tough was paired here), so it is the fallback - and
+nothing else about the procedure changes, the four clicks still follow it immediately.
+WHAT ARMS AN rPi: long_press, hold_press, button_hold, double_press and triple_press - and any
+code BTHome has no name for, which arrives as "code_XX" and is reported with the code in it, so a
+model that does broadcast something for its pairing gesture can be added to the table afterwards.
+THE RC BUTTON 4 AND THE WALL SWITCHES HAVE NO BUZZER, so there is nothing to confirm a pairing by
+ear - and nothing to gain from pairing them in the first place: their presses arrive from the
+advertisement, which needs no pairing at all. The buzzer, and with it this whole procedure, is
+only worth doing on a model that has one: the Button Tough and the BLU Button 1.
+The state buttonNumber says which button a press came from, and buttonsPressed lists all of them
+when several were pressed at once, eg "1,3"; the event stays in currentEventType as before.
+
+THREE SITUATIONS, SAME TWO GESTURES:
+  1. NEW PAIRING               hold it ~4 s next to the rPi and let go, then the 4 fast clicks.
+
+  2. AFTER AN "unpair" HERE    same, and opening pairing mode really is not optional: the button
+                               kept ITS OWN copy of the key and refuses a new pairing until the
+                               window is open.
 
   3. BUTTON WAS FACTORY RESET  its keys are gone, this rPi's are not - so this rPi believes it is
-                               paired, nothing works, and a hold will not arm it. Click "unpair"
-                               below first to drop the stale keys, THEN hold it next to the rPi.
+                               paired, nothing works, and no gesture will arm it. Click "unpair"
+                               below first to drop the stale keys, THEN do the two gestures.
 
 THE BUTTONS BELOW DO NOT PAIR ANYTHING - they are for an existing pairing only: checking one, or
 removing one.
@@ -8662,8 +9166,9 @@ advertises, which it does by itself.</Label>
 			</Field>
 			<Field id="labelUnpairNote" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
 				<Label>unpair removes THIS rPi's keys only - the button keeps its own copy, so pairing
-this rPi again needs the 10 s hold. It is also the way out of a pairing that has gone stale
-(button factory reset): unpair here, then hold the button next to the rPi. Tick "how to" above.</Label>
+this rPi again needs its pairing mode opened: hold it ~4 s and let go to arm, then the 4 fast
+clicks (older BLU Button 1: the 10 s hold alone). It is also the way out of a pairing that has gone stale
+(button factory reset): unpair here, then pair again. Tick "how to" above.</Label>
 			</Field>
 
 		
@@ -8694,6 +9199,15 @@ this rPi again needs the 10 s hold. It is also the way out of a pairing that has
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -8822,6 +9336,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -8913,6 +9436,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -9044,6 +9576,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -9188,6 +9729,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Option value="useDefault">use the plugin-config setting</Option>
 			<Option value="on"        >yes, for this device</Option>
 			<Option value="off"       >no, not for this device</Option>
+		</List>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
 		</List>
 	</Field>
 </ConfigUI>
@@ -9375,6 +9925,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9535,6 +10094,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -9644,6 +10212,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -9865,6 +10442,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10059,6 +10645,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -10296,6 +10891,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10427,6 +11031,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -10606,6 +11219,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10782,6 +11404,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -10956,6 +11587,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -11110,6 +11750,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 				<Option value="useDefault">use the plugin-config setting</Option>
 				<Option value="on"        >yes, for this device</Option>
 				<Option value="off"       >no, not for this device</Option>
+			</List>
+		</Field>
+		<Field id="sepSqlNoStats" type="separator"/>
+		<Field id="sqlNoStats" type="menu" defaultValue="default">
+			<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+			<List>
+				<Option value="default">default (as set in plugin config)</Option>
+				<Option value="no">not written</Option>
+				<Option value="yes">written</Option>
 			</List>
 		</Field>
 	</ConfigUI>
@@ -11319,6 +11968,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 	<States>
 	</States>
@@ -11478,6 +12136,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11630,6 +12297,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -11790,6 +12466,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -11947,6 +12632,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -12135,6 +12829,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -12326,6 +13029,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -12512,6 +13224,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -12701,6 +13422,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -12914,6 +13644,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13103,6 +13842,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -13290,6 +14038,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -13519,6 +14276,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -13867,6 +14633,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="GasResistance">
@@ -14074,6 +14849,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -14284,6 +15068,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -14490,6 +15283,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -14686,6 +15488,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -14835,6 +15646,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -15085,6 +15905,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -15344,6 +16173,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -15637,6 +16475,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -15827,6 +16674,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -15963,6 +16819,15 @@ actually reports one, because indigo's default of 0 would read as a flat battery
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -16547,6 +17412,15 @@ printed again as a further set of columns rather than wrapped. Two rows are mark
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -16765,6 +17639,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -17036,6 +17919,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -17202,6 +18094,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -17335,6 +18236,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -17592,6 +18502,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -17669,6 +18588,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -17848,6 +18776,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -18042,6 +18979,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -18234,6 +19180,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -18395,6 +19350,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -18535,6 +19499,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="UV">
@@ -18664,6 +19637,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -18910,6 +19892,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -19150,6 +20141,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -19425,6 +20425,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -19966,6 +20975,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Leaving_count">
@@ -20245,6 +21263,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 
@@ -20423,6 +21450,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -20616,6 +21652,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -20828,6 +21873,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -21016,6 +22070,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -21259,6 +22322,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="heading">
@@ -21465,6 +22537,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="ACCx">
@@ -21668,6 +22749,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="ACCx">
@@ -21860,6 +22950,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="adc">
@@ -22041,6 +23140,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -22250,6 +23358,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="Current1">
@@ -22414,6 +23531,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -22596,6 +23722,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -22891,6 +24026,15 @@ use bit max value, not actual voltage for feedVolt </Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -23181,6 +24325,15 @@ use bit max value, not actual voltage for feedVolt </Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -23694,6 +24847,15 @@ recommened is a relay with transitor switch in front!</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -24061,6 +25223,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -24318,6 +25489,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -24680,6 +25860,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 						<Option value="off"       >no, not for this device</Option>
 					</List>
 				</Field>
+				<Field id="sepSqlNoStats" type="separator"/>
+				<Field id="sqlNoStats" type="menu" defaultValue="default">
+					<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+					<List>
+						<Option value="default">default (as set in plugin config)</Option>
+						<Option value="no">not written</Option>
+						<Option value="yes">written</Option>
+					</List>
+				</Field>
 			</ConfigUI>
 
 		<States>
@@ -24727,7 +25916,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 
 		<Field id="infoLabelRPI" type="label" fontColor="green"> 				<Label>==== RPI setup:  -----------------------------</Label> </Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUTPulse devices are connected:</Label>
 			</Field>
 
@@ -24909,6 +26098,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -25042,7 +26240,7 @@ You can only use ONE definition of edge per gpio pin (not RISING in one device a
 
 		<Field id="infoLabelRPI" type="label"  fontColor="green"> 				<Label>==== RPI setup:  -----------------------------</Label> </Field>
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -25314,6 +26512,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -25439,7 +26646,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -25588,6 +26795,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -25624,7 +26840,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -25768,6 +26984,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -25823,7 +27048,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -25967,6 +27192,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_00">
@@ -26062,7 +27296,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -26207,6 +27441,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_00">
@@ -26322,7 +27565,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -26526,6 +27769,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -26561,7 +27813,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -26677,6 +27929,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -26727,7 +27988,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -26845,6 +28106,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT_0">
@@ -26927,7 +28197,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -27041,6 +28311,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -27205,7 +28484,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -27311,6 +28590,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -27341,7 +28629,7 @@ xx_Count_groupname_ .. Home, Away</Label>
 			</Field>
 
 			<Field id="piServerNumber"   type="menu" defaultValue="0" tooltip="select pi- server number and then click on confirm " >
-					<List class="self" filter="" method="filterPiD" dynamicReload="false" />
+					<List class="self" filter="blue,sensor" method="filterPiD" dynamicReload="false" />
 				<Label>select rPi-server to which the INPUT is connect to:</Label>
 			</Field>
 
@@ -27459,6 +28747,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="INPUT">
@@ -27524,7 +28821,7 @@ You can setup a trigger eg Distance becomes less than 30cm condition gt 10cm and
 					<Option value="2"   > 2   secs</Option>
 					<Option value="3"   > 3   secs</Option>
 					<Option value="4"   > 4   secs</Option>
-					<Option value="5"   > 4   secs</Option>
+					<Option value="5"   > 5   secs</Option>
 					<Option value="6"   > 6   secs</Option>
 					<Option value="7"   > 7   secs</Option>
 					<Option value="8"   > 8   secs</Option>
@@ -27534,40 +28831,76 @@ You can setup a trigger eg Distance becomes less than 30cm condition gt 10cm and
 			</Field>
 
 			<Field id="labeldeltaDist" type="label">
-				<Label>Send value to indigo if both are triggered delta dist absolut and %:</Label>
+				<Label>==== In between: report only a REAL change - BOTH tests have to pass:</Label>
 			</Field>
-			<Field id="deltaDistAbs" type="menu"     defaultValue="5" hidden="no" >
-				<Label>..   send if delta Dist &gt; absolute[cm]:</Label>
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10" hidden="no" tooltip="The absolute half of the change test. Without it a small wobble close to the sensor counts as a move: 1 cm at 2 cm away is a 50% change and would be reported, although 1 cm is noise. BOTH this and the percentage below have to be exceeded before a reading is reported.">
+				<Label>..   report if delta Dist &gt; absolute [cm]:</Label>
 				<List>
-					<Option value="0.5"  > 0.5</Option>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="4"    > 4</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="7"    > 7</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 cm</Option>
+					<Option value="2"    > 2 cm</Option>
+					<Option value="3"    > 3 cm</Option>
+					<Option value="4"    > 4 cm</Option>
+					<Option value="5"    > 5 cm</Option>
+					<Option value="7"    > 7 cm</Option>
+					<Option value="10"   >10 cm (default)</Option>
+					<Option value="15"   >15 cm</Option>
+					<Option value="20"   >20 cm</Option>
+					<Option value="25"   >25 cm</Option>
+					<Option value="30"   >30 cm</Option>
 				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="5" hidden="no"  >
-				<Label>..   send if delta Dist  &gt;%:</Label>
+			<Field id="deltaDist" type="menu"     defaultValue="5" hidden="no" tooltip="The relative half of the change test, as a percentage of the distance itself, so one setting works at 20 cm and at 4 m. BOTH this and the absolute threshold above have to be exceeded before a reading is reported." >
+				<Label>..   AND if delta Dist &gt; [%]:</Label>
 				<List>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="5"    > 5 (default)</Option>
-					<Option value="7"    > 7</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 %</Option>
+					<Option value="2"    > 2 %</Option>
+					<Option value="3"    > 3 %</Option>
+					<Option value="4"    > 4 %</Option>
+					<Option value="5"    > 5 % (default)</Option>
+					<Option value="6"    > 6 %</Option>
+					<Option value="7"    > 7 %</Option>
+					<Option value="8"    > 8 %</Option>
+					<Option value="9"    > 9 %</Option>
+					<Option value="10"   >10 %</Option>
 				</List>
+			</Field>
+			<Field id="secSendTiming" type="label" fontColor="green"> <Label>==== How often that may be reported to indigo:</Label> </Field>
+			<Field id="minSendSecs" type="menu" defaultValue="5" hidden="no" tooltip="THE SETTING WITH PRIORITY: no report may follow another sooner than this, whatever the change tests say. A sensor watching something that really is moving passes both tests on nearly every measurement, and every report writes 6 states on this device (distance, distanceRaw, sensorValue, status, speed, lastSensorChange) - one sensor measured 34 reports a minute, about 14,000 state writes an hour. The thresholds are untouched: the reading still has to pass them, it just is not reported again this soon, and the next report carries the full change since the last one. An explicit read-now and the distance/region EVENTS are never delayed by it.">
+				<Label>never more often than:</Label>
+				<List>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="2"    > 2 sec</Option>
+					<Option value="3"    > 3 sec</Option>
+					<Option value="4"    > 4 sec</Option>
+					<Option value="5"    > 5 sec (default)</Option>
+					<Option value="6"    > 6 sec</Option>
+					<Option value="7"    > 7 sec</Option>
+					<Option value="8"    > 8 sec</Option>
+					<Option value="9"    > 9 sec</Option>
+					<Option value="10"   >10 sec</Option>
+				</List>
+			</Field>
+			<Field id="sendMSGEverySecs" type="menu" defaultValue="90" hidden="no" tooltip="The keep-alive. Even when the distance has not moved at all, one report goes out this often so the device cannot look stale and so indigo keeps seeing the sensor. Nothing is measured differently for it - it is the same reading, reported on a timer.">
+				<Label>but at least every:</Label>
+				<List>
+					<Option value="10"   > 10 sec</Option>
+					<Option value="20"   > 20 sec</Option>
+					<Option value="30"   > 30 sec</Option>
+					<Option value="45"   > 45 sec</Option>
+					<Option value="60"   > 60 sec</Option>
+					<Option value="90"   > 90 sec (default)</Option>
+					<Option value="120"  >120 sec</Option>
+				</List>
+			</Field>
+			<Field id="labelminSendSecs" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>"never more often than" wins over everything else - that is the point of it. A moving
+target passes both change tests on almost every measurement and each report writes 6 states on
+this device; one sensor measured 34 reports/min. The thresholds are not touched by it: the next
+report still carries the whole change since the last one.
+NOT delayed by it: an explicit "read now", and the distance/region EVENTS that actions are
+built on. A sensor whose dialog was never saved since these settings appeared uses the defaults
+above (5 s / 90 s / 100 mm / 5%), not "no limit".</Label>
 			</Field>
 
 			<Field id="smoothMeasurements" type="checkbox"     defaultValue="true" hidden="no">
@@ -27797,13 +29130,17 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
-			<State id="measuredNumber">
-				<ValueType>String</ValueType>
-				<TriggerLabel>measuredNumber</TriggerLabel>
-				<ControlPageLabel>measuredNumber</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -27865,37 +29202,78 @@ If successful it is shown in dev state i2c </Label>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+			<Field id="labeldeltaDistShared" type="label">
+				<Label>==== In between: report only a REAL change - BOTH tests have to pass:</Label>
+			</Field>
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10" hidden="no" tooltip="The absolute half of the change test. Without it a small wobble close to the sensor counts as a move: 1 cm at 2 cm away is a 50% change and would be reported, although 1 cm is noise. BOTH this and the percentage below have to be exceeded before a reading is reported.">
+				<Label>..   report if delta Dist &gt; absolute [cm]:</Label>
 				<List>
-					<Option value="0.5"  > 0.5</Option>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="4"    > 5</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="7"    > 7</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 cm</Option>
+					<Option value="2"    > 2 cm</Option>
+					<Option value="3"    > 3 cm</Option>
+					<Option value="4"    > 4 cm</Option>
+					<Option value="5"    > 5 cm</Option>
+					<Option value="7"    > 7 cm</Option>
+					<Option value="10"   >10 cm (default)</Option>
+					<Option value="15"   >15 cm</Option>
+					<Option value="20"   >20 cm</Option>
+					<Option value="25"   >25 cm</Option>
+					<Option value="30"   >30 cm</Option>
 				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist(%) :</Label>
+			<Field id="deltaDist" type="menu"     defaultValue="5" hidden="no" tooltip="The relative half of the change test, as a percentage of the distance itself, so one setting works at 20 cm and at 4 m. BOTH this and the absolute threshold above have to be exceeded before a reading is reported." >
+				<Label>..   AND if delta Dist &gt; [%]:</Label>
 				<List>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 %</Option>
+					<Option value="2"    > 2 %</Option>
+					<Option value="3"    > 3 %</Option>
+					<Option value="4"    > 4 %</Option>
+					<Option value="5"    > 5 % (default)</Option>
+					<Option value="6"    > 6 %</Option>
+					<Option value="7"    > 7 %</Option>
+					<Option value="8"    > 8 %</Option>
+					<Option value="9"    > 9 %</Option>
+					<Option value="10"   >10 %</Option>
 				</List>
+			</Field>
+
+			<Field id="secSendTiming" type="label" fontColor="green"> <Label>==== How often that may be reported to indigo:</Label> </Field>
+			<Field id="minSendSecs" type="menu" defaultValue="5" hidden="no" tooltip="THE SETTING WITH PRIORITY: no report may follow another sooner than this, whatever the change tests say. A sensor watching something that really is moving passes both tests on nearly every measurement, and every report writes 6 states on this device (distance, distanceRaw, sensorValue, status, speed, lastSensorChange) - one sensor measured 34 reports a minute, about 14,000 state writes an hour. The thresholds are untouched: the reading still has to pass them, it just is not reported again this soon, and the next report carries the full change since the last one. An explicit read-now and the distance/region EVENTS are never delayed by it.">
+				<Label>never more often than:</Label>
+				<List>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="2"    > 2 sec</Option>
+					<Option value="3"    > 3 sec</Option>
+					<Option value="4"    > 4 sec</Option>
+					<Option value="5"    > 5 sec (default)</Option>
+					<Option value="6"    > 6 sec</Option>
+					<Option value="7"    > 7 sec</Option>
+					<Option value="8"    > 8 sec</Option>
+					<Option value="9"    > 9 sec</Option>
+					<Option value="10"   >10 sec</Option>
+				</List>
+			</Field>
+			<Field id="sendMSGEverySecs" type="menu" defaultValue="90" hidden="no" tooltip="The keep-alive. Even when the distance has not moved at all, one report goes out this often so the device cannot look stale and so indigo keeps seeing the sensor. Nothing is measured differently for it - it is the same reading, reported on a timer.">
+				<Label>but at least every:</Label>
+				<List>
+					<Option value="10"   > 10 sec</Option>
+					<Option value="20"   > 20 sec</Option>
+					<Option value="30"   > 30 sec</Option>
+					<Option value="45"   > 45 sec</Option>
+					<Option value="60"   > 60 sec</Option>
+					<Option value="90"   > 90 sec (default)</Option>
+					<Option value="120"  >120 sec</Option>
+				</List>
+			</Field>
+			<Field id="labelminSendSecs" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>"never more often than" wins over everything else - that is the point of it. A moving
+target passes both change tests on almost every measurement and each report writes 6 states on
+this device; one sensor measured 34 reports/min. The thresholds are not touched by it: the next
+report still carries the whole change since the last one.
+NOT delayed by it: an explicit "read now", and the distance/region EVENTS that actions are
+built on. A sensor whose dialog was never saved since these settings appeared uses the defaults
+above (5 s / 90 s / 100 mm / 5%), not "no limit".</Label>
 			</Field>
 
 			<Field id="waitIfNone" type="menu"     defaultValue="3"  >
@@ -28141,6 +29519,15 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -28210,37 +29597,78 @@ The sensr is more stable with the xShut pin enabled</Label>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+			<Field id="labeldeltaDistShared" type="label">
+				<Label>==== In between: report only a REAL change - BOTH tests have to pass:</Label>
+			</Field>
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10" hidden="no" tooltip="The absolute half of the change test. Without it a small wobble close to the sensor counts as a move: 1 cm at 2 cm away is a 50% change and would be reported, although 1 cm is noise. BOTH this and the percentage below have to be exceeded before a reading is reported.">
+				<Label>..   report if delta Dist &gt; absolute [cm]:</Label>
 				<List>
-					<Option value="0.5"  > 0.5</Option>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="4"    > 5</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="7"    > 7</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 cm</Option>
+					<Option value="2"    > 2 cm</Option>
+					<Option value="3"    > 3 cm</Option>
+					<Option value="4"    > 4 cm</Option>
+					<Option value="5"    > 5 cm</Option>
+					<Option value="7"    > 7 cm</Option>
+					<Option value="10"   >10 cm (default)</Option>
+					<Option value="15"   >15 cm</Option>
+					<Option value="20"   >20 cm</Option>
+					<Option value="25"   >25 cm</Option>
+					<Option value="30"   >30 cm</Option>
 				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist(%) :</Label>
+			<Field id="deltaDist" type="menu"     defaultValue="5" hidden="no" tooltip="The relative half of the change test, as a percentage of the distance itself, so one setting works at 20 cm and at 4 m. BOTH this and the absolute threshold above have to be exceeded before a reading is reported." >
+				<Label>..   AND if delta Dist &gt; [%]:</Label>
 				<List>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 %</Option>
+					<Option value="2"    > 2 %</Option>
+					<Option value="3"    > 3 %</Option>
+					<Option value="4"    > 4 %</Option>
+					<Option value="5"    > 5 % (default)</Option>
+					<Option value="6"    > 6 %</Option>
+					<Option value="7"    > 7 %</Option>
+					<Option value="8"    > 8 %</Option>
+					<Option value="9"    > 9 %</Option>
+					<Option value="10"   >10 %</Option>
 				</List>
+			</Field>
+
+			<Field id="secSendTiming" type="label" fontColor="green"> <Label>==== How often that may be reported to indigo:</Label> </Field>
+			<Field id="minSendSecs" type="menu" defaultValue="5" hidden="no" tooltip="THE SETTING WITH PRIORITY: no report may follow another sooner than this, whatever the change tests say. A sensor watching something that really is moving passes both tests on nearly every measurement, and every report writes 6 states on this device (distance, distanceRaw, sensorValue, status, speed, lastSensorChange) - one sensor measured 34 reports a minute, about 14,000 state writes an hour. The thresholds are untouched: the reading still has to pass them, it just is not reported again this soon, and the next report carries the full change since the last one. An explicit read-now and the distance/region EVENTS are never delayed by it.">
+				<Label>never more often than:</Label>
+				<List>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="2"    > 2 sec</Option>
+					<Option value="3"    > 3 sec</Option>
+					<Option value="4"    > 4 sec</Option>
+					<Option value="5"    > 5 sec (default)</Option>
+					<Option value="6"    > 6 sec</Option>
+					<Option value="7"    > 7 sec</Option>
+					<Option value="8"    > 8 sec</Option>
+					<Option value="9"    > 9 sec</Option>
+					<Option value="10"   >10 sec</Option>
+				</List>
+			</Field>
+			<Field id="sendMSGEverySecs" type="menu" defaultValue="90" hidden="no" tooltip="The keep-alive. Even when the distance has not moved at all, one report goes out this often so the device cannot look stale and so indigo keeps seeing the sensor. Nothing is measured differently for it - it is the same reading, reported on a timer.">
+				<Label>but at least every:</Label>
+				<List>
+					<Option value="10"   > 10 sec</Option>
+					<Option value="20"   > 20 sec</Option>
+					<Option value="30"   > 30 sec</Option>
+					<Option value="45"   > 45 sec</Option>
+					<Option value="60"   > 60 sec</Option>
+					<Option value="90"   > 90 sec (default)</Option>
+					<Option value="120"  >120 sec</Option>
+				</List>
+			</Field>
+			<Field id="labelminSendSecs" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>"never more often than" wins over everything else - that is the point of it. A moving
+target passes both change tests on almost every measurement and each report writes 6 states on
+this device; one sensor measured 34 reports/min. The thresholds are not touched by it: the next
+report still carries the whole change since the last one.
+NOT delayed by it: an explicit "read now", and the distance/region EVENTS that actions are
+built on. A sensor whose dialog was never saved since these settings appeared uses the defaults
+above (5 s / 90 s / 100 mm / 5%), not "no limit".</Label>
 			</Field>
 
 			<Field id="waitIfNone" type="menu"     defaultValue="0.5"  >
@@ -28529,6 +29957,15 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -28591,37 +30028,78 @@ distance up to 20 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+			<Field id="labeldeltaDistShared" type="label">
+				<Label>==== In between: report only a REAL change - BOTH tests have to pass:</Label>
+			</Field>
+			<Field id="deltaDistAbs" type="menu"     defaultValue="10" hidden="no" tooltip="The absolute half of the change test. Without it a small wobble close to the sensor counts as a move: 1 cm at 2 cm away is a 50% change and would be reported, although 1 cm is noise. BOTH this and the percentage below have to be exceeded before a reading is reported.">
+				<Label>..   report if delta Dist &gt; absolute [cm]:</Label>
 				<List>
-					<Option value="0.5"  > 0.5</Option>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="4"    > 5</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="7"    > 7</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 cm</Option>
+					<Option value="2"    > 2 cm</Option>
+					<Option value="3"    > 3 cm</Option>
+					<Option value="4"    > 4 cm</Option>
+					<Option value="5"    > 5 cm</Option>
+					<Option value="7"    > 7 cm</Option>
+					<Option value="10"   >10 cm (default)</Option>
+					<Option value="15"   >15 cm</Option>
+					<Option value="20"   >20 cm</Option>
+					<Option value="25"   >25 cm</Option>
+					<Option value="30"   >30 cm</Option>
 				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist(%) :</Label>
+			<Field id="deltaDist" type="menu"     defaultValue="5" hidden="no" tooltip="The relative half of the change test, as a percentage of the distance itself, so one setting works at 20 cm and at 4 m. BOTH this and the absolute threshold above have to be exceeded before a reading is reported." >
+				<Label>..   AND if delta Dist &gt; [%]:</Label>
 				<List>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 %</Option>
+					<Option value="2"    > 2 %</Option>
+					<Option value="3"    > 3 %</Option>
+					<Option value="4"    > 4 %</Option>
+					<Option value="5"    > 5 % (default)</Option>
+					<Option value="6"    > 6 %</Option>
+					<Option value="7"    > 7 %</Option>
+					<Option value="8"    > 8 %</Option>
+					<Option value="9"    > 9 %</Option>
+					<Option value="10"   >10 %</Option>
 				</List>
+			</Field>
+
+			<Field id="secSendTiming" type="label" fontColor="green"> <Label>==== How often that may be reported to indigo:</Label> </Field>
+			<Field id="minSendSecs" type="menu" defaultValue="5" hidden="no" tooltip="THE SETTING WITH PRIORITY: no report may follow another sooner than this, whatever the change tests say. A sensor watching something that really is moving passes both tests on nearly every measurement, and every report writes 6 states on this device (distance, distanceRaw, sensorValue, status, speed, lastSensorChange) - one sensor measured 34 reports a minute, about 14,000 state writes an hour. The thresholds are untouched: the reading still has to pass them, it just is not reported again this soon, and the next report carries the full change since the last one. An explicit read-now and the distance/region EVENTS are never delayed by it.">
+				<Label>never more often than:</Label>
+				<List>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="2"    > 2 sec</Option>
+					<Option value="3"    > 3 sec</Option>
+					<Option value="4"    > 4 sec</Option>
+					<Option value="5"    > 5 sec (default)</Option>
+					<Option value="6"    > 6 sec</Option>
+					<Option value="7"    > 7 sec</Option>
+					<Option value="8"    > 8 sec</Option>
+					<Option value="9"    > 9 sec</Option>
+					<Option value="10"   >10 sec</Option>
+				</List>
+			</Field>
+			<Field id="sendMSGEverySecs" type="menu" defaultValue="90" hidden="no" tooltip="The keep-alive. Even when the distance has not moved at all, one report goes out this often so the device cannot look stale and so indigo keeps seeing the sensor. Nothing is measured differently for it - it is the same reading, reported on a timer.">
+				<Label>but at least every:</Label>
+				<List>
+					<Option value="10"   > 10 sec</Option>
+					<Option value="20"   > 20 sec</Option>
+					<Option value="30"   > 30 sec</Option>
+					<Option value="45"   > 45 sec</Option>
+					<Option value="60"   > 60 sec</Option>
+					<Option value="90"   > 90 sec (default)</Option>
+					<Option value="120"  >120 sec</Option>
+				</List>
+			</Field>
+			<Field id="labelminSendSecs" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>"never more often than" wins over everything else - that is the point of it. A moving
+target passes both change tests on almost every measurement and each report writes 6 states on
+this device; one sensor measured 34 reports/min. The thresholds are not touched by it: the next
+report still carries the whole change since the last one.
+NOT delayed by it: an explicit "read now", and the distance/region EVENTS that actions are
+built on. A sensor whose dialog was never saved since these settings appeared uses the defaults
+above (5 s / 90 s / 100 mm / 5%), not "no limit".</Label>
 			</Field>
 
 			<Field id="maxCurrent" type="menu"     defaultValue="4"  >
@@ -28894,13 +30372,17 @@ eg VS=10, Short=20, Long=100 VL=200</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
-			<State id="measuredNumber">
-				<ValueType>String</ValueType>
-				<TriggerLabel>measuredNumber</TriggerLabel>
-				<ControlPageLabel>measuredNumber</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -28964,37 +30446,80 @@ distance up to 10 cm</Label>
 				</List>
 			</Field>
 
-			<Field id="deltaDistAbs" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist absolute[cm] eg 10 :</Label>
+			<Field id="labeldeltaDistShared" type="label">
+				<Label>==== In between: report only a REAL change - BOTH tests have to pass:
+this sensor reaches 25.5 cm in total, so 10 cm absolute would be nearly half of everything it
+can see - its default is 2 cm.</Label>
+			</Field>
+			<Field id="deltaDistAbs" type="menu"     defaultValue="2" hidden="no" tooltip="The absolute half of the change test. Without it a small wobble close to the sensor counts as a move: 1 cm at 2 cm away is a 50% change and would be reported, although 1 cm is noise. BOTH this and the percentage below have to be exceeded before a reading is reported.">
+				<Label>..   report if delta Dist &gt; absolute [cm]:</Label>
 				<List>
-					<Option value="0.5"  > 0.5</Option>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="4"    > 5</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="7"    > 7</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 cm</Option>
+					<Option value="2"    > 2 cm (default for this sensor)</Option>
+					<Option value="3"    > 3 cm</Option>
+					<Option value="4"    > 4 cm</Option>
+					<Option value="5"    > 5 cm</Option>
+					<Option value="7"    > 7 cm</Option>
+					<Option value="10"   >10 cm</Option>
+					<Option value="15"   >15 cm</Option>
+					<Option value="20"   >20 cm</Option>
+					<Option value="25"   >25 cm</Option>
+					<Option value="30"   >30 cm</Option>
 				</List>
 			</Field>
 
-			<Field id="deltaDist" type="menu"     defaultValue="10"  >
-				<Label>send if delta Dist(%) :</Label>
+			<Field id="deltaDist" type="menu"     defaultValue="5" hidden="no" tooltip="The relative half of the change test, as a percentage of the distance itself, so one setting works at 20 cm and at 4 m. BOTH this and the absolute threshold above have to be exceeded before a reading is reported." >
+				<Label>..   AND if delta Dist &gt; [%]:</Label>
 				<List>
-					<Option value="1"    > 1</Option>
-					<Option value="2"    > 2</Option>
-					<Option value="3"    > 3</Option>
-					<Option value="5"    > 5</Option>
-					<Option value="10"   > 10</Option>
-					<Option value="15"   > 15</Option>
-					<Option value="20"   > 20</Option>
-					<Option value="25"   > 25</Option>
-					<Option value="30"   > 30</Option>
+					<Option value="1"    > 1 %</Option>
+					<Option value="2"    > 2 %</Option>
+					<Option value="3"    > 3 %</Option>
+					<Option value="4"    > 4 %</Option>
+					<Option value="5"    > 5 % (default)</Option>
+					<Option value="6"    > 6 %</Option>
+					<Option value="7"    > 7 %</Option>
+					<Option value="8"    > 8 %</Option>
+					<Option value="9"    > 9 %</Option>
+					<Option value="10"   >10 %</Option>
 				</List>
+			</Field>
+
+			<Field id="secSendTiming" type="label" fontColor="green"> <Label>==== How often that may be reported to indigo:</Label> </Field>
+			<Field id="minSendSecs" type="menu" defaultValue="5" hidden="no" tooltip="THE SETTING WITH PRIORITY: no report may follow another sooner than this, whatever the change tests say. A sensor watching something that really is moving passes both tests on nearly every measurement, and every report writes 6 states on this device (distance, distanceRaw, sensorValue, status, speed, lastSensorChange) - one sensor measured 34 reports a minute, about 14,000 state writes an hour. The thresholds are untouched: the reading still has to pass them, it just is not reported again this soon, and the next report carries the full change since the last one. An explicit read-now and the distance/region EVENTS are never delayed by it.">
+				<Label>never more often than:</Label>
+				<List>
+					<Option value="1"    > 1 sec</Option>
+					<Option value="2"    > 2 sec</Option>
+					<Option value="3"    > 3 sec</Option>
+					<Option value="4"    > 4 sec</Option>
+					<Option value="5"    > 5 sec (default)</Option>
+					<Option value="6"    > 6 sec</Option>
+					<Option value="7"    > 7 sec</Option>
+					<Option value="8"    > 8 sec</Option>
+					<Option value="9"    > 9 sec</Option>
+					<Option value="10"   >10 sec</Option>
+				</List>
+			</Field>
+			<Field id="sendMSGEverySecs" type="menu" defaultValue="90" hidden="no" tooltip="The keep-alive. Even when the distance has not moved at all, one report goes out this often so the device cannot look stale and so indigo keeps seeing the sensor. Nothing is measured differently for it - it is the same reading, reported on a timer.">
+				<Label>but at least every:</Label>
+				<List>
+					<Option value="10"   > 10 sec</Option>
+					<Option value="20"   > 20 sec</Option>
+					<Option value="30"   > 30 sec</Option>
+					<Option value="45"   > 45 sec</Option>
+					<Option value="60"   > 60 sec</Option>
+					<Option value="90"   > 90 sec (default)</Option>
+					<Option value="120"  >120 sec</Option>
+				</List>
+			</Field>
+			<Field id="labelminSendSecs" type="label" alignWithControl="true" fontSize="small" fontColor="darkgrey">
+				<Label>"never more often than" wins over everything else - that is the point of it. A moving
+target passes both change tests on almost every measurement and each report writes 6 states on
+this device; one sensor measured 34 reports/min. The thresholds are not touched by it: the next
+report still carries the whole change since the last one.
+NOT delayed by it: an explicit "read now", and the distance/region EVENTS that actions are
+built on. A sensor whose dialog was never saved since these settings appeared uses the defaults
+above (5 s / 90 s / 100 mm / 5%), not "no limit".</Label>
 			</Field>
 
 			<Field id="dUnits" type="menu"     defaultValue="cm" >
@@ -29249,14 +30774,18 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Option value="off"       >no, not for this device</Option>
 		</List>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 
 		<States>
-			<State id="measuredNumber">
-				<ValueType>String</ValueType>
-				<TriggerLabel>measuredNumber</TriggerLabel>
-				<ControlPageLabel>measuredNumber</ControlPageLabel>
-			</State>
 
 		</States>
 
@@ -29497,6 +31026,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 			<State id="proximity">
@@ -29677,6 +31215,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 
 		<States>
@@ -29800,6 +31347,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -29938,6 +31494,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="useDefault">use the plugin-config setting</Option>
 					<Option value="on"        >yes, for this device</Option>
 					<Option value="off"       >no, not for this device</Option>
+				</List>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
 				</List>
 			</Field>
 		</ConfigUI>
@@ -30102,6 +31667,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 					<Option value="off"       >no, not for this device</Option>
 				</List>
 			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
+			</Field>
 		</ConfigUI>
 		<States>
 		</States>
@@ -30253,6 +31827,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -30354,6 +31937,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -30457,6 +32049,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -30581,6 +32182,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -30652,6 +32262,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 		<States>
@@ -30727,6 +32346,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 		<States>
@@ -31011,6 +32639,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 		<States>
 			<State id="status">
@@ -31128,6 +32765,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 		<States>
@@ -31392,6 +33038,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -31448,6 +33103,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -31492,6 +33156,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 		<States>
@@ -31741,6 +33414,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -31840,6 +33522,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -32075,6 +33766,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 		<States>
 		</States>
@@ -32158,6 +33858,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 	</Device>
@@ -32618,6 +34327,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
 	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
+	</Field>
 </ConfigUI>
 
 		<States>
@@ -32659,6 +34377,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -32735,6 +34462,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 	<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 		<Label>Debug:</Label>
 		<Description>print all properties of this device to the log after saving (resets itself)</Description>
+	</Field>
+	<Field id="sepSqlNoStats" type="separator"/>
+	<Field id="sqlNoStats" type="menu" defaultValue="default">
+		<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+		<List>
+			<Option value="default">default (as set in plugin config)</Option>
+			<Option value="no">not written</Option>
+			<Option value="yes">written</Option>
+		</List>
 	</Field>
 </ConfigUI>
 
@@ -32857,6 +34593,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -32994,6 +34739,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
@@ -33257,6 +35011,15 @@ xx_Count_groupname_ .. Home, Away</Label>
 			<Field id="printPropsToLog" type="checkbox" defaultValue="false">
 				<Label>Debug:</Label>
 				<Description>print all properties of this device to the log after saving (resets itself)</Description>
+			</Field>
+			<Field id="sepSqlNoStats" type="separator"/>
+			<Field id="sqlNoStats" type="menu" defaultValue="default">
+				<Label>statistics states (min / max / ave, today .. this / last year) into the SQL logger:</Label>
+				<List>
+					<Option value="default">default (as set in plugin config)</Option>
+					<Option value="no">not written</Option>
+					<Option value="yes">written</Option>
+				</List>
 			</Field>
 		</ConfigUI>
 		<States>
